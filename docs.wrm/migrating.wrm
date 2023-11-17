@@ -1,0 +1,397 @@
+_section: Migrating from v5 @<migrating> @priority<-10>
+
+This guide aims to capture some of the high-level differences
+between v5 and v6 to help those migrating an existing app and
+those already familiar with v5 that just need a quick primer.
+
+The biggest difference in v6 is the use of modern ES6 features,
+so a lot of changes are largely internal.
+
+- [BigNumbers](migrate-bigint)
+- [Contracts](migrate-contracts)
+- [Importing](migrate-importing)
+- [Providers](migrate-providers)
+- [Signatures](migrate-signatures)
+- [Transactions](migrate-transactions)
+- [Utilities](migrate-utils)
+- [Removed Items](migrate-missing)
+
+
+_subsection: Big Numbers  @<migrate-bigint>
+
+One of the biggest changes in v6 is that the //BigNumber// class has
+been replaced with the built-in ES2020 BigInt offered by modern
+JavaScript environments.
+
+There is plenty of [online documentation](link-js-bigint) to get
+you started with JavaScript ES2020 BigInt. Keep in mind, just like
+//BigNumber//, a ES2020 BigInt can **only** operate on integers.
+
+The [[FixedNumber]] class still exists for performing fixed-point
+maths.
+
+
+_code: creating large numbers  @lang<script>
+
+  // Using BigNumber in v5
+  value = BigNumber.from("1000")
+
+  // Using BigInt in v6 (using literal notation).
+  // Notice the suffix n
+  value = 1000n
+
+  // Using the BigInt function for strings
+  value = BigInt("1000")
+
+
+_code: simple maths on large numbers  @lang<script>
+
+  // Adding two values in v5
+  sum = value1.add(value2)
+
+  // Using BigInt in v6; keep in mind, both values
+  // must be a BigInt
+  sum = value1 + value2
+
+
+_code: simple comparison on large numbers  @lang<script>
+
+  // Checking equality in v5
+  isEqual = value1.eq(value2)
+
+  // Using BigInt in v6
+  isEqual = (value1 == value2)
+
+
+_subsection: Contracts @<migrate-contracts>
+
+The [[Contract]] is an ES6 Proxy, which means it can resolve
+method names at run-time.
+
+_heading: Ambiguous Methods
+
+In v5, in the case of an ambiguous method, it was necessary to
+look up a method by its canonical normalized signature. In v6
+the signature does not need to be normalized and the Typed API
+provides a cleaner way to access the desired method.
+
+In v5, duplicate definitions also injected warnings into the
+console, since there was no way to detect them at run-time.
+
+_code: contracts in v5 @lang<script>
+  abi = [
+    "function foo(address bar)",
+    "function foo(uint160 bar)",
+  ]
+  contract = new Contract(address, abi, provider)
+
+  // In v5 it was necessary to specify the fully-qualified normalized
+  // signature to access the desired method. For example:
+  contract["foo(address)"](addr)
+
+  // These would fail, since there signature is not normalized:
+  contract["foo(address )"](addr)
+  contract["foo(address addr)"](addr)
+
+  // This would fail, since the method is ambiguous:
+  contract.foo(addr)
+
+_code: contracts in v6  @lang<script>
+  abi = [
+    "function foo(address bar)",
+    "function foo(uint160 bar)",
+  ]
+  contract = new Contract(address, abi, provider)
+
+  // Any of these work fine:
+  contract["foo(address)"](addr)
+  contract["foo(address )"](addr)
+  contract["foo(address addr)"](addr)
+
+  // This still fails, since there is no way to know which
+  // method was intended
+  contract.foo(addr)
+
+  // However, the Typed API makes things a bit easier, since it
+  // allows providing typing information to the Contract:
+  contract.foo(Typed.address(addr))
+
+_heading: Other Method Operations
+
+In v5, contracts contained a series of method buckets, which
+then in turn had all signatures and non-ambiguous names
+attached to them to perform less-common operations.
+
+In v6, the methods each have their own less-common operations
+attached directly to them.
+
+_code: other operations in v5  @lang<script>
+
+  // The default action chooses send or call base on method
+  // type (pure, view, constant, non-payable or payable)
+  contract.foo(addr)
+
+  // This would perform the default action, but return a Result
+  // object, instead of destructing the value
+  contract.functions.foo(addr)
+
+  // Forces using call
+  contract.callStatic.foo(addr)
+
+  // Estimate the gas
+  contract.estimateGas.foo(addr)
+
+  // Populate a transaction
+  contract.populateTransaction.foo(addr)
+
+_code: other operations in v6  @lang<script>
+
+  // Still behaves the same
+  contract.foo(addr)
+
+  // Perform a call, returning a Result object directly
+  contract.foo.staticCallResult(addr)
+
+  // Forces using call (even for payable and non-payable)
+  contract.foo.staticCall(addr)
+
+  // Forces sending a transaction (even for pure and view)
+  contract.foo.send(addr)
+
+  // Estimate the gas
+  contract.foo.estimateGas(addr)
+
+  // Populate a transaction
+  contract.foo.populateTransaction(addr)
+
+
+_subsection: Importing  @<migrate-importing>
+
+In v5, the project was maintained as a large set of sub-packages
+managed as a monorepo.
+
+In v6 all imports are available in the root package, and for those
+who wish to have finer-grained control, the ``pkg.exports`` makes
+certain folders available directly.
+
+_code: importing in v5  @lang<script>
+
+  // Many things (but not all) we available on the root package
+  import { ethers } from "ethers"
+
+  // But some packages were grouped behind an additional property
+  import { providers } from "ethers"
+  const { InfuraProvider } = providers
+
+  // For granular control, importing from the sub-package
+  // was necessary
+  import { InfuraProvider } from "@ethersproject/providers"
+
+_code: importing in v6  @lang<script>
+
+  // Everything is available on the root package
+  import { ethers } from "ethers"
+  import { InfuraProvider } from "ethers"
+
+  // The pkg.exports provides granular access
+  import { InfuraProvider } from "ethers/providers"
+
+
+_subsection: Providers  @<migrate-providers>
+
+In addition to all the ``ethers.providers.*`` being moved to
+``ethers.*``, the biggest change developers need to keep in
+mind is that ``Web3Provider`` (which historically was used
+to wrap [[link-web3js]] providers) is now called
+[[BrowserProvider]] which is designed to wrap EIP-1193
+providers, which is the standard that both modern Web3.js and
+injected providers offer.
+
+_code: wrapping EIP-1193 providers  @lang<script>
+  // v5
+  provider = new ethers.providers.Web3Provider(window.ethereum)
+
+  // v6:
+  provider = new ethers.BrowserProvider(window.ethereum)
+
+Also, the method for broadcasting transactions to the network has
+changed:
+
+_code: broadcasting transactions  @lang<script>
+  // v5
+  provider.sendTransaction(signedTx)
+
+  // v6
+  provider.broadcastTransaction(signedTx)
+
+
+_subsection: Signatures  @<migrate-signatures>
+
+The Signature is now a class which facilitates all the parsing
+and serializing.
+
+_code: signature manipulation
+  // v5
+  splitSig = splitSignature(sigBytes)
+  sigBytes = joinSignature(splitSig)
+
+  // v6
+  splitSig = ethers.Signature.from(sigBytes)
+  sigBytes = ethers.Signature.from(splitSig).serialized
+
+
+_subsection: Transactions  @<migrate-transactions>
+
+The transaction helpers present in v5 were all wrapped into a
+[[Transaction]] class, which can handle any supported transaction
+format to be further processed
+
+_code: parsing transactions  @lang<script>
+
+  // v5
+  tx = parseTransaction(txBytes)
+  txBytes = serializeTransaction(tx)
+  txBytes = serializeTransaction(tx, sig)
+
+  // v6
+  tx = Transaction.from(txBytes)
+
+  // v6 (the tx can optionally include the signature)
+  txBytes = Transaction.from(tx).serialized
+
+
+_subsection: Utilities  @<migrate-utils>
+
+_code: Bytes32 string helpers  @lang<script>
+  // In v5:
+  bytes32 = ethers.utils.formatBytes32String(text)
+  text = ethers.utils.parseBytes32String(bytes32)
+
+  // In v6:
+  bytes32 = ethers.encodeBytes32String(text)
+  text = ethers.decodeBytes32String(bytes32)
+
+_code: constants  @lang<script>
+  // v5:
+  ethers.constants.AddressZero
+  ethers.constants.HashZero
+
+  // v6:
+  ethers.ZeroAddress
+  ethers.ZeroHash
+
+_code: data manipulation  @lang<script>
+  // v5
+  slice = ethers.utils.hexDataSlice(value, start, end)
+  padded = ethers.utils.hexZeroPad(value, length)
+
+  // v5; converting numbers to hexstrings
+  hex = hexlify(35)
+
+  // v6
+  slice = ethers.dataSlice(value, start, end)
+  padded = ethers.zeroPadValue(value, length)
+
+  // v6; converting numbers to hexstrings
+  hex = toBeHex(35)
+
+_code: defaultAbiCoder  @lang<script>
+  // In v5, it is a property of AbiCoder
+  coder = AbiCoder.defaultAbiCoder
+
+  // In v6, it is a static function on AbiCoder, which uses
+  // a singleton pattern; the first time it is called, the
+  // AbiCoder is created and on subsequent calls that initial
+  // instance is returned.
+  coder = AbiCoder.defaultAbiCoder()
+
+_code: fetching content  @lang<script>
+  // v5, with a body and no weird things
+  data = await ethers.utils.fetchJson(url, json, processFunc)
+
+  // v5 with Connection overrides
+  req = {
+      url, user: "username", password: "password"
+      // etc. properties have FetchRequest equivalents
+  };
+  data = await ethers.utils.fetchJson(req, json, processFunc)
+
+  // v6
+  req = new ethers.FetchRequest(url)
+
+  // set a body; optional
+  req.body = json
+
+  // set credentials; optional
+  req.setCredentials("username", "password")
+
+  // set a processFunc; optional
+  req.processFunc = processFunc
+
+  // send the request!
+  resp = await req.send()
+
+  // Get the response body; depending on desired format
+  data = resp.body        // Uint8Array
+  data = resp.bodyText    // Utf8String; throws if invalid
+  data = resp.bodyJson    // Object; throws if invalid
+
+_code: hex conversion  @lang<script>
+  // v5
+  hex = ethers.utils.hexValue(value)
+  array = ethers.utils.arrayify(value)
+
+  // v6
+  hex = ethers.toQuantity(value)
+  array = ethers.getBytes(value)
+
+_code: solidity non-standard packed  @lang<script>
+  // v5
+  ethers.utils.solidityPack(types, values)
+  ethers.utils.solidityKeccak256(types, values)
+  ethers.utils.soliditySha256(types, values)
+
+  // v6
+  ethers.solidityPacked(types, values)
+  ethers.solidityPackedKeccak256(types, values)
+  ethers.solidityPackedSha256(types, values)
+
+_code: property manipulation  @lang<script>
+  // v5
+  ethers.utils.defineReadOnly(obj, "name", value)
+
+  // v6
+  ethers.defineProperties(obj, { name: value });
+
+_code: commify  @lang<script>
+  // v5
+  ethers.utils.commify("1234.5")
+
+  // v6; we removed some of these local-specific utilities,
+  // however the functionality can be easily replicated
+  // and adjusted depending on your desired output format,
+  // for which everyone wanted their own tweaks anyways.
+  //
+  // However, to mimic v5 functionality, this can be used:
+  function commify(value) {
+    const match = value.match(/^(-?)([0-9]*)(\.?)([0-9]*)$/);
+    if (!match || (!match[2] && !match[4])) {
+      throw new Error(`bad formatted number: ${ JSON.stringify(value) }`);
+    }
+
+    const neg = match[1];
+    const whole = BigInt(match[2] || 0).toLocaleString("en-us");
+    const frac = match[4] ? match[4].match(/^(.*?)0*$/)[1]: "0";
+
+    return `${ neg }${ whole }.${ frac }`;
+  }
+
+  commify("1234.5");
+
+_subsection: Removed Classes and functions  @<migrate-missing>
+
+The **Logger** class has been replaced by
+[several Error utility functions](about-errors).
+
+The ``checkProperties`` and ``shallowCopy`` have been
+removed in favor of using ``.map`` and ``Object.assign``.

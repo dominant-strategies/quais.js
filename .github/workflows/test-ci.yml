@@ -1,0 +1,109 @@
+name: CI Tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src.ts/**"
+      - "lib.esm/**"
+      - "lib.commonjs/**"
+
+jobs:
+
+  test-node:
+    #if: ${{ false }}  # disable for now
+
+    name: Run Node.js Tests
+
+    runs-on: ubuntu-latest
+
+    environment: ethers-tests
+    env:
+      FAUCET_PRIVATEKEY: ${{ secrets.FAUCET_PRIVATEKEY }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [ 16.x, 18.x ]
+        test-type: [ esm, commonjs ]
+
+    steps:
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install and run Geth
+        uses: ethers-io/run-geth-action@main
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build ESM and CommonJS (from TypeScript)
+        run: npm run build-all
+
+      - name: Run tests (${{ matrix.test-type }})
+        run: npm run test-${{ matrix.test-type }}
+
+
+  coverage:
+    #if: ${{ false }}  # disable for now
+
+    name: Generate Coverage Report
+
+    runs-on: ubuntu-latest
+
+    environment: ethers-tests
+    env:
+      FAUCET_PRIVATEKEY: ${{ secrets.FAUCET_PRIVATEKEY }}
+
+    continue-on-error: true
+
+    steps:
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 18.x
+
+      - name: Install and run Geth
+        uses: ethers-io/run-geth-action@main
+        
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build ESM (from TypeScript)
+        run: npm run build
+
+      - name: Run coverage tests
+        run: npm run test-coverage
+
+      - name: Store coverage summary artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-summary
+          path: ./output/summary.txt
+
+      - name: Tar coverage files
+        run: tar -cvf ./output/coverage.tar ./output/lcov-report/
+
+      - name: Store full coverage artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-complete
+          path: ./output/coverage.tar
+
+      - name: Upload coverage to to build.ethers.org
+        uses: ethers-io/sync-s3-action@main
+        with:
+          aws_access_key_id: ${{ secrets.BUILD_AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.BUILD_AWS_SECRET_ACCESS_KEY}}
+          aws_s3_bucket: ethers.org
+          source_folder: 'output/'
+          destination_prefix: 'build/output/'
+          aws_cloudfront_id: ${{ secrets.BUILD_AWS_CLOUDFRONT_ID }}
