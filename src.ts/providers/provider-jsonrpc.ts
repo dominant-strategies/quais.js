@@ -649,7 +649,6 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
      *  and should generally call ``super._perform`` as a fallback.
      */
     async _perform(req: PerformActionRequest): Promise<any> {
-
         // Legacy networks do not like the type field being passed along (which
         // is fair), so we delete type if it is 0 and a non-EIP-1559 network
         if (req.method === "call" || req.method === "estimateGas") {
@@ -862,9 +861,6 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
             case "getGasPrice":
                 return { method: "eth_gasPrice", args: [] };
-
-            case "getPriorityFee":
-                return { method: "eth_maxPriorityFeePerGas", args: [ ] };
 
             case "getBalance":
                 return {
