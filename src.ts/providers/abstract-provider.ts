@@ -36,7 +36,7 @@ import {
 import { Network } from "./network.js";
 import { copyRequest, Block, FeeData, Log, TransactionReceipt, TransactionResponse } from "./provider.js";
 import {
-    PollingBlockSubscriber, PollingBlockTagSubscriber, PollingEventSubscriber,
+    PollingBlockSubscriber, PollingEventSubscriber,
     PollingOrphanSubscriber, PollingTransactionSubscriber
 } from "./subscriber-polling.js";
 
@@ -1340,8 +1340,6 @@ export class AbstractProvider implements Provider {
                 subscriber.pollingInterval = this.pollingInterval;
                 return subscriber;
             }
-            case "safe": case "finalized":
-                return new PollingBlockTagSubscriber(this, sub.type);
             case "event":
                 return new PollingEventSubscriber(this, sub.filter);
             case "transaction":

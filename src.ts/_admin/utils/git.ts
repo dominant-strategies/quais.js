@@ -37,7 +37,6 @@ export async function getModifiedTime(filename: string): Promise<null | number> 
 
     return null;
 }
-
 export interface GitLog {
     commit: string;
     author: string;
