@@ -17250,281 +17250,6 @@ function injectCommonNetworks() {
     registerEth("xdai", 100, { ensNetwork: 1 });
 }
 
-function copy$2(obj) {
-    return JSON.parse(JSON.stringify(obj));
-}
-// @TODO: refactor this
-/**
- *  A **PollingBlockSubscriber** polls at a regular interval for a change
- *  in the block number.
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class PollingBlockSubscriber {
-    #provider;
-    #poller;
-    #interval;
-    // The most recent block we have scanned for events. The value -2
-    // indicates we still need to fetch an initial block number
-    #blockNumber;
-    /**
-     *  Create a new **PollingBlockSubscriber** attached to %%provider%%.
-     */
-    constructor(provider) {
-        this.#provider = provider;
-        this.#poller = null;
-        this.#interval = 4000;
-        this.#blockNumber = -2;
-    }
-    /**
-     *  The polling interval.
-     */
-    get pollingInterval() { return this.#interval; }
-    set pollingInterval(value) { this.#interval = value; }
-    async #poll() {
-        try {
-            const blockNumber = await this.#provider.getBlockNumber();
-            // Bootstrap poll to setup our initial block number
-            if (this.#blockNumber === -2) {
-                this.#blockNumber = blockNumber;
-                return;
-            }
-            // @TODO: Put a cap on the maximum number of events per loop?
-            if (blockNumber !== this.#blockNumber) {
-                for (let b = this.#blockNumber + 1; b <= blockNumber; b++) {
-                    // We have been stopped
-                    if (this.#poller == null) {
-                        return;
-                    }
-                    await this.#provider.emit("block", b);
-                }
-                this.#blockNumber = blockNumber;
-            }
-        }
-        catch (error) {
-            // @TODO: Minor bump, add an "error" event to let subscribers
-            //        know things went awry.
-            //console.log(error);
-        }
-        // We have been stopped
-        if (this.#poller == null) {
-            return;
-        }
-        this.#poller = this.#provider._setTimeout(this.#poll.bind(this), this.#interval);
-    }
-    start() {
-        if (this.#poller) {
-            return;
-        }
-        this.#poller = this.#provider._setTimeout(this.#poll.bind(this), this.#interval);
-        this.#poll();
-    }
-    stop() {
-        if (!this.#poller) {
-            return;
-        }
-        this.#provider._clearTimeout(this.#poller);
-        this.#poller = null;
-    }
-    pause(dropWhilePaused) {
-        this.stop();
-        if (dropWhilePaused) {
-            this.#blockNumber = -2;
-        }
-    }
-    resume() {
-        this.start();
-    }
-}
-/**
- *  An **OnBlockSubscriber** can be sub-classed, with a [[_poll]]
- *  implmentation which will be called on every new block.
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class OnBlockSubscriber {
-    #provider;
-    #poll;
-    #running;
-    /**
-     *  Create a new **OnBlockSubscriber** attached to %%provider%%.
-     */
-    constructor(provider) {
-        this.#provider = provider;
-        this.#running = false;
-        this.#poll = (blockNumber) => {
-            this._poll(blockNumber, this.#provider);
-        };
-    }
-    /**
-     *  Called on every new block.
-     */
-    async _poll(blockNumber, provider) {
-        throw new Error("sub-classes must override this");
-    }
-    start() {
-        if (this.#running) {
-            return;
-        }
-        this.#running = true;
-        this.#poll(-2);
-        this.#provider.on("block", this.#poll);
-    }
-    stop() {
-        if (!this.#running) {
-            return;
-        }
-        this.#running = false;
-        this.#provider.off("block", this.#poll);
-    }
-    pause(dropWhilePaused) { this.stop(); }
-    resume() { this.start(); }
-}
-class PollingBlockTagSubscriber extends OnBlockSubscriber {
-    #tag;
-    #lastBlock;
-    constructor(provider, tag) {
-        super(provider);
-        this.#tag = tag;
-        this.#lastBlock = -2;
-    }
-    pause(dropWhilePaused) {
-        if (dropWhilePaused) {
-            this.#lastBlock = -2;
-        }
-        super.pause(dropWhilePaused);
-    }
-    async _poll(blockNumber, provider) {
-        const block = await provider.getBlock(this.#tag);
-        if (block == null) {
-            return;
-        }
-        if (this.#lastBlock === -2) {
-            this.#lastBlock = block.number;
-        }
-        else if (block.number > this.#lastBlock) {
-            provider.emit(this.#tag, block.number);
-            this.#lastBlock = block.number;
-        }
-    }
-}
-/**
- *  @_ignore:
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class PollingOrphanSubscriber extends OnBlockSubscriber {
-    #filter;
-    constructor(provider, filter) {
-        super(provider);
-        this.#filter = copy$2(filter);
-    }
-    async _poll(blockNumber, provider) {
-        throw new Error("@TODO");
-    }
-}
-/**
- *  A **PollingTransactionSubscriber** will poll for a given transaction
- *  hash for its receipt.
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class PollingTransactionSubscriber extends OnBlockSubscriber {
-    #hash;
-    /**
-     *  Create a new **PollingTransactionSubscriber** attached to
-     *  %%provider%%, listening for %%hash%%.
-     */
-    constructor(provider, hash) {
-        super(provider);
-        this.#hash = hash;
-    }
-    async _poll(blockNumber, provider) {
-        const tx = await provider.getTransactionReceipt(this.#hash);
-        if (tx) {
-            provider.emit(this.#hash, tx);
-        }
-    }
-}
-/**
- *  A **PollingEventSubscriber** will poll for a given filter for its logs.
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class PollingEventSubscriber {
-    #provider;
-    #filter;
-    #poller;
-    #running;
-    // The most recent block we have scanned for events. The value -2
-    // indicates we still need to fetch an initial block number
-    #blockNumber;
-    /**
-     *  Create a new **PollingTransactionSubscriber** attached to
-     *  %%provider%%, listening for %%filter%%.
-     */
-    constructor(provider, filter) {
-        this.#provider = provider;
-        this.#filter = copy$2(filter);
-        this.#poller = this.#poll.bind(this);
-        this.#running = false;
-        this.#blockNumber = -2;
-    }
-    async #poll(blockNumber) {
-        // The initial block hasn't been determined yet
-        if (this.#blockNumber === -2) {
-            return;
-        }
-        const filter = copy$2(this.#filter);
-        filter.fromBlock = this.#blockNumber + 1;
-        filter.toBlock = blockNumber;
-        const logs = await this.#provider.getLogs(filter);
-        // No logs could just mean the node has not indexed them yet,
-        // so we keep a sliding window of 60 blocks to keep scanning
-        if (logs.length === 0) {
-            if (this.#blockNumber < blockNumber - 60) {
-                this.#blockNumber = blockNumber - 60;
-            }
-            return;
-        }
-        for (const log of logs) {
-            this.#provider.emit(this.#filter, log);
-            // Only advance the block number when logs were found to
-            // account for networks (like BNB and Polygon) which may
-            // sacrifice event consistency for block event speed
-            this.#blockNumber = log.blockNumber;
-        }
-    }
-    start() {
-        if (this.#running) {
-            return;
-        }
-        this.#running = true;
-        if (this.#blockNumber === -2) {
-            this.#provider.getBlockNumber().then((blockNumber) => {
-                this.#blockNumber = blockNumber;
-            });
-        }
-        this.#provider.on("block", this.#poller);
-    }
-    stop() {
-        if (!this.#running) {
-            return;
-        }
-        this.#running = false;
-        this.#provider.off("block", this.#poller);
-    }
-    pause(dropWhilePaused) {
-        this.stop();
-        if (dropWhilePaused) {
-            this.#blockNumber = -2;
-        }
-    }
-    resume() {
-        this.start();
-    }
-}
-
 /**
  *  The available providers should suffice for most developers purposes,
  *  but the [[AbstractProvider]] class has many features which enable
@@ -17542,7 +17267,7 @@ class PollingEventSubscriber {
 // Constants
 const BN_2$1 = BigInt(2);
 const MAX_CCIP_REDIRECTS = 10;
-function isPromise$1(value) {
+function isPromise(value) {
     return (value && typeof (value.then) === "function");
 }
 function getTag(prefix, value) {
@@ -17587,7 +17312,7 @@ class UnmanagedSubscriber {
     pause(dropWhilePaused) { }
     resume() { }
 }
-function copy$1(value) {
+function copy$2(value) {
     return JSON.parse(JSON.stringify(value));
 }
 function concisify(items) {
@@ -17623,7 +17348,7 @@ async function getSubscription(_event, provider) {
     if (_event.orphan) {
         const event = _event;
         // @TODO: Should lowercase and whatnot things here instead of copy...
-        return { type: "orphan", tag: getTag("orphan", event), filter: copy$1(event) };
+        return { type: "orphan", tag: getTag("orphan", event), filter: copy$2(event) };
     }
     if ((_event.address || _event.topics)) {
         const event = _event;
@@ -18028,7 +17753,7 @@ class AbstractProvider {
                 return;
             }
             const addr = resolveAddress(request[key], this);
-            if (isPromise$1(addr)) {
+            if (isPromise(addr)) {
                 promises.push((async function () { request[key] = await addr; })());
             }
             else {
@@ -18037,7 +17762,7 @@ class AbstractProvider {
         });
         if (request.blockTag != null) {
             const blockTag = this._getBlockTag(request.blockTag);
-            if (isPromise$1(blockTag)) {
+            if (isPromise(blockTag)) {
                 promises.push((async function () { request.blockTag = await blockTag; })());
             }
             else {
@@ -18138,7 +17863,7 @@ class AbstractProvider {
     }
     async estimateGas(_tx) {
         let tx = this._getTransactionRequest(_tx);
-        if (isPromise$1(tx)) {
+        if (isPromise(tx)) {
             tx = await tx;
         }
         return getBigInt(await this.#perform({
@@ -18325,7 +18050,7 @@ class AbstractProvider {
     // Bloom-filter Queries
     async getLogs(_filter) {
         let filter = this._getFilter(_filter);
-        if (isPromise$1(filter)) {
+        if (isPromise(filter)) {
             filter = await filter;
         }
         const { network, params } = await resolveProperties({
@@ -18495,22 +18220,8 @@ class AbstractProvider {
             case "error":
             case "network":
                 return new UnmanagedSubscriber(sub.type);
-            case "block": {
-                const subscriber = new PollingBlockSubscriber(this);
-                subscriber.pollingInterval = this.pollingInterval;
-                return subscriber;
-            }
-            case "safe":
-            case "finalized":
-                return new PollingBlockTagSubscriber(this, sub.type);
-            case "event":
-                return new PollingEventSubscriber(this, sub.filter);
-            case "transaction":
-                return new PollingTransactionSubscriber(this, sub.hash);
-            case "orphan":
-                return new PollingOrphanSubscriber(this, sub.filter);
         }
-        throw new Error(`unsupported event: ${sub.type}`);
+        throw new Error("HTTP polling not supported. This method should be implemented by subclasses.");
     }
     /**
      *  If a [[Subscriber]] fails and needs to replace itself, this
@@ -19161,2484 +18872,6 @@ function showThrottleMessage(service) {
     console.log("==========================");
 }
 
-function copy(obj) {
-    return JSON.parse(JSON.stringify(obj));
-}
-/**
- *  Some backends support subscribing to events using a Filter ID.
- *
- *  When subscribing with this technique, the node issues a unique
- *  //Filter ID//. At this point the node dedicates resources to
- *  the filter, so that periodic calls to follow up on the //Filter ID//
- *  will receive any events since the last call.
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class FilterIdSubscriber {
-    #provider;
-    #filterIdPromise;
-    #poller;
-    #running;
-    #network;
-    #hault;
-    /**
-     *  Creates a new **FilterIdSubscriber** which will used [[_subscribe]]
-     *  and [[_emitResults]] to setup the subscription and provide the event
-     *  to the %%provider%%.
-     */
-    constructor(provider) {
-        this.#provider = provider;
-        this.#filterIdPromise = null;
-        this.#poller = this.#poll.bind(this);
-        this.#running = false;
-        this.#network = null;
-        this.#hault = false;
-    }
-    /**
-     *  Sub-classes **must** override this to begin the subscription.
-     */
-    _subscribe(provider) {
-        throw new Error("subclasses must override this");
-    }
-    /**
-     *  Sub-classes **must** override this handle the events.
-     */
-    _emitResults(provider, result) {
-        throw new Error("subclasses must override this");
-    }
-    /**
-     *  Sub-classes **must** override this handle recovery on errors.
-     */
-    _recover(provider) {
-        throw new Error("subclasses must override this");
-    }
-    async #poll(blockNumber) {
-        try {
-            // Subscribe if necessary
-            if (this.#filterIdPromise == null) {
-                this.#filterIdPromise = this._subscribe(this.#provider);
-            }
-            // Get the Filter ID
-            let filterId = null;
-            try {
-                filterId = await this.#filterIdPromise;
-            }
-            catch (error) {
-                if (!isError(error, "UNSUPPORTED_OPERATION") || error.operation !== "eth_newFilter") {
-                    throw error;
-                }
-            }
-            // The backend does not support Filter ID; downgrade to
-            // polling
-            if (filterId == null) {
-                this.#filterIdPromise = null;
-                this.#provider._recoverSubscriber(this, this._recover(this.#provider));
-                return;
-            }
-            const network = await this.#provider.getNetwork();
-            if (!this.#network) {
-                this.#network = network;
-            }
-            if (this.#network.chainId !== network.chainId) {
-                throw new Error("chaid changed");
-            }
-            if (this.#hault) {
-                return;
-            }
-            const result = await this.#provider.send("eth_getFilterChanges", [filterId]);
-            await this._emitResults(this.#provider, result);
-        }
-        catch (error) {
-            console.log("@TODO", error);
-        }
-        this.#provider.once("block", this.#poller);
-    }
-    #teardown() {
-        const filterIdPromise = this.#filterIdPromise;
-        if (filterIdPromise) {
-            this.#filterIdPromise = null;
-            filterIdPromise.then((filterId) => {
-                this.#provider.send("eth_uninstallFilter", [filterId]);
-            });
-        }
-    }
-    start() {
-        if (this.#running) {
-            return;
-        }
-        this.#running = true;
-        this.#poll(-2);
-    }
-    stop() {
-        if (!this.#running) {
-            return;
-        }
-        this.#running = false;
-        this.#hault = true;
-        this.#teardown();
-        this.#provider.off("block", this.#poller);
-    }
-    pause(dropWhilePaused) {
-        if (dropWhilePaused) {
-            this.#teardown();
-        }
-        this.#provider.off("block", this.#poller);
-    }
-    resume() { this.start(); }
-}
-/**
- *  A **FilterIdSubscriber** for receiving contract events.
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class FilterIdEventSubscriber extends FilterIdSubscriber {
-    #event;
-    /**
-     *  Creates a new **FilterIdEventSubscriber** attached to %%provider%%
-     *  listening for %%filter%%.
-     */
-    constructor(provider, filter) {
-        super(provider);
-        this.#event = copy(filter);
-    }
-    _recover(provider) {
-        return new PollingEventSubscriber(provider, this.#event);
-    }
-    async _subscribe(provider) {
-        const filterId = await provider.send("eth_newFilter", [this.#event]);
-        return filterId;
-    }
-    async _emitResults(provider, results) {
-        for (const result of results) {
-            provider.emit(this.#event, provider._wrapLog(result, provider._network));
-        }
-    }
-}
-/**
- *  A **FilterIdSubscriber** for receiving pending transactions events.
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class FilterIdPendingSubscriber extends FilterIdSubscriber {
-    async _subscribe(provider) {
-        return await provider.send("eth_newPendingTransactionFilter", []);
-    }
-    async _emitResults(provider, results) {
-        for (const result of results) {
-            provider.emit("pending", result);
-        }
-    }
-}
-
-/**
- *  One of the most common ways to interact with the blockchain is
- *  by a node running a JSON-RPC interface which can be connected to,
- *  based on the transport, using:
- *
- *  - HTTP or HTTPS - [[JsonRpcProvider]]
- *  - WebSocket - [[WebSocketProvider]]
- *  - IPC - [[IpcSocketProvider]]
- *
- * @_section: api/providers/jsonrpc:JSON-RPC Provider  [about-jsonrpcProvider]
- */
-// @TODO:
-// - Add the batching API
-// https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/eth1.0-apis/assembled-spec/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=true&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false
-const Primitive = "bigint,boolean,function,number,string,symbol".split(/,/g);
-//const Methods = "getAddress,then".split(/,/g);
-function deepCopy(value) {
-    if (value == null || Primitive.indexOf(typeof (value)) >= 0) {
-        return value;
-    }
-    // Keep any Addressable
-    if (typeof (value.getAddress) === "function") {
-        return value;
-    }
-    if (Array.isArray(value)) {
-        return (value.map(deepCopy));
-    }
-    if (typeof (value) === "object") {
-        return Object.keys(value).reduce((accum, key) => {
-            accum[key] = value[key];
-            return accum;
-        }, {});
-    }
-    throw new Error(`should not happen: ${value} (${typeof (value)})`);
-}
-function stall$3(duration) {
-    return new Promise((resolve) => { setTimeout(resolve, duration); });
-}
-function getLowerCase(value) {
-    if (value) {
-        return value.toLowerCase();
-    }
-    return value;
-}
-function isPollable(value) {
-    return (value && typeof (value.pollingInterval) === "number");
-}
-const defaultOptions = {
-    polling: false,
-    staticNetwork: null,
-    batchStallTime: 10,
-    batchMaxSize: (1 << 20),
-    batchMaxCount: 100,
-    cacheTimeout: 250,
-    pollingInterval: 4000
-};
-// @TODO: Unchecked Signers
-class JsonRpcSigner extends AbstractSigner {
-    address;
-    constructor(provider, address) {
-        super(provider);
-        address = getAddress(address);
-        defineProperties(this, { address });
-    }
-    connect(provider) {
-        assert(false, "cannot reconnect JsonRpcSigner", "UNSUPPORTED_OPERATION", {
-            operation: "signer.connect"
-        });
-    }
-    async getAddress() {
-        return this.address;
-    }
-    // JSON-RPC will automatially fill in nonce, etc. so we just check from
-    async populateTransaction(tx) {
-        return await this.populateCall(tx);
-    }
-    // Returns just the hash of the transaction after sent, which is what
-    // the bare JSON-RPC API does;
-    async sendUncheckedTransaction(_tx) {
-        const tx = deepCopy(_tx);
-        const promises = [];
-        // Make sure the from matches the sender
-        if (tx.from) {
-            const _from = tx.from;
-            promises.push((async () => {
-                const from = await resolveAddress(_from, this.provider);
-                assertArgument(from != null && from.toLowerCase() === this.address.toLowerCase(), "from address mismatch", "transaction", _tx);
-                tx.from = from;
-            })());
-        }
-        else {
-            tx.from = this.address;
-        }
-        // The JSON-RPC for eth_sendTransaction uses 90000 gas; if the user
-        // wishes to use this, it is easy to specify explicitly, otherwise
-        // we look it up for them.
-        if (tx.gasLimit == null) {
-            promises.push((async () => {
-                tx.gasLimit = await this.provider.estimateGas({ ...tx, from: this.address });
-            })());
-        }
-        // The address may be an ENS name or Addressable
-        if (tx.to != null) {
-            const _to = tx.to;
-            promises.push((async () => {
-                tx.to = await resolveAddress(_to, this.provider);
-            })());
-        }
-        // Wait until all of our properties are filled in
-        if (promises.length) {
-            await Promise.all(promises);
-        }
-        const hexTx = this.provider.getRpcTransaction(tx);
-        return this.provider.send("eth_sendTransaction", [hexTx]);
-    }
-    async sendTransaction(tx) {
-        // This cannot be mined any earlier than any recent block
-        const blockNumber = await this.provider.getBlockNumber();
-        // Send the transaction
-        const hash = await this.sendUncheckedTransaction(tx);
-        // Unfortunately, JSON-RPC only provides and opaque transaction hash
-        // for a response, and we need the actual transaction, so we poll
-        // for it; it should show up very quickly
-        return await (new Promise((resolve, reject) => {
-            const timeouts = [1000, 100];
-            let invalids = 0;
-            const checkTx = async () => {
-                try {
-                    // Try getting the transaction
-                    const tx = await this.provider.getTransaction(hash);
-                    if (tx != null) {
-                        resolve(tx.replaceableTransaction(blockNumber));
-                        return;
-                    }
-                }
-                catch (error) {
-                    // If we were cancelled: stop polling.
-                    // If the data is bad: the node returns bad transactions
-                    // If the network changed: calling again will also fail
-                    // If unsupported: likely destroyed
-                    if (isError(error, "CANCELLED") || isError(error, "BAD_DATA") ||
-                        isError(error, "NETWORK_ERROR" )) {
-                        if (error.info == null) {
-                            error.info = {};
-                        }
-                        error.info.sendTransactionHash = hash;
-                        reject(error);
-                        return;
-                    }
-                    // Stop-gap for misbehaving backends; see #4513
-                    if (isError(error, "INVALID_ARGUMENT")) {
-                        invalids++;
-                        if (error.info == null) {
-                            error.info = {};
-                        }
-                        error.info.sendTransactionHash = hash;
-                        if (invalids > 10) {
-                            reject(error);
-                            return;
-                        }
-                    }
-                    // Notify anyone that cares; but we will try again, since
-                    // it is likely an intermittent service error
-                    this.provider.emit("error", makeError("failed to fetch transation after sending (will try again)", "UNKNOWN_ERROR", { error }));
-                }
-                // Wait another 4 seconds
-                this.provider._setTimeout(() => { checkTx(); }, timeouts.pop() || 4000);
-            };
-            checkTx();
-        }));
-    }
-    async signTransaction(_tx) {
-        const tx = deepCopy(_tx);
-        // Make sure the from matches the sender
-        if (tx.from) {
-            const from = await resolveAddress(tx.from, this.provider);
-            assertArgument(from != null && from.toLowerCase() === this.address.toLowerCase(), "from address mismatch", "transaction", _tx);
-            tx.from = from;
-        }
-        else {
-            tx.from = this.address;
-        }
-        const hexTx = this.provider.getRpcTransaction(tx);
-        return await this.provider.send("eth_signTransaction", [hexTx]);
-    }
-    async signMessage(_message) {
-        const message = ((typeof (_message) === "string") ? toUtf8Bytes(_message) : _message);
-        return await this.provider.send("personal_sign", [
-            hexlify(message), this.address.toLowerCase()
-        ]);
-    }
-    async signTypedData(domain, types, _value) {
-        const value = deepCopy(_value);
-        // Populate any ENS names (in-place)
-        const populated = await TypedDataEncoder.resolveNames(domain, types, value, async (value) => {
-            const address = await resolveAddress(value);
-            assertArgument(address != null, "TypedData does not support null address", "value", value);
-            return address;
-        });
-        return await this.provider.send("eth_signTypedData_v4", [
-            this.address.toLowerCase(),
-            JSON.stringify(TypedDataEncoder.getPayload(populated.domain, types, populated.value))
-        ]);
-    }
-    async unlock(password) {
-        return this.provider.send("personal_unlockAccount", [
-            this.address.toLowerCase(), password, null
-        ]);
-    }
-    // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign
-    async _legacySignMessage(_message) {
-        const message = ((typeof (_message) === "string") ? toUtf8Bytes(_message) : _message);
-        return await this.provider.send("eth_sign", [
-            this.address.toLowerCase(), hexlify(message)
-        ]);
-    }
-}
-/**
- *  The JsonRpcApiProvider is an abstract class and **MUST** be
- *  sub-classed.
- *
- *  It provides the base for all JSON-RPC-based Provider interaction.
- *
- *  Sub-classing Notes:
- *  - a sub-class MUST override _send
- *  - a sub-class MUST call the `_start()` method once connected
- */
-class JsonRpcApiProvider extends AbstractProvider {
-    #options;
-    // The next ID to use for the JSON-RPC ID field
-    #nextId;
-    // Payloads are queued and triggered in batches using the drainTimer
-    #payloads;
-    #drainTimer;
-    #notReady;
-    #network;
-    #pendingDetectNetwork;
-    #scheduleDrain() {
-        if (this.#drainTimer) {
-            return;
-        }
-        // If we aren't using batching, no harm in sending it immediately
-        const stallTime = (this._getOption("batchMaxCount") === 1) ? 0 : this._getOption("batchStallTime");
-        this.#drainTimer = setTimeout(() => {
-            this.#drainTimer = null;
-            const payloads = this.#payloads;
-            this.#payloads = [];
-            while (payloads.length) {
-                // Create payload batches that satisfy our batch constraints
-                const batch = [(payloads.shift())];
-                while (payloads.length) {
-                    if (batch.length === this.#options.batchMaxCount) {
-                        break;
-                    }
-                    batch.push((payloads.shift()));
-                    const bytes = JSON.stringify(batch.map((p) => p.payload));
-                    if (bytes.length > this.#options.batchMaxSize) {
-                        payloads.unshift((batch.pop()));
-                        break;
-                    }
-                }
-                // Process the result to each payload
-                (async () => {
-                    const payload = ((batch.length === 1) ? batch[0].payload : batch.map((p) => p.payload));
-                    this.emit("debug", { action: "sendRpcPayload", payload });
-                    try {
-                        const result = await this._send(payload);
-                        this.emit("debug", { action: "receiveRpcResult", result });
-                        // Process results in batch order
-                        for (const { resolve, reject, payload } of batch) {
-                            if (this.destroyed) {
-                                reject(makeError("provider destroyed; cancelled request", "UNSUPPORTED_OPERATION", { operation: payload.method }));
-                                continue;
-                            }
-                            // Find the matching result
-                            const resp = result.filter((r) => (r.id === payload.id))[0];
-                            // No result; the node failed us in unexpected ways
-                            if (resp == null) {
-                                const error = makeError("missing response for request", "BAD_DATA", {
-                                    value: result, info: { payload }
-                                });
-                                this.emit("error", error);
-                                reject(error);
-                                continue;
-                            }
-                            // The response is an error
-                            if ("error" in resp) {
-                                reject(this.getRpcError(payload, resp));
-                                continue;
-                            }
-                            // All good; send the result
-                            resolve(resp.result);
-                        }
-                    }
-                    catch (error) {
-                        this.emit("debug", { action: "receiveRpcError", error });
-                        for (const { reject } of batch) {
-                            // @TODO: augment the error with the payload
-                            reject(error);
-                        }
-                    }
-                })();
-            }
-        }, stallTime);
-    }
-    constructor(network, options) {
-        super(network, options);
-        this.#nextId = 1;
-        this.#options = Object.assign({}, defaultOptions, options || {});
-        this.#payloads = [];
-        this.#drainTimer = null;
-        this.#network = null;
-        this.#pendingDetectNetwork = null;
-        {
-            let resolve = null;
-            const promise = new Promise((_resolve) => {
-                resolve = _resolve;
-            });
-            this.#notReady = { promise, resolve };
-        }
-        const staticNetwork = this._getOption("staticNetwork");
-        if (typeof (staticNetwork) === "boolean") {
-            assertArgument(!staticNetwork || network !== "any", "staticNetwork cannot be used on special network 'any'", "options", options);
-            if (staticNetwork && network != null) {
-                this.#network = Network.from(network);
-            }
-        }
-        else if (staticNetwork) {
-            // Make sure any static network is compatbile with the provided netwrok
-            assertArgument(network == null || staticNetwork.matches(network), "staticNetwork MUST match network object", "options", options);
-            this.#network = staticNetwork;
-        }
-    }
-    /**
-     *  Returns the value associated with the option %%key%%.
-     *
-     *  Sub-classes can use this to inquire about configuration options.
-     */
-    _getOption(key) {
-        return this.#options[key];
-    }
-    /**
-     *  Gets the [[Network]] this provider has committed to. On each call, the network
-     *  is detected, and if it has changed, the call will reject.
-     */
-    get _network() {
-        assert(this.#network, "network is not available yet", "NETWORK_ERROR");
-        return this.#network;
-    }
-    /**
-     *  Resolves to the non-normalized value by performing %%req%%.
-     *
-     *  Sub-classes may override this to modify behavior of actions,
-     *  and should generally call ``super._perform`` as a fallback.
-     */
-    async _perform(req) {
-        // Legacy networks do not like the type field being passed along (which
-        // is fair), so we delete type if it is 0 and a non-EIP-1559 network
-        if (req.method === "call" || req.method === "estimateGas") {
-            let tx = req.transaction;
-            if (tx && tx.type != null && getBigInt(tx.type)) {
-                // If there are no EIP-1559 properties, it might be non-EIP-a559
-                if (tx.maxFeePerGas == null && tx.maxPriorityFeePerGas == null) {
-                    const feeData = await this.getFeeData();
-                    if (feeData.maxFeePerGas == null && feeData.maxPriorityFeePerGas == null) {
-                        // Network doesn't know about EIP-1559 (and hence type)
-                        req = Object.assign({}, req, {
-                            transaction: Object.assign({}, tx, { type: undefined })
-                        });
-                    }
-                }
-            }
-        }
-        const request = this.getRpcRequest(req);
-        if (request != null) {
-            return await this.send(request.method, request.args);
-        }
-        return super._perform(req);
-    }
-    /**
-     *  Sub-classes may override this; it detects the *actual* network that
-     *  we are **currently** connected to.
-     *
-     *  Keep in mind that [[send]] may only be used once [[ready]], otherwise the
-     *  _send primitive must be used instead.
-     */
-    async _detectNetwork() {
-        const network = this._getOption("staticNetwork");
-        if (network) {
-            if (network === true) {
-                if (this.#network) {
-                    return this.#network;
-                }
-            }
-            else {
-                return network;
-            }
-        }
-        if (this.#pendingDetectNetwork) {
-            return await this.#pendingDetectNetwork;
-        }
-        // If we are ready, use ``send``, which enabled requests to be batched
-        if (this.ready) {
-            this.#pendingDetectNetwork = (async () => {
-                try {
-                    const result = Network.from(getBigInt(await this.send("eth_chainId", [])));
-                    this.#pendingDetectNetwork = null;
-                    return result;
-                }
-                catch (error) {
-                    this.#pendingDetectNetwork = null;
-                    throw error;
-                }
-            })();
-            return await this.#pendingDetectNetwork;
-        }
-        // We are not ready yet; use the primitive _send
-        this.#pendingDetectNetwork = (async () => {
-            const payload = {
-                id: this.#nextId++, method: "eth_chainId", params: [], jsonrpc: "2.0"
-            };
-            this.emit("debug", { action: "sendRpcPayload", payload });
-            let result;
-            try {
-                result = (await this._send(payload))[0];
-                this.#pendingDetectNetwork = null;
-            }
-            catch (error) {
-                this.#pendingDetectNetwork = null;
-                this.emit("debug", { action: "receiveRpcError", error });
-                throw error;
-            }
-            this.emit("debug", { action: "receiveRpcResult", result });
-            if ("result" in result) {
-                return Network.from(getBigInt(result.result));
-            }
-            throw this.getRpcError(payload, result);
-        })();
-        return await this.#pendingDetectNetwork;
-    }
-    /**
-     *  Sub-classes **MUST** call this. Until [[_start]] has been called, no calls
-     *  will be passed to [[_send]] from [[send]]. If it is overridden, then
-     *  ``super._start()`` **MUST** be called.
-     *
-     *  Calling it multiple times is safe and has no effect.
-     */
-    _start() {
-        if (this.#notReady == null || this.#notReady.resolve == null) {
-            return;
-        }
-        this.#notReady.resolve();
-        this.#notReady = null;
-        (async () => {
-            // Bootstrap the network
-            while (this.#network == null && !this.destroyed) {
-                try {
-                    this.#network = await this._detectNetwork();
-                }
-                catch (error) {
-                    if (this.destroyed) {
-                        break;
-                    }
-                    console.log("JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)");
-                    this.emit("error", makeError("failed to bootstrap network detection", "NETWORK_ERROR", { event: "initial-network-discovery", info: { error } }));
-                    await stall$3(1000);
-                }
-            }
-            // Start dispatching requests
-            this.#scheduleDrain();
-        })();
-    }
-    /**
-     *  Resolves once the [[_start]] has been called. This can be used in
-     *  sub-classes to defer sending data until the connection has been
-     *  established.
-     */
-    async _waitUntilReady() {
-        if (this.#notReady == null) {
-            return;
-        }
-        return await this.#notReady.promise;
-    }
-    /**
-     *  Return a Subscriber that will manage the %%sub%%.
-     *
-     *  Sub-classes may override this to modify the behavior of
-     *  subscription management.
-     */
-    _getSubscriber(sub) {
-        // Pending Filters aren't availble via polling
-        if (sub.type === "pending") {
-            return new FilterIdPendingSubscriber(this);
-        }
-        if (sub.type === "event") {
-            if (this._getOption("polling")) {
-                return new PollingEventSubscriber(this, sub.filter);
-            }
-            return new FilterIdEventSubscriber(this, sub.filter);
-        }
-        // Orphaned Logs are handled automatically, by the filter, since
-        // logs with removed are emitted by it
-        if (sub.type === "orphan" && sub.filter.orphan === "drop-log") {
-            return new UnmanagedSubscriber("orphan");
-        }
-        return super._getSubscriber(sub);
-    }
-    /**
-     *  Returns true only if the [[_start]] has been called.
-     */
-    get ready() { return this.#notReady == null; }
-    /**
-     *  Returns %%tx%% as a normalized JSON-RPC transaction request,
-     *  which has all values hexlified and any numeric values converted
-     *  to Quantity values.
-     */
-    getRpcTransaction(tx) {
-        const result = {};
-        // JSON-RPC now requires numeric values to be "quantity" values
-        ["chainId", "gasLimit", "gasPrice", "type", "maxFeePerGas", "maxPriorityFeePerGas", "nonce", "value"].forEach((key) => {
-            if (tx[key] == null) {
-                return;
-            }
-            let dstKey = key;
-            if (key === "gasLimit") {
-                dstKey = "gas";
-            }
-            result[dstKey] = toQuantity(getBigInt(tx[key], `tx.${key}`));
-        });
-        // Make sure addresses and data are lowercase
-        ["from", "to", "data"].forEach((key) => {
-            if (tx[key] == null) {
-                return;
-            }
-            result[key] = hexlify(tx[key]);
-        });
-        // Normalize the access list object
-        if (tx.accessList) {
-            result["accessList"] = accessListify(tx.accessList);
-        }
-        return result;
-    }
-    /**
-     *  Returns the request method and arguments required to perform
-     *  %%req%%.
-     */
-    getRpcRequest(req) {
-        switch (req.method) {
-            case "chainId":
-                return { method: "eth_chainId", args: [] };
-            case "getBlockNumber":
-                return { method: "eth_blockNumber", args: [] };
-            case "getGasPrice":
-                return { method: "eth_gasPrice", args: [] };
-            case "getPriorityFee":
-                return { method: "eth_maxPriorityFeePerGas", args: [] };
-            case "getBalance":
-                return {
-                    method: "eth_getBalance",
-                    args: [getLowerCase(req.address), req.blockTag]
-                };
-            case "getTransactionCount":
-                return {
-                    method: "eth_getTransactionCount",
-                    args: [getLowerCase(req.address), req.blockTag]
-                };
-            case "getCode":
-                return {
-                    method: "eth_getCode",
-                    args: [getLowerCase(req.address), req.blockTag]
-                };
-            case "getStorage":
-                return {
-                    method: "eth_getStorageAt",
-                    args: [
-                        getLowerCase(req.address),
-                        ("0x" + req.position.toString(16)),
-                        req.blockTag
-                    ]
-                };
-            case "broadcastTransaction":
-                return {
-                    method: "eth_sendRawTransaction",
-                    args: [req.signedTransaction]
-                };
-            case "getBlock":
-                if ("blockTag" in req) {
-                    return {
-                        method: "eth_getBlockByNumber",
-                        args: [req.blockTag, !!req.includeTransactions]
-                    };
-                }
-                else if ("blockHash" in req) {
-                    return {
-                        method: "eth_getBlockByHash",
-                        args: [req.blockHash, !!req.includeTransactions]
-                    };
-                }
-                break;
-            case "getTransaction":
-                return {
-                    method: "eth_getTransactionByHash",
-                    args: [req.hash]
-                };
-            case "getTransactionReceipt":
-                return {
-                    method: "eth_getTransactionReceipt",
-                    args: [req.hash]
-                };
-            case "call":
-                return {
-                    method: "eth_call",
-                    args: [this.getRpcTransaction(req.transaction), req.blockTag]
-                };
-            case "estimateGas": {
-                return {
-                    method: "eth_estimateGas",
-                    args: [this.getRpcTransaction(req.transaction)]
-                };
-            }
-            case "getLogs":
-                if (req.filter && req.filter.address != null) {
-                    if (Array.isArray(req.filter.address)) {
-                        req.filter.address = req.filter.address.map(getLowerCase);
-                    }
-                    else {
-                        req.filter.address = getLowerCase(req.filter.address);
-                    }
-                }
-                return { method: "eth_getLogs", args: [req.filter] };
-        }
-        return null;
-    }
-    /**
-     *  Returns an ethers-style Error for the given JSON-RPC error
-     *  %%payload%%, coalescing the various strings and error shapes
-     *  that different nodes return, coercing them into a machine-readable
-     *  standardized error.
-     */
-    getRpcError(payload, _error) {
-        const { method } = payload;
-        const { error } = _error;
-        if (method === "eth_estimateGas" && error.message) {
-            const msg = error.message;
-            if (!msg.match(/revert/i) && msg.match(/insufficient funds/i)) {
-                return makeError("insufficient funds", "INSUFFICIENT_FUNDS", {
-                    transaction: (payload.params[0]),
-                    info: { payload, error }
-                });
-            }
-        }
-        if (method === "eth_call" || method === "eth_estimateGas") {
-            const result = spelunkData(error);
-            const e = AbiCoder.getBuiltinCallException((method === "eth_call") ? "call" : "estimateGas", (payload.params[0]), (result ? result.data : null));
-            e.info = { error, payload };
-            return e;
-        }
-        // Only estimateGas and call can return arbitrary contract-defined text, so now we
-        // we can process text safely.
-        const message = JSON.stringify(spelunkMessage(error));
-        if (typeof (error.message) === "string" && error.message.match(/user denied|ethers-user-denied/i)) {
-            const actionMap = {
-                eth_sign: "signMessage",
-                personal_sign: "signMessage",
-                eth_signTypedData_v4: "signTypedData",
-                eth_signTransaction: "signTransaction",
-                eth_sendTransaction: "sendTransaction",
-                eth_requestAccounts: "requestAccess",
-                wallet_requestAccounts: "requestAccess",
-            };
-            return makeError(`user rejected action`, "ACTION_REJECTED", {
-                action: (actionMap[method] || "unknown"),
-                reason: "rejected",
-                info: { payload, error }
-            });
-        }
-        if (method === "eth_sendRawTransaction" || method === "eth_sendTransaction") {
-            const transaction = (payload.params[0]);
-            if (message.match(/insufficient funds|base fee exceeds gas limit/i)) {
-                return makeError("insufficient funds for intrinsic transaction cost", "INSUFFICIENT_FUNDS", {
-                    transaction, info: { error }
-                });
-            }
-            if (message.match(/nonce/i) && message.match(/too low/i)) {
-                return makeError("nonce has already been used", "NONCE_EXPIRED", { transaction, info: { error } });
-            }
-            // "replacement transaction underpriced"
-            if (message.match(/replacement transaction/i) && message.match(/underpriced/i)) {
-                return makeError("replacement fee too low", "REPLACEMENT_UNDERPRICED", { transaction, info: { error } });
-            }
-            if (message.match(/only replay-protected/i)) {
-                return makeError("legacy pre-eip-155 transactions not supported", "UNSUPPORTED_OPERATION", {
-                    operation: method, info: { transaction, info: { error } }
-                });
-            }
-        }
-        let unsupported = !!message.match(/the method .* does not exist/i);
-        if (!unsupported) {
-            if (error && error.details && error.details.startsWith("Unauthorized method:")) {
-                unsupported = true;
-            }
-        }
-        if (unsupported) {
-            return makeError("unsupported operation", "UNSUPPORTED_OPERATION", {
-                operation: payload.method, info: { error, payload }
-            });
-        }
-        return makeError("could not coalesce error", "UNKNOWN_ERROR", { error, payload });
-    }
-    /**
-     *  Requests the %%method%% with %%params%% via the JSON-RPC protocol
-     *  over the underlying channel. This can be used to call methods
-     *  on the backend that do not have a high-level API within the Provider
-     *  API.
-     *
-     *  This method queues requests according to the batch constraints
-     *  in the options, assigns the request a unique ID.
-     *
-     *  **Do NOT override** this method in sub-classes; instead
-     *  override [[_send]] or force the options values in the
-     *  call to the constructor to modify this method's behavior.
-     */
-    send(method, params) {
-        // @TODO: cache chainId?? purge on switch_networks
-        // We have been destroyed; no operations are supported anymore
-        if (this.destroyed) {
-            return Promise.reject(makeError("provider destroyed; cancelled request", "UNSUPPORTED_OPERATION", { operation: method }));
-        }
-        const id = this.#nextId++;
-        const promise = new Promise((resolve, reject) => {
-            this.#payloads.push({
-                resolve, reject,
-                payload: { method, params, id, jsonrpc: "2.0" }
-            });
-        });
-        // If there is not a pending drainTimer, set one
-        this.#scheduleDrain();
-        return promise;
-    }
-    /**
-     *  Resolves to the [[Signer]] account for  %%address%% managed by
-     *  the client.
-     *
-     *  If the %%address%% is a number, it is used as an index in the
-     *  the accounts from [[listAccounts]].
-     *
-     *  This can only be used on clients which manage accounts (such as
-     *  Geth with imported account or MetaMask).
-     *
-     *  Throws if the account doesn't exist.
-     */
-    async getSigner(address) {
-        if (address == null) {
-            address = 0;
-        }
-        const accountsPromise = this.send("eth_accounts", []);
-        // Account index
-        if (typeof (address) === "number") {
-            const accounts = (await accountsPromise);
-            if (address >= accounts.length) {
-                throw new Error("no such account");
-            }
-            return new JsonRpcSigner(this, accounts[address]);
-        }
-        const { accounts } = await resolveProperties({
-            network: this.getNetwork(),
-            accounts: accountsPromise
-        });
-        // Account address
-        address = getAddress(address);
-        for (const account of accounts) {
-            if (getAddress(account) === address) {
-                return new JsonRpcSigner(this, address);
-            }
-        }
-        throw new Error("invalid account");
-    }
-    async listAccounts() {
-        const accounts = await this.send("eth_accounts", []);
-        return accounts.map((a) => new JsonRpcSigner(this, a));
-    }
-    destroy() {
-        // Stop processing requests
-        if (this.#drainTimer) {
-            clearTimeout(this.#drainTimer);
-            this.#drainTimer = null;
-        }
-        // Cancel all pending requests
-        for (const { payload, reject } of this.#payloads) {
-            reject(makeError("provider destroyed; cancelled request", "UNSUPPORTED_OPERATION", { operation: payload.method }));
-        }
-        this.#payloads = [];
-        // Parent clean-up
-        super.destroy();
-    }
-}
-// @TODO: remove this in v7, it is not exported because this functionality
-// is exposed in the JsonRpcApiProvider by setting polling to true. It should
-// be safe to remove regardless, because it isn't reachable, but just in case.
-/**
- *  @_ignore:
- */
-class JsonRpcApiPollingProvider extends JsonRpcApiProvider {
-    #pollingInterval;
-    constructor(network, options) {
-        super(network, options);
-        this.#pollingInterval = 4000;
-    }
-    _getSubscriber(sub) {
-        const subscriber = super._getSubscriber(sub);
-        if (isPollable(subscriber)) {
-            subscriber.pollingInterval = this.#pollingInterval;
-        }
-        return subscriber;
-    }
-    /**
-     *  The polling interval (default: 4000 ms)
-     */
-    get pollingInterval() { return this.#pollingInterval; }
-    set pollingInterval(value) {
-        if (!Number.isInteger(value) || value < 0) {
-            throw new Error("invalid interval");
-        }
-        this.#pollingInterval = value;
-        this._forEachSubscriber((sub) => {
-            if (isPollable(sub)) {
-                sub.pollingInterval = this.#pollingInterval;
-            }
-        });
-    }
-}
-/**
- *  The JsonRpcProvider is one of the most common Providers,
- *  which performs all operations over HTTP (or HTTPS) requests.
- *
- *  Events are processed by polling the backend for the current block
- *  number; when it advances, all block-base events are then checked
- *  for updates.
- */
-class JsonRpcProvider extends JsonRpcApiPollingProvider {
-    #connect;
-    constructor(url, network, options) {
-        if (url == null) {
-            url = "http:/\/localhost:8545";
-        }
-        super(network, options);
-        if (typeof (url) === "string") {
-            this.#connect = new FetchRequest(url);
-        }
-        else {
-            this.#connect = url.clone();
-        }
-    }
-    _getConnection() {
-        return this.#connect.clone();
-    }
-    async send(method, params) {
-        // All requests are over HTTP, so we can just start handling requests
-        // We do this here rather than the constructor so that we don't send any
-        // requests to the network (i.e. eth_chainId) until we absolutely have to.
-        await this._start();
-        return await super.send(method, params);
-    }
-    async _send(payload) {
-        // Configure a POST connection for the requested method
-        const request = this._getConnection();
-        request.body = JSON.stringify(payload);
-        request.setHeader("content-type", "application/json");
-        const response = await request.send();
-        response.assertOk();
-        let resp = response.bodyJson;
-        if (!Array.isArray(resp)) {
-            resp = [resp];
-        }
-        return resp;
-    }
-}
-function spelunkData(value) {
-    if (value == null) {
-        return null;
-    }
-    // These *are* the droids we're looking for.
-    if (typeof (value.message) === "string" && value.message.match(/revert/i) && isHexString(value.data)) {
-        return { message: value.message, data: value.data };
-    }
-    // Spelunk further...
-    if (typeof (value) === "object") {
-        for (const key in value) {
-            const result = spelunkData(value[key]);
-            if (result) {
-                return result;
-            }
-        }
-        return null;
-    }
-    // Might be a JSON string we can further descend...
-    if (typeof (value) === "string") {
-        try {
-            return spelunkData(JSON.parse(value));
-        }
-        catch (error) { }
-    }
-    return null;
-}
-function _spelunkMessage(value, result) {
-    if (value == null) {
-        return;
-    }
-    // These *are* the droids we're looking for.
-    if (typeof (value.message) === "string") {
-        result.push(value.message);
-    }
-    // Spelunk further...
-    if (typeof (value) === "object") {
-        for (const key in value) {
-            _spelunkMessage(value[key], result);
-        }
-    }
-    // Might be a JSON string we can further descend...
-    if (typeof (value) === "string") {
-        try {
-            return _spelunkMessage(JSON.parse(value), result);
-        }
-        catch (error) { }
-    }
-}
-function spelunkMessage(value) {
-    const result = [];
-    _spelunkMessage(value, result);
-    return result;
-}
-
-/**
- *  [[link-ankr]] provides a third-party service for connecting to
- *  various blockchains over JSON-RPC.
- *
- *  **Supported Networks**
- *
- *  - Ethereum Mainnet (``mainnet``)
- *  - Goerli Testnet (``goerli``)
- *  - Polygon (``matic``)
- *  - Arbitrum (``arbitrum``)
- *
- *  @_subsection: api/providers/thirdparty:Ankr  [providers-ankr]
- */
-const defaultApiKey$1 = "9f7d929b018cdffb338517efa06f58359e86ff1ffd350bc889738523659e7972";
-function getHost$4(name) {
-    switch (name) {
-        case "mainnet":
-            return "rpc.ankr.com/eth";
-        case "goerli":
-            return "rpc.ankr.com/eth_goerli";
-        case "matic":
-            return "rpc.ankr.com/polygon";
-        case "arbitrum":
-            return "rpc.ankr.com/arbitrum";
-    }
-    assertArgument(false, "unsupported network", "network", name);
-}
-/**
- *  The **AnkrProvider** connects to the [[link-ankr]]
- *  JSON-RPC end-points.
- *
- *  By default, a highly-throttled API key is used, which is
- *  appropriate for quick prototypes and simple scripts. To
- *  gain access to an increased rate-limit, it is highly
- *  recommended to [sign up here](link-ankr-signup).
- */
-class AnkrProvider extends JsonRpcProvider {
-    /**
-     *  The API key for the Ankr connection.
-     */
-    apiKey;
-    /**
-     *  Create a new **AnkrProvider**.
-     *
-     *  By default connecting to ``mainnet`` with a highly throttled
-     *  API key.
-     */
-    constructor(_network, apiKey) {
-        if (_network == null) {
-            _network = "mainnet";
-        }
-        const network = Network.from(_network);
-        if (apiKey == null) {
-            apiKey = defaultApiKey$1;
-        }
-        // Ankr does not support filterId, so we force polling
-        const options = { polling: true, staticNetwork: network };
-        const request = AnkrProvider.getRequest(network, apiKey);
-        super(request, network, options);
-        defineProperties(this, { apiKey });
-    }
-    _getProvider(chainId) {
-        try {
-            return new AnkrProvider(chainId, this.apiKey);
-        }
-        catch (error) { }
-        return super._getProvider(chainId);
-    }
-    /**
-     *  Returns a prepared request for connecting to %%network%% with
-     *  %%apiKey%%.
-     */
-    static getRequest(network, apiKey) {
-        if (apiKey == null) {
-            apiKey = defaultApiKey$1;
-        }
-        const request = new FetchRequest(`https:/\/${getHost$4(network.name)}/${apiKey}`);
-        request.allowGzip = true;
-        if (apiKey === defaultApiKey$1) {
-            request.retryFunc = async (request, response, attempt) => {
-                showThrottleMessage("AnkrProvider");
-                return true;
-            };
-        }
-        return request;
-    }
-    getRpcError(payload, error) {
-        if (payload.method === "eth_sendRawTransaction") {
-            if (error && error.error && error.error.message === "INTERNAL_ERROR: could not replace existing tx") {
-                error.error.message = "replacement transaction underpriced";
-            }
-        }
-        return super.getRpcError(payload, error);
-    }
-    isCommunityResource() {
-        return (this.apiKey === defaultApiKey$1);
-    }
-}
-
-/**
- *  About Alchemy
- *
- *  @_subsection: api/providers/thirdparty:Alchemy  [providers-alchemy]
- */
-const defaultApiKey = "_gg7wSSi0KMBsdKnGVfHDueq6xMB9EkC";
-function getHost$3(name) {
-    switch (name) {
-        case "mainnet":
-            return "eth-mainnet.alchemyapi.io";
-        case "goerli":
-            return "eth-goerli.g.alchemy.com";
-        case "sepolia":
-            return "eth-sepolia.g.alchemy.com";
-        case "arbitrum":
-            return "arb-mainnet.g.alchemy.com";
-        case "arbitrum-goerli":
-            return "arb-goerli.g.alchemy.com";
-        case "base":
-            return "base-mainnet.g.alchemy.com";
-        case "base-goerli":
-            return "base-goerli.g.alchemy.com";
-        case "matic":
-            return "polygon-mainnet.g.alchemy.com";
-        case "matic-mumbai":
-            return "polygon-mumbai.g.alchemy.com";
-        case "optimism":
-            return "opt-mainnet.g.alchemy.com";
-        case "optimism-goerli":
-            return "opt-goerli.g.alchemy.com";
-    }
-    assertArgument(false, "unsupported network", "network", name);
-}
-/**
- *  The **AlchemyProvider** connects to the [[link-alchemy]]
- *  JSON-RPC end-points.
- *
- *  By default, a highly-throttled API key is used, which is
- *  appropriate for quick prototypes and simple scripts. To
- *  gain access to an increased rate-limit, it is highly
- *  recommended to [sign up here](link-alchemy-signup).
- *
- *  @_docloc: api/providers/thirdparty
- */
-class AlchemyProvider extends JsonRpcProvider {
-    apiKey;
-    constructor(_network, apiKey) {
-        if (_network == null) {
-            _network = "mainnet";
-        }
-        const network = Network.from(_network);
-        if (apiKey == null) {
-            apiKey = defaultApiKey;
-        }
-        const request = AlchemyProvider.getRequest(network, apiKey);
-        super(request, network, { staticNetwork: network });
-        defineProperties(this, { apiKey });
-    }
-    _getProvider(chainId) {
-        try {
-            return new AlchemyProvider(chainId, this.apiKey);
-        }
-        catch (error) { }
-        return super._getProvider(chainId);
-    }
-    async _perform(req) {
-        // https://docs.alchemy.com/reference/trace-transaction
-        if (req.method === "getTransactionResult") {
-            const { trace, tx } = await resolveProperties({
-                trace: this.send("trace_transaction", [req.hash]),
-                tx: this.getTransaction(req.hash)
-            });
-            if (trace == null || tx == null) {
-                return null;
-            }
-            let data;
-            let error = false;
-            try {
-                data = trace[0].result.output;
-                error = (trace[0].error === "Reverted");
-            }
-            catch (error) { }
-            if (data) {
-                assert(!error, "an error occurred during transaction executions", "CALL_EXCEPTION", {
-                    action: "getTransactionResult",
-                    data,
-                    reason: null,
-                    transaction: tx,
-                    invocation: null,
-                    revert: null // @TODO
-                });
-                return data;
-            }
-            assert(false, "could not parse trace result", "BAD_DATA", { value: trace });
-        }
-        return await super._perform(req);
-    }
-    isCommunityResource() {
-        return (this.apiKey === defaultApiKey);
-    }
-    static getRequest(network, apiKey) {
-        if (apiKey == null) {
-            apiKey = defaultApiKey;
-        }
-        const request = new FetchRequest(`https:/\/${getHost$3(network.name)}/v2/${apiKey}`);
-        request.allowGzip = true;
-        if (apiKey === defaultApiKey) {
-            request.retryFunc = async (request, response, attempt) => {
-                showThrottleMessage("alchemy");
-                return true;
-            };
-        }
-        return request;
-    }
-}
-
-/**
- *  About Cloudflare
- *
- *  @_subsection: api/providers/thirdparty:Cloudflare  [providers-cloudflare]
- */
-/**
- *  About Cloudflare...
- */
-class CloudflareProvider extends JsonRpcProvider {
-    constructor(_network) {
-        if (_network == null) {
-            _network = "mainnet";
-        }
-        const network = Network.from(_network);
-        assertArgument(network.name === "mainnet", "unsupported network", "network", _network);
-        super("https:/\/cloudflare-eth.com/", network, { staticNetwork: network });
-    }
-}
-
-/**
- *  [[link-etherscan]] provides a third-party service for connecting to
- *  various blockchains over a combination of JSON-RPC and custom API
- *  endpoints.
- *
- *  **Supported Networks**
- *
- *  - Ethereum Mainnet (``mainnet``)
- *  - Goerli Testnet (``goerli``)
- *  - Sepolia Testnet (``sepolia``)
- *  - Arbitrum (``arbitrum``)
- *  - Arbitrum Goerli Testnet (``arbitrum-goerli``)
- *  - Optimism (``optimism``)
- *  - Optimism Goerli Testnet (``optimism-goerli``)
- *  - Polygon (``matic``)
- *  - Polygon Mumbai Testnet (``matic-mumbai``)
- *
- *  @_subsection api/providers/thirdparty:Etherscan  [providers-etherscan]
- */
-const THROTTLE = 2000;
-function isPromise(value) {
-    return (value && typeof (value.then) === "function");
-}
-const EtherscanPluginId = "org.ethers.plugins.provider.Etherscan";
-/**
- *  A Network can include an **EtherscanPlugin** to provide
- *  a custom base URL.
- *
- *  @_docloc: api/providers/thirdparty:Etherscan
- */
-class EtherscanPlugin extends NetworkPlugin {
-    /**
-     *  The Etherscan API base URL.
-     */
-    baseUrl;
-    /**
-     *  Creates a new **EtherscanProvider** which will use
-     *  %%baseUrl%%.
-     */
-    constructor(baseUrl) {
-        super(EtherscanPluginId);
-        defineProperties(this, { baseUrl });
-    }
-    clone() {
-        return new EtherscanPlugin(this.baseUrl);
-    }
-}
-const skipKeys = ["enableCcipRead"];
-let nextId = 1;
-/**
- *  The **EtherscanBaseProvider** is the super-class of
- *  [[EtherscanProvider]], which should generally be used instead.
- *
- *  Since the **EtherscanProvider** includes additional code for
- *  [[Contract]] access, in //rare cases// that contracts are not
- *  used, this class can reduce code size.
- *
- *  @_docloc: api/providers/thirdparty:Etherscan
- */
-class EtherscanProvider extends AbstractProvider {
-    /**
-     *  The connected network.
-     */
-    network;
-    /**
-     *  The API key or null if using the community provided bandwidth.
-     */
-    apiKey;
-    #plugin;
-    /**
-     *  Creates a new **EtherscanBaseProvider**.
-     */
-    constructor(_network, _apiKey) {
-        const apiKey = (_apiKey != null) ? _apiKey : null;
-        super();
-        const network = Network.from(_network);
-        this.#plugin = network.getPlugin(EtherscanPluginId);
-        defineProperties(this, { apiKey, network });
-        // Test that the network is supported by Etherscan
-        this.getBaseUrl();
-    }
-    /**
-     *  Returns the base URL.
-     *
-     *  If an [[EtherscanPlugin]] is configured on the
-     *  [[EtherscanBaseProvider_network]], returns the plugin's
-     *  baseUrl.
-     */
-    getBaseUrl() {
-        if (this.#plugin) {
-            return this.#plugin.baseUrl;
-        }
-        switch (this.network.name) {
-            case "mainnet":
-                return "https:/\/api.etherscan.io";
-            case "goerli":
-                return "https:/\/api-goerli.etherscan.io";
-            case "sepolia":
-                return "https:/\/api-sepolia.etherscan.io";
-            case "arbitrum":
-                return "https:/\/api.arbiscan.io";
-            case "arbitrum-goerli":
-                return "https:/\/api-goerli.arbiscan.io";
-            case "matic":
-                return "https:/\/api.polygonscan.com";
-            case "matic-mumbai":
-                return "https:/\/api-testnet.polygonscan.com";
-            case "optimism":
-                return "https:/\/api-optimistic.etherscan.io";
-            case "optimism-goerli":
-                return "https:/\/api-goerli-optimistic.etherscan.io";
-            case "bnb":
-                return "http:/\/api.bscscan.com";
-            case "bnbt":
-                return "http:/\/api-testnet.bscscan.com";
-        }
-        assertArgument(false, "unsupported network", "network", this.network);
-    }
-    /**
-     *  Returns the URL for the %%module%% and %%params%%.
-     */
-    getUrl(module, params) {
-        const query = Object.keys(params).reduce((accum, key) => {
-            const value = params[key];
-            if (value != null) {
-                accum += `&${key}=${value}`;
-            }
-            return accum;
-        }, "");
-        const apiKey = ((this.apiKey) ? `&apikey=${this.apiKey}` : "");
-        return `${this.getBaseUrl()}/api?module=${module}${query}${apiKey}`;
-    }
-    /**
-     *  Returns the URL for using POST requests.
-     */
-    getPostUrl() {
-        return `${this.getBaseUrl()}/api`;
-    }
-    /**
-     *  Returns the parameters for using POST requests.
-     */
-    getPostData(module, params) {
-        params.module = module;
-        params.apikey = this.apiKey;
-        return params;
-    }
-    async detectNetwork() {
-        return this.network;
-    }
-    /**
-     *  Resolves to the result of calling %%module%% with %%params%%.
-     *
-     *  If %%post%%, the request is made as a POST request.
-     */
-    async fetch(module, params, post) {
-        const id = nextId++;
-        const url = (post ? this.getPostUrl() : this.getUrl(module, params));
-        const payload = (post ? this.getPostData(module, params) : null);
-        this.emit("debug", { action: "sendRequest", id, url, payload: payload });
-        const request = new FetchRequest(url);
-        request.setThrottleParams({ slotInterval: 1000 });
-        request.retryFunc = (req, resp, attempt) => {
-            if (this.isCommunityResource()) {
-                showThrottleMessage("Etherscan");
-            }
-            return Promise.resolve(true);
-        };
-        request.processFunc = async (request, response) => {
-            const result = response.hasBody() ? JSON.parse(toUtf8String(response.body)) : {};
-            const throttle = ((typeof (result.result) === "string") ? result.result : "").toLowerCase().indexOf("rate limit") >= 0;
-            if (module === "proxy") {
-                // This JSON response indicates we are being throttled
-                if (result && result.status == 0 && result.message == "NOTOK" && throttle) {
-                    this.emit("debug", { action: "receiveError", id, reason: "proxy-NOTOK", error: result });
-                    response.throwThrottleError(result.result, THROTTLE);
-                }
-            }
-            else {
-                if (throttle) {
-                    this.emit("debug", { action: "receiveError", id, reason: "null result", error: result.result });
-                    response.throwThrottleError(result.result, THROTTLE);
-                }
-            }
-            return response;
-        };
-        if (payload) {
-            request.setHeader("content-type", "application/x-www-form-urlencoded; charset=UTF-8");
-            request.body = Object.keys(payload).map((k) => `${k}=${payload[k]}`).join("&");
-        }
-        const response = await request.send();
-        try {
-            response.assertOk();
-        }
-        catch (error) {
-            this.emit("debug", { action: "receiveError", id, error, reason: "assertOk" });
-            assert(false, "response error", "SERVER_ERROR", { request, response });
-        }
-        if (!response.hasBody()) {
-            this.emit("debug", { action: "receiveError", id, error: "missing body", reason: "null body" });
-            assert(false, "missing response", "SERVER_ERROR", { request, response });
-        }
-        const result = JSON.parse(toUtf8String(response.body));
-        if (module === "proxy") {
-            if (result.jsonrpc != "2.0") {
-                this.emit("debug", { action: "receiveError", id, result, reason: "invalid JSON-RPC" });
-                assert(false, "invalid JSON-RPC response (missing jsonrpc='2.0')", "SERVER_ERROR", { request, response, info: { result } });
-            }
-            if (result.error) {
-                this.emit("debug", { action: "receiveError", id, result, reason: "JSON-RPC error" });
-                assert(false, "error response", "SERVER_ERROR", { request, response, info: { result } });
-            }
-            this.emit("debug", { action: "receiveRequest", id, result });
-            return result.result;
-        }
-        else {
-            // getLogs, getHistory have weird success responses
-            if (result.status == 0 && (result.message === "No records found" || result.message === "No transactions found")) {
-                this.emit("debug", { action: "receiveRequest", id, result });
-                return result.result;
-            }
-            if (result.status != 1 || (typeof (result.message) === "string" && !result.message.match(/^OK/))) {
-                this.emit("debug", { action: "receiveError", id, result });
-                assert(false, "error response", "SERVER_ERROR", { request, response, info: { result } });
-            }
-            this.emit("debug", { action: "receiveRequest", id, result });
-            return result.result;
-        }
-    }
-    /**
-     *  Returns %%transaction%% normalized for the Etherscan API.
-     */
-    _getTransactionPostData(transaction) {
-        const result = {};
-        for (let key in transaction) {
-            if (skipKeys.indexOf(key) >= 0) {
-                continue;
-            }
-            if (transaction[key] == null) {
-                continue;
-            }
-            let value = transaction[key];
-            if (key === "type" && value === 0) {
-                continue;
-            }
-            if (key === "blockTag" && value === "latest") {
-                continue;
-            }
-            // Quantity-types require no leading zero, unless 0
-            if ({ type: true, gasLimit: true, gasPrice: true, maxFeePerGs: true, maxPriorityFeePerGas: true, nonce: true, value: true }[key]) {
-                value = toQuantity(value);
-            }
-            else if (key === "accessList") {
-                value = "[" + accessListify(value).map((set) => {
-                    return `{address:"${set.address}",storageKeys:["${set.storageKeys.join('","')}"]}`;
-                }).join(",") + "]";
-            }
-            else {
-                value = hexlify(value);
-            }
-            result[key] = value;
-        }
-        return result;
-    }
-    /**
-     *  Throws the normalized Etherscan error.
-     */
-    _checkError(req, error, transaction) {
-        // Pull any message out if, possible
-        let message = "";
-        if (isError(error, "SERVER_ERROR")) {
-            // Check for an error emitted by a proxy call
-            try {
-                message = error.info.result.error.message;
-            }
-            catch (e) { }
-            if (!message) {
-                try {
-                    message = error.info.message;
-                }
-                catch (e) { }
-            }
-        }
-        if (req.method === "estimateGas") {
-            if (!message.match(/revert/i) && message.match(/insufficient funds/i)) {
-                assert(false, "insufficient funds", "INSUFFICIENT_FUNDS", {
-                    transaction: req.transaction
-                });
-            }
-        }
-        if (req.method === "call" || req.method === "estimateGas") {
-            if (message.match(/execution reverted/i)) {
-                let data = "";
-                try {
-                    data = error.info.result.error.data;
-                }
-                catch (error) { }
-                const e = AbiCoder.getBuiltinCallException(req.method, req.transaction, data);
-                e.info = { request: req, error };
-                throw e;
-            }
-        }
-        if (message) {
-            if (req.method === "broadcastTransaction") {
-                const transaction = Transaction.from(req.signedTransaction);
-                if (message.match(/replacement/i) && message.match(/underpriced/i)) {
-                    assert(false, "replacement fee too low", "REPLACEMENT_UNDERPRICED", {
-                        transaction
-                    });
-                }
-                if (message.match(/insufficient funds/)) {
-                    assert(false, "insufficient funds for intrinsic transaction cost", "INSUFFICIENT_FUNDS", {
-                        transaction
-                    });
-                }
-                if (message.match(/same hash was already imported|transaction nonce is too low|nonce too low/)) {
-                    assert(false, "nonce has already been used", "NONCE_EXPIRED", {
-                        transaction
-                    });
-                }
-            }
-        }
-        // Something we could not process
-        throw error;
-    }
-    async _detectNetwork() {
-        return this.network;
-    }
-    async _perform(req) {
-        switch (req.method) {
-            case "chainId":
-                return this.network.chainId;
-            case "getBlockNumber":
-                return this.fetch("proxy", { action: "eth_blockNumber" });
-            case "getGasPrice":
-                return this.fetch("proxy", { action: "eth_gasPrice" });
-            case "getPriorityFee":
-                // This is temporary until Etherscan completes support
-                if (this.network.name === "mainnet") {
-                    return "1000000000";
-                }
-                else if (this.network.name === "optimism") {
-                    return "1000000";
-                }
-                else {
-                    throw new Error("fallback onto the AbstractProvider default");
-                }
-            /* Working with Etherscan to get this added:
-            try {
-                const test = await this.fetch("proxy", {
-                    action: "eth_maxPriorityFeePerGas"
-                });
-                console.log(test);
-                return test;
-            } catch (e) {
-                console.log("DEBUG", e);
-                throw e;
-            }
-            */
-            /* This might be safe; but due to rounding neither myself
-               or Etherscan are necessarily comfortable with this. :)
-            try {
-                const result = await this.fetch("gastracker", { action: "gasoracle" });
-                console.log(result);
-                const gasPrice = parseUnits(result.SafeGasPrice, "gwei");
-                const baseFee = parseUnits(result.suggestBaseFee, "gwei");
-                const priorityFee = gasPrice - baseFee;
-                if (priorityFee < 0) { throw new Error("negative priority fee; defer to abstract provider default"); }
-                return priorityFee;
-            } catch (error) {
-                console.log("DEBUG", error);
-                throw error;
-            }
-            */
-            case "getBalance":
-                // Returns base-10 result
-                return this.fetch("account", {
-                    action: "balance",
-                    address: req.address,
-                    tag: req.blockTag
-                });
-            case "getTransactionCount":
-                return this.fetch("proxy", {
-                    action: "eth_getTransactionCount",
-                    address: req.address,
-                    tag: req.blockTag
-                });
-            case "getCode":
-                return this.fetch("proxy", {
-                    action: "eth_getCode",
-                    address: req.address,
-                    tag: req.blockTag
-                });
-            case "getStorage":
-                return this.fetch("proxy", {
-                    action: "eth_getStorageAt",
-                    address: req.address,
-                    position: req.position,
-                    tag: req.blockTag
-                });
-            case "broadcastTransaction":
-                return this.fetch("proxy", {
-                    action: "eth_sendRawTransaction",
-                    hex: req.signedTransaction
-                }, true).catch((error) => {
-                    return this._checkError(req, error, req.signedTransaction);
-                });
-            case "getBlock":
-                if ("blockTag" in req) {
-                    return this.fetch("proxy", {
-                        action: "eth_getBlockByNumber",
-                        tag: req.blockTag,
-                        boolean: (req.includeTransactions ? "true" : "false")
-                    });
-                }
-                assert(false, "getBlock by blockHash not supported by Etherscan", "UNSUPPORTED_OPERATION", {
-                    operation: "getBlock(blockHash)"
-                });
-            case "getTransaction":
-                return this.fetch("proxy", {
-                    action: "eth_getTransactionByHash",
-                    txhash: req.hash
-                });
-            case "getTransactionReceipt":
-                return this.fetch("proxy", {
-                    action: "eth_getTransactionReceipt",
-                    txhash: req.hash
-                });
-            case "call": {
-                if (req.blockTag !== "latest") {
-                    throw new Error("EtherscanProvider does not support blockTag for call");
-                }
-                const postData = this._getTransactionPostData(req.transaction);
-                postData.module = "proxy";
-                postData.action = "eth_call";
-                try {
-                    return await this.fetch("proxy", postData, true);
-                }
-                catch (error) {
-                    return this._checkError(req, error, req.transaction);
-                }
-            }
-            case "estimateGas": {
-                const postData = this._getTransactionPostData(req.transaction);
-                postData.module = "proxy";
-                postData.action = "eth_estimateGas";
-                try {
-                    return await this.fetch("proxy", postData, true);
-                }
-                catch (error) {
-                    return this._checkError(req, error, req.transaction);
-                }
-            }
-        }
-        return super._perform(req);
-    }
-    async getNetwork() {
-        return this.network;
-    }
-    /**
-     *  Resolves to the current price of ether.
-     *
-     *  This returns ``0`` on any network other than ``mainnet``.
-     */
-    async getEtherPrice() {
-        if (this.network.name !== "mainnet") {
-            return 0.0;
-        }
-        return parseFloat((await this.fetch("stats", { action: "ethprice" })).ethusd);
-    }
-    /**
-     *  Resolves to a [Contract]] for %%address%%, using the
-     *  Etherscan API to retreive the Contract ABI.
-     */
-    async getContract(_address) {
-        let address = this._getAddress(_address);
-        if (isPromise(address)) {
-            address = await address;
-        }
-        try {
-            const resp = await this.fetch("contract", {
-                action: "getabi", address
-            });
-            const abi = JSON.parse(resp);
-            return new Contract(address, abi, this);
-        }
-        catch (error) {
-            return null;
-        }
-    }
-    isCommunityResource() {
-        return (this.apiKey == null);
-    }
-}
-
-function getGlobal() {
-    if (typeof self !== 'undefined') {
-        return self;
-    }
-    if (typeof window !== 'undefined') {
-        return window;
-    }
-    if (typeof global !== 'undefined') {
-        return global;
-    }
-    throw new Error('unable to locate global object');
-}
-const _WebSocket = getGlobal().WebSocket;
-
-/**
- *  Generic long-lived socket provider.
- *
- *  Sub-classing notes
- *  - a sub-class MUST call the `_start()` method once connected
- *  - a sub-class MUST override the `_write(string)` method
- *  - a sub-class MUST call `_processMessage(string)` for each message
- *
- *  @_subsection: api/providers/abstract-provider:Socket Providers  [about-socketProvider]
- */
-/**
- *  A **SocketSubscriber** uses a socket transport to handle events and
- *  should use [[_emit]] to manage the events.
- */
-class SocketSubscriber {
-    #provider;
-    #filter;
-    /**
-     *  The filter.
-     */
-    get filter() { return JSON.parse(this.#filter); }
-    #filterId;
-    #paused;
-    #emitPromise;
-    /**
-     *  Creates a new **SocketSubscriber** attached to %%provider%% listening
-     *  to %%filter%%.
-     */
-    constructor(provider, filter) {
-        this.#provider = provider;
-        this.#filter = JSON.stringify(filter);
-        this.#filterId = null;
-        this.#paused = null;
-        this.#emitPromise = null;
-    }
-    start() {
-        this.#filterId = this.#provider.send("eth_subscribe", this.filter).then((filterId) => {
-            this.#provider._register(filterId, this);
-            return filterId;
-        });
-    }
-    stop() {
-        (this.#filterId).then((filterId) => {
-            this.#provider.send("eth_unsubscribe", [filterId]);
-        });
-        this.#filterId = null;
-    }
-    // @TODO: pause should trap the current blockNumber, unsub, and on resume use getLogs
-    //        and resume
-    pause(dropWhilePaused) {
-        assert(dropWhilePaused, "preserve logs while paused not supported by SocketSubscriber yet", "UNSUPPORTED_OPERATION", { operation: "pause(false)" });
-        this.#paused = !!dropWhilePaused;
-    }
-    resume() {
-        this.#paused = null;
-    }
-    /**
-     *  @_ignore:
-     */
-    _handleMessage(message) {
-        if (this.#filterId == null) {
-            return;
-        }
-        if (this.#paused === null) {
-            let emitPromise = this.#emitPromise;
-            if (emitPromise == null) {
-                emitPromise = this._emit(this.#provider, message);
-            }
-            else {
-                emitPromise = emitPromise.then(async () => {
-                    await this._emit(this.#provider, message);
-                });
-            }
-            this.#emitPromise = emitPromise.then(() => {
-                if (this.#emitPromise === emitPromise) {
-                    this.#emitPromise = null;
-                }
-            });
-        }
-    }
-    /**
-     *  Sub-classes **must** override this to emit the events on the
-     *  provider.
-     */
-    async _emit(provider, message) {
-        throw new Error("sub-classes must implemente this; _emit");
-    }
-}
-/**
- *  A **SocketBlockSubscriber** listens for ``newHeads`` events and emits
- *  ``"block"`` events.
- */
-class SocketBlockSubscriber extends SocketSubscriber {
-    /**
-     *  @_ignore:
-     */
-    constructor(provider) {
-        super(provider, ["newHeads"]);
-    }
-    async _emit(provider, message) {
-        provider.emit("block", parseInt(message.number));
-    }
-}
-/**
- *  A **SocketPendingSubscriber** listens for pending transacitons and emits
- *  ``"pending"`` events.
- */
-class SocketPendingSubscriber extends SocketSubscriber {
-    /**
-     *  @_ignore:
-     */
-    constructor(provider) {
-        super(provider, ["newPendingTransactions"]);
-    }
-    async _emit(provider, message) {
-        provider.emit("pending", message);
-    }
-}
-/**
- *  A **SocketEventSubscriber** listens for event logs.
- */
-class SocketEventSubscriber extends SocketSubscriber {
-    #logFilter;
-    /**
-     *  The filter.
-     */
-    get logFilter() { return JSON.parse(this.#logFilter); }
-    /**
-     *  @_ignore:
-     */
-    constructor(provider, filter) {
-        super(provider, ["logs", filter]);
-        this.#logFilter = JSON.stringify(filter);
-    }
-    async _emit(provider, message) {
-        provider.emit(this.logFilter, provider._wrapLog(message, provider._network));
-    }
-}
-/**
- *  A **SocketProvider** is backed by a long-lived connection over a
- *  socket, which can subscribe and receive real-time messages over
- *  its communication channel.
- */
-class SocketProvider extends JsonRpcApiProvider {
-    #callbacks;
-    // Maps each filterId to its subscriber
-    #subs;
-    // If any events come in before a subscriber has finished
-    // registering, queue them
-    #pending;
-    /**
-     *  Creates a new **SocketProvider** connected to %%network%%.
-     *
-     *  If unspecified, the network will be discovered.
-     */
-    constructor(network, _options) {
-        // Copy the options
-        const options = Object.assign({}, (_options != null) ? _options : {});
-        // Support for batches is generally not supported for
-        // connection-base providers; if this changes in the future
-        // the _send should be updated to reflect this
-        assertArgument(options.batchMaxCount == null || options.batchMaxCount === 1, "sockets-based providers do not support batches", "options.batchMaxCount", _options);
-        options.batchMaxCount = 1;
-        // Socket-based Providers (generally) cannot change their network,
-        // since they have a long-lived connection; but let people override
-        // this if they have just cause.
-        if (options.staticNetwork == null) {
-            options.staticNetwork = true;
-        }
-        super(network, options);
-        this.#callbacks = new Map();
-        this.#subs = new Map();
-        this.#pending = new Map();
-    }
-    // This value is only valid after _start has been called
-    /*
-    get _network(): Network {
-        if (this.#network == null) {
-            throw new Error("this shouldn't happen");
-        }
-        return this.#network.clone();
-    }
-    */
-    _getSubscriber(sub) {
-        switch (sub.type) {
-            case "close":
-                return new UnmanagedSubscriber("close");
-            case "block":
-                return new SocketBlockSubscriber(this);
-            case "pending":
-                return new SocketPendingSubscriber(this);
-            case "event":
-                return new SocketEventSubscriber(this, sub.filter);
-            case "orphan":
-                // Handled auto-matically within AbstractProvider
-                // when the log.removed = true
-                if (sub.filter.orphan === "drop-log") {
-                    return new UnmanagedSubscriber("drop-log");
-                }
-        }
-        return super._getSubscriber(sub);
-    }
-    /**
-     *  Register a new subscriber. This is used internalled by Subscribers
-     *  and generally is unecessary unless extending capabilities.
-     */
-    _register(filterId, subscriber) {
-        this.#subs.set(filterId, subscriber);
-        const pending = this.#pending.get(filterId);
-        if (pending) {
-            for (const message of pending) {
-                subscriber._handleMessage(message);
-            }
-            this.#pending.delete(filterId);
-        }
-    }
-    async _send(payload) {
-        // WebSocket provider doesn't accept batches
-        assertArgument(!Array.isArray(payload), "WebSocket does not support batch send", "payload", payload);
-        // @TODO: stringify payloads here and store to prevent mutations
-        // Prepare a promise to respond to
-        const promise = new Promise((resolve, reject) => {
-            this.#callbacks.set(payload.id, { payload, resolve, reject });
-        });
-        // Wait until the socket is connected before writing to it
-        await this._waitUntilReady();
-        // Write the request to the socket
-        await this._write(JSON.stringify(payload));
-        return [await promise];
-    }
-    // Sub-classes must call this once they are connected
-    /*
-    async _start(): Promise<void> {
-        if (this.#ready) { return; }
-
-        for (const { payload } of this.#callbacks.values()) {
-            await this._write(JSON.stringify(payload));
-        }
-
-        this.#ready = (async function() {
-            await super._start();
-        })();
-    }
-    */
-    /**
-     *  Sub-classes **must** call this with messages received over their
-     *  transport to be processed and dispatched.
-     */
-    async _processMessage(message) {
-        const result = (JSON.parse(message));
-        if (result && typeof (result) === "object" && "id" in result) {
-            const callback = this.#callbacks.get(result.id);
-            if (callback == null) {
-                this.emit("error", makeError("received result for unknown id", "UNKNOWN_ERROR", {
-                    reasonCode: "UNKNOWN_ID",
-                    result
-                }));
-                return;
-            }
-            this.#callbacks.delete(result.id);
-            callback.resolve(result);
-        }
-        else if (result && result.method === "eth_subscription") {
-            const filterId = result.params.subscription;
-            const subscriber = this.#subs.get(filterId);
-            if (subscriber) {
-                subscriber._handleMessage(result.params.result);
-            }
-            else {
-                let pending = this.#pending.get(filterId);
-                if (pending == null) {
-                    pending = [];
-                    this.#pending.set(filterId, pending);
-                }
-                pending.push(result.params.result);
-            }
-        }
-        else {
-            this.emit("error", makeError("received unexpected message", "UNKNOWN_ERROR", {
-                reasonCode: "UNEXPECTED_MESSAGE",
-                result
-            }));
-            return;
-        }
-    }
-    /**
-     *  Sub-classes **must** override this to send %%message%% over their
-     *  transport.
-     */
-    async _write(message) {
-        throw new Error("sub-classes must override this");
-    }
-}
-
-/**
- *  A JSON-RPC provider which is backed by a WebSocket.
- *
- *  WebSockets are often preferred because they retain a live connection
- *  to a server, which permits more instant access to events.
- *
- *  However, this incurs higher server infrasturture costs, so additional
- *  resources may be required to host your own WebSocket nodes and many
- *  third-party services charge additional fees for WebSocket endpoints.
- */
-class WebSocketProvider extends SocketProvider {
-    #connect;
-    #websocket;
-    get websocket() {
-        if (this.#websocket == null) {
-            throw new Error("websocket closed");
-        }
-        return this.#websocket;
-    }
-    constructor(url, network, options) {
-        super(network, options);
-        if (typeof (url) === "string") {
-            this.#connect = () => { return new _WebSocket(url); };
-            this.#websocket = this.#connect();
-        }
-        else if (typeof (url) === "function") {
-            this.#connect = url;
-            this.#websocket = url();
-        }
-        else {
-            this.#connect = null;
-            this.#websocket = url;
-        }
-        this.websocket.onopen = async () => {
-            try {
-                await this._start();
-                this.resume();
-            }
-            catch (error) {
-                console.log("failed to start WebsocketProvider", error);
-                // @TODO: now what? Attempt reconnect?
-            }
-        };
-        this.websocket.onmessage = (message) => {
-            this._processMessage(message.data);
-        };
-        /*
-                this.websocket.onclose = (event) => {
-                    // @TODO: What event.code should we reconnect on?
-                    const reconnect = false;
-                    if (reconnect) {
-                        this.pause(true);
-                        if (this.#connect) {
-                            this.#websocket = this.#connect();
-                            this.#websocket.onopen = ...
-                            // @TODO: this requires the super class to rebroadcast; move it there
-                        }
-                        this._reconnect();
-                    }
-                };
-        */
-    }
-    async _write(message) {
-        this.websocket.send(message);
-    }
-    async destroy() {
-        if (this.#websocket != null) {
-            this.#websocket.close();
-            this.#websocket = null;
-        }
-        super.destroy();
-    }
-}
-
-/**
- *  [[link-infura]] provides a third-party service for connecting to
- *  various blockchains over JSON-RPC.
- *
- *  **Supported Networks**
- *
- *  - Ethereum Mainnet (``mainnet``)
- *  - Goerli Testnet (``goerli``)
- *  - Sepolia Testnet (``sepolia``)
- *  - Arbitrum (``arbitrum``)
- *  - Arbitrum Goerli Testnet (``arbitrum-goerli``)
- *  - Optimism (``optimism``)
- *  - Optimism Goerli Testnet (``optimism-goerli``)
- *  - Polygon (``matic``)
- *  - Polygon Mumbai Testnet (``matic-mumbai``)
- *
- *  @_subsection: api/providers/thirdparty:INFURA  [providers-infura]
- */
-const defaultProjectId = "84842078b09946638c03157f83405213";
-function getHost$2(name) {
-    switch (name) {
-        case "mainnet":
-            return "mainnet.infura.io";
-        case "goerli":
-            return "goerli.infura.io";
-        case "sepolia":
-            return "sepolia.infura.io";
-        case "arbitrum":
-            return "arbitrum-mainnet.infura.io";
-        case "arbitrum-goerli":
-            return "arbitrum-goerli.infura.io";
-        case "linea":
-            return "linea-mainnet.infura.io";
-        case "linea-goerli":
-            return "linea-goerli.infura.io";
-        case "matic":
-            return "polygon-mainnet.infura.io";
-        case "matic-mumbai":
-            return "polygon-mumbai.infura.io";
-        case "optimism":
-            return "optimism-mainnet.infura.io";
-        case "optimism-goerli":
-            return "optimism-goerli.infura.io";
-    }
-    assertArgument(false, "unsupported network", "network", name);
-}
-/**
- *  The **InfuraWebSocketProvider** connects to the [[link-infura]]
- *  WebSocket end-points.
- *
- *  By default, a highly-throttled API key is used, which is
- *  appropriate for quick prototypes and simple scripts. To
- *  gain access to an increased rate-limit, it is highly
- *  recommended to [sign up here](link-infura-signup).
- */
-class InfuraWebSocketProvider extends WebSocketProvider {
-    /**
-     *  The Project ID for the INFURA connection.
-     */
-    projectId;
-    /**
-     *  The Project Secret.
-     *
-     *  If null, no authenticated requests are made. This should not
-     *  be used outside of private contexts.
-     */
-    projectSecret;
-    /**
-     *  Creates a new **InfuraWebSocketProvider**.
-     */
-    constructor(network, projectId) {
-        const provider = new InfuraProvider(network, projectId);
-        const req = provider._getConnection();
-        assert(!req.credentials, "INFURA WebSocket project secrets unsupported", "UNSUPPORTED_OPERATION", { operation: "InfuraProvider.getWebSocketProvider()" });
-        const url = req.url.replace(/^http/i, "ws").replace("/v3/", "/ws/v3/");
-        super(url, network);
-        defineProperties(this, {
-            projectId: provider.projectId,
-            projectSecret: provider.projectSecret
-        });
-    }
-    isCommunityResource() {
-        return (this.projectId === defaultProjectId);
-    }
-}
-/**
- *  The **InfuraProvider** connects to the [[link-infura]]
- *  JSON-RPC end-points.
- *
- *  By default, a highly-throttled API key is used, which is
- *  appropriate for quick prototypes and simple scripts. To
- *  gain access to an increased rate-limit, it is highly
- *  recommended to [sign up here](link-infura-signup).
- */
-class InfuraProvider extends JsonRpcProvider {
-    /**
-     *  The Project ID for the INFURA connection.
-     */
-    projectId;
-    /**
-     *  The Project Secret.
-     *
-     *  If null, no authenticated requests are made. This should not
-     *  be used outside of private contexts.
-     */
-    projectSecret;
-    /**
-     *  Creates a new **InfuraProvider**.
-     */
-    constructor(_network, projectId, projectSecret) {
-        if (_network == null) {
-            _network = "mainnet";
-        }
-        const network = Network.from(_network);
-        if (projectId == null) {
-            projectId = defaultProjectId;
-        }
-        if (projectSecret == null) {
-            projectSecret = null;
-        }
-        const request = InfuraProvider.getRequest(network, projectId, projectSecret);
-        super(request, network, { staticNetwork: network });
-        defineProperties(this, { projectId, projectSecret });
-    }
-    _getProvider(chainId) {
-        try {
-            return new InfuraProvider(chainId, this.projectId, this.projectSecret);
-        }
-        catch (error) { }
-        return super._getProvider(chainId);
-    }
-    isCommunityResource() {
-        return (this.projectId === defaultProjectId);
-    }
-    /**
-     *  Creates a new **InfuraWebSocketProvider**.
-     */
-    static getWebSocketProvider(network, projectId) {
-        return new InfuraWebSocketProvider(network, projectId);
-    }
-    /**
-     *  Returns a prepared request for connecting to %%network%%
-     *  with %%projectId%% and %%projectSecret%%.
-     */
-    static getRequest(network, projectId, projectSecret) {
-        if (projectId == null) {
-            projectId = defaultProjectId;
-        }
-        if (projectSecret == null) {
-            projectSecret = null;
-        }
-        const request = new FetchRequest(`https:/\/${getHost$2(network.name)}/v3/${projectId}`);
-        request.allowGzip = true;
-        if (projectSecret) {
-            request.setCredentials("", projectSecret);
-        }
-        if (projectId === defaultProjectId) {
-            request.retryFunc = async (request, response, attempt) => {
-                showThrottleMessage("InfuraProvider");
-                return true;
-            };
-        }
-        return request;
-    }
-}
-
-/**
- *  [[link-quicknode]] provides a third-party service for connecting to
- *  various blockchains over JSON-RPC.
- *
- *  **Supported Networks**
- *
- *  - Ethereum Mainnet (``mainnet``)
- *  - Goerli Testnet (``goerli``)
- *  - Arbitrum (``arbitrum``)
- *  - Arbitrum Goerli Testnet (``arbitrum-goerli``)
- *  - Optimism (``optimism``)
- *  - Optimism Goerli Testnet (``optimism-goerli``)
- *  - Polygon (``matic``)
- *  - Polygon Mumbai Testnet (``matic-mumbai``)
- *
- *  @_subsection: api/providers/thirdparty:QuickNode  [providers-quicknode]
- */
-const defaultToken = "919b412a057b5e9c9b6dce193c5a60242d6efadb";
-function getHost$1(name) {
-    switch (name) {
-        case "mainnet":
-            return "ethers.quiknode.pro";
-        case "goerli":
-            return "ethers.ethereum-goerli.quiknode.pro";
-        //case "sepolia":
-        //    return "sepolia.infura.io";
-        case "arbitrum":
-            return "ethers.arbitrum-mainnet.quiknode.pro";
-        case "arbitrum-goerli":
-            return "ethers.arbitrum-goerli.quiknode.pro";
-        case "matic":
-            return "ethers.matic.quiknode.pro";
-        case "matic-mumbai":
-            return "ethers.matic-testnet.quiknode.pro";
-        case "optimism":
-            return "ethers.optimism.quiknode.pro";
-        case "optimism-goerli":
-            return "ethers.optimism-goerli.quiknode.pro";
-    }
-    assertArgument(false, "unsupported network", "network", name);
-}
-/**
- *  The **QuickNodeProvider** connects to the [[link-quicknode]]
- *  JSON-RPC end-points.
- *
- *  By default, a highly-throttled API token is used, which is
- *  appropriate for quick prototypes and simple scripts. To
- *  gain access to an increased rate-limit, it is highly
- *  recommended to [sign up here](link-quicknode).
- */
-class QuickNodeProvider extends JsonRpcProvider {
-    /**
-     *  The API token.
-     */
-    token;
-    /**
-     *  Creates a new **QuickNodeProvider**.
-     */
-    constructor(_network, token) {
-        if (_network == null) {
-            _network = "mainnet";
-        }
-        const network = Network.from(_network);
-        if (token == null) {
-            token = defaultToken;
-        }
-        const request = QuickNodeProvider.getRequest(network, token);
-        super(request, network, { staticNetwork: network });
-        defineProperties(this, { token });
-    }
-    _getProvider(chainId) {
-        try {
-            return new QuickNodeProvider(chainId, this.token);
-        }
-        catch (error) { }
-        return super._getProvider(chainId);
-    }
-    isCommunityResource() {
-        return (this.token === defaultToken);
-    }
-    /**
-     *  Returns a new request prepared for %%network%% and the
-     *  %%token%%.
-     */
-    static getRequest(network, token) {
-        if (token == null) {
-            token = defaultToken;
-        }
-        const request = new FetchRequest(`https:/\/${getHost$1(network.name)}/${token}`);
-        request.allowGzip = true;
-        //if (projectSecret) { request.setCredentials("", projectSecret); }
-        if (token === defaultToken) {
-            request.retryFunc = async (request, response, attempt) => {
-                showThrottleMessage("QuickNodeProvider");
-                return true;
-            };
-        }
-        return request;
-    }
-}
-
 /**
  *  A **FallbackProvider** providers resiliance, security and performatnce
  *  in a way that is customizable and configurable.
@@ -21655,7 +18888,7 @@ function shuffle(array) {
         array[j] = tmp;
     }
 }
-function stall$2(duration) {
+function stall$3(duration) {
     return new Promise((resolve) => { setTimeout(resolve, duration); });
 }
 function getTime() { return (new Date()).getTime(); }
@@ -21935,8 +19168,6 @@ class FallbackProvider extends AbstractProvider {
                 return await provider.getCode(req.address, req.blockTag);
             case "getGasPrice":
                 return (await provider.getFeeData()).gasPrice;
-            case "getPriorityFee":
-                return (await provider.getFeeData()).maxPriorityFeePerGas;
             case "getLogs":
                 return await provider.getLogs(req.filter);
             case "getStorage":
@@ -22004,7 +19235,7 @@ class FallbackProvider extends AbstractProvider {
         // Start a staller; when this times out, it's time to force
         // kicking off another runner because we are taking too long
         runner.staller = (async () => {
-            await stall$2(config.stallTimeout);
+            await stall$3(config.stallTimeout);
             runner.staller = null;
         })();
         running.add(runner);
@@ -22082,7 +19313,6 @@ class FallbackProvider extends AbstractProvider {
                 return this.#height;
             }
             case "getGasPrice":
-            case "getPriorityFee":
             case "estimateGas":
                 return getMedian(this.quorum, results);
             case "getBlock":
@@ -22164,46 +19394,15 @@ class FallbackProvider extends AbstractProvider {
         // a cost on the user, so spamming is safe-ish. Just send it to
         // every backend.
         if (req.method === "broadcastTransaction") {
-            // Once any broadcast provides a positive result, use it. No
-            // need to wait for anyone else
-            const results = this.#configs.map((c) => null);
-            const broadcasts = this.#configs.map(async ({ provider, weight }, index) => {
+            const results = await Promise.all(this.#configs.map(async ({ provider, weight }) => {
                 try {
                     const result = await provider._perform(req);
-                    results[index] = Object.assign(normalizeResult({ result }), { weight });
+                    return Object.assign(normalizeResult({ result }), { weight });
                 }
                 catch (error) {
-                    results[index] = Object.assign(normalizeResult({ error }), { weight });
+                    return Object.assign(normalizeResult({ error }), { weight });
                 }
-            });
-            // As each promise finishes...
-            while (true) {
-                // Check for a valid broadcast result
-                const done = results.filter((r) => (r != null));
-                for (const { value } of done) {
-                    if (!(value instanceof Error)) {
-                        return value;
-                    }
-                }
-                // Check for a legit broadcast error (one which we cannot
-                // recover from; some nodes may return the following red
-                // herring events:
-                // - alredy seend (UNKNOWN_ERROR)
-                // - NONCE_EXPIRED
-                // - REPLACEMENT_UNDERPRICED
-                const result = checkQuorum(this.quorum, results.filter((r) => (r != null)));
-                if (isError(result, "INSUFFICIENT_FUNDS")) {
-                    throw result;
-                }
-                // Kick off the next provider (if any)
-                const waiting = broadcasts.filter((b, i) => (results[i] == null));
-                if (waiting.length === 0) {
-                    break;
-                }
-                await Promise.race(waiting);
-            }
-            // Use standard quorum results; any result was returned above,
-            // so this will find any error that met quorum if any
+            }));
             const result = getAnyResult(this.quorum, results);
             assert(result !== undefined, "problem multi-broadcasting", "SERVER_ERROR", {
                 request: "%sub-requests",
@@ -22217,16 +19416,8 @@ class FallbackProvider extends AbstractProvider {
         await this.#initialSync();
         // Bootstrap enough runners to meet quorum
         const running = new Set();
-        let inflightQuorum = 0;
-        while (true) {
-            const runner = this.#addRunner(running, req);
-            if (runner == null) {
-                break;
-            }
-            inflightQuorum += runner.config.weight;
-            if (inflightQuorum >= this.quorum) {
-                break;
-            }
+        for (let i = 0; i < this.quorum; i++) {
+            this.#addRunner(running, req);
         }
         const result = await this.#waitForQuorum(running, req);
         // Track requests sent to a provider that are still
@@ -22241,6 +19432,1450 @@ class FallbackProvider extends AbstractProvider {
     async destroy() {
         for (const { provider } of this.#configs) {
             provider.destroy();
+        }
+        super.destroy();
+    }
+}
+
+function copy$1(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+/**
+ *  A **PollingEventSubscriber** will poll for a given filter for its logs.
+ *
+ *  @_docloc: api/providers/abstract-provider
+ */
+class PollingEventSubscriber {
+    #provider;
+    #filter;
+    #poller;
+    #running;
+    // The most recent block we have scanned for events. The value -2
+    // indicates we still need to fetch an initial block number
+    #blockNumber;
+    /**
+     *  Create a new **PollingTransactionSubscriber** attached to
+     *  %%provider%%, listening for %%filter%%.
+     */
+    constructor(provider, filter) {
+        this.#provider = provider;
+        this.#filter = copy$1(filter);
+        this.#poller = this.#poll.bind(this);
+        this.#running = false;
+        this.#blockNumber = -2;
+    }
+    async #poll(blockNumber) {
+        // The initial block hasn't been determined yet
+        if (this.#blockNumber === -2) {
+            return;
+        }
+        const filter = copy$1(this.#filter);
+        filter.fromBlock = this.#blockNumber + 1;
+        filter.toBlock = blockNumber;
+        const logs = await this.#provider.getLogs(filter);
+        // No logs could just mean the node has not indexed them yet,
+        // so we keep a sliding window of 60 blocks to keep scanning
+        if (logs.length === 0) {
+            if (this.#blockNumber < blockNumber - 60) {
+                this.#blockNumber = blockNumber - 60;
+            }
+            return;
+        }
+        for (const log of logs) {
+            this.#provider.emit(this.#filter, log);
+            // Only advance the block number when logs were found to
+            // account for networks (like BNB and Polygon) which may
+            // sacrifice event consistency for block event speed
+            this.#blockNumber = log.blockNumber;
+        }
+    }
+    start() {
+        if (this.#running) {
+            return;
+        }
+        this.#running = true;
+        if (this.#blockNumber === -2) {
+            this.#provider.getBlockNumber().then((blockNumber) => {
+                this.#blockNumber = blockNumber;
+            });
+        }
+        this.#provider.on("block", this.#poller);
+    }
+    stop() {
+        if (!this.#running) {
+            return;
+        }
+        this.#running = false;
+        this.#provider.off("block", this.#poller);
+    }
+    pause(dropWhilePaused) {
+        this.stop();
+        if (dropWhilePaused) {
+            this.#blockNumber = -2;
+        }
+    }
+    resume() {
+        this.start();
+    }
+}
+
+function copy(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+/**
+ *  Some backends support subscribing to events using a Filter ID.
+ *
+ *  When subscribing with this technique, the node issues a unique
+ *  //Filter ID//. At this point the node dedicates resources to
+ *  the filter, so that periodic calls to follow up on the //Filter ID//
+ *  will receive any events since the last call.
+ *
+ *  @_docloc: api/providers/abstract-provider
+ */
+class FilterIdSubscriber {
+    #provider;
+    #filterIdPromise;
+    #poller;
+    #running;
+    #network;
+    #hault;
+    /**
+     *  Creates a new **FilterIdSubscriber** which will used [[_subscribe]]
+     *  and [[_emitResults]] to setup the subscription and provide the event
+     *  to the %%provider%%.
+     */
+    constructor(provider) {
+        this.#provider = provider;
+        this.#filterIdPromise = null;
+        this.#poller = this.#poll.bind(this);
+        this.#running = false;
+        this.#network = null;
+        this.#hault = false;
+    }
+    /**
+     *  Sub-classes **must** override this to begin the subscription.
+     */
+    _subscribe(provider) {
+        throw new Error("subclasses must override this");
+    }
+    /**
+     *  Sub-classes **must** override this handle the events.
+     */
+    _emitResults(provider, result) {
+        throw new Error("subclasses must override this");
+    }
+    /**
+     *  Sub-classes **must** override this handle recovery on errors.
+     */
+    _recover(provider) {
+        throw new Error("subclasses must override this");
+    }
+    async #poll(blockNumber) {
+        try {
+            // Subscribe if necessary
+            if (this.#filterIdPromise == null) {
+                this.#filterIdPromise = this._subscribe(this.#provider);
+            }
+            // Get the Filter ID
+            let filterId = null;
+            try {
+                filterId = await this.#filterIdPromise;
+            }
+            catch (error) {
+                if (!isError(error, "UNSUPPORTED_OPERATION") || error.operation !== "eth_newFilter") {
+                    throw error;
+                }
+            }
+            // The backend does not support Filter ID; downgrade to
+            // polling
+            if (filterId == null) {
+                this.#filterIdPromise = null;
+                this.#provider._recoverSubscriber(this, this._recover(this.#provider));
+                return;
+            }
+            const network = await this.#provider.getNetwork();
+            if (!this.#network) {
+                this.#network = network;
+            }
+            if (this.#network.chainId !== network.chainId) {
+                throw new Error("chaid changed");
+            }
+            if (this.#hault) {
+                return;
+            }
+            const result = await this.#provider.send("eth_getFilterChanges", [filterId]);
+            await this._emitResults(this.#provider, result);
+        }
+        catch (error) {
+            console.log("@TODO", error);
+        }
+        this.#provider.once("block", this.#poller);
+    }
+    #teardown() {
+        const filterIdPromise = this.#filterIdPromise;
+        if (filterIdPromise) {
+            this.#filterIdPromise = null;
+            filterIdPromise.then((filterId) => {
+                this.#provider.send("eth_uninstallFilter", [filterId]);
+            });
+        }
+    }
+    start() {
+        if (this.#running) {
+            return;
+        }
+        this.#running = true;
+        this.#poll(-2);
+    }
+    stop() {
+        if (!this.#running) {
+            return;
+        }
+        this.#running = false;
+        this.#hault = true;
+        this.#teardown();
+        this.#provider.off("block", this.#poller);
+    }
+    pause(dropWhilePaused) {
+        if (dropWhilePaused) {
+            this.#teardown();
+        }
+        this.#provider.off("block", this.#poller);
+    }
+    resume() { this.start(); }
+}
+/**
+ *  A **FilterIdSubscriber** for receiving contract events.
+ *
+ *  @_docloc: api/providers/abstract-provider
+ */
+class FilterIdEventSubscriber extends FilterIdSubscriber {
+    #event;
+    /**
+     *  Creates a new **FilterIdEventSubscriber** attached to %%provider%%
+     *  listening for %%filter%%.
+     */
+    constructor(provider, filter) {
+        super(provider);
+        this.#event = copy(filter);
+    }
+    _recover(provider) {
+        return new PollingEventSubscriber(provider, this.#event);
+    }
+    async _subscribe(provider) {
+        const filterId = await provider.send("eth_newFilter", [this.#event]);
+        return filterId;
+    }
+    async _emitResults(provider, results) {
+        for (const result of results) {
+            provider.emit(this.#event, provider._wrapLog(result, provider._network));
+        }
+    }
+}
+/**
+ *  A **FilterIdSubscriber** for receiving pending transactions events.
+ *
+ *  @_docloc: api/providers/abstract-provider
+ */
+class FilterIdPendingSubscriber extends FilterIdSubscriber {
+    async _subscribe(provider) {
+        return await provider.send("eth_newPendingTransactionFilter", []);
+    }
+    async _emitResults(provider, results) {
+        for (const result of results) {
+            provider.emit("pending", result);
+        }
+    }
+}
+
+/**
+ *  One of the most common ways to interact with the blockchain is
+ *  by a node running a JSON-RPC interface which can be connected to,
+ *  based on the transport, using:
+ *
+ *  - HTTP or HTTPS - [[JsonRpcProvider]]
+ *  - WebSocket - [[WebSocketProvider]]
+ *  - IPC - [[IpcSocketProvider]]
+ *
+ * @_section: api/providers/jsonrpc:JSON-RPC Provider  [about-jsonrpcProvider]
+ */
+// @TODO:
+// - Add the batching API
+// https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/eth1.0-apis/assembled-spec/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=true&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false
+const Primitive = "bigint,boolean,function,number,string,symbol".split(/,/g);
+//const Methods = "getAddress,then".split(/,/g);
+function deepCopy(value) {
+    if (value == null || Primitive.indexOf(typeof (value)) >= 0) {
+        return value;
+    }
+    // Keep any Addressable
+    if (typeof (value.getAddress) === "function") {
+        return value;
+    }
+    if (Array.isArray(value)) {
+        return (value.map(deepCopy));
+    }
+    if (typeof (value) === "object") {
+        return Object.keys(value).reduce((accum, key) => {
+            accum[key] = value[key];
+            return accum;
+        }, {});
+    }
+    throw new Error(`should not happen: ${value} (${typeof (value)})`);
+}
+function stall$2(duration) {
+    return new Promise((resolve) => { setTimeout(resolve, duration); });
+}
+function getLowerCase(value) {
+    if (value) {
+        return value.toLowerCase();
+    }
+    return value;
+}
+const defaultOptions = {
+    staticNetwork: null,
+    batchStallTime: 10,
+    batchMaxSize: (1 << 20),
+    batchMaxCount: 100,
+    cacheTimeout: 250
+};
+// @TODO: Unchecked Signers
+class JsonRpcSigner extends AbstractSigner {
+    address;
+    constructor(provider, address) {
+        super(provider);
+        address = getAddress(address);
+        defineProperties(this, { address });
+    }
+    connect(provider) {
+        assert(false, "cannot reconnect JsonRpcSigner", "UNSUPPORTED_OPERATION", {
+            operation: "signer.connect"
+        });
+    }
+    async getAddress() {
+        return this.address;
+    }
+    // JSON-RPC will automatially fill in nonce, etc. so we just check from
+    async populateTransaction(tx) {
+        return await this.populateCall(tx);
+    }
+    // Returns just the hash of the transaction after sent, which is what
+    // the bare JSON-RPC API does;
+    async sendUncheckedTransaction(_tx) {
+        const tx = deepCopy(_tx);
+        const promises = [];
+        // Make sure the from matches the sender
+        if (tx.from) {
+            const _from = tx.from;
+            promises.push((async () => {
+                const from = await resolveAddress(_from, this.provider);
+                assertArgument(from != null && from.toLowerCase() === this.address.toLowerCase(), "from address mismatch", "transaction", _tx);
+                tx.from = from;
+            })());
+        }
+        else {
+            tx.from = this.address;
+        }
+        // The JSON-RPC for eth_sendTransaction uses 90000 gas; if the user
+        // wishes to use this, it is easy to specify explicitly, otherwise
+        // we look it up for them.
+        if (tx.gasLimit == null) {
+            promises.push((async () => {
+                tx.gasLimit = await this.provider.estimateGas({ ...tx, from: this.address });
+            })());
+        }
+        // The address may be an ENS name or Addressable
+        if (tx.to != null) {
+            const _to = tx.to;
+            promises.push((async () => {
+                tx.to = await resolveAddress(_to, this.provider);
+            })());
+        }
+        // Wait until all of our properties are filled in
+        if (promises.length) {
+            await Promise.all(promises);
+        }
+        const hexTx = this.provider.getRpcTransaction(tx);
+        return this.provider.send("eth_sendTransaction", [hexTx]);
+    }
+    async sendTransaction(tx) {
+        // This cannot be mined any earlier than any recent block
+        const blockNumber = await this.provider.getBlockNumber();
+        // Send the transaction
+        const hash = await this.sendUncheckedTransaction(tx);
+        // Unfortunately, JSON-RPC only provides and opaque transaction hash
+        // for a response, and we need the actual transaction, so we poll
+        // for it; it should show up very quickly
+        return await (new Promise((resolve, reject) => {
+            const timeouts = [1000, 100];
+            const checkTx = async () => {
+                // Try getting the transaction
+                const tx = await this.provider.getTransaction(hash);
+                if (tx != null) {
+                    resolve(tx.replaceableTransaction(blockNumber));
+                    return;
+                }
+                // Wait another 4 seconds
+                this.provider._setTimeout(() => { checkTx(); }, timeouts.pop() || 4000);
+            };
+            checkTx();
+        }));
+    }
+    async signTransaction(_tx) {
+        const tx = deepCopy(_tx);
+        // Make sure the from matches the sender
+        if (tx.from) {
+            const from = await resolveAddress(tx.from, this.provider);
+            assertArgument(from != null && from.toLowerCase() === this.address.toLowerCase(), "from address mismatch", "transaction", _tx);
+            tx.from = from;
+        }
+        else {
+            tx.from = this.address;
+        }
+        const hexTx = this.provider.getRpcTransaction(tx);
+        return await this.provider.send("eth_signTransaction", [hexTx]);
+    }
+    async signMessage(_message) {
+        const message = ((typeof (_message) === "string") ? toUtf8Bytes(_message) : _message);
+        return await this.provider.send("personal_sign", [
+            hexlify(message), this.address.toLowerCase()
+        ]);
+    }
+    async signTypedData(domain, types, _value) {
+        const value = deepCopy(_value);
+        // Populate any ENS names (in-place)
+        const populated = await TypedDataEncoder.resolveNames(domain, types, value, async (value) => {
+            const address = await resolveAddress(value);
+            assertArgument(address != null, "TypedData does not support null address", "value", value);
+            return address;
+        });
+        return await this.provider.send("eth_signTypedData_v4", [
+            this.address.toLowerCase(),
+            JSON.stringify(TypedDataEncoder.getPayload(populated.domain, types, populated.value))
+        ]);
+    }
+    async unlock(password) {
+        return this.provider.send("personal_unlockAccount", [
+            this.address.toLowerCase(), password, null
+        ]);
+    }
+    // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign
+    async _legacySignMessage(_message) {
+        const message = ((typeof (_message) === "string") ? toUtf8Bytes(_message) : _message);
+        return await this.provider.send("eth_sign", [
+            this.address.toLowerCase(), hexlify(message)
+        ]);
+    }
+}
+/**
+ *  The JsonRpcApiProvider is an abstract class and **MUST** be
+ *  sub-classed.
+ *
+ *  It provides the base for all JSON-RPC-based Provider interaction.
+ *
+ *  Sub-classing Notes:
+ *  - a sub-class MUST override _send
+ *  - a sub-class MUST call the `_start()` method once connected
+ */
+class JsonRpcApiProvider extends AbstractProvider {
+    #options;
+    // The next ID to use for the JSON-RPC ID field
+    #nextId;
+    // Payloads are queued and triggered in batches using the drainTimer
+    #payloads;
+    #drainTimer;
+    #notReady;
+    #network;
+    #scheduleDrain() {
+        if (this.#drainTimer) {
+            return;
+        }
+        // If we aren't using batching, no hard in sending it immeidately
+        const stallTime = (this._getOption("batchMaxCount") === 1) ? 0 : this._getOption("batchStallTime");
+        this.#drainTimer = setTimeout(() => {
+            this.#drainTimer = null;
+            const payloads = this.#payloads;
+            this.#payloads = [];
+            while (payloads.length) {
+                // Create payload batches that satisfy our batch constraints
+                const batch = [(payloads.shift())];
+                while (payloads.length) {
+                    if (batch.length === this.#options.batchMaxCount) {
+                        break;
+                    }
+                    batch.push((payloads.shift()));
+                    const bytes = JSON.stringify(batch.map((p) => p.payload));
+                    if (bytes.length > this.#options.batchMaxSize) {
+                        payloads.unshift((batch.pop()));
+                        break;
+                    }
+                }
+                // Process the result to each payload
+                (async () => {
+                    const payload = ((batch.length === 1) ? batch[0].payload : batch.map((p) => p.payload));
+                    this.emit("debug", { action: "sendRpcPayload", payload });
+                    try {
+                        const result = await this._send(payload);
+                        this.emit("debug", { action: "receiveRpcResult", result });
+                        // Process results in batch order
+                        for (const { resolve, reject, payload } of batch) {
+                            if (this.destroyed) {
+                                reject(makeError("provider destroyed; cancelled request", "UNSUPPORTED_OPERATION", { operation: payload.method }));
+                                continue;
+                            }
+                            // Find the matching result
+                            const resp = result.filter((r) => (r.id === payload.id))[0];
+                            // No result; the node failed us in unexpected ways
+                            if (resp == null) {
+                                const error = makeError("missing response for request", "BAD_DATA", {
+                                    value: result, info: { payload }
+                                });
+                                this.emit("error", error);
+                                reject(error);
+                                continue;
+                            }
+                            // The response is an error
+                            if ("error" in resp) {
+                                reject(this.getRpcError(payload, resp));
+                                continue;
+                            }
+                            // All good; send the result
+                            resolve(resp.result);
+                        }
+                    }
+                    catch (error) {
+                        this.emit("debug", { action: "receiveRpcError", error });
+                        for (const { reject } of batch) {
+                            // @TODO: augment the error with the payload
+                            reject(error);
+                        }
+                    }
+                })();
+            }
+        }, stallTime);
+    }
+    constructor(network, options) {
+        super(network, options);
+        this.#nextId = 1;
+        this.#options = Object.assign({}, defaultOptions, options || {});
+        this.#payloads = [];
+        this.#drainTimer = null;
+        this.#network = null;
+        {
+            let resolve = null;
+            const promise = new Promise((_resolve) => {
+                resolve = _resolve;
+            });
+            this.#notReady = { promise, resolve };
+        }
+        // Make sure any static network is compatbile with the provided netwrok
+        const staticNetwork = this._getOption("staticNetwork");
+        if (staticNetwork) {
+            assertArgument(network == null || staticNetwork.matches(network), "staticNetwork MUST match network object", "options", options);
+            this.#network = staticNetwork;
+        }
+    }
+    /**
+     *  Returns the value associated with the option %%key%%.
+     *
+     *  Sub-classes can use this to inquire about configuration options.
+     */
+    _getOption(key) {
+        return this.#options[key];
+    }
+    /**
+     *  Gets the [[Network]] this provider has committed to. On each call, the network
+     *  is detected, and if it has changed, the call will reject.
+     */
+    get _network() {
+        assert(this.#network, "network is not available yet", "NETWORK_ERROR");
+        return this.#network;
+    }
+    /**
+     *  Resolves to the non-normalized value by performing %%req%%.
+     *
+     *  Sub-classes may override this to modify behavior of actions,
+     *  and should generally call ``super._perform`` as a fallback.
+     */
+    async _perform(req) {
+        // Legacy networks do not like the type field being passed along (which
+        // is fair), so we delete type if it is 0 and a non-EIP-1559 network
+        if (req.method === "call" || req.method === "estimateGas") {
+            let tx = req.transaction;
+            if (tx && tx.type != null && getBigInt(tx.type)) {
+                // If there are no EIP-1559 properties, it might be non-EIP-a559
+                if (tx.maxFeePerGas == null && tx.maxPriorityFeePerGas == null) {
+                    const feeData = await this.getFeeData();
+                    if (feeData.maxFeePerGas == null && feeData.maxPriorityFeePerGas == null) {
+                        // Network doesn't know about EIP-1559 (and hence type)
+                        req = Object.assign({}, req, {
+                            transaction: Object.assign({}, tx, { type: undefined })
+                        });
+                    }
+                }
+            }
+        }
+        const request = this.getRpcRequest(req);
+        if (request != null) {
+            return await this.send(request.method, request.args);
+        }
+        return super._perform(req);
+    }
+    /**
+     *  Sub-classes may override this; it detects the *actual* network that
+     *  we are **currently** connected to.
+     *
+     *  Keep in mind that [[send]] may only be used once [[ready]], otherwise the
+     *  _send primitive must be used instead.
+     */
+    async _detectNetwork() {
+        const network = this._getOption("staticNetwork");
+        if (network) {
+            return network;
+        }
+        // If we are ready, use ``send``, which enabled requests to be batched
+        if (this.ready) {
+            return Network.from(getBigInt(await this.send("eth_chainId", [])));
+        }
+        // We are not ready yet; use the primitive _send
+        const payload = {
+            id: this.#nextId++, method: "eth_chainId", params: [], jsonrpc: "2.0"
+        };
+        this.emit("debug", { action: "sendRpcPayload", payload });
+        let result;
+        try {
+            result = (await this._send(payload))[0];
+        }
+        catch (error) {
+            this.emit("debug", { action: "receiveRpcError", error });
+            throw error;
+        }
+        this.emit("debug", { action: "receiveRpcResult", result });
+        if ("result" in result) {
+            return Network.from(getBigInt(result.result));
+        }
+        throw this.getRpcError(payload, result);
+    }
+    /**
+     *  Sub-classes **MUST** call this. Until [[_start]] has been called, no calls
+     *  will be passed to [[_send]] from [[send]]. If it is overridden, then
+     *  ``super._start()`` **MUST** be called.
+     *
+     *  Calling it multiple times is safe and has no effect.
+     */
+    _start() {
+        if (this.#notReady == null || this.#notReady.resolve == null) {
+            return;
+        }
+        this.#notReady.resolve();
+        this.#notReady = null;
+        (async () => {
+            // Bootstrap the network
+            while (this.#network == null && !this.destroyed) {
+                try {
+                    this.#network = await this._detectNetwork();
+                }
+                catch (error) {
+                    if (this.destroyed) {
+                        break;
+                    }
+                    console.log("JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)");
+                    this.emit("error", makeError("failed to bootstrap network detection", "NETWORK_ERROR", { event: "initial-network-discovery", info: { error } }));
+                    await stall$2(1000);
+                }
+            }
+            // Start dispatching requests
+            this.#scheduleDrain();
+        })();
+    }
+    /**
+     *  Resolves once the [[_start]] has been called. This can be used in
+     *  sub-classes to defer sending data until the connection has been
+     *  established.
+     */
+    async _waitUntilReady() {
+        if (this.#notReady == null) {
+            return;
+        }
+        return await this.#notReady.promise;
+    }
+    /**
+     *  Return a Subscriber that will manage the %%sub%%.
+     *
+     *  Sub-classes may override this to modify the behavior of
+     *  subscription management.
+     */
+    _getSubscriber(sub) {
+        // Pending Filters aren't availble via polling
+        if (sub.type === "pending") {
+            return new FilterIdPendingSubscriber(this);
+        }
+        if (sub.type === "event") {
+            return new FilterIdEventSubscriber(this, sub.filter);
+        }
+        // Orphaned Logs are handled automatically, by the filter, since
+        // logs with removed are emitted by it
+        if (sub.type === "orphan" && sub.filter.orphan === "drop-log") {
+            return new UnmanagedSubscriber("orphan");
+        }
+        return super._getSubscriber(sub);
+    }
+    /**
+     *  Returns true only if the [[_start]] has been called.
+     */
+    get ready() { return this.#notReady == null; }
+    /**
+     *  Returns %%tx%% as a normalized JSON-RPC transaction request,
+     *  which has all values hexlified and any numeric values converted
+     *  to Quantity values.
+     */
+    getRpcTransaction(tx) {
+        const result = {};
+        // JSON-RPC now requires numeric values to be "quantity" values
+        ["chainId", "gasLimit", "gasPrice", "type", "maxFeePerGas", "maxPriorityFeePerGas", "nonce", "value"].forEach((key) => {
+            if (tx[key] == null) {
+                return;
+            }
+            let dstKey = key;
+            if (key === "gasLimit") {
+                dstKey = "gas";
+            }
+            result[dstKey] = toQuantity(getBigInt(tx[key], `tx.${key}`));
+        });
+        // Make sure addresses and data are lowercase
+        ["from", "to", "data"].forEach((key) => {
+            if (tx[key] == null) {
+                return;
+            }
+            result[key] = hexlify(tx[key]);
+        });
+        // Normalize the access list object
+        if (tx.accessList) {
+            result["accessList"] = accessListify(tx.accessList);
+        }
+        return result;
+    }
+    /**
+     *  Returns the request method and arguments required to perform
+     *  %%req%%.
+     */
+    getRpcRequest(req) {
+        switch (req.method) {
+            case "chainId":
+                return { method: "eth_chainId", args: [] };
+            case "getBlockNumber":
+                return { method: "eth_blockNumber", args: [] };
+            case "getGasPrice":
+                return { method: "eth_gasPrice", args: [] };
+            case "getBalance":
+                return {
+                    method: "eth_getBalance",
+                    args: [getLowerCase(req.address), req.blockTag]
+                };
+            case "getTransactionCount":
+                return {
+                    method: "eth_getTransactionCount",
+                    args: [getLowerCase(req.address), req.blockTag]
+                };
+            case "getCode":
+                return {
+                    method: "eth_getCode",
+                    args: [getLowerCase(req.address), req.blockTag]
+                };
+            case "getStorage":
+                return {
+                    method: "eth_getStorageAt",
+                    args: [
+                        getLowerCase(req.address),
+                        ("0x" + req.position.toString(16)),
+                        req.blockTag
+                    ]
+                };
+            case "broadcastTransaction":
+                return {
+                    method: "eth_sendRawTransaction",
+                    args: [req.signedTransaction]
+                };
+            case "getBlock":
+                if ("blockTag" in req) {
+                    return {
+                        method: "eth_getBlockByNumber",
+                        args: [req.blockTag, !!req.includeTransactions]
+                    };
+                }
+                else if ("blockHash" in req) {
+                    return {
+                        method: "eth_getBlockByHash",
+                        args: [req.blockHash, !!req.includeTransactions]
+                    };
+                }
+                break;
+            case "getTransaction":
+                return {
+                    method: "eth_getTransactionByHash",
+                    args: [req.hash]
+                };
+            case "getTransactionReceipt":
+                return {
+                    method: "eth_getTransactionReceipt",
+                    args: [req.hash]
+                };
+            case "call":
+                return {
+                    method: "eth_call",
+                    args: [this.getRpcTransaction(req.transaction), req.blockTag]
+                };
+            case "estimateGas": {
+                return {
+                    method: "eth_estimateGas",
+                    args: [this.getRpcTransaction(req.transaction)]
+                };
+            }
+            case "getLogs":
+                if (req.filter && req.filter.address != null) {
+                    if (Array.isArray(req.filter.address)) {
+                        req.filter.address = req.filter.address.map(getLowerCase);
+                    }
+                    else {
+                        req.filter.address = getLowerCase(req.filter.address);
+                    }
+                }
+                return { method: "eth_getLogs", args: [req.filter] };
+        }
+        return null;
+    }
+    /**
+     *  Returns an ethers-style Error for the given JSON-RPC error
+     *  %%payload%%, coalescing the various strings and error shapes
+     *  that different nodes return, coercing them into a machine-readable
+     *  standardized error.
+     */
+    getRpcError(payload, _error) {
+        const { method } = payload;
+        const { error } = _error;
+        if (method === "eth_estimateGas" && error.message) {
+            const msg = error.message;
+            if (!msg.match(/revert/i) && msg.match(/insufficient funds/i)) {
+                return makeError("insufficient funds", "INSUFFICIENT_FUNDS", {
+                    transaction: (payload.params[0]),
+                    info: { payload, error }
+                });
+            }
+        }
+        if (method === "eth_call" || method === "eth_estimateGas") {
+            const result = spelunkData(error);
+            const e = AbiCoder.getBuiltinCallException((method === "eth_call") ? "call" : "estimateGas", (payload.params[0]), (result ? result.data : null));
+            e.info = { error, payload };
+            return e;
+        }
+        // Only estimateGas and call can return arbitrary contract-defined text, so now we
+        // we can process text safely.
+        const message = JSON.stringify(spelunkMessage(error));
+        if (typeof (error.message) === "string" && error.message.match(/user denied|ethers-user-denied/i)) {
+            const actionMap = {
+                eth_sign: "signMessage",
+                personal_sign: "signMessage",
+                eth_signTypedData_v4: "signTypedData",
+                eth_signTransaction: "signTransaction",
+                eth_sendTransaction: "sendTransaction",
+                eth_requestAccounts: "requestAccess",
+                wallet_requestAccounts: "requestAccess",
+            };
+            return makeError(`user rejected action`, "ACTION_REJECTED", {
+                action: (actionMap[method] || "unknown"),
+                reason: "rejected",
+                info: { payload, error }
+            });
+        }
+        if (method === "eth_sendRawTransaction" || method === "eth_sendTransaction") {
+            const transaction = (payload.params[0]);
+            if (message.match(/insufficient funds|base fee exceeds gas limit/i)) {
+                return makeError("insufficient funds for intrinsic transaction cost", "INSUFFICIENT_FUNDS", {
+                    transaction, info: { error }
+                });
+            }
+            if (message.match(/nonce/i) && message.match(/too low/i)) {
+                return makeError("nonce has already been used", "NONCE_EXPIRED", { transaction, info: { error } });
+            }
+            // "replacement transaction underpriced"
+            if (message.match(/replacement transaction/i) && message.match(/underpriced/i)) {
+                return makeError("replacement fee too low", "REPLACEMENT_UNDERPRICED", { transaction, info: { error } });
+            }
+            if (message.match(/only replay-protected/i)) {
+                return makeError("legacy pre-eip-155 transactions not supported", "UNSUPPORTED_OPERATION", {
+                    operation: method, info: { transaction, info: { error } }
+                });
+            }
+        }
+        let unsupported = !!message.match(/the method .* does not exist/i);
+        if (!unsupported) {
+            if (error && error.details && error.details.startsWith("Unauthorized method:")) {
+                unsupported = true;
+            }
+        }
+        if (unsupported) {
+            return makeError("unsupported operation", "UNSUPPORTED_OPERATION", {
+                operation: payload.method, info: { error, payload }
+            });
+        }
+        return makeError("could not coalesce error", "UNKNOWN_ERROR", { error, payload });
+    }
+    /**
+     *  Requests the %%method%% with %%params%% via the JSON-RPC protocol
+     *  over the underlying channel. This can be used to call methods
+     *  on the backend that do not have a high-level API within the Provider
+     *  API.
+     *
+     *  This method queues requests according to the batch constraints
+     *  in the options, assigns the request a unique ID.
+     *
+     *  **Do NOT override** this method in sub-classes; instead
+     *  override [[_send]] or force the options values in the
+     *  call to the constructor to modify this method's behavior.
+     */
+    send(method, params) {
+        // @TODO: cache chainId?? purge on switch_networks
+        // We have been destroyed; no operations are supported anymore
+        if (this.destroyed) {
+            return Promise.reject(makeError("provider destroyed; cancelled request", "UNSUPPORTED_OPERATION", { operation: method }));
+        }
+        const id = this.#nextId++;
+        const promise = new Promise((resolve, reject) => {
+            this.#payloads.push({
+                resolve, reject,
+                payload: { method, params, id, jsonrpc: "2.0" }
+            });
+        });
+        // If there is not a pending drainTimer, set one
+        this.#scheduleDrain();
+        return promise;
+    }
+    /**
+     *  Resolves to the [[Signer]] account for  %%address%% managed by
+     *  the client.
+     *
+     *  If the %%address%% is a number, it is used as an index in the
+     *  the accounts from [[listAccounts]].
+     *
+     *  This can only be used on clients which manage accounts (such as
+     *  Geth with imported account or MetaMask).
+     *
+     *  Throws if the account doesn't exist.
+     */
+    async getSigner(address) {
+        if (address == null) {
+            address = 0;
+        }
+        const accountsPromise = this.send("eth_accounts", []);
+        // Account index
+        if (typeof (address) === "number") {
+            const accounts = (await accountsPromise);
+            if (address >= accounts.length) {
+                throw new Error("no such account");
+            }
+            return new JsonRpcSigner(this, accounts[address]);
+        }
+        const { accounts } = await resolveProperties({
+            network: this.getNetwork(),
+            accounts: accountsPromise
+        });
+        // Account address
+        address = getAddress(address);
+        for (const account of accounts) {
+            if (getAddress(account) === address) {
+                return new JsonRpcSigner(this, address);
+            }
+        }
+        throw new Error("invalid account");
+    }
+    async listAccounts() {
+        const accounts = await this.send("eth_accounts", []);
+        return accounts.map((a) => new JsonRpcSigner(this, a));
+    }
+    destroy() {
+        // Stop processing requests
+        if (this.#drainTimer) {
+            clearTimeout(this.#drainTimer);
+            this.#drainTimer = null;
+        }
+        // Cancel all pending requests
+        for (const { payload, reject } of this.#payloads) {
+            reject(makeError("provider destroyed; cancelled request", "UNSUPPORTED_OPERATION", { operation: payload.method }));
+        }
+        this.#payloads = [];
+        // Parent clean-up
+        super.destroy();
+    }
+}
+/**
+ *  The JsonRpcProvider is one of the most common Providers,
+ *  which performs all operations over HTTP (or HTTPS) requests.
+ *
+ *  Events are processed by polling the backend for the current block
+ *  number; when it advances, all block-base events are then checked
+ *  for updates.
+ */
+class JsonRpcProvider extends JsonRpcApiProvider {
+    #connect;
+    constructor(url, network, options) {
+        if (url == null) {
+            url = "http:/\/localhost:8545";
+        }
+        super(network, options);
+        if (typeof (url) === "string") {
+            this.#connect = new FetchRequest(url);
+        }
+        else {
+            this.#connect = url.clone();
+        }
+    }
+    _getSubscriber(sub) {
+        const subscriber = super._getSubscriber(sub);
+        return subscriber;
+    }
+    _getConnection() {
+        return this.#connect.clone();
+    }
+    async send(method, params) {
+        // All requests are over HTTP, so we can just start handling requests
+        // We do this here rather than the constructor so that we don't send any
+        // requests to the network (i.e. eth_chainId) until we absolutely have to.
+        await this._start();
+        return await super.send(method, params);
+    }
+    async _send(payload) {
+        // Configure a POST connection for the requested method
+        const request = this._getConnection();
+        request.body = JSON.stringify(payload);
+        request.setHeader("content-type", "application/json");
+        const response = await request.send();
+        response.assertOk();
+        let resp = response.bodyJson;
+        if (!Array.isArray(resp)) {
+            resp = [resp];
+        }
+        return resp;
+    }
+}
+function spelunkData(value) {
+    if (value == null) {
+        return null;
+    }
+    // These *are* the droids we're looking for.
+    if (typeof (value.message) === "string" && value.message.match(/revert/i) && isHexString(value.data)) {
+        return { message: value.message, data: value.data };
+    }
+    // Spelunk further...
+    if (typeof (value) === "object") {
+        for (const key in value) {
+            const result = spelunkData(value[key]);
+            if (result) {
+                return result;
+            }
+        }
+        return null;
+    }
+    // Might be a JSON string we can further descend...
+    if (typeof (value) === "string") {
+        try {
+            return spelunkData(JSON.parse(value));
+        }
+        catch (error) { }
+    }
+    return null;
+}
+function _spelunkMessage(value, result) {
+    if (value == null) {
+        return;
+    }
+    // These *are* the droids we're looking for.
+    if (typeof (value.message) === "string") {
+        result.push(value.message);
+    }
+    // Spelunk further...
+    if (typeof (value) === "object") {
+        for (const key in value) {
+            _spelunkMessage(value[key], result);
+        }
+    }
+    // Might be a JSON string we can further descend...
+    if (typeof (value) === "string") {
+        try {
+            return _spelunkMessage(JSON.parse(value), result);
+        }
+        catch (error) { }
+    }
+}
+function spelunkMessage(value) {
+    const result = [];
+    _spelunkMessage(value, result);
+    return result;
+}
+
+function getGlobal() {
+    if (typeof self !== 'undefined') {
+        return self;
+    }
+    if (typeof window !== 'undefined') {
+        return window;
+    }
+    if (typeof global !== 'undefined') {
+        return global;
+    }
+    throw new Error('unable to locate global object');
+}
+const _WebSocket = getGlobal().WebSocket;
+
+/**
+ *  Generic long-lived socket provider.
+ *
+ *  Sub-classing notes
+ *  - a sub-class MUST call the `_start()` method once connected
+ *  - a sub-class MUST override the `_write(string)` method
+ *  - a sub-class MUST call `_processMessage(string)` for each message
+ *
+ *  @_subsection: api/providers/abstract-provider:Socket Providers  [about-socketProvider]
+ */
+/**
+ *  A **SocketSubscriber** uses a socket transport to handle events and
+ *  should use [[_emit]] to manage the events.
+ */
+class SocketSubscriber {
+    #provider;
+    #filter;
+    /**
+     *  The filter.
+     */
+    get filter() { return JSON.parse(this.#filter); }
+    #filterId;
+    #paused;
+    #emitPromise;
+    /**
+     *  Creates a new **SocketSubscriber** attached to %%provider%% listening
+     *  to %%filter%%.
+     */
+    constructor(provider, filter) {
+        this.#provider = provider;
+        this.#filter = JSON.stringify(filter);
+        this.#filterId = null;
+        this.#paused = null;
+        this.#emitPromise = null;
+    }
+    start() {
+        this.#filterId = this.#provider.send("eth_subscribe", this.filter).then((filterId) => {
+            this.#provider._register(filterId, this);
+            return filterId;
+        });
+    }
+    stop() {
+        (this.#filterId).then((filterId) => {
+            this.#provider.send("eth_unsubscribe", [filterId]);
+        });
+        this.#filterId = null;
+    }
+    // @TODO: pause should trap the current blockNumber, unsub, and on resume use getLogs
+    //        and resume
+    pause(dropWhilePaused) {
+        assert(dropWhilePaused, "preserve logs while paused not supported by SocketSubscriber yet", "UNSUPPORTED_OPERATION", { operation: "pause(false)" });
+        this.#paused = !!dropWhilePaused;
+    }
+    resume() {
+        this.#paused = null;
+    }
+    /**
+     *  @_ignore:
+     */
+    _handleMessage(message) {
+        if (this.#filterId == null) {
+            return;
+        }
+        if (this.#paused === null) {
+            let emitPromise = this.#emitPromise;
+            if (emitPromise == null) {
+                emitPromise = this._emit(this.#provider, message);
+            }
+            else {
+                emitPromise = emitPromise.then(async () => {
+                    await this._emit(this.#provider, message);
+                });
+            }
+            this.#emitPromise = emitPromise.then(() => {
+                if (this.#emitPromise === emitPromise) {
+                    this.#emitPromise = null;
+                }
+            });
+        }
+    }
+    /**
+     *  Sub-classes **must** override this to emit the events on the
+     *  provider.
+     */
+    async _emit(provider, message) {
+        throw new Error("sub-classes must implemente this; _emit");
+    }
+}
+/**
+ *  A **SocketBlockSubscriber** listens for ``newHeads`` events and emits
+ *  ``"block"`` events.
+ */
+class SocketBlockSubscriber extends SocketSubscriber {
+    /**
+     *  @_ignore:
+     */
+    constructor(provider) {
+        super(provider, ["newHeads"]);
+    }
+    async _emit(provider, message) {
+        provider.emit("block", parseInt(message.number));
+    }
+}
+/**
+ *  A **SocketPendingSubscriber** listens for pending transacitons and emits
+ *  ``"pending"`` events.
+ */
+class SocketPendingSubscriber extends SocketSubscriber {
+    /**
+     *  @_ignore:
+     */
+    constructor(provider) {
+        super(provider, ["newPendingTransactions"]);
+    }
+    async _emit(provider, message) {
+        provider.emit("pending", message);
+    }
+}
+/**
+ *  A **SocketEventSubscriber** listens for event logs.
+ */
+class SocketEventSubscriber extends SocketSubscriber {
+    #logFilter;
+    /**
+     *  The filter.
+     */
+    get logFilter() { return JSON.parse(this.#logFilter); }
+    /**
+     *  @_ignore:
+     */
+    constructor(provider, filter) {
+        super(provider, ["logs", filter]);
+        this.#logFilter = JSON.stringify(filter);
+    }
+    async _emit(provider, message) {
+        provider.emit(this.logFilter, provider._wrapLog(message, provider._network));
+    }
+}
+/**
+ *  A **SocketProvider** is backed by a long-lived connection over a
+ *  socket, which can subscribe and receive real-time messages over
+ *  its communication channel.
+ */
+class SocketProvider extends JsonRpcApiProvider {
+    #callbacks;
+    // Maps each filterId to its subscriber
+    #subs;
+    // If any events come in before a subscriber has finished
+    // registering, queue them
+    #pending;
+    /**
+     *  Creates a new **SocketProvider** connected to %%network%%.
+     *
+     *  If unspecified, the network will be discovered.
+     */
+    constructor(network) {
+        super(network, { batchMaxCount: 1 });
+        this.#callbacks = new Map();
+        this.#subs = new Map();
+        this.#pending = new Map();
+    }
+    // This value is only valid after _start has been called
+    /*
+    get _network(): Network {
+        if (this.#network == null) {
+            throw new Error("this shouldn't happen");
+        }
+        return this.#network.clone();
+    }
+    */
+    _getSubscriber(sub) {
+        switch (sub.type) {
+            case "close":
+                return new UnmanagedSubscriber("close");
+            case "block":
+                return new SocketBlockSubscriber(this);
+            case "pending":
+                return new SocketPendingSubscriber(this);
+            case "event":
+                return new SocketEventSubscriber(this, sub.filter);
+            case "orphan":
+                // Handled auto-matically within AbstractProvider
+                // when the log.removed = true
+                if (sub.filter.orphan === "drop-log") {
+                    return new UnmanagedSubscriber("drop-log");
+                }
+        }
+        return super._getSubscriber(sub);
+    }
+    /**
+     *  Register a new subscriber. This is used internalled by Subscribers
+     *  and generally is unecessary unless extending capabilities.
+     */
+    _register(filterId, subscriber) {
+        this.#subs.set(filterId, subscriber);
+        const pending = this.#pending.get(filterId);
+        if (pending) {
+            for (const message of pending) {
+                subscriber._handleMessage(message);
+            }
+            this.#pending.delete(filterId);
+        }
+    }
+    async _send(payload) {
+        // WebSocket provider doesn't accept batches
+        assertArgument(!Array.isArray(payload), "WebSocket does not support batch send", "payload", payload);
+        // @TODO: stringify payloads here and store to prevent mutations
+        // Prepare a promise to respond to
+        const promise = new Promise((resolve, reject) => {
+            this.#callbacks.set(payload.id, { payload, resolve, reject });
+        });
+        // Wait until the socket is connected before writing to it
+        await this._waitUntilReady();
+        // Write the request to the socket
+        await this._write(JSON.stringify(payload));
+        return [await promise];
+    }
+    // Sub-classes must call this once they are connected
+    /*
+    async _start(): Promise<void> {
+        if (this.#ready) { return; }
+
+        for (const { payload } of this.#callbacks.values()) {
+            await this._write(JSON.stringify(payload));
+        }
+
+        this.#ready = (async function() {
+            await super._start();
+        })();
+    }
+    */
+    /**
+     *  Sub-classes **must** call this with messages received over their
+     *  transport to be processed and dispatched.
+     */
+    async _processMessage(message) {
+        const result = (JSON.parse(message));
+        if (result && typeof (result) === "object" && "id" in result) {
+            const callback = this.#callbacks.get(result.id);
+            if (callback == null) {
+                this.emit("error", makeError("received result for unknown id", "UNKNOWN_ERROR", {
+                    reasonCode: "UNKNOWN_ID",
+                    result
+                }));
+                return;
+            }
+            this.#callbacks.delete(result.id);
+            callback.resolve(result);
+        }
+        else if (result && result.method === "eth_subscription") {
+            const filterId = result.params.subscription;
+            const subscriber = this.#subs.get(filterId);
+            if (subscriber) {
+                subscriber._handleMessage(result.params.result);
+            }
+            else {
+                let pending = this.#pending.get(filterId);
+                if (pending == null) {
+                    pending = [];
+                    this.#pending.set(filterId, pending);
+                }
+                pending.push(result.params.result);
+            }
+        }
+        else {
+            this.emit("error", makeError("received unexpected message", "UNKNOWN_ERROR", {
+                reasonCode: "UNEXPECTED_MESSAGE",
+                result
+            }));
+            return;
+        }
+    }
+    /**
+     *  Sub-classes **must** override this to send %%message%% over their
+     *  transport.
+     */
+    async _write(message) {
+        throw new Error("sub-classes must override this");
+    }
+}
+
+/**
+ *  A JSON-RPC provider which is backed by a WebSocket.
+ *
+ *  WebSockets are often preferred because they retain a live connection
+ *  to a server, which permits more instant access to events.
+ *
+ *  However, this incurs higher server infrasturture costs, so additional
+ *  resources may be required to host your own WebSocket nodes and many
+ *  third-party services charge additional fees for WebSocket endpoints.
+ */
+class WebSocketProvider extends SocketProvider {
+    #connect;
+    #websocket;
+    get websocket() {
+        if (this.#websocket == null) {
+            throw new Error("websocket closed");
+        }
+        return this.#websocket;
+    }
+    constructor(url, network) {
+        super(network);
+        if (typeof (url) === "string") {
+            this.#connect = () => { return new _WebSocket(url); };
+            this.#websocket = this.#connect();
+        }
+        else if (typeof (url) === "function") {
+            this.#connect = url;
+            this.#websocket = url();
+        }
+        else {
+            this.#connect = null;
+            this.#websocket = url;
+        }
+        this.websocket.onopen = async () => {
+            try {
+                await this._start();
+                this.resume();
+            }
+            catch (error) {
+                console.log("failed to start WebsocketProvider", error);
+                // @TODO: now what? Attempt reconnect?
+            }
+        };
+        this.websocket.onmessage = (message) => {
+            this._processMessage(message.data);
+        };
+        /*
+                this.websocket.onclose = (event) => {
+                    // @TODO: What event.code should we reconnect on?
+                    const reconnect = false;
+                    if (reconnect) {
+                        this.pause(true);
+                        if (this.#connect) {
+                            this.#websocket = this.#connect();
+                            this.#websocket.onopen = ...
+                            // @TODO: this requires the super class to rebroadcast; move it there
+                        }
+                        this._reconnect();
+                    }
+                };
+        */
+    }
+    async _write(message) {
+        this.websocket.send(message);
+    }
+    async destroy() {
+        if (this.#websocket != null) {
+            this.#websocket.close();
+            this.#websocket = null;
         }
         super.destroy();
     }
@@ -22328,42 +20963,6 @@ function getDefaultProvider(network, options) {
             providers.push(new JsonRpcProvider("https:/\/polygon-rpc.com/", staticNetwork, { staticNetwork }));
         }
     }
-    if (allowService("alchemy")) {
-        try {
-            providers.push(new AlchemyProvider(network, options.alchemy));
-        }
-        catch (error) { }
-    }
-    if (allowService("ankr") && options.ankr != null) {
-        try {
-            providers.push(new AnkrProvider(network, options.ankr));
-        }
-        catch (error) { }
-    }
-    if (allowService("cloudflare")) {
-        try {
-            providers.push(new CloudflareProvider(network));
-        }
-        catch (error) { }
-    }
-    if (allowService("etherscan")) {
-        try {
-            providers.push(new EtherscanProvider(network, options.etherscan));
-        }
-        catch (error) { }
-    }
-    if (allowService("infura")) {
-        try {
-            let projectId = options.infura;
-            let projectSecret = undefined;
-            if (typeof (projectId) === "object") {
-                projectSecret = projectId.projectSecret;
-                projectId = projectId.projectId;
-            }
-            providers.push(new InfuraProvider(network, projectId, projectSecret));
-        }
-        catch (error) { }
-    }
     /*
         if (options.pocket !== "-") {
             try {
@@ -22379,13 +20978,6 @@ function getDefaultProvider(network, options) {
             } catch (error) { console.log(error); }
         }
     */
-    if (allowService("quicknode")) {
-        try {
-            let token = options.quicknode;
-            providers.push(new QuickNodeProvider(network, token));
-        }
-        catch (error) { }
-    }
     assert(providers.length, "unsupported default network", "UNSUPPORTED_OPERATION", {
         operation: "getDefaultProvider"
     });
@@ -22488,7 +21080,7 @@ class NonceManager extends AbstractSigner {
  *  adheres to the [[link-eip-1193]] standard, which most (if not all)
  *  currently do.
  */
-class BrowserProvider extends JsonRpcApiPollingProvider {
+class BrowserProvider extends JsonRpcApiProvider {
     #request;
     /**
      *  Connnect to the %%ethereum%% provider, optionally forcing the
@@ -22575,107 +21167,6 @@ class BrowserProvider extends JsonRpcApiPollingProvider {
             }
         }
         return await super.getSigner(address);
-    }
-}
-
-/**
- *  [[link-pocket]] provides a third-party service for connecting to
- *  various blockchains over JSON-RPC.
- *
- *  **Supported Networks**
- *
- *  - Ethereum Mainnet (``mainnet``)
- *  - Goerli Testnet (``goerli``)
- *  - Polygon (``matic``)
- *  - Arbitrum (``arbitrum``)
- *
- *  @_subsection: api/providers/thirdparty:Pocket  [providers-pocket]
- */
-const defaultApplicationId = "62e1ad51b37b8e00394bda3b";
-function getHost(name) {
-    switch (name) {
-        case "mainnet":
-            return "eth-mainnet.gateway.pokt.network";
-        case "goerli":
-            return "eth-goerli.gateway.pokt.network";
-        case "matic":
-            return "poly-mainnet.gateway.pokt.network";
-        case "matic-mumbai":
-            return "polygon-mumbai-rpc.gateway.pokt.network";
-    }
-    assertArgument(false, "unsupported network", "network", name);
-}
-/**
- *  The **PocketProvider** connects to the [[link-pocket]]
- *  JSON-RPC end-points.
- *
- *  By default, a highly-throttled API key is used, which is
- *  appropriate for quick prototypes and simple scripts. To
- *  gain access to an increased rate-limit, it is highly
- *  recommended to [sign up here](link-pocket-signup).
- */
-class PocketProvider extends JsonRpcProvider {
-    /**
-     *  The Application ID for the Pocket connection.
-     */
-    applicationId;
-    /**
-     *  The Application Secret for making authenticated requests
-     *  to the Pocket connection.
-     */
-    applicationSecret;
-    /**
-     *  Create a new **PocketProvider**.
-     *
-     *  By default connecting to ``mainnet`` with a highly throttled
-     *  API key.
-     */
-    constructor(_network, applicationId, applicationSecret) {
-        if (_network == null) {
-            _network = "mainnet";
-        }
-        const network = Network.from(_network);
-        if (applicationId == null) {
-            applicationId = defaultApplicationId;
-        }
-        if (applicationSecret == null) {
-            applicationSecret = null;
-        }
-        const options = { staticNetwork: network };
-        const request = PocketProvider.getRequest(network, applicationId, applicationSecret);
-        super(request, network, options);
-        defineProperties(this, { applicationId, applicationSecret });
-    }
-    _getProvider(chainId) {
-        try {
-            return new PocketProvider(chainId, this.applicationId, this.applicationSecret);
-        }
-        catch (error) { }
-        return super._getProvider(chainId);
-    }
-    /**
-     *  Returns a prepared request for connecting to %%network%% with
-     *  %%applicationId%%.
-     */
-    static getRequest(network, applicationId, applicationSecret) {
-        if (applicationId == null) {
-            applicationId = defaultApplicationId;
-        }
-        const request = new FetchRequest(`https:/\/${getHost(network.name)}/v1/lb/${applicationId}`);
-        request.allowGzip = true;
-        if (applicationSecret) {
-            request.setCredentials("", applicationSecret);
-        }
-        if (applicationId === defaultApplicationId) {
-            request.retryFunc = async (request, response, attempt) => {
-                showThrottleMessage("PocketProvider");
-                return true;
-            };
-        }
-        return request;
-    }
-    isCommunityResource() {
-        return (this.applicationId === defaultApplicationId);
     }
 }
 
@@ -24695,13 +23186,10 @@ var ethers = /*#__PURE__*/Object.freeze({
     AbiCoder: AbiCoder,
     AbstractProvider: AbstractProvider,
     AbstractSigner: AbstractSigner,
-    AlchemyProvider: AlchemyProvider,
-    AnkrProvider: AnkrProvider,
     BaseContract: BaseContract,
     BaseWallet: BaseWallet,
     Block: Block,
     BrowserProvider: BrowserProvider,
-    CloudflareProvider: CloudflareProvider,
     ConstructorFragment: ConstructorFragment,
     Contract: Contract,
     ContractEventPayload: ContractEventPayload,
@@ -24714,8 +23202,6 @@ var ethers = /*#__PURE__*/Object.freeze({
     ErrorDescription: ErrorDescription,
     ErrorFragment: ErrorFragment,
     EtherSymbol: EtherSymbol,
-    EtherscanPlugin: EtherscanPlugin,
-    EtherscanProvider: EtherscanProvider,
     EventFragment: EventFragment,
     EventLog: EventLog,
     EventPayload: EventPayload,
@@ -24734,8 +23220,6 @@ var ethers = /*#__PURE__*/Object.freeze({
     HDNodeVoidWallet: HDNodeVoidWallet,
     HDNodeWallet: HDNodeWallet,
     Indexed: Indexed,
-    InfuraProvider: InfuraProvider,
-    InfuraWebSocketProvider: InfuraWebSocketProvider,
     Interface: Interface,
     IpcSocketProvider: IpcSocketProvider,
     JsonRpcApiProvider: JsonRpcApiProvider,
@@ -24756,8 +23240,6 @@ var ethers = /*#__PURE__*/Object.freeze({
     NetworkPlugin: NetworkPlugin,
     NonceManager: NonceManager,
     ParamType: ParamType,
-    PocketProvider: PocketProvider,
-    QuickNodeProvider: QuickNodeProvider,
     Result: Result,
     Signature: Signature,
     SigningKey: SigningKey,
@@ -24882,5 +23364,5 @@ var ethers = /*#__PURE__*/Object.freeze({
     zeroPadValue: zeroPadValue
 });
 
-export { AbiCoder, AbstractProvider, AbstractSigner, AlchemyProvider, AnkrProvider, BaseContract, BaseWallet, Block, BrowserProvider, CloudflareProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, EnsPlugin, EnsResolver, ErrorDescription, ErrorFragment, EtherSymbol, EtherscanPlugin, EtherscanProvider, EventFragment, EventLog, EventPayload, FallbackFragment, FallbackProvider, FeeData, FeeDataNetworkPlugin, FetchCancelSignal, FetchRequest, FetchResponse, FetchUrlFeeDataNetworkPlugin, FixedNumber, Fragment, FunctionFragment, GasCostPlugin, HDNodeVoidWallet, HDNodeWallet, Indexed, InfuraProvider, InfuraWebSocketProvider, Interface, IpcSocketProvider, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, MulticoinProviderPlugin, N$1 as N, NamedFragment, Network, NetworkPlugin, NonceManager, ParamType, PocketProvider, QuickNodeProvider, Result, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, Transaction, TransactionDescription, TransactionReceipt, TransactionResponse, Typed, TypedDataEncoder, UndecodedEventLog, UnmanagedSubscriber, Utf8ErrorFuncs, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, accessListify, assert, assertArgument, assertArgumentCount, assertNormalize, assertPrivate, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32String, decodeRlp, decryptCrowdsaleJson, decryptKeystoreJson, decryptKeystoreJsonSync, defaultPath, defineProperties, dnsEncode, encodeBase58, encodeBase64, encodeBytes32String, encodeRlp, encryptKeystoreJson, encryptKeystoreJsonSync, ensNormalize, ethers, formatEther, formatUnits, fromTwos, getAccountPath, getAddress, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getDefaultProvider, getIcapAddress, getIndexedAccountPath, getNumber, getUint, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isCrowdsaleJson, isError, isHexString, isKeystoreJson, isValidName, keccak256, lock, makeError, mask, namehash, parseEther, parseUnits$1 as parseUnits, pbkdf2, randomBytes, recoverAddress, resolveAddress, resolveProperties, ripemd160, scrypt, scryptSync, sha256, sha512, showThrottleMessage, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, uuidV4, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
+export { AbiCoder, AbstractProvider, AbstractSigner, BaseContract, BaseWallet, Block, BrowserProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, EnsPlugin, EnsResolver, ErrorDescription, ErrorFragment, EtherSymbol, EventFragment, EventLog, EventPayload, FallbackFragment, FallbackProvider, FeeData, FeeDataNetworkPlugin, FetchCancelSignal, FetchRequest, FetchResponse, FetchUrlFeeDataNetworkPlugin, FixedNumber, Fragment, FunctionFragment, GasCostPlugin, HDNodeVoidWallet, HDNodeWallet, Indexed, Interface, IpcSocketProvider, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, MulticoinProviderPlugin, N$1 as N, NamedFragment, Network, NetworkPlugin, NonceManager, ParamType, Result, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, Transaction, TransactionDescription, TransactionReceipt, TransactionResponse, Typed, TypedDataEncoder, UndecodedEventLog, UnmanagedSubscriber, Utf8ErrorFuncs, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, accessListify, assert, assertArgument, assertArgumentCount, assertNormalize, assertPrivate, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32String, decodeRlp, decryptCrowdsaleJson, decryptKeystoreJson, decryptKeystoreJsonSync, defaultPath, defineProperties, dnsEncode, encodeBase58, encodeBase64, encodeBytes32String, encodeRlp, encryptKeystoreJson, encryptKeystoreJsonSync, ensNormalize, ethers, formatEther, formatUnits, fromTwos, getAccountPath, getAddress, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getDefaultProvider, getIcapAddress, getIndexedAccountPath, getNumber, getUint, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isCrowdsaleJson, isError, isHexString, isKeystoreJson, isValidName, keccak256, lock, makeError, mask, namehash, parseEther, parseUnits$1 as parseUnits, pbkdf2, randomBytes, recoverAddress, resolveAddress, resolveProperties, ripemd160, scrypt, scryptSync, sha256, sha512, showThrottleMessage, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, uuidV4, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
 //# sourceMappingURL=ethers.js.map

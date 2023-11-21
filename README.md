@@ -1,5 +1,4 @@
-The Ethers Project
-==================
+# The Ethers Project 6.8.1
 
 [![npm (tag)](https://img.shields.io/npm/v/ethers)](https://www.npmjs.com/package/ethers)
 [![CI Tests](https://github.com/ethers-io/ethers.js/actions/workflows/test-ci.yml/badge.svg?branch=main)](https://github.com/ethers-io/ethers.js/actions/workflows/test-ci.yml)
@@ -8,7 +7,7 @@ The Ethers Project
 [![GitPOAP Badge](https://public-api.gitpoap.io/v1/repo/ethers-io/ethers.js/badge)](https://www.gitpoap.io/gh/ethers-io/ethers.js)
 [![Twitter Follow](https://img.shields.io/twitter/follow/ricmoo?style=social)](https://twitter.com/ricmoo)
 
------
+---
 
 A complete, compact and simple library for Ethereum and ilk, written
 in [TypeScript](https://www.typescriptlang.org).
@@ -29,9 +28,7 @@ in [TypeScript](https://www.typescriptlang.org).
 - Fully written in **TypeScript**, with strict types for security and safety
 - **MIT License** (including ALL dependencies); completely open source to do with as you please
 
-
-Keep Updated
-------------
+## Keep Updated
 
 For advisories and important notices, follow [@ethersproject](https://twitter.com/ethersproject)
 on Twitter (low-traffic, non-marketing, important information only) as well as watch this GitHub project.
@@ -40,10 +37,8 @@ For more general news, discussions, and feedback, follow or DM me,
 [@ricmoo](https://twitter.com/ricmoo) on Twitter or on the
 [Ethers Discord](https://discord.gg/qYtSscGYYc).
 
-
 For the latest changes, see the
 [CHANGELOG](https://github.com/ethers-io/ethers.js/blob/main/CHANGELOG.md).
-
 
 **Summaries**
 
@@ -57,10 +52,7 @@ For the latest changes, see the
 - [March 2021](https://blog.ricmoo.com/highlights-ethers-js-march-2021-173d3a545b8d)
 - [December 2020](https://blog.ricmoo.com/highlights-ethers-js-december-2020-2e2db8bc800a)
 
-
-
-Installing
-----------
+## Installing
 
 **NodeJS**
 
@@ -78,9 +70,7 @@ The bundled library is available in the `./dist/` folder in this repo.
 </script>
 ```
 
-
-Documentation
--------------
+## Documentation
 
 Browse the [documentation](https://docs.ethers.org) online:
 
@@ -88,10 +78,7 @@ Browse the [documentation](https://docs.ethers.org) online:
 - [Full API Documentation](https://docs.ethers.org/v6/api/)
 - [Various Ethereum Articles](https://blog.ricmoo.com/)
 
-
-
-Providers
----------
+## Providers
 
 Ethers works closely with an ever-growing list of third-party providers
 to ensure getting started is quick and easy, by providing default keys
@@ -118,9 +105,7 @@ A special thanks to these services for providing community resources:
 - [INFURA](https://infura.io/)
 - [Alchemy](https://dashboard.alchemyapi.io/signup?referral=55a35117-028e-4b7c-9e47-e275ad0acc6d)
 
-
-Extension Packages
-------------------
+## Extension Packages
 
 The `ethers` package only includes the most common and most core
 functionality to interact with Ethereum. There are many other
@@ -132,9 +117,6 @@ packages designed to further enhance the functionality and experience.
 - [Optimism Utilities](https://github.com/ethers-io/ext-utils-optimism) - A collection of Optimism utilities
 - [LedgerSigner](https://github.com/ethers-io/ext-signer-ledger) - A Signer to interact directly with Ledger Hardware Wallets
 
-
-License
--------
+## License
 
 MIT License (including **all** dependencies).
-

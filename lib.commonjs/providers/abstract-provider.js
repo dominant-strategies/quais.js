@@ -25,7 +25,6 @@ const ens_resolver_js_1 = require("./ens-resolver.js");
 const format_js_1 = require("./format.js");
 const network_js_1 = require("./network.js");
 const provider_js_1 = require("./provider.js");
-const subscriber_polling_js_1 = require("./subscriber-polling.js");
 // Constants
 const BN_2 = BigInt(2);
 const MAX_CCIP_REDIRECTS = 10;
@@ -983,22 +982,8 @@ class AbstractProvider {
             case "error":
             case "network":
                 return new UnmanagedSubscriber(sub.type);
-            case "block": {
-                const subscriber = new subscriber_polling_js_1.PollingBlockSubscriber(this);
-                subscriber.pollingInterval = this.pollingInterval;
-                return subscriber;
-            }
-            case "safe":
-            case "finalized":
-                return new subscriber_polling_js_1.PollingBlockTagSubscriber(this, sub.type);
-            case "event":
-                return new subscriber_polling_js_1.PollingEventSubscriber(this, sub.filter);
-            case "transaction":
-                return new subscriber_polling_js_1.PollingTransactionSubscriber(this, sub.hash);
-            case "orphan":
-                return new subscriber_polling_js_1.PollingOrphanSubscriber(this, sub.filter);
         }
-        throw new Error(`unsupported event: ${sub.type}`);
+        throw new Error("HTTP polling not supported. This method should be implemented by subclasses.");
     }
     /**
      *  If a [[Subscriber]] fails and needs to replace itself, this

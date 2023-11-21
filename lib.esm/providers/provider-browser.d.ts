@@ -1,4 +1,4 @@
-import { JsonRpcApiPollingProvider } from "./provider-jsonrpc.js";
+import { JsonRpcApiProvider } from "./provider-jsonrpc.js";
 import type { JsonRpcError, JsonRpcPayload, JsonRpcResult, JsonRpcSigner } from "./provider-jsonrpc.js";
 import type { Networkish } from "./network.js";
 /**
@@ -37,7 +37,7 @@ export type DebugEventBrowserProvider = {
  *  adheres to the [[link-eip-1193]] standard, which most (if not all)
  *  currently do.
  */
-export declare class BrowserProvider extends JsonRpcApiPollingProvider {
+export declare class BrowserProvider extends JsonRpcApiProvider {
     #private;
     /**
      *  Connnect to the %%ethereum%% provider, optionally forcing the

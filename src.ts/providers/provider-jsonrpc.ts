@@ -29,7 +29,6 @@ import { AbstractProvider, UnmanagedSubscriber } from "./abstract-provider.js";
 import { AbstractSigner } from "./abstract-signer.js";
 import { Network } from "./network.js";
 import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from "./subscriber-filterid.js";
-import { PollingEventSubscriber } from "./subscriber-polling.js";
 
 import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
 import type { TransactionLike } from "../transaction/index.js";
@@ -72,14 +71,6 @@ function stall(duration: number): Promise<void> {
 function getLowerCase(value: string): string {
     if (value) { return value.toLowerCase(); }
     return value;
-}
-
-interface Pollable {
-    pollingInterval: number;
-}
-
-function isPollable(value: any): value is Pollable {
-    return (value && typeof(value.pollingInterval) === "number");
 }
 
 /**
@@ -188,26 +179,22 @@ export type DebugEventJsonRpcApiProvider = {
  *  **``cacheTimeout``** - passed as [[AbstractProviderOptions]].
  */
 export type JsonRpcApiProviderOptions = {
-    polling?: boolean;
-    staticNetwork?: null | boolean | Network;
+    staticNetwork?: null | Network;
     batchStallTime?: number;
     batchMaxSize?: number;
     batchMaxCount?: number;
 
     cacheTimeout?: number;
-    pollingInterval?: number;
 };
 
 const defaultOptions = {
-    polling: false,
     staticNetwork: null,
 
     batchStallTime: 10,      // 10ms
     batchMaxSize: (1 << 20), // 1Mb
     batchMaxCount: 100,      // 100 requests
 
-    cacheTimeout: 250,
-    pollingInterval: 4000
+    cacheTimeout: 250
 }
 
 /**
@@ -797,9 +784,6 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         if (sub.type === "pending") { return new FilterIdPendingSubscriber(this); }
 
         if (sub.type === "event") {
-            if (this._getOption("polling")) {
-                return new PollingEventSubscriber(this, sub.filter);
-            }
             return new FilterIdEventSubscriber(this, sub.filter);
         }
 
@@ -1147,43 +1131,6 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     }
 }
 
-// @TODO: remove this in v7, it is not exported because this functionality
-// is exposed in the JsonRpcApiProvider by setting polling to true. It should
-// be safe to remove regardless, because it isn't reachable, but just in case.
-/**
- *  @_ignore:
- */
-export abstract class JsonRpcApiPollingProvider extends JsonRpcApiProvider {
-    #pollingInterval: number;
-    constructor(network?: Networkish, options?: JsonRpcApiProviderOptions) {
-        super(network, options);
-
-        this.#pollingInterval = 4000;
-    }
-
-    _getSubscriber(sub: Subscription): Subscriber {
-        const subscriber = super._getSubscriber(sub);
-        if (isPollable(subscriber)) {
-            subscriber.pollingInterval = this.#pollingInterval;
-        }
-        return subscriber;
-    }
-
-    /**
-     *  The polling interval (default: 4000 ms)
-     */
-    get pollingInterval(): number { return this.#pollingInterval; }
-    set pollingInterval(value: number) {
-        if (!Number.isInteger(value) || value < 0) { throw new Error("invalid interval"); }
-        this.#pollingInterval = value;
-        this._forEachSubscriber((sub) => {
-            if (isPollable(sub)) {
-                sub.pollingInterval = this.#pollingInterval;
-            }
-        });
-    }
-}
-
 /**
  *  The JsonRpcProvider is one of the most common Providers,
  *  which performs all operations over HTTP (or HTTPS) requests.
@@ -1192,7 +1139,7 @@ export abstract class JsonRpcApiPollingProvider extends JsonRpcApiProvider {
  *  number; when it advances, all block-base events are then checked
  *  for updates.
  */
-export class JsonRpcProvider extends JsonRpcApiPollingProvider {
+export class JsonRpcProvider extends JsonRpcApiProvider {
     #connect: FetchRequest;
 
     constructor(url?: string | FetchRequest, network?: Networkish, options?: JsonRpcApiProviderOptions) {
@@ -1204,6 +1151,11 @@ export class JsonRpcProvider extends JsonRpcApiPollingProvider {
         } else {
             this.#connect = url.clone();
         }
+    }
+
+    _getSubscriber(sub: Subscription): Subscriber {
+        const subscriber = super._getSubscriber(sub);
+        return subscriber;
     }
 
     _getConnection(): FetchRequest {

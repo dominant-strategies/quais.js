@@ -9,7 +9,7 @@ const provider_jsonrpc_js_1 = require("./provider-jsonrpc.js");
  *  adheres to the [[link-eip-1193]] standard, which most (if not all)
  *  currently do.
  */
-class BrowserProvider extends provider_jsonrpc_js_1.JsonRpcApiPollingProvider {
+class BrowserProvider extends provider_jsonrpc_js_1.JsonRpcApiProvider {
     #request;
     /**
      *  Connnect to the %%ethereum%% provider, optionally forcing the
