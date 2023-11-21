@@ -1,6 +1,6 @@
 import { assertArgument } from "../utils/index.js";
 
-import { JsonRpcApiPollingProvider } from "./provider-jsonrpc.js";
+import { JsonRpcApiProvider } from "./provider-jsonrpc.js";
 
 import type {
     JsonRpcError, JsonRpcPayload, JsonRpcResult,
@@ -41,7 +41,7 @@ export type DebugEventBrowserProvider = {
  *  adheres to the [[link-eip-1193]] standard, which most (if not all)
  *  currently do.
  */
-export class BrowserProvider extends JsonRpcApiPollingProvider {
+export class BrowserProvider extends JsonRpcApiProvider {
     #request: (method: string, params: Array<any> | Record<string, any>) => Promise<any>;
 
     /**

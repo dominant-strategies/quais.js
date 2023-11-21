@@ -35,10 +35,6 @@ import {
 } from "./format.js";
 import { Network } from "./network.js";
 import { copyRequest, Block, FeeData, Log, TransactionReceipt, TransactionResponse } from "./provider.js";
-import {
-    PollingBlockSubscriber, PollingEventSubscriber,
-    PollingOrphanSubscriber, PollingTransactionSubscriber
-} from "./subscriber-polling.js";
 
 import type { Addressable, AddressLike } from "../address/index.js";
 import type { BigNumberish, BytesLike } from "../utils/index.js";
@@ -1335,20 +1331,9 @@ export class AbstractProvider implements Provider {
             case "error":
             case "network":
                 return new UnmanagedSubscriber(sub.type);
-            case "block": {
-                const subscriber = new PollingBlockSubscriber(this);
-                subscriber.pollingInterval = this.pollingInterval;
-                return subscriber;
-            }
-            case "event":
-                return new PollingEventSubscriber(this, sub.filter);
-            case "transaction":
-                return new PollingTransactionSubscriber(this, sub.hash);
-            case "orphan":
-                return new PollingOrphanSubscriber(this, sub.filter);
         }
 
-        throw new Error(`unsupported event: ${ sub.type }`);
+        throw new Error("HTTP polling not supported. This method should be implemented by subclasses.");
     }
 
     /**
