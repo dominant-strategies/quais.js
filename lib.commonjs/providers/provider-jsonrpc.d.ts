@@ -116,13 +116,11 @@ export type DebugEventJsonRpcApiProvider = {
  *  **``cacheTimeout``** - passed as [[AbstractProviderOptions]].
  */
 export type JsonRpcApiProviderOptions = {
-    polling?: boolean;
     staticNetwork?: null | Network;
     batchStallTime?: number;
     batchMaxSize?: number;
     batchMaxCount?: number;
     cacheTimeout?: number;
-    pollingInterval?: number;
 };
 /**
  *  A **JsonRpcTransactionRequest** is formatted as needed by the JSON-RPC
@@ -320,19 +318,6 @@ export declare abstract class JsonRpcApiProvider extends AbstractProvider {
     destroy(): void;
 }
 /**
- *  @_ignore:
- */
-export declare abstract class JsonRpcApiPollingProvider extends JsonRpcApiProvider {
-    #private;
-    constructor(network?: Networkish, options?: JsonRpcApiProviderOptions);
-    _getSubscriber(sub: Subscription): Subscriber;
-    /**
-     *  The polling interval (default: 4000 ms)
-     */
-    get pollingInterval(): number;
-    set pollingInterval(value: number);
-}
-/**
  *  The JsonRpcProvider is one of the most common Providers,
  *  which performs all operations over HTTP (or HTTPS) requests.
  *
@@ -340,9 +325,10 @@ export declare abstract class JsonRpcApiPollingProvider extends JsonRpcApiProvid
  *  number; when it advances, all block-base events are then checked
  *  for updates.
  */
-export declare class JsonRpcProvider extends JsonRpcApiPollingProvider {
+export declare class JsonRpcProvider extends JsonRpcApiProvider {
     #private;
     constructor(url?: string | FetchRequest, network?: Networkish, options?: JsonRpcApiProviderOptions);
+    _getSubscriber(sub: Subscription): Subscriber;
     _getConnection(): FetchRequest;
     send(method: string, params: Array<any> | Record<string, any>): Promise<any>;
     _send(payload: JsonRpcPayload | Array<JsonRpcPayload>): Promise<Array<JsonRpcResult>>;

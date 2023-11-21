@@ -1,12 +1,12 @@
 import { assertArgument } from "../utils/index.js";
-import { JsonRpcApiPollingProvider } from "./provider-jsonrpc.js";
+import { JsonRpcApiProvider } from "./provider-jsonrpc.js";
 ;
 /**
  *  A **BrowserProvider** is intended to wrap an injected provider which
  *  adheres to the [[link-eip-1193]] standard, which most (if not all)
  *  currently do.
  */
-export class BrowserProvider extends JsonRpcApiPollingProvider {
+export class BrowserProvider extends JsonRpcApiProvider {
     #request;
     /**
      *  Connnect to the %%ethereum%% provider, optionally forcing the

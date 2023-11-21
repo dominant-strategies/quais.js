@@ -21,7 +21,6 @@ import { AbstractProvider, UnmanagedSubscriber } from "./abstract-provider.js";
 import { AbstractSigner } from "./abstract-signer.js";
 import { Network } from "./network.js";
 import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from "./subscriber-filterid.js";
-import { PollingEventSubscriber } from "./subscriber-polling.js";
 const Primitive = "bigint,boolean,function,number,string,symbol".split(/,/g);
 //const Methods = "getAddress,then".split(/,/g);
 function deepCopy(value) {
@@ -52,17 +51,12 @@ function getLowerCase(value) {
     }
     return value;
 }
-function isPollable(value) {
-    return (value && typeof (value.pollingInterval) === "number");
-}
 const defaultOptions = {
-    polling: false,
     staticNetwork: null,
     batchStallTime: 10,
     batchMaxSize: (1 << 20),
     batchMaxCount: 100,
-    cacheTimeout: 250,
-    pollingInterval: 4000
+    cacheTimeout: 250
 };
 // @TODO: Unchecked Signers
 export class JsonRpcSigner extends AbstractSigner {
@@ -436,9 +430,6 @@ export class JsonRpcApiProvider extends AbstractProvider {
             return new FilterIdPendingSubscriber(this);
         }
         if (sub.type === "event") {
-            if (this._getOption("polling")) {
-                return new PollingEventSubscriber(this, sub.filter);
-            }
             return new FilterIdEventSubscriber(this, sub.filter);
         }
         // Orphaned Logs are handled automatically, by the filter, since
@@ -735,41 +726,6 @@ export class JsonRpcApiProvider extends AbstractProvider {
         super.destroy();
     }
 }
-// @TODO: remove this in v7, it is not exported because this functionality
-// is exposed in the JsonRpcApiProvider by setting polling to true. It should
-// be safe to remove regardless, because it isn't reachable, but just in case.
-/**
- *  @_ignore:
- */
-export class JsonRpcApiPollingProvider extends JsonRpcApiProvider {
-    #pollingInterval;
-    constructor(network, options) {
-        super(network, options);
-        this.#pollingInterval = 4000;
-    }
-    _getSubscriber(sub) {
-        const subscriber = super._getSubscriber(sub);
-        if (isPollable(subscriber)) {
-            subscriber.pollingInterval = this.#pollingInterval;
-        }
-        return subscriber;
-    }
-    /**
-     *  The polling interval (default: 4000 ms)
-     */
-    get pollingInterval() { return this.#pollingInterval; }
-    set pollingInterval(value) {
-        if (!Number.isInteger(value) || value < 0) {
-            throw new Error("invalid interval");
-        }
-        this.#pollingInterval = value;
-        this._forEachSubscriber((sub) => {
-            if (isPollable(sub)) {
-                sub.pollingInterval = this.#pollingInterval;
-            }
-        });
-    }
-}
 /**
  *  The JsonRpcProvider is one of the most common Providers,
  *  which performs all operations over HTTP (or HTTPS) requests.
@@ -778,7 +734,7 @@ export class JsonRpcApiPollingProvider extends JsonRpcApiProvider {
  *  number; when it advances, all block-base events are then checked
  *  for updates.
  */
-export class JsonRpcProvider extends JsonRpcApiPollingProvider {
+export class JsonRpcProvider extends JsonRpcApiProvider {
     #connect;
     constructor(url, network, options) {
         if (url == null) {
@@ -791,6 +747,10 @@ export class JsonRpcProvider extends JsonRpcApiPollingProvider {
         else {
             this.#connect = url.clone();
         }
+    }
+    _getSubscriber(sub) {
+        const subscriber = super._getSubscriber(sub);
+        return subscriber;
     }
     _getConnection() {
         return this.#connect.clone();

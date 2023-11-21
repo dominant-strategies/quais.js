@@ -69,15 +69,12 @@ export {
 
     BrowserProvider,
 
-    AlchemyProvider, AnkrProvider, CloudflareProvider, EtherscanProvider,
-    InfuraProvider, InfuraWebSocketProvider, PocketProvider, QuickNodeProvider,
-
     IpcSocketProvider, SocketProvider, WebSocketProvider,
 
     EnsResolver,
     Network,
 
-    EnsPlugin, EtherscanPlugin,
+    EnsPlugin,
     FeeDataNetworkPlugin, FetchUrlFeeDataNetworkPlugin,
     GasCostPlugin, NetworkPlugin, MulticoinProviderPlugin,
 
