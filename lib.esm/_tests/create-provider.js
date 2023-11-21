@@ -1,75 +1,8 @@
-import { AlchemyProvider, 
-//    AnkrProvider,
-//    CloudflareProvider,
-EtherscanProvider, InfuraProvider, 
-//    PocketProvider,
-QuickNodeProvider, FallbackProvider, isError, } from "../index.js";
+import { FallbackProvider, isError, } from "../index.js";
 ;
 const ethNetworks = ["default", "mainnet", "goerli"];
 //const maticNetworks = [ "matic", "maticmum" ];
 const ProviderCreators = [
-    {
-        name: "AlchemyProvider",
-        networks: ethNetworks,
-        create: function (network) {
-            return new AlchemyProvider(network, "YrPw6SWb20vJDRFkhWq8aKnTQ8JRNRHM");
-        }
-    },
-    /*
-    {
-        name: "AnkrProvider",
-        networks: ethNetworks.concat([ "matic", "arbitrum" ]),
-        create: function(network: string) {
-            return new AnkrProvider(network);
-        }
-    },
-    */
-    /*
-    {
-        name: "CloudflareProvider",
-        networks: [ "default", "mainnet" ],
-        create: function(network: string) {
-            return new CloudflareProvider(network);
-        }
-    },
-    */
-    {
-        name: "EtherscanProvider",
-        networks: ethNetworks,
-        create: function (network) {
-            return new EtherscanProvider(network, "FPFGK6JSW2UHJJ2666FG93KP7WC999MNW7");
-        }
-    },
-    {
-        name: "InfuraProvider",
-        networks: ethNetworks,
-        create: function (network) {
-            return new InfuraProvider(network, "49a0efa3aaee4fd99797bfa94d8ce2f1");
-        }
-    },
-    {
-        name: "InfuraWebsocketProvider",
-        networks: ethNetworks,
-        create: function (network) {
-            return InfuraProvider.getWebSocketProvider(network, "49a0efa3aaee4fd99797bfa94d8ce2f1");
-        }
-    },
-    /*
-        {
-            name: "PocketProvider",
-            networks: ethNetworks,
-            create: function(network: string) {
-                return new PocketProvider(network);
-            }
-        },
-    */
-    {
-        name: "QuickNodeProvider",
-        networks: ethNetworks,
-        create: function (network) {
-            return new QuickNodeProvider(network);
-        }
-    },
     {
         name: "FallbackProvider",
         networks: ethNetworks,

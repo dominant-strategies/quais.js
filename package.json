@@ -1,5 +1,5 @@
 {
-  "author": "Richard Moore <me@ricmoo.com>",
+  "author": "Dominant Strategies",
   "browser": {
     "./lib.esm/crypto/crypto.js": "./lib.esm/crypto/crypto-browser.js",
     "./lib.esm/providers/provider-ipcsocket.js": "./lib.esm/providers/provider-ipcsocket-browser.js",
@@ -17,7 +17,7 @@
     "tslib": "2.4.0",
     "ws": "8.5.0"
   },
-  "description": "A complete and compact Ethereum library, for dapps, wallets and any other tools.",
+  "description": "A complete and compact Quai library, for dapps, wallets and any other tools.",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "15.0.2",
     "@types/mocha": "9.1.1",
@@ -32,7 +32,6 @@
   "engines": {
     "node": ">=14.0.0"
   },
-  "ethereum": "donations.ethers.eth",
   "exports": {
     ".": {
       "import": "./lib.esm/index.js",
@@ -83,34 +82,23 @@
       "default": "./lib.commonjs/wordlists/index.js"
     }
   },
-  "funding": [
-    {
-      "type": "individual",
-      "url": "https://github.com/sponsors/ethers-io/"
-    },
-    {
-      "type": "individual",
-      "url": "https://www.buymeacoffee.com/ricmoo"
-    }
-  ],
-  "gitHead": "8fed2f84768ace4bf3e5742c931a74841da7c637",
-  "homepage": "https://ethers.org",
+  "homepage": "https://qu.ai",
   "keywords": [
-    "ethereum",
-    "ethers",
-    "ethersjs"
+    "quainetwork",
+    "quais",
+    "quaisjs"
   ],
   "license": "MIT",
   "main": "./lib.commonjs/index.js",
   "module": "./lib.esm/index.js",
-  "name": "ethers",
+  "name": "quais",
   "publishConfig": {
     "access": "public",
     "tag": "latest"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/ethers-io/ethers.js.git"
+    "url": "git://github.com/dominant-strategies/quais-6.js.git"
   },
   "scripts": {
     "_build-dist": "rollup -c && uglifyjs ./dist/ethers.js -o ./dist/ethers.min.js && uglifyjs ./dist/ethers.umd.js -o ./dist/ethers.umd.min.js && uglifyjs ./dist/wordlists-extra.js -o ./dist/wordlists-extra.min.js",
