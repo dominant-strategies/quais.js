@@ -4,7 +4,13 @@ This change log is maintained by `src.ts/_admin/update-changelog.ts` but may als
 
 ## ethers/v6.9.2 (2024-01-02 19:12)
 
-- Fix Base58 padding for string representation of binary data ([#4527](https://github.com/ethers-io/ethers.js/issues/4527); [ccac24a](https://github.com/ethers-io/ethers.js/commit/ccac24a5b0a4d07a4b639c1c4d0a44703e32d418)).
+## ethers/v6.8.1 (2023-11-01 16:08)
+
+- Fixed typo in error description when converting values to arrays ([#4427](https://github.com/ethers-io/ethers.js/issues/4427), [#4446](https://github.com/ethers-io/ethers.js/issues/4446); [8fed2f8](https://github.com/ethers-io/ethers.js/commit/8fed2f84768ace4bf3e5742c931a74841da7c637)).
+- Fix invalid token nonpayable being included in formatted constructor ([#4412](https://github.com/ethers-io/ethers.js/issues/4412); [2e0bd90](https://github.com/ethers-io/ethers.js/commit/2e0bd90744b8e76fcf03f75a66cb0061d50f7bd9)).
+- Add ENS support for Sepolia ([#4422](https://github.com/ethers-io/ethers.js/issues/4422); [1da50ae](https://github.com/ethers-io/ethers.js/commit/1da50ae286da01e58a70bb8df8aa5cc5d260e33e)).
+
+## ethers/v6.8.0 (2023-10-10 22:42)
 
 ## ethers/v6.9.1 (2023-12-19 04:53)
 

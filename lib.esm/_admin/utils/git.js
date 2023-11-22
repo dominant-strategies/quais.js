@@ -42,7 +42,7 @@ export async function getModifiedTime(filename) {
     return null;
 }
 export async function getLogs(files, range, limit) {
-    const args = ["log", "-n", String((limit != null) ? limit : 100)];
+    const args = ["log", "-n", String((limit != null) ? limit : 1)];
     if (range) {
         args.push(`${range.tag0}..${range.tag1}`);
     }
@@ -51,9 +51,7 @@ export async function getLogs(files, range, limit) {
         files.forEach((f) => args.push(f));
     }
     const exec = await run("git", args);
-    if (!exec.ok) {
-        throw new Error(`git log error`);
-    }
+    // if (!exec.stdout) { throw new Error(`git log error`); }
     const log = exec.stdout.trim();
     if (!log) {
         return [];
