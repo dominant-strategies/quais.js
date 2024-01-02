@@ -21,13 +21,6 @@ export { Block, FeeData, Log, TransactionReceipt, TransactionResponse, copyReque
 export { FallbackProvider } from "./provider-fallback.js";
 export { JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner } from "./provider-jsonrpc.js";
 export { BrowserProvider } from "./provider-browser.js";
-export { AlchemyProvider } from "./provider-alchemy.js";
-export { AnkrProvider } from "./provider-ankr.js";
-export { CloudflareProvider } from "./provider-cloudflare.js";
-export { EtherscanProvider, EtherscanPlugin } from "./provider-etherscan.js";
-export { InfuraProvider, InfuraWebSocketProvider } from "./provider-infura.js";
-export { PocketProvider } from "./provider-pocket.js";
-export { QuickNodeProvider } from "./provider-quicknode.js";
 import { IpcSocketProvider } from "./provider-ipcsocket.js";
 export { IpcSocketProvider };
 export { SocketProvider } from "./provider-socket.js";

@@ -1,14 +1,6 @@
 
 import { assert } from "../utils/index.js";
 
-import { AnkrProvider } from "./provider-ankr.js";
-import { AlchemyProvider } from "./provider-alchemy.js";
-import { CloudflareProvider } from "./provider-cloudflare.js";
-import { EtherscanProvider } from "./provider-etherscan.js";
-import { InfuraProvider } from "./provider-infura.js";
-//import { PocketProvider } from "./provider-pocket.js";
-import { QuickNodeProvider } from "./provider-quicknode.js";
-
 import { FallbackProvider } from "./provider-fallback.js";
 import { JsonRpcProvider } from "./provider-jsonrpc.js";
 import { Network } from "./network.js";
@@ -104,42 +96,6 @@ export function getDefaultProvider(network: string | Networkish | WebSocketLike,
             providers.push(new JsonRpcProvider("https:/\/polygon-rpc.com/", staticNetwork, { staticNetwork }));
         }
     }
-
-    if (allowService("alchemy")) {
-        try {
-            providers.push(new AlchemyProvider(network, options.alchemy));
-        } catch (error) { }
-    }
-
-    if (allowService("ankr") && options.ankr != null) {
-        try {
-            providers.push(new AnkrProvider(network, options.ankr));
-        } catch (error) { }
-    }
-
-    if (allowService("cloudflare")) {
-        try {
-            providers.push(new CloudflareProvider(network));
-        } catch (error) { }
-    }
-
-    if (allowService("etherscan")) {
-        try {
-            providers.push(new EtherscanProvider(network, options.etherscan));
-        } catch (error) { }
-    }
-
-    if (allowService("infura")) {
-        try {
-            let projectId = options.infura;
-            let projectSecret: undefined | string = undefined;
-            if (typeof(projectId) === "object") {
-                projectSecret = projectId.projectSecret;
-                projectId = projectId.projectId;
-            }
-            providers.push(new InfuraProvider(network, projectId, projectSecret));
-        } catch (error) { }
-    }
 /*
     if (options.pocket !== "-") {
         try {
@@ -155,12 +111,6 @@ export function getDefaultProvider(network: string | Networkish | WebSocketLike,
         } catch (error) { console.log(error); }
     }
 */
-    if (allowService("quicknode")) {
-        try {
-            let token = options.quicknode;
-            providers.push(new QuickNodeProvider(network, token));
-        } catch (error) { }
-    }
 
     assert(providers.length, "unsupported default network", "UNSUPPORTED_OPERATION", {
         operation: "getDefaultProvider"

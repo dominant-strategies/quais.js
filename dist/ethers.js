@@ -109,7 +109,7 @@ function stringify$1(value) {
  *  Returns true if the %%error%% matches an error thrown by ethers
  *  that matches the error %%code%%.
  *
- *  In TypeScript envornoments, this can be used to check that %%error%%
+ *  In TypeScript environments, this can be used to check that %%error%%
  *  matches an EthersError type, which means the expected properties will
  *  be set.
  *
@@ -135,13 +135,13 @@ function isCallException(error) {
 }
 /**
  *  Returns a new Error configured to the format ethers emits errors, with
- *  the %%message%%, [[api:ErrorCode]] %%code%% and additioanl properties
+ *  the %%message%%, [[api:ErrorCode]] %%code%% and additional properties
  *  for the corresponding EthersError.
  *
  *  Each error in ethers includes the version of ethers, a
- *  machine-readable [[ErrorCode]], and depneding on %%code%%, additional
- *  required properties. The error message will also include the %%meeage%%,
- *  ethers version, %%code%% and all aditional properties, serialized.
+ *  machine-readable [[ErrorCode]], and depending on %%code%%, additional
+ *  required properties. The error message will also include the %%message%%,
+ *  ethers version, %%code%% and all additional properties, serialized.
  */
 function makeError(message, code, info) {
     let shortMessage = message;
@@ -1031,7 +1031,7 @@ function createGetUrl(options) {
 
 /**
  *  Fetching content from the web is environment-specific, so Ethers
- *  provides an abstraction the each environment can implement to provide
+ *  provides an abstraction that each environment can implement to provide
  *  this service.
  *
  *  On [Node.js](link-node), the ``http`` and ``https`` libs are used to
@@ -1039,10 +1039,10 @@ function createGetUrl(options) {
  *  and populate the [[FetchResponse]].
  *
  *  In a browser, the [DOM fetch](link-js-fetch) is used, and the resulting
- *  ``Promise`` is waited on to retreive the payload.
+ *  ``Promise`` is waited on to retrieve the payload.
  *
  *  The [[FetchRequest]] is responsible for handling many common situations,
- *  such as redirects, server throttling, authentcation, etc.
+ *  such as redirects, server throttling, authentication, etc.
  *
  *  It also handles common gateways, such as IPFS and data URIs.
  *
@@ -1166,7 +1166,7 @@ class FetchRequest {
     #throttle;
     #getUrlFunc;
     /**
-     *  The fetch URI to requrest.
+     *  The fetch URL to request.
      */
     get url() { return this.#url; }
     set url(url) {
@@ -1180,15 +1180,15 @@ class FetchRequest {
      *  header.
      *
      *  If %%body%% is null, the body is cleared (along with the
-     *  intrinsic ``Content-Type``) and the .
+     *  intrinsic ``Content-Type``).
      *
-     *  If %%body%% is a string, the intrincis ``Content-Type`` is set to
+     *  If %%body%% is a string, the intrinsic ``Content-Type`` is set to
      *  ``text/plain``.
      *
-     *  If %%body%% is a Uint8Array, the intrincis ``Content-Type`` is set to
+     *  If %%body%% is a Uint8Array, the intrinsic ``Content-Type`` is set to
      *  ``application/octet-stream``.
      *
-     *  If %%body%% is any other object, the intrincis ``Content-Type`` is
+     *  If %%body%% is any other object, the intrinsic ``Content-Type`` is
      *  set to ``application/json``.
      */
     get body() {
@@ -1248,7 +1248,7 @@ class FetchRequest {
      *  The headers that will be used when requesting the URI. All
      *  keys are lower-case.
      *
-     *  This object is a copy, so any chnages will **NOT** be reflected
+     *  This object is a copy, so any changes will **NOT** be reflected
      *  in the ``FetchRequest``.
      *
      *  To set a header entry, use the ``setHeader`` method.
@@ -1340,7 +1340,7 @@ class FetchRequest {
         this.#allowInsecure = !!value;
     }
     /**
-     *  The timeout (in milliseconds) to wait for a complere response.
+     *  The timeout (in milliseconds) to wait for a complete response.
      *  //(default: 5 minutes)//
      */
     get timeout() { return this.#timeout; }
@@ -1547,7 +1547,7 @@ class FetchRequest {
      *  to %%location%%.
      */
     redirect(location) {
-        // Redirection; for now we only support absolute locataions
+        // Redirection; for now we only support absolute locations
         const current = this.url.split(":")[0].toLowerCase();
         const target = location.split(":")[0].toLowerCase();
         // Don't allow redirecting:
@@ -1685,7 +1685,7 @@ class FetchRequest {
     }
 }
 /**
- *  The response for a FetchREquest.
+ *  The response for a FetchRequest.
  */
 class FetchResponse {
     #statusCode;
@@ -1815,7 +1815,7 @@ class FetchResponse {
         return this.headers[key.toLowerCase()];
     }
     /**
-     *  Returns true of the response has a body.
+     *  Returns true if the response has a body.
      */
     hasBody() {
         return (this.#body != null);
@@ -17261,253 +17261,6 @@ function injectCommonNetworks() {
     registerEth("xdai", 100, { ensNetwork: 1 });
 }
 
-function copy$2(obj) {
-    return JSON.parse(JSON.stringify(obj));
-}
-// @TODO: refactor this
-/**
- *  A **PollingBlockSubscriber** polls at a regular interval for a change
- *  in the block number.
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class PollingBlockSubscriber {
-    #provider;
-    #poller;
-    #interval;
-    // The most recent block we have scanned for events. The value -2
-    // indicates we still need to fetch an initial block number
-    #blockNumber;
-    /**
-     *  Create a new **PollingBlockSubscriber** attached to %%provider%%.
-     */
-    constructor(provider) {
-        this.#provider = provider;
-        this.#poller = null;
-        this.#interval = 4000;
-        this.#blockNumber = -2;
-    }
-    /**
-     *  The polling interval.
-     */
-    get pollingInterval() { return this.#interval; }
-    set pollingInterval(value) { this.#interval = value; }
-    async #poll() {
-        try {
-            const blockNumber = await this.#provider.getBlockNumber();
-            // Bootstrap poll to setup our initial block number
-            if (this.#blockNumber === -2) {
-                this.#blockNumber = blockNumber;
-                return;
-            }
-            // @TODO: Put a cap on the maximum number of events per loop?
-            if (blockNumber !== this.#blockNumber) {
-                for (let b = this.#blockNumber + 1; b <= blockNumber; b++) {
-                    // We have been stopped
-                    if (this.#poller == null) {
-                        return;
-                    }
-                    await this.#provider.emit("block", b);
-                }
-                this.#blockNumber = blockNumber;
-            }
-        }
-        catch (error) {
-            // @TODO: Minor bump, add an "error" event to let subscribers
-            //        know things went awry.
-            //console.log(error);
-        }
-        // We have been stopped
-        if (this.#poller == null) {
-            return;
-        }
-        this.#poller = this.#provider._setTimeout(this.#poll.bind(this), this.#interval);
-    }
-    start() {
-        if (this.#poller) {
-            return;
-        }
-        this.#poller = this.#provider._setTimeout(this.#poll.bind(this), this.#interval);
-        this.#poll();
-    }
-    stop() {
-        if (!this.#poller) {
-            return;
-        }
-        this.#provider._clearTimeout(this.#poller);
-        this.#poller = null;
-    }
-    pause(dropWhilePaused) {
-        this.stop();
-        if (dropWhilePaused) {
-            this.#blockNumber = -2;
-        }
-    }
-    resume() {
-        this.start();
-    }
-}
-/**
- *  An **OnBlockSubscriber** can be sub-classed, with a [[_poll]]
- *  implmentation which will be called on every new block.
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class OnBlockSubscriber {
-    #provider;
-    #poll;
-    #running;
-    /**
-     *  Create a new **OnBlockSubscriber** attached to %%provider%%.
-     */
-    constructor(provider) {
-        this.#provider = provider;
-        this.#running = false;
-        this.#poll = (blockNumber) => {
-            this._poll(blockNumber, this.#provider);
-        };
-    }
-    /**
-     *  Called on every new block.
-     */
-    async _poll(blockNumber, provider) {
-        throw new Error("sub-classes must override this");
-    }
-    start() {
-        if (this.#running) {
-            return;
-        }
-        this.#running = true;
-        this.#poll(-2);
-        this.#provider.on("block", this.#poll);
-    }
-    stop() {
-        if (!this.#running) {
-            return;
-        }
-        this.#running = false;
-        this.#provider.off("block", this.#poll);
-    }
-    pause(dropWhilePaused) { this.stop(); }
-    resume() { this.start(); }
-}
-/**
- *  @_ignore:
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class PollingOrphanSubscriber extends OnBlockSubscriber {
-    #filter;
-    constructor(provider, filter) {
-        super(provider);
-        this.#filter = copy$2(filter);
-    }
-    async _poll(blockNumber, provider) {
-        throw new Error("@TODO");
-    }
-}
-/**
- *  A **PollingTransactionSubscriber** will poll for a given transaction
- *  hash for its receipt.
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class PollingTransactionSubscriber extends OnBlockSubscriber {
-    #hash;
-    /**
-     *  Create a new **PollingTransactionSubscriber** attached to
-     *  %%provider%%, listening for %%hash%%.
-     */
-    constructor(provider, hash) {
-        super(provider);
-        this.#hash = hash;
-    }
-    async _poll(blockNumber, provider) {
-        const tx = await provider.getTransactionReceipt(this.#hash);
-        if (tx) {
-            provider.emit(this.#hash, tx);
-        }
-    }
-}
-/**
- *  A **PollingEventSubscriber** will poll for a given filter for its logs.
- *
- *  @_docloc: api/providers/abstract-provider
- */
-class PollingEventSubscriber {
-    #provider;
-    #filter;
-    #poller;
-    #running;
-    // The most recent block we have scanned for events. The value -2
-    // indicates we still need to fetch an initial block number
-    #blockNumber;
-    /**
-     *  Create a new **PollingTransactionSubscriber** attached to
-     *  %%provider%%, listening for %%filter%%.
-     */
-    constructor(provider, filter) {
-        this.#provider = provider;
-        this.#filter = copy$2(filter);
-        this.#poller = this.#poll.bind(this);
-        this.#running = false;
-        this.#blockNumber = -2;
-    }
-    async #poll(blockNumber) {
-        // The initial block hasn't been determined yet
-        if (this.#blockNumber === -2) {
-            return;
-        }
-        const filter = copy$2(this.#filter);
-        filter.fromBlock = this.#blockNumber + 1;
-        filter.toBlock = blockNumber;
-        const logs = await this.#provider.getLogs(filter);
-        // No logs could just mean the node has not indexed them yet,
-        // so we keep a sliding window of 60 blocks to keep scanning
-        if (logs.length === 0) {
-            if (this.#blockNumber < blockNumber - 60) {
-                this.#blockNumber = blockNumber - 60;
-            }
-            return;
-        }
-        for (const log of logs) {
-            this.#provider.emit(this.#filter, log);
-            // Only advance the block number when logs were found to
-            // account for networks (like BNB and Polygon) which may
-            // sacrifice event consistency for block event speed
-            this.#blockNumber = log.blockNumber;
-        }
-    }
-    start() {
-        if (this.#running) {
-            return;
-        }
-        this.#running = true;
-        if (this.#blockNumber === -2) {
-            this.#provider.getBlockNumber().then((blockNumber) => {
-                this.#blockNumber = blockNumber;
-            });
-        }
-        this.#provider.on("block", this.#poller);
-    }
-    stop() {
-        if (!this.#running) {
-            return;
-        }
-        this.#running = false;
-        this.#provider.off("block", this.#poller);
-    }
-    pause(dropWhilePaused) {
-        this.stop();
-        if (dropWhilePaused) {
-            this.#blockNumber = -2;
-        }
-    }
-    resume() {
-        this.start();
-    }
-}
-
 /**
  *  The available providers should suffice for most developers purposes,
  *  but the [[AbstractProvider]] class has many features which enable
@@ -17525,7 +17278,7 @@ class PollingEventSubscriber {
 // Constants
 const BN_2$1 = BigInt(2);
 const MAX_CCIP_REDIRECTS = 10;
-function isPromise$1(value) {
+function isPromise(value) {
     return (value && typeof (value.then) === "function");
 }
 function getTag(prefix, value) {
@@ -17570,7 +17323,7 @@ class UnmanagedSubscriber {
     pause(dropWhilePaused) { }
     resume() { }
 }
-function copy$1(value) {
+function copy$2(value) {
     return JSON.parse(JSON.stringify(value));
 }
 function concisify(items) {
@@ -17604,7 +17357,7 @@ async function getSubscription(_event, provider) {
     if (_event.orphan) {
         const event = _event;
         // @TODO: Should lowercase and whatnot things here instead of copy...
-        return { type: "orphan", tag: getTag("orphan", event), filter: copy$1(event) };
+        return { type: "orphan", tag: getTag("orphan", event), filter: copy$2(event) };
     }
     if ((_event.address || _event.topics)) {
         const event = _event;
@@ -18009,7 +17762,7 @@ class AbstractProvider {
                 return;
             }
             const addr = resolveAddress(request[key], this);
-            if (isPromise$1(addr)) {
+            if (isPromise(addr)) {
                 promises.push((async function () { request[key] = await addr; })());
             }
             else {
@@ -18018,7 +17771,7 @@ class AbstractProvider {
         });
         if (request.blockTag != null) {
             const blockTag = this._getBlockTag(request.blockTag);
-            if (isPromise$1(blockTag)) {
+            if (isPromise(blockTag)) {
                 promises.push((async function () { request.blockTag = await blockTag; })());
             }
             else {
@@ -18108,7 +17861,7 @@ class AbstractProvider {
     }
     async estimateGas(_tx) {
         let tx = this._getTransactionRequest(_tx);
-        if (isPromise$1(tx)) {
+        if (isPromise(tx)) {
             tx = await tx;
         }
         return getBigInt(await this.#perform({
@@ -18295,7 +18048,7 @@ class AbstractProvider {
     // Bloom-filter Queries
     async getLogs(_filter) {
         let filter = this._getFilter(_filter);
-        if (isPromise$1(filter)) {
+        if (isPromise(filter)) {
             filter = await filter;
         }
         const { network, params } = await resolveProperties({
@@ -18465,19 +18218,8 @@ class AbstractProvider {
             case "error":
             case "network":
                 return new UnmanagedSubscriber(sub.type);
-            case "block": {
-                const subscriber = new PollingBlockSubscriber(this);
-                subscriber.pollingInterval = this.pollingInterval;
-                return subscriber;
-            }
-            case "event":
-                return new PollingEventSubscriber(this, sub.filter);
-            case "transaction":
-                return new PollingTransactionSubscriber(this, sub.hash);
-            case "orphan":
-                return new PollingOrphanSubscriber(this, sub.filter);
         }
-        throw new Error(`unsupported event: ${sub.type}`);
+        throw new Error("HTTP polling not supported. This method should be implemented by subclasses.");
     }
     /**
      *  If a [[Subscriber]] fails and needs to replace itself, this
@@ -19128,6 +18870,653 @@ function showThrottleMessage(service) {
     console.log("==========================");
 }
 
+/**
+ *  A **FallbackProvider** providers resiliance, security and performatnce
+ *  in a way that is customizable and configurable.
+ *
+ *  @_section: api/providers/fallback-provider:Fallback Provider [about-fallback-provider]
+ */
+const BN_1 = BigInt("1");
+const BN_2 = BigInt("2");
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const tmp = array[i];
+        array[i] = array[j];
+        array[j] = tmp;
+    }
+}
+function stall$3(duration) {
+    return new Promise((resolve) => { setTimeout(resolve, duration); });
+}
+function getTime() { return (new Date()).getTime(); }
+function stringify(value) {
+    return JSON.stringify(value, (key, value) => {
+        if (typeof (value) === "bigint") {
+            return { type: "bigint", value: value.toString() };
+        }
+        return value;
+    });
+}
+const defaultConfig = { stallTimeout: 400, priority: 1, weight: 1 };
+const defaultState = {
+    blockNumber: -2, requests: 0, lateResponses: 0, errorResponses: 0,
+    outOfSync: -1, unsupportedEvents: 0, rollingDuration: 0, score: 0,
+    _network: null, _updateNumber: null, _totalTime: 0,
+    _lastFatalError: null, _lastFatalErrorTimestamp: 0
+};
+async function waitForSync(config, blockNumber) {
+    while (config.blockNumber < 0 || config.blockNumber < blockNumber) {
+        if (!config._updateNumber) {
+            config._updateNumber = (async () => {
+                try {
+                    const blockNumber = await config.provider.getBlockNumber();
+                    if (blockNumber > config.blockNumber) {
+                        config.blockNumber = blockNumber;
+                    }
+                }
+                catch (error) {
+                    config.blockNumber = -2;
+                    config._lastFatalError = error;
+                    config._lastFatalErrorTimestamp = getTime();
+                }
+                config._updateNumber = null;
+            })();
+        }
+        await config._updateNumber;
+        config.outOfSync++;
+        if (config._lastFatalError) {
+            break;
+        }
+    }
+}
+function _normalize(value) {
+    if (value == null) {
+        return "null";
+    }
+    if (Array.isArray(value)) {
+        return "[" + (value.map(_normalize)).join(",") + "]";
+    }
+    if (typeof (value) === "object" && typeof (value.toJSON) === "function") {
+        return _normalize(value.toJSON());
+    }
+    switch (typeof (value)) {
+        case "boolean":
+        case "symbol":
+            return value.toString();
+        case "bigint":
+        case "number":
+            return BigInt(value).toString();
+        case "string":
+            return JSON.stringify(value);
+        case "object": {
+            const keys = Object.keys(value);
+            keys.sort();
+            return "{" + keys.map((k) => `${JSON.stringify(k)}:${_normalize(value[k])}`).join(",") + "}";
+        }
+    }
+    console.log("Could not serialize", value);
+    throw new Error("Hmm...");
+}
+function normalizeResult(value) {
+    if ("error" in value) {
+        const error = value.error;
+        return { tag: _normalize(error), value: error };
+    }
+    const result = value.result;
+    return { tag: _normalize(result), value: result };
+}
+// This strategy picks the highest weight result, as long as the weight is
+// equal to or greater than quorum
+function checkQuorum(quorum, results) {
+    const tally = new Map();
+    for (const { value, tag, weight } of results) {
+        const t = tally.get(tag) || { value, weight: 0 };
+        t.weight += weight;
+        tally.set(tag, t);
+    }
+    let best = null;
+    for (const r of tally.values()) {
+        if (r.weight >= quorum && (!best || r.weight > best.weight)) {
+            best = r;
+        }
+    }
+    if (best) {
+        return best.value;
+    }
+    return undefined;
+}
+function getMedian(quorum, results) {
+    let resultWeight = 0;
+    const errorMap = new Map();
+    let bestError = null;
+    const values = [];
+    for (const { value, tag, weight } of results) {
+        if (value instanceof Error) {
+            const e = errorMap.get(tag) || { value, weight: 0 };
+            e.weight += weight;
+            errorMap.set(tag, e);
+            if (bestError == null || e.weight > bestError.weight) {
+                bestError = e;
+            }
+        }
+        else {
+            values.push(BigInt(value));
+            resultWeight += weight;
+        }
+    }
+    if (resultWeight < quorum) {
+        // We have quorum for an error
+        if (bestError && bestError.weight >= quorum) {
+            return bestError.value;
+        }
+        // We do not have quorum for a result
+        return undefined;
+    }
+    // Get the sorted values
+    values.sort((a, b) => ((a < b) ? -1 : (b > a) ? 1 : 0));
+    const mid = Math.floor(values.length / 2);
+    // Odd-length; take the middle value
+    if (values.length % 2) {
+        return values[mid];
+    }
+    // Even length; take the ceiling of the mean of the center two values
+    return (values[mid - 1] + values[mid] + BN_1) / BN_2;
+}
+function getAnyResult(quorum, results) {
+    // If any value or error meets quorum, that is our preferred result
+    const result = checkQuorum(quorum, results);
+    if (result !== undefined) {
+        return result;
+    }
+    // Otherwise, do we have any result?
+    for (const r of results) {
+        if (r.value) {
+            return r.value;
+        }
+    }
+    // Nope!
+    return undefined;
+}
+function getFuzzyMode(quorum, results) {
+    if (quorum === 1) {
+        return getNumber(getMedian(quorum, results), "%internal");
+    }
+    const tally = new Map();
+    const add = (result, weight) => {
+        const t = tally.get(result) || { result, weight: 0 };
+        t.weight += weight;
+        tally.set(result, t);
+    };
+    for (const { weight, value } of results) {
+        const r = getNumber(value);
+        add(r - 1, weight);
+        add(r, weight);
+        add(r + 1, weight);
+    }
+    let bestWeight = 0;
+    let bestResult = undefined;
+    for (const { weight, result } of tally.values()) {
+        // Use this result, if this result meets quorum and has either:
+        // - a better weight
+        // - or equal weight, but the result is larger
+        if (weight >= quorum && (weight > bestWeight || (bestResult != null && weight === bestWeight && result > bestResult))) {
+            bestWeight = weight;
+            bestResult = result;
+        }
+    }
+    return bestResult;
+}
+/**
+ *  A **FallbackProvider** manages several [[Providers]] providing
+ *  resiliance by switching between slow or misbehaving nodes, security
+ *  by requiring multiple backends to aggree and performance by allowing
+ *  faster backends to respond earlier.
+ *
+ */
+class FallbackProvider extends AbstractProvider {
+    /**
+     *  The number of backends that must agree on a value before it is
+     *  accpeted.
+     */
+    quorum;
+    /**
+     *  @_ignore:
+     */
+    eventQuorum;
+    /**
+     *  @_ignore:
+     */
+    eventWorkers;
+    #configs;
+    #height;
+    #initialSyncPromise;
+    /**
+     *  Creates a new **FallbackProvider** with %%providers%% connected to
+     *  %%network%%.
+     *
+     *  If a [[Provider]] is included in %%providers%%, defaults are used
+     *  for the configuration.
+     */
+    constructor(providers, network, options) {
+        super(network, options);
+        this.#configs = providers.map((p) => {
+            if (p instanceof AbstractProvider) {
+                return Object.assign({ provider: p }, defaultConfig, defaultState);
+            }
+            else {
+                return Object.assign({}, defaultConfig, p, defaultState);
+            }
+        });
+        this.#height = -2;
+        this.#initialSyncPromise = null;
+        if (options && options.quorum != null) {
+            this.quorum = options.quorum;
+        }
+        else {
+            this.quorum = Math.ceil(this.#configs.reduce((accum, config) => {
+                accum += config.weight;
+                return accum;
+            }, 0) / 2);
+        }
+        this.eventQuorum = 1;
+        this.eventWorkers = 1;
+        assertArgument(this.quorum <= this.#configs.reduce((a, c) => (a + c.weight), 0), "quorum exceed provider wieght", "quorum", this.quorum);
+    }
+    get providerConfigs() {
+        return this.#configs.map((c) => {
+            const result = Object.assign({}, c);
+            for (const key in result) {
+                if (key[0] === "_") {
+                    delete result[key];
+                }
+            }
+            return result;
+        });
+    }
+    async _detectNetwork() {
+        return Network.from(getBigInt(await this._perform({ method: "chainId" })));
+    }
+    // @TODO: Add support to select providers to be the event subscriber
+    //_getSubscriber(sub: Subscription): Subscriber {
+    //    throw new Error("@TODO");
+    //}
+    /**
+     *  Transforms a %%req%% into the correct method call on %%provider%%.
+     */
+    async _translatePerform(provider, req) {
+        switch (req.method) {
+            case "broadcastTransaction":
+                return await provider.broadcastTransaction(req.signedTransaction);
+            case "call":
+                return await provider.call(Object.assign({}, req.transaction, { blockTag: req.blockTag }));
+            case "chainId":
+                return (await provider.getNetwork()).chainId;
+            case "estimateGas":
+                return await provider.estimateGas(req.transaction);
+            case "getBalance":
+                return await provider.getBalance(req.address, req.blockTag);
+            case "getBlock": {
+                const block = ("blockHash" in req) ? req.blockHash : req.blockTag;
+                return await provider.getBlock(block, req.includeTransactions);
+            }
+            case "getBlockNumber":
+                return await provider.getBlockNumber();
+            case "getCode":
+                return await provider.getCode(req.address, req.blockTag);
+            case "getGasPrice":
+                return (await provider.getFeeData()).gasPrice;
+            case "getLogs":
+                return await provider.getLogs(req.filter);
+            case "getStorage":
+                return await provider.getStorage(req.address, req.position, req.blockTag);
+            case "getTransaction":
+                return await provider.getTransaction(req.hash);
+            case "getTransactionCount":
+                return await provider.getTransactionCount(req.address, req.blockTag);
+            case "getTransactionReceipt":
+                return await provider.getTransactionReceipt(req.hash);
+            case "getTransactionResult":
+                return await provider.getTransactionResult(req.hash);
+        }
+    }
+    // Grab the next (random) config that is not already part of
+    // the running set
+    #getNextConfig(running) {
+        // @TODO: Maybe do a check here to favour (heavily) providers that
+        //        do not require waitForSync and disfavour providers that
+        //        seem down-ish or are behaving slowly
+        const configs = Array.from(running).map((r) => r.config);
+        // Shuffle the states, sorted by priority
+        const allConfigs = this.#configs.slice();
+        shuffle(allConfigs);
+        allConfigs.sort((a, b) => (a.priority - b.priority));
+        for (const config of allConfigs) {
+            if (config._lastFatalError) {
+                continue;
+            }
+            if (configs.indexOf(config) === -1) {
+                return config;
+            }
+        }
+        return null;
+    }
+    // Adds a new runner (if available) to running.
+    #addRunner(running, req) {
+        const config = this.#getNextConfig(running);
+        // No runners available
+        if (config == null) {
+            return null;
+        }
+        // Create a new runner
+        const runner = {
+            config, result: null, didBump: false,
+            perform: null, staller: null
+        };
+        const now = getTime();
+        // Start performing this operation
+        runner.perform = (async () => {
+            try {
+                config.requests++;
+                const result = await this._translatePerform(config.provider, req);
+                runner.result = { result };
+            }
+            catch (error) {
+                config.errorResponses++;
+                runner.result = { error };
+            }
+            const dt = (getTime() - now);
+            config._totalTime += dt;
+            config.rollingDuration = 0.95 * config.rollingDuration + 0.05 * dt;
+            runner.perform = null;
+        })();
+        // Start a staller; when this times out, it's time to force
+        // kicking off another runner because we are taking too long
+        runner.staller = (async () => {
+            await stall$3(config.stallTimeout);
+            runner.staller = null;
+        })();
+        running.add(runner);
+        return runner;
+    }
+    // Initializes the blockNumber and network for each runner and
+    // blocks until initialized
+    async #initialSync() {
+        let initialSync = this.#initialSyncPromise;
+        if (!initialSync) {
+            const promises = [];
+            this.#configs.forEach((config) => {
+                promises.push((async () => {
+                    await waitForSync(config, 0);
+                    if (!config._lastFatalError) {
+                        config._network = await config.provider.getNetwork();
+                    }
+                })());
+            });
+            this.#initialSyncPromise = initialSync = (async () => {
+                // Wait for all providers to have a block number and network
+                await Promise.all(promises);
+                // Check all the networks match
+                let chainId = null;
+                for (const config of this.#configs) {
+                    if (config._lastFatalError) {
+                        continue;
+                    }
+                    const network = (config._network);
+                    if (chainId == null) {
+                        chainId = network.chainId;
+                    }
+                    else if (network.chainId !== chainId) {
+                        assert(false, "cannot mix providers on different networks", "UNSUPPORTED_OPERATION", {
+                            operation: "new FallbackProvider"
+                        });
+                    }
+                }
+            })();
+        }
+        await initialSync;
+    }
+    async #checkQuorum(running, req) {
+        // Get all the result objects
+        const results = [];
+        for (const runner of running) {
+            if (runner.result != null) {
+                const { tag, value } = normalizeResult(runner.result);
+                results.push({ tag, value, weight: runner.config.weight });
+            }
+        }
+        // Are there enough results to event meet quorum?
+        if (results.reduce((a, r) => (a + r.weight), 0) < this.quorum) {
+            return undefined;
+        }
+        switch (req.method) {
+            case "getBlockNumber": {
+                // We need to get the bootstrap block height
+                if (this.#height === -2) {
+                    this.#height = Math.ceil(getNumber(getMedian(this.quorum, this.#configs.filter((c) => (!c._lastFatalError)).map((c) => ({
+                        value: c.blockNumber,
+                        tag: getNumber(c.blockNumber).toString(),
+                        weight: c.weight
+                    })))));
+                }
+                // Find the mode across all the providers, allowing for
+                // a little drift between block heights
+                const mode = getFuzzyMode(this.quorum, results);
+                if (mode === undefined) {
+                    return undefined;
+                }
+                if (mode > this.#height) {
+                    this.#height = mode;
+                }
+                return this.#height;
+            }
+            case "getGasPrice":
+            case "estimateGas":
+                return getMedian(this.quorum, results);
+            case "getBlock":
+                // Pending blocks are in the mempool and already
+                // quite untrustworthy; just grab anything
+                if ("blockTag" in req && req.blockTag === "pending") {
+                    return getAnyResult(this.quorum, results);
+                }
+                return checkQuorum(this.quorum, results);
+            case "call":
+            case "chainId":
+            case "getBalance":
+            case "getTransactionCount":
+            case "getCode":
+            case "getStorage":
+            case "getTransaction":
+            case "getTransactionReceipt":
+            case "getLogs":
+                return checkQuorum(this.quorum, results);
+            case "broadcastTransaction":
+                return getAnyResult(this.quorum, results);
+        }
+        assert(false, "unsupported method", "UNSUPPORTED_OPERATION", {
+            operation: `_perform(${stringify(req.method)})`
+        });
+    }
+    async #waitForQuorum(running, req) {
+        if (running.size === 0) {
+            throw new Error("no runners?!");
+        }
+        // Any promises that are interesting to watch for; an expired stall
+        // or a successful perform
+        const interesting = [];
+        let newRunners = 0;
+        for (const runner of running) {
+            // No responses, yet; keep an eye on it
+            if (runner.perform) {
+                interesting.push(runner.perform);
+            }
+            // Still stalling...
+            if (runner.staller) {
+                interesting.push(runner.staller);
+                continue;
+            }
+            // This runner has already triggered another runner
+            if (runner.didBump) {
+                continue;
+            }
+            // Got a response (result or error) or stalled; kick off another runner
+            runner.didBump = true;
+            newRunners++;
+        }
+        // Check if we have reached quorum on a result (or error)
+        const value = await this.#checkQuorum(running, req);
+        if (value !== undefined) {
+            if (value instanceof Error) {
+                throw value;
+            }
+            return value;
+        }
+        // Add any new runners, because a staller timed out or a result
+        // or error response came in.
+        for (let i = 0; i < newRunners; i++) {
+            this.#addRunner(running, req);
+        }
+        // All providers have returned, and we have no result
+        assert(interesting.length > 0, "quorum not met", "SERVER_ERROR", {
+            request: "%sub-requests",
+            info: { request: req, results: Array.from(running).map((r) => stringify(r.result)) }
+        });
+        // Wait for someone to either complete its perform or stall out
+        await Promise.race(interesting);
+        // This is recursive, but at worst case the depth is 2x the
+        // number of providers (each has a perform and a staller)
+        return await this.#waitForQuorum(running, req);
+    }
+    async _perform(req) {
+        // Broadcasting a transaction is rare (ish) and already incurs
+        // a cost on the user, so spamming is safe-ish. Just send it to
+        // every backend.
+        if (req.method === "broadcastTransaction") {
+            const results = await Promise.all(this.#configs.map(async ({ provider, weight }) => {
+                try {
+                    const result = await provider._perform(req);
+                    return Object.assign(normalizeResult({ result }), { weight });
+                }
+                catch (error) {
+                    return Object.assign(normalizeResult({ error }), { weight });
+                }
+            }));
+            const result = getAnyResult(this.quorum, results);
+            assert(result !== undefined, "problem multi-broadcasting", "SERVER_ERROR", {
+                request: "%sub-requests",
+                info: { request: req, results: results.map(stringify) }
+            });
+            if (result instanceof Error) {
+                throw result;
+            }
+            return result;
+        }
+        await this.#initialSync();
+        // Bootstrap enough runners to meet quorum
+        const running = new Set();
+        for (let i = 0; i < this.quorum; i++) {
+            this.#addRunner(running, req);
+        }
+        const result = await this.#waitForQuorum(running, req);
+        // Track requests sent to a provider that are still
+        // outstanding after quorum has been otherwise found
+        for (const runner of running) {
+            if (runner.perform && runner.result == null) {
+                runner.config.lateResponses++;
+            }
+        }
+        return result;
+    }
+    async destroy() {
+        for (const { provider } of this.#configs) {
+            provider.destroy();
+        }
+        super.destroy();
+    }
+}
+
+function copy$1(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+/**
+ *  A **PollingEventSubscriber** will poll for a given filter for its logs.
+ *
+ *  @_docloc: api/providers/abstract-provider
+ */
+class PollingEventSubscriber {
+    #provider;
+    #filter;
+    #poller;
+    #running;
+    // The most recent block we have scanned for events. The value -2
+    // indicates we still need to fetch an initial block number
+    #blockNumber;
+    /**
+     *  Create a new **PollingTransactionSubscriber** attached to
+     *  %%provider%%, listening for %%filter%%.
+     */
+    constructor(provider, filter) {
+        this.#provider = provider;
+        this.#filter = copy$1(filter);
+        this.#poller = this.#poll.bind(this);
+        this.#running = false;
+        this.#blockNumber = -2;
+    }
+    async #poll(blockNumber) {
+        // The initial block hasn't been determined yet
+        if (this.#blockNumber === -2) {
+            return;
+        }
+        const filter = copy$1(this.#filter);
+        filter.fromBlock = this.#blockNumber + 1;
+        filter.toBlock = blockNumber;
+        const logs = await this.#provider.getLogs(filter);
+        // No logs could just mean the node has not indexed them yet,
+        // so we keep a sliding window of 60 blocks to keep scanning
+        if (logs.length === 0) {
+            if (this.#blockNumber < blockNumber - 60) {
+                this.#blockNumber = blockNumber - 60;
+            }
+            return;
+        }
+        for (const log of logs) {
+            this.#provider.emit(this.#filter, log);
+            // Only advance the block number when logs were found to
+            // account for networks (like BNB and Polygon) which may
+            // sacrifice event consistency for block event speed
+            this.#blockNumber = log.blockNumber;
+        }
+    }
+    start() {
+        if (this.#running) {
+            return;
+        }
+        this.#running = true;
+        if (this.#blockNumber === -2) {
+            this.#provider.getBlockNumber().then((blockNumber) => {
+                this.#blockNumber = blockNumber;
+            });
+        }
+        this.#provider.on("block", this.#poller);
+    }
+    stop() {
+        if (!this.#running) {
+            return;
+        }
+        this.#running = false;
+        this.#provider.off("block", this.#poller);
+    }
+    pause(dropWhilePaused) {
+        this.stop();
+        if (dropWhilePaused) {
+            this.#blockNumber = -2;
+        }
+    }
+    resume() {
+        this.start();
+    }
+}
+
 function copy(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
@@ -19332,7 +19721,7 @@ function deepCopy(value) {
     }
     throw new Error(`should not happen: ${value} (${typeof (value)})`);
 }
-function stall$3(duration) {
+function stall$2(duration) {
     return new Promise((resolve) => { setTimeout(resolve, duration); });
 }
 function getLowerCase(value) {
@@ -19341,17 +19730,12 @@ function getLowerCase(value) {
     }
     return value;
 }
-function isPollable(value) {
-    return (value && typeof (value.pollingInterval) === "number");
-}
 const defaultOptions = {
-    polling: false,
     staticNetwork: null,
     batchStallTime: 10,
     batchMaxSize: (1 << 20),
     batchMaxCount: 100,
-    cacheTimeout: 250,
-    pollingInterval: 4000
+    cacheTimeout: 250
 };
 // @TODO: Unchecked Signers
 class JsonRpcSigner extends AbstractSigner {
@@ -19695,7 +20079,7 @@ class JsonRpcApiProvider extends AbstractProvider {
                     }
                     console.log("JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)");
                     this.emit("error", makeError("failed to bootstrap network detection", "NETWORK_ERROR", { event: "initial-network-discovery", info: { error } }));
-                    await stall$3(1000);
+                    await stall$2(1000);
                 }
             }
             // Start dispatching requests
@@ -19725,9 +20109,6 @@ class JsonRpcApiProvider extends AbstractProvider {
             return new FilterIdPendingSubscriber(this);
         }
         if (sub.type === "event") {
-            if (this._getOption("polling")) {
-                return new PollingEventSubscriber(this, sub.filter);
-            }
             return new FilterIdEventSubscriber(this, sub.filter);
         }
         // Orphaned Logs are handled automatically, by the filter, since
@@ -20024,41 +20405,6 @@ class JsonRpcApiProvider extends AbstractProvider {
         super.destroy();
     }
 }
-// @TODO: remove this in v7, it is not exported because this functionality
-// is exposed in the JsonRpcApiProvider by setting polling to true. It should
-// be safe to remove regardless, because it isn't reachable, but just in case.
-/**
- *  @_ignore:
- */
-class JsonRpcApiPollingProvider extends JsonRpcApiProvider {
-    #pollingInterval;
-    constructor(network, options) {
-        super(network, options);
-        this.#pollingInterval = 4000;
-    }
-    _getSubscriber(sub) {
-        const subscriber = super._getSubscriber(sub);
-        if (isPollable(subscriber)) {
-            subscriber.pollingInterval = this.#pollingInterval;
-        }
-        return subscriber;
-    }
-    /**
-     *  The polling interval (default: 4000 ms)
-     */
-    get pollingInterval() { return this.#pollingInterval; }
-    set pollingInterval(value) {
-        if (!Number.isInteger(value) || value < 0) {
-            throw new Error("invalid interval");
-        }
-        this.#pollingInterval = value;
-        this._forEachSubscriber((sub) => {
-            if (isPollable(sub)) {
-                sub.pollingInterval = this.#pollingInterval;
-            }
-        });
-    }
-}
 /**
  *  The JsonRpcProvider is one of the most common Providers,
  *  which performs all operations over HTTP (or HTTPS) requests.
@@ -20067,7 +20413,7 @@ class JsonRpcApiPollingProvider extends JsonRpcApiProvider {
  *  number; when it advances, all block-base events are then checked
  *  for updates.
  */
-class JsonRpcProvider extends JsonRpcApiPollingProvider {
+class JsonRpcProvider extends JsonRpcApiProvider {
     #connect;
     constructor(url, network, options) {
         if (url == null) {
@@ -20080,6 +20426,10 @@ class JsonRpcProvider extends JsonRpcApiPollingProvider {
         else {
             this.#connect = url.clone();
         }
+    }
+    _getSubscriber(sub) {
+        const subscriber = super._getSubscriber(sub);
+        return subscriber;
     }
     _getConnection() {
         return this.#connect.clone();
@@ -20158,692 +20508,6 @@ function spelunkMessage(value) {
     const result = [];
     _spelunkMessage(value, result);
     return result;
-}
-
-/**
- *  [[link-ankr]] provides a third-party service for connecting to
- *  various blockchains over JSON-RPC.
- *
- *  **Supported Networks**
- *
- *  - Ethereum Mainnet (``mainnet``)
- *  - Goerli Testnet (``goerli``)
- *  - Polygon (``matic``)
- *  - Arbitrum (``arbitrum``)
- *
- *  @_subsection: api/providers/thirdparty:Ankr  [providers-ankr]
- */
-const defaultApiKey$1 = "9f7d929b018cdffb338517efa06f58359e86ff1ffd350bc889738523659e7972";
-function getHost$4(name) {
-    switch (name) {
-        case "mainnet":
-            return "rpc.ankr.com/eth";
-        case "goerli":
-            return "rpc.ankr.com/eth_goerli";
-        case "matic":
-            return "rpc.ankr.com/polygon";
-        case "arbitrum":
-            return "rpc.ankr.com/arbitrum";
-    }
-    assertArgument(false, "unsupported network", "network", name);
-}
-/**
- *  The **AnkrProvider** connects to the [[link-ankr]]
- *  JSON-RPC end-points.
- *
- *  By default, a highly-throttled API key is used, which is
- *  appropriate for quick prototypes and simple scripts. To
- *  gain access to an increased rate-limit, it is highly
- *  recommended to [sign up here](link-ankr-signup).
- */
-class AnkrProvider extends JsonRpcProvider {
-    /**
-     *  The API key for the Ankr connection.
-     */
-    apiKey;
-    /**
-     *  Create a new **AnkrProvider**.
-     *
-     *  By default connecting to ``mainnet`` with a highly throttled
-     *  API key.
-     */
-    constructor(_network, apiKey) {
-        if (_network == null) {
-            _network = "mainnet";
-        }
-        const network = Network.from(_network);
-        if (apiKey == null) {
-            apiKey = defaultApiKey$1;
-        }
-        // Ankr does not support filterId, so we force polling
-        const options = { polling: true, staticNetwork: network };
-        const request = AnkrProvider.getRequest(network, apiKey);
-        super(request, network, options);
-        defineProperties(this, { apiKey });
-    }
-    _getProvider(chainId) {
-        try {
-            return new AnkrProvider(chainId, this.apiKey);
-        }
-        catch (error) { }
-        return super._getProvider(chainId);
-    }
-    /**
-     *  Returns a prepared request for connecting to %%network%% with
-     *  %%apiKey%%.
-     */
-    static getRequest(network, apiKey) {
-        if (apiKey == null) {
-            apiKey = defaultApiKey$1;
-        }
-        const request = new FetchRequest(`https:/\/${getHost$4(network.name)}/${apiKey}`);
-        request.allowGzip = true;
-        if (apiKey === defaultApiKey$1) {
-            request.retryFunc = async (request, response, attempt) => {
-                showThrottleMessage("AnkrProvider");
-                return true;
-            };
-        }
-        return request;
-    }
-    getRpcError(payload, error) {
-        if (payload.method === "eth_sendRawTransaction") {
-            if (error && error.error && error.error.message === "INTERNAL_ERROR: could not replace existing tx") {
-                error.error.message = "replacement transaction underpriced";
-            }
-        }
-        return super.getRpcError(payload, error);
-    }
-    isCommunityResource() {
-        return (this.apiKey === defaultApiKey$1);
-    }
-}
-
-/**
- *  About Alchemy
- *
- *  @_subsection: api/providers/thirdparty:Alchemy  [providers-alchemy]
- */
-const defaultApiKey = "_gg7wSSi0KMBsdKnGVfHDueq6xMB9EkC";
-function getHost$3(name) {
-    switch (name) {
-        case "mainnet":
-            return "eth-mainnet.alchemyapi.io";
-        case "goerli":
-            return "eth-goerli.g.alchemy.com";
-        case "sepolia":
-            return "eth-sepolia.g.alchemy.com";
-        case "arbitrum":
-            return "arb-mainnet.g.alchemy.com";
-        case "arbitrum-goerli":
-            return "arb-goerli.g.alchemy.com";
-        case "matic":
-            return "polygon-mainnet.g.alchemy.com";
-        case "matic-mumbai":
-            return "polygon-mumbai.g.alchemy.com";
-        case "optimism":
-            return "opt-mainnet.g.alchemy.com";
-        case "optimism-goerli":
-            return "opt-goerli.g.alchemy.com";
-    }
-    assertArgument(false, "unsupported network", "network", name);
-}
-/**
- *  The **AlchemyProvider** connects to the [[link-alchemy]]
- *  JSON-RPC end-points.
- *
- *  By default, a highly-throttled API key is used, which is
- *  appropriate for quick prototypes and simple scripts. To
- *  gain access to an increased rate-limit, it is highly
- *  recommended to [sign up here](link-alchemy-signup).
- *
- *  @_docloc: api/providers/thirdparty
- */
-class AlchemyProvider extends JsonRpcProvider {
-    apiKey;
-    constructor(_network, apiKey) {
-        if (_network == null) {
-            _network = "mainnet";
-        }
-        const network = Network.from(_network);
-        if (apiKey == null) {
-            apiKey = defaultApiKey;
-        }
-        const request = AlchemyProvider.getRequest(network, apiKey);
-        super(request, network, { staticNetwork: network });
-        defineProperties(this, { apiKey });
-    }
-    _getProvider(chainId) {
-        try {
-            return new AlchemyProvider(chainId, this.apiKey);
-        }
-        catch (error) { }
-        return super._getProvider(chainId);
-    }
-    async _perform(req) {
-        // https://docs.alchemy.com/reference/trace-transaction
-        if (req.method === "getTransactionResult") {
-            const { trace, tx } = await resolveProperties({
-                trace: this.send("trace_transaction", [req.hash]),
-                tx: this.getTransaction(req.hash)
-            });
-            if (trace == null || tx == null) {
-                return null;
-            }
-            let data;
-            let error = false;
-            try {
-                data = trace[0].result.output;
-                error = (trace[0].error === "Reverted");
-            }
-            catch (error) { }
-            if (data) {
-                assert(!error, "an error occurred during transaction executions", "CALL_EXCEPTION", {
-                    action: "getTransactionResult",
-                    data,
-                    reason: null,
-                    transaction: tx,
-                    invocation: null,
-                    revert: null // @TODO
-                });
-                return data;
-            }
-            assert(false, "could not parse trace result", "BAD_DATA", { value: trace });
-        }
-        return await super._perform(req);
-    }
-    isCommunityResource() {
-        return (this.apiKey === defaultApiKey);
-    }
-    static getRequest(network, apiKey) {
-        if (apiKey == null) {
-            apiKey = defaultApiKey;
-        }
-        const request = new FetchRequest(`https:/\/${getHost$3(network.name)}/v2/${apiKey}`);
-        request.allowGzip = true;
-        if (apiKey === defaultApiKey) {
-            request.retryFunc = async (request, response, attempt) => {
-                showThrottleMessage("alchemy");
-                return true;
-            };
-        }
-        return request;
-    }
-}
-
-/**
- *  About Cloudflare
- *
- *  @_subsection: api/providers/thirdparty:Cloudflare  [providers-cloudflare]
- */
-/**
- *  About Cloudflare...
- */
-class CloudflareProvider extends JsonRpcProvider {
-    constructor(_network) {
-        if (_network == null) {
-            _network = "mainnet";
-        }
-        const network = Network.from(_network);
-        assertArgument(network.name === "mainnet", "unsupported network", "network", _network);
-        super("https:/\/cloudflare-eth.com/", network, { staticNetwork: network });
-    }
-}
-
-/**
- *  [[link-etherscan]] provides a third-party service for connecting to
- *  various blockchains over a combination of JSON-RPC and custom API
- *  endpoints.
- *
- *  **Supported Networks**
- *
- *  - Ethereum Mainnet (``mainnet``)
- *  - Goerli Testnet (``goerli``)
- *  - Sepolia Testnet (``sepolia``)
- *  - Arbitrum (``arbitrum``)
- *  - Arbitrum Goerli Testnet (``arbitrum-goerli``)
- *  - Optimism (``optimism``)
- *  - Optimism Goerli Testnet (``optimism-goerli``)
- *  - Polygon (``matic``)
- *  - Polygon Mumbai Testnet (``matic-mumbai``)
- *
- *  @_subsection api/providers/thirdparty:Etherscan  [providers-etherscan]
- */
-const THROTTLE = 2000;
-function isPromise(value) {
-    return (value && typeof (value.then) === "function");
-}
-const EtherscanPluginId = "org.ethers.plugins.provider.Etherscan";
-/**
- *  A Network can include an **EtherscanPlugin** to provide
- *  a custom base URL.
- *
- *  @_docloc: api/providers/thirdparty:Etherscan
- */
-class EtherscanPlugin extends NetworkPlugin {
-    /**
-     *  The Etherscan API base URL.
-     */
-    baseUrl;
-    /**
-     *  Creates a new **EtherscanProvider** which will use
-     *  %%baseUrl%%.
-     */
-    constructor(baseUrl) {
-        super(EtherscanPluginId);
-        defineProperties(this, { baseUrl });
-    }
-    clone() {
-        return new EtherscanPlugin(this.baseUrl);
-    }
-}
-const skipKeys = ["enableCcipRead"];
-let nextId = 1;
-/**
- *  The **EtherscanBaseProvider** is the super-class of
- *  [[EtherscanProvider]], which should generally be used instead.
- *
- *  Since the **EtherscanProvider** includes additional code for
- *  [[Contract]] access, in //rare cases// that contracts are not
- *  used, this class can reduce code size.
- *
- *  @_docloc: api/providers/thirdparty:Etherscan
- */
-class EtherscanProvider extends AbstractProvider {
-    /**
-     *  The connected network.
-     */
-    network;
-    /**
-     *  The API key or null if using the community provided bandwidth.
-     */
-    apiKey;
-    #plugin;
-    /**
-     *  Creates a new **EtherscanBaseProvider**.
-     */
-    constructor(_network, _apiKey) {
-        const apiKey = (_apiKey != null) ? _apiKey : null;
-        super();
-        const network = Network.from(_network);
-        this.#plugin = network.getPlugin(EtherscanPluginId);
-        defineProperties(this, { apiKey, network });
-        // Test that the network is supported by Etherscan
-        this.getBaseUrl();
-    }
-    /**
-     *  Returns the base URL.
-     *
-     *  If an [[EtherscanPlugin]] is configured on the
-     *  [[EtherscanBaseProvider_network]], returns the plugin's
-     *  baseUrl.
-     */
-    getBaseUrl() {
-        if (this.#plugin) {
-            return this.#plugin.baseUrl;
-        }
-        switch (this.network.name) {
-            case "mainnet":
-                return "https:/\/api.etherscan.io";
-            case "goerli":
-                return "https:/\/api-goerli.etherscan.io";
-            case "sepolia":
-                return "https:/\/api-sepolia.etherscan.io";
-            case "arbitrum":
-                return "https:/\/api.arbiscan.io";
-            case "arbitrum-goerli":
-                return "https:/\/api-goerli.arbiscan.io";
-            case "matic":
-                return "https:/\/api.polygonscan.com";
-            case "matic-mumbai":
-                return "https:/\/api-testnet.polygonscan.com";
-            case "optimism":
-                return "https:/\/api-optimistic.etherscan.io";
-            case "optimism-goerli":
-                return "https:/\/api-goerli-optimistic.etherscan.io";
-            case "bnb":
-                return "http:/\/api.bscscan.com";
-            case "bnbt":
-                return "http:/\/api-testnet.bscscan.com";
-        }
-        assertArgument(false, "unsupported network", "network", this.network);
-    }
-    /**
-     *  Returns the URL for the %%module%% and %%params%%.
-     */
-    getUrl(module, params) {
-        const query = Object.keys(params).reduce((accum, key) => {
-            const value = params[key];
-            if (value != null) {
-                accum += `&${key}=${value}`;
-            }
-            return accum;
-        }, "");
-        const apiKey = ((this.apiKey) ? `&apikey=${this.apiKey}` : "");
-        return `${this.getBaseUrl()}/api?module=${module}${query}${apiKey}`;
-    }
-    /**
-     *  Returns the URL for using POST requests.
-     */
-    getPostUrl() {
-        return `${this.getBaseUrl()}/api`;
-    }
-    /**
-     *  Returns the parameters for using POST requests.
-     */
-    getPostData(module, params) {
-        params.module = module;
-        params.apikey = this.apiKey;
-        return params;
-    }
-    async detectNetwork() {
-        return this.network;
-    }
-    /**
-     *  Resolves to the result of calling %%module%% with %%params%%.
-     *
-     *  If %%post%%, the request is made as a POST request.
-     */
-    async fetch(module, params, post) {
-        const id = nextId++;
-        const url = (post ? this.getPostUrl() : this.getUrl(module, params));
-        const payload = (post ? this.getPostData(module, params) : null);
-        this.emit("debug", { action: "sendRequest", id, url, payload: payload });
-        const request = new FetchRequest(url);
-        request.setThrottleParams({ slotInterval: 1000 });
-        request.retryFunc = (req, resp, attempt) => {
-            if (this.isCommunityResource()) {
-                showThrottleMessage("Etherscan");
-            }
-            return Promise.resolve(true);
-        };
-        request.processFunc = async (request, response) => {
-            const result = response.hasBody() ? JSON.parse(toUtf8String(response.body)) : {};
-            const throttle = ((typeof (result.result) === "string") ? result.result : "").toLowerCase().indexOf("rate limit") >= 0;
-            if (module === "proxy") {
-                // This JSON response indicates we are being throttled
-                if (result && result.status == 0 && result.message == "NOTOK" && throttle) {
-                    this.emit("debug", { action: "receiveError", id, reason: "proxy-NOTOK", error: result });
-                    response.throwThrottleError(result.result, THROTTLE);
-                }
-            }
-            else {
-                if (throttle) {
-                    this.emit("debug", { action: "receiveError", id, reason: "null result", error: result.result });
-                    response.throwThrottleError(result.result, THROTTLE);
-                }
-            }
-            return response;
-        };
-        if (payload) {
-            request.setHeader("content-type", "application/x-www-form-urlencoded; charset=UTF-8");
-            request.body = Object.keys(payload).map((k) => `${k}=${payload[k]}`).join("&");
-        }
-        const response = await request.send();
-        try {
-            response.assertOk();
-        }
-        catch (error) {
-            this.emit("debug", { action: "receiveError", id, error, reason: "assertOk" });
-            assert(false, "response error", "SERVER_ERROR", { request, response });
-        }
-        if (!response.hasBody()) {
-            this.emit("debug", { action: "receiveError", id, error: "missing body", reason: "null body" });
-            assert(false, "missing response", "SERVER_ERROR", { request, response });
-        }
-        const result = JSON.parse(toUtf8String(response.body));
-        if (module === "proxy") {
-            if (result.jsonrpc != "2.0") {
-                this.emit("debug", { action: "receiveError", id, result, reason: "invalid JSON-RPC" });
-                assert(false, "invalid JSON-RPC response (missing jsonrpc='2.0')", "SERVER_ERROR", { request, response, info: { result } });
-            }
-            if (result.error) {
-                this.emit("debug", { action: "receiveError", id, result, reason: "JSON-RPC error" });
-                assert(false, "error response", "SERVER_ERROR", { request, response, info: { result } });
-            }
-            this.emit("debug", { action: "receiveRequest", id, result });
-            return result.result;
-        }
-        else {
-            // getLogs, getHistory have weird success responses
-            if (result.status == 0 && (result.message === "No records found" || result.message === "No transactions found")) {
-                this.emit("debug", { action: "receiveRequest", id, result });
-                return result.result;
-            }
-            if (result.status != 1 || (typeof (result.message) === "string" && !result.message.match(/^OK/))) {
-                this.emit("debug", { action: "receiveError", id, result });
-                assert(false, "error response", "SERVER_ERROR", { request, response, info: { result } });
-            }
-            this.emit("debug", { action: "receiveRequest", id, result });
-            return result.result;
-        }
-    }
-    /**
-     *  Returns %%transaction%% normalized for the Etherscan API.
-     */
-    _getTransactionPostData(transaction) {
-        const result = {};
-        for (let key in transaction) {
-            if (skipKeys.indexOf(key) >= 0) {
-                continue;
-            }
-            if (transaction[key] == null) {
-                continue;
-            }
-            let value = transaction[key];
-            if (key === "type" && value === 0) {
-                continue;
-            }
-            if (key === "blockTag" && value === "latest") {
-                continue;
-            }
-            // Quantity-types require no leading zero, unless 0
-            if ({ type: true, gasLimit: true, gasPrice: true, maxFeePerGs: true, maxPriorityFeePerGas: true, nonce: true, value: true }[key]) {
-                value = toQuantity(value);
-            }
-            else if (key === "accessList") {
-                value = "[" + accessListify(value).map((set) => {
-                    return `{address:"${set.address}",storageKeys:["${set.storageKeys.join('","')}"]}`;
-                }).join(",") + "]";
-            }
-            else {
-                value = hexlify(value);
-            }
-            result[key] = value;
-        }
-        return result;
-    }
-    /**
-     *  Throws the normalized Etherscan error.
-     */
-    _checkError(req, error, transaction) {
-        // Pull any message out if, possible
-        let message = "";
-        if (isError(error, "SERVER_ERROR")) {
-            // Check for an error emitted by a proxy call
-            try {
-                message = error.info.result.error.message;
-            }
-            catch (e) { }
-            if (!message) {
-                try {
-                    message = error.info.message;
-                }
-                catch (e) { }
-            }
-        }
-        if (req.method === "estimateGas") {
-            if (!message.match(/revert/i) && message.match(/insufficient funds/i)) {
-                assert(false, "insufficient funds", "INSUFFICIENT_FUNDS", {
-                    transaction: req.transaction
-                });
-            }
-        }
-        if (req.method === "call" || req.method === "estimateGas") {
-            if (message.match(/execution reverted/i)) {
-                let data = "";
-                try {
-                    data = error.info.result.error.data;
-                }
-                catch (error) { }
-                const e = AbiCoder.getBuiltinCallException(req.method, req.transaction, data);
-                e.info = { request: req, error };
-                throw e;
-            }
-        }
-        if (message) {
-            if (req.method === "broadcastTransaction") {
-                const transaction = Transaction.from(req.signedTransaction);
-                if (message.match(/replacement/i) && message.match(/underpriced/i)) {
-                    assert(false, "replacement fee too low", "REPLACEMENT_UNDERPRICED", {
-                        transaction
-                    });
-                }
-                if (message.match(/insufficient funds/)) {
-                    assert(false, "insufficient funds for intrinsic transaction cost", "INSUFFICIENT_FUNDS", {
-                        transaction
-                    });
-                }
-                if (message.match(/same hash was already imported|transaction nonce is too low|nonce too low/)) {
-                    assert(false, "nonce has already been used", "NONCE_EXPIRED", {
-                        transaction
-                    });
-                }
-            }
-        }
-        // Something we could not process
-        throw error;
-    }
-    async _detectNetwork() {
-        return this.network;
-    }
-    async _perform(req) {
-        switch (req.method) {
-            case "chainId":
-                return this.network.chainId;
-            case "getBlockNumber":
-                return this.fetch("proxy", { action: "eth_blockNumber" });
-            case "getGasPrice":
-                return this.fetch("proxy", { action: "eth_gasPrice" });
-            case "getBalance":
-                // Returns base-10 result
-                return this.fetch("account", {
-                    action: "balance",
-                    address: req.address,
-                    tag: req.blockTag
-                });
-            case "getTransactionCount":
-                return this.fetch("proxy", {
-                    action: "eth_getTransactionCount",
-                    address: req.address,
-                    tag: req.blockTag
-                });
-            case "getCode":
-                return this.fetch("proxy", {
-                    action: "eth_getCode",
-                    address: req.address,
-                    tag: req.blockTag
-                });
-            case "getStorage":
-                return this.fetch("proxy", {
-                    action: "eth_getStorageAt",
-                    address: req.address,
-                    position: req.position,
-                    tag: req.blockTag
-                });
-            case "broadcastTransaction":
-                return this.fetch("proxy", {
-                    action: "eth_sendRawTransaction",
-                    hex: req.signedTransaction
-                }, true).catch((error) => {
-                    return this._checkError(req, error, req.signedTransaction);
-                });
-            case "getBlock":
-                if ("blockTag" in req) {
-                    return this.fetch("proxy", {
-                        action: "eth_getBlockByNumber",
-                        tag: req.blockTag,
-                        boolean: (req.includeTransactions ? "true" : "false")
-                    });
-                }
-                assert(false, "getBlock by blockHash not supported by Etherscan", "UNSUPPORTED_OPERATION", {
-                    operation: "getBlock(blockHash)"
-                });
-            case "getTransaction":
-                return this.fetch("proxy", {
-                    action: "eth_getTransactionByHash",
-                    txhash: req.hash
-                });
-            case "getTransactionReceipt":
-                return this.fetch("proxy", {
-                    action: "eth_getTransactionReceipt",
-                    txhash: req.hash
-                });
-            case "call": {
-                if (req.blockTag !== "latest") {
-                    throw new Error("EtherscanProvider does not support blockTag for call");
-                }
-                const postData = this._getTransactionPostData(req.transaction);
-                postData.module = "proxy";
-                postData.action = "eth_call";
-                try {
-                    return await this.fetch("proxy", postData, true);
-                }
-                catch (error) {
-                    return this._checkError(req, error, req.transaction);
-                }
-            }
-            case "estimateGas": {
-                const postData = this._getTransactionPostData(req.transaction);
-                postData.module = "proxy";
-                postData.action = "eth_estimateGas";
-                try {
-                    return await this.fetch("proxy", postData, true);
-                }
-                catch (error) {
-                    return this._checkError(req, error, req.transaction);
-                }
-            }
-        }
-        return super._perform(req);
-    }
-    async getNetwork() {
-        return this.network;
-    }
-    /**
-     *  Resolves to the current price of ether.
-     *
-     *  This returns ``0`` on any network other than ``mainnet``.
-     */
-    async getEtherPrice() {
-        if (this.network.name !== "mainnet") {
-            return 0.0;
-        }
-        return parseFloat((await this.fetch("stats", { action: "ethprice" })).ethusd);
-    }
-    /**
-     *  Resolves to a [Contract]] for %%address%%, using the
-     *  Etherscan API to retreive the Contract ABI.
-     */
-    async getContract(_address) {
-        let address = this._getAddress(_address);
-        if (isPromise(address)) {
-            address = await address;
-        }
-        try {
-            const resp = await this.fetch("contract", {
-                action: "getabi", address
-            });
-            const abi = JSON.parse(resp);
-            return new Contract(address, abi, this);
-        }
-        catch (error) {
-            return null;
-        }
-    }
-    isCommunityResource() {
-        return (this.apiKey == null);
-    }
 }
 
 function getGlobal() {
@@ -21215,838 +20879,6 @@ class WebSocketProvider extends SocketProvider {
     }
 }
 
-/**
- *  [[link-infura]] provides a third-party service for connecting to
- *  various blockchains over JSON-RPC.
- *
- *  **Supported Networks**
- *
- *  - Ethereum Mainnet (``mainnet``)
- *  - Goerli Testnet (``goerli``)
- *  - Sepolia Testnet (``sepolia``)
- *  - Arbitrum (``arbitrum``)
- *  - Arbitrum Goerli Testnet (``arbitrum-goerli``)
- *  - Optimism (``optimism``)
- *  - Optimism Goerli Testnet (``optimism-goerli``)
- *  - Polygon (``matic``)
- *  - Polygon Mumbai Testnet (``matic-mumbai``)
- *
- *  @_subsection: api/providers/thirdparty:INFURA  [providers-infura]
- */
-const defaultProjectId = "84842078b09946638c03157f83405213";
-function getHost$2(name) {
-    switch (name) {
-        case "mainnet":
-            return "mainnet.infura.io";
-        case "goerli":
-            return "goerli.infura.io";
-        case "sepolia":
-            return "sepolia.infura.io";
-        case "arbitrum":
-            return "arbitrum-mainnet.infura.io";
-        case "arbitrum-goerli":
-            return "arbitrum-goerli.infura.io";
-        case "linea":
-            return "linea-mainnet.infura.io";
-        case "linea-goerli":
-            return "linea-goerli.infura.io";
-        case "matic":
-            return "polygon-mainnet.infura.io";
-        case "matic-mumbai":
-            return "polygon-mumbai.infura.io";
-        case "optimism":
-            return "optimism-mainnet.infura.io";
-        case "optimism-goerli":
-            return "optimism-goerli.infura.io";
-    }
-    assertArgument(false, "unsupported network", "network", name);
-}
-/**
- *  The **InfuraWebSocketProvider** connects to the [[link-infura]]
- *  WebSocket end-points.
- *
- *  By default, a highly-throttled API key is used, which is
- *  appropriate for quick prototypes and simple scripts. To
- *  gain access to an increased rate-limit, it is highly
- *  recommended to [sign up here](link-infura-signup).
- */
-class InfuraWebSocketProvider extends WebSocketProvider {
-    /**
-     *  The Project ID for the INFURA connection.
-     */
-    projectId;
-    /**
-     *  The Project Secret.
-     *
-     *  If null, no authenticated requests are made. This should not
-     *  be used outside of private contexts.
-     */
-    projectSecret;
-    /**
-     *  Creates a new **InfuraWebSocketProvider**.
-     */
-    constructor(network, projectId) {
-        const provider = new InfuraProvider(network, projectId);
-        const req = provider._getConnection();
-        assert(!req.credentials, "INFURA WebSocket project secrets unsupported", "UNSUPPORTED_OPERATION", { operation: "InfuraProvider.getWebSocketProvider()" });
-        const url = req.url.replace(/^http/i, "ws").replace("/v3/", "/ws/v3/");
-        super(url, network);
-        defineProperties(this, {
-            projectId: provider.projectId,
-            projectSecret: provider.projectSecret
-        });
-    }
-    isCommunityResource() {
-        return (this.projectId === defaultProjectId);
-    }
-}
-/**
- *  The **InfuraProvider** connects to the [[link-infura]]
- *  JSON-RPC end-points.
- *
- *  By default, a highly-throttled API key is used, which is
- *  appropriate for quick prototypes and simple scripts. To
- *  gain access to an increased rate-limit, it is highly
- *  recommended to [sign up here](link-infura-signup).
- */
-class InfuraProvider extends JsonRpcProvider {
-    /**
-     *  The Project ID for the INFURA connection.
-     */
-    projectId;
-    /**
-     *  The Project Secret.
-     *
-     *  If null, no authenticated requests are made. This should not
-     *  be used outside of private contexts.
-     */
-    projectSecret;
-    /**
-     *  Creates a new **InfuraProvider**.
-     */
-    constructor(_network, projectId, projectSecret) {
-        if (_network == null) {
-            _network = "mainnet";
-        }
-        const network = Network.from(_network);
-        if (projectId == null) {
-            projectId = defaultProjectId;
-        }
-        if (projectSecret == null) {
-            projectSecret = null;
-        }
-        const request = InfuraProvider.getRequest(network, projectId, projectSecret);
-        super(request, network, { staticNetwork: network });
-        defineProperties(this, { projectId, projectSecret });
-    }
-    _getProvider(chainId) {
-        try {
-            return new InfuraProvider(chainId, this.projectId, this.projectSecret);
-        }
-        catch (error) { }
-        return super._getProvider(chainId);
-    }
-    isCommunityResource() {
-        return (this.projectId === defaultProjectId);
-    }
-    /**
-     *  Creates a new **InfuraWebSocketProvider**.
-     */
-    static getWebSocketProvider(network, projectId) {
-        return new InfuraWebSocketProvider(network, projectId);
-    }
-    /**
-     *  Returns a prepared request for connecting to %%network%%
-     *  with %%projectId%% and %%projectSecret%%.
-     */
-    static getRequest(network, projectId, projectSecret) {
-        if (projectId == null) {
-            projectId = defaultProjectId;
-        }
-        if (projectSecret == null) {
-            projectSecret = null;
-        }
-        const request = new FetchRequest(`https:/\/${getHost$2(network.name)}/v3/${projectId}`);
-        request.allowGzip = true;
-        if (projectSecret) {
-            request.setCredentials("", projectSecret);
-        }
-        if (projectId === defaultProjectId) {
-            request.retryFunc = async (request, response, attempt) => {
-                showThrottleMessage("InfuraProvider");
-                return true;
-            };
-        }
-        return request;
-    }
-}
-
-/**
- *  [[link-quicknode]] provides a third-party service for connecting to
- *  various blockchains over JSON-RPC.
- *
- *  **Supported Networks**
- *
- *  - Ethereum Mainnet (``mainnet``)
- *  - Goerli Testnet (``goerli``)
- *  - Arbitrum (``arbitrum``)
- *  - Arbitrum Goerli Testnet (``arbitrum-goerli``)
- *  - Optimism (``optimism``)
- *  - Optimism Goerli Testnet (``optimism-goerli``)
- *  - Polygon (``matic``)
- *  - Polygon Mumbai Testnet (``matic-mumbai``)
- *
- *  @_subsection: api/providers/thirdparty:QuickNode  [providers-quicknode]
- */
-const defaultToken = "919b412a057b5e9c9b6dce193c5a60242d6efadb";
-function getHost$1(name) {
-    switch (name) {
-        case "mainnet":
-            return "ethers.quiknode.pro";
-        case "goerli":
-            return "ethers.ethereum-goerli.quiknode.pro";
-        //case "sepolia":
-        //    return "sepolia.infura.io";
-        case "arbitrum":
-            return "ethers.arbitrum-mainnet.quiknode.pro";
-        case "arbitrum-goerli":
-            return "ethers.arbitrum-goerli.quiknode.pro";
-        case "matic":
-            return "ethers.matic.quiknode.pro";
-        case "matic-mumbai":
-            return "ethers.matic-testnet.quiknode.pro";
-        case "optimism":
-            return "ethers.optimism.quiknode.pro";
-        case "optimism-goerli":
-            return "ethers.optimism-goerli.quiknode.pro";
-    }
-    assertArgument(false, "unsupported network", "network", name);
-}
-/**
- *  The **QuickNodeProvider** connects to the [[link-quicknode]]
- *  JSON-RPC end-points.
- *
- *  By default, a highly-throttled API token is used, which is
- *  appropriate for quick prototypes and simple scripts. To
- *  gain access to an increased rate-limit, it is highly
- *  recommended to [sign up here](link-quicknode).
- */
-class QuickNodeProvider extends JsonRpcProvider {
-    /**
-     *  The API token.
-     */
-    token;
-    /**
-     *  Creates a new **QuickNodeProvider**.
-     */
-    constructor(_network, token) {
-        if (_network == null) {
-            _network = "mainnet";
-        }
-        const network = Network.from(_network);
-        if (token == null) {
-            token = defaultToken;
-        }
-        const request = QuickNodeProvider.getRequest(network, token);
-        super(request, network, { staticNetwork: network });
-        defineProperties(this, { token });
-    }
-    _getProvider(chainId) {
-        try {
-            return new QuickNodeProvider(chainId, this.token);
-        }
-        catch (error) { }
-        return super._getProvider(chainId);
-    }
-    isCommunityResource() {
-        return (this.token === defaultToken);
-    }
-    /**
-     *  Returns a new request prepared for %%network%% and the
-     *  %%token%%.
-     */
-    static getRequest(network, token) {
-        if (token == null) {
-            token = defaultToken;
-        }
-        const request = new FetchRequest(`https:/\/${getHost$1(network.name)}/${token}`);
-        request.allowGzip = true;
-        //if (projectSecret) { request.setCredentials("", projectSecret); }
-        if (token === defaultToken) {
-            request.retryFunc = async (request, response, attempt) => {
-                showThrottleMessage("QuickNodeProvider");
-                return true;
-            };
-        }
-        return request;
-    }
-}
-
-/**
- *  A **FallbackProvider** providers resiliance, security and performatnce
- *  in a way that is customizable and configurable.
- *
- *  @_section: api/providers/fallback-provider:Fallback Provider [about-fallback-provider]
- */
-const BN_1 = BigInt("1");
-const BN_2 = BigInt("2");
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const tmp = array[i];
-        array[i] = array[j];
-        array[j] = tmp;
-    }
-}
-function stall$2(duration) {
-    return new Promise((resolve) => { setTimeout(resolve, duration); });
-}
-function getTime() { return (new Date()).getTime(); }
-function stringify(value) {
-    return JSON.stringify(value, (key, value) => {
-        if (typeof (value) === "bigint") {
-            return { type: "bigint", value: value.toString() };
-        }
-        return value;
-    });
-}
-const defaultConfig = { stallTimeout: 400, priority: 1, weight: 1 };
-const defaultState = {
-    blockNumber: -2, requests: 0, lateResponses: 0, errorResponses: 0,
-    outOfSync: -1, unsupportedEvents: 0, rollingDuration: 0, score: 0,
-    _network: null, _updateNumber: null, _totalTime: 0,
-    _lastFatalError: null, _lastFatalErrorTimestamp: 0
-};
-async function waitForSync(config, blockNumber) {
-    while (config.blockNumber < 0 || config.blockNumber < blockNumber) {
-        if (!config._updateNumber) {
-            config._updateNumber = (async () => {
-                try {
-                    const blockNumber = await config.provider.getBlockNumber();
-                    if (blockNumber > config.blockNumber) {
-                        config.blockNumber = blockNumber;
-                    }
-                }
-                catch (error) {
-                    config.blockNumber = -2;
-                    config._lastFatalError = error;
-                    config._lastFatalErrorTimestamp = getTime();
-                }
-                config._updateNumber = null;
-            })();
-        }
-        await config._updateNumber;
-        config.outOfSync++;
-        if (config._lastFatalError) {
-            break;
-        }
-    }
-}
-function _normalize(value) {
-    if (value == null) {
-        return "null";
-    }
-    if (Array.isArray(value)) {
-        return "[" + (value.map(_normalize)).join(",") + "]";
-    }
-    if (typeof (value) === "object" && typeof (value.toJSON) === "function") {
-        return _normalize(value.toJSON());
-    }
-    switch (typeof (value)) {
-        case "boolean":
-        case "symbol":
-            return value.toString();
-        case "bigint":
-        case "number":
-            return BigInt(value).toString();
-        case "string":
-            return JSON.stringify(value);
-        case "object": {
-            const keys = Object.keys(value);
-            keys.sort();
-            return "{" + keys.map((k) => `${JSON.stringify(k)}:${_normalize(value[k])}`).join(",") + "}";
-        }
-    }
-    console.log("Could not serialize", value);
-    throw new Error("Hmm...");
-}
-function normalizeResult(value) {
-    if ("error" in value) {
-        const error = value.error;
-        return { tag: _normalize(error), value: error };
-    }
-    const result = value.result;
-    return { tag: _normalize(result), value: result };
-}
-// This strategy picks the highest weight result, as long as the weight is
-// equal to or greater than quorum
-function checkQuorum(quorum, results) {
-    const tally = new Map();
-    for (const { value, tag, weight } of results) {
-        const t = tally.get(tag) || { value, weight: 0 };
-        t.weight += weight;
-        tally.set(tag, t);
-    }
-    let best = null;
-    for (const r of tally.values()) {
-        if (r.weight >= quorum && (!best || r.weight > best.weight)) {
-            best = r;
-        }
-    }
-    if (best) {
-        return best.value;
-    }
-    return undefined;
-}
-function getMedian(quorum, results) {
-    let resultWeight = 0;
-    const errorMap = new Map();
-    let bestError = null;
-    const values = [];
-    for (const { value, tag, weight } of results) {
-        if (value instanceof Error) {
-            const e = errorMap.get(tag) || { value, weight: 0 };
-            e.weight += weight;
-            errorMap.set(tag, e);
-            if (bestError == null || e.weight > bestError.weight) {
-                bestError = e;
-            }
-        }
-        else {
-            values.push(BigInt(value));
-            resultWeight += weight;
-        }
-    }
-    if (resultWeight < quorum) {
-        // We have quorum for an error
-        if (bestError && bestError.weight >= quorum) {
-            return bestError.value;
-        }
-        // We do not have quorum for a result
-        return undefined;
-    }
-    // Get the sorted values
-    values.sort((a, b) => ((a < b) ? -1 : (b > a) ? 1 : 0));
-    const mid = Math.floor(values.length / 2);
-    // Odd-length; take the middle value
-    if (values.length % 2) {
-        return values[mid];
-    }
-    // Even length; take the ceiling of the mean of the center two values
-    return (values[mid - 1] + values[mid] + BN_1) / BN_2;
-}
-function getAnyResult(quorum, results) {
-    // If any value or error meets quorum, that is our preferred result
-    const result = checkQuorum(quorum, results);
-    if (result !== undefined) {
-        return result;
-    }
-    // Otherwise, do we have any result?
-    for (const r of results) {
-        if (r.value) {
-            return r.value;
-        }
-    }
-    // Nope!
-    return undefined;
-}
-function getFuzzyMode(quorum, results) {
-    if (quorum === 1) {
-        return getNumber(getMedian(quorum, results), "%internal");
-    }
-    const tally = new Map();
-    const add = (result, weight) => {
-        const t = tally.get(result) || { result, weight: 0 };
-        t.weight += weight;
-        tally.set(result, t);
-    };
-    for (const { weight, value } of results) {
-        const r = getNumber(value);
-        add(r - 1, weight);
-        add(r, weight);
-        add(r + 1, weight);
-    }
-    let bestWeight = 0;
-    let bestResult = undefined;
-    for (const { weight, result } of tally.values()) {
-        // Use this result, if this result meets quorum and has either:
-        // - a better weight
-        // - or equal weight, but the result is larger
-        if (weight >= quorum && (weight > bestWeight || (bestResult != null && weight === bestWeight && result > bestResult))) {
-            bestWeight = weight;
-            bestResult = result;
-        }
-    }
-    return bestResult;
-}
-/**
- *  A **FallbackProvider** manages several [[Providers]] providing
- *  resiliance by switching between slow or misbehaving nodes, security
- *  by requiring multiple backends to aggree and performance by allowing
- *  faster backends to respond earlier.
- *
- */
-class FallbackProvider extends AbstractProvider {
-    /**
-     *  The number of backends that must agree on a value before it is
-     *  accpeted.
-     */
-    quorum;
-    /**
-     *  @_ignore:
-     */
-    eventQuorum;
-    /**
-     *  @_ignore:
-     */
-    eventWorkers;
-    #configs;
-    #height;
-    #initialSyncPromise;
-    /**
-     *  Creates a new **FallbackProvider** with %%providers%% connected to
-     *  %%network%%.
-     *
-     *  If a [[Provider]] is included in %%providers%%, defaults are used
-     *  for the configuration.
-     */
-    constructor(providers, network, options) {
-        super(network, options);
-        this.#configs = providers.map((p) => {
-            if (p instanceof AbstractProvider) {
-                return Object.assign({ provider: p }, defaultConfig, defaultState);
-            }
-            else {
-                return Object.assign({}, defaultConfig, p, defaultState);
-            }
-        });
-        this.#height = -2;
-        this.#initialSyncPromise = null;
-        if (options && options.quorum != null) {
-            this.quorum = options.quorum;
-        }
-        else {
-            this.quorum = Math.ceil(this.#configs.reduce((accum, config) => {
-                accum += config.weight;
-                return accum;
-            }, 0) / 2);
-        }
-        this.eventQuorum = 1;
-        this.eventWorkers = 1;
-        assertArgument(this.quorum <= this.#configs.reduce((a, c) => (a + c.weight), 0), "quorum exceed provider wieght", "quorum", this.quorum);
-    }
-    get providerConfigs() {
-        return this.#configs.map((c) => {
-            const result = Object.assign({}, c);
-            for (const key in result) {
-                if (key[0] === "_") {
-                    delete result[key];
-                }
-            }
-            return result;
-        });
-    }
-    async _detectNetwork() {
-        return Network.from(getBigInt(await this._perform({ method: "chainId" })));
-    }
-    // @TODO: Add support to select providers to be the event subscriber
-    //_getSubscriber(sub: Subscription): Subscriber {
-    //    throw new Error("@TODO");
-    //}
-    /**
-     *  Transforms a %%req%% into the correct method call on %%provider%%.
-     */
-    async _translatePerform(provider, req) {
-        switch (req.method) {
-            case "broadcastTransaction":
-                return await provider.broadcastTransaction(req.signedTransaction);
-            case "call":
-                return await provider.call(Object.assign({}, req.transaction, { blockTag: req.blockTag }));
-            case "chainId":
-                return (await provider.getNetwork()).chainId;
-            case "estimateGas":
-                return await provider.estimateGas(req.transaction);
-            case "getBalance":
-                return await provider.getBalance(req.address, req.blockTag);
-            case "getBlock": {
-                const block = ("blockHash" in req) ? req.blockHash : req.blockTag;
-                return await provider.getBlock(block, req.includeTransactions);
-            }
-            case "getBlockNumber":
-                return await provider.getBlockNumber();
-            case "getCode":
-                return await provider.getCode(req.address, req.blockTag);
-            case "getGasPrice":
-                return (await provider.getFeeData()).gasPrice;
-            case "getLogs":
-                return await provider.getLogs(req.filter);
-            case "getStorage":
-                return await provider.getStorage(req.address, req.position, req.blockTag);
-            case "getTransaction":
-                return await provider.getTransaction(req.hash);
-            case "getTransactionCount":
-                return await provider.getTransactionCount(req.address, req.blockTag);
-            case "getTransactionReceipt":
-                return await provider.getTransactionReceipt(req.hash);
-            case "getTransactionResult":
-                return await provider.getTransactionResult(req.hash);
-        }
-    }
-    // Grab the next (random) config that is not already part of
-    // the running set
-    #getNextConfig(running) {
-        // @TODO: Maybe do a check here to favour (heavily) providers that
-        //        do not require waitForSync and disfavour providers that
-        //        seem down-ish or are behaving slowly
-        const configs = Array.from(running).map((r) => r.config);
-        // Shuffle the states, sorted by priority
-        const allConfigs = this.#configs.slice();
-        shuffle(allConfigs);
-        allConfigs.sort((a, b) => (a.priority - b.priority));
-        for (const config of allConfigs) {
-            if (config._lastFatalError) {
-                continue;
-            }
-            if (configs.indexOf(config) === -1) {
-                return config;
-            }
-        }
-        return null;
-    }
-    // Adds a new runner (if available) to running.
-    #addRunner(running, req) {
-        const config = this.#getNextConfig(running);
-        // No runners available
-        if (config == null) {
-            return null;
-        }
-        // Create a new runner
-        const runner = {
-            config, result: null, didBump: false,
-            perform: null, staller: null
-        };
-        const now = getTime();
-        // Start performing this operation
-        runner.perform = (async () => {
-            try {
-                config.requests++;
-                const result = await this._translatePerform(config.provider, req);
-                runner.result = { result };
-            }
-            catch (error) {
-                config.errorResponses++;
-                runner.result = { error };
-            }
-            const dt = (getTime() - now);
-            config._totalTime += dt;
-            config.rollingDuration = 0.95 * config.rollingDuration + 0.05 * dt;
-            runner.perform = null;
-        })();
-        // Start a staller; when this times out, it's time to force
-        // kicking off another runner because we are taking too long
-        runner.staller = (async () => {
-            await stall$2(config.stallTimeout);
-            runner.staller = null;
-        })();
-        running.add(runner);
-        return runner;
-    }
-    // Initializes the blockNumber and network for each runner and
-    // blocks until initialized
-    async #initialSync() {
-        let initialSync = this.#initialSyncPromise;
-        if (!initialSync) {
-            const promises = [];
-            this.#configs.forEach((config) => {
-                promises.push((async () => {
-                    await waitForSync(config, 0);
-                    if (!config._lastFatalError) {
-                        config._network = await config.provider.getNetwork();
-                    }
-                })());
-            });
-            this.#initialSyncPromise = initialSync = (async () => {
-                // Wait for all providers to have a block number and network
-                await Promise.all(promises);
-                // Check all the networks match
-                let chainId = null;
-                for (const config of this.#configs) {
-                    if (config._lastFatalError) {
-                        continue;
-                    }
-                    const network = (config._network);
-                    if (chainId == null) {
-                        chainId = network.chainId;
-                    }
-                    else if (network.chainId !== chainId) {
-                        assert(false, "cannot mix providers on different networks", "UNSUPPORTED_OPERATION", {
-                            operation: "new FallbackProvider"
-                        });
-                    }
-                }
-            })();
-        }
-        await initialSync;
-    }
-    async #checkQuorum(running, req) {
-        // Get all the result objects
-        const results = [];
-        for (const runner of running) {
-            if (runner.result != null) {
-                const { tag, value } = normalizeResult(runner.result);
-                results.push({ tag, value, weight: runner.config.weight });
-            }
-        }
-        // Are there enough results to event meet quorum?
-        if (results.reduce((a, r) => (a + r.weight), 0) < this.quorum) {
-            return undefined;
-        }
-        switch (req.method) {
-            case "getBlockNumber": {
-                // We need to get the bootstrap block height
-                if (this.#height === -2) {
-                    this.#height = Math.ceil(getNumber(getMedian(this.quorum, this.#configs.filter((c) => (!c._lastFatalError)).map((c) => ({
-                        value: c.blockNumber,
-                        tag: getNumber(c.blockNumber).toString(),
-                        weight: c.weight
-                    })))));
-                }
-                // Find the mode across all the providers, allowing for
-                // a little drift between block heights
-                const mode = getFuzzyMode(this.quorum, results);
-                if (mode === undefined) {
-                    return undefined;
-                }
-                if (mode > this.#height) {
-                    this.#height = mode;
-                }
-                return this.#height;
-            }
-            case "getGasPrice":
-            case "estimateGas":
-                return getMedian(this.quorum, results);
-            case "getBlock":
-                // Pending blocks are in the mempool and already
-                // quite untrustworthy; just grab anything
-                if ("blockTag" in req && req.blockTag === "pending") {
-                    return getAnyResult(this.quorum, results);
-                }
-                return checkQuorum(this.quorum, results);
-            case "call":
-            case "chainId":
-            case "getBalance":
-            case "getTransactionCount":
-            case "getCode":
-            case "getStorage":
-            case "getTransaction":
-            case "getTransactionReceipt":
-            case "getLogs":
-                return checkQuorum(this.quorum, results);
-            case "broadcastTransaction":
-                return getAnyResult(this.quorum, results);
-        }
-        assert(false, "unsupported method", "UNSUPPORTED_OPERATION", {
-            operation: `_perform(${stringify(req.method)})`
-        });
-    }
-    async #waitForQuorum(running, req) {
-        if (running.size === 0) {
-            throw new Error("no runners?!");
-        }
-        // Any promises that are interesting to watch for; an expired stall
-        // or a successful perform
-        const interesting = [];
-        let newRunners = 0;
-        for (const runner of running) {
-            // No responses, yet; keep an eye on it
-            if (runner.perform) {
-                interesting.push(runner.perform);
-            }
-            // Still stalling...
-            if (runner.staller) {
-                interesting.push(runner.staller);
-                continue;
-            }
-            // This runner has already triggered another runner
-            if (runner.didBump) {
-                continue;
-            }
-            // Got a response (result or error) or stalled; kick off another runner
-            runner.didBump = true;
-            newRunners++;
-        }
-        // Check if we have reached quorum on a result (or error)
-        const value = await this.#checkQuorum(running, req);
-        if (value !== undefined) {
-            if (value instanceof Error) {
-                throw value;
-            }
-            return value;
-        }
-        // Add any new runners, because a staller timed out or a result
-        // or error response came in.
-        for (let i = 0; i < newRunners; i++) {
-            this.#addRunner(running, req);
-        }
-        // All providers have returned, and we have no result
-        assert(interesting.length > 0, "quorum not met", "SERVER_ERROR", {
-            request: "%sub-requests",
-            info: { request: req, results: Array.from(running).map((r) => stringify(r.result)) }
-        });
-        // Wait for someone to either complete its perform or stall out
-        await Promise.race(interesting);
-        // This is recursive, but at worst case the depth is 2x the
-        // number of providers (each has a perform and a staller)
-        return await this.#waitForQuorum(running, req);
-    }
-    async _perform(req) {
-        // Broadcasting a transaction is rare (ish) and already incurs
-        // a cost on the user, so spamming is safe-ish. Just send it to
-        // every backend.
-        if (req.method === "broadcastTransaction") {
-            const results = await Promise.all(this.#configs.map(async ({ provider, weight }) => {
-                try {
-                    const result = await provider._perform(req);
-                    return Object.assign(normalizeResult({ result }), { weight });
-                }
-                catch (error) {
-                    return Object.assign(normalizeResult({ error }), { weight });
-                }
-            }));
-            const result = getAnyResult(this.quorum, results);
-            assert(result !== undefined, "problem multi-broadcasting", "SERVER_ERROR", {
-                request: "%sub-requests",
-                info: { request: req, results: results.map(stringify) }
-            });
-            if (result instanceof Error) {
-                throw result;
-            }
-            return result;
-        }
-        await this.#initialSync();
-        // Bootstrap enough runners to meet quorum
-        const running = new Set();
-        for (let i = 0; i < this.quorum; i++) {
-            this.#addRunner(running, req);
-        }
-        const result = await this.#waitForQuorum(running, req);
-        // Track requests sent to a provider that are still
-        // outstanding after quorum has been otherwise found
-        for (const runner of running) {
-            if (runner.perform && runner.result == null) {
-                runner.config.lateResponses++;
-            }
-        }
-        return result;
-    }
-    async destroy() {
-        for (const { provider } of this.#configs) {
-            provider.destroy();
-        }
-        super.destroy();
-    }
-}
-
 function isWebSocketLike(value) {
     return (value && typeof (value.send) === "function" &&
         typeof (value.close) === "function");
@@ -22088,7 +20920,7 @@ const Testnets = "goerli kovan sepolia classicKotti optimism-goerli arbitrum-goe
  *    // third-party services available
  *    provider = getDefaultProvider("mainnet");
  *
- *    // Connect to Polygoin, but only allow Etherscan and
+ *    // Connect to Polygon, but only allow Etherscan and
  *    // INFURA and use "MY_API_KEY" in calls to Etherscan.
  *    provider = getDefaultProvider("matic", {
  *      etherscan: "MY_API_KEY",
@@ -22129,42 +20961,6 @@ function getDefaultProvider(network, options) {
             providers.push(new JsonRpcProvider("https:/\/polygon-rpc.com/", staticNetwork, { staticNetwork }));
         }
     }
-    if (allowService("alchemy")) {
-        try {
-            providers.push(new AlchemyProvider(network, options.alchemy));
-        }
-        catch (error) { }
-    }
-    if (allowService("ankr") && options.ankr != null) {
-        try {
-            providers.push(new AnkrProvider(network, options.ankr));
-        }
-        catch (error) { }
-    }
-    if (allowService("cloudflare")) {
-        try {
-            providers.push(new CloudflareProvider(network));
-        }
-        catch (error) { }
-    }
-    if (allowService("etherscan")) {
-        try {
-            providers.push(new EtherscanProvider(network, options.etherscan));
-        }
-        catch (error) { }
-    }
-    if (allowService("infura")) {
-        try {
-            let projectId = options.infura;
-            let projectSecret = undefined;
-            if (typeof (projectId) === "object") {
-                projectSecret = projectId.projectSecret;
-                projectId = projectId.projectId;
-            }
-            providers.push(new InfuraProvider(network, projectId, projectSecret));
-        }
-        catch (error) { }
-    }
     /*
         if (options.pocket !== "-") {
             try {
@@ -22180,13 +20976,6 @@ function getDefaultProvider(network, options) {
             } catch (error) { console.log(error); }
         }
     */
-    if (allowService("quicknode")) {
-        try {
-            let token = options.quicknode;
-            providers.push(new QuickNodeProvider(network, token));
-        }
-        catch (error) { }
-    }
     assert(providers.length, "unsupported default network", "UNSUPPORTED_OPERATION", {
         operation: "getDefaultProvider"
     });
@@ -22289,7 +21078,7 @@ class NonceManager extends AbstractSigner {
  *  adheres to the [[link-eip-1193]] standard, which most (if not all)
  *  currently do.
  */
-class BrowserProvider extends JsonRpcApiPollingProvider {
+class BrowserProvider extends JsonRpcApiProvider {
     #request;
     /**
      *  Connnect to the %%ethereum%% provider, optionally forcing the
@@ -22376,107 +21165,6 @@ class BrowserProvider extends JsonRpcApiPollingProvider {
             }
         }
         return await super.getSigner(address);
-    }
-}
-
-/**
- *  [[link-pocket]] provides a third-party service for connecting to
- *  various blockchains over JSON-RPC.
- *
- *  **Supported Networks**
- *
- *  - Ethereum Mainnet (``mainnet``)
- *  - Goerli Testnet (``goerli``)
- *  - Polygon (``matic``)
- *  - Arbitrum (``arbitrum``)
- *
- *  @_subsection: api/providers/thirdparty:Pocket  [providers-pocket]
- */
-const defaultApplicationId = "62e1ad51b37b8e00394bda3b";
-function getHost(name) {
-    switch (name) {
-        case "mainnet":
-            return "eth-mainnet.gateway.pokt.network";
-        case "goerli":
-            return "eth-goerli.gateway.pokt.network";
-        case "matic":
-            return "poly-mainnet.gateway.pokt.network";
-        case "matic-mumbai":
-            return "polygon-mumbai-rpc.gateway.pokt.network";
-    }
-    assertArgument(false, "unsupported network", "network", name);
-}
-/**
- *  The **PocketProvider** connects to the [[link-pocket]]
- *  JSON-RPC end-points.
- *
- *  By default, a highly-throttled API key is used, which is
- *  appropriate for quick prototypes and simple scripts. To
- *  gain access to an increased rate-limit, it is highly
- *  recommended to [sign up here](link-pocket-signup).
- */
-class PocketProvider extends JsonRpcProvider {
-    /**
-     *  The Application ID for the Pocket connection.
-     */
-    applicationId;
-    /**
-     *  The Application Secret for making authenticated requests
-     *  to the Pocket connection.
-     */
-    applicationSecret;
-    /**
-     *  Create a new **PocketProvider**.
-     *
-     *  By default connecting to ``mainnet`` with a highly throttled
-     *  API key.
-     */
-    constructor(_network, applicationId, applicationSecret) {
-        if (_network == null) {
-            _network = "mainnet";
-        }
-        const network = Network.from(_network);
-        if (applicationId == null) {
-            applicationId = defaultApplicationId;
-        }
-        if (applicationSecret == null) {
-            applicationSecret = null;
-        }
-        const options = { staticNetwork: network };
-        const request = PocketProvider.getRequest(network, applicationId, applicationSecret);
-        super(request, network, options);
-        defineProperties(this, { applicationId, applicationSecret });
-    }
-    _getProvider(chainId) {
-        try {
-            return new PocketProvider(chainId, this.applicationId, this.applicationSecret);
-        }
-        catch (error) { }
-        return super._getProvider(chainId);
-    }
-    /**
-     *  Returns a prepared request for connecting to %%network%% with
-     *  %%applicationId%%.
-     */
-    static getRequest(network, applicationId, applicationSecret) {
-        if (applicationId == null) {
-            applicationId = defaultApplicationId;
-        }
-        const request = new FetchRequest(`https:/\/${getHost(network.name)}/v1/lb/${applicationId}`);
-        request.allowGzip = true;
-        if (applicationSecret) {
-            request.setCredentials("", applicationSecret);
-        }
-        if (applicationId === defaultApplicationId) {
-            request.retryFunc = async (request, response, attempt) => {
-                showThrottleMessage("PocketProvider");
-                return true;
-            };
-        }
-        return request;
-    }
-    isCommunityResource() {
-        return (this.applicationId === defaultApplicationId);
     }
 }
 
@@ -24496,13 +23184,10 @@ var ethers = /*#__PURE__*/Object.freeze({
     AbiCoder: AbiCoder,
     AbstractProvider: AbstractProvider,
     AbstractSigner: AbstractSigner,
-    AlchemyProvider: AlchemyProvider,
-    AnkrProvider: AnkrProvider,
     BaseContract: BaseContract,
     BaseWallet: BaseWallet,
     Block: Block,
     BrowserProvider: BrowserProvider,
-    CloudflareProvider: CloudflareProvider,
     ConstructorFragment: ConstructorFragment,
     Contract: Contract,
     ContractEventPayload: ContractEventPayload,
@@ -24515,8 +23200,6 @@ var ethers = /*#__PURE__*/Object.freeze({
     ErrorDescription: ErrorDescription,
     ErrorFragment: ErrorFragment,
     EtherSymbol: EtherSymbol,
-    EtherscanPlugin: EtherscanPlugin,
-    EtherscanProvider: EtherscanProvider,
     EventFragment: EventFragment,
     EventLog: EventLog,
     EventPayload: EventPayload,
@@ -24535,8 +23218,6 @@ var ethers = /*#__PURE__*/Object.freeze({
     HDNodeVoidWallet: HDNodeVoidWallet,
     HDNodeWallet: HDNodeWallet,
     Indexed: Indexed,
-    InfuraProvider: InfuraProvider,
-    InfuraWebSocketProvider: InfuraWebSocketProvider,
     Interface: Interface,
     IpcSocketProvider: IpcSocketProvider,
     JsonRpcApiProvider: JsonRpcApiProvider,
@@ -24557,8 +23238,6 @@ var ethers = /*#__PURE__*/Object.freeze({
     NetworkPlugin: NetworkPlugin,
     NonceManager: NonceManager,
     ParamType: ParamType,
-    PocketProvider: PocketProvider,
-    QuickNodeProvider: QuickNodeProvider,
     Result: Result,
     Signature: Signature,
     SigningKey: SigningKey,
@@ -24683,5 +23362,5 @@ var ethers = /*#__PURE__*/Object.freeze({
     zeroPadValue: zeroPadValue
 });
 
-export { AbiCoder, AbstractProvider, AbstractSigner, AlchemyProvider, AnkrProvider, BaseContract, BaseWallet, Block, BrowserProvider, CloudflareProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, EnsPlugin, EnsResolver, ErrorDescription, ErrorFragment, EtherSymbol, EtherscanPlugin, EtherscanProvider, EventFragment, EventLog, EventPayload, FallbackFragment, FallbackProvider, FeeData, FeeDataNetworkPlugin, FetchCancelSignal, FetchRequest, FetchResponse, FetchUrlFeeDataNetworkPlugin, FixedNumber, Fragment, FunctionFragment, GasCostPlugin, HDNodeVoidWallet, HDNodeWallet, Indexed, InfuraProvider, InfuraWebSocketProvider, Interface, IpcSocketProvider, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, MulticoinProviderPlugin, N$1 as N, NamedFragment, Network, NetworkPlugin, NonceManager, ParamType, PocketProvider, QuickNodeProvider, Result, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, Transaction, TransactionDescription, TransactionReceipt, TransactionResponse, Typed, TypedDataEncoder, UndecodedEventLog, UnmanagedSubscriber, Utf8ErrorFuncs, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, accessListify, assert, assertArgument, assertArgumentCount, assertNormalize, assertPrivate, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32String, decodeRlp, decryptCrowdsaleJson, decryptKeystoreJson, decryptKeystoreJsonSync, defaultPath, defineProperties, dnsEncode, encodeBase58, encodeBase64, encodeBytes32String, encodeRlp, encryptKeystoreJson, encryptKeystoreJsonSync, ensNormalize, ethers, formatEther, formatUnits, fromTwos, getAccountPath, getAddress, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getDefaultProvider, getIcapAddress, getIndexedAccountPath, getNumber, getUint, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isCrowdsaleJson, isError, isHexString, isKeystoreJson, isValidName, keccak256, lock, makeError, mask, namehash, parseEther, parseUnits$1 as parseUnits, pbkdf2, randomBytes, recoverAddress, resolveAddress, resolveProperties, ripemd160, scrypt, scryptSync, sha256, sha512, showThrottleMessage, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, uuidV4, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
+export { AbiCoder, AbstractProvider, AbstractSigner, BaseContract, BaseWallet, Block, BrowserProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, EnsPlugin, EnsResolver, ErrorDescription, ErrorFragment, EtherSymbol, EventFragment, EventLog, EventPayload, FallbackFragment, FallbackProvider, FeeData, FeeDataNetworkPlugin, FetchCancelSignal, FetchRequest, FetchResponse, FetchUrlFeeDataNetworkPlugin, FixedNumber, Fragment, FunctionFragment, GasCostPlugin, HDNodeVoidWallet, HDNodeWallet, Indexed, Interface, IpcSocketProvider, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, MulticoinProviderPlugin, N$1 as N, NamedFragment, Network, NetworkPlugin, NonceManager, ParamType, Result, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, Transaction, TransactionDescription, TransactionReceipt, TransactionResponse, Typed, TypedDataEncoder, UndecodedEventLog, UnmanagedSubscriber, Utf8ErrorFuncs, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, accessListify, assert, assertArgument, assertArgumentCount, assertNormalize, assertPrivate, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32String, decodeRlp, decryptCrowdsaleJson, decryptKeystoreJson, decryptKeystoreJsonSync, defaultPath, defineProperties, dnsEncode, encodeBase58, encodeBase64, encodeBytes32String, encodeRlp, encryptKeystoreJson, encryptKeystoreJsonSync, ensNormalize, ethers, formatEther, formatUnits, fromTwos, getAccountPath, getAddress, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getDefaultProvider, getIcapAddress, getIndexedAccountPath, getNumber, getUint, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isCrowdsaleJson, isError, isHexString, isKeystoreJson, isValidName, keccak256, lock, makeError, mask, namehash, parseEther, parseUnits$1 as parseUnits, pbkdf2, randomBytes, recoverAddress, resolveAddress, resolveProperties, ripemd160, scrypt, scryptSync, sha256, sha512, showThrottleMessage, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, uuidV4, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
 //# sourceMappingURL=ethers.js.map

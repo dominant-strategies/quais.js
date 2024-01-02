@@ -11,7 +11,7 @@
  * @_section: api/providers/jsonrpc:JSON-RPC Provider  [about-jsonrpcProvider]
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.JsonRpcProvider = exports.JsonRpcApiPollingProvider = exports.JsonRpcApiProvider = exports.JsonRpcSigner = void 0;
+exports.JsonRpcProvider = exports.JsonRpcApiProvider = exports.JsonRpcSigner = void 0;
 // @TODO:
 // - Add the batching API
 // https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/eth1.0-apis/assembled-spec/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=true&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false
@@ -24,7 +24,6 @@ const abstract_provider_js_1 = require("./abstract-provider.js");
 const abstract_signer_js_1 = require("./abstract-signer.js");
 const network_js_1 = require("./network.js");
 const subscriber_filterid_js_1 = require("./subscriber-filterid.js");
-const subscriber_polling_js_1 = require("./subscriber-polling.js");
 const Primitive = "bigint,boolean,function,number,string,symbol".split(/,/g);
 //const Methods = "getAddress,then".split(/,/g);
 function deepCopy(value) {
@@ -55,17 +54,12 @@ function getLowerCase(value) {
     }
     return value;
 }
-function isPollable(value) {
-    return (value && typeof (value.pollingInterval) === "number");
-}
 const defaultOptions = {
-    polling: false,
     staticNetwork: null,
     batchStallTime: 10,
     batchMaxSize: (1 << 20),
     batchMaxCount: 100,
-    cacheTimeout: 250,
-    pollingInterval: 4000
+    cacheTimeout: 250
 };
 // @TODO: Unchecked Signers
 class JsonRpcSigner extends abstract_signer_js_1.AbstractSigner {
@@ -440,9 +434,6 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
             return new subscriber_filterid_js_1.FilterIdPendingSubscriber(this);
         }
         if (sub.type === "event") {
-            if (this._getOption("polling")) {
-                return new subscriber_polling_js_1.PollingEventSubscriber(this, sub.filter);
-            }
             return new subscriber_filterid_js_1.FilterIdEventSubscriber(this, sub.filter);
         }
         // Orphaned Logs are handled automatically, by the filter, since
@@ -740,42 +731,6 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
     }
 }
 exports.JsonRpcApiProvider = JsonRpcApiProvider;
-// @TODO: remove this in v7, it is not exported because this functionality
-// is exposed in the JsonRpcApiProvider by setting polling to true. It should
-// be safe to remove regardless, because it isn't reachable, but just in case.
-/**
- *  @_ignore:
- */
-class JsonRpcApiPollingProvider extends JsonRpcApiProvider {
-    #pollingInterval;
-    constructor(network, options) {
-        super(network, options);
-        this.#pollingInterval = 4000;
-    }
-    _getSubscriber(sub) {
-        const subscriber = super._getSubscriber(sub);
-        if (isPollable(subscriber)) {
-            subscriber.pollingInterval = this.#pollingInterval;
-        }
-        return subscriber;
-    }
-    /**
-     *  The polling interval (default: 4000 ms)
-     */
-    get pollingInterval() { return this.#pollingInterval; }
-    set pollingInterval(value) {
-        if (!Number.isInteger(value) || value < 0) {
-            throw new Error("invalid interval");
-        }
-        this.#pollingInterval = value;
-        this._forEachSubscriber((sub) => {
-            if (isPollable(sub)) {
-                sub.pollingInterval = this.#pollingInterval;
-            }
-        });
-    }
-}
-exports.JsonRpcApiPollingProvider = JsonRpcApiPollingProvider;
 /**
  *  The JsonRpcProvider is one of the most common Providers,
  *  which performs all operations over HTTP (or HTTPS) requests.
@@ -784,7 +739,7 @@ exports.JsonRpcApiPollingProvider = JsonRpcApiPollingProvider;
  *  number; when it advances, all block-base events are then checked
  *  for updates.
  */
-class JsonRpcProvider extends JsonRpcApiPollingProvider {
+class JsonRpcProvider extends JsonRpcApiProvider {
     #connect;
     constructor(url, network, options) {
         if (url == null) {
@@ -797,6 +752,10 @@ class JsonRpcProvider extends JsonRpcApiPollingProvider {
         else {
             this.#connect = url.clone();
         }
+    }
+    _getSubscriber(sub) {
+        const subscriber = super._getSubscriber(sub);
+        return subscriber;
     }
     _getConnection() {
         return this.#connect.clone();
