@@ -1,41 +1,41 @@
 _section: Getting Started @<getting-started> @priority<100>
 
-This is a very short introduction to Ethers, but covers many of the
+This is a very short introduction to quais, but covers many of the
 most common operations that developers require and provides a
 starting point for those newer to Ethereum.
 
 
-_heading: Getting Ethers
+_heading: Getting quais
 
-If using NPM, you must first install Ethers.
+If using NPM, you must first install quais.
 
 _code: installing via NPM @lang<shell>
-  # Install ethers
-  /home/ricmoo/test-ethers> npm install ethers
+  # Install quais
+  /home/ricmoo/test-quais> npm install quais
 
 _null:
 
-Everything in Ethers is exported from its root as well as on the ``ethers``
+Everything in quais is exported from its root as well as on the ``quais``
 object. There are also ``exports`` in the ``package.json`` to facilitate
 more fine-grained importing.
 
-Generally this documentation will presume all exports from ethers
+Generally this documentation will presume all exports from quais
 have been imported in the code examples, but you may import the
 necessary objects in any way you wish.
 
 _code: importing in Node.js  @lang<script>
   // Import everything
-  import { ethers } from "ethers";
+  import { quais } from "quais";
 
   // Import just a few select items
-  import { BrowserProvider, parseUnits } from "ethers";
+  import { BrowserProvider, parseUnits } from "quais";
 
   // Import from a specific export
-  import { HDNodeWallet } from "ethers/wallet";
+  import { HDNodeWallet } from "quais/wallet";
 
 _code: importing ESM in a browser  @lang<script>
   <script type="module">
-    import { ethers } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
+    import { quais } from "https://cdnjs.cloudflare.com/ajax/libs/quais/6.7.0/quais.min.js";
     // Your code here...
   </script>
 
@@ -52,7 +52,7 @@ querying the blockchain state, such as account, block or transaction details,
 querying event logs or evaluating read-only code using call.
 
 If you are coming from Web3.js, you are used to a **Provider** offering
-both read and write access. In Ethers, all write operations are further
+both read and write access. In quais, all write operations are further
 abstracted into another Object, the **Signer**.
 
 _heading: Signer
@@ -132,14 +132,14 @@ _code:  @lang<script>
       // as INFURA). They do not have private keys installed so are
       // only have read-only access
       console.log("MetaMask not installed; using read-only defaults")
-      provider = ethers.getDefaultProvider()
+      provider = quais.getDefaultProvider()
 
   } else {
 
       // Connect to the MetaMask EIP-1193 object. This is a standard
-      // protocol that allows Ethers access to make all read-only
+      // protocol that allows quais access to make all read-only
       // requests through MetaMask.
-      provider = new ethers.BrowserProvider(window.ethereum)
+      provider = new quais.BrowserProvider(window.ethereum)
 
       // It also provides an opportunity to request access to write
       // operations, which will be performed by the private key
@@ -163,7 +163,7 @@ _code: connecting to a JSON-RPC URL  @lang<script>
 
   // If no %%url%% is provided, it connects to the default
   // http://localhost:8545, which most nodes use.
-  provider = new ethers.JsonRpcProvider(url)
+  provider = new quais.JsonRpcProvider(url)
 
   // Get write access as an account by getting the signer
   signer = await provider.getSigner()
@@ -227,7 +227,7 @@ _code:  @lang<javascript>
   //_result:
 
   // Get the current balance of an account (by address or ENS name)
-  balance = await provider.getBalance("ethers.eth")
+  balance = await provider.getBalance("quais.eth")
   //_result:
 
   // Since the balance is in wei, you may wish to display it
@@ -236,7 +236,7 @@ _code:  @lang<javascript>
   //_result:
 
   // Get the next nonce required to send a transaction
-  await provider.getTransactionCount("ethers.eth")
+  await provider.getTransactionCount("quais.eth")
   //_result:
 
 _heading: Sending Transactions
@@ -258,7 +258,7 @@ _code:  @lang<script>
   // When sending a transaction, the value is in wei, so parseEther
   // converts ether to wei.
   tx = await signer.sendTransaction({
-    to: "ethers.eth",
+    to: "quais.eth",
     value: parseEther("1.0")
   });
   //_result:
@@ -283,7 +283,7 @@ representation, as well as encode the ways to call and interpret
 the Contract.
 
 For any method, event or error you wish to use, you must include a
-[[Fragment]] to inform Ethers how it should encode the request and
+[[Fragment]] to inform quais how it should encode the request and
 decode the result.
 
 Any methods or events that are not needed can be safely excluded.
@@ -301,7 +301,7 @@ _code: simplified ERC-20 ABI @lang<script>
   ]
 
   // Create a contract
-  contract = new Contract("dai.tokens.ethers.eth", abi, provider)
+  contract = new Contract("dai.tokens.quais.eth", abi, provider)
 
 _heading: Read-only methods (i.e. ``view`` and ``pure``)
 
@@ -319,7 +319,7 @@ _code: reading the DAI ERC-20 contract @lang<javascript>
 
   // Create a contract; connected to a Provider, so it may
   // only access read-only methods (like view and pure)
-  contract = new Contract("dai.tokens.ethers.eth", abi, provider)
+  contract = new Contract("dai.tokens.quais.eth", abi, provider)
 
   // The symbol name for the token
   sym = await contract.symbol()
@@ -330,7 +330,7 @@ _code: reading the DAI ERC-20 contract @lang<javascript>
   //_result:
 
   // Read the token balance for an account
-  balance = await contract.balanceOf("ethers.eth")
+  balance = await contract.balanceOf("quais.eth")
   //_result:
 
   // Format the balance for humans, such as in a UI
@@ -347,13 +347,13 @@ _code: change state on an ERC-20 contract  @lang<script>
 
   // Connected to a Signer; can make state changing transactions,
   // which will cost the account ether
-  contract = new Contract("dai.tokens.ethers.eth", abi, signer)
+  contract = new Contract("dai.tokens.quais.eth", abi, signer)
 
   // Send 1 DAI
   amount = parseUnits("1.0", 18);
 
   // Send the transaction
-  tx = await contract.transfer("ethers.eth", amount)
+  tx = await contract.transfer("quais.eth", amount)
   //_result: @TODO
 
   // Currently the transaction has been sent to the mempool,
@@ -370,19 +370,19 @@ _code: forcing a call (simulation) of a state-changing method @lang<javascript>
   ]
 
   // Connected to a Provider since we only require read access
-  contract = new Contract("dai.tokens.ethers.eth", abi, provider)
+  contract = new Contract("dai.tokens.quais.eth", abi, provider)
 
   amount = parseUnits("1.0", 18)
 
   // There are many limitations to using a static call, but can
   // often be useful to preflight a transaction.
-  await contract.transfer.staticCall("ethers.eth", amount)
+  await contract.transfer.staticCall("quais.eth", amount)
   //_result:
 
   // We can also simulate the transaction as another account
   other = new VoidSigner("0x643aA0A61eADCC9Cc202D1915D942d35D005400C")
   contractAsOther = contract.connect(other.connect(provider))
-  await contractAsOther.transfer.staticCall("ethers.eth", amount)
+  await contractAsOther.transfer.staticCall("quais.eth", amount)
   //_result:
 
 _heading: Listening to Events
@@ -401,7 +401,7 @@ _code: listen for ERC-20 events  @lang<script>
 
   // Create a contract; connected to a Provider, so it may
   // only access read-only methods (like view and pure)
-  contract = new Contract("dai.tokens.ethers.eth", abi, provider)
+  contract = new Contract("dai.tokens.quais.eth", abi, provider)
 
   // Begin listening for any Transfer event
   contract.on("Transfer", (from, to, _amount, event) => {
@@ -419,10 +419,10 @@ _code: listen for ERC-20 events  @lang<script>
     // See above
   })
 
-  // Listen for any Transfer to "ethers.eth"
-  filter = contract.filters.Transfer("ethers.eth")
+  // Listen for any Transfer to "quais.eth"
+  filter = contract.filters.Transfer("quais.eth")
   contract.on(filter, (from, to, amount, event) => {
-    // `to` will always be equal to the address of "ethers.eth"
+    // `to` will always be equal to the address of "quais.eth"
   });
 
   // Listen for any event, whether it is present in the ABI
@@ -448,7 +448,7 @@ _code: query historic ERC-20 events  @lang<javascript>
 
   // Create a contract; connected to a Provider, so it may
   // only access read-only methods (like view and pure)
-  contract = new Contract("dai.tokens.ethers.eth", abi, provider)
+  contract = new Contract("dai.tokens.quais.eth", abi, provider)
 
   // Query the last 100 blocks for any transfer
   filter = contract.filters.Transfer
@@ -462,8 +462,8 @@ _code: query historic ERC-20 events  @lang<javascript>
   events[0]
   //_result:
 
-  // Query all time for any transfer to ethers.eth
-  filter = contract.filters.Transfer("ethers.eth")
+  // Query all time for any transfer to quais.eth
+  filter = contract.filters.Transfer("quais.eth")
   events = await contract.queryFilter(filter)
 
   // The first matching event
@@ -486,7 +486,7 @@ _code:  @lang<javascript>
   signer = new Wallet(id("test"))
   //_result:
 
-  message = "sign into ethers.org?"
+  message = "sign into quais.org?"
 
   // Signing the message
   sig = await signer.signMessage(message);

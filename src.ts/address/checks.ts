@@ -15,7 +15,7 @@ import type { Addressable, AddressLike, NameResolver } from "./index.js";
  *    //_result:
  *
  *    // Contracts
- *    contract = new Contract("dai.tokens.ethers.eth", [ ], provider)
+ *    contract = new Contract("dai.tokens.quais.eth", [ ], provider)
  *    isAddressable(contract)
  *    //_result:
  */
@@ -85,7 +85,7 @@ async function checkAddress(target: any, promise: Promise<null | string>): Promi
  *    //_result:
  *
  *    // ENS names are resolved asynchronously
- *    resolveAddress("dai.tokens.ethers.eth", provider)
+ *    resolveAddress("dai.tokens.quais.eth", provider)
  *    //_result:
  *
  *    // Addressable objects are resolved asynchronously

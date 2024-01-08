@@ -26,7 +26,7 @@ ABI that helps specify how to encode the input and how to decode the output.
 It is up to the contract developer to make this ABI available. Many
 Contracts implement a standard (such as ERC-20), in which case the
 ABI for that standard can be used. Many developers choose to verify their
-source code on Etherscan, in which case Etherscan computes the ABI and
+source code on quaiscan, in which case quaiscan computes the ABI and
 provides it through their website (which can be fetched using the ``getContract``
 method). Otherwise, beyond reverse engineering the Contract there is
 not a meaningful way to extract the contract ABI.

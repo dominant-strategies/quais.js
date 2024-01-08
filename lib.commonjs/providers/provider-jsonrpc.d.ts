@@ -150,7 +150,7 @@ export interface JsonRpcTransactionRequest {
     /**
      *  The maximum amount of gas to allow a transaction to consume.
      *
-     *  In most other places in ethers, this is called ``gasLimit`` which
+     *  In most other places in quais, this is called ``gasLimit`` which
      *  differs from the JSON-RPC Ethereum API specification.
      */
     gas?: string;
@@ -281,7 +281,7 @@ export declare abstract class JsonRpcApiProvider extends AbstractProvider {
         args: Array<any>;
     };
     /**
-     *  Returns an ethers-style Error for the given JSON-RPC error
+     *  Returns an quais-style Error for the given JSON-RPC error
      *  %%payload%%, coalescing the various strings and error shapes
      *  that different nodes return, coercing them into a machine-readable
      *  standardized error.

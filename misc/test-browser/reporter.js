@@ -89,7 +89,7 @@ export class MyReporter {
 
         }).on(EVENT_SUITE_BEGIN, (suite) => {
             this._suiteLogs.push([ ]);
-            suite._ethersLog = (text) => {
+            suite._quaisLog = (text) => {
                 this._suiteLogs[this._suiteLogs.length - 1].push(getString(text))
             };
             if (suite.title.trim()) {
@@ -110,7 +110,7 @@ export class MyReporter {
 
         }).on(EVENT_TEST_BEGIN, (test) => {
             this._testLogs.push([ ]);
-            test._ethersLog = (text) => {
+            test._quaisLog = (text) => {
                 this._testLogs[this._testLogs.length - 1].push(getString(text))
             };
 

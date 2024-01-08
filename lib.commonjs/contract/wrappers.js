@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ContractEventPayload = exports.ContractUnknownEventPayload = exports.ContractTransactionResponse = exports.ContractTransactionReceipt = exports.UndecodedEventLog = exports.EventLog = void 0;
 // import from provider.ts instead of index.ts to prevent circular dep
-// from EtherscanProvider
+// from quaiscanProvider
 const provider_js_1 = require("../providers/provider.js");
 const index_js_1 = require("../utils/index.js");
 /**

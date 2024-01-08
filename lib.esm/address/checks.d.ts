@@ -9,7 +9,7 @@ import type { Addressable, AddressLike, NameResolver } from "./index.js";
  *    //_result:
  *
  *    // Contracts
- *    contract = new Contract("dai.tokens.ethers.eth", [ ], provider)
+ *    contract = new Contract("dai.tokens.quais.eth", [ ], provider)
  *    isAddressable(contract)
  *    //_result:
  */
@@ -60,7 +60,7 @@ export declare function isAddress(value: any): value is string;
  *    //_result:
  *
  *    // ENS names are resolved asynchronously
- *    resolveAddress("dai.tokens.ethers.eth", provider)
+ *    resolveAddress("dai.tokens.quais.eth", provider)
  *    //_result:
  *
  *    // Addressable objects are resolved asynchronously

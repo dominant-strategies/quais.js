@@ -27,8 +27,8 @@ function loadTests(tag) {
 }
 exports.loadTests = loadTests;
 function log(context, text) {
-    if (context && context.test && typeof (context.test._ethersLog) === "function") {
-        context.test._ethersLog(text);
+    if (context && context.test && typeof (context.test._quaisLog) === "function") {
+        context.test._quaisLog(text);
     }
     else {
         console.log(text);
@@ -115,8 +115,8 @@ export class Stats {
 
     end(context?: any): void {
         let log = console.log.bind(console);
-        if (context && typeof(context._ethersLog) === "function") {
-            log = context._ethersLog;
+        if (context && typeof(context._quaisLog) === "function") {
+            log = context._quaisLog;
         }
         const { name, retries } = this.#currentStats();
         if (retries.length === 0) { return; }

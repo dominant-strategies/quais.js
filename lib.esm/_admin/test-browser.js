@@ -2,7 +2,7 @@
  *
  *
  *  Paths
- *  /index.js => dist/ethers.js
+ *  /index.js => dist/quais.js
  *  /tests/utils.js => in-memory hijack
  *  /static/* => output/*
  *    - index.html
@@ -159,7 +159,7 @@ const TestData = (function () {
         return [String(data.length), zlib.deflateRawSync(data).toString("base64")].join(",");
     }
     let data = [];
-    data.push(`import { ethers } from "/index.js";`);
+    data.push(`import { quais } from "/index.js";`);
     data.push(`import { inflate } from "/static/tiny-inflate.js";`);
     data.push(`const fs = new Map();`);
     for (const filename of fs.readdirSync("testcases")) {
@@ -174,8 +174,8 @@ const TestData = (function () {
     data.push(`  if (data == null) { throw new Error("missing tag: " + tag); }`);
     data.push(`  const comps = data.split(",");`);
     data.push(`  const result = new Uint8Array(parseInt(comps[0]));`);
-    data.push(`  inflate(ethers.decodeBase64(comps[1]), result);`);
-    data.push(`  return JSON.parse(ethers.toUtf8String(result))`);
+    data.push(`  inflate(quais.decodeBase64(comps[1]), result);`);
+    data.push(`  return JSON.parse(quais.toUtf8String(result))`);
     data.push(`}`);
     return data.join("\n");
 })();
@@ -193,11 +193,11 @@ export function start(_root, options) {
         if (url === "/") {
             filename = "./misc/test-browser/index.html";
         }
-        else if (url === "/ethers.js" || url === "/index.js") {
-            filename = "./dist/ethers.js";
+        else if (url === "/quais.js" || url === "/index.js") {
+            filename = "./dist/quais.js";
         }
-        else if (url === "/ethers.js.map") {
-            filename = "./dist/ethers.js.map";
+        else if (url === "/quais.js.map") {
+            filename = "./dist/quais.js.map";
         }
         else if (url.startsWith("/static/")) {
             filename = "./misc/test-browser/" + url.substring(8);

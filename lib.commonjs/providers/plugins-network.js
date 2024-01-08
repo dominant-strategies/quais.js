@@ -74,7 +74,7 @@ class GasCostPlugin extends NetworkPlugin {
         if (effectiveBlock == null) {
             effectiveBlock = 0;
         }
-        super(`org.ethers.network.plugins.GasCost#${(effectiveBlock || 0)}`);
+        super(`org.quais.network.plugins.GasCost#${(effectiveBlock || 0)}`);
         const props = { effectiveBlock };
         function set(name, nullish) {
             let value = (costs || {})[name];
@@ -121,7 +121,7 @@ class EnsPlugin extends NetworkPlugin {
      *  if unspecified.
      */
     constructor(address, targetNetwork) {
-        super("org.ethers.plugins.network.Ens");
+        super("org.quais.plugins.network.Ens");
         (0, properties_js_1.defineProperties)(this, {
             address: (address || EnsAddress),
             targetNetwork: ((targetNetwork == null) ? 1 : targetNetwork)
@@ -151,7 +151,7 @@ class FeeDataNetworkPlugin extends NetworkPlugin {
      *  Creates a new **FeeDataNetworkPlugin**.
      */
     constructor(feeDataFunc) {
-        super("org.ethers.plugins.network.FeeData");
+        super("org.quais.plugins.network.FeeData");
         this.#feeDataFunc = feeDataFunc;
     }
     /**
@@ -181,7 +181,7 @@ class FetchUrlFeeDataNetworkPlugin extends NetworkPlugin {
      *  be used when computing the fee data for the network.
      */
     constructor(url, processFunc) {
-        super("org.ethers.plugins.network.FetchUrlFeeDataPlugin");
+        super("org.quais.plugins.network.FetchUrlFeeDataPlugin");
         this.#url = url;
         this.#processFunc = processFunc;
     }
@@ -195,7 +195,7 @@ export class CustomBlockNetworkPlugin extends NetworkPlugin {
     readonly #blockWithTxsFunc: (provider: Provider, block: BlockParams<TransactionResponseParams>) => Block<TransactionResponse>;
 
     constructor(blockFunc: (provider: Provider, block: BlockParams<string>) => Block<string>, blockWithTxsFunc: (provider: Provider, block: BlockParams<TransactionResponseParams>) => Block<TransactionResponse>) {
-        super("org.ethers.network-plugins.custom-block");
+        super("org.quais.network-plugins.custom-block");
         this.#blockFunc = blockFunc;
         this.#blockWithTxsFunc = blockWithTxsFunc;
     }

@@ -1,7 +1,7 @@
-// See: https://github.com/ethers-io/ethers.js/issues/3910
+// See: https://github.com/quais-io/quais.js/issues/3910
 
 import { Component } from '@angular/core';
-import { ethers } from 'ethers';
+import { quais } from 'quais';
 
 declare global {
   interface Window {
@@ -16,7 +16,7 @@ declare global {
 })
 export class AppComponent {
   title = 'test';
-  network?: ethers.Network;
+  network?: quais.Network;
 
   async connect() {
 
@@ -28,9 +28,9 @@ export class AppComponent {
       console.log('MetaMask not installed; using read-only defaults');
     } else {
       // Connect to the MetaMask EIP-1193 object. This is a standard
-      // protocol that allows Ethers access to make all read-only
+      // protocol that allows quais access to make all read-only
       // requests through MetaMask.
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      const provider = new quais.BrowserProvider(window.ethereum);
 
       const accounts = await window.ethereum.request({
         method: 'eth_requestAccounts',

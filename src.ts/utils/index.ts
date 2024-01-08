@@ -62,7 +62,7 @@ export type {
 
     ErrorCode,
 
-    EthersError, UnknownError, NotImplementedError, UnsupportedOperationError, NetworkError,
+    quaisError, UnknownError, NotImplementedError, UnsupportedOperationError, NetworkError,
     ServerError, TimeoutError, BadDataError, CancelledError, BufferOverrunError,
     NumericFaultError, InvalidArgumentError, MissingArgumentError, UnexpectedArgumentError,
     CallExceptionError, InsufficientFundsError, NonceExpiredError, OffchainFaultError,
@@ -71,7 +71,7 @@ export type {
 
     CallExceptionAction, CallExceptionTransaction,
 
-    CodedEthersError
+    CodedquaisError
 } from "./errors.js"
 
 export type { EventEmitterable, Listener } from "./events.js";

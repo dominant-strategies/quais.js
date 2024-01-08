@@ -24,7 +24,7 @@ import { WebSocketLike } from "./provider-websocket.js";
  *  - ``"alchemy"``
  *  - ``"ankr"``
  *  - ``"cloudflare"``
- *  - ``"etherscan"``
+ *  - ``"quaiscan"``
  *  - ``"infura"``
  *  - ``"publicPolygon"``
  *  - ``"quicknode"``
@@ -37,11 +37,11 @@ import { WebSocketLike } from "./provider-websocket.js";
  *    // third-party services available
  *    provider = getDefaultProvider("mainnet");
  *
- *    // Connect to Polygon, but only allow Etherscan and
- *    // INFURA and use "MY_API_KEY" in calls to Etherscan.
+ *    // Connect to Polygon, but only allow quaiscan and
+ *    // INFURA and use "MY_API_KEY" in calls to quaiscan.
  *    provider = getDefaultProvider("matic", {
- *      etherscan: "MY_API_KEY",
- *      exclusive: [ "etherscan", "infura" ]
+ *      quaiscan: "MY_API_KEY",
+ *      exclusive: [ "quaiscan", "infura" ]
  *    });
  */
 export declare function getDefaultProvider(network: string | Networkish | WebSocketLike, options?: any): AbstractProvider;

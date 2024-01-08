@@ -1,4 +1,4 @@
-//import { resolveAddress } from "@ethersproject/address";
+//import { resolveAddress } from "@quaisproject/address";
 import { defineProperties, getBigInt, getNumber, hexlify, resolveProperties, assert, assertArgument, isError, makeError } from "../utils/index.js";
 import { accessListify } from "../transaction/index.js";
 const BN_0 = BigInt(0);

@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyTypedData = exports.TypedDataEncoder = void 0;
-//import { TypedDataDomain, TypedDataField } from "@ethersproject/providerabstract-signer";
+//import { TypedDataDomain, TypedDataField } from "@quaisproject/providerabstract-signer";
 const index_js_1 = require("../address/index.js");
 const index_js_2 = require("../crypto/index.js");
 const index_js_3 = require("../transaction/index.js");
