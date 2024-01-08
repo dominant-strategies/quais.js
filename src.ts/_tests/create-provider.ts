@@ -11,8 +11,7 @@ interface ProviderCreator {
     create: (network: string) => null | AbstractProvider;
 };
 
-const ethNetworks = [ "default", "mainnet", "goerli" ];
-//const maticNetworks = [ "matic", "maticmum" ];
+const ethNetworks = [ "default", "mainnet" ];
 
 const ProviderCreators: Array<ProviderCreator> = [
     {
@@ -20,7 +19,7 @@ const ProviderCreators: Array<ProviderCreator> = [
         networks: ethNetworks,
         create: function(network: string) {
             const providers: Array<AbstractProvider> = [];
-            for (const providerName of [ "AlchemyProvider", "AnkrProvider", "quaiscanProvider", "InfuraProvider" ]) {
+            for (const providerName of [ "JsonRpcProvider" ]) {
                 const provider = getProvider(providerName, network);
                 if (provider) { providers.push(provider); }
             }
@@ -55,7 +54,7 @@ export function getProviderNetworks(provider: string): Array<string> {
 
 export function getProvider(provider: string, network: string): null | AbstractProvider {
     if (setup == false) { throw new Error("MUST CALL setupProviders in root context"); }
-
+    console.log(`getProvider: ${ provider }.${ network }`);
     const creator = getCreator(provider);
     try {
         if (creator) {
