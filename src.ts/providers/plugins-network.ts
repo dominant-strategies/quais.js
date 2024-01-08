@@ -126,7 +126,7 @@ export class GasCostPlugin extends NetworkPlugin implements GasCostParameters {
      */
     constructor(effectiveBlock?: number, costs?: GasCostParameters) {
         if (effectiveBlock == null) { effectiveBlock = 0; }
-        super(`org.ethers.network.plugins.GasCost#${ (effectiveBlock || 0) }`);
+        super(`org.quais.network.plugins.GasCost#${ (effectiveBlock || 0) }`);
 
         const props: Record<string, number> = { effectiveBlock };
         function set(name: keyof GasCostParameters, nullish: number): void {
@@ -178,7 +178,7 @@ export class EnsPlugin extends NetworkPlugin {
      *  if unspecified.
      */
     constructor(address?: null | string, targetNetwork?: null | number) {
-        super("org.ethers.plugins.network.Ens");
+        super("org.quais.plugins.network.Ens");
         defineProperties<EnsPlugin>(this, {
             address: (address || EnsAddress),
             targetNetwork: ((targetNetwork == null) ? 1: targetNetwork)
@@ -211,7 +211,7 @@ export class FeeDataNetworkPlugin extends NetworkPlugin {
      *  Creates a new **FeeDataNetworkPlugin**.
      */
     constructor(feeDataFunc: (provider: Provider) => Promise<FeeData>) {
-        super("org.ethers.plugins.network.FeeData");
+        super("org.quais.plugins.network.FeeData");
         this.#feeDataFunc = feeDataFunc;
     }
 
@@ -246,7 +246,7 @@ export class FetchUrlFeeDataNetworkPlugin extends NetworkPlugin {
      *  be used when computing the fee data for the network.
      */
     constructor(url: string, processFunc: (f: () => Promise<FeeData>, p: Provider, r: FetchRequest) => Promise<{ gasPrice?: null | bigint, maxFeePerGas?: null | bigint, maxPriorityFeePerGas?: null | bigint }>) {
-        super("org.ethers.plugins.network.FetchUrlFeeDataPlugin");
+        super("org.quais.plugins.network.FetchUrlFeeDataPlugin");
         this.#url = url;
         this.#processFunc = processFunc;
     }
@@ -261,7 +261,7 @@ export class CustomBlockNetworkPlugin extends NetworkPlugin {
     readonly #blockWithTxsFunc: (provider: Provider, block: BlockParams<TransactionResponseParams>) => Block<TransactionResponse>;
 
     constructor(blockFunc: (provider: Provider, block: BlockParams<string>) => Block<string>, blockWithTxsFunc: (provider: Provider, block: BlockParams<TransactionResponseParams>) => Block<TransactionResponse>) {
-        super("org.ethers.network-plugins.custom-block");
+        super("org.quais.network-plugins.custom-block");
         this.#blockFunc = blockFunc;
         this.#blockWithTxsFunc = blockWithTxsFunc;
     }

@@ -14,13 +14,13 @@ uses a MulticallProvider to batch all the ``eth_call`` queries
 for each key into a single ``eth_call``. As such, you will need
 to install:
 
-``/home/ricmoo> npm install @ethers-ext/provider-multicall``
+``/home/ricmoo> npm install @quais-ext/provider-multicall``
 
 
 _code: Fetching all ENS text records.  @lang<script>
 
-import { ethers } from "ethers";
-import { MulticallProvider } from "@ethers-ext/provider-multicall";
+import { quais } from "quais";
+import { MulticallProvider } from "@quais-ext/provider-multicall";
 
 async function getTextRecords(_provider, name) {
   // Prepare a multicall-based provider to batch all the call operations
@@ -30,12 +30,12 @@ async function getTextRecords(_provider, name) {
   const resolver = await provider.getResolver(name);
 
   // A contract instance; used filter and parse logs
-  const contract = new ethers.Contract(resolver.address, [
+  const contract = new quais.Contract(resolver.address, [
     "event TextChanged(bytes32 indexed node, string indexed _key, string key)"
   ], provider);
 
   // A filter for the given name
-  const filter = contract.filters.TextChanged(ethers.namehash(name));
+  const filter = contract.filters.TextChanged(quais.namehash(name));
 
   // Get the matching logs
   const logs = await contract.queryFilter(filter);
@@ -61,6 +61,6 @@ async function getTextRecords(_provider, name) {
 
 // Example usage
 (async function() {
-  const provider = new ethers.InfuraProvider();
+  const provider = new quais.InfuraProvider();
   console.log(await getTextRecords(provider, "ricmoo.eth"));
 })();

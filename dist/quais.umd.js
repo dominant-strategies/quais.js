@@ -2,12 +2,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
     typeof define === 'function' && define.amd ? define(['exports'], factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.ethers = {}));
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.quais = {}));
 })(this, (function (exports) { 'use strict';
 
     /* Do NOT modify this file; see /src.ts/_admin/update-version.ts */
     /**
-     *  The current version of Ethers.
+     *  The current version of quais.
      */
     const version = "6.9.2";
 
@@ -66,7 +66,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
 
     /**
-     *  All errors in ethers include properties to ensure they are both
+     *  All errors in quais include properties to ensure they are both
      *  human-readable (i.e. ``.message``) and machine-readable (i.e. ``.code``).
      *
      *  The [[isError]] function can be used to check the error ``code`` and
@@ -112,11 +112,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         return `[ COULD NOT SERIALIZE ]`;
     }
     /**
-     *  Returns true if the %%error%% matches an error thrown by ethers
+     *  Returns true if the %%error%% matches an error thrown by quais
      *  that matches the error %%code%%.
      *
      *  In TypeScript environments, this can be used to check that %%error%%
-     *  matches an EthersError type, which means the expected properties will
+     *  matches an quaisError type, which means the expected properties will
      *  be set.
      *
      *  @See [ErrorCodes](api:ErrorCode)
@@ -140,14 +140,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         return isError(error, "CALL_EXCEPTION");
     }
     /**
-     *  Returns a new Error configured to the format ethers emits errors, with
+     *  Returns a new Error configured to the format quais emits errors, with
      *  the %%message%%, [[api:ErrorCode]] %%code%% and additional properties
-     *  for the corresponding EthersError.
+     *  for the corresponding quaisError.
      *
-     *  Each error in ethers includes the version of ethers, a
+     *  Each error in quais includes the version of quais, a
      *  machine-readable [[ErrorCode]], and depending on %%code%%, additional
      *  required properties. The error message will also include the %%message%%,
-     *  ethers version, %%code%% and all additional properties, serialized.
+     *  quais version, %%code%% and all additional properties, serialized.
      */
     function makeError(message, code, info) {
         let shortMessage = message;
@@ -198,7 +198,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         return error;
     }
     /**
-     *  Throws an EthersError with %%message%%, %%code%% and additional error
+     *  Throws an quaisError with %%message%%, %%code%% and additional error
      *  %%info%% when %%check%% is falsish..
      *
      *  @see [[api:makeError]]
@@ -1044,7 +1044,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
 
     /**
-     *  Fetching content from the web is environment-specific, so Ethers
+     *  Fetching content from the web is environment-specific, so quais
      *  provides an abstraction that each environment can implement to provide
      *  this service.
      *
@@ -6518,7 +6518,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      *  (**i.e.** ``"\\u039e"``)
      */
-    const EtherSymbol = "\u039e"; // "\uD835\uDF63";
+    const quaisymbol = "\u039e"; // "\uD835\uDF63";
     /**
      *  A constant for the [[link-eip-191]] personal message prefix.
      *
@@ -7238,7 +7238,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *    //_result:
      *
      *    // Contracts
-     *    contract = new Contract("dai.tokens.ethers.eth", [ ], provider)
+     *    contract = new Contract("dai.tokens.quais.eth", [ ], provider)
      *    isAddressable(contract)
      *    //_result:
      */
@@ -7306,7 +7306,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *    //_result:
      *
      *    // ENS names are resolved asynchronously
-     *    resolveAddress("dai.tokens.ethers.eth", provider)
+     *    resolveAddress("dai.tokens.quais.eth", provider)
      *    //_result:
      *
      *    // Addressable objects are resolved asynchronously
@@ -7368,7 +7368,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         // @TODO: Check range is valid for value
         return new Typed(_gaurd, `bytes${(size) ? size : ""}`, value, { size });
     }
-    const _typedSymbol = Symbol.for("_ethers_typed");
+    const _typedSymbol = Symbol.for("_quais_typed");
     /**
      *  The **Typed** class to wrap values providing explicit type information.
      */
@@ -9520,7 +9520,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         };
     }
     /**
-     *  Returns a [[AccessList]] from any ethers-supported access-list structure.
+     *  Returns a [[AccessList]] from any quais-supported access-list structure.
      */
     function accessListify(value) {
         if (Array.isArray(value)) {
@@ -10414,7 +10414,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         return sha256(solidityPacked(types, values));
     }
 
-    //import { TypedDataDomain, TypedDataField } from "@ethersproject/providerabstract-signer";
+    //import { TypedDataDomain, TypedDataField } from "@quaisproject/providerabstract-signer";
     const padding = new Uint8Array(32);
     padding.fill(0);
     const BN__1 = BigInt(-1);
@@ -11228,7 +11228,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
     // Make the Fragment constructors effectively private
     const _guard$2 = {};
-    const internal$1 = Symbol.for("_ethers_internal");
+    const internal$1 = Symbol.for("_quais_internal");
     const ParamTypeInternal = "_ParamTypeInternal";
     const ErrorFragmentInternal = "_ErrorInternal";
     const EventFragmentInternal = "_EventInternal";
@@ -12388,7 +12388,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return defaultCoder;
         }
         /**
-         *  Returns an ethers-compatible [[CallExceptionError]] Error for the given
+         *  Returns an quais-compatible [[CallExceptionError]] Error for the given
          *  result %%data%% for the [[CallExceptionAction]] %%action%% against
          *  the Transaction %%tx%%.
          */
@@ -13525,7 +13525,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
     }
 
-    //import { resolveAddress } from "@ethersproject/address";
+    //import { resolveAddress } from "@quaisproject/address";
     const BN_0$2 = BigInt(0);
     // -----------------------
     function getValue(value) {
@@ -14744,7 +14744,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
 
     // import from provider.ts instead of index.ts to prevent circular dep
-    // from EtherscanProvider
+    // from quaiscanProvider
     /**
      *  An **EventLog** contains additional properties parsed from the [[Log]].
      */
@@ -15227,7 +15227,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     // the world go boom; so we hide variables with some trickery keeping
     // a symbol attached to each BaseContract which its sub-class (even
     // via a Proxy) can reach and use to look up its internal values.
-    const internal = Symbol.for("_ethersInternal_contract");
+    const internal = Symbol.for("_quaisInternal_contract");
     const internalValues = new WeakMap();
     function setInternal(contract, values) {
         internalValues.set(contract[internal], values);
@@ -16387,7 +16387,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         static async getEnsAddress(provider) {
             const network = await provider.getNetwork();
-            const ensPlugin = network.getPlugin("org.ethers.plugins.network.Ens");
+            const ensPlugin = network.getPlugin("org.quais.plugins.network.Ens");
             // No ENS...
             assert(ensPlugin, "network does not support ENS", "UNSUPPORTED_OPERATION", {
                 operation: "getEnsAddress", info: { network }
@@ -16765,7 +16765,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (effectiveBlock == null) {
                 effectiveBlock = 0;
             }
-            super(`org.ethers.network.plugins.GasCost#${(effectiveBlock || 0)}`);
+            super(`org.quais.network.plugins.GasCost#${(effectiveBlock || 0)}`);
             const props = { effectiveBlock };
             function set(name, nullish) {
                 let value = (costs || {})[name];
@@ -16811,7 +16811,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *  if unspecified.
          */
         constructor(address, targetNetwork) {
-            super("org.ethers.plugins.network.Ens");
+            super("org.quais.plugins.network.Ens");
             defineProperties(this, {
                 address: (address || EnsAddress),
                 targetNetwork: ((targetNetwork == null) ? 1 : targetNetwork)
@@ -16840,7 +16840,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *  Creates a new **FeeDataNetworkPlugin**.
          */
         constructor(feeDataFunc) {
-            super("org.ethers.plugins.network.FeeData");
+            super("org.quais.plugins.network.FeeData");
             this.#feeDataFunc = feeDataFunc;
         }
         /**
@@ -16869,7 +16869,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *  be used when computing the fee data for the network.
          */
         constructor(url, processFunc) {
-            super("org.ethers.plugins.network.FetchUrlFeeDataPlugin");
+            super("org.quais.plugins.network.FetchUrlFeeDataPlugin");
             this.#url = url;
             this.#processFunc = processFunc;
         }
@@ -16882,7 +16882,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         readonly #blockWithTxsFunc: (provider: Provider, block: BlockParams<TransactionResponseParams>) => Block<TransactionResponse>;
 
         constructor(blockFunc: (provider: Provider, block: BlockParams<string>) => Block<string>, blockWithTxsFunc: (provider: Provider, block: BlockParams<TransactionResponseParams>) => Block<TransactionResponse>) {
-            super("org.ethers.network-plugins.custom-block");
+            super("org.quais.network-plugins.custom-block");
             this.#blockFunc = blockFunc;
             this.#blockWithTxsFunc = blockWithTxsFunc;
         }
@@ -16915,7 +16915,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         readonly provider!: Provider;
     // @TODO: Rename to ChainAccess and allow for connecting to any chain
         constructor(provider: Provider) {
-            super("org.ethers.plugins.layer-one-connection");
+            super("org.quais.plugins.layer-one-connection");
             defineProperties<LayerOneConnectionPlugin>(this, { provider });
         }
 
@@ -17049,7 +17049,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *  values.
          */
         computeIntrinsicGas(tx) {
-            const costs = this.getPlugin("org.ethers.plugins.network.GasCost") || (new GasCostPlugin());
+            const costs = this.getPlugin("org.quais.plugins.network.GasCost") || (new GasCostPlugin());
             let gas = costs.txBase;
             if (tx.to == null) {
                 gas += costs.txCreate;
@@ -17167,7 +17167,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     function getGasStationPlugin(url) {
         return new FetchUrlFeeDataNetworkPlugin(url, async (fetchFeeData, provider, request) => {
             // Prevent Cloudflare from blocking our request in node.js
-            request.setHeader("User-Agent", "ethers");
+            request.setHeader("User-Agent", "quais");
             let response;
             try {
                 const [_response, _feeData] = await Promise.all([
@@ -17859,7 +17859,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 return new FeeData(gasPrice, maxFeePerGas, maxPriorityFeePerGas);
             };
             // Check for a FeeDataNetWorkPlugin
-            const plugin = network.getPlugin("org.ethers.plugins.network.FetchUrlFeeDataPlugin");
+            const plugin = network.getPlugin("org.quais.plugins.network.FetchUrlFeeDataPlugin");
             if (plugin) {
                 const req = new FetchRequest(plugin.url);
                 const feeData = await plugin.processFunc(getFeeDataFunc, this, req);
@@ -18874,7 +18874,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         console.log("signing up for your own API keys to improve performance, increase your");
         console.log("request rate/limit and enable other perks, such as metrics and advanced APIs.");
         console.log("");
-        console.log("For more details: https:/\/docs.ethers.org/api-keys/");
+        console.log("For more details: https:/\/docs.quais.org/api-keys/");
         console.log("==========================");
     }
 
@@ -20251,7 +20251,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return null;
         }
         /**
-         *  Returns an ethers-style Error for the given JSON-RPC error
+         *  Returns an quais-style Error for the given JSON-RPC error
          *  %%payload%%, coalescing the various strings and error shapes
          *  that different nodes return, coercing them into a machine-readable
          *  standardized error.
@@ -20277,7 +20277,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // Only estimateGas and call can return arbitrary contract-defined text, so now we
             // we can process text safely.
             const message = JSON.stringify(spelunkMessage(error));
-            if (typeof (error.message) === "string" && error.message.match(/user denied|ethers-user-denied/i)) {
+            if (typeof (error.message) === "string" && error.message.match(/user denied|quais-user-denied/i)) {
                 const actionMap = {
                     eth_sign: "signMessage",
                     personal_sign: "signMessage",
@@ -20915,7 +20915,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *  - ``"alchemy"``
      *  - ``"ankr"``
      *  - ``"cloudflare"``
-     *  - ``"etherscan"``
+     *  - ``"quaiscan"``
      *  - ``"infura"``
      *  - ``"publicPolygon"``
      *  - ``"quicknode"``
@@ -20928,11 +20928,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *    // third-party services available
      *    provider = getDefaultProvider("mainnet");
      *
-     *    // Connect to Polygon, but only allow Etherscan and
-     *    // INFURA and use "MY_API_KEY" in calls to Etherscan.
+     *    // Connect to Polygon, but only allow quaiscan and
+     *    // INFURA and use "MY_API_KEY" in calls to quaiscan.
      *    provider = getDefaultProvider("matic", {
-     *      etherscan: "MY_API_KEY",
-     *      exclusive: [ "etherscan", "infura" ]
+     *      quaiscan: "MY_API_KEY",
+     *      exclusive: [ "quaiscan", "infura" ]
      *    });
      */
     function getDefaultProvider(network, options) {
@@ -21135,10 +21135,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // them into 
             switch (error.error.code || -1) {
                 case 4001:
-                    error.error.message = `ethers-user-denied: ${error.error.message}`;
+                    error.error.message = `quais-user-denied: ${error.error.message}`;
                     break;
                 case 4200:
-                    error.error.message = `ethers-unsupported: ${error.error.message}`;
+                    error.error.message = `quais-unsupported: ${error.error.message}`;
                     break;
             }
             return super.getRpcError(payload, error);
@@ -22184,16 +22184,16 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             assertArgument(getAddress(check) === address, "keystore address/privateKey mismatch", "address", data.address);
         }
         const account = { address, privateKey };
-        // Version 0.1 x-ethers metadata must contain an encrypted mnemonic phrase
-        const version = spelunk(data, "x-ethers.version:string");
+        // Version 0.1 x-quais metadata must contain an encrypted mnemonic phrase
+        const version = spelunk(data, "x-quais.version:string");
         if (version === "0.1") {
             const mnemonicKey = key.slice(32, 64);
-            const mnemonicCiphertext = spelunk(data, "x-ethers.mnemonicCiphertext:data!");
-            const mnemonicIv = spelunk(data, "x-ethers.mnemonicCounter:data!");
+            const mnemonicCiphertext = spelunk(data, "x-quais.mnemonicCiphertext:data!");
+            const mnemonicIv = spelunk(data, "x-quais.mnemonicCounter:data!");
             const mnemonicAesCtr = new CTR(mnemonicKey, mnemonicIv);
             account.mnemonic = {
-                path: (spelunk(data, "x-ethers.path:string") || defaultPath$1),
-                locale: (spelunk(data, "x-ethers.locale:string") || "en"),
+                path: (spelunk(data, "x-quais.path:string") || defaultPath$1),
+                locale: (spelunk(data, "x-quais.locale:string") || "en"),
                 entropy: hexlify(getBytes(mnemonicAesCtr.decrypt(mnemonicCiphertext)))
             };
         }
@@ -22320,7 +22320,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         assertArgument(uuidRandom.length === 16, "invalid options.uuid length", "options.uuid", options.iv);
         // This will be used to encrypt the wallet (as per Web3 secret storage)
         // - 32 bytes   As normal for the Web3 secret storage (derivedKey, macPrefix)
-        // - 32 bytes   AES key to encrypt mnemonic with (required here to be Ethers Wallet)
+        // - 32 bytes   AES key to encrypt mnemonic with (required here to be quais Wallet)
         const derivedKey = key.slice(0, 16);
         const macPrefix = key.slice(16, 32);
         // Encrypt the private key
@@ -22352,7 +22352,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         };
         // If we have a mnemonic, encrypt it into the JSON wallet
         if (account.mnemonic) {
-            const client = (options.client != null) ? options.client : `ethers/${version}`;
+            const client = (options.client != null) ? options.client : `quais/${version}`;
             const path = account.mnemonic.path || defaultPath$1;
             const locale = account.mnemonic.locale || "en";
             const mnemonicKey = key.slice(32, 64);
@@ -22368,7 +22368,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 zpad$1(now.getUTCMinutes(), 2) + "-" +
                 zpad$1(now.getUTCSeconds(), 2) + ".0Z");
             const gethFilename = ("UTC--" + timestamp + "--" + data.address);
-            data["x-ethers"] = {
+            data["x-quais"] = {
                 client, gethFilename, path, locale,
                 mnemonicCounter: hexlify(mnemonicIv).substring(2),
                 mnemonicCiphertext: hexlify(mnemonicCiphertext).substring(2),
@@ -23187,7 +23187,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     /////////////////////////////
     //
 
-    var ethers = /*#__PURE__*/Object.freeze({
+    var quais = /*#__PURE__*/Object.freeze({
         __proto__: null,
         AbiCoder: AbiCoder,
         AbstractProvider: AbstractProvider,
@@ -23207,7 +23207,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         EnsResolver: EnsResolver,
         ErrorDescription: ErrorDescription,
         ErrorFragment: ErrorFragment,
-        EtherSymbol: EtherSymbol,
         EventFragment: EventFragment,
         EventLog: EventLog,
         EventPayload: EventPayload,
@@ -23338,6 +23337,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         parseEther: parseEther,
         parseUnits: parseUnits$1,
         pbkdf2: pbkdf2,
+        quaisymbol: quaisymbol,
         randomBytes: randomBytes,
         recoverAddress: recoverAddress,
         resolveAddress: resolveAddress,
@@ -23388,7 +23388,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     exports.EnsResolver = EnsResolver;
     exports.ErrorDescription = ErrorDescription;
     exports.ErrorFragment = ErrorFragment;
-    exports.EtherSymbol = EtherSymbol;
     exports.EventFragment = EventFragment;
     exports.EventLog = EventLog;
     exports.EventPayload = EventPayload;
@@ -23484,7 +23483,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     exports.encryptKeystoreJson = encryptKeystoreJson;
     exports.encryptKeystoreJsonSync = encryptKeystoreJsonSync;
     exports.ensNormalize = ensNormalize;
-    exports.ethers = ethers;
     exports.formatEther = formatEther;
     exports.formatUnits = formatUnits;
     exports.fromTwos = fromTwos;
@@ -23520,6 +23518,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     exports.parseEther = parseEther;
     exports.parseUnits = parseUnits$1;
     exports.pbkdf2 = pbkdf2;
+    exports.quais = quais;
+    exports.quaisymbol = quaisymbol;
     exports.randomBytes = randomBytes;
     exports.recoverAddress = recoverAddress;
     exports.resolveAddress = resolveAddress;
@@ -23552,4 +23552,4 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     exports.zeroPadValue = zeroPadValue;
 
 }));
-//# sourceMappingURL=ethers.umd.js.map
+//# sourceMappingURL=quais.umd.js.map

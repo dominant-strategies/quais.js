@@ -1,7 +1,7 @@
 import { Interface, Typed } from "../abi/index.js";
 import { isAddressable, resolveAddress } from "../address/index.js";
 // import from provider.ts instead of index.ts to prevent circular dep
-// from EtherscanProvider
+// from quaiscanProvider
 import { copyRequest, Log, TransactionResponse } from "../providers/provider.js";
 import {
     defineProperties, getBigInt, isCallException, isHexString, resolveProperties,
@@ -436,7 +436,7 @@ type Sub = {
 // a symbol attached to each BaseContract which its sub-class (even
 // via a Proxy) can reach and use to look up its internal values.
 
-const internal = Symbol.for("_ethersInternal_contract");
+const internal = Symbol.for("_quaisInternal_contract");
 type Internal = {
     addrPromise: Promise<string>;
     addr: null | string;

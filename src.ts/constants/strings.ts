@@ -5,7 +5,7 @@
  *
  *  (**i.e.** ``"\\u039e"``)
  */
-export const EtherSymbol: string = "\u039e";  // "\uD835\uDF63";
+export const quaisymbol: string = "\u039e";  // "\uD835\uDF63";
 
 
 /**

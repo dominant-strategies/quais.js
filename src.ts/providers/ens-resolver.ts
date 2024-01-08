@@ -128,7 +128,7 @@ export abstract class MulticoinProviderPlugin implements AbstractProviderPlugin 
     }
 }
 
-const BasicMulticoinPluginId = "org.ethers.plugins.provider.BasicMulticoin";
+const BasicMulticoinPluginId = "org.quais.plugins.provider.BasicMulticoin";
 
 /**
  *  A **BasicMulticoinProviderPlugin** provides service for common
@@ -539,7 +539,7 @@ export class EnsResolver {
     static async getEnsAddress(provider: Provider): Promise<string> {
         const network = await provider.getNetwork();
 
-        const ensPlugin = network.getPlugin<EnsPlugin>("org.ethers.plugins.network.Ens");
+        const ensPlugin = network.getPlugin<EnsPlugin>("org.quais.plugins.network.Ens");
 
         // No ENS...
         assert(ensPlugin, "network does not support ENS", "UNSUPPORTED_OPERATION", {

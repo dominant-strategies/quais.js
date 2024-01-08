@@ -1,5 +1,5 @@
-import { ethers } from "ethers";
+import { quais } from "quais";
 
-console.log("Version:", ethers.version);
+console.log("Version:", quais.version);
 
-console.log(ethers.getAddress("0x0123456789abcdef0123456789abcdef01234567"));
+console.log(quais.getAddress("0x0123456789abcdef0123456789abcdef01234567"));

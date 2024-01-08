@@ -103,19 +103,19 @@ function getAccount(data: any, _key: string): KeystoreAccount {
 
     const account: KeystoreAccount = { address, privateKey };
 
-    // Version 0.1 x-ethers metadata must contain an encrypted mnemonic phrase
-    const version = spelunk(data, "x-ethers.version:string");
+    // Version 0.1 x-quais metadata must contain an encrypted mnemonic phrase
+    const version = spelunk(data, "x-quais.version:string");
     if (version === "0.1") {
         const mnemonicKey = key.slice(32, 64);
 
-        const mnemonicCiphertext = spelunk<Uint8Array>(data, "x-ethers.mnemonicCiphertext:data!");
-        const mnemonicIv = spelunk<Uint8Array>(data, "x-ethers.mnemonicCounter:data!");
+        const mnemonicCiphertext = spelunk<Uint8Array>(data, "x-quais.mnemonicCiphertext:data!");
+        const mnemonicIv = spelunk<Uint8Array>(data, "x-quais.mnemonicCounter:data!");
 
         const mnemonicAesCtr = new CTR(mnemonicKey, mnemonicIv);
 
         account.mnemonic = {
-            path: (spelunk<null | string>(data, "x-ethers.path:string") || defaultPath),
-            locale: (spelunk<null | string>(data, "x-ethers.locale:string") || "en"),
+            path: (spelunk<null | string>(data, "x-quais.path:string") || defaultPath),
+            locale: (spelunk<null | string>(data, "x-quais.locale:string") || "en"),
             entropy: hexlify(getBytes(mnemonicAesCtr.decrypt(mnemonicCiphertext)))
         };
     }
@@ -284,7 +284,7 @@ function _encryptKeystore(key: Uint8Array, kdf: ScryptParams, account: KeystoreA
 
     // This will be used to encrypt the wallet (as per Web3 secret storage)
     // - 32 bytes   As normal for the Web3 secret storage (derivedKey, macPrefix)
-    // - 32 bytes   AES key to encrypt mnemonic with (required here to be Ethers Wallet)
+    // - 32 bytes   AES key to encrypt mnemonic with (required here to be quais Wallet)
     const derivedKey = key.slice(0, 16);
     const macPrefix = key.slice(16, 32);
 
@@ -320,7 +320,7 @@ function _encryptKeystore(key: Uint8Array, kdf: ScryptParams, account: KeystoreA
 
     // If we have a mnemonic, encrypt it into the JSON wallet
     if (account.mnemonic) {
-        const client = (options.client != null) ? options.client: `ethers/${ version }`;
+        const client = (options.client != null) ? options.client: `quais/${ version }`;
 
         const path = account.mnemonic.path || defaultPath;
         const locale = account.mnemonic.locale || "en";
@@ -341,7 +341,7 @@ function _encryptKeystore(key: Uint8Array, kdf: ScryptParams, account: KeystoreA
                            zpad(now.getUTCSeconds(), 2) + ".0Z");
         const gethFilename = ("UTC--" + timestamp + "--" + data.address);
 
-        data["x-ethers"] = {
+        data["x-quais"] = {
             client, gethFilename, path, locale,
             mnemonicCounter: hexlify(mnemonicIv).substring(2),
             mnemonicCiphertext: hexlify(mnemonicCiphertext).substring(2),

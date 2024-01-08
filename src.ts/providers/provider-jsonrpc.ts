@@ -230,7 +230,7 @@ export interface JsonRpcTransactionRequest {
      /**
       *  The maximum amount of gas to allow a transaction to consume.
       *
-      *  In most other places in ethers, this is called ``gasLimit`` which
+      *  In most other places in quais, this is called ``gasLimit`` which
       *  differs from the JSON-RPC Ethereum API specification.
       */
      gas?: string;
@@ -934,7 +934,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     }
 
     /**
-     *  Returns an ethers-style Error for the given JSON-RPC error
+     *  Returns an quais-style Error for the given JSON-RPC error
      *  %%payload%%, coalescing the various strings and error shapes
      *  that different nodes return, coercing them into a machine-readable
      *  standardized error.
@@ -970,7 +970,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
         const message = JSON.stringify(spelunkMessage(error));
 
-        if (typeof(error.message) === "string" && error.message.match(/user denied|ethers-user-denied/i)) {
+        if (typeof(error.message) === "string" && error.message.match(/user denied|quais-user-denied/i)) {
             const actionMap: Record<string, "requestAccess" | "sendTransaction" | "signMessage" | "signTransaction" | "signTypedData"> = {
                 eth_sign: "signMessage",
                 personal_sign: "signMessage",
