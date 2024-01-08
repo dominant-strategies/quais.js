@@ -104,7 +104,7 @@ export interface TypedString extends Typed {
     defaultValue(): string;
 }
 
-const _typedSymbol = Symbol.for("_ethers_typed");
+const _typedSymbol = Symbol.for("_quais_typed");
 
 /**
  *  The **Typed** class to wrap values providing explicit type information.

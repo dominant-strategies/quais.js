@@ -4,7 +4,7 @@ exports.Contract = exports.BaseContract = exports.resolveArgs = exports.copyOver
 const index_js_1 = require("../abi/index.js");
 const index_js_2 = require("../address/index.js");
 // import from provider.ts instead of index.ts to prevent circular dep
-// from EtherscanProvider
+// from quaiscanProvider
 const provider_js_1 = require("../providers/provider.js");
 const index_js_3 = require("../utils/index.js");
 const wrappers_js_1 = require("./wrappers.js");
@@ -319,7 +319,7 @@ function buildWrappedEvent(contract, key) {
 // the world go boom; so we hide variables with some trickery keeping
 // a symbol attached to each BaseContract which its sub-class (even
 // via a Proxy) can reach and use to look up its internal values.
-const internal = Symbol.for("_ethersInternal_contract");
+const internal = Symbol.for("_quaisInternal_contract");
 const internalValues = new WeakMap();
 function setInternal(contract, values) {
     internalValues.set(contract[internal], values);

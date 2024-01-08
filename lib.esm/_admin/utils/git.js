@@ -51,7 +51,6 @@ export async function getLogs(files, range, limit) {
         files.forEach((f) => args.push(f));
     }
     const exec = await run("git", args);
-    // if (!exec.stdout) { throw new Error(`git log error`); }
     const log = exec.stdout.trim();
     if (!log) {
         return [];

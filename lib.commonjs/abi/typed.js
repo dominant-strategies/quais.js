@@ -30,7 +30,7 @@ function b(value, size) {
     // @TODO: Check range is valid for value
     return new Typed(_gaurd, `bytes${(size) ? size : ""}`, value, { size });
 }
-const _typedSymbol = Symbol.for("_ethers_typed");
+const _typedSymbol = Symbol.for("_quais_typed");
 /**
  *  The **Typed** class to wrap values providing explicit type information.
  */

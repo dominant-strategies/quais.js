@@ -10,27 +10,27 @@ this is highly recommended, and requires installing the
 
 _code:
 
-import { ethers } from "ethers";
+import { quais } from "quais";
 
 import crypto from "react-native-quick-crypto";
 
-ethers.randomBytes.register((length) => {
+quais.randomBytes.register((length) => {
   return new Uint8Array(crypto.randomBytes(length));
 });
 
-ethers.computeHmac.register((algo, key, data) => {
+quais.computeHmac.register((algo, key, data) => {
     return crypto.createHmac(algo, key).update(data).digest();
 });
 
-ethers.pbkdf2.register((passwd, salt, iter, keylen, algo) => {
+quais.pbkdf2.register((passwd, salt, iter, keylen, algo) => {
   return crypto.pbkdf2Sync(passwd, salt, iter, keylen, algo);
 });
 
-ethers.sha256.register((data) => {
+quais.sha256.register((data) => {
   return crypto.createHash('sha256').update(data).digest();
 });
 
-ethers.sha512.register((data) => {
+quais.sha512.register((data) => {
   return crypto.createHash('sha512').update(data).digest();
 });
 

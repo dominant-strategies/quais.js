@@ -1,7 +1,7 @@
-name: "Bug Report v6 (latest)"
-description: "Open an issue for a bug in Ethers v6 (latest)"
-title: "Add Bug Title Here"
-labels: [ "investigate", "v6" ]
+name: 'Bug Report v6 (latest)'
+description: 'Open an issue for a bug in quais v6 (latest)'
+title: 'Add Bug Title Here'
+labels: ['investigate', 'v6']
 assignees:
   - ricmoo
 body:
@@ -10,14 +10,14 @@ body:
       value: |
         **READ THIS FIRST** and follow all instructions, please. `:)`
 
-        Thank you for taking the time to report an issue. This form is for reporting **bugs within ethers**.
+        Thank you for taking the time to report an issue. This form is for reporting **bugs within quais**.
 
-        If you are **new to ethers** or *uncertain* whether this is a bug in ethers, a bug in another framework or a bug in your own code, please [start a discussion](https://github.com/ethers-io/ethers.js/discussions) first.
+        If you are **new to quais** or *uncertain* whether this is a bug in quais, a bug in another framework or a bug in your own code, please [start a discussion](https://github.com/quais-io/quais.js/discussions) first.
   - type: input
     id: version
     attributes:
-      label: Ethers Version
-      description: What version of ethers are you using? Before opening an issue, please make sure you are up to date.
+      label: quais Version
+      description: What version of quais are you using? Before opening an issue, please make sure you are up to date.
       placeholder: 6.y.z
     validations:
       required: true
@@ -25,7 +25,7 @@ body:
     id: search-terms
     attributes:
       label: Search Terms
-      description: Have you searched for answers [in the documentation](https://docs.ethers.org), through [the issues](https://github.com/ethers-io/ethers.js/issues) and [on the discusions](https://github.com/ethers-io/ethers.js/discussions)? Please include the search terms you have tried. This helps us add more keywords where needed.
+      description: Have you searched for answers [in the documentation](https://docs.quais.org), through [the issues](https://github.com/quais-io/quais.js/issues) and [on the discusions](https://github.com/quais-io/quais.js/discussions)? Please include the search terms you have tried. This helps us add more keywords where needed.
       placeholder: e.g. abi, network, utf8
   - type: textarea
     id: about-the-bug
@@ -34,12 +34,12 @@ body:
       description: Please describe what you expected to happen vs what did happen?
       placeholder: What happened?
     validations:
-      required: true    
+      required: true
   - type: textarea
     id: code-snippet
     attributes:
       label: Code Snippet
-      description: If possible, please include a **short and concise** code snippets that can reproduce this issue. Ideally code that can be pasted into the [Ethers Playground](https://playground.ethers.org).
+      description: If possible, please include a **short and concise** code snippets that can reproduce this issue. Ideally code that can be pasted into the [quais Playground](https://playground.quais.org).
       placeholder: e.g. provider.getBlockNumber()
       render: shell
   - type: textarea

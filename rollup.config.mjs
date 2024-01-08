@@ -4,7 +4,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 function getConfig(opts) {
   if (opts == null) { opts = { }; }
 
-  const file = `./dist/ethers${ (opts.suffix || "") }.js`;
+  const file = `./dist/quais${ (opts.suffix || "") }.js`;
   const exportConditions = [ "import", "default" ];
   const mainFields = [ "module", "main" ];
   if (opts.browser) { mainFields.unshift("browser"); }
@@ -31,7 +31,7 @@ function getConfig(opts) {
 
 export default [
   getConfig({ browser: true }),
-  getConfig({ browser: true, suffix: ".umd", format: "umd", name: "ethers" }),
+  getConfig({ browser: true, suffix: ".umd", format: "umd", name: "quais" }),
   {
     input: "./lib.esm/wordlists/wordlists-extra.js",
     output: {

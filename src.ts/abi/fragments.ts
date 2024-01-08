@@ -513,7 +513,7 @@ export type ParamTypeWalkFunc = (type: string, value: any) => any;
  */
 export type ParamTypeWalkAsyncFunc = (type: string, value: any) => any | Promise<any>;
 
-const internal = Symbol.for("_ethers_internal");
+const internal = Symbol.for("_quais_internal");
 
 const ParamTypeInternal = "_ParamTypeInternal";
 const ErrorFragmentInternal = "_ErrorInternal";

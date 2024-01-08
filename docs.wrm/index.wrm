@@ -1,6 +1,6 @@
 _section: Documentation  @<about-home> @nav<Documentation>
 
-The ethers.js library aims to be a complete and compact library
+The quais.js library aims to be a complete and compact library
 for interacting with the Ethereum Blockchain and its ecosystem.
 
 It is often used to create decentralized applications (dapps),
@@ -14,7 +14,7 @@ _subsection: About this documentation?
 These docs are still under construction, and are being expanded
 every day.
 
-Developers new to Ethers should be sure to read through the
+Developers new to quais should be sure to read through the
 [[getting-started]] section.
 
 And the [[about-api]] is available for drilling down into more details

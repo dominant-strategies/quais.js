@@ -49,7 +49,7 @@ describe("Test Contract", function() {
         const contractSigner = <any>contract.connect(signer);
 
         const vUint256 = 42;
-        const vAddrName = "ethers.eth";
+        const vAddrName = "quais.eth";
         const vAddr = "0x228568EA92aC5Bc281c1E30b1893735c60a139F1";
         const vString = "Hello";
         const vBytes = "0x12345678";

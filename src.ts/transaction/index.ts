@@ -17,7 +17,7 @@ export type AccessListEntry = { address: string, storageKeys: Array<string> };
 export type AccessList = Array<AccessListEntry>;
 
 /**
- *  Any ethers-supported access list structure.
+ *  Any quais-supported access list structure.
  */
 export type AccessListish = AccessList |
                             Array<[ string, Array<string> ]> |

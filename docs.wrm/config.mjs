@@ -1,11 +1,11 @@
 import { inspect } from "util";
 
-import * as ethers from "../lib.esm/index.js";
+import * as quais from "../lib.esm/index.js";
 import { version } from "../lib.esm/_version.js";
 
 import { getModifiedTime } from "../lib.esm/_admin/utils/git.js";
 
-const title = "ethers";
+const title = "quais";
 
 const subtitle = (function(version) {
     const dash = version.indexOf("-");
@@ -15,8 +15,8 @@ const subtitle = (function(version) {
 
 const extraLinks = function() {
     return [
-      `link-cdnjs [ethers.min.js](https:/\/cdnjs.cloudflare.com/ajax/libs/ethers/${ version }/ethers.min.js)`,
-      `link-cdnjs-wordlists [wordlists-extra.min.js](https:/\/cdnjs.cloudflare.com/ajax/libs/ethers/${ version }/wordlists-extra.min.js)`,
+      `link-cdnjs [quais.min.js](https:/\/cdnjs.cloudflare.com/ajax/libs/quais/${ version }/quais.min.js)`,
+      `link-cdnjs-wordlists [wordlists-extra.min.js](https:/\/cdnjs.cloudflare.com/ajax/libs/quais/${ version }/wordlists-extra.min.js)`,
     ];
 }
 
@@ -34,23 +34,23 @@ export default {
 
   // Prepare the context for running the examples
   contextify: function(context) {
-    Object.assign(context, ethers);
-    context.provider = new ethers.InfuraProvider();
+    Object.assign(context, quais);
+    context.provider = new quais.InfuraProvider();
     context.Uint8Array = Uint8Array;
 
-    ethers.InfuraProvider.prototype[inspect.custom] = function(depth, options, inspect) {
+    quais.InfuraProvider.prototype[inspect.custom] = function(depth, options, inspect) {
       if (depth > 0) { return `InfuraProvider { ... }`; }
       // Does this cause infinite recursion??
       return this;
     };
 
-    ethers.Interface.prototype[inspect.custom] = function(depth, options, inspect) {
+    quais.Interface.prototype[inspect.custom] = function(depth, options, inspect) {
       if (depth > 0) { return `Interface { ... }`; }
       // Does this cause infinite recursion??
       return this;
     };
 
-    ethers.Fragment.prototype[inspect.custom] = function(depth, options, inspect) {
+    quais.Fragment.prototype[inspect.custom] = function(depth, options, inspect) {
       if (depth > 0) { return `${ this.constructor.name } { ... }`; }
       // Does this cause infinite recursion??
       return this;
@@ -58,7 +58,7 @@ export default {
   },
 
   // The base URL to use for the <src> links
-  srcBaseUrl: "https:/\/github.com/ethers-io/ethers.js/blob/main/src.ts/{FILENAME}#L{LINENO}",
+  srcBaseUrl: "https:/\/github.com/quais-io/quais.js/blob/main/src.ts/{FILENAME}#L{LINENO}",
 
   // Used at the bottom of each page to indicate the last-modified-time.
   // This uses the most recent time in the repo that the file was

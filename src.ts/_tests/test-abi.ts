@@ -115,7 +115,7 @@ describe("Test Interface", function() {
 
 
         // See: #4244
-        // https://goerli.etherscan.io/tx/0xe61cef4cd706db8e23114717a207d76cc6b0df0b74ec52805551c4d1bf347a27#eventlog
+        // https://goerli.quaiscan.io/tx/0xe61cef4cd706db8e23114717a207d76cc6b0df0b74ec52805551c4d1bf347a27#eventlog
         // See `RedemptionRequested` event.
         {
             const walletPubKeyHash = "0x03b74d6893ad46dfdd01b9e0e3b3385f4fce2d1e"

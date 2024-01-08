@@ -1,7 +1,7 @@
 const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 'undefined' ? window: typeof global !== 'undefined' ? global: typeof self !== 'undefined' ? self: {});
 /* Do NOT modify this file; see /src.ts/_admin/update-version.ts */
 /**
- *  The current version of Ethers.
+ *  The current version of quais.
  */
 const version = "6.8.1";
 
@@ -60,7 +60,7 @@ function defineProperties(target, values, types) {
 }
 
 /**
- *  All errors in ethers include properties to ensure they are both
+ *  All errors in quais include properties to ensure they are both
  *  human-readable (i.e. ``.message``) and machine-readable (i.e. ``.code``).
  *
  *  The [[isError]] function can be used to check the error ``code`` and
@@ -106,11 +106,11 @@ function stringify$1(value) {
     return `[ COULD NOT SERIALIZE ]`;
 }
 /**
- *  Returns true if the %%error%% matches an error thrown by ethers
+ *  Returns true if the %%error%% matches an error thrown by quais
  *  that matches the error %%code%%.
  *
  *  In TypeScript environments, this can be used to check that %%error%%
- *  matches an EthersError type, which means the expected properties will
+ *  matches an quaisError type, which means the expected properties will
  *  be set.
  *
  *  @See [ErrorCodes](api:ErrorCode)
@@ -134,14 +134,14 @@ function isCallException(error) {
     return isError(error, "CALL_EXCEPTION");
 }
 /**
- *  Returns a new Error configured to the format ethers emits errors, with
+ *  Returns a new Error configured to the format quais emits errors, with
  *  the %%message%%, [[api:ErrorCode]] %%code%% and additional properties
- *  for the corresponding EthersError.
+ *  for the corresponding quaisError.
  *
- *  Each error in ethers includes the version of ethers, a
+ *  Each error in quais includes the version of quais, a
  *  machine-readable [[ErrorCode]], and depending on %%code%%, additional
  *  required properties. The error message will also include the %%message%%,
- *  ethers version, %%code%% and all additional properties, serialized.
+ *  quais version, %%code%% and all additional properties, serialized.
  */
 function makeError(message, code, info) {
     let shortMessage = message;
@@ -192,7 +192,7 @@ function makeError(message, code, info) {
     return error;
 }
 /**
- *  Throws an EthersError with %%message%%, %%code%% and additional error
+ *  Throws an quaisError with %%message%%, %%code%% and additional error
  *  %%info%% when %%check%% is falsish..
  *
  *  @see [[api:makeError]]
@@ -1030,7 +1030,7 @@ function createGetUrl(options) {
 }
 
 /**
- *  Fetching content from the web is environment-specific, so Ethers
+ *  Fetching content from the web is environment-specific, so quais
  *  provides an abstraction that each environment can implement to provide
  *  this service.
  *
@@ -6504,7 +6504,7 @@ const MaxInt256 = BigInt("0x7fffffffffffffffffffffffffffffffffffffffffffffffffff
  *
  *  (**i.e.** ``"\\u039e"``)
  */
-const EtherSymbol = "\u039e"; // "\uD835\uDF63";
+const quaisymbol = "\u039e"; // "\uD835\uDF63";
 /**
  *  A constant for the [[link-eip-191]] personal message prefix.
  *
@@ -7224,7 +7224,7 @@ function getCreate2Address(_from, _salt, _initCodeHash) {
  *    //_result:
  *
  *    // Contracts
- *    contract = new Contract("dai.tokens.ethers.eth", [ ], provider)
+ *    contract = new Contract("dai.tokens.quais.eth", [ ], provider)
  *    isAddressable(contract)
  *    //_result:
  */
@@ -7292,7 +7292,7 @@ async function checkAddress(target, promise) {
  *    //_result:
  *
  *    // ENS names are resolved asynchronously
- *    resolveAddress("dai.tokens.ethers.eth", provider)
+ *    resolveAddress("dai.tokens.quais.eth", provider)
  *    //_result:
  *
  *    // Addressable objects are resolved asynchronously
@@ -7354,7 +7354,7 @@ function b(value, size) {
     // @TODO: Check range is valid for value
     return new Typed(_gaurd, `bytes${(size) ? size : ""}`, value, { size });
 }
-const _typedSymbol = Symbol.for("_ethers_typed");
+const _typedSymbol = Symbol.for("_quais_typed");
 /**
  *  The **Typed** class to wrap values providing explicit type information.
  */
@@ -9506,7 +9506,7 @@ function accessSetify(addr, storageKeys) {
     };
 }
 /**
- *  Returns a [[AccessList]] from any ethers-supported access-list structure.
+ *  Returns a [[AccessList]] from any quais-supported access-list structure.
  */
 function accessListify(value) {
     if (Array.isArray(value)) {
@@ -10400,7 +10400,7 @@ function solidityPackedSha256(types, values) {
     return sha256(solidityPacked(types, values));
 }
 
-//import { TypedDataDomain, TypedDataField } from "@ethersproject/providerabstract-signer";
+//import { TypedDataDomain, TypedDataField } from "@quaisproject/providerabstract-signer";
 const padding = new Uint8Array(32);
 padding.fill(0);
 const BN__1 = BigInt(-1);
@@ -11214,7 +11214,7 @@ function verifyBasicType(type) {
 }
 // Make the Fragment constructors effectively private
 const _guard$2 = {};
-const internal$1 = Symbol.for("_ethers_internal");
+const internal$1 = Symbol.for("_quais_internal");
 const ParamTypeInternal = "_ParamTypeInternal";
 const ErrorFragmentInternal = "_ErrorInternal";
 const EventFragmentInternal = "_EventInternal";
@@ -12377,7 +12377,7 @@ class AbiCoder {
         return defaultCoder;
     }
     /**
-     *  Returns an ethers-compatible [[CallExceptionError]] Error for the given
+     *  Returns an quais-compatible [[CallExceptionError]] Error for the given
      *  result %%data%% for the [[CallExceptionAction]] %%action%% against
      *  the Transaction %%tx%%.
      */
@@ -13514,7 +13514,7 @@ getSelector(fragment: ErrorFragment | FunctionFragment): string {
     }
 }
 
-//import { resolveAddress } from "@ethersproject/address";
+//import { resolveAddress } from "@quaisproject/address";
 const BN_0$2 = BigInt(0);
 // -----------------------
 function getValue(value) {
@@ -14733,7 +14733,7 @@ function createRemovedLogFilter(log) {
 }
 
 // import from provider.ts instead of index.ts to prevent circular dep
-// from EtherscanProvider
+// from quaiscanProvider
 /**
  *  An **EventLog** contains additional properties parsed from the [[Log]].
  */
@@ -15216,7 +15216,7 @@ function buildWrappedEvent(contract, key) {
 // the world go boom; so we hide variables with some trickery keeping
 // a symbol attached to each BaseContract which its sub-class (even
 // via a Proxy) can reach and use to look up its internal values.
-const internal = Symbol.for("_ethersInternal_contract");
+const internal = Symbol.for("_quaisInternal_contract");
 const internalValues = new WeakMap();
 function setInternal(contract, values) {
     internalValues.set(contract[internal], values);
@@ -16376,7 +16376,7 @@ class EnsResolver {
     }
     static async getEnsAddress(provider) {
         const network = await provider.getNetwork();
-        const ensPlugin = network.getPlugin("org.ethers.plugins.network.Ens");
+        const ensPlugin = network.getPlugin("org.quais.plugins.network.Ens");
         // No ENS...
         assert(ensPlugin, "network does not support ENS", "UNSUPPORTED_OPERATION", {
             operation: "getEnsAddress", info: { network }
@@ -16754,7 +16754,7 @@ class GasCostPlugin extends NetworkPlugin {
         if (effectiveBlock == null) {
             effectiveBlock = 0;
         }
-        super(`org.ethers.network.plugins.GasCost#${(effectiveBlock || 0)}`);
+        super(`org.quais.network.plugins.GasCost#${(effectiveBlock || 0)}`);
         const props = { effectiveBlock };
         function set(name, nullish) {
             let value = (costs || {})[name];
@@ -16800,7 +16800,7 @@ class EnsPlugin extends NetworkPlugin {
      *  if unspecified.
      */
     constructor(address, targetNetwork) {
-        super("org.ethers.plugins.network.Ens");
+        super("org.quais.plugins.network.Ens");
         defineProperties(this, {
             address: (address || EnsAddress),
             targetNetwork: ((targetNetwork == null) ? 1 : targetNetwork)
@@ -16829,7 +16829,7 @@ class FeeDataNetworkPlugin extends NetworkPlugin {
      *  Creates a new **FeeDataNetworkPlugin**.
      */
     constructor(feeDataFunc) {
-        super("org.ethers.plugins.network.FeeData");
+        super("org.quais.plugins.network.FeeData");
         this.#feeDataFunc = feeDataFunc;
     }
     /**
@@ -16858,7 +16858,7 @@ class FetchUrlFeeDataNetworkPlugin extends NetworkPlugin {
      *  be used when computing the fee data for the network.
      */
     constructor(url, processFunc) {
-        super("org.ethers.plugins.network.FetchUrlFeeDataPlugin");
+        super("org.quais.plugins.network.FetchUrlFeeDataPlugin");
         this.#url = url;
         this.#processFunc = processFunc;
     }
@@ -16871,7 +16871,7 @@ export class CustomBlockNetworkPlugin extends NetworkPlugin {
     readonly #blockWithTxsFunc: (provider: Provider, block: BlockParams<TransactionResponseParams>) => Block<TransactionResponse>;
 
     constructor(blockFunc: (provider: Provider, block: BlockParams<string>) => Block<string>, blockWithTxsFunc: (provider: Provider, block: BlockParams<TransactionResponseParams>) => Block<TransactionResponse>) {
-        super("org.ethers.network-plugins.custom-block");
+        super("org.quais.network-plugins.custom-block");
         this.#blockFunc = blockFunc;
         this.#blockWithTxsFunc = blockWithTxsFunc;
     }
@@ -16904,7 +16904,7 @@ export class LayerOneConnectionPlugin extends NetworkPlugin {
     readonly provider!: Provider;
 // @TODO: Rename to ChainAccess and allow for connecting to any chain
     constructor(provider: Provider) {
-        super("org.ethers.plugins.layer-one-connection");
+        super("org.quais.plugins.layer-one-connection");
         defineProperties<LayerOneConnectionPlugin>(this, { provider });
     }
 
@@ -17038,7 +17038,7 @@ class Network {
      *  values.
      */
     computeIntrinsicGas(tx) {
-        const costs = this.getPlugin("org.ethers.plugins.network.GasCost") || (new GasCostPlugin());
+        const costs = this.getPlugin("org.quais.plugins.network.GasCost") || (new GasCostPlugin());
         let gas = costs.txBase;
         if (tx.to == null) {
             gas += costs.txCreate;
@@ -17156,7 +17156,7 @@ function parseUnits(_value, decimals) {
 function getGasStationPlugin(url) {
     return new FetchUrlFeeDataNetworkPlugin(url, async (fetchFeeData, provider, request) => {
         // Prevent Cloudflare from blocking our request in node.js
-        request.setHeader("User-Agent", "ethers");
+        request.setHeader("User-Agent", "quais");
         let response;
         try {
             const [_response, _feeData] = await Promise.all([
@@ -17851,7 +17851,7 @@ class AbstractProvider {
             return new FeeData(gasPrice, maxFeePerGas, maxPriorityFeePerGas);
         };
         // Check for a FeeDataNetWorkPlugin
-        const plugin = network.getPlugin("org.ethers.plugins.network.FetchUrlFeeDataPlugin");
+        const plugin = network.getPlugin("org.quais.plugins.network.FetchUrlFeeDataPlugin");
         if (plugin) {
             const req = new FetchRequest(plugin.url);
             const feeData = await plugin.processFunc(getFeeDataFunc, this, req);
@@ -18866,7 +18866,7 @@ function showThrottleMessage(service) {
     console.log("signing up for your own API keys to improve performance, increase your");
     console.log("request rate/limit and enable other perks, such as metrics and advanced APIs.");
     console.log("");
-    console.log("For more details: https:/\/docs.ethers.org/api-keys/");
+    console.log("For more details: https:/\/docs.quais.org/api-keys/");
     console.log("==========================");
 }
 
@@ -20243,7 +20243,7 @@ class JsonRpcApiProvider extends AbstractProvider {
         return null;
     }
     /**
-     *  Returns an ethers-style Error for the given JSON-RPC error
+     *  Returns an quais-style Error for the given JSON-RPC error
      *  %%payload%%, coalescing the various strings and error shapes
      *  that different nodes return, coercing them into a machine-readable
      *  standardized error.
@@ -20269,7 +20269,7 @@ class JsonRpcApiProvider extends AbstractProvider {
         // Only estimateGas and call can return arbitrary contract-defined text, so now we
         // we can process text safely.
         const message = JSON.stringify(spelunkMessage(error));
-        if (typeof (error.message) === "string" && error.message.match(/user denied|ethers-user-denied/i)) {
+        if (typeof (error.message) === "string" && error.message.match(/user denied|quais-user-denied/i)) {
             const actionMap = {
                 eth_sign: "signMessage",
                 personal_sign: "signMessage",
@@ -20907,7 +20907,7 @@ const Testnets = "goerli kovan sepolia classicKotti optimism-goerli arbitrum-goe
  *  - ``"alchemy"``
  *  - ``"ankr"``
  *  - ``"cloudflare"``
- *  - ``"etherscan"``
+ *  - ``"quaiscan"``
  *  - ``"infura"``
  *  - ``"publicPolygon"``
  *  - ``"quicknode"``
@@ -20920,11 +20920,11 @@ const Testnets = "goerli kovan sepolia classicKotti optimism-goerli arbitrum-goe
  *    // third-party services available
  *    provider = getDefaultProvider("mainnet");
  *
- *    // Connect to Polygon, but only allow Etherscan and
- *    // INFURA and use "MY_API_KEY" in calls to Etherscan.
+ *    // Connect to Polygon, but only allow quaiscan and
+ *    // INFURA and use "MY_API_KEY" in calls to quaiscan.
  *    provider = getDefaultProvider("matic", {
- *      etherscan: "MY_API_KEY",
- *      exclusive: [ "etherscan", "infura" ]
+ *      quaiscan: "MY_API_KEY",
+ *      exclusive: [ "quaiscan", "infura" ]
  *    });
  */
 function getDefaultProvider(network, options) {
@@ -21127,10 +21127,10 @@ class BrowserProvider extends JsonRpcApiProvider {
         // them into 
         switch (error.error.code || -1) {
             case 4001:
-                error.error.message = `ethers-user-denied: ${error.error.message}`;
+                error.error.message = `quais-user-denied: ${error.error.message}`;
                 break;
             case 4200:
-                error.error.message = `ethers-unsupported: ${error.error.message}`;
+                error.error.message = `quais-unsupported: ${error.error.message}`;
                 break;
         }
         return super.getRpcError(payload, error);
@@ -22176,16 +22176,16 @@ function getAccount(data, _key) {
         assertArgument(getAddress(check) === address, "keystore address/privateKey mismatch", "address", data.address);
     }
     const account = { address, privateKey };
-    // Version 0.1 x-ethers metadata must contain an encrypted mnemonic phrase
-    const version = spelunk(data, "x-ethers.version:string");
+    // Version 0.1 x-quais metadata must contain an encrypted mnemonic phrase
+    const version = spelunk(data, "x-quais.version:string");
     if (version === "0.1") {
         const mnemonicKey = key.slice(32, 64);
-        const mnemonicCiphertext = spelunk(data, "x-ethers.mnemonicCiphertext:data!");
-        const mnemonicIv = spelunk(data, "x-ethers.mnemonicCounter:data!");
+        const mnemonicCiphertext = spelunk(data, "x-quais.mnemonicCiphertext:data!");
+        const mnemonicIv = spelunk(data, "x-quais.mnemonicCounter:data!");
         const mnemonicAesCtr = new CTR(mnemonicKey, mnemonicIv);
         account.mnemonic = {
-            path: (spelunk(data, "x-ethers.path:string") || defaultPath$1),
-            locale: (spelunk(data, "x-ethers.locale:string") || "en"),
+            path: (spelunk(data, "x-quais.path:string") || defaultPath$1),
+            locale: (spelunk(data, "x-quais.locale:string") || "en"),
             entropy: hexlify(getBytes(mnemonicAesCtr.decrypt(mnemonicCiphertext)))
         };
     }
@@ -22312,7 +22312,7 @@ function _encryptKeystore(key, kdf, account, options) {
     assertArgument(uuidRandom.length === 16, "invalid options.uuid length", "options.uuid", options.iv);
     // This will be used to encrypt the wallet (as per Web3 secret storage)
     // - 32 bytes   As normal for the Web3 secret storage (derivedKey, macPrefix)
-    // - 32 bytes   AES key to encrypt mnemonic with (required here to be Ethers Wallet)
+    // - 32 bytes   AES key to encrypt mnemonic with (required here to be quais Wallet)
     const derivedKey = key.slice(0, 16);
     const macPrefix = key.slice(16, 32);
     // Encrypt the private key
@@ -22344,7 +22344,7 @@ function _encryptKeystore(key, kdf, account, options) {
     };
     // If we have a mnemonic, encrypt it into the JSON wallet
     if (account.mnemonic) {
-        const client = (options.client != null) ? options.client : `ethers/${version}`;
+        const client = (options.client != null) ? options.client : `quais/${version}`;
         const path = account.mnemonic.path || defaultPath$1;
         const locale = account.mnemonic.locale || "en";
         const mnemonicKey = key.slice(32, 64);
@@ -22360,7 +22360,7 @@ function _encryptKeystore(key, kdf, account, options) {
             zpad$1(now.getUTCMinutes(), 2) + "-" +
             zpad$1(now.getUTCSeconds(), 2) + ".0Z");
         const gethFilename = ("UTC--" + timestamp + "--" + data.address);
-        data["x-ethers"] = {
+        data["x-quais"] = {
             client, gethFilename, path, locale,
             mnemonicCounter: hexlify(mnemonicIv).substring(2),
             mnemonicCiphertext: hexlify(mnemonicCiphertext).substring(2),
@@ -23179,7 +23179,7 @@ const wordlists = {
 /////////////////////////////
 //
 
-var ethers = /*#__PURE__*/Object.freeze({
+var quais = /*#__PURE__*/Object.freeze({
     __proto__: null,
     AbiCoder: AbiCoder,
     AbstractProvider: AbstractProvider,
@@ -23199,7 +23199,6 @@ var ethers = /*#__PURE__*/Object.freeze({
     EnsResolver: EnsResolver,
     ErrorDescription: ErrorDescription,
     ErrorFragment: ErrorFragment,
-    EtherSymbol: EtherSymbol,
     EventFragment: EventFragment,
     EventLog: EventLog,
     EventPayload: EventPayload,
@@ -23330,6 +23329,7 @@ var ethers = /*#__PURE__*/Object.freeze({
     parseEther: parseEther,
     parseUnits: parseUnits$1,
     pbkdf2: pbkdf2,
+    quaisymbol: quaisymbol,
     randomBytes: randomBytes,
     recoverAddress: recoverAddress,
     resolveAddress: resolveAddress,
@@ -23362,5 +23362,5 @@ var ethers = /*#__PURE__*/Object.freeze({
     zeroPadValue: zeroPadValue
 });
 
-export { AbiCoder, AbstractProvider, AbstractSigner, BaseContract, BaseWallet, Block, BrowserProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, EnsPlugin, EnsResolver, ErrorDescription, ErrorFragment, EtherSymbol, EventFragment, EventLog, EventPayload, FallbackFragment, FallbackProvider, FeeData, FeeDataNetworkPlugin, FetchCancelSignal, FetchRequest, FetchResponse, FetchUrlFeeDataNetworkPlugin, FixedNumber, Fragment, FunctionFragment, GasCostPlugin, HDNodeVoidWallet, HDNodeWallet, Indexed, Interface, IpcSocketProvider, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, MulticoinProviderPlugin, N$1 as N, NamedFragment, Network, NetworkPlugin, NonceManager, ParamType, Result, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, Transaction, TransactionDescription, TransactionReceipt, TransactionResponse, Typed, TypedDataEncoder, UndecodedEventLog, UnmanagedSubscriber, Utf8ErrorFuncs, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, accessListify, assert, assertArgument, assertArgumentCount, assertNormalize, assertPrivate, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32String, decodeRlp, decryptCrowdsaleJson, decryptKeystoreJson, decryptKeystoreJsonSync, defaultPath, defineProperties, dnsEncode, encodeBase58, encodeBase64, encodeBytes32String, encodeRlp, encryptKeystoreJson, encryptKeystoreJsonSync, ensNormalize, ethers, formatEther, formatUnits, fromTwos, getAccountPath, getAddress, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getDefaultProvider, getIcapAddress, getIndexedAccountPath, getNumber, getUint, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isCrowdsaleJson, isError, isHexString, isKeystoreJson, isValidName, keccak256, lock, makeError, mask, namehash, parseEther, parseUnits$1 as parseUnits, pbkdf2, randomBytes, recoverAddress, resolveAddress, resolveProperties, ripemd160, scrypt, scryptSync, sha256, sha512, showThrottleMessage, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, uuidV4, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
-//# sourceMappingURL=ethers.js.map
+export { AbiCoder, AbstractProvider, AbstractSigner, BaseContract, BaseWallet, Block, BrowserProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, EnsPlugin, EnsResolver, ErrorDescription, ErrorFragment, EventFragment, EventLog, EventPayload, FallbackFragment, FallbackProvider, FeeData, FeeDataNetworkPlugin, FetchCancelSignal, FetchRequest, FetchResponse, FetchUrlFeeDataNetworkPlugin, FixedNumber, Fragment, FunctionFragment, GasCostPlugin, HDNodeVoidWallet, HDNodeWallet, Indexed, Interface, IpcSocketProvider, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, MulticoinProviderPlugin, N$1 as N, NamedFragment, Network, NetworkPlugin, NonceManager, ParamType, Result, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, Transaction, TransactionDescription, TransactionReceipt, TransactionResponse, Typed, TypedDataEncoder, UndecodedEventLog, UnmanagedSubscriber, Utf8ErrorFuncs, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, accessListify, assert, assertArgument, assertArgumentCount, assertNormalize, assertPrivate, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32String, decodeRlp, decryptCrowdsaleJson, decryptKeystoreJson, decryptKeystoreJsonSync, defaultPath, defineProperties, dnsEncode, encodeBase58, encodeBase64, encodeBytes32String, encodeRlp, encryptKeystoreJson, encryptKeystoreJsonSync, ensNormalize, formatEther, formatUnits, fromTwos, getAccountPath, getAddress, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getDefaultProvider, getIcapAddress, getIndexedAccountPath, getNumber, getUint, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isCrowdsaleJson, isError, isHexString, isKeystoreJson, isValidName, keccak256, lock, makeError, mask, namehash, parseEther, parseUnits$1 as parseUnits, pbkdf2, quais, quaisymbol, randomBytes, recoverAddress, resolveAddress, resolveProperties, ripemd160, scrypt, scryptSync, sha256, sha512, showThrottleMessage, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, uuidV4, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
+//# sourceMappingURL=quais.js.map

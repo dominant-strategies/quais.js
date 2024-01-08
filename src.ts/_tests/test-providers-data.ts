@@ -178,8 +178,8 @@ function assertReceipt(actual: any, expected: any): void {
 
 describe("Test Provider Block operations", function() {
     forEach("test getBlock(blockHash)", testBlock, (providerName, test) => {
-        // Etherscan does not support getting a block by blockhash
-        if (providerName === "EtherscanProvider") { return null; }
+        // quaiscan does not support getting a block by blockhash
+        if (providerName === "quaiscanProvider") { return null; }
 
         return async (provider) => {
             assertBlock(await provider.getBlock(test.hash), test);

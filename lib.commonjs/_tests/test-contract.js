@@ -34,7 +34,7 @@ describe("Test Contract", function () {
         const signer = new index_js_1.Wallet((process.env.FAUCET_PRIVATEKEY), provider);
         const contractSigner = contract.connect(signer);
         const vUint256 = 42;
-        const vAddrName = "ethers.eth";
+        const vAddrName = "quais.eth";
         const vAddr = "0x228568EA92aC5Bc281c1E30b1893735c60a139F1";
         const vString = "Hello";
         const vBytes = "0x12345678";

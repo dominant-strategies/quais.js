@@ -73,7 +73,7 @@ describe("Test CCIP execution", function () {
             const result = await provider.call(tx);
             console.log(result);
         }, (error) => {
-            const infoJson = '{"urls":["https:/\/ethers.ricmoo.workers.dev/status/500/{sender}/{data}"],"errorMessages":["hello world"]}';
+            const infoJson = '{"urls":["https:/\/quais.ricmoo.workers.dev/status/500/{sender}/{data}"],"errorMessages":["hello world"]}';
             return ((0, index_js_1.isError)(error, "OFFCHAIN_FAULT") && error.reason === "500_SERVER_ERROR" &&
                 JSON.stringify(error.info) === infoJson);
         });
@@ -90,7 +90,7 @@ describe("Test CCIP execution", function () {
             const result = await provider.call(tx);
             console.log(result);
         }, (error) => {
-            const errorArgsJson = '["0x0000000000000000000000000000000000000000",["https://ethers.ricmoo.workers.dev/test-ccip-read/{sender}/{data}"],"0x1234","0xb1494be1","0x4d792065787472612064617461"]';
+            const errorArgsJson = '["0x0000000000000000000000000000000000000000",["https://quais.ricmoo.workers.dev/test-ccip-read/{sender}/{data}"],"0x1234","0xb1494be1","0x4d792065787472612064617461"]';
             const offchainErrorData = "0x556f1830000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000140b1494be100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000004068747470733a2f2f6574686572732e7269636d6f6f2e776f726b6572732e6465762f746573742d636369702d726561642f7b73656e6465727d2f7b646174617d00000000000000000000000000000000000000000000000000000000000000021234000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000d4d79206578747261206461746100000000000000000000000000000000000000";
             return ((0, index_js_1.isCallException)(error) && error.data === offchainErrorData &&
                 error.revert &&
@@ -110,7 +110,7 @@ describe("Test CCIP execution", function () {
             const result = await provider.call(tx);
             console.log(result);
         }, (error) => {
-            const infoJson = '{"url":"https:/\/ethers.ricmoo.workers.dev/status/404/{sender}/{data}","errorMessage":"hello world"}';
+            const infoJson = '{"url":"https:/\/quais.ricmoo.workers.dev/status/404/{sender}/{data}","errorMessage":"hello world"}';
             return ((0, index_js_1.isError)(error, "OFFCHAIN_FAULT") && error.reason === "404_MISSING_RESOURCE" &&
                 JSON.stringify(error.info || "") === infoJson);
         });

@@ -14,7 +14,7 @@ export function getChanges(): Array<ChangeVersion> {
 
     const content = fs.readFileSync(resolve("CHANGELOG.md")).toString();
     for (const line of content.split("\n")) {
-        let match = line.match(/^ethers\/v(\S+)\s/);
+        let match = line.match(/^quais\/v(\S+)\s/);
         if (match) {
             changes.push({ version: match[1], title: line.trim(), body: [ ] });
         } else {

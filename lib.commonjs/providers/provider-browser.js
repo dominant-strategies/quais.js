@@ -58,10 +58,10 @@ class BrowserProvider extends provider_jsonrpc_js_1.JsonRpcApiProvider {
         // them into 
         switch (error.error.code || -1) {
             case 4001:
-                error.error.message = `ethers-user-denied: ${error.error.message}`;
+                error.error.message = `quais-user-denied: ${error.error.message}`;
                 break;
             case 4200:
-                error.error.message = `ethers-unsupported: ${error.error.message}`;
+                error.error.message = `quais-unsupported: ${error.error.message}`;
                 break;
         }
         return super.getRpcError(payload, error);
