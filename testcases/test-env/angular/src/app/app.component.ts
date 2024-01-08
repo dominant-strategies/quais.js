@@ -33,7 +33,7 @@ export class AppComponent {
       const provider = new quais.BrowserProvider(window.ethereum);
 
       const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts',
+        method: 'quai_requestAccounts',
       });
 
       console.log('accounts: ', accounts);

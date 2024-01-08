@@ -284,7 +284,7 @@ export declare class Interface {
      */
     encodeDeploy(values?: ReadonlyArray<any>): string;
     /**
-     *  Decodes the result %%data%% (e.g. from an ``eth_call``) for the
+     *  Decodes the result %%data%% (e.g. from an ``quai_call``) for the
      *  specified error (see [[getError]] for valid values for
      *  %%key%%).
      *
@@ -318,7 +318,7 @@ export declare class Interface {
      */
     encodeFunctionData(fragment: FunctionFragment | string, values?: ReadonlyArray<any>): string;
     /**
-     *  Decodes the result %%data%% (e.g. from an ``eth_call``) for the
+     *  Decodes the result %%data%% (e.g. from an ``quai_call``) for the
      *  specified function (see [[getFunction]] for valid values for
      *  %%key%%).
      *
@@ -329,7 +329,7 @@ export declare class Interface {
     decodeFunctionResult(fragment: FunctionFragment | string, data: BytesLike): Result;
     makeError(_data: BytesLike, tx: CallExceptionTransaction): CallExceptionError;
     /**
-     *  Encodes the result data (e.g. from an ``eth_call``) for the
+     *  Encodes the result data (e.g. from an ``quai_call``) for the
      *  specified function (see [[getFunction]] for valid values
      *  for %%fragment%%) with %%values%%.
      *

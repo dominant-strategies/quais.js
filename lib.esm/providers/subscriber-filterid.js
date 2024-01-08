@@ -63,7 +63,7 @@ export class FilterIdSubscriber {
                 filterId = await this.#filterIdPromise;
             }
             catch (error) {
-                if (!isError(error, "UNSUPPORTED_OPERATION") || error.operation !== "eth_newFilter") {
+                if (!isError(error, "UNSUPPORTED_OPERATION") || error.operation !== "quai_newFilter") {
                     throw error;
                 }
             }
@@ -84,7 +84,7 @@ export class FilterIdSubscriber {
             if (this.#hault) {
                 return;
             }
-            const result = await this.#provider.send("eth_getFilterChanges", [filterId]);
+            const result = await this.#provider.send("quai_getFilterChanges", [filterId]);
             await this._emitResults(this.#provider, result);
         }
         catch (error) {
@@ -97,7 +97,7 @@ export class FilterIdSubscriber {
         if (filterIdPromise) {
             this.#filterIdPromise = null;
             filterIdPromise.then((filterId) => {
-                this.#provider.send("eth_uninstallFilter", [filterId]);
+                this.#provider.send("quai_uninstallFilter", [filterId]);
             });
         }
     }
@@ -144,7 +144,7 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
         return new PollingEventSubscriber(provider, this.#event);
     }
     async _subscribe(provider) {
-        const filterId = await provider.send("eth_newFilter", [this.#event]);
+        const filterId = await provider.send("quai_newFilter", [this.#event]);
         return filterId;
     }
     async _emitResults(provider, results) {
@@ -160,7 +160,7 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
  */
 export class FilterIdPendingSubscriber extends FilterIdSubscriber {
     async _subscribe(provider) {
-        return await provider.send("eth_newPendingTransactionFilter", []);
+        return await provider.send("quai_newPendingTransactionFilter", []);
     }
     async _emitResults(provider, results) {
         for (const result of results) {

@@ -82,7 +82,7 @@
       "default": "./lib.commonjs/wordlists/index.js"
     }
   },
-  "gitHead": "4110365f4c8814128743e31b4bf4042975928d2b",
+  "gitHead": "d1fc08c3410a607c552c3cda4a7ab67da53bbe3a",
   "homepage": "https://qu.ai",
   "keywords": [
     "quainetwork",
