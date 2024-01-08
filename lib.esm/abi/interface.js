@@ -674,7 +674,7 @@ getSelector(fragment: ErrorFragment | FunctionFragment): string {
         return this._encodeParams(this.deploy.inputs, values || []);
     }
     /**
-     *  Decodes the result %%data%% (e.g. from an ``eth_call``) for the
+     *  Decodes the result %%data%% (e.g. from an ``quai_call``) for the
      *  specified error (see [[getError]] for valid values for
      *  %%key%%).
      *
@@ -744,7 +744,7 @@ getSelector(fragment: ErrorFragment | FunctionFragment): string {
         ]);
     }
     /**
-     *  Decodes the result %%data%% (e.g. from an ``eth_call``) for the
+     *  Decodes the result %%data%% (e.g. from an ``quai_call``) for the
      *  specified function (see [[getFunction]] for valid values for
      *  %%key%%).
      *
@@ -808,7 +808,7 @@ getSelector(fragment: ErrorFragment | FunctionFragment): string {
         return error;
     }
     /**
-     *  Encodes the result data (e.g. from an ``eth_call``) for the
+     *  Encodes the result data (e.g. from an ``quai_call``) for the
      *  specified function (see [[getFunction]] for valid values
      *  for %%fragment%%) with %%values%%.
      *
@@ -853,7 +853,7 @@ getSelector(fragment: ErrorFragment | FunctionFragment): string {
             });
         }
     */
-    // Create the filter for the event with search criteria (e.g. for eth_filterLog)
+    // Create the filter for the event with search criteria (e.g. for quai_filterLog)
     encodeFilterTopics(fragment, values) {
         if (typeof (fragment) === "string") {
             const f = this.getEvent(fragment);

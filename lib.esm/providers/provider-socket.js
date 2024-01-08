@@ -37,7 +37,7 @@ export class SocketSubscriber {
         this.#emitPromise = null;
     }
     start() {
-        this.#filterId = this.#provider.send("eth_subscribe", this.filter).then((filterId) => {
+        this.#filterId = this.#provider.send("quai_subscribe", this.filter).then((filterId) => {
             ;
             this.#provider._register(filterId, this);
             return filterId;
@@ -45,7 +45,7 @@ export class SocketSubscriber {
     }
     stop() {
         (this.#filterId).then((filterId) => {
-            this.#provider.send("eth_unsubscribe", [filterId]);
+            this.#provider.send("quai_unsubscribe", [filterId]);
         });
         this.#filterId = null;
     }
@@ -264,7 +264,7 @@ export class SocketProvider extends JsonRpcApiProvider {
             this.#callbacks.delete(result.id);
             callback.resolve(result);
         }
-        else if (result && result.method === "eth_subscription") {
+        else if (result && result.method === "quai_subscription") {
             const filterId = result.params.subscription;
             const subscriber = this.#subs.get(filterId);
             if (subscriber) {

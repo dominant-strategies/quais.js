@@ -10,8 +10,8 @@ Here is a short recipe to get all the text records set for an ENS
 name.
 
 It first queries all ``TextChanged`` events on the resovler, and
-uses a MulticallProvider to batch all the ``eth_call`` queries
-for each key into a single ``eth_call``. As such, you will need
+uses a MulticallProvider to batch all the ``quai_call`` queries
+for each key into a single ``quai_call``. As such, you will need
 to install:
 
 ``/home/ricmoo> npm install @quais-ext/provider-multicall``
