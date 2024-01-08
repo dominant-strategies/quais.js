@@ -918,7 +918,7 @@ export class AbstractProvider implements Provider {
         };
 
         // Check for a FeeDataNetWorkPlugin
-        const plugin = <FetchUrlFeeDataNetworkPlugin>network.getPlugin("org.ethers.plugins.network.FetchUrlFeeDataPlugin");
+        const plugin = <FetchUrlFeeDataNetworkPlugin>network.getPlugin("org.quais.plugins.network.FetchUrlFeeDataPlugin");
         if (plugin) {
             const req = new FetchRequest(plugin.url);
             const feeData = await plugin.processFunc(getFeeDataFunc, this, req);

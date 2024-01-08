@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.version = void 0;
 /**
- *  The current version of Ethers.
+ *  The current version of quais.
  */
 exports.version = "6.8.1";
 //# sourceMappingURL=_version.js.map

@@ -33,8 +33,8 @@ export async function getVersions(name: string): Promise<Array<Version>> {
 }
 /*
 (async function() {
-    //console.log(await _getNpmPackage("ethers"));
-    console.log(await getGitHeads("ethers"));
+    //console.log(await _getNpmPackage("quais"));
+    console.log(await getGitHeads("quais"));
 })();
 */
 /*
@@ -50,7 +50,7 @@ export type PackageInfo = {
     version: string;
     tarballHash: string;
     location: "remote" | "local";
-    _ethers_nobuild: boolean;
+    _quais_nobuild: boolean;
 };
 
 export class Package {
@@ -109,7 +109,7 @@ export async function getPackage(name: string, version?: string): Promise<null |
         name: info.name,
         tarballHash: info.tarballHash,
         version : info.version,
-        _ethers_nobuild: !!info._ethers_nobuild,
+        _quais_nobuild: !!info._quais_nobuild,
     });
 }
 */

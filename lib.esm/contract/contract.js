@@ -1,7 +1,7 @@
 import { Interface, Typed } from "../abi/index.js";
 import { isAddressable, resolveAddress } from "../address/index.js";
 // import from provider.ts instead of index.ts to prevent circular dep
-// from EtherscanProvider
+// from quaiscanProvider
 import { copyRequest, Log } from "../providers/provider.js";
 import { defineProperties, getBigInt, isCallException, isHexString, resolveProperties, isError, makeError, assert, assertArgument } from "../utils/index.js";
 import { ContractEventPayload, ContractUnknownEventPayload, ContractTransactionResponse, EventLog, UndecodedEventLog } from "./wrappers.js";
@@ -314,7 +314,7 @@ function buildWrappedEvent(contract, key) {
 // the world go boom; so we hide variables with some trickery keeping
 // a symbol attached to each BaseContract which its sub-class (even
 // via a Proxy) can reach and use to look up its internal values.
-const internal = Symbol.for("_ethersInternal_contract");
+const internal = Symbol.for("_quaisInternal_contract");
 const internalValues = new WeakMap();
 function setInternal(contract, values) {
     internalValues.set(contract[internal], values);

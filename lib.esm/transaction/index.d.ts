@@ -15,7 +15,7 @@ export type AccessListEntry = {
  */
 export type AccessList = Array<AccessListEntry>;
 /**
- *  Any ethers-supported access list structure.
+ *  Any quais-supported access list structure.
  */
 export type AccessListish = AccessList | Array<[string, Array<string>]> | Record<string, Array<string>>;
 export { accessListify } from "./accesslist.js";

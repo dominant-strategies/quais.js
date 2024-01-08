@@ -1,5 +1,5 @@
 // import from provider.ts instead of index.ts to prevent circular dep
-// from EtherscanProvider
+// from quaiscanProvider
 import { Log, TransactionReceipt, TransactionResponse } from "../providers/provider.js";
 import { defineProperties, EventPayload } from "../utils/index.js";
 /**

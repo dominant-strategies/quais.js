@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.FetchResponse = exports.FetchRequest = exports.FetchCancelSignal = void 0;
 /**
- *  Fetching content from the web is environment-specific, so Ethers
+ *  Fetching content from the web is environment-specific, so quais
  *  provides an abstraction that each environment can implement to provide
  *  this service.
  *

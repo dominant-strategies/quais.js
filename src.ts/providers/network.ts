@@ -44,7 +44,7 @@ export class LayerOneConnectionPlugin extends NetworkPlugin {
     readonly provider!: Provider;
 // @TODO: Rename to ChainAccess and allow for connecting to any chain
     constructor(provider: Provider) {
-        super("org.ethers.plugins.layer-one-connection");
+        super("org.quais.plugins.layer-one-connection");
         defineProperties<LayerOneConnectionPlugin>(this, { provider });
     }
 
@@ -193,7 +193,7 @@ export class Network {
      *  values.
      */
     computeIntrinsicGas(tx: TransactionLike): number {
-        const costs = this.getPlugin<GasCostPlugin>("org.ethers.plugins.network.GasCost") || (new GasCostPlugin());
+        const costs = this.getPlugin<GasCostPlugin>("org.quais.plugins.network.GasCost") || (new GasCostPlugin());
 
         let gas = costs.txBase;
         if (tx.to == null) { gas += costs.txCreate; }
@@ -325,7 +325,7 @@ function getGasStationPlugin(url: string) {
     return new FetchUrlFeeDataNetworkPlugin(url, async (fetchFeeData, provider, request) => {
 
         // Prevent Cloudflare from blocking our request in node.js
-        request.setHeader("User-Agent", "ethers");
+        request.setHeader("User-Agent", "quais");
 
         let response;
         try {

@@ -13,4 +13,4 @@ export {
     MinInt256,
     MaxInt256
 } from "./numbers.js";
-export { EtherSymbol, MessagePrefix } from "./strings.js";
+export { quaisymbol, MessagePrefix } from "./strings.js";

@@ -1,6 +1,6 @@
 "use strict";
 /**
- *  All errors in ethers include properties to ensure they are both
+ *  All errors in quais include properties to ensure they are both
  *  human-readable (i.e. ``.message``) and machine-readable (i.e. ``.code``).
  *
  *  The [[isError]] function can be used to check the error ``code`` and
@@ -50,11 +50,11 @@ function stringify(value) {
     return `[ COULD NOT SERIALIZE ]`;
 }
 /**
- *  Returns true if the %%error%% matches an error thrown by ethers
+ *  Returns true if the %%error%% matches an error thrown by quais
  *  that matches the error %%code%%.
  *
  *  In TypeScript environments, this can be used to check that %%error%%
- *  matches an EthersError type, which means the expected properties will
+ *  matches an quaisError type, which means the expected properties will
  *  be set.
  *
  *  @See [ErrorCodes](api:ErrorCode)
@@ -80,14 +80,14 @@ function isCallException(error) {
 }
 exports.isCallException = isCallException;
 /**
- *  Returns a new Error configured to the format ethers emits errors, with
+ *  Returns a new Error configured to the format quais emits errors, with
  *  the %%message%%, [[api:ErrorCode]] %%code%% and additional properties
- *  for the corresponding EthersError.
+ *  for the corresponding quaisError.
  *
- *  Each error in ethers includes the version of ethers, a
+ *  Each error in quais includes the version of quais, a
  *  machine-readable [[ErrorCode]], and depending on %%code%%, additional
  *  required properties. The error message will also include the %%message%%,
- *  ethers version, %%code%% and all additional properties, serialized.
+ *  quais version, %%code%% and all additional properties, serialized.
  */
 function makeError(message, code, info) {
     let shortMessage = message;
@@ -139,7 +139,7 @@ function makeError(message, code, info) {
 }
 exports.makeError = makeError;
 /**
- *  Throws an EthersError with %%message%%, %%code%% and additional error
+ *  Throws an quaisError with %%message%%, %%code%% and additional error
  *  %%info%% when %%check%% is falsish..
  *
  *  @see [[api:makeError]]

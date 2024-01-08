@@ -27,7 +27,7 @@ to use human-readable text, as this is easier for a user to
 verify visually.
 
 This technique could be used, for example, to sign into a service
-by using the text ``"I am signing into ethers.org on 2023-06-04 12:57pm"``.
+by using the text ``"I am signing into quais.org on 2023-06-04 12:57pm"``.
 The user can then see the message in MetaMask or on a Ledger
 Hardware Wallet and accept that they wish to sign the message which
 the site can then authenticate them with. By providing a timestamp
@@ -69,7 +69,7 @@ contract = new Contract(contractAddress, [
   "function recoverStringFromVRS(string message, uint8 v, bytes32 r, bytes32 s) pure returns (address)",
   "function recoverStringFromRaw(string message, bytes sig) pure returns (address)",
   "function recoverHashFromCompact(bytes32 hash, (bytes32 r, bytes32 yParityAndS) sig) pure returns (address)"
-], new ethers.InfuraProvider("sepolia"));
+], new quais.InfuraProvider("sepolia"));
 
 // The Signer; it does not need to be connected to a Provider to sign
 signer = new Wallet(id("foobar"));
@@ -125,7 +125,7 @@ _code: Solidity @lang<solidity>
 
 // SPDX-License-Identifier: MIT
 
-// For more info, see: https://docs.ethers.org
+// For more info, see: https://docs.quais.org
 
 
 pragma solidity ^0.8.21;

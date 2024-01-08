@@ -5,10 +5,10 @@ on:
     branches:
       - main
     paths:
-      - "src.ts/**"
-      - "lib.esm/**"
-      - "lib.commonjs/**"
-      - "misc/test-browser/**"
+      - 'src.ts/**'
+      - 'lib.esm/**'
+      - 'lib.commonjs/**'
+      - 'misc/test-browser/**'
 
 jobs:
   test-browser:
@@ -16,7 +16,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    environment: ethers-tests
+    environment: quais-tests
 
     strategy:
       fail-fast: false
@@ -28,7 +28,7 @@ jobs:
           node-version: 18.x
 
       - name: Install and run Geth
-        uses: ethers-io/run-geth-action@main
+        uses: quais-io/run-geth-action@main
 
       - name: Insall Chrome
         run: wget -q 'https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb' && sudo dpkg --install google-chrome-stable_current_amd64.deb
@@ -41,6 +41,6 @@ jobs:
 
       - name: Build browser bundles (from TypeScript)
         run: npm run build-dist
-        
+
       - name: Run tests
         run: npm run test-browser

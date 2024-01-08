@@ -6,7 +6,6 @@ on:
       - main
 
 jobs:
-
   test-tsc-env:
     name: Test TypeScript Environments
 
@@ -18,8 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tsModuleResolution: [ "node", "node16", "nodenext" ]
-        tsModule: [ "commonjs", "es2020" ]
+        tsModuleResolution: ['node', 'node16', 'nodenext']
+        tsModule: ['commonjs', 'es2020']
 
     steps:
       - name: Use Node.js
@@ -30,10 +29,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          path: "faux_modules/ethers"
+          path: 'faux_modules/quais'
 
       - name: Copy tests to working directory
-        run: cp -r faux_modules/ethers/testcases/test-env/test-tsc/* .
+        run: cp -r faux_modules/quais/testcases/test-env/test-tsc/* .
 
       - name: Prepare setup moduleResolution=${{ matrix.tsModuleResolution }} module=${{ matrix.tsModule }}
         run: node prepare.cjs ${{ matrix.tsModuleResolution }} ${{ matrix.tsModule }}
@@ -42,7 +41,7 @@ jobs:
         run: cat package.json tsconfig.json
 
       - name: Install and run Faux Registry
-        uses: ethers-io/hijack-npm-action@main
+        uses: quais-io/hijack-npm-action@main
 
       - name: Install packages
         run: npm install
@@ -70,17 +69,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          path: "faux_modules/ethers"
+          path: 'faux_modules/quais'
 
       - name: Copy tests to working directory
-        run: cp -r faux_modules/ethers/testcases/test-env/angular/* .
+        run: cp -r faux_modules/quais/testcases/test-env/angular/* .
 
       - name: Install and run Faux Registry
-        uses: ethers-io/hijack-npm-action@main
+        uses: quais-io/hijack-npm-action@main
 
       - name: Install packages
         run: npm install
 
       - name: Build project
         run: npm run build
-
