@@ -3,15 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.connect = exports.checkProvider = exports.getProvider = exports.getProviderNetworks = exports.providerNames = exports.setupProviders = void 0;
 const index_js_1 = require("../index.js");
 ;
-const ethNetworks = ["default", "mainnet", "goerli"];
-//const maticNetworks = [ "matic", "maticmum" ];
+const ethNetworks = ["default", "mainnet"];
 const ProviderCreators = [
     {
         name: "FallbackProvider",
         networks: ethNetworks,
         create: function (network) {
             const providers = [];
-            for (const providerName of ["AlchemyProvider", "AnkrProvider", "quaiscanProvider", "InfuraProvider"]) {
+            for (const providerName of ["JsonRpcProvider"]) {
                 const provider = getProvider(providerName, network);
                 if (provider) {
                     providers.push(provider);
@@ -55,6 +54,7 @@ function getProvider(provider, network) {
     if (setup == false) {
         throw new Error("MUST CALL setupProviders in root context");
     }
+    console.log(`getProvider: ${provider}.${network}`);
     const creator = getCreator(provider);
     try {
         if (creator) {

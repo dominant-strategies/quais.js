@@ -113,7 +113,7 @@ export class BrowserProvider extends JsonRpcApiProvider {
     async hasSigner(address: number | string): Promise<boolean> {
         if (address == null) { address = 0; }
 
-        const accounts = await this.send("eth_accounts", [ ]);
+        const accounts = await this.send("quai_accounts", [ ]);
         if (typeof(address) === "number") {
             return (accounts.length > address);
         }
@@ -128,7 +128,7 @@ export class BrowserProvider extends JsonRpcApiProvider {
         if (!(await this.hasSigner(address))) {
             try {
                 //const resp = 
-                await this.#request("eth_requestAccounts", [ ]);
+                await this.#request("quai_requestAccounts", [ ]);
                 //console.log("RESP", resp);
 
             } catch (error: any) {

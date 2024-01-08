@@ -84,7 +84,7 @@ export class FilterIdSubscriber implements Subscriber {
             try {
                 filterId = await this.#filterIdPromise;
             } catch (error) {
-                if (!isError(error, "UNSUPPORTED_OPERATION") || error.operation !== "eth_newFilter") {
+                if (!isError(error, "UNSUPPORTED_OPERATION") || error.operation !== "quai_newFilter") {
                     throw error;
                 }
             }
@@ -106,7 +106,7 @@ export class FilterIdSubscriber implements Subscriber {
 
             if (this.#hault) { return; }
 
-            const result = await this.#provider.send("eth_getFilterChanges", [ filterId ]);
+            const result = await this.#provider.send("quai_getFilterChanges", [ filterId ]);
             await this._emitResults(this.#provider, result);
         } catch (error) { console.log("@TODO", error); }
 
@@ -118,7 +118,7 @@ export class FilterIdSubscriber implements Subscriber {
         if (filterIdPromise) {
             this.#filterIdPromise = null;
             filterIdPromise.then((filterId) => {
-                this.#provider.send("eth_uninstallFilter", [ filterId ]);
+                this.#provider.send("quai_uninstallFilter", [ filterId ]);
             });
         }
     }
@@ -169,7 +169,7 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
     }
 
     async _subscribe(provider: JsonRpcApiProvider): Promise<string> {
-        const filterId = await provider.send("eth_newFilter", [ this.#event ]);
+        const filterId = await provider.send("quai_newFilter", [ this.#event ]);
         return filterId;
     }
 
@@ -187,7 +187,7 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
  */
 export class FilterIdPendingSubscriber extends FilterIdSubscriber {
     async _subscribe(provider: JsonRpcApiProvider): Promise<string> {
-        return await provider.send("eth_newPendingTransactionFilter", [ ]);
+        return await provider.send("quai_newPendingTransactionFilter", [ ]);
     }
 
     async _emitResults(provider: JsonRpcApiProvider, results: Array<any>): Promise<void> {

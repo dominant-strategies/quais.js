@@ -98,7 +98,7 @@ class JsonRpcSigner extends abstract_signer_js_1.AbstractSigner {
         else {
             tx.from = this.address;
         }
-        // The JSON-RPC for eth_sendTransaction uses 90000 gas; if the user
+        // The JSON-RPC for quai_sendTransaction uses 90000 gas; if the user
         // wishes to use this, it is easy to specify explicitly, otherwise
         // we look it up for them.
         if (tx.gasLimit == null) {
@@ -118,7 +118,7 @@ class JsonRpcSigner extends abstract_signer_js_1.AbstractSigner {
             await Promise.all(promises);
         }
         const hexTx = this.provider.getRpcTransaction(tx);
-        return this.provider.send("eth_sendTransaction", [hexTx]);
+        return this.provider.send("quai_sendTransaction", [hexTx]);
     }
     async sendTransaction(tx) {
         // This cannot be mined any earlier than any recent block
@@ -155,7 +155,7 @@ class JsonRpcSigner extends abstract_signer_js_1.AbstractSigner {
             tx.from = this.address;
         }
         const hexTx = this.provider.getRpcTransaction(tx);
-        return await this.provider.send("eth_signTransaction", [hexTx]);
+        return await this.provider.send("quai_signTransaction", [hexTx]);
     }
     async signMessage(_message) {
         const message = ((typeof (_message) === "string") ? (0, index_js_5.toUtf8Bytes)(_message) : _message);
@@ -171,7 +171,7 @@ class JsonRpcSigner extends abstract_signer_js_1.AbstractSigner {
             (0, index_js_5.assertArgument)(address != null, "TypedData does not support null address", "value", value);
             return address;
         });
-        return await this.provider.send("eth_signTypedData_v4", [
+        return await this.provider.send("quai_signTypedData_v4", [
             this.address.toLowerCase(),
             JSON.stringify(index_js_3.TypedDataEncoder.getPayload(populated.domain, types, populated.value))
         ]);
@@ -181,10 +181,10 @@ class JsonRpcSigner extends abstract_signer_js_1.AbstractSigner {
             this.address.toLowerCase(), password, null
         ]);
     }
-    // https://github.com/ethereum/wiki/wiki/JSON-RPC#eth_sign
+    // https://github.com/ethereum/wiki/wiki/JSON-RPC#quai_sign
     async _legacySignMessage(_message) {
         const message = ((typeof (_message) === "string") ? (0, index_js_5.toUtf8Bytes)(_message) : _message);
-        return await this.provider.send("eth_sign", [
+        return await this.provider.send("quai_sign", [
             this.address.toLowerCase(), (0, index_js_5.hexlify)(message)
         ]);
     }
@@ -358,11 +358,11 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
         }
         // If we are ready, use ``send``, which enabled requests to be batched
         if (this.ready) {
-            return network_js_1.Network.from((0, index_js_5.getBigInt)(await this.send("eth_chainId", [])));
+            return network_js_1.Network.from((0, index_js_5.getBigInt)(await this.send("quai_chainId", [])));
         }
         // We are not ready yet; use the primitive _send
         const payload = {
-            id: this.#nextId++, method: "eth_chainId", params: [], jsonrpc: "2.0"
+            id: this.#nextId++, method: "quai_chainId", params: [], jsonrpc: "2.0"
         };
         this.emit("debug", { action: "sendRpcPayload", payload });
         let result;
@@ -485,29 +485,29 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
     getRpcRequest(req) {
         switch (req.method) {
             case "chainId":
-                return { method: "eth_chainId", args: [] };
+                return { method: "quai_chainId", args: [] };
             case "getBlockNumber":
-                return { method: "eth_blockNumber", args: [] };
+                return { method: "quai_blockNumber", args: [] };
             case "getGasPrice":
-                return { method: "eth_gasPrice", args: [] };
+                return { method: "quai_gasPrice", args: [] };
             case "getBalance":
                 return {
-                    method: "eth_getBalance",
+                    method: "quai_getBalance",
                     args: [getLowerCase(req.address), req.blockTag]
                 };
             case "getTransactionCount":
                 return {
-                    method: "eth_getTransactionCount",
+                    method: "quai_getTransactionCount",
                     args: [getLowerCase(req.address), req.blockTag]
                 };
             case "getCode":
                 return {
-                    method: "eth_getCode",
+                    method: "quai_getCode",
                     args: [getLowerCase(req.address), req.blockTag]
                 };
             case "getStorage":
                 return {
-                    method: "eth_getStorageAt",
+                    method: "quai_getStorageAt",
                     args: [
                         getLowerCase(req.address),
                         ("0x" + req.position.toString(16)),
@@ -516,41 +516,41 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
                 };
             case "broadcastTransaction":
                 return {
-                    method: "eth_sendRawTransaction",
+                    method: "quai_sendRawTransaction",
                     args: [req.signedTransaction]
                 };
             case "getBlock":
                 if ("blockTag" in req) {
                     return {
-                        method: "eth_getBlockByNumber",
+                        method: "quai_getBlockByNumber",
                         args: [req.blockTag, !!req.includeTransactions]
                     };
                 }
                 else if ("blockHash" in req) {
                     return {
-                        method: "eth_getBlockByHash",
+                        method: "quai_getBlockByHash",
                         args: [req.blockHash, !!req.includeTransactions]
                     };
                 }
                 break;
             case "getTransaction":
                 return {
-                    method: "eth_getTransactionByHash",
+                    method: "quai_getTransactionByHash",
                     args: [req.hash]
                 };
             case "getTransactionReceipt":
                 return {
-                    method: "eth_getTransactionReceipt",
+                    method: "quai_getTransactionReceipt",
                     args: [req.hash]
                 };
             case "call":
                 return {
-                    method: "eth_call",
+                    method: "quai_call",
                     args: [this.getRpcTransaction(req.transaction), req.blockTag]
                 };
             case "estimateGas": {
                 return {
-                    method: "eth_estimateGas",
+                    method: "quai_estimateGas",
                     args: [this.getRpcTransaction(req.transaction)]
                 };
             }
@@ -563,7 +563,7 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
                         req.filter.address = getLowerCase(req.filter.address);
                     }
                 }
-                return { method: "eth_getLogs", args: [req.filter] };
+                return { method: "quai_getLogs", args: [req.filter] };
         }
         return null;
     }
@@ -576,7 +576,7 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
     getRpcError(payload, _error) {
         const { method } = payload;
         const { error } = _error;
-        if (method === "eth_estimateGas" && error.message) {
+        if (method === "quai_estimateGas" && error.message) {
             const msg = error.message;
             if (!msg.match(/revert/i) && msg.match(/insufficient funds/i)) {
                 return (0, index_js_5.makeError)("insufficient funds", "INSUFFICIENT_FUNDS", {
@@ -585,9 +585,9 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
                 });
             }
         }
-        if (method === "eth_call" || method === "eth_estimateGas") {
+        if (method === "quai_call" || method === "quai_estimateGas") {
             const result = spelunkData(error);
-            const e = index_js_1.AbiCoder.getBuiltinCallException((method === "eth_call") ? "call" : "estimateGas", (payload.params[0]), (result ? result.data : null));
+            const e = index_js_1.AbiCoder.getBuiltinCallException((method === "quai_call") ? "call" : "estimateGas", (payload.params[0]), (result ? result.data : null));
             e.info = { error, payload };
             return e;
         }
@@ -596,12 +596,12 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
         const message = JSON.stringify(spelunkMessage(error));
         if (typeof (error.message) === "string" && error.message.match(/user denied|quais-user-denied/i)) {
             const actionMap = {
-                eth_sign: "signMessage",
+                quai_sign: "signMessage",
                 personal_sign: "signMessage",
-                eth_signTypedData_v4: "signTypedData",
-                eth_signTransaction: "signTransaction",
-                eth_sendTransaction: "sendTransaction",
-                eth_requestAccounts: "requestAccess",
+                quai_signTypedData_v4: "signTypedData",
+                quai_signTransaction: "signTransaction",
+                quai_sendTransaction: "sendTransaction",
+                quai_requestAccounts: "requestAccess",
                 wallet_requestAccounts: "requestAccess",
             };
             return (0, index_js_5.makeError)(`user rejected action`, "ACTION_REJECTED", {
@@ -610,7 +610,7 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
                 info: { payload, error }
             });
         }
-        if (method === "eth_sendRawTransaction" || method === "eth_sendTransaction") {
+        if (method === "quai_sendRawTransaction" || method === "quai_sendTransaction") {
             const transaction = (payload.params[0]);
             if (message.match(/insufficient funds|base fee exceeds gas limit/i)) {
                 return (0, index_js_5.makeError)("insufficient funds for intrinsic transaction cost", "INSUFFICIENT_FUNDS", {
@@ -689,7 +689,7 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
         if (address == null) {
             address = 0;
         }
-        const accountsPromise = this.send("eth_accounts", []);
+        const accountsPromise = this.send("quai_accounts", []);
         // Account index
         if (typeof (address) === "number") {
             const accounts = (await accountsPromise);
@@ -712,7 +712,7 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
         throw new Error("invalid account");
     }
     async listAccounts() {
-        const accounts = await this.send("eth_accounts", []);
+        const accounts = await this.send("quai_accounts", []);
         return accounts.map((a) => new JsonRpcSigner(this, a));
     }
     destroy() {
@@ -763,7 +763,7 @@ class JsonRpcProvider extends JsonRpcApiProvider {
     async send(method, params) {
         // All requests are over HTTP, so we can just start handling requests
         // We do this here rather than the constructor so that we don't send any
-        // requests to the network (i.e. eth_chainId) until we absolutely have to.
+        // requests to the network (i.e. quai_chainId) until we absolutely have to.
         await this._start();
         return await super.send(method, params);
     }
