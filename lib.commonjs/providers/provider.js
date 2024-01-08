@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TransactionResponse = exports.TransactionReceipt = exports.Log = exports.Block = exports.copyRequest = exports.FeeData = void 0;
-//import { resolveAddress } from "@ethersproject/address";
+//import { resolveAddress } from "@quaisproject/address";
 const index_js_1 = require("../utils/index.js");
 const index_js_2 = require("../transaction/index.js");
 const BN_0 = BigInt(0);

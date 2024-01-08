@@ -122,7 +122,7 @@ export interface TestCaseSolidityHash {
 export interface TestCaseUnit {
     name: string;
     wei: string;
-    ethers: string;
+    quais: string;
     ether_format: string;
     kwei?: string;
     mwei?: string;

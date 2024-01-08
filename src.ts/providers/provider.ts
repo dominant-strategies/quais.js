@@ -1,4 +1,4 @@
-//import { resolveAddress } from "@ethersproject/address";
+//import { resolveAddress } from "@quaisproject/address";
 import {
     defineProperties, getBigInt, getNumber, hexlify, resolveProperties,
     assert, assertArgument, isError, makeError

@@ -1,5 +1,5 @@
 /**
- *  All errors in ethers include properties to ensure they are both
+ *  All errors in quais include properties to ensure they are both
  *  human-readable (i.e. ``.message``) and machine-readable (i.e. ``.code``).
  *
  *  The [[isError]] function can be used to check the error ``code`` and
@@ -17,11 +17,11 @@ export type ErrorInfo<T> = Omit<T, "code" | "name" | "message" | "shortMessage">
     shortMessage?: string;
 };
 /**
- *  All errors emitted by ethers have an **ErrorCode** to help
+ *  All errors emitted by quais have an **ErrorCode** to help
  *  identify and coalesce errors to simplify programmatic analysis.
  *
  *  Each **ErrorCode** is the %%code%% proerty of a coresponding
- *  [[EthersError]].
+ *  [[quaisError]].
  *
  *  **Generic Errors**
  *
@@ -79,10 +79,10 @@ export type ErrorInfo<T> = Omit<T, "code" | "name" | "message" | "shortMessage">
  */
 export type ErrorCode = "UNKNOWN_ERROR" | "NOT_IMPLEMENTED" | "UNSUPPORTED_OPERATION" | "NETWORK_ERROR" | "SERVER_ERROR" | "TIMEOUT" | "BAD_DATA" | "CANCELLED" | "BUFFER_OVERRUN" | "NUMERIC_FAULT" | "INVALID_ARGUMENT" | "MISSING_ARGUMENT" | "UNEXPECTED_ARGUMENT" | "VALUE_MISMATCH" | "CALL_EXCEPTION" | "INSUFFICIENT_FUNDS" | "NONCE_EXPIRED" | "REPLACEMENT_UNDERPRICED" | "TRANSACTION_REPLACED" | "UNCONFIGURED_NAME" | "OFFCHAIN_FAULT" | "ACTION_REJECTED";
 /**
- *  All errors in Ethers include properties to assist in
+ *  All errors in quais include properties to assist in
  *  machine-readable errors.
  */
-export interface EthersError<T extends ErrorCode = ErrorCode> extends Error {
+export interface quaisError<T extends ErrorCode = ErrorCode> extends Error {
     /**
      *  The string error code.
      */
@@ -104,17 +104,17 @@ export interface EthersError<T extends ErrorCode = ErrorCode> extends Error {
     error?: Error;
 }
 /**
- *  This Error is a catch-all for when there is no way for Ethers to
+ *  This Error is a catch-all for when there is no way for quais to
  *  know what the underlying problem is.
  */
-export interface UnknownError extends EthersError<"UNKNOWN_ERROR"> {
+export interface UnknownError extends quaisError<"UNKNOWN_ERROR"> {
     [key: string]: any;
 }
 /**
  *  This Error is mostly used as a stub for functionality that is
  *  intended for the future, but is currently not implemented.
  */
-export interface NotImplementedError extends EthersError<"NOT_IMPLEMENTED"> {
+export interface NotImplementedError extends quaisError<"NOT_IMPLEMENTED"> {
     /**
      *  The attempted operation.
      */
@@ -130,7 +130,7 @@ export interface NotImplementedError extends EthersError<"NOT_IMPLEMENTED"> {
  *  For example, a [[Wallet]] with no connected [[Provider]] is unable
  *  to send a transaction.
  */
-export interface UnsupportedOperationError extends EthersError<"UNSUPPORTED_OPERATION"> {
+export interface UnsupportedOperationError extends quaisError<"UNSUPPORTED_OPERATION"> {
     /**
      *  The attempted operation.
      */
@@ -139,7 +139,7 @@ export interface UnsupportedOperationError extends EthersError<"UNSUPPORTED_OPER
 /**
  *  This Error indicates a problem connecting to a network.
  */
-export interface NetworkError extends EthersError<"NETWORK_ERROR"> {
+export interface NetworkError extends quaisError<"NETWORK_ERROR"> {
     /**
      *  The network event.
      */
@@ -149,7 +149,7 @@ export interface NetworkError extends EthersError<"NETWORK_ERROR"> {
  *  This Error indicates there was a problem fetching a resource from
  *  a server.
  */
-export interface ServerError extends EthersError<"SERVER_ERROR"> {
+export interface ServerError extends quaisError<"SERVER_ERROR"> {
     /**
      *  The requested resource.
      */
@@ -167,7 +167,7 @@ export interface ServerError extends EthersError<"SERVER_ERROR"> {
  *  generally means a request has been sent and there has simply
  *  been no response to indicate whether it was processed or not.
  */
-export interface TimeoutError extends EthersError<"TIMEOUT"> {
+export interface TimeoutError extends quaisError<"TIMEOUT"> {
     /**
      *  The attempted operation.
      */
@@ -185,7 +185,7 @@ export interface TimeoutError extends EthersError<"TIMEOUT"> {
  *  This Error indicates that a provided set of data cannot
  *  be correctly interpreted.
  */
-export interface BadDataError extends EthersError<"BAD_DATA"> {
+export interface BadDataError extends quaisError<"BAD_DATA"> {
     /**
      *  The data.
      */
@@ -195,16 +195,16 @@ export interface BadDataError extends EthersError<"BAD_DATA"> {
  *  This Error indicates that the operation was cancelled by a
  *  programmatic call, for example to ``cancel()``.
  */
-export interface CancelledError extends EthersError<"CANCELLED"> {
+export interface CancelledError extends quaisError<"CANCELLED"> {
 }
 /**
  *  This Error indicates an attempt was made to read outside the bounds
  *  of protected data.
  *
- *  Most operations in Ethers are protected by bounds checks, to mitigate
+ *  Most operations in quais are protected by bounds checks, to mitigate
  *  exploits when parsing data.
  */
-export interface BufferOverrunError extends EthersError<"BUFFER_OVERRUN"> {
+export interface BufferOverrunError extends quaisError<"BUFFER_OVERRUN"> {
     /**
      *  The buffer that was overrun.
      */
@@ -225,7 +225,7 @@ export interface BufferOverrunError extends EthersError<"BUFFER_OVERRUN"> {
  *  For example, trying to divide by zero or using a ``uint8`` to store
  *  a negative value.
  */
-export interface NumericFaultError extends EthersError<"NUMERIC_FAULT"> {
+export interface NumericFaultError extends quaisError<"NUMERIC_FAULT"> {
     /**
      *  The attempted operation.
      */
@@ -243,7 +243,7 @@ export interface NumericFaultError extends EthersError<"NUMERIC_FAULT"> {
  *  This Error indicates an incorrect type or value was passed to
  *  a function or method.
  */
-export interface InvalidArgumentError extends EthersError<"INVALID_ARGUMENT"> {
+export interface InvalidArgumentError extends quaisError<"INVALID_ARGUMENT"> {
     /**
      *  The name of the argument.
      */
@@ -257,7 +257,7 @@ export interface InvalidArgumentError extends EthersError<"INVALID_ARGUMENT"> {
 /**
  *  This Error indicates there were too few arguments were provided.
  */
-export interface MissingArgumentError extends EthersError<"MISSING_ARGUMENT"> {
+export interface MissingArgumentError extends quaisError<"MISSING_ARGUMENT"> {
     /**
      *  The number of arguments received.
      */
@@ -270,7 +270,7 @@ export interface MissingArgumentError extends EthersError<"MISSING_ARGUMENT"> {
 /**
  *  This Error indicates too many arguments were provided.
  */
-export interface UnexpectedArgumentError extends EthersError<"UNEXPECTED_ARGUMENT"> {
+export interface UnexpectedArgumentError extends quaisError<"UNEXPECTED_ARGUMENT"> {
     /**
      *  The number of arguments received.
      */
@@ -295,7 +295,7 @@ export type CallExceptionTransaction = {
 /**
  *  This **Error** indicates a transaction reverted.
  */
-export interface CallExceptionError extends EthersError<"CALL_EXCEPTION"> {
+export interface CallExceptionError extends quaisError<"CALL_EXCEPTION"> {
     /**
      *  The action being performed when the revert was encountered.
      */
@@ -338,7 +338,7 @@ export interface CallExceptionError extends EthersError<"CALL_EXCEPTION"> {
  *  The sending account has insufficient funds to cover the
  *  entire transaction cost.
  */
-export interface InsufficientFundsError extends EthersError<"INSUFFICIENT_FUNDS"> {
+export interface InsufficientFundsError extends quaisError<"INSUFFICIENT_FUNDS"> {
     /**
      *  The transaction.
      */
@@ -348,7 +348,7 @@ export interface InsufficientFundsError extends EthersError<"INSUFFICIENT_FUNDS"
  *  The sending account has already used this nonce in a
  *  transaction that has been included.
  */
-export interface NonceExpiredError extends EthersError<"NONCE_EXPIRED"> {
+export interface NonceExpiredError extends quaisError<"NONCE_EXPIRED"> {
     /**
      *  The transaction.
      */
@@ -358,7 +358,7 @@ export interface NonceExpiredError extends EthersError<"NONCE_EXPIRED"> {
  *  A CCIP-read exception, which cannot be recovered from or
  *  be further processed.
  */
-export interface OffchainFaultError extends EthersError<"OFFCHAIN_FAULT"> {
+export interface OffchainFaultError extends quaisError<"OFFCHAIN_FAULT"> {
     /**
      *  The transaction.
      */
@@ -373,7 +373,7 @@ export interface OffchainFaultError extends EthersError<"OFFCHAIN_FAULT"> {
  *  insufficient additional fee to afford evicting the old
  *  transaction from the memory pool.
  */
-export interface ReplacementUnderpricedError extends EthersError<"REPLACEMENT_UNDERPRICED"> {
+export interface ReplacementUnderpricedError extends quaisError<"REPLACEMENT_UNDERPRICED"> {
     /**
      *  The transaction.
      */
@@ -382,7 +382,7 @@ export interface ReplacementUnderpricedError extends EthersError<"REPLACEMENT_UN
 /**
  *  A pending transaction was replaced by another.
  */
-export interface TransactionReplacedError extends EthersError<"TRANSACTION_REPLACED"> {
+export interface TransactionReplacedError extends quaisError<"TRANSACTION_REPLACED"> {
     /**
      *  If the transaction was cancelled, such that the original
      *  effects of the transaction cannot be assured.
@@ -412,7 +412,7 @@ export interface TransactionReplacedError extends EthersError<"TRANSACTION_REPLA
  *  This could indicate an ENS name is unowned or that the current
  *  address being pointed to is the [[ZeroAddress]].
  */
-export interface UnconfiguredNameError extends EthersError<"UNCONFIGURED_NAME"> {
+export interface UnconfiguredNameError extends quaisError<"UNCONFIGURED_NAME"> {
     /**
      *  The ENS name that was requested
      */
@@ -426,7 +426,7 @@ export interface UnconfiguredNameError extends EthersError<"UNCONFIGURED_NAME"> 
  *  presents a dialog box to the user. If the user denies the request
  *  this error is thrown.
  */
-export interface ActionRejectedError extends EthersError<"ACTION_REJECTED"> {
+export interface ActionRejectedError extends quaisError<"ACTION_REJECTED"> {
     /**
      *  The requested action.
      */
@@ -442,17 +442,17 @@ export interface ActionRejectedError extends EthersError<"ACTION_REJECTED"> {
 }
 /**
  *  A conditional type that transforms the [[ErrorCode]] T into
- *  its EthersError type.
+ *  its quaisError type.
  *
  *  @flatworm-skip-docs
  */
-export type CodedEthersError<T> = T extends "UNKNOWN_ERROR" ? UnknownError : T extends "NOT_IMPLEMENTED" ? NotImplementedError : T extends "UNSUPPORTED_OPERATION" ? UnsupportedOperationError : T extends "NETWORK_ERROR" ? NetworkError : T extends "SERVER_ERROR" ? ServerError : T extends "TIMEOUT" ? TimeoutError : T extends "BAD_DATA" ? BadDataError : T extends "CANCELLED" ? CancelledError : T extends "BUFFER_OVERRUN" ? BufferOverrunError : T extends "NUMERIC_FAULT" ? NumericFaultError : T extends "INVALID_ARGUMENT" ? InvalidArgumentError : T extends "MISSING_ARGUMENT" ? MissingArgumentError : T extends "UNEXPECTED_ARGUMENT" ? UnexpectedArgumentError : T extends "CALL_EXCEPTION" ? CallExceptionError : T extends "INSUFFICIENT_FUNDS" ? InsufficientFundsError : T extends "NONCE_EXPIRED" ? NonceExpiredError : T extends "OFFCHAIN_FAULT" ? OffchainFaultError : T extends "REPLACEMENT_UNDERPRICED" ? ReplacementUnderpricedError : T extends "TRANSACTION_REPLACED" ? TransactionReplacedError : T extends "UNCONFIGURED_NAME" ? UnconfiguredNameError : T extends "ACTION_REJECTED" ? ActionRejectedError : never;
+export type CodedquaisError<T> = T extends "UNKNOWN_ERROR" ? UnknownError : T extends "NOT_IMPLEMENTED" ? NotImplementedError : T extends "UNSUPPORTED_OPERATION" ? UnsupportedOperationError : T extends "NETWORK_ERROR" ? NetworkError : T extends "SERVER_ERROR" ? ServerError : T extends "TIMEOUT" ? TimeoutError : T extends "BAD_DATA" ? BadDataError : T extends "CANCELLED" ? CancelledError : T extends "BUFFER_OVERRUN" ? BufferOverrunError : T extends "NUMERIC_FAULT" ? NumericFaultError : T extends "INVALID_ARGUMENT" ? InvalidArgumentError : T extends "MISSING_ARGUMENT" ? MissingArgumentError : T extends "UNEXPECTED_ARGUMENT" ? UnexpectedArgumentError : T extends "CALL_EXCEPTION" ? CallExceptionError : T extends "INSUFFICIENT_FUNDS" ? InsufficientFundsError : T extends "NONCE_EXPIRED" ? NonceExpiredError : T extends "OFFCHAIN_FAULT" ? OffchainFaultError : T extends "REPLACEMENT_UNDERPRICED" ? ReplacementUnderpricedError : T extends "TRANSACTION_REPLACED" ? TransactionReplacedError : T extends "UNCONFIGURED_NAME" ? UnconfiguredNameError : T extends "ACTION_REJECTED" ? ActionRejectedError : never;
 /**
- *  Returns true if the %%error%% matches an error thrown by ethers
+ *  Returns true if the %%error%% matches an error thrown by quais
  *  that matches the error %%code%%.
  *
  *  In TypeScript environments, this can be used to check that %%error%%
- *  matches an EthersError type, which means the expected properties will
+ *  matches an quaisError type, which means the expected properties will
  *  be set.
  *
  *  @See [ErrorCodes](api:ErrorCode)
@@ -466,29 +466,29 @@ export type CodedEthersError<T> = T extends "UNKNOWN_ERROR" ? UnknownError : T e
  *      }
  *    }
  */
-export declare function isError<K extends ErrorCode, T extends CodedEthersError<K>>(error: any, code: K): error is T;
+export declare function isError<K extends ErrorCode, T extends CodedquaisError<K>>(error: any, code: K): error is T;
 /**
  *  Returns true if %%error%% is a [[CallExceptionError].
  */
 export declare function isCallException(error: any): error is CallExceptionError;
 /**
- *  Returns a new Error configured to the format ethers emits errors, with
+ *  Returns a new Error configured to the format quais emits errors, with
  *  the %%message%%, [[api:ErrorCode]] %%code%% and additional properties
- *  for the corresponding EthersError.
+ *  for the corresponding quaisError.
  *
- *  Each error in ethers includes the version of ethers, a
+ *  Each error in quais includes the version of quais, a
  *  machine-readable [[ErrorCode]], and depending on %%code%%, additional
  *  required properties. The error message will also include the %%message%%,
- *  ethers version, %%code%% and all additional properties, serialized.
+ *  quais version, %%code%% and all additional properties, serialized.
  */
-export declare function makeError<K extends ErrorCode, T extends CodedEthersError<K>>(message: string, code: K, info?: ErrorInfo<T>): T;
+export declare function makeError<K extends ErrorCode, T extends CodedquaisError<K>>(message: string, code: K, info?: ErrorInfo<T>): T;
 /**
- *  Throws an EthersError with %%message%%, %%code%% and additional error
+ *  Throws an quaisError with %%message%%, %%code%% and additional error
  *  %%info%% when %%check%% is falsish..
  *
  *  @see [[api:makeError]]
  */
-export declare function assert<K extends ErrorCode, T extends CodedEthersError<K>>(check: unknown, message: string, code: K, info?: ErrorInfo<T>): asserts check;
+export declare function assert<K extends ErrorCode, T extends CodedquaisError<K>>(check: unknown, message: string, code: K, info?: ErrorInfo<T>): asserts check;
 /**
  *  A simple helper to simply ensuring provided arguments match expected
  *  constraints, throwing if not.

@@ -20,7 +20,7 @@ const ProviderCreators: Array<ProviderCreator> = [
         networks: ethNetworks,
         create: function(network: string) {
             const providers: Array<AbstractProvider> = [];
-            for (const providerName of [ "AlchemyProvider", "AnkrProvider", "EtherscanProvider", "InfuraProvider" ]) {
+            for (const providerName of [ "AlchemyProvider", "AnkrProvider", "quaiscanProvider", "InfuraProvider" ]) {
                 const provider = getProvider(providerName, network);
                 if (provider) { providers.push(provider); }
             }

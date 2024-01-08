@@ -25,7 +25,7 @@ export {
     ZeroAddress,
     WeiPerEther, MaxUint256, MinInt256, MaxInt256, N,
     ZeroHash,
-    EtherSymbol, MessagePrefix
+    quaisymbol, MessagePrefix
 } from "./constants/index.js";
 
 export {
@@ -189,13 +189,13 @@ export type {
     FetchPreflightFunc, FetchProcessFunc, FetchRetryFunc,
     FetchGatewayFunc, FetchGetUrlFunc,
 
-    EthersError, UnknownError, NotImplementedError, UnsupportedOperationError, NetworkError,
+    quaisError, UnknownError, NotImplementedError, UnsupportedOperationError, NetworkError,
     ServerError, TimeoutError, BadDataError, CancelledError, BufferOverrunError,
     NumericFaultError, InvalidArgumentError, MissingArgumentError, UnexpectedArgumentError,
     CallExceptionError, InsufficientFundsError, NonceExpiredError, OffchainFaultError,
     ReplacementUnderpricedError, TransactionReplacedError, UnconfiguredNameError,
     ActionRejectedError,
-    CodedEthersError,
+    CodedquaisError,
 
     CallExceptionAction, CallExceptionTransaction,
     EventEmitterable, Listener

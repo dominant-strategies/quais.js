@@ -337,7 +337,7 @@ function verifyBasicType(type) {
 }
 // Make the Fragment constructors effectively private
 const _guard = {};
-const internal = Symbol.for("_ethers_internal");
+const internal = Symbol.for("_quais_internal");
 const ParamTypeInternal = "_ParamTypeInternal";
 const ErrorFragmentInternal = "_ErrorInternal";
 const EventFragmentInternal = "_EventInternal";

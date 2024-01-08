@@ -1,13 +1,13 @@
 {
   "name": "test",
   "dependencies": {
-    "ethers": "^6.0.0"
+    "quais": "^6.0.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
   },
   "version": "0.0.1",
-  "description": "Test case for simple import for ethers.",
+  "description": "Test case for simple import for quais.",
   "main": "index.js",
   "private": true,
   "publishConfig": {
@@ -20,7 +20,7 @@
     "test": "npm run build && node index.js"
   },
   "keywords": [
-    "ethers",
+    "quais",
     "tests",
     "typescipt"
   ],

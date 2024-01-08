@@ -13,7 +13,7 @@ const address_js_1 = require("./address.js");
  *    //_result:
  *
  *    // Contracts
- *    contract = new Contract("dai.tokens.ethers.eth", [ ], provider)
+ *    contract = new Contract("dai.tokens.quais.eth", [ ], provider)
  *    isAddressable(contract)
  *    //_result:
  */
@@ -83,7 +83,7 @@ async function checkAddress(target, promise) {
  *    //_result:
  *
  *    // ENS names are resolved asynchronously
- *    resolveAddress("dai.tokens.ethers.eth", provider)
+ *    resolveAddress("dai.tokens.quais.eth", provider)
  *    //_result:
  *
  *    // Addressable objects are resolved asynchronously

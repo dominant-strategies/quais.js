@@ -63,7 +63,7 @@ type PresentVersion = {
     {
         const content = fs.readFileSync(resolve("CHANGELOG.md")).toString();
         for (const line of content.split("\n")) {
-            let match = line.match(/^ethers\/v(\S+)\s/);
+            let match = line.match(/^quais\/v(\S+)\s/);
             if (match) {
                 present.push({ version: match[1], body: [ line ] });
             } else {
@@ -77,7 +77,7 @@ type PresentVersion = {
     }
 
     // Get the remote versions (along with their date and gitHead)
-    let versions = await getVersions("ethers");
+    let versions = await getVersions("quais");
     versions = versions.filter((v) => (v.version.match(/^6\.[0-9]+\.[0-9]+$/)));
 
     const entries: Array<PresentVersion | Version> = [ ];
@@ -168,17 +168,17 @@ type PresentVersion = {
         }
 
         // Entry from git; format it nicely
-        const title = `ethers/v${ ver.version } (${ ver.date})`;
+        const title = `quais/v${ ver.version } (${ ver.date})`;
         output.push(title);
         output.push(repeat("-", title.length));
         output.push("");
         for (const change of ver.changes) {
             let line = `  - ${ change.message } (`;
             line += change.issues.map((i) => {
-                return `[#${ i }](https:/\/github.com/ethers-io/ethers.js/issues/${ i })`;
+                return `[#${ i }](https:/\/github.com/quais-io/quais.js/issues/${ i })`;
             }).join(", ");
             if (change.issues.length) { line += "; "; }
-            line += `[${ change.commit.substring(0, 7) }](https:/\/github.com/ethers-io/ethers.js/commit/${ change.commit })).`;
+            line += `[${ change.commit.substring(0, 7) }](https:/\/github.com/quais-io/quais.js/commit/${ change.commit })).`;
             output.push(line)
         }
         output.push("");

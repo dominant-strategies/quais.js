@@ -61,7 +61,7 @@ export class MulticoinProviderPlugin {
         throw new Error("unsupported coin");
     }
 }
-const BasicMulticoinPluginId = "org.ethers.plugins.provider.BasicMulticoin";
+const BasicMulticoinPluginId = "org.quais.plugins.provider.BasicMulticoin";
 /**
  *  A **BasicMulticoinProviderPlugin** provides service for common
  *  coin types, which do not require additional libraries to encode or
@@ -434,7 +434,7 @@ export class EnsResolver {
     }
     static async getEnsAddress(provider) {
         const network = await provider.getNetwork();
-        const ensPlugin = network.getPlugin("org.ethers.plugins.network.Ens");
+        const ensPlugin = network.getPlugin("org.quais.plugins.network.Ens");
         // No ENS...
         assert(ensPlugin, "network does not support ENS", "UNSUPPORTED_OPERATION", {
             operation: "getEnsAddress", info: { network }

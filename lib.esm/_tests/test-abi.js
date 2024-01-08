@@ -95,7 +95,7 @@ describe("Test Interface", function () {
         assert.equal(filter[1], "0x0000000000000000000000008ba1f109551bd432803012645ac136ddd64dba72");
         assert.equal(filter[2], "0x000000000000000000000000ac1639cf97a3a46d431e6d1216f576622894cbb5");
         // See: #4244
-        // https://goerli.etherscan.io/tx/0xe61cef4cd706db8e23114717a207d76cc6b0df0b74ec52805551c4d1bf347a27#eventlog
+        // https://goerli.quaiscan.io/tx/0xe61cef4cd706db8e23114717a207d76cc6b0df0b74ec52805551c4d1bf347a27#eventlog
         // See `RedemptionRequested` event.
         {
             const walletPubKeyHash = "0x03b74d6893ad46dfdd01b9e0e3b3385f4fce2d1e";

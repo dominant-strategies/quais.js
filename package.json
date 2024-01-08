@@ -82,7 +82,7 @@
       "default": "./lib.commonjs/wordlists/index.js"
     }
   },
-  "gitHead": "bd135c6440ccafa5e94d94ec84b0734a218c3530",
+  "gitHead": "4110365f4c8814128743e31b4bf4042975928d2b",
   "homepage": "https://qu.ai",
   "keywords": [
     "quainetwork",
@@ -102,8 +102,8 @@
     "url": "git://github.com/dominant-strategies/quais-6.js.git"
   },
   "scripts": {
-    "_build-dist": "rollup -c && uglifyjs ./dist/ethers.js -o ./dist/ethers.min.js && uglifyjs ./dist/ethers.umd.js -o ./dist/ethers.umd.min.js && uglifyjs ./dist/wordlists-extra.js -o ./dist/wordlists-extra.min.js",
-    "_dist-stats": "gzip -k9f -S '.gz' ./dist/ethers.min.js && gzip -k9f -S '.gz' ./dist/ethers.umd.min.js && gzip -k9f -S '.gz' ./dist/wordlists-extra.min.js && du -hs ./dist/*.gz && echo '' && du -hs ./dist/*.js",
+    "_build-dist": "rollup -c && uglifyjs ./dist/quais.js -o ./dist/quais.min.js && uglifyjs ./dist/quais.umd.js -o ./dist/quais.umd.min.js && uglifyjs ./dist/wordlists-extra.js -o ./dist/wordlists-extra.min.js",
+    "_dist-stats": "gzip -k9f -S '.gz' ./dist/quais.min.js && gzip -k9f -S '.gz' ./dist/quais.umd.min.js && gzip -k9f -S '.gz' ./dist/wordlists-extra.min.js && du -hs ./dist/*.gz && echo '' && du -hs ./dist/*.js",
     "auto-build": "npm run build -- -w",
     "build": "tsc --project tsconfig.esm.json",
     "build-all": "npm run build && npm run build-commonjs",

@@ -615,7 +615,7 @@ class AbstractProvider {
             return new provider_js_1.FeeData(gasPrice, maxFeePerGas, maxPriorityFeePerGas);
         };
         // Check for a FeeDataNetWorkPlugin
-        const plugin = network.getPlugin("org.ethers.plugins.network.FetchUrlFeeDataPlugin");
+        const plugin = network.getPlugin("org.quais.plugins.network.FetchUrlFeeDataPlugin");
         if (plugin) {
             const req = new index_js_6.FetchRequest(plugin.url);
             const feeData = await plugin.processFunc(getFeeDataFunc, this, req);

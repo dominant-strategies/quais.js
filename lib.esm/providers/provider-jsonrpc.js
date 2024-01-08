@@ -633,7 +633,7 @@ export class JsonRpcApiProvider extends AbstractProvider {
         return null;
     }
     /**
-     *  Returns an ethers-style Error for the given JSON-RPC error
+     *  Returns an quais-style Error for the given JSON-RPC error
      *  %%payload%%, coalescing the various strings and error shapes
      *  that different nodes return, coercing them into a machine-readable
      *  standardized error.
@@ -659,7 +659,7 @@ export class JsonRpcApiProvider extends AbstractProvider {
         // Only estimateGas and call can return arbitrary contract-defined text, so now we
         // we can process text safely.
         const message = JSON.stringify(spelunkMessage(error));
-        if (typeof (error.message) === "string" && error.message.match(/user denied|ethers-user-denied/i)) {
+        if (typeof (error.message) === "string" && error.message.match(/user denied|quais-user-denied/i)) {
             const actionMap = {
                 eth_sign: "signMessage",
                 personal_sign: "signMessage",

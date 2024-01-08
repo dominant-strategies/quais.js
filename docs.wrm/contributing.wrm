@@ -7,7 +7,7 @@ Pull requests are welcome, but please keep the following in mind:
 - Security is important; adding dependencies require fairly
   convincing arguments as to why
 - The library aims to be lean, so keep an eye on the
-  ``dist/ethers.min.js`` file size before and after your
+  ``dist/quais.min.js`` file size before and after your
   changes (the ``build-clean`` target includes these stats)
 - Keep the PR simple, readable and confined to the relevant
   files; see below for which files to change
@@ -47,7 +47,7 @@ _heading: Building the Documentation
 
 Currently, the documentation is built using an experimental v2 of the
 Flatworm documentation system, a system originally specifically made
-to maintain the Ethers documentation.
+to maintain the quais documentation.
 
 The new ``tsdocs`` branch has the ability to parse ``jsdocs`` from
 from TypeScript source files to create an API reference.
@@ -68,7 +68,7 @@ _code: Building with the v2 Flatworm @lang<shell>
   /home/ricmoo/flatworm> node lib/cli-test PATH_TO_WRM_ROOT
 
 Eventually the code for the v2 branch will be cleaned up, and it
-will be much easier to include as a ``devDependency`` for Ethers.
+will be much easier to include as a ``devDependency`` for quais.
 
 In the meantime, expect new changes to be made frequently to the
 ``tsdocs`` branch, so for stability you may wish to checkout a
@@ -92,7 +92,7 @@ signature or altering the exports.
 _subsection: Adding Features  @<about-contrib-feature>
 
 Contributing new features usually require a deeper understanding
-of the internal interactions with Ethers and its components, and
+of the internal interactions with quais and its components, and
 generally requires a minor version bump.
 
 When making any of the following changes, you must first open a
@@ -112,9 +112,9 @@ _subsection: Building  @<building>
 
 _code: @lang<shell>
   /home/ricmoo> git clone @TODO
-  /home/ricmoo> cd ethers
-  /home/ricmoo/ethers> npm install
-  /home/ricmoo/ethers> npm run auto-build
+  /home/ricmoo> cd quais
+  /home/ricmoo/quais> npm install
+  /home/ricmoo/quais> npm run auto-build
 
 _null:
 

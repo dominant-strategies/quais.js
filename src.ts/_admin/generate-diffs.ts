@@ -9,7 +9,7 @@ function escver(v: string): string {
 }
 
 (async function() {
-    let versions = await getVersions("ethers");
+    let versions = await getVersions("quais");
     versions = versions.filter((h) => (h.version.match(/^6\.[0-9]+\.[0-9]+$/)));
     fs.writeFileSync(resolve("misc/diffs/versions.txt"), versions.map((h) => h.version).join(","));
     for (let i = 0; i < versions.length; i++) {

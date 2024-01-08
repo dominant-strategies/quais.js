@@ -177,30 +177,30 @@ certain folders available directly.
 _code: importing in v5  @lang<script>
 
   // Many things (but not all) we available on the root package
-  import { ethers } from "ethers"
+  import { quais } from "quais"
 
   // But some packages were grouped behind an additional property
-  import { providers } from "ethers"
+  import { providers } from "quais"
   const { InfuraProvider } = providers
 
   // For granular control, importing from the sub-package
   // was necessary
-  import { InfuraProvider } from "@ethersproject/providers"
+  import { InfuraProvider } from "@quaisproject/providers"
 
 _code: importing in v6  @lang<script>
 
   // Everything is available on the root package
-  import { ethers } from "ethers"
-  import { InfuraProvider } from "ethers"
+  import { quais } from "quais"
+  import { InfuraProvider } from "quais"
 
   // The pkg.exports provides granular access
-  import { InfuraProvider } from "ethers/providers"
+  import { InfuraProvider } from "quais/providers"
 
 
 _subsection: Providers  @<migrate-providers>
 
-In addition to all the ``ethers.providers.*`` being moved to
-``ethers.*``, the biggest change developers need to keep in
+In addition to all the ``quais.providers.*`` being moved to
+``quais.*``, the biggest change developers need to keep in
 mind is that ``Web3Provider`` (which historically was used
 to wrap [[link-web3js]] providers) is now called
 [[BrowserProvider]] which is designed to wrap EIP-1193
@@ -209,10 +209,10 @@ injected providers offer.
 
 _code: wrapping EIP-1193 providers  @lang<script>
   // v5
-  provider = new ethers.providers.Web3Provider(window.ethereum)
+  provider = new quais.providers.Web3Provider(window.ethereum)
 
   // v6:
-  provider = new ethers.BrowserProvider(window.ethereum)
+  provider = new quais.BrowserProvider(window.ethereum)
 
 Also, the method for broadcasting transactions to the network has
 changed:
@@ -236,8 +236,8 @@ _code: signature manipulation
   sigBytes = joinSignature(splitSig)
 
   // v6
-  splitSig = ethers.Signature.from(sigBytes)
-  sigBytes = ethers.Signature.from(splitSig).serialized
+  splitSig = quais.Signature.from(sigBytes)
+  sigBytes = quais.Signature.from(splitSig).serialized
 
 
 _subsection: Transactions  @<migrate-transactions>
@@ -264,33 +264,33 @@ _subsection: Utilities  @<migrate-utils>
 
 _code: Bytes32 string helpers  @lang<script>
   // In v5:
-  bytes32 = ethers.utils.formatBytes32String(text)
-  text = ethers.utils.parseBytes32String(bytes32)
+  bytes32 = quais.utils.formatBytes32String(text)
+  text = quais.utils.parseBytes32String(bytes32)
 
   // In v6:
-  bytes32 = ethers.encodeBytes32String(text)
-  text = ethers.decodeBytes32String(bytes32)
+  bytes32 = quais.encodeBytes32String(text)
+  text = quais.decodeBytes32String(bytes32)
 
 _code: constants  @lang<script>
   // v5:
-  ethers.constants.AddressZero
-  ethers.constants.HashZero
+  quais.constants.AddressZero
+  quais.constants.HashZero
 
   // v6:
-  ethers.ZeroAddress
-  ethers.ZeroHash
+  quais.ZeroAddress
+  quais.ZeroHash
 
 _code: data manipulation  @lang<script>
   // v5
-  slice = ethers.utils.hexDataSlice(value, start, end)
-  padded = ethers.utils.hexZeroPad(value, length)
+  slice = quais.utils.hexDataSlice(value, start, end)
+  padded = quais.utils.hexZeroPad(value, length)
 
   // v5; converting numbers to hexstrings
   hex = hexlify(35)
 
   // v6
-  slice = ethers.dataSlice(value, start, end)
-  padded = ethers.zeroPadValue(value, length)
+  slice = quais.dataSlice(value, start, end)
+  padded = quais.zeroPadValue(value, length)
 
   // v6; converting numbers to hexstrings
   hex = toBeHex(35)
@@ -307,17 +307,17 @@ _code: defaultAbiCoder  @lang<script>
 
 _code: fetching content  @lang<script>
   // v5, with a body and no weird things
-  data = await ethers.utils.fetchJson(url, json, processFunc)
+  data = await quais.utils.fetchJson(url, json, processFunc)
 
   // v5 with Connection overrides
   req = {
       url, user: "username", password: "password"
       // etc. properties have FetchRequest equivalents
   };
-  data = await ethers.utils.fetchJson(req, json, processFunc)
+  data = await quais.utils.fetchJson(req, json, processFunc)
 
   // v6
-  req = new ethers.FetchRequest(url)
+  req = new quais.FetchRequest(url)
 
   // set a body; optional
   req.body = json
@@ -338,34 +338,34 @@ _code: fetching content  @lang<script>
 
 _code: hex conversion  @lang<script>
   // v5
-  hex = ethers.utils.hexValue(value)
-  array = ethers.utils.arrayify(value)
+  hex = quais.utils.hexValue(value)
+  array = quais.utils.arrayify(value)
 
   // v6
-  hex = ethers.toQuantity(value)
-  array = ethers.getBytes(value)
+  hex = quais.toQuantity(value)
+  array = quais.getBytes(value)
 
 _code: solidity non-standard packed  @lang<script>
   // v5
-  ethers.utils.solidityPack(types, values)
-  ethers.utils.solidityKeccak256(types, values)
-  ethers.utils.soliditySha256(types, values)
+  quais.utils.solidityPack(types, values)
+  quais.utils.solidityKeccak256(types, values)
+  quais.utils.soliditySha256(types, values)
 
   // v6
-  ethers.solidityPacked(types, values)
-  ethers.solidityPackedKeccak256(types, values)
-  ethers.solidityPackedSha256(types, values)
+  quais.solidityPacked(types, values)
+  quais.solidityPackedKeccak256(types, values)
+  quais.solidityPackedSha256(types, values)
 
 _code: property manipulation  @lang<script>
   // v5
-  ethers.utils.defineReadOnly(obj, "name", value)
+  quais.utils.defineReadOnly(obj, "name", value)
 
   // v6
-  ethers.defineProperties(obj, { name: value });
+  quais.defineProperties(obj, { name: value });
 
 _code: commify  @lang<script>
   // v5
-  ethers.utils.commify("1234.5")
+  quais.utils.commify("1234.5")
 
   // v6; we removed some of these local-specific utilities,
   // however the functionality can be easily replicated

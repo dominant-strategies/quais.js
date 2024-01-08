@@ -3,7 +3,7 @@
  *
  *  (**i.e.** ``"\\u039e"``)
  */
-export declare const EtherSymbol: string;
+export declare const quaisymbol: string;
 /**
  *  A constant for the [[link-eip-191]] personal message prefix.
  *
