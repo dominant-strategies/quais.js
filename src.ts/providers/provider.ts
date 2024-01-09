@@ -415,7 +415,7 @@ export class Block implements BlockParams, Iterable<string> {
      *  The block number, sometimes called the block height. This is a
      *  sequential number that is one higher than the parent block.
      */
-    readonly number!: number;
+    readonly number!: Array<number> | number;
 
     /**
      *  The block hash.
@@ -434,7 +434,7 @@ export class Block implements BlockParams, Iterable<string> {
     /**
      *  The block hash of the parent block.
      */
-    readonly parentHash!: string;
+    readonly parentHash!: Array<string> | string;
 
     /**
      *  The nonce.
@@ -486,7 +486,25 @@ export class Block implements BlockParams, Iterable<string> {
      */
     readonly baseFeePerGas!: null | bigint;
 
+    readonly manifestHash!: Array<string>;
+    readonly location!: bigint;
+    readonly parentDeltaS!: Array<bigint>;
+    readonly parentEntropy!: Array<bigint>;
+    readonly order!: number;
+    readonly subManifest!: Array<string> | null;
+    readonly totalEntropy!: bigint;
+    readonly mixHash!: string;
+    readonly receiptsRoot!: string;
+    readonly sha3Uncles!: string;
+    readonly size!: bigint;
+    readonly stateRoot!: string;
+    readonly uncles!: Array<string> | null;
+
     readonly #transactions: Array<string | TransactionResponse>;
+    readonly transactionsRoot: string;
+    readonly extRollupRoot: string;
+    readonly #extTransactions: Array<string | TransactionResponse>;
+    readonly extTransactionsRoot: string;
 
     /**
      *  Create a new **Block** object.
@@ -496,12 +514,26 @@ export class Block implements BlockParams, Iterable<string> {
      */
     constructor(block: BlockParams, provider: Provider) {
 
+        
         this.#transactions = block.transactions.map((tx) => {
             if (typeof(tx) !== "string") {
                 return new TransactionResponse(tx, provider);
             }
             return tx;
         });
+
+        this.#extTransactions = block.extTransactions.map((tx) => {
+            if (typeof(tx) !== "string") {
+                return new TransactionResponse(tx, provider);
+            }
+            return tx;
+        });
+
+        this.transactionsRoot = block.transactionsRoot;
+
+        this.extRollupRoot = block.extRollupRoot;
+
+        this.extTransactionsRoot = block.extTransactionsRoot;
 
         defineProperties<Block>(this, {
             provider,
@@ -521,7 +553,24 @@ export class Block implements BlockParams, Iterable<string> {
             miner: block.miner,
             extraData: block.extraData,
 
-            baseFeePerGas: getValue(block.baseFeePerGas)
+            baseFeePerGas: getValue(block.baseFeePerGas),
+
+            manifestHash: block.manifestHash,
+            location: block.location,
+            parentDeltaS: block.parentDeltaS,
+            parentEntropy: block.parentEntropy,
+            order: block.order,
+            subManifest: block.subManifest,
+            totalEntropy: block.totalEntropy,
+            mixHash: block.mixHash,
+            receiptsRoot: block.receiptsRoot,
+            sha3Uncles: block.sha3Uncles,
+            size: block.size,
+            stateRoot: block.stateRoot,
+            uncles: block.uncles,
+            transactionsRoot: block.transactionsRoot,
+            extRollupRoot: block.extRollupRoot,
+            extTransactionsRoot: block.extTransactionsRoot,
         });
     }
 
@@ -531,6 +580,13 @@ export class Block implements BlockParams, Iterable<string> {
      */
     get transactions(): ReadonlyArray<string> {
         return this.#transactions.map((tx) => {
+            if (typeof(tx) === "string") { return tx; }
+            return tx.hash;
+        });
+    }
+
+    get extTransactions(): ReadonlyArray<string> {
+        return this.#extTransactions.map((tx) => {
             if (typeof(tx) === "string") { return tx; }
             return tx.hash;
         });
@@ -558,15 +614,38 @@ export class Block implements BlockParams, Iterable<string> {
         return <Array<TransactionResponse>>txs;
     }
 
+    get prefetchedExtTransactions(): Array<TransactionResponse> {
+        const txs = this.#extTransactions.slice();
+
+        // Doesn't matter...
+        if (txs.length === 0) { return [ ]; }
+
+        // Make sure we prefetched the transactions
+        assert(typeof(txs[0]) === "object", "transactions were not prefetched with block request", "UNSUPPORTED_OPERATION", {
+            operation: "transactionResponses()"
+        });
+
+        return <Array<TransactionResponse>>txs;
+    }
+
+
     /**
      *  Returns a JSON-friendly value.
      */
     toJSON(): any {
         const {
             baseFeePerGas, difficulty, extraData, gasLimit, gasUsed, hash,
-            miner, nonce, number, parentHash, timestamp, transactions
+            miner, nonce, number, parentHash, timestamp,
+            manifestHash, location, parentDeltaS, parentEntropy,
+            order, subManifest, totalEntropy, mixHash, receiptsRoot,
+            sha3Uncles, size, stateRoot, uncles, transactionsRoot,
+            extRollupRoot, extTransactionsRoot
         } = this;
-
+    
+        // Using getters to retrieve the transactions and extTransactions
+        const transactions = this.transactions;
+        const extTransactions = this.extTransactions;
+    
         return {
             _type: "Block",
             baseFeePerGas: toJson(baseFeePerGas),
@@ -574,10 +653,33 @@ export class Block implements BlockParams, Iterable<string> {
             extraData,
             gasLimit: toJson(gasLimit),
             gasUsed: toJson(gasUsed),
-            hash, miner, nonce, number, parentHash, timestamp,
-            transactions,
+            hash, 
+            miner, 
+            nonce, 
+            number, 
+            parentHash, 
+            timestamp,
+            manifestHash, 
+            location, 
+            parentDeltaS, 
+            parentEntropy,
+            order, 
+            subManifest, 
+            totalEntropy, 
+            mixHash, 
+            receiptsRoot,
+            sha3Uncles, 
+            size, 
+            stateRoot, 
+            uncles, 
+            transactionsRoot,
+            extRollupRoot, 
+            extTransactionsRoot,
+            transactions, // Includes the transaction hashes or full transactions based on the prefetched data
+            extTransactions // Includes the extended transaction hashes or full transactions based on the prefetched data
         };
     }
+    
 
     [Symbol.iterator](): Iterator<string> {
         let index = 0;
@@ -639,6 +741,35 @@ export class Block implements BlockParams, Iterable<string> {
         }
     }
 
+    async getExtTransaction(indexOrHash: number | string): Promise<TransactionResponse> {
+        // Find the internal value by its index or hash
+        let tx: string | TransactionResponse | undefined = undefined;
+        if (typeof(indexOrHash) === "number") {
+            tx = this.#extTransactions[indexOrHash];
+                
+        } else {
+            const hash = indexOrHash.toLowerCase();
+            for (const v of this.#extTransactions) {
+                if (typeof(v) === "string") {
+                    if (v !== hash) { continue; }
+                    tx = v;
+                    break;
+                } else {
+                    if (v.hash === hash) { continue; }
+                    tx = v;
+                    break;
+                }
+            }
+        }
+        if (tx == null) { throw new Error("no such tx"); }
+
+        if (typeof(tx) === "string") {
+            return <TransactionResponse>(await this.provider.getTransaction(tx));
+        } else {
+            return tx;
+        }
+    }
+
     /**
      *  If a **Block** was fetched with a request to include the transactions
      *  this will allow synchronous access to those transactions.
@@ -664,13 +795,6 @@ export class Block implements BlockParams, Iterable<string> {
      *  for all properties on a [[MinedBlock]].
      */
     isMined(): this is MinedBlock { return !!this.hash; }
-
-    /**
-     *  Returns true if this block is an [[link-eip-2930]] block.
-     */
-    isLondon(): this is (Block & { baseFeePerGas: bigint }) {
-        return !!this.baseFeePerGas;
-    }
 
     /**
      *  @_ignore:

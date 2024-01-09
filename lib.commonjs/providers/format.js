@@ -106,8 +106,8 @@ function formatLog(value) {
 exports.formatLog = formatLog;
 const _formatBlock = object({
     hash: allowNull(formatHash),
-    parentHash: formatHash,
-    number: index_js_4.getNumber,
+    parentHash: arrayOf(formatHash),
+    number: arrayOf(index_js_4.getNumber),
     timestamp: index_js_4.getNumber,
     nonce: allowNull(formatData),
     difficulty: index_js_4.getBigInt,
@@ -115,11 +115,35 @@ const _formatBlock = object({
     gasUsed: index_js_4.getBigInt,
     miner: allowNull(index_js_1.getAddress),
     extraData: formatData,
-    baseFeePerGas: allowNull(index_js_4.getBigInt)
+    baseFeePerGas: allowNull(index_js_4.getBigInt),
+    extRollupRoot: formatHash,
+    // extTransactions: arrayOf(formatTransaction), 
+    extTransactionsRoot: formatHash,
+    // transactions:
+    transactionsRoot: formatHash,
+    manifestHash: arrayOf(formatHash),
+    location: formatData,
+    parentDeltaS: arrayOf(index_js_4.getBigInt),
+    parentEntropy: arrayOf(index_js_4.getBigInt),
+    order: index_js_4.getNumber,
+    subManifest: arrayOf(formatData),
+    totalEntropy: index_js_4.getBigInt,
+    mixHash: formatHash,
+    receiptsRoot: formatHash,
+    sha3Uncles: formatHash,
+    size: index_js_4.getBigInt,
+    stateRoot: formatHash,
+    uncles: arrayOf(formatHash),
 });
 function formatBlock(value) {
     const result = _formatBlock(value);
     result.transactions = value.transactions.map((tx) => {
+        if (typeof (tx) === "string") {
+            return tx;
+        }
+        return formatTransactionResponse(tx);
+    });
+    result.extTransactions = value.extTransactions.map((tx) => {
         if (typeof (tx) === "string") {
             return tx;
         }

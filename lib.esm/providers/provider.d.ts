@@ -276,7 +276,7 @@ export declare class Block implements BlockParams, Iterable<string> {
      *  The block number, sometimes called the block height. This is a
      *  sequential number that is one higher than the parent block.
      */
-    readonly number: number;
+    readonly number: Array<number> | number;
     /**
      *  The block hash.
      *
@@ -292,7 +292,7 @@ export declare class Block implements BlockParams, Iterable<string> {
     /**
      *  The block hash of the parent block.
      */
-    readonly parentHash: string;
+    readonly parentHash: Array<string> | string;
     /**
      *  The nonce.
      *
@@ -335,6 +335,22 @@ export declare class Block implements BlockParams, Iterable<string> {
      *  is.
      */
     readonly baseFeePerGas: null | bigint;
+    readonly manifestHash: Array<string>;
+    readonly location: bigint;
+    readonly parentDeltaS: Array<bigint>;
+    readonly parentEntropy: Array<bigint>;
+    readonly order: number;
+    readonly subManifest: Array<string> | null;
+    readonly totalEntropy: bigint;
+    readonly mixHash: string;
+    readonly receiptsRoot: string;
+    readonly sha3Uncles: string;
+    readonly size: bigint;
+    readonly stateRoot: string;
+    readonly uncles: Array<string> | null;
+    readonly transactionsRoot: string;
+    readonly extRollupRoot: string;
+    readonly extTransactionsRoot: string;
     /**
      *  Create a new **Block** object.
      *
@@ -347,6 +363,7 @@ export declare class Block implements BlockParams, Iterable<string> {
      *  they were executed within the block.
      */
     get transactions(): ReadonlyArray<string>;
+    get extTransactions(): ReadonlyArray<string>;
     /**
      *  Returns the complete transactions, in the order they
      *  were executed within the block.
@@ -356,6 +373,7 @@ export declare class Block implements BlockParams, Iterable<string> {
      *  into [[Provider-getBlock]].
      */
     get prefetchedTransactions(): Array<TransactionResponse>;
+    get prefetchedExtTransactions(): Array<TransactionResponse>;
     /**
      *  Returns a JSON-friendly value.
      */
@@ -373,6 +391,7 @@ export declare class Block implements BlockParams, Iterable<string> {
      *  Get the transaction at %%indexe%% within this block.
      */
     getTransaction(indexOrHash: number | string): Promise<TransactionResponse>;
+    getExtTransaction(indexOrHash: number | string): Promise<TransactionResponse>;
     /**
      *  If a **Block** was fetched with a request to include the transactions
      *  this will allow synchronous access to those transactions.
@@ -385,12 +404,6 @@ export declare class Block implements BlockParams, Iterable<string> {
      *  for all properties on a [[MinedBlock]].
      */
     isMined(): this is MinedBlock;
-    /**
-     *  Returns true if this block is an [[link-eip-2930]] block.
-     */
-    isLondon(): this is (Block & {
-        baseFeePerGas: bigint;
-    });
     /**
      *  @_ignore:
      */

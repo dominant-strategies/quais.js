@@ -393,7 +393,7 @@ export declare class AbstractProvider implements Provider {
      *  method may be used.
      *
      *  For example, this is used for providers when using the
-     *  ``quai_getFilterChanges`` method, which can return null if state
+     *  ``eth_getFilterChanges`` method, which can return null if state
      *  filters are not supported by the backend, allowing the Subscriber
      *  to swap in a [[PollingEventSubscriber]].
      */

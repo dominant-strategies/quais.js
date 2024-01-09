@@ -623,7 +623,9 @@ export class AbstractProvider implements Provider {
      *  sub-class of [[Block]].
      */
     _wrapBlock(value: BlockParams, network: Network): Block {
-        return new Block(formatBlock(value), this);
+        const block =  new Block(formatBlock(value), this);
+        console.log('Blockster', block);
+        return block;
     }
 
     /**
@@ -1071,7 +1073,6 @@ export class AbstractProvider implements Provider {
 
     async #getBlock(block: BlockTag | string, includeTransactions: boolean): Promise<any> {
         // @TODO: Add CustomBlockPlugin check
-
         if (isHexString(block, 32)) {
             return await this.#perform({
                 method: "getBlock", blockHash: block, includeTransactions
@@ -1093,7 +1094,6 @@ export class AbstractProvider implements Provider {
             params: this.#getBlock(block, !!prefetchTxs)
         });
         if (params == null) { return null; }
-
         return this._wrapBlock(params, network);
     }
 
@@ -1321,7 +1321,7 @@ export class AbstractProvider implements Provider {
      *  method may be used.
      *
      *  For example, this is used for providers when using the
-     *  ``quai_getFilterChanges`` method, which can return null if state
+     *  ``eth_getFilterChanges`` method, which can return null if state
      *  filters are not supported by the backend, allowing the Subscriber
      *  to swap in a [[PollingEventSubscriber]].
      */
