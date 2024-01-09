@@ -95,8 +95,8 @@ export function formatLog(value) {
 }
 const _formatBlock = object({
     hash: allowNull(formatHash),
-    parentHash: formatHash,
-    number: getNumber,
+    parentHash: arrayOf(formatHash),
+    number: arrayOf(getNumber),
     timestamp: getNumber,
     nonce: allowNull(formatData),
     difficulty: getBigInt,
@@ -104,11 +104,35 @@ const _formatBlock = object({
     gasUsed: getBigInt,
     miner: allowNull(getAddress),
     extraData: formatData,
-    baseFeePerGas: allowNull(getBigInt)
+    baseFeePerGas: allowNull(getBigInt),
+    extRollupRoot: formatHash,
+    // extTransactions: arrayOf(formatTransaction), 
+    extTransactionsRoot: formatHash,
+    // transactions:
+    transactionsRoot: formatHash,
+    manifestHash: arrayOf(formatHash),
+    location: formatData,
+    parentDeltaS: arrayOf(getBigInt),
+    parentEntropy: arrayOf(getBigInt),
+    order: getNumber,
+    subManifest: arrayOf(formatData),
+    totalEntropy: getBigInt,
+    mixHash: formatHash,
+    receiptsRoot: formatHash,
+    sha3Uncles: formatHash,
+    size: getBigInt,
+    stateRoot: formatHash,
+    uncles: arrayOf(formatHash),
 });
 export function formatBlock(value) {
     const result = _formatBlock(value);
     result.transactions = value.transactions.map((tx) => {
+        if (typeof (tx) === "string") {
+            return tx;
+        }
+        return formatTransactionResponse(tx);
+    });
+    result.extTransactions = value.extTransactions.map((tx) => {
         if (typeof (tx) === "string") {
             return tx;
         }

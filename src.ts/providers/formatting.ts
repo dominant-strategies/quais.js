@@ -24,7 +24,7 @@ export interface BlockParams {
     /**
      *  The block number.
      */
-    number: number;
+    number: Array<number> | number;
 
     /**
      *  The timestamp for this block, which is the number of seconds
@@ -36,7 +36,7 @@ export interface BlockParams {
      *  The hash of the previous block in the blockchain. The genesis block
      *  has the parentHash of the [[ZeroHash]].
      */
-    parentHash: string;
+    parentHash: Array<string> | string;
 
     /**
      *  A random sequence provided during the mining process for
@@ -76,10 +76,44 @@ export interface BlockParams {
      */
     baseFeePerGas: null | bigint;
 
+    manifestHash: Array<string>;
+
+    location: bigint;
+
+    parentDeltaS: Array<bigint>;
+
+    parentEntropy: Array<bigint>;
+
+    order: number;
+
+    subManifest: Array<string> | null;
+
+    totalEntropy: bigint;
+
+    mixHash: string;
+
+    receiptsRoot: string;
+
+    sha3Uncles: string;
+
+    size: bigint;
+
+    stateRoot: string;
+
+    uncles: Array<string> | null;
+
     /**
      *  The list of transactions in the block.
      */
     transactions: ReadonlyArray<string | TransactionResponseParams>;
+
+    transactionsRoot: string;
+
+    extRollupRoot: string;
+
+    extTransactions: ReadonlyArray<string | TransactionResponseParams>;
+
+    extTransactionsRoot: string;
 };
 
 
