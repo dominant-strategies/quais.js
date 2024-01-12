@@ -200,7 +200,6 @@ const _formatTransactionReceipt = object({
 });
 export function formatTransactionReceipt(value) {
     const result = _formatTransactionReceipt(value);
-    console.log('formatTransactionReceipt', result);
     return result;
 }
 export function formatTransactionResponse(value) {

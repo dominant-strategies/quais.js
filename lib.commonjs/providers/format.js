@@ -214,7 +214,6 @@ const _formatTransactionReceipt = object({
 });
 function formatTransactionReceipt(value) {
     const result = _formatTransactionReceipt(value);
-    console.log('formatTransactionReceipt', result);
     return result;
 }
 exports.formatTransactionReceipt = formatTransactionReceipt;
