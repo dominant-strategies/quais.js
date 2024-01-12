@@ -176,6 +176,23 @@ export interface LogParams {
 
 
 //////////////////////
+//Etx within a transaction receipt for and internal to external transaction
+
+export interface EtxParams {
+    type: number;
+    nonce: number;
+    gasPrice: null | bigint;
+    maxPriorityFeePerGas: bigint;
+    maxFeePerGas: bigint;
+    gas: bigint;
+    value: bigint;
+    input: string;
+    to: null | string;
+    accessList: null | AccessList;
+    chainId: null | bigint;
+    from: null | string;
+    hash: string;
+}
 // Transaction Receipt
 
 /**
@@ -272,6 +289,8 @@ export interface TransactionReceiptParams {
      *  post-byzantium blocks this is null.
      */
     root: null | string;
+
+    etxs: ReadonlyArray<string>;
 }
 
 /*
@@ -316,7 +335,7 @@ export interface TransactionResponseParams {
     /**
      *  The transaction index.
      */
-    transactionIndex: bigint;
+    index: bigint;
 
  
     type: number;

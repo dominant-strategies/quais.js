@@ -1081,6 +1081,8 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
 
     readonly #logs: ReadonlyArray<Log>;
 
+    readonly etxs!: ReadonlyArray<string>;
+
     /**
      *  @_ignore:
      */
@@ -1115,6 +1117,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             cumulativeGasUsed: tx.cumulativeGasUsed,
             gasPrice,
 
+            etxs: tx.etxs,
             type: tx.type,
             //byzantium: tx.byzantium,
             status: tx.status,
@@ -1286,7 +1289,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
     /**
      *  The index within the block that this transaction resides at.
      */
-    readonly transactionIndex!: bigint;
+    readonly index!: bigint;
 
     /**
      *  The transaction hash.
@@ -1397,7 +1400,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
         this.blockHash = (tx.blockHash != null) ? tx.blockHash: null;
 
         this.hash = tx.hash;
-        this.transactionIndex = tx.transactionIndex;
+        this.index = tx.index;
 
         this.type = tx.type;
 
@@ -1424,7 +1427,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
             delete tx.etxData;
             delete tx.etxAccessList;
         }
-        
+
         if (tx.etxGasLimit) this.etxGasLimit = tx.etxGasLimit;
         if (tx.etxGasPrice) this.etxGasPrice = tx.etxGasPrice;
         if (tx.etxGasTip) this.etxGasTip = tx.etxGasTip;
@@ -1439,7 +1442,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      */
     toJSON(): any {
         const {
-            blockNumber, blockHash, transactionIndex, hash, type, to, from, nonce,
+            blockNumber, blockHash, index, hash, type, to, from, nonce,
             data, signature, accessList,
             //etxGasLimit, etxGasPrice, etxGasTip, etxData, etxAccessList // Include new fields
         } = this;
@@ -1452,7 +1455,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
             hash,
             maxFeePerGas: toJson(this.maxFeePerGas),
             maxPriorityFeePerGas: toJson(this.maxPriorityFeePerGas),
-            nonce, signature, to, transactionIndex, type,
+            nonce, signature, to, index, type,
             value: toJson(this.value),
             // Include new fields in the output
             // etxGasLimit: etxGasLimit ? toJson(etxGasLimit) : null,
