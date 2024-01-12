@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.formatTransactionResponse = exports.formatTransactionReceipt = exports.formatReceiptLog = exports.formatBlock = exports.formatLog = exports.formatUint256 = exports.formatHash = exports.formatData = exports.formatBoolean = exports.object = exports.arrayOf = exports.allowNull = void 0;
+exports.formatTransactionResponse = exports.formatTransactionReceipt = exports.formatEtx = exports.formatReceiptLog = exports.formatBlock = exports.formatLog = exports.formatUint256 = exports.formatHash = exports.formatData = exports.formatBoolean = exports.object = exports.arrayOf = exports.allowNull = void 0;
 /**
  *  @_ignore
  */
@@ -168,6 +168,27 @@ function formatReceiptLog(value) {
     return _formatReceiptLog(value);
 }
 exports.formatReceiptLog = formatReceiptLog;
+const _formatEtx = object({
+    type: allowNull(index_js_4.getNumber, 0),
+    nonce: index_js_4.getNumber,
+    gasPrice: allowNull(index_js_4.getBigInt),
+    maxPriorityFeePerGas: index_js_4.getBigInt,
+    maxFeePerGas: index_js_4.getBigInt,
+    gas: index_js_4.getBigInt,
+    value: allowNull(index_js_4.getBigInt, BN_0),
+    input: formatData,
+    to: allowNull(index_js_1.getAddress, null),
+    accessList: allowNull(index_js_3.accessListify, null),
+    chainId: allowNull(index_js_4.getBigInt, null),
+    from: allowNull(index_js_1.getAddress, null),
+    hash: formatHash,
+}, {
+    from: ["sender"],
+});
+function formatEtx(value) {
+    return _formatEtx(value);
+}
+exports.formatEtx = formatEtx;
 const _formatTransactionReceipt = object({
     to: allowNull(index_js_1.getAddress, null),
     from: allowNull(index_js_1.getAddress, null),
@@ -185,14 +206,16 @@ const _formatTransactionReceipt = object({
     cumulativeGasUsed: index_js_4.getBigInt,
     effectiveGasPrice: allowNull(index_js_4.getBigInt),
     status: allowNull(index_js_4.getNumber),
-    type: allowNull(index_js_4.getNumber, 0)
+    type: allowNull(index_js_4.getNumber, 0),
+    etxs: arrayOf(formatEtx),
 }, {
-    effectiveGasPrice: ["gasPrice"],
     hash: ["transactionHash"],
     index: ["transactionIndex"],
 });
 function formatTransactionReceipt(value) {
-    return _formatTransactionReceipt(value);
+    const result = _formatTransactionReceipt(value);
+    console.log('formatTransactionReceipt', result);
+    return result;
 }
 exports.formatTransactionReceipt = formatTransactionReceipt;
 function formatTransactionResponse(value) {
@@ -201,6 +224,8 @@ function formatTransactionResponse(value) {
     if (value.to && (0, index_js_4.getBigInt)(value.to) === BN_0) {
         value.to = "0x0000000000000000000000000000000000000000";
     }
+    if (value.type === "0x1")
+        value.from = value.sender;
     const result = object({
         hash: formatHash,
         type: (value) => {
@@ -212,7 +237,7 @@ function formatTransactionResponse(value) {
         accessList: allowNull(index_js_3.accessListify, null),
         blockHash: allowNull(formatHash, null),
         blockNumber: allowNull(index_js_4.getNumber, null),
-        transactionIndex: allowNull(index_js_4.getNumber, null),
+        index: allowNull(index_js_4.getNumber, null),
         //confirmations: allowNull(getNumber, null),
         from: index_js_1.getAddress,
         maxPriorityFeePerGas: allowNull(index_js_4.getBigInt),
@@ -231,6 +256,7 @@ function formatTransactionResponse(value) {
     }, {
         data: ["input"],
         gasLimit: ["gas"],
+        index: ["transactionIndex"],
     })(value);
     // If to and creates are empty, populate the creates from the value
     if (result.to == null && result.creates == null) {

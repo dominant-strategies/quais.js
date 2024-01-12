@@ -1111,8 +1111,8 @@ export class AbstractProvider implements Provider {
             params: this.#perform({ method: "getTransactionReceipt", hash })
         });
         if (params == null) { return null; }
-
-        // Some backends did not backfill the effectiveGasPrice into old transactions
+        console.log('getTransactionReceipt', params);
+        // Some backends did not backfill the effectiveGasPrice in to old transactions
         // in the receipt, so we look it up manually and inject it.
         if (params.gasPrice == null && params.effectiveGasPrice == null) {
             const tx = await this.#perform({ method: "getTransaction", hash });

@@ -719,6 +719,7 @@ export class TransactionReceipt {
      */
     root;
     #logs;
+    etxs;
     /**
      *  @_ignore:
      */
@@ -746,6 +747,7 @@ export class TransactionReceipt {
             gasUsed: tx.gasUsed,
             cumulativeGasUsed: tx.cumulativeGasUsed,
             gasPrice,
+            etxs: tx.etxs,
             type: tx.type,
             //byzantium: tx.byzantium,
             status: tx.status,
@@ -874,7 +876,7 @@ export class TransactionResponse {
     /**
      *  The index within the block that this transaction resides at.
      */
-    transactionIndex;
+    index;
     /**
      *  The transaction hash.
      */
@@ -962,7 +964,7 @@ export class TransactionResponse {
         this.blockNumber = (tx.blockNumber != null) ? tx.blockNumber : null;
         this.blockHash = (tx.blockHash != null) ? tx.blockHash : null;
         this.hash = tx.hash;
-        this.transactionIndex = tx.transactionIndex;
+        this.index = tx.index;
         this.type = tx.type;
         this.from = tx.from;
         this.to = tx.to || null;
@@ -998,7 +1000,7 @@ export class TransactionResponse {
      *  Returns a JSON-compatible representation of this transaction.
      */
     toJSON() {
-        const { blockNumber, blockHash, transactionIndex, hash, type, to, from, nonce, data, signature, accessList,
+        const { blockNumber, blockHash, index, hash, type, to, from, nonce, data, signature, accessList,
         //etxGasLimit, etxGasPrice, etxGasTip, etxData, etxAccessList // Include new fields
          } = this;
         let result = {
@@ -1010,7 +1012,7 @@ export class TransactionResponse {
             hash,
             maxFeePerGas: toJson(this.maxFeePerGas),
             maxPriorityFeePerGas: toJson(this.maxPriorityFeePerGas),
-            nonce, signature, to, transactionIndex, type,
+            nonce, signature, to, index, type,
             value: toJson(this.value),
             // Include new fields in the output
             // etxGasLimit: etxGasLimit ? toJson(etxGasLimit) : null,

@@ -587,6 +587,7 @@ export declare class TransactionReceipt implements TransactionReceiptParams, Ite
      *  could be used to validate certain parts of the receipt.
      */
     readonly root: null | string;
+    readonly etxs: ReadonlyArray<string>;
     /**
      *  @_ignore:
      */
@@ -686,7 +687,7 @@ export declare class TransactionResponse implements TransactionLike<string>, Tra
     /**
      *  The index within the block that this transaction resides at.
      */
-    readonly transactionIndex: bigint;
+    readonly index: bigint;
     /**
      *  The transaction hash.
      */

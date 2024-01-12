@@ -126,6 +126,21 @@ export interface LogParams {
      */
     transactionIndex: number;
 }
+export interface EtxParams {
+    type: number;
+    nonce: number;
+    gasPrice: null | bigint;
+    maxPriorityFeePerGas: bigint;
+    maxFeePerGas: bigint;
+    gas: bigint;
+    value: bigint;
+    input: string;
+    to: null | string;
+    accessList: null | AccessList;
+    chainId: null | bigint;
+    from: null | string;
+    hash: string;
+}
 /**
  *  a **TransactionReceiptParams** encodes the minimal required properties
  *  for a formatted transaction receipt.
@@ -204,6 +219,7 @@ export interface TransactionReceiptParams {
      *  post-byzantium blocks this is null.
      */
     root: null | string;
+    etxs: ReadonlyArray<string>;
 }
 /**
  *  a **TransactionResponseParams** encodes the minimal required properties
@@ -225,7 +241,7 @@ export interface TransactionResponseParams {
     /**
      *  The transaction index.
      */
-    transactionIndex: bigint;
+    index: bigint;
     type: number;
     /**
      *  The target of the transaction. If ``null``, the ``data`` is initcode
