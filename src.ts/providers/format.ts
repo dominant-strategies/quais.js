@@ -11,7 +11,7 @@ import {
 
 import type {
     BlockParams, LogParams,
-    TransactionReceiptParams, TransactionResponseParams,
+    TransactionReceiptParams, TransactionResponseParams, EtxParams
 } from "./formatting.js";
 
 
@@ -174,6 +174,28 @@ export function formatReceiptLog(value: any): LogParams {
     return _formatReceiptLog(value);
 }
 
+const _formatEtx = object({
+    type: allowNull(getNumber, 0),
+    nonce: getNumber,
+    gasPrice: allowNull(getBigInt),
+    maxPriorityFeePerGas: getBigInt,
+    maxFeePerGas: getBigInt,
+    gas: getBigInt,
+    value: allowNull(getBigInt, BN_0),
+    input: formatData,
+    to: allowNull(getAddress, null),
+    accessList: allowNull(accessListify, null),
+    chainId: allowNull(getBigInt, null),
+    from: allowNull(getAddress, null),
+    hash: formatHash,
+}, {
+    from: [ "sender" ],
+});
+
+export function formatEtx(value: any): EtxParams {
+    return _formatEtx(value);
+}
+
 const _formatTransactionReceipt = object({
     to: allowNull(getAddress, null),
     from: allowNull(getAddress, null),
@@ -191,15 +213,17 @@ const _formatTransactionReceipt = object({
     cumulativeGasUsed: getBigInt,
     effectiveGasPrice: allowNull(getBigInt),
     status: allowNull(getNumber),
-    type: allowNull(getNumber, 0)
+    type: allowNull(getNumber, 0),
+    etxs: arrayOf(formatEtx),
 }, {
-    effectiveGasPrice: [ "gasPrice" ],
     hash: [ "transactionHash" ],
     index: [ "transactionIndex" ],
 });
 
 export function formatTransactionReceipt(value: any): TransactionReceiptParams {
-    return _formatTransactionReceipt(value);
+    const result = _formatTransactionReceipt(value);
+    console.log('formatTransactionReceipt', result);
+    return result;
 }
 
 export function formatTransactionResponse(value: any): TransactionResponseParams {
@@ -209,6 +233,7 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
     if (value.to && getBigInt(value.to) === BN_0) {
         value.to = "0x0000000000000000000000000000000000000000";
     }
+    if (value.type === "0x1") value.from = value.sender
 
     const result = object({
         hash: formatHash,
@@ -221,7 +246,7 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
 
         blockHash: allowNull(formatHash, null),
         blockNumber: allowNull(getNumber, null),
-        transactionIndex: allowNull(getNumber, null),
+        index: allowNull(getNumber, null),
 
         //confirmations: allowNull(getNumber, null),
 
@@ -247,6 +272,7 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
     }, {
         data: [ "input" ],
         gasLimit: [ "gas" ],
+        index: [ "transactionIndex" ],
     })(value);
 
     // If to and creates are empty, populate the creates from the value
