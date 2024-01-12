@@ -201,24 +201,33 @@ export function formatTransactionResponse(value) {
         transactionIndex: allowNull(getNumber, null),
         //confirmations: allowNull(getNumber, null),
         from: getAddress,
-        // either (gasPrice) or (maxPriorityFeePerGas + maxFeePerGas) must be set
-        gasPrice: allowNull(getBigInt),
         maxPriorityFeePerGas: allowNull(getBigInt),
         maxFeePerGas: allowNull(getBigInt),
         gasLimit: getBigInt,
         to: allowNull(getAddress, null),
         value: getBigInt,
         nonce: getNumber,
-        data: formatData,
         creates: allowNull(getAddress, null),
-        chainId: allowNull(getBigInt, null)
+        chainId: allowNull(getBigInt, null),
+        etxGasLimit: allowNull(getBigInt, null),
+        etxGasPrice: allowNull(getBigInt, null),
+        etxGasTip: allowNull(getBigInt, null),
+        etxData: allowNull(formatData, null),
+        etxAccessList: allowNull(accessListify, null),
     }, {
         data: ["input"],
-        gasLimit: ["gas"]
+        gasLimit: ["gas"],
     })(value);
     // If to and creates are empty, populate the creates from the value
     if (result.to == null && result.creates == null) {
         result.creates = getCreateAddress(result);
+    }
+    if (result.type !== 2) {
+        delete result.etxGasLimit;
+        delete result.etxGasPrice;
+        delete result.etxGasTip;
+        delete result.etxData;
+        delete result.etxAccessList;
     }
     // @TODO: Check fee data
     // Add an access list to supported transaction types

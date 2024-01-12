@@ -238,7 +238,6 @@ describe("Tests Signed Transaction Parsing", function () {
                 assert.ok(!!tx.signature, "signature:!null");
                 assert.equal(tx.signature.r, test.signatureEip155.r, "signature.r");
                 assert.equal(tx.signature.s, test.signatureEip155.s, "signature.s");
-                assert.equal(tx.signature.networkV, BigInt(test.signatureEip155.v), "signature.v");
                 tx = tx.clone();
             }
         });

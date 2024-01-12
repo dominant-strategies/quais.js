@@ -623,9 +623,7 @@ export class AbstractProvider implements Provider {
      *  sub-class of [[Block]].
      */
     _wrapBlock(value: BlockParams, network: Network): Block {
-        const block =  new Block(formatBlock(value), this);
-        console.log('Blockster', block);
-        return block;
+        return new Block(formatBlock(value), this);
     }
 
     /**

@@ -88,57 +88,54 @@ function _parseLegacy(data) {
     }
     return tx;
 }
-function _serializeLegacy(tx, sig) {
-    const fields = [
-        formatNumber(tx.nonce || 0, "nonce"),
-        formatNumber(tx.gasPrice || 0, "gasPrice"),
-        formatNumber(tx.gasLimit || 0, "gasLimit"),
-        ((tx.to != null) ? getAddress(tx.to) : "0x"),
-        formatNumber(tx.value || 0, "value"),
-        (tx.data || "0x"),
-    ];
-    let chainId = BN_0;
-    if (tx.chainId != BN_0) {
-        // A chainId was provided; if non-zero we'll use EIP-155
-        chainId = getBigInt(tx.chainId, "tx.chainId");
-        // We have a chainId in the tx and an EIP-155 v in the signature,
-        // make sure they agree with each other
-        assertArgument(!sig || sig.networkV == null || sig.legacyChainId === chainId, "tx.chainId/sig.v mismatch", "sig", sig);
-    }
-    else if (tx.signature) {
-        // No explicit chainId, but EIP-155 have a derived implicit chainId
-        const legacy = tx.signature.legacyChainId;
-        if (legacy != null) {
-            chainId = legacy;
-        }
-    }
-    // Requesting an unsigned transaction
-    if (!sig) {
-        // We have an EIP-155 transaction (chainId was specified and non-zero)
-        if (chainId !== BN_0) {
-            fields.push(toBeArray(chainId));
-            fields.push("0x");
-            fields.push("0x");
-        }
-        return encodeRlp(fields);
-    }
-    // @TODO: We should probably check that tx.signature, chainId, and sig
-    //        match but that logic could break existing code, so schedule
-    //        this for the next major bump.
-    // Compute the EIP-155 v
-    let v = BigInt(27 + sig.yParity);
-    if (chainId !== BN_0) {
-        v = Signature.getChainIdV(chainId, sig.v);
-    }
-    else if (BigInt(sig.v) !== v) {
-        assertArgument(false, "tx.chainId/sig.v mismatch", "sig", sig);
-    }
-    // Add the signature
-    fields.push(toBeArray(v));
-    fields.push(toBeArray(sig.r));
-    fields.push(toBeArray(sig.s));
-    return encodeRlp(fields);
-}
+// function _serializeLegacy(tx: Transaction, sig?: Signature): string {
+//     const fields: Array<any> = [
+//         formatNumber(tx.nonce || 0, "nonce"),
+//         formatNumber(tx.gasPrice || 0, "gasPrice"),
+//         formatNumber(tx.gasLimit || 0, "gasLimit"),
+//         ((tx.to != null) ? getAddress(tx.to): "0x"),
+//         formatNumber(tx.value || 0, "value"),
+//         (tx.data || "0x"),
+//     ];
+//     let chainId = BN_0;
+//     if (tx.chainId != BN_0) {
+//         // A chainId was provided; if non-zero we'll use EIP-155
+//         chainId = getBigInt(tx.chainId, "tx.chainId");
+//         // We have a chainId in the tx and an EIP-155 v in the signature,
+//         // make sure they agree with each other
+//         assertArgument(!sig || sig.networkV == null || sig.legacyChainId === chainId,
+//              "tx.chainId/sig.v mismatch", "sig", sig);
+//     } else if (tx.signature) {
+//         // No explicit chainId, but EIP-155 have a derived implicit chainId
+//         const legacy = tx.signature.legacyChainId;
+//         if (legacy != null) { chainId = legacy; }
+//     }
+//     // Requesting an unsigned transaction
+//     if (!sig) {
+//         // We have an EIP-155 transaction (chainId was specified and non-zero)
+//         if (chainId !== BN_0) {
+//             fields.push(toBeArray(chainId));
+//             fields.push("0x");
+//             fields.push("0x");
+//         }
+//         return encodeRlp(fields);
+//     }
+//     // @TODO: We should probably check that tx.signature, chainId, and sig
+//     //        match but that logic could break existing code, so schedule
+//     //        this for the next major bump.
+//     // Compute the EIP-155 v
+//     let v = BigInt(27 + sig.yParity);
+//     if (chainId !== BN_0) {
+//         v = Signature.getChainIdV(chainId, sig.v);
+//     } else if (BigInt(sig.v) !== v) {
+//         assertArgument(false, "tx.chainId/sig.v mismatch", "sig", sig);
+//     }
+//     // Add the signature
+//     fields.push(toBeArray(v));
+//     fields.push(toBeArray(sig.r));
+//     fields.push(toBeArray(sig.s));
+//     return encodeRlp(fields);
+// }
 function _parseEipSignature(tx, fields) {
     let yParity;
     try {
@@ -492,7 +489,7 @@ export class Transaction {
         assert(this.signature != null, "cannot serialize unsigned transaction; maybe you meant .unsignedSerialized", "UNSUPPORTED_OPERATION", { operation: ".serialized" });
         switch (this.inferType()) {
             case 0:
-                return _serializeLegacy(this, this.signature);
+            //return _serializeLegacy(this, this.signature);
             case 1:
                 return _serializeEip2930(this, this.signature);
             case 2:
@@ -509,7 +506,7 @@ export class Transaction {
     get unsignedSerialized() {
         switch (this.inferType()) {
             case 0:
-                return _serializeLegacy(this);
+            //return _serializeLegacy(this);
             case 1:
                 return _serializeEip2930(this);
             case 2:
