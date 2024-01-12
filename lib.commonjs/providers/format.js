@@ -215,24 +215,33 @@ function formatTransactionResponse(value) {
         transactionIndex: allowNull(index_js_4.getNumber, null),
         //confirmations: allowNull(getNumber, null),
         from: index_js_1.getAddress,
-        // either (gasPrice) or (maxPriorityFeePerGas + maxFeePerGas) must be set
-        gasPrice: allowNull(index_js_4.getBigInt),
         maxPriorityFeePerGas: allowNull(index_js_4.getBigInt),
         maxFeePerGas: allowNull(index_js_4.getBigInt),
         gasLimit: index_js_4.getBigInt,
         to: allowNull(index_js_1.getAddress, null),
         value: index_js_4.getBigInt,
         nonce: index_js_4.getNumber,
-        data: formatData,
         creates: allowNull(index_js_1.getAddress, null),
-        chainId: allowNull(index_js_4.getBigInt, null)
+        chainId: allowNull(index_js_4.getBigInt, null),
+        etxGasLimit: allowNull(index_js_4.getBigInt, null),
+        etxGasPrice: allowNull(index_js_4.getBigInt, null),
+        etxGasTip: allowNull(index_js_4.getBigInt, null),
+        etxData: allowNull(formatData, null),
+        etxAccessList: allowNull(index_js_3.accessListify, null),
     }, {
         data: ["input"],
-        gasLimit: ["gas"]
+        gasLimit: ["gas"],
     })(value);
     // If to and creates are empty, populate the creates from the value
     if (result.to == null && result.creates == null) {
         result.creates = (0, index_js_1.getCreateAddress)(result);
+    }
+    if (result.type !== 2) {
+        delete result.etxGasLimit;
+        delete result.etxGasPrice;
+        delete result.etxGasTip;
+        delete result.etxData;
+        delete result.etxAccessList;
     }
     // @TODO: Check fee data
     // Add an access list to supported transaction types

@@ -686,7 +686,7 @@ export declare class TransactionResponse implements TransactionLike<string>, Tra
     /**
      *  The index within the block that this transaction resides at.
      */
-    readonly index: number;
+    readonly transactionIndex: bigint;
     /**
      *  The transaction hash.
      */
@@ -727,19 +727,6 @@ export declare class TransactionResponse implements TransactionLike<string>, Tra
      */
     readonly gasLimit: bigint;
     /**
-     *  The gas price can have various values, depending on the network.
-     *
-     *  In modern networks, for transactions that are included this is
-     *  the //effective gas price// (the fee per gas that was actually
-     *  charged), while for transactions that have not been included yet
-     *  is the [[maxFeePerGas]].
-     *
-     *  For legacy transactions, or transactions on legacy networks, this
-     *  is the fee that will be charged per unit of gas the transaction
-     *  consumes.
-     */
-    readonly gasPrice: bigint;
-    /**
      *  The maximum priority fee (per unit of gas) to allow a
      *  validator to charge the sender. This is inclusive of the
      *  [[maxFeeFeePerGas]].
@@ -772,6 +759,11 @@ export declare class TransactionResponse implements TransactionLike<string>, Tra
      *  support it, otherwise ``null``.
      */
     readonly accessList: null | AccessList;
+    readonly etxGasLimit?: bigint;
+    readonly etxGasPrice?: bigint;
+    readonly etxGasTip?: bigint;
+    readonly etxData?: string;
+    readonly etxAccessList?: AccessList;
     /**
      *  @_ignore:
      */
@@ -818,42 +810,6 @@ export declare class TransactionResponse implements TransactionLike<string>, Tra
      *  unmined transactions.
      */
     isMined(): this is MinedTransactionResponse;
-    /**
-     *  Returns true if the transaction is a legacy (i.e. ``type == 0``)
-     *  transaction.
-     *
-     *  This provides a Type Guard that this transaction will have
-     *  the ``null``-ness for hardfork-specific properties set correctly.
-     */
-    isLegacy(): this is (TransactionResponse & {
-        accessList: null;
-        maxFeePerGas: null;
-        maxPriorityFeePerGas: null;
-    });
-    /**
-     *  Returns true if the transaction is a Berlin (i.e. ``type == 1``)
-     *  transaction. See [[link-eip-2070]].
-     *
-     *  This provides a Type Guard that this transaction will have
-     *  the ``null``-ness for hardfork-specific properties set correctly.
-     */
-    isBerlin(): this is (TransactionResponse & {
-        accessList: AccessList;
-        maxFeePerGas: null;
-        maxPriorityFeePerGas: null;
-    });
-    /**
-     *  Returns true if the transaction is a London (i.e. ``type == 2``)
-     *  transaction. See [[link-eip-1559]].
-     *
-     *  This provides a Type Guard that this transaction will have
-     *  the ``null``-ness for hardfork-specific properties set correctly.
-     */
-    isLondon(): this is (TransactionResponse & {
-        accessList: AccessList;
-        maxFeePerGas: bigint;
-        maxPriorityFeePerGas: bigint;
-    });
     /**
      *  Returns a filter which can be used to listen for orphan events
      *  that evict this transaction.

@@ -54,22 +54,10 @@ export declare class Signature {
      *  It is normalized to the values ``27`` or ``28`` for legacy
      *  purposes.
      */
-    get v(): 27 | 28;
+    get v(): 0 | 1;
     set v(value: BigNumberish);
     /**
-     *  The EIP-155 ``v`` for legacy transactions. For non-legacy
-     *  transactions, this value is ``null``.
-     */
-    get networkV(): null | bigint;
-    /**
-     *  The chain ID for EIP-155 legacy transactions. For non-legacy
-     *  transactions, this value is ``null``.
-     */
-    get legacyChainId(): null | bigint;
-    /**
      *  The ``yParity`` for the signature.
-     *
-     *  See ``v`` for more details on how this value is used.
      */
     get yParity(): 0 | 1;
     /**
@@ -88,7 +76,7 @@ export declare class Signature {
     /**
      *  @private
      */
-    constructor(guard: any, r: string, s: string, v: 27 | 28);
+    constructor(guard: any, r: string, s: string, v: 0 | 1);
     /**
      *  Returns a new identical [[Signature]].
      */
@@ -97,54 +85,6 @@ export declare class Signature {
      *  Returns a representation that is compatible with ``JSON.stringify``.
      */
     toJSON(): any;
-    /**
-     *  Compute the chain ID from the ``v`` in a legacy EIP-155 transactions.
-     *
-     *  @example:
-     *    Signature.getChainId(45)
-     *    //_result:
-     *
-     *    Signature.getChainId(46)
-     *    //_result:
-     */
-    static getChainId(v: BigNumberish): bigint;
-    /**
-     *  Compute the ``v`` for a chain ID for a legacy EIP-155 transactions.
-     *
-     *  Legacy transactions which use [[link-eip-155]] hijack the ``v``
-     *  property to include the chain ID.
-     *
-     *  @example:
-     *    Signature.getChainIdV(5, 27)
-     *    //_result:
-     *
-     *    Signature.getChainIdV(5, 28)
-     *    //_result:
-     *
-     */
-    static getChainIdV(chainId: BigNumberish, v: 27 | 28): bigint;
-    /**
-     *  Compute the normalized legacy transaction ``v`` from a ``yParirty``,
-     *  a legacy transaction ``v`` or a legacy [[link-eip-155]] transaction.
-     *
-     *  @example:
-     *    // The values 0 and 1 imply v is actually yParity
-     *    Signature.getNormalizedV(0)
-     *    //_result:
-     *
-     *    // Legacy non-EIP-1559 transaction (i.e. 27 or 28)
-     *    Signature.getNormalizedV(27)
-     *    //_result:
-     *
-     *    // Legacy EIP-155 transaction (i.e. >= 35)
-     *    Signature.getNormalizedV(46)
-     *    //_result:
-     *
-     *    // Invalid values throw
-     *    Signature.getNormalizedV(5)
-     *    //_error:
-     */
-    static getNormalizedV(v: BigNumberish): 27 | 28;
     /**
      *  Creates a new [[Signature]].
      *
