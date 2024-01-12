@@ -316,11 +316,9 @@ export interface TransactionResponseParams {
     /**
      *  The transaction index.
      */
-    index: number;
+    transactionIndex: bigint;
 
-    /**
-     *  The [[link-eip-2718]] transaction type.
-     */
+ 
     type: number;
 
     /**
@@ -343,11 +341,6 @@ export interface TransactionResponseParams {
      *  The maximum amount of gas this transaction is authorized to consume.
      */
     gasLimit: bigint;
-
-    /**
-     *  For legacy transactions, this is the gas price per gas to pay.
-     */
-    gasPrice: bigint;
 
     /**
      *  For [[link-eip-1559]] transactions, this is the maximum priority
@@ -385,6 +378,18 @@ export interface TransactionResponseParams {
      *  The transaction access list.
      */
     accessList: null | AccessList;
+
+    //External Transaction fields
+
+    etxGasLimit ?: bigint ;
+
+    etxGasPrice ?: bigint ;
+
+    etxGasTip   ?: bigint ;
+
+    etxData     ?: string ;
+
+    etxAccessList ?: AccessList ;
 };
 
 

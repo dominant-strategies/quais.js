@@ -1286,7 +1286,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
     /**
      *  The index within the block that this transaction resides at.
      */
-    readonly index!: number;
+    readonly transactionIndex!: bigint;
 
     /**
      *  The transaction hash.
@@ -1334,20 +1334,6 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
     readonly gasLimit!: bigint;
 
     /**
-     *  The gas price can have various values, depending on the network.
-     *
-     *  In modern networks, for transactions that are included this is
-     *  the //effective gas price// (the fee per gas that was actually
-     *  charged), while for transactions that have not been included yet
-     *  is the [[maxFeePerGas]].
-     *
-     *  For legacy transactions, or transactions on legacy networks, this
-     *  is the fee that will be charged per unit of gas the transaction
-     *  consumes.
-     */
-    readonly gasPrice!: bigint;
-
-    /**
      *  The maximum priority fee (per unit of gas) to allow a
      *  validator to charge the sender. This is inclusive of the
      *  [[maxFeeFeePerGas]].
@@ -1387,6 +1373,18 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      */
     readonly accessList!: null | AccessList;
 
+    // Extrernal transaction specific fields
+
+    readonly etxGasLimit?: bigint ;
+
+    readonly etxGasPrice?: bigint ;
+
+    readonly etxGasTip?: bigint ;
+
+    readonly etxData?: string ;
+
+    readonly etxAccessList?: AccessList ;
+
     #startBlock: number;
 
     /**
@@ -1399,7 +1397,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
         this.blockHash = (tx.blockHash != null) ? tx.blockHash: null;
 
         this.hash = tx.hash;
-        this.index = tx.index;
+        this.transactionIndex = tx.transactionIndex;
 
         this.type = tx.type;
 
@@ -1411,7 +1409,6 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
         this.data = tx.data;
         this.value = tx.value;
 
-        this.gasPrice = tx.gasPrice;
         this.maxPriorityFeePerGas = (tx.maxPriorityFeePerGas != null) ? tx.maxPriorityFeePerGas: null;
         this.maxFeePerGas = (tx.maxFeePerGas != null) ? tx.maxFeePerGas: null;
 
@@ -1419,6 +1416,20 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
         this.signature = tx.signature;
 
         this.accessList = (tx.accessList != null) ? tx.accessList: null;
+
+        if (tx.type != 2) {
+            delete tx.etxGasLimit;
+            delete tx.etxGasPrice;
+            delete tx.etxGasTip;
+            delete tx.etxData;
+            delete tx.etxAccessList;
+        }
+        
+        if (tx.etxGasLimit) this.etxGasLimit = tx.etxGasLimit;
+        if (tx.etxGasPrice) this.etxGasPrice = tx.etxGasPrice;
+        if (tx.etxGasTip) this.etxGasTip = tx.etxGasTip;
+        if (tx.etxData) this.etxData = tx.etxData;
+        if (tx.etxAccessList) this.etxAccessList = tx.etxAccessList;
 
         this.#startBlock = -1;
     }
@@ -1428,24 +1439,32 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      */
     toJSON(): any {
         const {
-            blockNumber, blockHash, index, hash, type, to, from, nonce,
-            data, signature, accessList
+            blockNumber, blockHash, transactionIndex, hash, type, to, from, nonce,
+            data, signature, accessList,
+            //etxGasLimit, etxGasPrice, etxGasTip, etxData, etxAccessList // Include new fields
         } = this;
-
-        return {
+        let result ={
             _type: "TransactionReceipt",
             accessList, blockNumber, blockHash,
             chainId: toJson(this.chainId),
             data, from,
             gasLimit: toJson(this.gasLimit),
-            gasPrice: toJson(this.gasPrice),
             hash,
             maxFeePerGas: toJson(this.maxFeePerGas),
             maxPriorityFeePerGas: toJson(this.maxPriorityFeePerGas),
-            nonce, signature, to, index, type,
+            nonce, signature, to, transactionIndex, type,
             value: toJson(this.value),
-        };
+            // Include new fields in the output
+            // etxGasLimit: etxGasLimit ? toJson(etxGasLimit) : null,
+            // etxGasPrice: etxGasPrice ? toJson(etxGasPrice) : null,
+            // etxGasTip: etxGasTip ? toJson(etxGasTip) : null,
+            // etxData: etxData ? etxData : null,
+            // etxAccessList: etxAccessList ? etxAccessList : null
+        }
+
+        return result;
     }
+    
 
     /**
      *  Resolves to the Block that this transaction was included in.
@@ -1688,39 +1707,6 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      */
     isMined(): this is MinedTransactionResponse {
         return (this.blockHash != null);
-    }
-
-    /**
-     *  Returns true if the transaction is a legacy (i.e. ``type == 0``)
-     *  transaction.
-     *
-     *  This provides a Type Guard that this transaction will have
-     *  the ``null``-ness for hardfork-specific properties set correctly.
-     */
-    isLegacy(): this is (TransactionResponse & { accessList: null, maxFeePerGas: null, maxPriorityFeePerGas: null }) {
-        return (this.type === 0)
-    }
-
-    /**
-     *  Returns true if the transaction is a Berlin (i.e. ``type == 1``)
-     *  transaction. See [[link-eip-2070]].
-     *
-     *  This provides a Type Guard that this transaction will have
-     *  the ``null``-ness for hardfork-specific properties set correctly.
-     */
-    isBerlin(): this is (TransactionResponse & { accessList: AccessList, maxFeePerGas: null, maxPriorityFeePerGas: null }) {
-        return (this.type === 1);
-    }
-
-    /**
-     *  Returns true if the transaction is a London (i.e. ``type == 2``)
-     *  transaction. See [[link-eip-1559]].
-     *
-     *  This provides a Type Guard that this transaction will have
-     *  the ``null``-ness for hardfork-specific properties set correctly.
-     */
-    isLondon(): this is (TransactionResponse & { accessList: AccessList, maxFeePerGas: bigint, maxPriorityFeePerGas: bigint }){
-        return (this.type === 2);
     }
 
     /**
