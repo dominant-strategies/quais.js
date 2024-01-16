@@ -3,6 +3,7 @@ import { BaseWallet } from "./base-wallet.js";
 import { HDNodeWallet } from "./hdwallet.js";
 import type { ProgressCallback } from "../crypto/index.js";
 import type { Provider } from "../providers/index.js";
+import type { Wordlist } from "../quais.js";
 /**
  *  A **Wallet** manages a single private key which is used to sign
  *  transactions, messages and other common payloads.
@@ -66,6 +67,6 @@ export declare class Wallet extends BaseWallet {
     /**
      *  Creates a [[HDNodeWallet]] for %%phrase%%.
      */
-    static fromPhrase(phrase: string, provider?: Provider): HDNodeWallet;
+    static fromPhrase(phrase: string, provider?: Provider, wordlist?: Wordlist): HDNodeWallet;
 }
 //# sourceMappingURL=wallet.d.ts.map
