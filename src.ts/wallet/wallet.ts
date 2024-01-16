@@ -13,7 +13,7 @@ import { Mnemonic } from "./mnemonic.js";
 
 import type { ProgressCallback } from "../crypto/index.js";
 import type { Provider } from "../providers/index.js";
-
+import type { Wordlist } from "../quais.js";
 import type { CrowdsaleAccount } from "./json-crowdsale.js";
 import type { KeystoreAccount } from "./json-keystore.js";
 
@@ -155,8 +155,8 @@ export class Wallet extends BaseWallet {
     /**
      *  Creates a [[HDNodeWallet]] for %%phrase%%.
      */
-    static fromPhrase(phrase: string, provider?: Provider): HDNodeWallet {
-        const wallet = HDNodeWallet.fromPhrase(phrase);
+    static fromPhrase(phrase: string, provider?: Provider, wordlist?: Wordlist): HDNodeWallet {
+        const wallet = HDNodeWallet.fromPhrase(phrase, undefined, undefined, wordlist);
         if (provider) { return wallet.connect(provider); }
         return wallet;
     }
