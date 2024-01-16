@@ -133,8 +133,8 @@ export class Wallet extends BaseWallet {
     /**
      *  Creates a [[HDNodeWallet]] for %%phrase%%.
      */
-    static fromPhrase(phrase, provider) {
-        const wallet = HDNodeWallet.fromPhrase(phrase);
+    static fromPhrase(phrase, provider, wordlist) {
+        const wallet = HDNodeWallet.fromPhrase(phrase, undefined, undefined, wordlist);
         if (provider) {
             return wallet.connect(provider);
         }

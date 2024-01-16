@@ -126,7 +126,7 @@ export {
 } from "./wallet/index.js";
 
 export {
-    Wordlist, LangEn, WordlistOwl, WordlistOwlA, wordlists
+    Wordlist, LangEn, LangEs, WordlistOwl, WordlistOwlA, wordlists
 } from "./wordlists/index.js";
 
 
