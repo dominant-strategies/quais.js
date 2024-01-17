@@ -217,42 +217,6 @@ export declare class Transaction implements TransactionLike<string> {
      */
     inferTypes(): Array<number>;
     /**
-     *  Returns true if this transaction is a legacy transaction (i.e.
-     *  ``type === 0``).
-     *
-     *  This provides a Type Guard that the related properties are
-     *  non-null.
-     */
-    isLegacy(): this is (Transaction & {
-        type: 0;
-        gasPrice: bigint;
-    });
-    /**
-     *  Returns true if this transaction is berlin hardform transaction (i.e.
-     *  ``type === 1``).
-     *
-     *  This provides a Type Guard that the related properties are
-     *  non-null.
-     */
-    isBerlin(): this is (Transaction & {
-        type: 1;
-        gasPrice: bigint;
-        accessList: AccessList;
-    });
-    /**
-     *  Returns true if this transaction is london hardform transaction (i.e.
-     *  ``type === 2``).
-     *
-     *  This provides a Type Guard that the related properties are
-     *  non-null.
-     */
-    isLondon(): this is (Transaction & {
-        type: 2;
-        accessList: AccessList;
-        maxFeePerGas: bigint;
-        maxPriorityFeePerGas: bigint;
-    });
-    /**
      *  Create a copy of this transaciton.
      */
     clone(): Transaction;

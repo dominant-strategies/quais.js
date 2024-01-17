@@ -6,6 +6,7 @@ const index_js_2 = require("../crypto/index.js");
 const index_js_3 = require("../utils/index.js");
 const accesslist_js_1 = require("./accesslist.js");
 const address_js_1 = require("./address.js");
+const index_js_4 = require("../utils/index.js");
 const BN_0 = BigInt(0);
 const BN_2 = BigInt(2);
 const BN_27 = BigInt(27);
@@ -222,7 +223,7 @@ function _parseEip2930(data) {
     _parseEipSignature(tx, fields.slice(8));
     return tx;
 }
-function _serializeEip2930(tx, sig) {
+function _serialize(tx, sig) {
     const fields = [
         formatNumber(tx.chainId || 0, "chainId"),
         formatNumber(tx.nonce || 0, "nonce"),
@@ -492,9 +493,7 @@ class Transaction {
         (0, index_js_3.assert)(this.signature != null, "cannot serialize unsigned transaction; maybe you meant .unsignedSerialized", "UNSUPPORTED_OPERATION", { operation: ".serialized" });
         switch (this.inferType()) {
             case 0:
-            //return _serializeLegacy(this, this.signature);
-            case 1:
-                return _serializeEip2930(this, this.signature);
+                return _serialize(this, this.signature);
             case 2:
                 return _serializeEip1559(this, this.signature);
         }
@@ -507,14 +506,14 @@ class Transaction {
      *  authorize this transaction.
      */
     get unsignedSerialized() {
-        switch (this.inferType()) {
-            case 0:
-            //return _serializeLegacy(this);
-            case 1:
-                return _serializeEip2930(this);
-            case 2:
-                return _serializeEip1559(this);
-        }
+        // console.log("unsignedSerialized", this.type);
+        // switch (this.inferType()) {
+        //     case 0:
+        //         return _serialize(this);
+        //     case 2:
+        //         return _serializeEip1559(this);
+        // }
+        return _serialize(this);
         (0, index_js_3.assert)(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: ".unsignedSerialized" });
     }
     /**
@@ -529,78 +528,22 @@ class Transaction {
      *  transaction types.
      */
     inferTypes() {
-        // Checks that there are no conflicting properties set
-        const hasGasPrice = this.gasPrice != null;
         const hasFee = (this.maxFeePerGas != null || this.maxPriorityFeePerGas != null);
-        const hasAccessList = (this.accessList != null);
-        //if (hasGasPrice && hasFee) {
-        //    throw new Error("transaction cannot have gasPrice and maxFeePerGas");
-        //}
+        if (!hasFee) {
+            (0, index_js_3.assert)(hasFee, "missing maxPriorityFeePerGas or maxFeePerGas", "BAD_DATA", { value: this });
+        }
         if (this.maxFeePerGas != null && this.maxPriorityFeePerGas != null) {
             (0, index_js_3.assert)(this.maxFeePerGas >= this.maxPriorityFeePerGas, "priorityFee cannot be more than maxFee", "BAD_DATA", { value: this });
         }
-        //if (this.type === 2 && hasGasPrice) {
-        //    throw new Error("eip-1559 transaction cannot have gasPrice");
-        //}
-        (0, index_js_3.assert)(!hasFee || (this.type !== 0 && this.type !== 1), "transaction type cannot have maxFeePerGas or maxPriorityFeePerGas", "BAD_DATA", { value: this });
-        (0, index_js_3.assert)(this.type !== 0 || !hasAccessList, "legacy transaction cannot have accessList", "BAD_DATA", { value: this });
         const types = [];
-        // Explicit type
-        if (this.type != null) {
-            types.push(this.type);
+        if (this.from == null || this.to == null) {
+            (0, index_js_3.assert)(this.type == null, "transaction type cannot be inferred due to missing to or from", "BAD_DATA", { value: this });
         }
         else {
-            if (hasFee) {
-                types.push(2);
-            }
-            else if (hasGasPrice) {
-                types.push(1);
-                if (!hasAccessList) {
-                    types.push(0);
-                }
-            }
-            else if (hasAccessList) {
-                types.push(1);
-                types.push(2);
-            }
-            else {
-                types.push(0);
-                types.push(1);
-                types.push(2);
-            }
+            const allowedType = (0, index_js_4.getTxType)(this.from, this.to);
+            types.push(allowedType);
         }
-        types.sort();
         return types;
-    }
-    /**
-     *  Returns true if this transaction is a legacy transaction (i.e.
-     *  ``type === 0``).
-     *
-     *  This provides a Type Guard that the related properties are
-     *  non-null.
-     */
-    isLegacy() {
-        return (this.type === 0);
-    }
-    /**
-     *  Returns true if this transaction is berlin hardform transaction (i.e.
-     *  ``type === 1``).
-     *
-     *  This provides a Type Guard that the related properties are
-     *  non-null.
-     */
-    isBerlin() {
-        return (this.type === 1);
-    }
-    /**
-     *  Returns true if this transaction is london hardform transaction (i.e.
-     *  ``type === 2``).
-     *
-     *  This provides a Type Guard that the related properties are
-     *  non-null.
-     */
-    isLondon() {
-        return (this.type === 2);
     }
     /**
      *  Create a copy of this transaciton.

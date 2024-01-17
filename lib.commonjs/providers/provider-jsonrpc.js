@@ -117,12 +117,14 @@ class JsonRpcSigner extends abstract_signer_js_1.AbstractSigner {
         if (promises.length) {
             await Promise.all(promises);
         }
+        console.log("sendUncheckedTransaction", tx);
         const hexTx = this.provider.getRpcTransaction(tx);
         return this.provider.send("quai_sendTransaction", [hexTx]);
     }
     async sendTransaction(tx) {
         // This cannot be mined any earlier than any recent block
         const blockNumber = await this.provider.getBlockNumber();
+        console.log("sendTransaction", tx);
         // Send the transaction
         const hash = await this.sendUncheckedTransaction(tx);
         // Unfortunately, JSON-RPC only provides and opaque transaction hash
