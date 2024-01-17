@@ -50,6 +50,8 @@ export {
 
 export { uuidV4 } from "./uuid.js";
 
+export { getTxType, getShardForAddress } from "./shards.js";
+
 /////////////////////////////
 // Types
 

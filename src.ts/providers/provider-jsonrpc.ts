@@ -331,7 +331,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 
         // Wait until all of our properties are filled in
         if (promises.length) { await Promise.all(promises); }
-
+        console.log("sendUncheckedTransaction", tx);
         const hexTx = this.provider.getRpcTransaction(tx);
 
         return this.provider.send("quai_sendTransaction", [ hexTx ]);
@@ -340,7 +340,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
         // This cannot be mined any earlier than any recent block
         const blockNumber = await this.provider.getBlockNumber();
-
+        console.log("sendTransaction", tx);
         // Send the transaction
         const hash = await this.sendUncheckedTransaction(tx);
 
