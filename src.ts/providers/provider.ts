@@ -214,8 +214,18 @@ export interface TransactionRequest {
      */
     enableCcipRead?: boolean;
 
-    // Todo?
-    //gasMultiplier?: number;
+    //External transactiuon fields
+
+    externalGasLimit?: BigNumberish;
+
+    externalGasPrice?: BigNumberish;
+
+    externalGasTip?: BigNumberish;
+
+    externalData?: string;
+
+    externalAcccessList?: AccessListish;
+
 };
 
 /**

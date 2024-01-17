@@ -13,4 +13,4 @@ export const quaisymbol: string = "\u039e";  // "\uD835\uDF63";
  *
  *  (**i.e.** ``"\\x19Ethereum Signed Message:\\n"``)
  */
-export const MessagePrefix: string = "\x19Ethereum Signed Message:\n";
+export const MessagePrefix: string = "\x19Quai Signed Message:\n";

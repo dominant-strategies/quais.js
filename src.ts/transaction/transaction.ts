@@ -11,7 +11,7 @@ import { recoverAddress } from "./address.js";
 
 import type { BigNumberish, BytesLike } from "../utils/index.js";
 import type { SignatureLike } from "../crypto/index.js";
-
+import { getTxType } from "../utils/index.js";
 import type { AccessList, AccessListish } from "./index.js";
 
 
@@ -341,7 +341,7 @@ function _parseEip2930(data: Uint8Array): TransactionLike {
     return tx;
 }
 
-function _serializeEip2930(tx: TransactionLike, sig?: Signature): string {
+function _serialize(tx: TransactionLike, sig?: Signature): string {
     const fields: any = [
         formatNumber(tx.chainId || 0, "chainId"),
         formatNumber(tx.nonce || 0, "nonce"),
@@ -617,9 +617,7 @@ export class Transaction implements TransactionLike<string> {
 
         switch (this.inferType()) {
             case 0:
-                //return _serializeLegacy(this, this.signature);
-            case 1:
-                return _serializeEip2930(this, this.signature);
+                return _serialize(this, this.signature);
             case 2:
                 return _serializeEip1559(this, this.signature);
         }
@@ -634,15 +632,14 @@ export class Transaction implements TransactionLike<string> {
      *  authorize this transaction.
      */
     get unsignedSerialized(): string {
-        switch (this.inferType()) {
-            case 0:
-                //return _serializeLegacy(this);
-            case 1:
-                return _serializeEip2930(this);
-            case 2:
-                return _serializeEip1559(this);
-        }
-
+        // console.log("unsignedSerialized", this.type);
+        // switch (this.inferType()) {
+        //     case 0:
+        //         return _serialize(this);
+        //     case 2:
+        //         return _serializeEip1559(this);
+        // }
+        return _serialize(this);
         assert(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: ".unsignedSerialized" });
     }
 
@@ -660,84 +657,24 @@ export class Transaction implements TransactionLike<string> {
      */
     inferTypes(): Array<number> {
 
-        // Checks that there are no conflicting properties set
-        const hasGasPrice = this.gasPrice != null;
         const hasFee = (this.maxFeePerGas != null || this.maxPriorityFeePerGas != null);
-        const hasAccessList = (this.accessList != null);
-
-        //if (hasGasPrice && hasFee) {
-        //    throw new Error("transaction cannot have gasPrice and maxFeePerGas");
-        //}
+        if (!hasFee) {
+            assert(hasFee, "missing maxPriorityFeePerGas or maxFeePerGas", "BAD_DATA", { value: this });
+        }
 
         if (this.maxFeePerGas != null && this.maxPriorityFeePerGas != null) {
             assert(this.maxFeePerGas >= this.maxPriorityFeePerGas, "priorityFee cannot be more than maxFee", "BAD_DATA", { value: this });
         }
 
-        //if (this.type === 2 && hasGasPrice) {
-        //    throw new Error("eip-1559 transaction cannot have gasPrice");
-        //}
-
-        assert(!hasFee || (this.type !== 0 && this.type !== 1), "transaction type cannot have maxFeePerGas or maxPriorityFeePerGas", "BAD_DATA", { value: this });
-        assert(this.type !== 0 || !hasAccessList, "legacy transaction cannot have accessList", "BAD_DATA", { value: this })
 
         const types: Array<number> = [ ];
-
-        // Explicit type
-        if (this.type != null) {
-            types.push(this.type);
-
+        if (this.from == null || this.to == null) {
+            assert(this.type == null, "transaction type cannot be inferred due to missing to or from", "BAD_DATA", { value: this });
         } else {
-            if (hasFee) {
-                types.push(2);
-            } else if (hasGasPrice) {
-                types.push(1);
-                if (!hasAccessList) { types.push(0); }
-            } else if (hasAccessList) {
-                types.push(1);
-                types.push(2);
-            } else {
-                types.push(0);
-                types.push(1);
-                types.push(2);
-            }
+            const allowedType = getTxType(this.from, this.to);
+            types.push(allowedType);
         }
-
-        types.sort();
-
         return types;
-    }
-
-    /**
-     *  Returns true if this transaction is a legacy transaction (i.e.
-     *  ``type === 0``).
-     *
-     *  This provides a Type Guard that the related properties are
-     *  non-null.
-     */
-    isLegacy(): this is (Transaction & { type: 0, gasPrice: bigint }) {
-        return (this.type === 0);
-    }
-
-    /**
-     *  Returns true if this transaction is berlin hardform transaction (i.e.
-     *  ``type === 1``).
-     *
-     *  This provides a Type Guard that the related properties are
-     *  non-null.
-     */
-    isBerlin(): this is (Transaction & { type: 1, gasPrice: bigint, accessList: AccessList }) {
-        return (this.type === 1);
-    }
-
-    /**
-     *  Returns true if this transaction is london hardform transaction (i.e.
-     *  ``type === 2``).
-     *
-     *  This provides a Type Guard that the related properties are
-     *  non-null.
-     */
-    isLondon(): this is (Transaction & { type: 2, accessList: AccessList, maxFeePerGas: bigint, maxPriorityFeePerGas: bigint}) {
-        return (this.type === 2);
     }
 
     /**
@@ -782,7 +719,6 @@ export class Transaction implements TransactionLike<string> {
 
         if (typeof(tx) === "string") {
             const payload = getBytes(tx);
-
             if (payload[0] >= 0x7f) { // @TODO: > vs >= ??
                 return Transaction.from(_parseLegacy(payload));
             }
@@ -807,6 +743,7 @@ export class Transaction implements TransactionLike<string> {
         if (tx.chainId != null) { result.chainId = tx.chainId; }
         if (tx.signature != null) { result.signature = Signature.from(tx.signature); }
         if (tx.accessList != null) { result.accessList = tx.accessList; }
+        
 
         if (tx.hash != null) {
             assertArgument(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);

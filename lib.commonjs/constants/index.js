@@ -5,7 +5,7 @@
  *  @_section: api/constants: Constants  [about-constants]
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.MessagePrefix = exports.quaisymbol = exports.MaxInt256 = exports.MinInt256 = exports.MaxUint256 = exports.WeiPerEther = exports.N = exports.ZeroHash = exports.ZeroAddress = void 0;
+exports.ShardData = exports.MessagePrefix = exports.quaisymbol = exports.MaxInt256 = exports.MinInt256 = exports.MaxUint256 = exports.WeiPerEther = exports.N = exports.ZeroHash = exports.ZeroAddress = void 0;
 var addresses_js_1 = require("./addresses.js");
 Object.defineProperty(exports, "ZeroAddress", { enumerable: true, get: function () { return addresses_js_1.ZeroAddress; } });
 var hashes_js_1 = require("./hashes.js");
@@ -19,4 +19,6 @@ Object.defineProperty(exports, "MaxInt256", { enumerable: true, get: function ()
 var strings_js_1 = require("./strings.js");
 Object.defineProperty(exports, "quaisymbol", { enumerable: true, get: function () { return strings_js_1.quaisymbol; } });
 Object.defineProperty(exports, "MessagePrefix", { enumerable: true, get: function () { return strings_js_1.MessagePrefix; } });
+var shards_js_1 = require("./shards.js");
+Object.defineProperty(exports, "ShardData", { enumerable: true, get: function () { return shards_js_1.ShardData; } });
 //# sourceMappingURL=index.js.map

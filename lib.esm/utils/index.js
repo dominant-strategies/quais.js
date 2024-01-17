@@ -19,4 +19,5 @@ export { encodeRlp } from "./rlp-encode.js";
 export { formatEther, parseEther, formatUnits, parseUnits } from "./units.js";
 export { toUtf8Bytes, toUtf8CodePoints, toUtf8String, Utf8ErrorFuncs, } from "./utf8.js";
 export { uuidV4 } from "./uuid.js";
+export { getTxType, getShardForAddress } from "./shards.js";
 //# sourceMappingURL=index.js.map
