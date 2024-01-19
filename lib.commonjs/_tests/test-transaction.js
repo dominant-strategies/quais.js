@@ -211,9 +211,6 @@ describe("Tests Signed Transaction Parsing", function () {
             for (let i = 0; i < 2; i++) {
                 assertTxEqual(tx, expected);
                 assert_1.default.equal(tx.typeName, "legacy", "typeName");
-                assert_1.default.equal(tx.isLegacy(), true, "isLegacy");
-                assert_1.default.equal(tx.isBerlin(), false, "isBerlin");
-                assert_1.default.equal(tx.isLondon(), false, "isLondon");
                 assert_1.default.ok(!!tx.signature, "signature:!null");
                 assert_1.default.equal(tx.signature.r, test.signatureLegacy.r, "signature.r");
                 assert_1.default.equal(tx.signature.s, test.signatureLegacy.s, "signature.s");
@@ -235,13 +232,9 @@ describe("Tests Signed Transaction Parsing", function () {
             for (let i = 0; i < 2; i++) {
                 assertTxEqual(tx, expected);
                 assert_1.default.equal(tx.typeName, "legacy", "typeName");
-                assert_1.default.equal(tx.isLegacy(), true, "isLegacy");
-                assert_1.default.equal(tx.isBerlin(), false, "isBerlin");
-                assert_1.default.equal(tx.isLondon(), false, "isLondon");
                 assert_1.default.ok(!!tx.signature, "signature:!null");
                 assert_1.default.equal(tx.signature.r, test.signatureEip155.r, "signature.r");
                 assert_1.default.equal(tx.signature.s, test.signatureEip155.s, "signature.s");
-                assert_1.default.equal(tx.signature.networkV, BigInt(test.signatureEip155.v), "signature.v");
                 tx = tx.clone();
             }
         });
@@ -255,9 +248,6 @@ describe("Tests Signed Transaction Parsing", function () {
             for (let i = 0; i < 2; i++) {
                 assertTxEqual(tx, expected);
                 assert_1.default.equal(tx.typeName, "eip-2930", "typeName");
-                assert_1.default.equal(tx.isLegacy(), false, "isLegacy");
-                assert_1.default.equal(tx.isBerlin(), true, "isBerlin");
-                assert_1.default.equal(tx.isLondon(), false, "isLondon");
                 assert_1.default.ok(!!tx.signature, "signature:!null");
                 assert_1.default.equal(tx.signature.r, test.signatureBerlin.r, "signature.r");
                 assert_1.default.equal(tx.signature.s, test.signatureBerlin.s, "signature.s");
@@ -274,9 +264,6 @@ describe("Tests Signed Transaction Parsing", function () {
             for (let i = 0; i < 2; i++) {
                 assertTxEqual(tx, expected);
                 assert_1.default.equal(tx.typeName, "eip-1559", "typeName");
-                assert_1.default.equal(tx.isLegacy(), false, "isLegacy");
-                assert_1.default.equal(tx.isBerlin(), false, "isBerlin");
-                assert_1.default.equal(tx.isLondon(), true, "isLondon");
                 assert_1.default.ok(!!tx.signature, "signature:!null");
                 assert_1.default.equal(tx.signature.r, test.signatureLondon.r, "signature.r");
                 assert_1.default.equal(tx.signature.s, test.signatureLondon.s, "signature.s");

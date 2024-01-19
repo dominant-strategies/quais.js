@@ -19,6 +19,7 @@ export { encodeRlp } from "./rlp-encode.js";
 export { formatEther, parseEther, formatUnits, parseUnits } from "./units.js";
 export { toUtf8Bytes, toUtf8CodePoints, toUtf8String, Utf8ErrorFuncs, } from "./utf8.js";
 export { uuidV4 } from "./uuid.js";
+export { getTxType, getShardForAddress } from "./shards.js";
 export type { BytesLike } from "./data.js";
 export type { ErrorCode, quaisError, UnknownError, NotImplementedError, UnsupportedOperationError, NetworkError, ServerError, TimeoutError, BadDataError, CancelledError, BufferOverrunError, NumericFaultError, InvalidArgumentError, MissingArgumentError, UnexpectedArgumentError, CallExceptionError, InsufficientFundsError, NonceExpiredError, OffchainFaultError, ReplacementUnderpricedError, TransactionReplacedError, UnconfiguredNameError, ActionRejectedError, CallExceptionAction, CallExceptionTransaction, CodedquaisError } from "./errors.js";
 export type { EventEmitterable, Listener } from "./events.js";

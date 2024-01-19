@@ -136,8 +136,8 @@ class Wallet extends base_wallet_js_1.BaseWallet {
     /**
      *  Creates a [[HDNodeWallet]] for %%phrase%%.
      */
-    static fromPhrase(phrase, provider) {
-        const wallet = hdwallet_js_1.HDNodeWallet.fromPhrase(phrase);
+    static fromPhrase(phrase, provider, wordlist) {
+        const wallet = hdwallet_js_1.HDNodeWallet.fromPhrase(phrase, undefined, undefined, wordlist);
         if (provider) {
             return wallet.connect(provider);
         }

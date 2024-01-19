@@ -13,5 +13,5 @@ exports.quaisymbol = "\u039e"; // "\uD835\uDF63";
  *
  *  (**i.e.** ``"\\x19Ethereum Signed Message:\\n"``)
  */
-exports.MessagePrefix = "\x19Ethereum Signed Message:\n";
+exports.MessagePrefix = "\x19Quai Signed Message:\n";
 //# sourceMappingURL=strings.js.map

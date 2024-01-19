@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.formatTransactionResponse = exports.formatTransactionReceipt = exports.formatReceiptLog = exports.formatBlock = exports.formatLog = exports.formatUint256 = exports.formatHash = exports.formatData = exports.formatBoolean = exports.object = exports.arrayOf = exports.allowNull = void 0;
+exports.formatTransactionResponse = exports.formatTransactionReceipt = exports.formatEtx = exports.formatReceiptLog = exports.formatBlock = exports.formatLog = exports.formatUint256 = exports.formatHash = exports.formatData = exports.formatBoolean = exports.object = exports.arrayOf = exports.allowNull = void 0;
 /**
  *  @_ignore
  */
@@ -106,8 +106,8 @@ function formatLog(value) {
 exports.formatLog = formatLog;
 const _formatBlock = object({
     hash: allowNull(formatHash),
-    parentHash: formatHash,
-    number: index_js_4.getNumber,
+    parentHash: arrayOf(formatHash),
+    number: arrayOf(index_js_4.getNumber),
     timestamp: index_js_4.getNumber,
     nonce: allowNull(formatData),
     difficulty: index_js_4.getBigInt,
@@ -115,11 +115,35 @@ const _formatBlock = object({
     gasUsed: index_js_4.getBigInt,
     miner: allowNull(index_js_1.getAddress),
     extraData: formatData,
-    baseFeePerGas: allowNull(index_js_4.getBigInt)
+    baseFeePerGas: allowNull(index_js_4.getBigInt),
+    extRollupRoot: formatHash,
+    // extTransactions: arrayOf(formatTransaction), 
+    extTransactionsRoot: formatHash,
+    // transactions:
+    transactionsRoot: formatHash,
+    manifestHash: arrayOf(formatHash),
+    location: formatData,
+    parentDeltaS: arrayOf(index_js_4.getBigInt),
+    parentEntropy: arrayOf(index_js_4.getBigInt),
+    order: index_js_4.getNumber,
+    subManifest: arrayOf(formatData),
+    totalEntropy: index_js_4.getBigInt,
+    mixHash: formatHash,
+    receiptsRoot: formatHash,
+    sha3Uncles: formatHash,
+    size: index_js_4.getBigInt,
+    stateRoot: formatHash,
+    uncles: arrayOf(formatHash),
 });
 function formatBlock(value) {
     const result = _formatBlock(value);
     result.transactions = value.transactions.map((tx) => {
+        if (typeof (tx) === "string") {
+            return tx;
+        }
+        return formatTransactionResponse(tx);
+    });
+    result.extTransactions = value.extTransactions.map((tx) => {
         if (typeof (tx) === "string") {
             return tx;
         }
@@ -144,6 +168,27 @@ function formatReceiptLog(value) {
     return _formatReceiptLog(value);
 }
 exports.formatReceiptLog = formatReceiptLog;
+const _formatEtx = object({
+    type: allowNull(index_js_4.getNumber, 0),
+    nonce: index_js_4.getNumber,
+    gasPrice: allowNull(index_js_4.getBigInt),
+    maxPriorityFeePerGas: index_js_4.getBigInt,
+    maxFeePerGas: index_js_4.getBigInt,
+    gas: index_js_4.getBigInt,
+    value: allowNull(index_js_4.getBigInt, BN_0),
+    input: formatData,
+    to: allowNull(index_js_1.getAddress, null),
+    accessList: allowNull(index_js_3.accessListify, null),
+    chainId: allowNull(index_js_4.getBigInt, null),
+    from: allowNull(index_js_1.getAddress, null),
+    hash: formatHash,
+}, {
+    from: ["sender"],
+});
+function formatEtx(value) {
+    return _formatEtx(value);
+}
+exports.formatEtx = formatEtx;
 const _formatTransactionReceipt = object({
     to: allowNull(index_js_1.getAddress, null),
     from: allowNull(index_js_1.getAddress, null),
@@ -161,14 +206,15 @@ const _formatTransactionReceipt = object({
     cumulativeGasUsed: index_js_4.getBigInt,
     effectiveGasPrice: allowNull(index_js_4.getBigInt),
     status: allowNull(index_js_4.getNumber),
-    type: allowNull(index_js_4.getNumber, 0)
+    type: allowNull(index_js_4.getNumber, 0),
+    etxs: arrayOf(formatEtx),
 }, {
-    effectiveGasPrice: ["gasPrice"],
     hash: ["transactionHash"],
     index: ["transactionIndex"],
 });
 function formatTransactionReceipt(value) {
-    return _formatTransactionReceipt(value);
+    const result = _formatTransactionReceipt(value);
+    return result;
 }
 exports.formatTransactionReceipt = formatTransactionReceipt;
 function formatTransactionResponse(value) {
@@ -177,6 +223,8 @@ function formatTransactionResponse(value) {
     if (value.to && (0, index_js_4.getBigInt)(value.to) === BN_0) {
         value.to = "0x0000000000000000000000000000000000000000";
     }
+    if (value.type === "0x1")
+        value.from = value.sender;
     const result = object({
         hash: formatHash,
         type: (value) => {
@@ -188,29 +236,53 @@ function formatTransactionResponse(value) {
         accessList: allowNull(index_js_3.accessListify, null),
         blockHash: allowNull(formatHash, null),
         blockNumber: allowNull(index_js_4.getNumber, null),
-        transactionIndex: allowNull(index_js_4.getNumber, null),
+        index: allowNull(index_js_4.getNumber, null),
         //confirmations: allowNull(getNumber, null),
         from: index_js_1.getAddress,
-        // either (gasPrice) or (maxPriorityFeePerGas + maxFeePerGas) must be set
-        gasPrice: allowNull(index_js_4.getBigInt),
         maxPriorityFeePerGas: allowNull(index_js_4.getBigInt),
         maxFeePerGas: allowNull(index_js_4.getBigInt),
         gasLimit: index_js_4.getBigInt,
         to: allowNull(index_js_1.getAddress, null),
         value: index_js_4.getBigInt,
         nonce: index_js_4.getNumber,
-        data: formatData,
         creates: allowNull(index_js_1.getAddress, null),
-        chainId: allowNull(index_js_4.getBigInt, null)
+        chainId: allowNull(index_js_4.getBigInt, null),
+        etxGasLimit: allowNull(index_js_4.getBigInt, null),
+        etxGasPrice: allowNull(index_js_4.getBigInt, null),
+        etxGasTip: allowNull(index_js_4.getBigInt, null),
+        etxData: allowNull(formatData, null),
+        etxAccessList: allowNull(index_js_3.accessListify, null),
     }, {
         data: ["input"],
-        gasLimit: ["gas"]
+        gasLimit: ["gas"],
+        index: ["transactionIndex"],
     })(value);
     // If to and creates are empty, populate the creates from the value
     if (result.to == null && result.creates == null) {
         result.creates = (0, index_js_1.getCreateAddress)(result);
     }
-    // @TODO: Check fee data
+    if (result.type !== 2) {
+        delete result.etxGasLimit;
+        delete result.etxGasPrice;
+        delete result.etxGasTip;
+        delete result.etxData;
+        delete result.etxAccessList;
+    }
+    else {
+        //Needed due to go-quai api using both external as naming and etx as naming
+        //External is for when creating an external transaction
+        //Etx is for when reading an external transaction
+        if (result.etxGasLimit == null && value.externalGasLimit != null)
+            result.etxGasLimit = value.externalGasLimit;
+        if (result.etxGasPrice == null && value.externalGasPrice != null)
+            result.etxGasPrice = value.externalGasPrice;
+        if (result.etxGasTip == null && value.externalGasTip != null)
+            result.etxGasTip = value.externalGasTip;
+        if (result.etxData == null && value.externalData != null)
+            result.etxData = value.externalData;
+        if (result.etxAccessList == null && value.externalAccessList != null)
+            result.etxAccessList = value.externalAccessList;
+    }
     // Add an access list to supported transaction types
     if ((value.type === 1 || value.type === 2) && value.accessList == null) {
         result.accessList = [];

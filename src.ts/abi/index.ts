@@ -20,7 +20,7 @@ export {
     Fragment, FunctionFragment, NamedFragment, ParamType, StructFragment,
 } from "./fragments.js";
 
-export {
+export { 
     checkResultErrors,
     Indexed,
     Interface,

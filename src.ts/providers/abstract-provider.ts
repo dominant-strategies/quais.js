@@ -1071,7 +1071,6 @@ export class AbstractProvider implements Provider {
 
     async #getBlock(block: BlockTag | string, includeTransactions: boolean): Promise<any> {
         // @TODO: Add CustomBlockPlugin check
-
         if (isHexString(block, 32)) {
             return await this.#perform({
                 method: "getBlock", blockHash: block, includeTransactions
@@ -1093,7 +1092,6 @@ export class AbstractProvider implements Provider {
             params: this.#getBlock(block, !!prefetchTxs)
         });
         if (params == null) { return null; }
-
         return this._wrapBlock(params, network);
     }
 
@@ -1113,8 +1111,7 @@ export class AbstractProvider implements Provider {
             params: this.#perform({ method: "getTransactionReceipt", hash })
         });
         if (params == null) { return null; }
-
-        // Some backends did not backfill the effectiveGasPrice into old transactions
+        // Some backends did not backfill the effectiveGasPrice in to old transactions
         // in the receipt, so we look it up manually and inject it.
         if (params.gasPrice == null && params.effectiveGasPrice == null) {
             const tx = await this.#perform({ method: "getTransaction", hash });
@@ -1321,7 +1318,7 @@ export class AbstractProvider implements Provider {
      *  method may be used.
      *
      *  For example, this is used for providers when using the
-     *  ``quai_getFilterChanges`` method, which can return null if state
+     *  ``eth_getFilterChanges`` method, which can return null if state
      *  filters are not supported by the backend, allowing the Subscriber
      *  to swap in a [[PollingEventSubscriber]].
      */

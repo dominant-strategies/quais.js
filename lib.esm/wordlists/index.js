@@ -19,6 +19,7 @@
  */
 export { Wordlist } from "./wordlist.js";
 export { LangEn } from "./lang-en.js";
+export { LangEs } from "./lang-es.js";
 export { WordlistOwl } from "./wordlist-owl.js";
 export { WordlistOwlA } from "./wordlist-owla.js";
 export { wordlists } from "./wordlists.js";

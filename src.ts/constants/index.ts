@@ -14,3 +14,4 @@ export {
     MaxInt256
 } from "./numbers.js";
 export { quaisymbol, MessagePrefix } from "./strings.js";
+export { ShardData } from "./shards.js";

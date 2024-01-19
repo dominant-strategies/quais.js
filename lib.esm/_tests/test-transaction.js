@@ -208,9 +208,6 @@ describe("Tests Signed Transaction Parsing", function () {
             for (let i = 0; i < 2; i++) {
                 assertTxEqual(tx, expected);
                 assert.equal(tx.typeName, "legacy", "typeName");
-                assert.equal(tx.isLegacy(), true, "isLegacy");
-                assert.equal(tx.isBerlin(), false, "isBerlin");
-                assert.equal(tx.isLondon(), false, "isLondon");
                 assert.ok(!!tx.signature, "signature:!null");
                 assert.equal(tx.signature.r, test.signatureLegacy.r, "signature.r");
                 assert.equal(tx.signature.s, test.signatureLegacy.s, "signature.s");
@@ -232,13 +229,9 @@ describe("Tests Signed Transaction Parsing", function () {
             for (let i = 0; i < 2; i++) {
                 assertTxEqual(tx, expected);
                 assert.equal(tx.typeName, "legacy", "typeName");
-                assert.equal(tx.isLegacy(), true, "isLegacy");
-                assert.equal(tx.isBerlin(), false, "isBerlin");
-                assert.equal(tx.isLondon(), false, "isLondon");
                 assert.ok(!!tx.signature, "signature:!null");
                 assert.equal(tx.signature.r, test.signatureEip155.r, "signature.r");
                 assert.equal(tx.signature.s, test.signatureEip155.s, "signature.s");
-                assert.equal(tx.signature.networkV, BigInt(test.signatureEip155.v), "signature.v");
                 tx = tx.clone();
             }
         });
@@ -252,9 +245,6 @@ describe("Tests Signed Transaction Parsing", function () {
             for (let i = 0; i < 2; i++) {
                 assertTxEqual(tx, expected);
                 assert.equal(tx.typeName, "eip-2930", "typeName");
-                assert.equal(tx.isLegacy(), false, "isLegacy");
-                assert.equal(tx.isBerlin(), true, "isBerlin");
-                assert.equal(tx.isLondon(), false, "isLondon");
                 assert.ok(!!tx.signature, "signature:!null");
                 assert.equal(tx.signature.r, test.signatureBerlin.r, "signature.r");
                 assert.equal(tx.signature.s, test.signatureBerlin.s, "signature.s");
@@ -271,9 +261,6 @@ describe("Tests Signed Transaction Parsing", function () {
             for (let i = 0; i < 2; i++) {
                 assertTxEqual(tx, expected);
                 assert.equal(tx.typeName, "eip-1559", "typeName");
-                assert.equal(tx.isLegacy(), false, "isLegacy");
-                assert.equal(tx.isBerlin(), false, "isBerlin");
-                assert.equal(tx.isLondon(), true, "isLondon");
                 assert.ok(!!tx.signature, "signature:!null");
                 assert.equal(tx.signature.r, test.signatureLondon.r, "signature.r");
                 assert.equal(tx.signature.s, test.signatureLondon.s, "signature.s");

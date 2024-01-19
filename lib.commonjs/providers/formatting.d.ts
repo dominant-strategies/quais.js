@@ -17,7 +17,7 @@ export interface BlockParams {
     /**
      *  The block number.
      */
-    number: number;
+    number: Array<number> | number;
     /**
      *  The timestamp for this block, which is the number of seconds
      *  since epoch that this block was included.
@@ -27,7 +27,7 @@ export interface BlockParams {
      *  The hash of the previous block in the blockchain. The genesis block
      *  has the parentHash of the [[ZeroHash]].
      */
-    parentHash: string;
+    parentHash: Array<string> | string;
     /**
      *  A random sequence provided during the mining process for
      *  proof-of-work networks.
@@ -59,10 +59,27 @@ export interface BlockParams {
      *  block.
      */
     baseFeePerGas: null | bigint;
+    manifestHash: Array<string>;
+    location: bigint;
+    parentDeltaS: Array<bigint>;
+    parentEntropy: Array<bigint>;
+    order: number;
+    subManifest: Array<string> | null;
+    totalEntropy: bigint;
+    mixHash: string;
+    receiptsRoot: string;
+    sha3Uncles: string;
+    size: bigint;
+    stateRoot: string;
+    uncles: Array<string> | null;
     /**
      *  The list of transactions in the block.
      */
     transactions: ReadonlyArray<string | TransactionResponseParams>;
+    transactionsRoot: string;
+    extRollupRoot: string;
+    extTransactions: ReadonlyArray<string | TransactionResponseParams>;
+    extTransactionsRoot: string;
 }
 /**
  *  a **LogParams** encodes the minimal required properties for a
@@ -108,6 +125,21 @@ export interface LogParams {
      *  The transaction index of this log.
      */
     transactionIndex: number;
+}
+export interface EtxParams {
+    type: number;
+    nonce: number;
+    gasPrice: null | bigint;
+    maxPriorityFeePerGas: bigint;
+    maxFeePerGas: bigint;
+    gas: bigint;
+    value: bigint;
+    input: string;
+    to: null | string;
+    accessList: null | AccessList;
+    chainId: null | bigint;
+    from: null | string;
+    hash: string;
 }
 /**
  *  a **TransactionReceiptParams** encodes the minimal required properties
@@ -187,6 +219,7 @@ export interface TransactionReceiptParams {
      *  post-byzantium blocks this is null.
      */
     root: null | string;
+    etxs: ReadonlyArray<string>;
 }
 /**
  *  a **TransactionResponseParams** encodes the minimal required properties
@@ -208,10 +241,7 @@ export interface TransactionResponseParams {
     /**
      *  The transaction index.
      */
-    index: number;
-    /**
-     *  The [[link-eip-2718]] transaction type.
-     */
+    index: bigint;
     type: number;
     /**
      *  The target of the transaction. If ``null``, the ``data`` is initcode
@@ -230,10 +260,6 @@ export interface TransactionResponseParams {
      *  The maximum amount of gas this transaction is authorized to consume.
      */
     gasLimit: bigint;
-    /**
-     *  For legacy transactions, this is the gas price per gas to pay.
-     */
-    gasPrice: bigint;
     /**
      *  For [[link-eip-1559]] transactions, this is the maximum priority
      *  fee to allow a producer to claim.
@@ -264,5 +290,10 @@ export interface TransactionResponseParams {
      *  The transaction access list.
      */
     accessList: null | AccessList;
+    etxGasLimit?: bigint;
+    etxGasPrice?: bigint;
+    etxGasTip?: bigint;
+    etxData?: string;
+    etxAccessList?: AccessList;
 }
 //# sourceMappingURL=formatting.d.ts.map

@@ -21,7 +21,7 @@ import type {
     BlockTag, Provider, TransactionRequest, TransactionResponse
 } from "./provider.js";
 import type { Signer } from "./signer.js";
-
+import { getTxType } from "../utils/index.js";
 
 function checkProvider(signer: AbstractSigner, operation: string): Provider {
     if (signer.provider) { return signer.provider; }
@@ -114,107 +114,35 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             pop.chainId = network.chainId;
         }
 
-        // Do not allow mixing pre-eip-1559 and eip-1559 properties
-        const hasEip1559 = (pop.maxFeePerGas != null || pop.maxPriorityFeePerGas != null);
-        if (pop.gasPrice != null && (pop.type === 2 || hasEip1559)) {
-            assertArgument(false, "eip-1559 transaction do not support gasPrice", "tx", tx);
-        } else if ((pop.type === 0 || pop.type === 1) && hasEip1559) {
-            assertArgument(false, "pre-eip-1559 transaction do not support maxFeePerGas/maxPriorityFeePerGas", "tx", tx);
-        }
-
-        if ((pop.type === 2 || pop.type == null) && (pop.maxFeePerGas != null && pop.maxPriorityFeePerGas != null)) {
-            // Fully-formed EIP-1559 transaction (skip getFeeData)
-            pop.type = 2;
-
-        } else if (pop.type === 0 || pop.type === 1) {
-            // Explicit Legacy or EIP-2930 transaction
-
-            // We need to get fee data to determine things
+        if (pop.maxFeePerGas == null || pop.maxPriorityFeePerGas == null) {
             const feeData = await provider.getFeeData();
-
-            assert(feeData.gasPrice != null, "network does not support gasPrice", "UNSUPPORTED_OPERATION", {
-                operation: "getGasPrice" });
-
-            // Populate missing gasPrice
-            if (pop.gasPrice == null) { pop.gasPrice = feeData.gasPrice; }
-
-        } else {
-
-            // We need to get fee data to determine things
-            const feeData = await provider.getFeeData();
-
-            if (pop.type == null) {
-                // We need to auto-detect the intended type of this transaction...
-
-                if (feeData.maxFeePerGas != null && feeData.maxPriorityFeePerGas != null) {
-                    // The network supports EIP-1559!
-
-                    // Upgrade transaction from null to eip-1559
-                    pop.type = 2;
-
-                    if (pop.gasPrice != null) {
-                        // Using legacy gasPrice property on an eip-1559 network,
-                        // so use gasPrice as both fee properties
-                        const gasPrice = pop.gasPrice;
-                        delete pop.gasPrice;
-                        pop.maxFeePerGas = gasPrice;
-                        pop.maxPriorityFeePerGas = gasPrice;
-
-                    } else {
-                        // Populate missing fee data
-
-                        if (pop.maxFeePerGas == null) {
-                            pop.maxFeePerGas = feeData.maxFeePerGas;
-                        }
-
-                        if (pop.maxPriorityFeePerGas == null) {
-                            pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-                        }
-                    }
-
-                } else if (feeData.gasPrice != null) {
-                    // Network doesn't support EIP-1559...
-
-                    // ...but they are trying to use EIP-1559 properties
-                    assert(!hasEip1559, "network does not support EIP-1559", "UNSUPPORTED_OPERATION", {
-                            operation: "populateTransaction" });
-
-                    // Populate missing fee data
-                    if (pop.gasPrice == null) {
-                        pop.gasPrice = feeData.gasPrice;
-                    }
-
-                    // Explicitly set untyped transaction to legacy
-                    // @TODO: Maybe this shold allow type 1?
-                    pop.type = 0;
-
-               } else {
-                    // getFeeData has failed us.
-                    assert(false, "failed to get consistent fee data", "UNSUPPORTED_OPERATION", {
-                        operation: "signer.getFeeData" });
-                }
-
-            } else if (pop.type === 2) {
-                // Explicitly using EIP-1559
-
-                // Populate missing fee data
-                if (pop.maxFeePerGas == null) {
-                    pop.maxFeePerGas = feeData.maxFeePerGas;
-                }
-
-                if (pop.maxPriorityFeePerGas == null) {
-                    pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-                }
+            if (pop.maxFeePerGas == null) {
+                pop.maxFeePerGas = feeData.maxFeePerGas;
+            }
+            if (pop.maxPriorityFeePerGas == null) {
+                pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
             }
         }
+        
+        if (pop.type == null) {
+            if(pop.to ==  null || pop.from == null) {
+                throw new Error("Cannot determine transaction type, please specify a type or provide a from and to address");
+            }
+            pop.type = await getTxType(pop.from, pop.to);
+        }
 
-//@TOOD: Don't await all over the place; save them up for
-// the end for better batching
-        return await resolveProperties(pop);
-    }
+                if (pop.type == 2) {
+                    pop.externalGasLimit = getBigInt(Number(pop.gasLimit) * 9);
+                    pop.externalGasTip = getBigInt(Number(pop.maxPriorityFeePerGas) * 9);
+                    pop.externalGasPrice = getBigInt(Number(pop.maxFeePerGas) * 9);
+                }
+        //@TOOD: Don't await all over the place; save them up for
+        // the end for better batching
+                return await resolveProperties(pop);
+            }
 
-    async estimateGas(tx: TransactionRequest): Promise<bigint> {
-        return checkProvider(this, "estimateGas").estimateGas(await this.populateCall(tx));
+            async estimateGas(tx: TransactionRequest): Promise<bigint> {
+                return checkProvider(this, "estimateGas").estimateGas(await this.populateCall(tx));
     }
 
     async call(tx: TransactionRequest): Promise<string> {
@@ -230,9 +158,12 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         const provider = checkProvider(this, "sendTransaction");
 
         const pop = await this.populateTransaction(tx);
+
         delete pop.from;
         const txObj = Transaction.from(pop);
-        return await provider.broadcastTransaction(await this.signTransaction(txObj));
+
+        const signedTx = await this.signTransaction(txObj);
+        return await provider.broadcastTransaction(signedTx);
     }
 
     abstract signTransaction(tx: TransactionRequest): Promise<string>;

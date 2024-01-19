@@ -214,8 +214,31 @@ export interface TransactionRequest {
      */
     enableCcipRead?: boolean;
 
-    // Todo?
-    //gasMultiplier?: number;
+        /**
+ * The external gas price.
+ */
+    externalGasPrice?: null | BigNumberish;
+
+    /**
+     * The external gas tip.
+     */
+    externalGasTip?: null | BigNumberish;
+
+    /**
+     * The external gas limit.
+     */
+    externalGasLimit?: null | BigNumberish;
+
+
+    /**
+     *  The external data.
+     */
+    externalData?: null | string;
+
+    /**
+     *  The access list for berlin and london transactions.
+     */
+    externalAccessList?: null | AccessListish;
 };
 
 /**
@@ -415,7 +438,7 @@ export class Block implements BlockParams, Iterable<string> {
      *  The block number, sometimes called the block height. This is a
      *  sequential number that is one higher than the parent block.
      */
-    readonly number!: number;
+    readonly number!: Array<number> | number;
 
     /**
      *  The block hash.
@@ -434,7 +457,7 @@ export class Block implements BlockParams, Iterable<string> {
     /**
      *  The block hash of the parent block.
      */
-    readonly parentHash!: string;
+    readonly parentHash!: Array<string> | string;
 
     /**
      *  The nonce.
@@ -486,7 +509,25 @@ export class Block implements BlockParams, Iterable<string> {
      */
     readonly baseFeePerGas!: null | bigint;
 
+    readonly manifestHash!: Array<string>;
+    readonly location!: bigint;
+    readonly parentDeltaS!: Array<bigint>;
+    readonly parentEntropy!: Array<bigint>;
+    readonly order!: number;
+    readonly subManifest!: Array<string> | null;
+    readonly totalEntropy!: bigint;
+    readonly mixHash!: string;
+    readonly receiptsRoot!: string;
+    readonly sha3Uncles!: string;
+    readonly size!: bigint;
+    readonly stateRoot!: string;
+    readonly uncles!: Array<string> | null;
+
     readonly #transactions: Array<string | TransactionResponse>;
+    readonly transactionsRoot: string;
+    readonly extRollupRoot: string;
+    readonly #extTransactions: Array<string | TransactionResponse>;
+    readonly extTransactionsRoot: string;
 
     /**
      *  Create a new **Block** object.
@@ -496,12 +537,26 @@ export class Block implements BlockParams, Iterable<string> {
      */
     constructor(block: BlockParams, provider: Provider) {
 
+        
         this.#transactions = block.transactions.map((tx) => {
             if (typeof(tx) !== "string") {
                 return new TransactionResponse(tx, provider);
             }
             return tx;
         });
+
+        this.#extTransactions = block.extTransactions.map((tx) => {
+            if (typeof(tx) !== "string") {
+                return new TransactionResponse(tx, provider);
+            }
+            return tx;
+        });
+
+        this.transactionsRoot = block.transactionsRoot;
+
+        this.extRollupRoot = block.extRollupRoot;
+
+        this.extTransactionsRoot = block.extTransactionsRoot;
 
         defineProperties<Block>(this, {
             provider,
@@ -521,7 +576,24 @@ export class Block implements BlockParams, Iterable<string> {
             miner: block.miner,
             extraData: block.extraData,
 
-            baseFeePerGas: getValue(block.baseFeePerGas)
+            baseFeePerGas: getValue(block.baseFeePerGas),
+
+            manifestHash: block.manifestHash,
+            location: block.location,
+            parentDeltaS: block.parentDeltaS,
+            parentEntropy: block.parentEntropy,
+            order: block.order,
+            subManifest: block.subManifest,
+            totalEntropy: block.totalEntropy,
+            mixHash: block.mixHash,
+            receiptsRoot: block.receiptsRoot,
+            sha3Uncles: block.sha3Uncles,
+            size: block.size,
+            stateRoot: block.stateRoot,
+            uncles: block.uncles,
+            transactionsRoot: block.transactionsRoot,
+            extRollupRoot: block.extRollupRoot,
+            extTransactionsRoot: block.extTransactionsRoot,
         });
     }
 
@@ -531,6 +603,13 @@ export class Block implements BlockParams, Iterable<string> {
      */
     get transactions(): ReadonlyArray<string> {
         return this.#transactions.map((tx) => {
+            if (typeof(tx) === "string") { return tx; }
+            return tx.hash;
+        });
+    }
+
+    get extTransactions(): ReadonlyArray<string> {
+        return this.#extTransactions.map((tx) => {
             if (typeof(tx) === "string") { return tx; }
             return tx.hash;
         });
@@ -558,15 +637,38 @@ export class Block implements BlockParams, Iterable<string> {
         return <Array<TransactionResponse>>txs;
     }
 
+    get prefetchedExtTransactions(): Array<TransactionResponse> {
+        const txs = this.#extTransactions.slice();
+
+        // Doesn't matter...
+        if (txs.length === 0) { return [ ]; }
+
+        // Make sure we prefetched the transactions
+        assert(typeof(txs[0]) === "object", "transactions were not prefetched with block request", "UNSUPPORTED_OPERATION", {
+            operation: "transactionResponses()"
+        });
+
+        return <Array<TransactionResponse>>txs;
+    }
+
+
     /**
      *  Returns a JSON-friendly value.
      */
     toJSON(): any {
         const {
             baseFeePerGas, difficulty, extraData, gasLimit, gasUsed, hash,
-            miner, nonce, number, parentHash, timestamp, transactions
+            miner, nonce, number, parentHash, timestamp,
+            manifestHash, location, parentDeltaS, parentEntropy,
+            order, subManifest, totalEntropy, mixHash, receiptsRoot,
+            sha3Uncles, size, stateRoot, uncles, transactionsRoot,
+            extRollupRoot, extTransactionsRoot
         } = this;
-
+    
+        // Using getters to retrieve the transactions and extTransactions
+        const transactions = this.transactions;
+        const extTransactions = this.extTransactions;
+    
         return {
             _type: "Block",
             baseFeePerGas: toJson(baseFeePerGas),
@@ -574,10 +676,33 @@ export class Block implements BlockParams, Iterable<string> {
             extraData,
             gasLimit: toJson(gasLimit),
             gasUsed: toJson(gasUsed),
-            hash, miner, nonce, number, parentHash, timestamp,
-            transactions,
+            hash, 
+            miner, 
+            nonce, 
+            number, 
+            parentHash, 
+            timestamp,
+            manifestHash, 
+            location, 
+            parentDeltaS, 
+            parentEntropy,
+            order, 
+            subManifest, 
+            totalEntropy, 
+            mixHash, 
+            receiptsRoot,
+            sha3Uncles, 
+            size, 
+            stateRoot, 
+            uncles, 
+            transactionsRoot,
+            extRollupRoot, 
+            extTransactionsRoot,
+            transactions, // Includes the transaction hashes or full transactions based on the prefetched data
+            extTransactions // Includes the extended transaction hashes or full transactions based on the prefetched data
         };
     }
+    
 
     [Symbol.iterator](): Iterator<string> {
         let index = 0;
@@ -639,6 +764,35 @@ export class Block implements BlockParams, Iterable<string> {
         }
     }
 
+    async getExtTransaction(indexOrHash: number | string): Promise<TransactionResponse> {
+        // Find the internal value by its index or hash
+        let tx: string | TransactionResponse | undefined = undefined;
+        if (typeof(indexOrHash) === "number") {
+            tx = this.#extTransactions[indexOrHash];
+                
+        } else {
+            const hash = indexOrHash.toLowerCase();
+            for (const v of this.#extTransactions) {
+                if (typeof(v) === "string") {
+                    if (v !== hash) { continue; }
+                    tx = v;
+                    break;
+                } else {
+                    if (v.hash === hash) { continue; }
+                    tx = v;
+                    break;
+                }
+            }
+        }
+        if (tx == null) { throw new Error("no such tx"); }
+
+        if (typeof(tx) === "string") {
+            return <TransactionResponse>(await this.provider.getTransaction(tx));
+        } else {
+            return tx;
+        }
+    }
+
     /**
      *  If a **Block** was fetched with a request to include the transactions
      *  this will allow synchronous access to those transactions.
@@ -664,13 +818,6 @@ export class Block implements BlockParams, Iterable<string> {
      *  for all properties on a [[MinedBlock]].
      */
     isMined(): this is MinedBlock { return !!this.hash; }
-
-    /**
-     *  Returns true if this block is an [[link-eip-2930]] block.
-     */
-    isLondon(): this is (Block & { baseFeePerGas: bigint }) {
-        return !!this.baseFeePerGas;
-    }
 
     /**
      *  @_ignore:
@@ -957,6 +1104,8 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
 
     readonly #logs: ReadonlyArray<Log>;
 
+    readonly etxs!: ReadonlyArray<string>;
+
     /**
      *  @_ignore:
      */
@@ -991,6 +1140,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             cumulativeGasUsed: tx.cumulativeGasUsed,
             gasPrice,
 
+            etxs: tx.etxs,
             type: tx.type,
             //byzantium: tx.byzantium,
             status: tx.status,
@@ -1162,7 +1312,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
     /**
      *  The index within the block that this transaction resides at.
      */
-    readonly index!: number;
+    readonly index!: bigint;
 
     /**
      *  The transaction hash.
@@ -1210,20 +1360,6 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
     readonly gasLimit!: bigint;
 
     /**
-     *  The gas price can have various values, depending on the network.
-     *
-     *  In modern networks, for transactions that are included this is
-     *  the //effective gas price// (the fee per gas that was actually
-     *  charged), while for transactions that have not been included yet
-     *  is the [[maxFeePerGas]].
-     *
-     *  For legacy transactions, or transactions on legacy networks, this
-     *  is the fee that will be charged per unit of gas the transaction
-     *  consumes.
-     */
-    readonly gasPrice!: bigint;
-
-    /**
      *  The maximum priority fee (per unit of gas) to allow a
      *  validator to charge the sender. This is inclusive of the
      *  [[maxFeeFeePerGas]].
@@ -1263,6 +1399,18 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      */
     readonly accessList!: null | AccessList;
 
+    // Extrernal transaction specific fields
+
+    readonly etxGasLimit?: bigint ;
+
+    readonly etxGasPrice?: bigint ;
+
+    readonly etxGasTip?: bigint ;
+
+    readonly etxData?: string ;
+
+    readonly etxAccessList?: AccessList ;
+
     #startBlock: number;
 
     /**
@@ -1287,7 +1435,6 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
         this.data = tx.data;
         this.value = tx.value;
 
-        this.gasPrice = tx.gasPrice;
         this.maxPriorityFeePerGas = (tx.maxPriorityFeePerGas != null) ? tx.maxPriorityFeePerGas: null;
         this.maxFeePerGas = (tx.maxFeePerGas != null) ? tx.maxFeePerGas: null;
 
@@ -1295,6 +1442,20 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
         this.signature = tx.signature;
 
         this.accessList = (tx.accessList != null) ? tx.accessList: null;
+
+        if (tx.type != 2) {
+            delete tx.etxGasLimit;
+            delete tx.etxGasPrice;
+            delete tx.etxGasTip;
+            delete tx.etxData;
+            delete tx.etxAccessList;
+        }
+
+        if (tx.etxGasLimit) this.etxGasLimit = tx.etxGasLimit;
+        if (tx.etxGasPrice) this.etxGasPrice = tx.etxGasPrice;
+        if (tx.etxGasTip) this.etxGasTip = tx.etxGasTip;
+        if (tx.etxData) this.etxData = tx.etxData;
+        if (tx.etxAccessList) this.etxAccessList = tx.etxAccessList;
 
         this.#startBlock = -1;
     }
@@ -1305,23 +1466,31 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
     toJSON(): any {
         const {
             blockNumber, blockHash, index, hash, type, to, from, nonce,
-            data, signature, accessList
+            data, signature, accessList,
+            //etxGasLimit, etxGasPrice, etxGasTip, etxData, etxAccessList // Include new fields
         } = this;
-
-        return {
+        let result ={
             _type: "TransactionReceipt",
             accessList, blockNumber, blockHash,
             chainId: toJson(this.chainId),
             data, from,
             gasLimit: toJson(this.gasLimit),
-            gasPrice: toJson(this.gasPrice),
             hash,
             maxFeePerGas: toJson(this.maxFeePerGas),
             maxPriorityFeePerGas: toJson(this.maxPriorityFeePerGas),
             nonce, signature, to, index, type,
             value: toJson(this.value),
-        };
+            // Include new fields in the output
+            // etxGasLimit: etxGasLimit ? toJson(etxGasLimit) : null,
+            // etxGasPrice: etxGasPrice ? toJson(etxGasPrice) : null,
+            // etxGasTip: etxGasTip ? toJson(etxGasTip) : null,
+            // etxData: etxData ? etxData : null,
+            // etxAccessList: etxAccessList ? etxAccessList : null
+        }
+
+        return result;
     }
+    
 
     /**
      *  Resolves to the Block that this transaction was included in.
@@ -1564,39 +1733,6 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      */
     isMined(): this is MinedTransactionResponse {
         return (this.blockHash != null);
-    }
-
-    /**
-     *  Returns true if the transaction is a legacy (i.e. ``type == 0``)
-     *  transaction.
-     *
-     *  This provides a Type Guard that this transaction will have
-     *  the ``null``-ness for hardfork-specific properties set correctly.
-     */
-    isLegacy(): this is (TransactionResponse & { accessList: null, maxFeePerGas: null, maxPriorityFeePerGas: null }) {
-        return (this.type === 0)
-    }
-
-    /**
-     *  Returns true if the transaction is a Berlin (i.e. ``type == 1``)
-     *  transaction. See [[link-eip-2070]].
-     *
-     *  This provides a Type Guard that this transaction will have
-     *  the ``null``-ness for hardfork-specific properties set correctly.
-     */
-    isBerlin(): this is (TransactionResponse & { accessList: AccessList, maxFeePerGas: null, maxPriorityFeePerGas: null }) {
-        return (this.type === 1);
-    }
-
-    /**
-     *  Returns true if the transaction is a London (i.e. ``type == 2``)
-     *  transaction. See [[link-eip-1559]].
-     *
-     *  This provides a Type Guard that this transaction will have
-     *  the ``null``-ness for hardfork-specific properties set correctly.
-     */
-    isLondon(): this is (TransactionResponse & { accessList: AccessList, maxFeePerGas: bigint, maxPriorityFeePerGas: bigint }){
-        return (this.type === 2);
     }
 
     /**

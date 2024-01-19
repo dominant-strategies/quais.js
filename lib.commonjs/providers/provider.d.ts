@@ -144,6 +144,26 @@ export interface TransactionRequest {
      *  the fetch to unexpected parties.
      */
     enableCcipRead?: boolean;
+    /**
+* The external gas price.
+*/
+    externalGasPrice?: null | BigNumberish;
+    /**
+     * The external gas tip.
+     */
+    externalGasTip?: null | BigNumberish;
+    /**
+     * The external gas limit.
+     */
+    externalGasLimit?: null | BigNumberish;
+    /**
+     *  The external data.
+     */
+    externalData?: null | string;
+    /**
+     *  The access list for berlin and london transactions.
+     */
+    externalAccessList?: null | AccessListish;
 }
 /**
  *  A **PreparedTransactionRequest** is identical to a [[TransactionRequest]]
@@ -276,7 +296,7 @@ export declare class Block implements BlockParams, Iterable<string> {
      *  The block number, sometimes called the block height. This is a
      *  sequential number that is one higher than the parent block.
      */
-    readonly number: number;
+    readonly number: Array<number> | number;
     /**
      *  The block hash.
      *
@@ -292,7 +312,7 @@ export declare class Block implements BlockParams, Iterable<string> {
     /**
      *  The block hash of the parent block.
      */
-    readonly parentHash: string;
+    readonly parentHash: Array<string> | string;
     /**
      *  The nonce.
      *
@@ -335,6 +355,22 @@ export declare class Block implements BlockParams, Iterable<string> {
      *  is.
      */
     readonly baseFeePerGas: null | bigint;
+    readonly manifestHash: Array<string>;
+    readonly location: bigint;
+    readonly parentDeltaS: Array<bigint>;
+    readonly parentEntropy: Array<bigint>;
+    readonly order: number;
+    readonly subManifest: Array<string> | null;
+    readonly totalEntropy: bigint;
+    readonly mixHash: string;
+    readonly receiptsRoot: string;
+    readonly sha3Uncles: string;
+    readonly size: bigint;
+    readonly stateRoot: string;
+    readonly uncles: Array<string> | null;
+    readonly transactionsRoot: string;
+    readonly extRollupRoot: string;
+    readonly extTransactionsRoot: string;
     /**
      *  Create a new **Block** object.
      *
@@ -347,6 +383,7 @@ export declare class Block implements BlockParams, Iterable<string> {
      *  they were executed within the block.
      */
     get transactions(): ReadonlyArray<string>;
+    get extTransactions(): ReadonlyArray<string>;
     /**
      *  Returns the complete transactions, in the order they
      *  were executed within the block.
@@ -356,6 +393,7 @@ export declare class Block implements BlockParams, Iterable<string> {
      *  into [[Provider-getBlock]].
      */
     get prefetchedTransactions(): Array<TransactionResponse>;
+    get prefetchedExtTransactions(): Array<TransactionResponse>;
     /**
      *  Returns a JSON-friendly value.
      */
@@ -373,6 +411,7 @@ export declare class Block implements BlockParams, Iterable<string> {
      *  Get the transaction at %%indexe%% within this block.
      */
     getTransaction(indexOrHash: number | string): Promise<TransactionResponse>;
+    getExtTransaction(indexOrHash: number | string): Promise<TransactionResponse>;
     /**
      *  If a **Block** was fetched with a request to include the transactions
      *  this will allow synchronous access to those transactions.
@@ -385,12 +424,6 @@ export declare class Block implements BlockParams, Iterable<string> {
      *  for all properties on a [[MinedBlock]].
      */
     isMined(): this is MinedBlock;
-    /**
-     *  Returns true if this block is an [[link-eip-2930]] block.
-     */
-    isLondon(): this is (Block & {
-        baseFeePerGas: bigint;
-    });
     /**
      *  @_ignore:
      */
@@ -574,6 +607,7 @@ export declare class TransactionReceipt implements TransactionReceiptParams, Ite
      *  could be used to validate certain parts of the receipt.
      */
     readonly root: null | string;
+    readonly etxs: ReadonlyArray<string>;
     /**
      *  @_ignore:
      */
@@ -673,7 +707,7 @@ export declare class TransactionResponse implements TransactionLike<string>, Tra
     /**
      *  The index within the block that this transaction resides at.
      */
-    readonly index: number;
+    readonly index: bigint;
     /**
      *  The transaction hash.
      */
@@ -714,19 +748,6 @@ export declare class TransactionResponse implements TransactionLike<string>, Tra
      */
     readonly gasLimit: bigint;
     /**
-     *  The gas price can have various values, depending on the network.
-     *
-     *  In modern networks, for transactions that are included this is
-     *  the //effective gas price// (the fee per gas that was actually
-     *  charged), while for transactions that have not been included yet
-     *  is the [[maxFeePerGas]].
-     *
-     *  For legacy transactions, or transactions on legacy networks, this
-     *  is the fee that will be charged per unit of gas the transaction
-     *  consumes.
-     */
-    readonly gasPrice: bigint;
-    /**
      *  The maximum priority fee (per unit of gas) to allow a
      *  validator to charge the sender. This is inclusive of the
      *  [[maxFeeFeePerGas]].
@@ -759,6 +780,11 @@ export declare class TransactionResponse implements TransactionLike<string>, Tra
      *  support it, otherwise ``null``.
      */
     readonly accessList: null | AccessList;
+    readonly etxGasLimit?: bigint;
+    readonly etxGasPrice?: bigint;
+    readonly etxGasTip?: bigint;
+    readonly etxData?: string;
+    readonly etxAccessList?: AccessList;
     /**
      *  @_ignore:
      */
@@ -805,42 +831,6 @@ export declare class TransactionResponse implements TransactionLike<string>, Tra
      *  unmined transactions.
      */
     isMined(): this is MinedTransactionResponse;
-    /**
-     *  Returns true if the transaction is a legacy (i.e. ``type == 0``)
-     *  transaction.
-     *
-     *  This provides a Type Guard that this transaction will have
-     *  the ``null``-ness for hardfork-specific properties set correctly.
-     */
-    isLegacy(): this is (TransactionResponse & {
-        accessList: null;
-        maxFeePerGas: null;
-        maxPriorityFeePerGas: null;
-    });
-    /**
-     *  Returns true if the transaction is a Berlin (i.e. ``type == 1``)
-     *  transaction. See [[link-eip-2070]].
-     *
-     *  This provides a Type Guard that this transaction will have
-     *  the ``null``-ness for hardfork-specific properties set correctly.
-     */
-    isBerlin(): this is (TransactionResponse & {
-        accessList: AccessList;
-        maxFeePerGas: null;
-        maxPriorityFeePerGas: null;
-    });
-    /**
-     *  Returns true if the transaction is a London (i.e. ``type == 2``)
-     *  transaction. See [[link-eip-1559]].
-     *
-     *  This provides a Type Guard that this transaction will have
-     *  the ``null``-ness for hardfork-specific properties set correctly.
-     */
-    isLondon(): this is (TransactionResponse & {
-        accessList: AccessList;
-        maxFeePerGas: bigint;
-        maxPriorityFeePerGas: bigint;
-    });
     /**
      *  Returns a filter which can be used to listen for orphan events
      *  that evict this transaction.

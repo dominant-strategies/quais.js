@@ -11,7 +11,7 @@ import {
 
 import type {
     BlockParams, LogParams,
-    TransactionReceiptParams, TransactionResponseParams,
+    TransactionReceiptParams, TransactionResponseParams, EtxParams
 } from "./formatting.js";
 
 
@@ -109,8 +109,8 @@ export function formatLog(value: any): LogParams {
 
 const _formatBlock = object({
     hash: allowNull(formatHash),
-    parentHash: formatHash,
-    number: getNumber,
+    parentHash: arrayOf(formatHash),
+    number: arrayOf(getNumber),
 
     timestamp: getNumber,
     nonce: allowNull(formatData),
@@ -122,12 +122,35 @@ const _formatBlock = object({
     miner: allowNull(getAddress),
     extraData: formatData,
 
-    baseFeePerGas: allowNull(getBigInt)
+    baseFeePerGas: allowNull(getBigInt),
+
+    extRollupRoot: formatHash,
+    // extTransactions: arrayOf(formatTransaction), 
+    extTransactionsRoot: formatHash,
+    // transactions:
+    transactionsRoot: formatHash,
+    manifestHash: arrayOf(formatHash), 
+    location: formatData, 
+    parentDeltaS: arrayOf(getBigInt), 
+    parentEntropy: arrayOf(getBigInt), 
+    order: getNumber, 
+    subManifest: arrayOf(formatData), 
+    totalEntropy: getBigInt, 
+    mixHash: formatHash,
+    receiptsRoot: formatHash,
+    sha3Uncles: formatHash,
+    size: getBigInt,
+    stateRoot: formatHash,
+    uncles: arrayOf(formatHash),
 });
 
 export function formatBlock(value: any): BlockParams {
     const result = _formatBlock(value);
     result.transactions = value.transactions.map((tx: string | TransactionResponseParams) => {
+        if (typeof(tx) === "string") { return tx; }
+        return formatTransactionResponse(tx);
+    });
+    result.extTransactions = value.extTransactions.map((tx: string | TransactionResponseParams) => {
         if (typeof(tx) === "string") { return tx; }
         return formatTransactionResponse(tx);
     });
@@ -151,6 +174,28 @@ export function formatReceiptLog(value: any): LogParams {
     return _formatReceiptLog(value);
 }
 
+const _formatEtx = object({
+    type: allowNull(getNumber, 0),
+    nonce: getNumber,
+    gasPrice: allowNull(getBigInt),
+    maxPriorityFeePerGas: getBigInt,
+    maxFeePerGas: getBigInt,
+    gas: getBigInt,
+    value: allowNull(getBigInt, BN_0),
+    input: formatData,
+    to: allowNull(getAddress, null),
+    accessList: allowNull(accessListify, null),
+    chainId: allowNull(getBigInt, null),
+    from: allowNull(getAddress, null),
+    hash: formatHash,
+}, {
+    from: [ "sender" ],
+});
+
+export function formatEtx(value: any): EtxParams {
+    return _formatEtx(value);
+}
+
 const _formatTransactionReceipt = object({
     to: allowNull(getAddress, null),
     from: allowNull(getAddress, null),
@@ -168,15 +213,16 @@ const _formatTransactionReceipt = object({
     cumulativeGasUsed: getBigInt,
     effectiveGasPrice: allowNull(getBigInt),
     status: allowNull(getNumber),
-    type: allowNull(getNumber, 0)
+    type: allowNull(getNumber, 0),
+    etxs: arrayOf(formatEtx),
 }, {
-    effectiveGasPrice: [ "gasPrice" ],
     hash: [ "transactionHash" ],
     index: [ "transactionIndex" ],
 });
 
 export function formatTransactionReceipt(value: any): TransactionReceiptParams {
-    return _formatTransactionReceipt(value);
+    const result = _formatTransactionReceipt(value);
+    return result;
 }
 
 export function formatTransactionResponse(value: any): TransactionResponseParams {
@@ -186,6 +232,7 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
     if (value.to && getBigInt(value.to) === BN_0) {
         value.to = "0x0000000000000000000000000000000000000000";
     }
+    if (value.type === "0x1") value.from = value.sender
 
     const result = object({
         hash: formatHash,
@@ -198,29 +245,33 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
 
         blockHash: allowNull(formatHash, null),
         blockNumber: allowNull(getNumber, null),
-        transactionIndex: allowNull(getNumber, null),
+        index: allowNull(getNumber, null),
 
         //confirmations: allowNull(getNumber, null),
 
         from: getAddress,
 
-        // either (gasPrice) or (maxPriorityFeePerGas + maxFeePerGas) must be set
-        gasPrice: allowNull(getBigInt),
         maxPriorityFeePerGas: allowNull(getBigInt),
         maxFeePerGas: allowNull(getBigInt),
 
         gasLimit: getBigInt,
         to: allowNull(getAddress, null),
         value: getBigInt,
-        nonce: getNumber,
-        data: formatData,
+        nonce: getNumber, 
 
         creates: allowNull(getAddress, null),
 
-        chainId: allowNull(getBigInt, null)
+        chainId: allowNull(getBigInt, null),
+
+        etxGasLimit: allowNull(getBigInt, null),
+        etxGasPrice: allowNull(getBigInt, null),
+        etxGasTip: allowNull(getBigInt, null),
+        etxData: allowNull(formatData, null),
+        etxAccessList: allowNull(accessListify, null),
     }, {
         data: [ "input" ],
-        gasLimit: [ "gas" ]
+        gasLimit: [ "gas" ],
+        index: [ "transactionIndex" ],
     })(value);
 
     // If to and creates are empty, populate the creates from the value
@@ -228,7 +279,27 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
         result.creates = getCreateAddress(result);
     }
 
-    // @TODO: Check fee data
+    if (result.type !== 2) {
+        delete result.etxGasLimit;
+        delete result.etxGasPrice;
+        delete result.etxGasTip;
+        delete result.etxData;
+        delete result.etxAccessList;
+    } else {
+        //Needed due to go-quai api using both external as naming and etx as naming
+        //External is for when creating an external transaction
+        //Etx is for when reading an external transaction
+        if (result.etxGasLimit == null && value.externalGasLimit!= null)
+            result.etxGasLimit = value.externalGasLimit;
+        if (result.etxGasPrice == null && value.externalGasPrice!= null) 
+            result.etxGasPrice = value.externalGasPrice;
+        if (result.etxGasTip == null && value.externalGasTip!= null)
+            result.etxGasTip = value.externalGasTip;
+        if (result.etxData == null && value.externalData!= null)
+            result.etxData = value.externalData;
+        if (result.etxAccessList == null && value.externalAccessList!= null)
+            result.etxAccessList = value.externalAccessList;
+    }
 
     // Add an access list to supported transaction types
     if ((value.type === 1 || value.type === 2) && value.accessList == null) {
