@@ -66,8 +66,8 @@ export class SigningKey {
         });
 
         return Signature.from({
-            r: toBeHex(sig.r, 32),
-            s: toBeHex(sig.s, 32),
+            r: toBeHex("0x" + sig.r.toString(16), 32),
+            s: toBeHex("0x" + sig.s.toString(16), 32),
             v: (sig.recovery ? 0x1c: 0x1b)
         });
     }

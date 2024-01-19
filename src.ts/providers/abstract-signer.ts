@@ -131,13 +131,18 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             pop.type = await getTxType(pop.from, pop.to);
         }
 
-//@TOOD: Don't await all over the place; save them up for
-// the end for better batching
-        return await resolveProperties(pop);
-    }
+                if (pop.type == 2) {
+                    pop.externalGasLimit = getBigInt(Number(pop.gasLimit) * 9);
+                    pop.externalGasTip = getBigInt(Number(pop.maxPriorityFeePerGas) * 9);
+                    pop.externalGasPrice = getBigInt(Number(pop.maxFeePerGas) * 9);
+                }
+        //@TOOD: Don't await all over the place; save them up for
+        // the end for better batching
+                return await resolveProperties(pop);
+            }
 
-    async estimateGas(tx: TransactionRequest): Promise<bigint> {
-        return checkProvider(this, "estimateGas").estimateGas(await this.populateCall(tx));
+            async estimateGas(tx: TransactionRequest): Promise<bigint> {
+                return checkProvider(this, "estimateGas").estimateGas(await this.populateCall(tx));
     }
 
     async call(tx: TransactionRequest): Promise<string> {
@@ -150,15 +155,15 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
     }
 
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
-        console.log("AbstractsendTransaction", tx);
         const provider = checkProvider(this, "sendTransaction");
 
         const pop = await this.populateTransaction(tx);
-        console.log("pop", pop);
 
+        delete pop.from;
         const txObj = Transaction.from(pop);
-        console.log('txobj', txObj.type )
-        return await provider.broadcastTransaction(await this.signTransaction(txObj));
+
+        const signedTx = await this.signTransaction(txObj);
+        return await provider.broadcastTransaction(signedTx);
     }
 
     abstract signTransaction(tx: TransactionRequest): Promise<string>;
