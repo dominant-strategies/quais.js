@@ -2616,6 +2616,142 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
 
     /**
+     *  A constant for the zero address.
+     *
+     *  (**i.e.** ``"0x0000000000000000000000000000000000000000"``)
+     */
+    const ZeroAddress = "0x0000000000000000000000000000000000000000";
+
+    /**
+     *  A constant for the zero hash.
+     *
+     *  (**i.e.** ``"0x0000000000000000000000000000000000000000000000000000000000000000"``)
+     */
+    const ZeroHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
+
+    /**
+     *  A constant for the order N for the secp256k1 curve.
+     *
+     *  (**i.e.** ``0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n``)
+     */
+    const N$1 = BigInt("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");
+    /**
+     *  A constant for the number of wei in a single ether.
+     *
+     *  (**i.e.** ``1000000000000000000n``)
+     */
+    const WeiPerEther = BigInt("1000000000000000000");
+    /**
+     *  A constant for the maximum value for a ``uint256``.
+     *
+     *  (**i.e.** ``0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn``)
+     */
+    const MaxUint256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    /**
+     *  A constant for the minimum value for an ``int256``.
+     *
+     *  (**i.e.** ``-8000000000000000000000000000000000000000000000000000000000000000n``)
+     */
+    const MinInt256 = BigInt("0x8000000000000000000000000000000000000000000000000000000000000000") * BigInt(-1);
+    /**
+     *  A constant for the maximum value for an ``int256``.
+     *
+     *  (**i.e.** ``0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn``)
+     */
+    const MaxInt256 = BigInt("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+
+    // NFKC (composed)             // (decomposed)
+    /**
+     *  A constant for the ether symbol (normalized using NFKC).
+     *
+     *  (**i.e.** ``"\\u039e"``)
+     */
+    const quaisymbol = "\u039e"; // "\uD835\uDF63";
+    /**
+     *  A constant for the [[link-eip-191]] personal message prefix.
+     *
+     *  (**i.e.** ``"\\x19Ethereum Signed Message:\\n"``)
+     */
+    const MessagePrefix = "\x19Quai Signed Message:\n";
+
+    const ShardData = [
+        {
+            name: "Cyprus One",
+            shard: "zone-0-0",
+            context: 2,
+            byte: ["00", "1d"]
+        },
+        {
+            name: "Cyprus Two",
+            shard: "zone-0-1",
+            context: 2,
+            byte: ["1e", "3a"]
+        },
+        {
+            name: "Cyprus Three",
+            shard: "zone-0-2",
+            context: 2,
+            byte: ["3b", "57"]
+        },
+        {
+            name: "Paxos One",
+            shard: "zone-1-0",
+            context: 2,
+            byte: ["58", "73"]
+        },
+        {
+            name: "Paxos Two",
+            shard: "zone-1-1",
+            context: 2,
+            byte: ["74", "8f"]
+        },
+        {
+            name: "Paxos Three",
+            shard: "zone-1-2",
+            context: 2,
+            byte: ["90", "AB"]
+        },
+        {
+            name: "Hydra One",
+            shard: "zone-2-0",
+            context: 2,
+            byte: ["AC", "C7"]
+        },
+        {
+            name: "Hydra Two",
+            shard: "zone-2-1",
+            context: 2,
+            byte: ["C8", "E3"]
+        },
+        {
+            name: "Hydra Three",
+            shard: "zone-2-2",
+            context: 2,
+            byte: ["E4", "FF"]
+        }
+    ];
+
+    function getShardForAddress(address) {
+        if (address.length < 4)
+            return null;
+        const byteCode = address.substring(2, 4).toUpperCase();
+        for (const shardInfo of ShardData) {
+            if (byteCode >= shardInfo.byte[0] && byteCode <= shardInfo.byte[1]) {
+                return shardInfo.shard;
+            }
+        }
+        return null;
+    }
+    function getTxType(from, to) {
+        const fromShard = getShardForAddress(from);
+        const toShard = getShardForAddress(to);
+        if (fromShard === null || toShard === null) {
+            throw new Error("Invalid address or shard not found");
+        }
+        return fromShard === toShard ? 0 : 2;
+    }
+
+    /**
      * @_ignore:
      */
     const WordSize = 32;
@@ -6459,72 +6595,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     BigInt(0);
     secp256k1.ProjectivePoint;
 
-    /**
-     *  A constant for the zero address.
-     *
-     *  (**i.e.** ``"0x0000000000000000000000000000000000000000"``)
-     */
-    const ZeroAddress = "0x0000000000000000000000000000000000000000";
-
-    /**
-     *  A constant for the zero hash.
-     *
-     *  (**i.e.** ``"0x0000000000000000000000000000000000000000000000000000000000000000"``)
-     */
-    const ZeroHash = "0x0000000000000000000000000000000000000000000000000000000000000000";
-
-    /**
-     *  A constant for the order N for the secp256k1 curve.
-     *
-     *  (**i.e.** ``0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141n``)
-     */
-    const N$1 = BigInt("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");
-    /**
-     *  A constant for the number of wei in a single ether.
-     *
-     *  (**i.e.** ``1000000000000000000n``)
-     */
-    const WeiPerEther = BigInt("1000000000000000000");
-    /**
-     *  A constant for the maximum value for a ``uint256``.
-     *
-     *  (**i.e.** ``0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn``)
-     */
-    const MaxUint256 = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-    /**
-     *  A constant for the minimum value for an ``int256``.
-     *
-     *  (**i.e.** ``-8000000000000000000000000000000000000000000000000000000000000000n``)
-     */
-    const MinInt256 = BigInt("0x8000000000000000000000000000000000000000000000000000000000000000") * BigInt(-1);
-    /**
-     *  A constant for the maximum value for an ``int256``.
-     *
-     *  (**i.e.** ``0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffn``)
-     */
-    const MaxInt256 = BigInt("0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-
-    // NFKC (composed)             // (decomposed)
-    /**
-     *  A constant for the ether symbol (normalized using NFKC).
-     *
-     *  (**i.e.** ``"\\u039e"``)
-     */
-    const quaisymbol = "\u039e"; // "\uD835\uDF63";
-    /**
-     *  A constant for the [[link-eip-191]] personal message prefix.
-     *
-     *  (**i.e.** ``"\\x19Ethereum Signed Message:\\n"``)
-     */
-    const MessagePrefix = "\x19Ethereum Signed Message:\n";
-
     // Constants
     const BN_0$7 = BigInt(0);
     const BN_1$3 = BigInt(1);
-    const BN_2$3 = BigInt(2);
-    const BN_27$1 = BigInt(27);
-    const BN_28$1 = BigInt(28);
-    const BN_35$1 = BigInt(35);
+    const BN_2$2 = BigInt(2);
+    const BN_27 = BigInt(27);
+    const BN_28 = BigInt(28);
+    const BN_35 = BigInt(35);
     const _guard$3 = {};
     function toUint256(value) {
         return zeroPadValue(toBeArray(value), 32);
@@ -6672,12 +6749,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         static getChainId(v) {
             const bv = getBigInt(v, "v");
             // The v is not an EIP-155 v, so it is the unspecified chain ID
-            if ((bv == BN_27$1) || (bv == BN_28$1)) {
+            if ((bv == BN_27) || (bv == BN_28)) {
                 return BN_0$7;
             }
             // Bad value for an EIP-155 v
-            assertArgument(bv >= BN_35$1, "invalid EIP-155 v", "v", v);
-            return (bv - BN_35$1) / BN_2$3;
+            assertArgument(bv >= BN_35, "invalid EIP-155 v", "v", v);
+            return (bv - BN_35) / BN_2$2;
         }
         /**
          *  Compute the ``v`` for a chain ID for a legacy EIP-155 transactions.
@@ -6694,7 +6771,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          */
         static getChainIdV(chainId, v) {
-            return (getBigInt(chainId) * BN_2$3) + BigInt(35 + v - 27);
+            return (getBigInt(chainId) * BN_2$2) + BigInt(35 + v - 27);
         }
         /**
          *  Compute the normalized legacy transaction ``v`` from a ``yParirty``,
@@ -6719,13 +6796,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         static getNormalizedV(v) {
             const bv = getBigInt(v);
-            if (bv === BN_0$7 || bv === BN_27$1) {
+            if (bv === BN_0$7 || bv === BN_27) {
                 return 27;
             }
-            if (bv === BN_1$3 || bv === BN_28$1) {
+            if (bv === BN_1$3 || bv === BN_28) {
                 return 28;
             }
-            assertArgument(bv >= BN_35$1, "invalid v", "v", v);
+            assertArgument(bv >= BN_35, "invalid v", "v", v);
             // Otherwise, EIP-155 v means odd is 27 and even is 28
             return (bv & BN_1$3) ? 27 : 28;
         }
@@ -6788,7 +6865,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (_v != null) {
                     const v = getBigInt(_v);
                     return {
-                        networkV: ((v >= BN_35$1) ? v : undefined),
+                        networkV: ((v >= BN_35) ? v : undefined),
                         v: Signature.getNormalizedV(v)
                     };
                 }
@@ -6797,7 +6874,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     return { v: ((getBytes(yParityAndS)[0] & 0x80) ? 28 : 27) };
                 }
                 if (yParity != null) {
-                    switch (getNumber(yParity, "sig.yParity")) {
+                    switch (yParity) {
                         case 0: return { v: 27 };
                         case 1: return { v: 28 };
                     }
@@ -6810,8 +6887,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 result.#networkV = networkV;
             }
             // If multiple of v, yParity, yParityAndS we given, check they match
-            assertError(sig.yParity == null || getNumber(sig.yParity, "sig.yParity") === result.yParity, "yParity mismatch");
-            assertError(sig.yParityAndS == null || sig.yParityAndS === result.yParityAndS, "yParityAndS mismatch");
+            assertError(!("yParity" in sig && sig.yParity !== result.yParity), "yParity mismatch");
+            assertError(!("yParityAndS" in sig && sig.yParityAndS !== result.yParityAndS), "yParityAndS mismatch");
             return result;
         }
     }
@@ -9561,10 +9638,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
 
     const BN_0$4 = BigInt(0);
-    const BN_2$2 = BigInt(2);
-    const BN_27 = BigInt(27);
-    const BN_28 = BigInt(28);
-    const BN_35 = BigInt(35);
+    // const BN_2 = BigInt(2);
+    // const BN_27 = BigInt(27)
+    // const BN_28 = BigInt(28)
+    // const BN_35 = BigInt(35);
     const BN_MAX_UINT = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
     function handleAddress(value) {
         if (value === "0x") {
@@ -9603,100 +9680,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     function formatAccessList(value) {
         return accessListify(value).map((set) => [set.address, set.storageKeys]);
     }
-    function _parseLegacy(data) {
-        const fields = decodeRlp(data);
-        assertArgument(Array.isArray(fields) && (fields.length === 9 || fields.length === 6), "invalid field count for legacy transaction", "data", data);
-        const tx = {
-            type: 0,
-            nonce: handleNumber(fields[0], "nonce"),
-            gasPrice: handleUint(fields[1], "gasPrice"),
-            gasLimit: handleUint(fields[2], "gasLimit"),
-            to: handleAddress(fields[3]),
-            value: handleUint(fields[4], "value"),
-            data: hexlify(fields[5]),
-            chainId: BN_0$4
-        };
-        // Legacy unsigned transaction
-        if (fields.length === 6) {
-            return tx;
-        }
-        const v = handleUint(fields[6], "v");
-        const r = handleUint(fields[7], "r");
-        const s = handleUint(fields[8], "s");
-        if (r === BN_0$4 && s === BN_0$4) {
-            // EIP-155 unsigned transaction
-            tx.chainId = v;
-        }
-        else {
-            // Compute the EIP-155 chain ID (or 0 for legacy)
-            let chainId = (v - BN_35) / BN_2$2;
-            if (chainId < BN_0$4) {
-                chainId = BN_0$4;
-            }
-            tx.chainId = chainId;
-            // Signed Legacy Transaction
-            assertArgument(chainId !== BN_0$4 || (v === BN_27 || v === BN_28), "non-canonical legacy v", "v", fields[6]);
-            tx.signature = Signature.from({
-                r: zeroPadValue(fields[7], 32),
-                s: zeroPadValue(fields[8], 32),
-                v
-            });
-            tx.hash = keccak256(data);
-        }
-        return tx;
-    }
-    function _serializeLegacy(tx, sig) {
-        const fields = [
-            formatNumber(tx.nonce || 0, "nonce"),
-            formatNumber(tx.gasPrice || 0, "gasPrice"),
-            formatNumber(tx.gasLimit || 0, "gasLimit"),
-            ((tx.to != null) ? getAddress(tx.to) : "0x"),
-            formatNumber(tx.value || 0, "value"),
-            (tx.data || "0x"),
-        ];
-        let chainId = BN_0$4;
-        if (tx.chainId != BN_0$4) {
-            // A chainId was provided; if non-zero we'll use EIP-155
-            chainId = getBigInt(tx.chainId, "tx.chainId");
-            // We have a chainId in the tx and an EIP-155 v in the signature,
-            // make sure they agree with each other
-            assertArgument(!sig || sig.networkV == null || sig.legacyChainId === chainId, "tx.chainId/sig.v mismatch", "sig", sig);
-        }
-        else if (tx.signature) {
-            // No explicit chainId, but EIP-155 have a derived implicit chainId
-            const legacy = tx.signature.legacyChainId;
-            if (legacy != null) {
-                chainId = legacy;
-            }
-        }
-        // Requesting an unsigned transaction
-        if (!sig) {
-            // We have an EIP-155 transaction (chainId was specified and non-zero)
-            if (chainId !== BN_0$4) {
-                fields.push(toBeArray(chainId));
-                fields.push("0x");
-                fields.push("0x");
-            }
-            return encodeRlp(fields);
-        }
-        // @TODO: We should probably check that tx.signature, chainId, and sig
-        //        match but that logic could break existing code, so schedule
-        //        this for the next major bump.
-        // Compute the EIP-155 v
-        let v = BigInt(27 + sig.yParity);
-        if (chainId !== BN_0$4) {
-            v = Signature.getChainIdV(chainId, sig.v);
-        }
-        else if (BigInt(sig.v) !== v) {
-            assertArgument(false, "tx.chainId/sig.v mismatch", "sig", sig);
-        }
-        // Add the signature
-        fields.push(toBeArray(v));
-        fields.push(toBeArray(sig.r));
-        fields.push(toBeArray(sig.s));
-        return encodeRlp(fields);
-    }
-    function _parseEipSignature(tx, fields) {
+    function _parseSignature(tx, fields, serialize) {
         let yParity;
         try {
             yParity = handleNumber(fields[0], "yParity");
@@ -9712,13 +9696,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         const signature = Signature.from({ r, s, yParity });
         tx.signature = signature;
     }
-    function _parseEip1559(data) {
+    function _parse(data) {
         const fields = decodeRlp(getBytes(data).slice(1));
         assertArgument(Array.isArray(fields) && (fields.length === 9 || fields.length === 12), "invalid field count for transaction type: 2", "data", hexlify(data));
         const maxPriorityFeePerGas = handleUint(fields[2], "maxPriorityFeePerGas");
         const maxFeePerGas = handleUint(fields[3], "maxFeePerGas");
         const tx = {
-            type: 2,
+            type: 0,
             chainId: handleUint(fields[0], "chainId"),
             nonce: handleNumber(fields[1], "nonce"),
             maxPriorityFeePerGas: maxPriorityFeePerGas,
@@ -9735,10 +9719,41 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return tx;
         }
         tx.hash = keccak256(data);
-        _parseEipSignature(tx, fields.slice(9));
+        _parseSignature(tx, fields.slice(9));
         return tx;
     }
-    function _serializeEip1559(tx, sig) {
+    function _parseStandardETx(data) {
+        const fields = decodeRlp(getBytes(data).slice(1));
+        assertArgument(Array.isArray(fields) && (fields.length === 8 || fields.length === 17), "invalid field count for transaction type: 2", "data", hexlify(data));
+        const maxPriorityFeePerGas = handleUint(fields[2], "maxPriorityFeePerGas");
+        const maxFeePerGas = handleUint(fields[3], "maxFeePerGas");
+        const tx = {
+            type: 0,
+            chainId: handleUint(fields[0], "chainId"),
+            nonce: handleNumber(fields[1], "nonce"),
+            maxPriorityFeePerGas: maxPriorityFeePerGas,
+            maxFeePerGas: maxFeePerGas,
+            gasPrice: null,
+            gasLimit: handleUint(fields[4], "gasLimit"),
+            to: handleAddress(fields[5]),
+            value: handleUint(fields[6], "value"),
+            data: hexlify(fields[7]),
+            accessList: handleAccessList(fields[8], "accessList"),
+            externalGasLimit: handleUint(fields[9], "externalGasLimit"),
+            externalGasPrice: handleUint(fields[10], "externalGasPrice"),
+            externalGasTip: handleUint(fields[11], "externalGasTip"),
+            externalData: hexlify(fields[12]),
+            externalAccessList: handleAccessList(fields[13], "externalAccessList")
+        };
+        // Unsigned EIP-2930 Transaction
+        if (fields.length === 8) {
+            return tx;
+        }
+        tx.hash = keccak256(data);
+        _parseSignature(tx, fields.slice(14));
+        return tx;
+    }
+    function _serialize(tx, sig) {
         const fields = [
             formatNumber(tx.chainId || 0, "chainId"),
             formatNumber(tx.nonce || 0, "nonce"),
@@ -9755,47 +9770,31 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             fields.push(toBeArray(sig.r));
             fields.push(toBeArray(sig.s));
         }
-        return concat(["0x02", encodeRlp(fields)]);
+        return concat(["0x00", encodeRlp(fields)]);
     }
-    function _parseEip2930(data) {
-        const fields = decodeRlp(getBytes(data).slice(1));
-        assertArgument(Array.isArray(fields) && (fields.length === 8 || fields.length === 11), "invalid field count for transaction type: 1", "data", hexlify(data));
-        const tx = {
-            type: 1,
-            chainId: handleUint(fields[0], "chainId"),
-            nonce: handleNumber(fields[1], "nonce"),
-            gasPrice: handleUint(fields[2], "gasPrice"),
-            gasLimit: handleUint(fields[3], "gasLimit"),
-            to: handleAddress(fields[4]),
-            value: handleUint(fields[5], "value"),
-            data: hexlify(fields[6]),
-            accessList: handleAccessList(fields[7], "accessList")
-        };
-        // Unsigned EIP-2930 Transaction
-        if (fields.length === 8) {
-            return tx;
-        }
-        tx.hash = keccak256(data);
-        _parseEipSignature(tx, fields.slice(8));
-        return tx;
-    }
-    function _serializeEip2930(tx, sig) {
+    function _serializeStandardETx(transaction, sig) {
         const fields = [
-            formatNumber(tx.chainId || 0, "chainId"),
-            formatNumber(tx.nonce || 0, "nonce"),
-            formatNumber(tx.gasPrice || 0, "gasPrice"),
-            formatNumber(tx.gasLimit || 0, "gasLimit"),
-            ((tx.to != null) ? getAddress(tx.to) : "0x"),
-            formatNumber(tx.value || 0, "value"),
-            (tx.data || "0x"),
-            (formatAccessList(tx.accessList || []))
+            formatNumber(transaction.chainId || 0, "chainId"),
+            formatNumber(transaction.nonce || 0, "nonce"),
+            formatNumber(transaction.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
+            formatNumber(transaction.maxFeePerGas || 0, "maxFeePerGas"),
+            formatNumber(transaction.gasLimit || 0, "gasLimit"),
+            ((transaction.to != null) ? getAddress(transaction.to) : "0x"),
+            formatNumber(transaction.value || 0, "value"),
+            (transaction.data || "0x"),
+            (formatAccessList(transaction.accessList || [])),
+            formatNumber(transaction.externalGasLimit || 0, "externalGasLimit"),
+            formatNumber(transaction.externalGasPrice || 0, "externalGasPrice"),
+            formatNumber(transaction.externalGasTip || 0, "externalGasTip"),
+            (transaction.externalData || "0x"),
+            (formatAccessList(transaction.externalAccessList || [])),
         ];
         if (sig) {
             fields.push(formatNumber(sig.yParity, "recoveryParam"));
             fields.push(toBeArray(sig.r));
             fields.push(toBeArray(sig.s));
         }
-        return concat(["0x01", encodeRlp(fields)]);
+        return concat(["0x02", encodeRlp(fields)]);
     }
     /**
      *  A **Transaction** describes an operation to be executed on
@@ -9823,6 +9822,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         #chainId;
         #sig;
         #accessList;
+        #externalGasLimit;
+        #externalGasTip;
+        #externalGasPrice;
+        #externalAccessList;
+        #externalData;
         /**
          *  The transaction type.
          *
@@ -9836,17 +9840,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     this.#type = null;
                     break;
                 case 0:
-                case "legacy":
+                case "standard":
                     this.#type = 0;
                     break;
-                case 1:
-                case "berlin":
-                case "eip-2930":
-                    this.#type = 1;
-                    break;
+                // case 1: case "external":
+                //     this.#type = 1;
+                //     break;
                 case 2:
-                case "london":
-                case "eip-1559":
+                case "internalToExternal":
                     this.#type = 2;
                     break;
                 default:
@@ -9858,9 +9859,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         get typeName() {
             switch (this.type) {
-                case 0: return "legacy";
-                case 1: return "eip-2930";
-                case 2: return "eip-1559";
+                case 0: return "standard";
+                case 1: return "external";
+                case 2: return "internalToExternal";
             }
             return null;
         }
@@ -9890,9 +9891,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         get gasPrice() {
             const value = this.#gasPrice;
-            if (value == null && (this.type === 0 || this.type === 1)) {
-                return BN_0$4;
-            }
             return value;
         }
         set gasPrice(value) {
@@ -9905,9 +9903,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         get maxPriorityFeePerGas() {
             const value = this.#maxPriorityFeePerGas;
             if (value == null) {
-                if (this.type === 2) {
-                    return BN_0$4;
-                }
                 return null;
             }
             return value;
@@ -9922,9 +9917,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         get maxFeePerGas() {
             const value = this.#maxFeePerGas;
             if (value == null) {
-                if (this.type === 2) {
-                    return BN_0$4;
-                }
                 return null;
             }
             return value;
@@ -9939,7 +9931,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         get data() { return this.#data; }
         set data(value) { this.#data = hexlify(value); }
         /**
-         *  The amount of ether (in wei) to send in this transactions.
+         *  The amount of ether to send in this transactions.
          */
         get value() { return this.#value; }
         set value(value) {
@@ -9966,15 +9958,67 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         get accessList() {
             const value = this.#accessList || null;
             if (value == null) {
-                if (this.type === 1 || this.type === 2) {
-                    return [];
-                }
                 return null;
             }
             return value;
         }
         set accessList(value) {
             this.#accessList = (value == null) ? null : accessListify(value);
+        }
+        /**
+         *  The gas limit.
+         */
+        get externalGasLimit() { return this.#externalGasLimit; }
+        set externalGasLimit(value) { this.#externalGasLimit = getBigInt(value); }
+        /**
+         *  The maximum priority fee per unit of gas to pay. On legacy
+         *  networks this should be ``null``.
+         */
+        get externalGasTip() {
+            const value = this.#externalGasTip;
+            if (value == null) {
+                return null;
+            }
+            return value;
+        }
+        set externalGasTip(value) {
+            this.#externalGasTip = (value == null) ? null : getBigInt(value, "externalGasTip");
+        }
+        /**
+         *  The maximum total fee per unit of gas to pay. On legacy
+         *  networks this should be ``null``.
+         */
+        get externalGasPrice() {
+            const value = this.#externalGasPrice;
+            if (value == null) {
+                return null;
+            }
+            return value;
+        }
+        set externalGasPrice(value) {
+            this.#externalGasPrice = (value == null) ? null : getBigInt(value, "externalGasPrice");
+        }
+        /**
+         *  The transaction externalData. For ``init`` transactions this is the
+         *  deployment code.
+         */
+        get externalData() { return this.#externalData; }
+        set externalData(value) { this.#externalData = hexlify(value); }
+        /**
+         *  The external access list.
+         *
+         *  An access list permits discounted (but pre-paid) access to
+         *  bytecode and state variable access within contract execution.
+         */
+        get externalAccessList() {
+            const value = this.#externalAccessList || null;
+            if (value == null) {
+                return null;
+            }
+            return value;
+        }
+        set externalAccessList(value) {
+            this.#externalAccessList = (value == null) ? null : accessListify(value);
         }
         /**
          *  Creates a new Transaction with default values.
@@ -9992,6 +10036,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.#chainId = BigInt(0);
             this.#sig = null;
             this.#accessList = null;
+            this.#externalGasLimit = BigInt(0);
+            this.#externalGasTip = null;
+            this.#externalGasPrice = null;
+            this.#externalData = "0x";
+            this.#externalAccessList = null;
         }
         /**
          *  The transaction hash, if signed. Otherwise, ``null``.
@@ -10049,11 +10098,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             assert(this.signature != null, "cannot serialize unsigned transaction; maybe you meant .unsignedSerialized", "UNSUPPORTED_OPERATION", { operation: ".serialized" });
             switch (this.inferType()) {
                 case 0:
-                    return _serializeLegacy(this, this.signature);
-                case 1:
-                    return _serializeEip2930(this, this.signature);
+                    return _serialize(this, this.signature);
+                // case 1:
+                //     return _serializeEip2930(this, this.signature);
                 case 2:
-                    return _serializeEip1559(this, this.signature);
+                    return _serializeStandardETx(this, this.signature);
             }
             assert(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: ".serialized" });
         }
@@ -10066,11 +10115,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         get unsignedSerialized() {
             switch (this.inferType()) {
                 case 0:
-                    return _serializeLegacy(this);
-                case 1:
-                    return _serializeEip2930(this);
+                    return _serialize(this);
+                // case 1:
+                //     return _serializeEip2930(this);
                 case 2:
-                    return _serializeEip1559(this);
+                    return _serializeStandardETx(this);
             }
             assert(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: ".unsignedSerialized" });
         }
@@ -10087,9 +10136,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         inferTypes() {
             // Checks that there are no conflicting properties set
-            const hasGasPrice = this.gasPrice != null;
-            const hasFee = (this.maxFeePerGas != null || this.maxPriorityFeePerGas != null);
-            const hasAccessList = (this.accessList != null);
+            // const hasGasPrice = this.gasPrice != null;
+            // const hasFee = (this.maxFeePerGas != null || this.maxPriorityFeePerGas != null);
+            const hasExternal = (this.externalGasLimit != null || this.externalGasTip != null || this.externalGasPrice != null || this.externalData != null || this.externalAccessList != null);
+            // const hasAccessList = (this.accessList != null);
             //if (hasGasPrice && hasFee) {
             //    throw new Error("transaction cannot have gasPrice and maxFeePerGas");
             //}
@@ -10099,31 +10149,18 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             //if (this.type === 2 && hasGasPrice) {
             //    throw new Error("eip-1559 transaction cannot have gasPrice");
             //}
-            assert(!hasFee || (this.type !== 0 && this.type !== 1), "transaction type cannot have maxFeePerGas or maxPriorityFeePerGas", "BAD_DATA", { value: this });
-            assert(this.type !== 0 || !hasAccessList, "legacy transaction cannot have accessList", "BAD_DATA", { value: this });
+            assert(hasExternal || (this.type !== 0 && this.type !== 1), "transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList", "BAD_DATA", { value: this });
             const types = [];
             // Explicit type
             if (this.type != null) {
                 types.push(this.type);
             }
             else {
-                if (hasFee) {
-                    types.push(2);
-                }
-                else if (hasGasPrice) {
-                    types.push(1);
-                    if (!hasAccessList) {
-                        types.push(0);
-                    }
-                }
-                else if (hasAccessList) {
-                    types.push(1);
+                if (hasExternal) {
                     types.push(2);
                 }
                 else {
                     types.push(0);
-                    types.push(1);
-                    types.push(2);
                 }
             }
             types.sort();
@@ -10188,7 +10225,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 value: s(this.value),
                 chainId: s(this.chainId),
                 sig: this.signature ? this.signature.toJSON() : null,
-                accessList: this.accessList
+                accessList: this.accessList,
+                externalGasLimit: s(this.externalGasLimit),
+                externalGasTip: s(this.externalGasTip),
+                externalGasPrice: s(this.externalGasPrice),
+                externalData: this.externalData,
+                externalAccessList: this.externalAccessList,
             };
         }
         /**
@@ -10199,14 +10241,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (tx == null) {
                 return new Transaction();
             }
+            console.log("txfrom", tx);
             if (typeof (tx) === "string") {
                 const payload = getBytes(tx);
                 if (payload[0] >= 0x7f) { // @TODO: > vs >= ??
-                    return Transaction.from(_parseLegacy(payload));
+                    return Transaction.from(_parse(payload));
                 }
                 switch (payload[0]) {
-                    case 1: return Transaction.from(_parseEip2930(payload));
-                    case 2: return Transaction.from(_parseEip1559(payload));
+                    // case 1: return Transaction.from(_parseEip2930(payload));
+                    case 2: return Transaction.from(_parseStandardETx(payload));
                 }
                 assert(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: "from" });
             }
@@ -10246,6 +10289,21 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             if (tx.accessList != null) {
                 result.accessList = tx.accessList;
+            }
+            if (tx.externalGasLimit != null) {
+                result.externalGasLimit = tx.externalGasLimit;
+            }
+            if (tx.externalGasPrice != null) {
+                result.externalGasPrice = tx.externalGasPrice;
+            }
+            if (tx.externalGasTip != null) {
+                result.externalGasTip = tx.externalGasTip;
+            }
+            if (tx.externalData != null) {
+                result.externalData = tx.externalData;
+            }
+            if (tx.externalAccessList != null) {
+                result.externalAccessList = tx.externalAccessList;
             }
             if (tx.hash != null) {
                 assertArgument(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);
@@ -14238,6 +14296,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         root;
         #logs;
+        etxs;
         /**
          *  @_ignore:
          */
@@ -14265,6 +14324,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 gasUsed: tx.gasUsed,
                 cumulativeGasUsed: tx.cumulativeGasUsed,
                 gasPrice,
+                etxs: tx.etxs,
                 type: tx.type,
                 //byzantium: tx.byzantium,
                 status: tx.status,
@@ -14434,19 +14494,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         gasLimit;
         /**
-         *  The gas price can have various values, depending on the network.
-         *
-         *  In modern networks, for transactions that are included this is
-         *  the //effective gas price// (the fee per gas that was actually
-         *  charged), while for transactions that have not been included yet
-         *  is the [[maxFeePerGas]].
-         *
-         *  For legacy transactions, or transactions on legacy networks, this
-         *  is the fee that will be charged per unit of gas the transaction
-         *  consumes.
-         */
-        gasPrice;
-        /**
          *  The maximum priority fee (per unit of gas) to allow a
          *  validator to charge the sender. This is inclusive of the
          *  [[maxFeeFeePerGas]].
@@ -14479,6 +14526,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *  support it, otherwise ``null``.
          */
         accessList;
+        // Extrernal transaction specific fields
+        etxGasLimit;
+        etxGasPrice;
+        etxGasTip;
+        etxData;
+        etxAccessList;
         #startBlock;
         /**
          *  @_ignore:
@@ -14496,32 +14549,56 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.nonce = tx.nonce;
             this.data = tx.data;
             this.value = tx.value;
-            this.gasPrice = tx.gasPrice;
             this.maxPriorityFeePerGas = (tx.maxPriorityFeePerGas != null) ? tx.maxPriorityFeePerGas : null;
             this.maxFeePerGas = (tx.maxFeePerGas != null) ? tx.maxFeePerGas : null;
             this.chainId = tx.chainId;
             this.signature = tx.signature;
             this.accessList = (tx.accessList != null) ? tx.accessList : null;
+            if (tx.type != 2) {
+                delete tx.etxGasLimit;
+                delete tx.etxGasPrice;
+                delete tx.etxGasTip;
+                delete tx.etxData;
+                delete tx.etxAccessList;
+            }
+            if (tx.etxGasLimit)
+                this.etxGasLimit = tx.etxGasLimit;
+            if (tx.etxGasPrice)
+                this.etxGasPrice = tx.etxGasPrice;
+            if (tx.etxGasTip)
+                this.etxGasTip = tx.etxGasTip;
+            if (tx.etxData)
+                this.etxData = tx.etxData;
+            if (tx.etxAccessList)
+                this.etxAccessList = tx.etxAccessList;
             this.#startBlock = -1;
         }
         /**
          *  Returns a JSON-compatible representation of this transaction.
          */
         toJSON() {
-            const { blockNumber, blockHash, index, hash, type, to, from, nonce, data, signature, accessList } = this;
-            return {
+            const { blockNumber, blockHash, index, hash, type, to, from, nonce, data, signature, accessList,
+            //etxGasLimit, etxGasPrice, etxGasTip, etxData, etxAccessList // Include new fields
+             } = this;
+            let result = {
                 _type: "TransactionReceipt",
                 accessList, blockNumber, blockHash,
                 chainId: toJson(this.chainId),
                 data, from,
                 gasLimit: toJson(this.gasLimit),
-                gasPrice: toJson(this.gasPrice),
                 hash,
                 maxFeePerGas: toJson(this.maxFeePerGas),
                 maxPriorityFeePerGas: toJson(this.maxPriorityFeePerGas),
                 nonce, signature, to, index, type,
                 value: toJson(this.value),
+                // Include new fields in the output
+                // etxGasLimit: etxGasLimit ? toJson(etxGasLimit) : null,
+                // etxGasPrice: etxGasPrice ? toJson(etxGasPrice) : null,
+                // etxGasTip: etxGasTip ? toJson(etxGasTip) : null,
+                // etxData: etxData ? etxData : null,
+                // etxAccessList: etxAccessList ? etxAccessList : null
             };
+            return result;
         }
         /**
          *  Resolves to the Block that this transaction was included in.
@@ -14769,36 +14846,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         isMined() {
             return (this.blockHash != null);
-        }
-        /**
-         *  Returns true if the transaction is a legacy (i.e. ``type == 0``)
-         *  transaction.
-         *
-         *  This provides a Type Guard that this transaction will have
-         *  the ``null``-ness for hardfork-specific properties set correctly.
-         */
-        isLegacy() {
-            return (this.type === 0);
-        }
-        /**
-         *  Returns true if the transaction is a Berlin (i.e. ``type == 1``)
-         *  transaction. See [[link-eip-2070]].
-         *
-         *  This provides a Type Guard that this transaction will have
-         *  the ``null``-ness for hardfork-specific properties set correctly.
-         */
-        isBerlin() {
-            return (this.type === 1);
-        }
-        /**
-         *  Returns true if the transaction is a London (i.e. ``type == 2``)
-         *  transaction. See [[link-eip-1559]].
-         *
-         *  This provides a Type Guard that this transaction will have
-         *  the ``null``-ness for hardfork-specific properties set correctly.
-         */
-        isLondon() {
-            return (this.type === 2);
         }
         /**
          *  Returns a filter which can be used to listen for orphan events
@@ -16705,6 +16752,26 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     function formatReceiptLog(value) {
         return _formatReceiptLog(value);
     }
+    const _formatEtx = object({
+        type: allowNull(getNumber, 0),
+        nonce: getNumber,
+        gasPrice: allowNull(getBigInt),
+        maxPriorityFeePerGas: getBigInt,
+        maxFeePerGas: getBigInt,
+        gas: getBigInt,
+        value: allowNull(getBigInt, BN_0),
+        input: formatData,
+        to: allowNull(getAddress, null),
+        accessList: allowNull(accessListify, null),
+        chainId: allowNull(getBigInt, null),
+        from: allowNull(getAddress, null),
+        hash: formatHash,
+    }, {
+        from: ["sender"],
+    });
+    function formatEtx(value) {
+        return _formatEtx(value);
+    }
     const _formatTransactionReceipt = object({
         to: allowNull(getAddress, null),
         from: allowNull(getAddress, null),
@@ -16722,14 +16789,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         cumulativeGasUsed: getBigInt,
         effectiveGasPrice: allowNull(getBigInt),
         status: allowNull(getNumber),
-        type: allowNull(getNumber, 0)
+        type: allowNull(getNumber, 0),
+        etxs: arrayOf(formatEtx),
     }, {
-        effectiveGasPrice: ["gasPrice"],
         hash: ["transactionHash"],
         index: ["transactionIndex"],
     });
     function formatTransactionReceipt(value) {
-        return _formatTransactionReceipt(value);
+        const result = _formatTransactionReceipt(value);
+        return result;
     }
     function formatTransactionResponse(value) {
         // Some clients (TestRPC) do strange things like return 0x0 for the
@@ -16737,6 +16805,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         if (value.to && getBigInt(value.to) === BN_0) {
             value.to = "0x0000000000000000000000000000000000000000";
         }
+        if (value.type === "0x1")
+            value.from = value.sender;
         const result = object({
             hash: formatHash,
             type: (value) => {
@@ -16748,27 +16818,37 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             accessList: allowNull(accessListify, null),
             blockHash: allowNull(formatHash, null),
             blockNumber: allowNull(getNumber, null),
-            transactionIndex: allowNull(getNumber, null),
+            index: allowNull(getNumber, null),
             //confirmations: allowNull(getNumber, null),
             from: getAddress,
-            // either (gasPrice) or (maxPriorityFeePerGas + maxFeePerGas) must be set
-            gasPrice: allowNull(getBigInt),
             maxPriorityFeePerGas: allowNull(getBigInt),
             maxFeePerGas: allowNull(getBigInt),
             gasLimit: getBigInt,
             to: allowNull(getAddress, null),
             value: getBigInt,
             nonce: getNumber,
-            data: formatData,
             creates: allowNull(getAddress, null),
-            chainId: allowNull(getBigInt, null)
+            chainId: allowNull(getBigInt, null),
+            etxGasLimit: allowNull(getBigInt, null),
+            etxGasPrice: allowNull(getBigInt, null),
+            etxGasTip: allowNull(getBigInt, null),
+            etxData: allowNull(formatData, null),
+            etxAccessList: allowNull(accessListify, null),
         }, {
             data: ["input"],
-            gasLimit: ["gas"]
+            gasLimit: ["gas"],
+            index: ["transactionIndex"],
         })(value);
         // If to and creates are empty, populate the creates from the value
         if (result.to == null && result.creates == null) {
             result.creates = getCreateAddress(result);
+        }
+        if (result.type !== 2) {
+            delete result.etxGasLimit;
+            delete result.etxGasPrice;
+            delete result.etxGasTip;
+            delete result.etxData;
+            delete result.etxAccessList;
         }
         // @TODO: Check fee data
         // Add an access list to supported transaction types
@@ -17713,9 +17793,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *  sub-class of [[Block]].
          */
         _wrapBlock(value, network) {
-            const block = new Block(formatBlock(value), this);
-            console.log('Blockster', block);
-            return block;
+            return new Block(formatBlock(value), this);
         }
         /**
          *  Provides the opportunity for a sub-class to wrap a log before
@@ -18172,7 +18250,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (params == null) {
                 return null;
             }
-            // Some backends did not backfill the effectiveGasPrice into old transactions
+            // Some backends did not backfill the effectiveGasPrice in to old transactions
             // in the receipt, so we look it up manually and inject it.
             if (params.gasPrice == null && params.effectiveGasPrice == null) {
                 const tx = await this.#perform({ method: "getTransaction", hash });
@@ -18838,88 +18916,20 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             else {
                 pop.chainId = network.chainId;
             }
-            // Do not allow mixing pre-eip-1559 and eip-1559 properties
-            const hasEip1559 = (pop.maxFeePerGas != null || pop.maxPriorityFeePerGas != null);
-            if (pop.gasPrice != null && (pop.type === 2 || hasEip1559)) {
-                assertArgument(false, "eip-1559 transaction do not support gasPrice", "tx", tx);
-            }
-            else if ((pop.type === 0 || pop.type === 1) && hasEip1559) {
-                assertArgument(false, "pre-eip-1559 transaction do not support maxFeePerGas/maxPriorityFeePerGas", "tx", tx);
-            }
-            if ((pop.type === 2 || pop.type == null) && (pop.maxFeePerGas != null && pop.maxPriorityFeePerGas != null)) {
-                // Fully-formed EIP-1559 transaction (skip getFeeData)
-                pop.type = 2;
-            }
-            else if (pop.type === 0 || pop.type === 1) {
-                // Explicit Legacy or EIP-2930 transaction
-                // We need to get fee data to determine things
+            if (pop.maxFeePerGas == null || pop.maxPriorityFeePerGas == null) {
                 const feeData = await provider.getFeeData();
-                assert(feeData.gasPrice != null, "network does not support gasPrice", "UNSUPPORTED_OPERATION", {
-                    operation: "getGasPrice"
-                });
-                // Populate missing gasPrice
-                if (pop.gasPrice == null) {
-                    pop.gasPrice = feeData.gasPrice;
+                if (pop.maxFeePerGas == null) {
+                    pop.maxFeePerGas = feeData.maxFeePerGas;
+                }
+                if (pop.maxPriorityFeePerGas == null) {
+                    pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
                 }
             }
-            else {
-                // We need to get fee data to determine things
-                const feeData = await provider.getFeeData();
-                if (pop.type == null) {
-                    // We need to auto-detect the intended type of this transaction...
-                    if (feeData.maxFeePerGas != null && feeData.maxPriorityFeePerGas != null) {
-                        // The network supports EIP-1559!
-                        // Upgrade transaction from null to eip-1559
-                        pop.type = 2;
-                        if (pop.gasPrice != null) {
-                            // Using legacy gasPrice property on an eip-1559 network,
-                            // so use gasPrice as both fee properties
-                            const gasPrice = pop.gasPrice;
-                            delete pop.gasPrice;
-                            pop.maxFeePerGas = gasPrice;
-                            pop.maxPriorityFeePerGas = gasPrice;
-                        }
-                        else {
-                            // Populate missing fee data
-                            if (pop.maxFeePerGas == null) {
-                                pop.maxFeePerGas = feeData.maxFeePerGas;
-                            }
-                            if (pop.maxPriorityFeePerGas == null) {
-                                pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-                            }
-                        }
-                    }
-                    else if (feeData.gasPrice != null) {
-                        // Network doesn't support EIP-1559...
-                        // ...but they are trying to use EIP-1559 properties
-                        assert(!hasEip1559, "network does not support EIP-1559", "UNSUPPORTED_OPERATION", {
-                            operation: "populateTransaction"
-                        });
-                        // Populate missing fee data
-                        if (pop.gasPrice == null) {
-                            pop.gasPrice = feeData.gasPrice;
-                        }
-                        // Explicitly set untyped transaction to legacy
-                        // @TODO: Maybe this shold allow type 1?
-                        pop.type = 0;
-                    }
-                    else {
-                        // getFeeData has failed us.
-                        assert(false, "failed to get consistent fee data", "UNSUPPORTED_OPERATION", {
-                            operation: "signer.getFeeData"
-                        });
-                    }
+            if (pop.type == null) {
+                if (pop.to == null || pop.from == null) {
+                    throw new Error("Cannot determine transaction type, please specify a type or provide a from and to address");
                 }
-                else if (pop.type === 2) {
-                    // Explicitly using EIP-1559
-                    // Populate missing fee data
-                    if (pop.maxFeePerGas == null) {
-                        pop.maxFeePerGas = feeData.maxFeePerGas;
-                    }
-                    if (pop.maxPriorityFeePerGas == null) {
-                        pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-                    }
-                }
+                pop.type = await getTxType(pop.from, pop.to);
             }
             //@TOOD: Don't await all over the place; save them up for
             // the end for better batching
@@ -18940,7 +18950,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const pop = await this.populateTransaction(tx);
             delete pop.from;
             const txObj = Transaction.from(pop);
-            return await provider.broadcastTransaction(await this.signTransaction(txObj));
+            txObj.chainId = Number(txObj.chainId);
+            const signedTx = await this.signTransaction(txObj);
+            return await provider.broadcastTransaction(signedTx);
         }
     }
     /**
@@ -19941,12 +19953,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (promises.length) {
                 await Promise.all(promises);
             }
+            console.log("sendUncheckedTransaction", tx);
             const hexTx = this.provider.getRpcTransaction(tx);
             return this.provider.send("quai_sendTransaction", [hexTx]);
         }
         async sendTransaction(tx) {
             // This cannot be mined any earlier than any recent block
             const blockNumber = await this.provider.getBlockNumber();
+            console.log("sendTransaction", tx);
             // Send the transaction
             const hash = await this.sendUncheckedTransaction(tx);
             // Unfortunately, JSON-RPC only provides and opaque transaction hash
@@ -21571,9 +21585,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
     }
 
-    const words = "0erleonalorenseinceregesticitStanvetearctssi#ch2Athck&tneLl0And#Il.yLeOutO=S|S%b/ra@SurdU'0Ce[Cid|CountCu'Hie=IdOu,-Qui*Ro[TT]T%T*[Tu$0AptDD-tD*[Ju,M.UltV<)Vi)0Rob-0FairF%dRaid0A(EEntRee0Ead0MRRp%tS!_rmBumCoholErtI&LLeyLowMo,O}PhaReadySoT Ways0A>urAz(gOngOuntU'd0Aly,Ch%Ci|G G!GryIm$K!Noun)Nu$O` Sw T&naTiqueXietyY1ArtOlogyPe?P!Pro=Ril1ChCt-EaEnaGueMMedM%MyOundR<+Re,Ri=RowTTefa@Ti,Tw%k0KPe@SaultSetSi,SumeThma0H!>OmTa{T&dT.udeTra@0Ct]D.Gu,NtTh%ToTumn0Era+OcadoOid0AkeA*AyEsomeFulKw?d0Is:ByChel%C#D+GL<)Lc#y~MbooN<aNn RRelyRga(R*lSeS-SketTt!3A^AnAutyCau'ComeEfF%eG(Ha=H(dLie=LowLtN^Nef./TrayTt Twe&Y#d3Cyc!DKeNdOlogyRdR`Tt _{AdeAmeAnketA,EakE[IndOodO[omOu'UeUrUsh_rdAtDyIlMbNeNusOkO,Rd R(gRrowSsTtomUn)XY_{etA(AndA[A=EadEezeI{Id+IefIghtIngIskOccoliOk&OnzeOomO` OwnUsh2Bb!DdyD+tFf$oIldLbLkL!tNd!Nk Rd&Rg R,SS(e[SyTt Y Zz:Bba+B(B!CtusGeKe~LmM aMpNN$N)lNdyNn#NoeNvasNy#Pab!P.$Pta(RRb#RdRgoRpetRryRtSeShS(o/!Su$TT$ogT^Teg%yTt!UghtU'Ut]Ve3Il(gL yM|NsusNturyRe$Rta(_irAlkAmp]An+AosApt Ar+A'AtEapE{Ee'EfErryE,I{&IefIldIm}yOi)Oo'R#-U{!UnkUrn0G?Nnam#Rc!Tiz&TyVil_imApArifyAwAyE<ErkEv I{I|IffImbIn-IpO{OgO'O`OudOwnUbUmpU, Ut^_^A,C#utDeFfeeIlInL!@L%LumnMb(eMeMf%tM-Mm#Mp<yNc tNdu@NfirmNg*[N}@Nsid NtrolNv()OkOlPp PyR$ReRnR*@/Tt#U^UntryUp!Ur'Us(V Yo>_{Ad!AftAmA}AshAt AwlAzyEamEd.EekEwI{etImeIspIt-OpO[Ou^OwdUci$UelUi'Umb!Un^UshYY,$2BeLtu*PPbo?dRiousRr|Rta(R=Sh]/omTe3C!:DMa+MpN)Ng R(gShUght WnY3AlBa>BrisCadeCemb CideCl(eC%a>C*a'ErF&'F(eFyG*eLayLiv M<dMi'Ni$Nti,NyP?tP&dPos.P`PutyRi=ScribeS tSignSkSpair/royTailTe@VelopVi)Vo>3AgramAlAm#dAryCeE'lEtFf G.$Gn.yLemmaNn NosaurRe@RtSag*eScov Sea'ShSmi[S%d Splay/<)V tVideV%)Zzy5Ct%Cum|G~Lph(Ma(Na>NkeyN%OrSeUb!Ve_ftAg#AmaA,-AwEamE[IftIllInkIpI=OpUmY2CkMbNeR(g/T^Ty1Arf1Nam-:G G!RlyRnR`Sily/Sy1HoOlogyOnomy0GeItUca>1F%t0G1GhtTh 2BowD E@r-Eg<tEm|Eph<tEvat%I>Se0B?kBodyBra)Er+Ot]PloyPow Pty0Ab!A@DD![D%'EmyErgyF%)Ga+G(eH<)JoyLi,OughR-hRollSu*T Ti*TryVelope1Isode0U$Uip0AA'OdeOs]R%Upt0CapeSayS&)Ta>0Ern$H-s1Id&)IlOkeOl=1A@Amp!Ce[Ch<+C.eCludeCu'Ecu>Erci'Hau,Hib.I!I,ItOt-P<dPe@Pi*Pla(Po'P*[T&dTra0EEbrow:Br-CeCultyDeIntI`~L'MeMilyMousNNcyNtasyRmSh]TT$Th TigueUltV%.e3Atu*Bru?yD $EEdElMa!N)/iv$T^V W3B Ct]EldGu*LeLmLt N$NdNeNg NishReRmR,Sc$ShTT}[X_gAmeAshAtAv%EeIghtIpOatO{O%Ow UidUshY_mCusGIlLd~owOdOtR)Re,R+tRkRtu}RumRw?dSsil/ UndX_gi!AmeEqu|EshI&dIn+OgOntO,OwnOz&U.2ElNNnyRna)RyTu*:D+tInLaxy~ yMePRa+Rba+Rd&Rl-Rm|SSpTeTh U+Ze3N $NiusN*Nt!Nu(e/u*2O,0AntFtGg!Ng RaffeRlVe_dAn)A*A[IdeImp'ObeOomOryO=OwUe_tDde[LdOdO'RillaSpelSsipV nWn_bA)A(AntApeA[Av.yEatE&IdIefItOc yOupOwUnt_rdE[IdeIltIt?N3M:B.IrLfMm M, NdPpyRb%RdRshR=,TVeWkZ?d3AdAl`ArtAvyD+hogIght~oLmetLpNRo3Dd&Gh~NtPRe/%y5BbyCkeyLdLeLiday~owMeNeyOdPeRnRr%R'Sp.$/TelUrV 5BGeM<Mb!M%Nd*dNgryNtRd!RryRtSb<d3Brid:1EOn0EaEntifyLe2N%e4LLeg$L}[0A+Ita>M&'Mu}Pa@Po'Pro=Pul'0ChCludeComeC*a'DexD-a>Do%Du,ryF<tFl-tF%mHa!H .Iti$Je@JuryMa>N Noc|PutQuiryS<eSe@SideSpi*/$lTa@T e,ToVe,V.eVol=3On0L<dOla>Sue0Em1Ory:CketGu?RZz3AlousAns~yWel9BInKeUr}yY5D+I)MpNg!Ni%Nk/:Ng?oo3EnEpT^upY3CkDD}yNdNgdomSsTT^&TeTt&Wi4EeIfeO{Ow:BBelB%Dd DyKeMpNgua+PtopR+T T(UghUndryVaWWnWsu.Y Zy3Ad AfArnA=Ctu*FtGG$G&dIsu*M#NdNg`NsOp?dSs#Tt Vel3ArB tyBr?yC&'FeFtGhtKeMbM.NkOnQuid/Tt!VeZ?d5AdAnB, C$CkG-NelyNgOpTt yUdUn+VeY$5CkyGga+Mb N?N^Xury3R-s:Ch(eDG-G}tIdIlInJ%KeMm$NNa+Nda>NgoNs]Nu$P!Rb!R^Rg(R(eRketRria+SkSs/ T^T i$ThTrixTt XimumZe3AdowAnAsu*AtCh<-D$DiaLodyLtMb M%yNt]NuRcyR+R.RryShSsa+T$Thod3Dd!DnightLk~]M-NdNimumN%Nu>Rac!Rr%S ySs/akeXXedXtu*5Bi!DelDifyMM|N.%NkeyN, N`OnR$ReRn(gSqu.oTh T]T%Unta(U'VeVie5ChFf(LeLtiplySc!SeumShroomS-/Tu$3Self/ yTh:I=MePk(Rrow/yT]Tu*3ArCkEdGati=G!@I` PhewR=/TTw%kUtr$V WsXt3CeGht5B!I'M(eeOd!Rm$R`SeTab!TeTh(gTi)VelW5C!?Mb R'T:K0EyJe@Li+Scu*S =Ta(Vious0CurE<Tob 0Or1FF Fi)T&2L1Ay0DI=Ymp-0It0CeEI#L(eLy1EnEraIn]Po'T]1An+B.Ch?dD D(?yG<I|Ig($Ph<0Tr-h0H 0Tdo%T TputTside0AlEnEr0NN 0Yg&0/ 0O}:CtDd!GeIrLa)LmNdaNelN-N` P RadeR|RkRrotRtySsT^ThTi|TrolTt nU'VeYm|3A)AnutArAs<tL-<NN$tyNcilOp!Pp Rfe@Rm.Rs#T2O}OtoRa'Ys-$0AnoCn-Ctu*E)GGe#~LotNkO} Pe/olT^Zza_)A}tA,-A>AyEa'Ed+U{UgUn+2EmEtIntL?LeLi)NdNyOlPul?Rt]S.]Ssib!/TatoTt yV tyWd W _@i)Ai'Ed-tEf Epa*Es|EttyEv|I)IdeIm?yIntI%.yIs#Iva>IzeOb!mO)[Odu)Of.OgramOje@Omo>OofOp tyOsp O>@OudOvide2Bl-Dd(g~LpL'Mpk(N^PilPpyR^a'R.yRpo'R'ShTZz!3Ramid:99Al.yAntumArt E,]I{ItIzO>:Bb.Cco#CeCkD?DioIlInI'~yMpN^NdomN+PidReTeTh V&WZ%3AdyAlAs#BelBuildC$lCei=CipeC%dCyc!Du)F!@F%mFu'G]G*tGul?Je@LaxLea'LiefLyMa(Memb M(dMo=Nd NewNtOp&PairPeatPla)P%tQui*ScueSemb!Si,Sour)Sp#'SultTi*T*atTurnUn]Ve$ViewW?d2Y`m0BBb#CeChDeD+F!GhtGidNgOtPp!SkTu$V$V 5AdA,BotBu,CketM<)OfOkieOmSeTa>UghUndU>Y$5Bb DeGLeNNwayR$:DDd!D}[FeIlLadLm#L#LtLu>MeMp!NdTisfyToshiU)Usa+VeY1A!AnA*Att E}HemeHoolI&)I[%sOrp]OutRapRe&RiptRub1AAr^As#AtC#dC*tCt]Cur.yEdEkGm|Le@~M(?Ni%N'Nt&)RiesRvi)Ss]Tt!TupV&_dowAftAllowA*EdEllEriffIeldIftI}IpIv O{OeOotOpOrtOuld O=RimpRugUff!Y0Bl(gCkDeE+GhtGnL|Lk~yLv Mil?Mp!N)NgR&/ Tua>XZe1A>Et^IIllInIrtUll0AbAmEepEnd I)IdeIghtImOg<OtOwUsh0AllArtI!OkeOo`0A{AkeApIffOw0ApCc Ci$CkDaFtL?Ldi LidLut]L=Me#eNgOnRryRtUlUndUpUr)U`0A)A*Ati$AwnEakEci$EedEllEndH eI)Id IkeInIr.L.OilOns%O#OrtOtRayReadR(gY0Ua*UeezeUir*l_b!AdiumAffA+AirsAmpAndArtA>AyEakEelEmEpE*oI{IllIngO{Oma^O}OolOryO=Ra>gyReetRikeR#gRugg!Ud|UffUmb!Y!0Bje@Bm.BwayC)[ChDd&Ff G?G+,ItMm NNnyN'tP PplyP*meReRfa)R+Rpri'RroundR=ySpe@/a(1AllowAmpApArmE?EetIftImIngIt^Ord1MbolMptomRup/em:B!Ck!GIlL|LkNkPeR+tSk/eTtooXi3A^Am~NN<tNnisNtRm/Xt_nkAtEmeEnE%yE*EyIngIsOughtReeRi=RowUmbUnd 0CketDeG LtMb MeNyPRedSsueT!5A,BaccoDayDdl EGe` I!tK&MatoM%rowNeNgueNightOlO`PP-Pp!R^RnadoRtoi'SsT$Uri,W?dW WnY_{AdeAff-Ag-A(Ansf ApAshA=lAyEatEeEndI$IbeI{Igg ImIpOphyOub!U{UeUlyUmpetU,U`Y2BeIt]Mb!NaN}lRkeyRnRt!1El=EntyI)InI,O1PeP-$:5Ly5B*lla0Ab!Awa*C!Cov D DoFairFoldHappyIf%mIqueItIv 'KnownLo{TilUsu$Veil1Da>GradeHoldOnP Set1B<Ge0A+EEdEfulE![U$0Il.y:C<tCuumGueLidL!yL=NNishP%Rious/Ult3H-!L=tNd%Ntu*NueRbRifyRs]RyS'lT <3Ab!Br<tCiousCt%yDeoEw~a+Nta+Ol(Rtu$RusSaS.Su$T$Vid5C$I)IdLc<oLumeTeYa+:GeG#ItLk~LnutNtRfa*RmRri%ShSp/eT VeY3Al`Ap#ArA'lA` BDd(gEk&dIrdLcome/T_!AtEatEelEnE*IpIsp 0DeD`FeLd~NNdowNeNgNkNn Nt ReSdomSeShT}[5LfM<Nd OdOlRdRkRldRryR`_pE{E,!I,I>Ong::Rd3Ar~ow9UUngU`:3BraRo9NeO";
-    const checksum = "0x3c8acc1e7b08d8e76f9fda015ef48dc8c710a73cb7e0f77b2c18a9b5a7adde60";
-    let wordlist = null;
+    const words$1 = "0erleonalorenseinceregesticitStanvetearctssi#ch2Athck&tneLl0And#Il.yLeOutO=S|S%b/ra@SurdU'0Ce[Cid|CountCu'Hie=IdOu,-Qui*Ro[TT]T%T*[Tu$0AptDD-tD*[Ju,M.UltV<)Vi)0Rob-0FairF%dRaid0A(EEntRee0Ead0MRRp%tS!_rmBumCoholErtI&LLeyLowMo,O}PhaReadySoT Ways0A>urAz(gOngOuntU'd0Aly,Ch%Ci|G G!GryIm$K!Noun)Nu$O` Sw T&naTiqueXietyY1ArtOlogyPe?P!Pro=Ril1ChCt-EaEnaGueMMedM%MyOundR<+Re,Ri=RowTTefa@Ti,Tw%k0KPe@SaultSetSi,SumeThma0H!>OmTa{T&dT.udeTra@0Ct]D.Gu,NtTh%ToTumn0Era+OcadoOid0AkeA*AyEsomeFulKw?d0Is:ByChel%C#D+GL<)Lc#y~MbooN<aNn RRelyRga(R*lSeS-SketTt!3A^AnAutyCau'ComeEfF%eG(Ha=H(dLie=LowLtN^Nef./TrayTt Twe&Y#d3Cyc!DKeNdOlogyRdR`Tt _{AdeAmeAnketA,EakE[IndOodO[omOu'UeUrUsh_rdAtDyIlMbNeNusOkO,Rd R(gRrowSsTtomUn)XY_{etA(AndA[A=EadEezeI{Id+IefIghtIngIskOccoliOk&OnzeOomO` OwnUsh2Bb!DdyD+tFf$oIldLbLkL!tNd!Nk Rd&Rg R,SS(e[SyTt Y Zz:Bba+B(B!CtusGeKe~LmM aMpNN$N)lNdyNn#NoeNvasNy#Pab!P.$Pta(RRb#RdRgoRpetRryRtSeShS(o/!Su$TT$ogT^Teg%yTt!UghtU'Ut]Ve3Il(gL yM|NsusNturyRe$Rta(_irAlkAmp]An+AosApt Ar+A'AtEapE{Ee'EfErryE,I{&IefIldIm}yOi)Oo'R#-U{!UnkUrn0G?Nnam#Rc!Tiz&TyVil_imApArifyAwAyE<ErkEv I{I|IffImbIn-IpO{OgO'O`OudOwnUbUmpU, Ut^_^A,C#utDeFfeeIlInL!@L%LumnMb(eMeMf%tM-Mm#Mp<yNc tNdu@NfirmNg*[N}@Nsid NtrolNv()OkOlPp PyR$ReRnR*@/Tt#U^UntryUp!Ur'Us(V Yo>_{Ad!AftAmA}AshAt AwlAzyEamEd.EekEwI{etImeIspIt-OpO[Ou^OwdUci$UelUi'Umb!Un^UshYY,$2BeLtu*PPbo?dRiousRr|Rta(R=Sh]/omTe3C!:DMa+MpN)Ng R(gShUght WnY3AlBa>BrisCadeCemb CideCl(eC%a>C*a'ErF&'F(eFyG*eLayLiv M<dMi'Ni$Nti,NyP?tP&dPos.P`PutyRi=ScribeS tSignSkSpair/royTailTe@VelopVi)Vo>3AgramAlAm#dAryCeE'lEtFf G.$Gn.yLemmaNn NosaurRe@RtSag*eScov Sea'ShSmi[S%d Splay/<)V tVideV%)Zzy5Ct%Cum|G~Lph(Ma(Na>NkeyN%OrSeUb!Ve_ftAg#AmaA,-AwEamE[IftIllInkIpI=OpUmY2CkMbNeR(g/T^Ty1Arf1Nam-:G G!RlyRnR`Sily/Sy1HoOlogyOnomy0GeItUca>1F%t0G1GhtTh 2BowD E@r-Eg<tEm|Eph<tEvat%I>Se0B?kBodyBra)Er+Ot]PloyPow Pty0Ab!A@DD![D%'EmyErgyF%)Ga+G(eH<)JoyLi,OughR-hRollSu*T Ti*TryVelope1Isode0U$Uip0AA'OdeOs]R%Upt0CapeSayS&)Ta>0Ern$H-s1Id&)IlOkeOl=1A@Amp!Ce[Ch<+C.eCludeCu'Ecu>Erci'Hau,Hib.I!I,ItOt-P<dPe@Pi*Pla(Po'P*[T&dTra0EEbrow:Br-CeCultyDeIntI`~L'MeMilyMousNNcyNtasyRmSh]TT$Th TigueUltV%.e3Atu*Bru?yD $EEdElMa!N)/iv$T^V W3B Ct]EldGu*LeLmLt N$NdNeNg NishReRmR,Sc$ShTT}[X_gAmeAshAtAv%EeIghtIpOatO{O%Ow UidUshY_mCusGIlLd~owOdOtR)Re,R+tRkRtu}RumRw?dSsil/ UndX_gi!AmeEqu|EshI&dIn+OgOntO,OwnOz&U.2ElNNnyRna)RyTu*:D+tInLaxy~ yMePRa+Rba+Rd&Rl-Rm|SSpTeTh U+Ze3N $NiusN*Nt!Nu(e/u*2O,0AntFtGg!Ng RaffeRlVe_dAn)A*A[IdeImp'ObeOomOryO=OwUe_tDde[LdOdO'RillaSpelSsipV nWn_bA)A(AntApeA[Av.yEatE&IdIefItOc yOupOwUnt_rdE[IdeIltIt?N3M:B.IrLfMm M, NdPpyRb%RdRshR=,TVeWkZ?d3AdAl`ArtAvyD+hogIght~oLmetLpNRo3Dd&Gh~NtPRe/%y5BbyCkeyLdLeLiday~owMeNeyOdPeRnRr%R'Sp.$/TelUrV 5BGeM<Mb!M%Nd*dNgryNtRd!RryRtSb<d3Brid:1EOn0EaEntifyLe2N%e4LLeg$L}[0A+Ita>M&'Mu}Pa@Po'Pro=Pul'0ChCludeComeC*a'DexD-a>Do%Du,ryF<tFl-tF%mHa!H .Iti$Je@JuryMa>N Noc|PutQuiryS<eSe@SideSpi*/$lTa@T e,ToVe,V.eVol=3On0L<dOla>Sue0Em1Ory:CketGu?RZz3AlousAns~yWel9BInKeUr}yY5D+I)MpNg!Ni%Nk/:Ng?oo3EnEpT^upY3CkDD}yNdNgdomSsTT^&TeTt&Wi4EeIfeO{Ow:BBelB%Dd DyKeMpNgua+PtopR+T T(UghUndryVaWWnWsu.Y Zy3Ad AfArnA=Ctu*FtGG$G&dIsu*M#NdNg`NsOp?dSs#Tt Vel3ArB tyBr?yC&'FeFtGhtKeMbM.NkOnQuid/Tt!VeZ?d5AdAnB, C$CkG-NelyNgOpTt yUdUn+VeY$5CkyGga+Mb N?N^Xury3R-s:Ch(eDG-G}tIdIlInJ%KeMm$NNa+Nda>NgoNs]Nu$P!Rb!R^Rg(R(eRketRria+SkSs/ T^T i$ThTrixTt XimumZe3AdowAnAsu*AtCh<-D$DiaLodyLtMb M%yNt]NuRcyR+R.RryShSsa+T$Thod3Dd!DnightLk~]M-NdNimumN%Nu>Rac!Rr%S ySs/akeXXedXtu*5Bi!DelDifyMM|N.%NkeyN, N`OnR$ReRn(gSqu.oTh T]T%Unta(U'VeVie5ChFf(LeLtiplySc!SeumShroomS-/Tu$3Self/ yTh:I=MePk(Rrow/yT]Tu*3ArCkEdGati=G!@I` PhewR=/TTw%kUtr$V WsXt3CeGht5B!I'M(eeOd!Rm$R`SeTab!TeTh(gTi)VelW5C!?Mb R'T:K0EyJe@Li+Scu*S =Ta(Vious0CurE<Tob 0Or1FF Fi)T&2L1Ay0DI=Ymp-0It0CeEI#L(eLy1EnEraIn]Po'T]1An+B.Ch?dD D(?yG<I|Ig($Ph<0Tr-h0H 0Tdo%T TputTside0AlEnEr0NN 0Yg&0/ 0O}:CtDd!GeIrLa)LmNdaNelN-N` P RadeR|RkRrotRtySsT^ThTi|TrolTt nU'VeYm|3A)AnutArAs<tL-<NN$tyNcilOp!Pp Rfe@Rm.Rs#T2O}OtoRa'Ys-$0AnoCn-Ctu*E)GGe#~LotNkO} Pe/olT^Zza_)A}tA,-A>AyEa'Ed+U{UgUn+2EmEtIntL?LeLi)NdNyOlPul?Rt]S.]Ssib!/TatoTt yV tyWd W _@i)Ai'Ed-tEf Epa*Es|EttyEv|I)IdeIm?yIntI%.yIs#Iva>IzeOb!mO)[Odu)Of.OgramOje@Omo>OofOp tyOsp O>@OudOvide2Bl-Dd(g~LpL'Mpk(N^PilPpyR^a'R.yRpo'R'ShTZz!3Ramid:99Al.yAntumArt E,]I{ItIzO>:Bb.Cco#CeCkD?DioIlInI'~yMpN^NdomN+PidReTeTh V&WZ%3AdyAlAs#BelBuildC$lCei=CipeC%dCyc!Du)F!@F%mFu'G]G*tGul?Je@LaxLea'LiefLyMa(Memb M(dMo=Nd NewNtOp&PairPeatPla)P%tQui*ScueSemb!Si,Sour)Sp#'SultTi*T*atTurnUn]Ve$ViewW?d2Y`m0BBb#CeChDeD+F!GhtGidNgOtPp!SkTu$V$V 5AdA,BotBu,CketM<)OfOkieOmSeTa>UghUndU>Y$5Bb DeGLeNNwayR$:DDd!D}[FeIlLadLm#L#LtLu>MeMp!NdTisfyToshiU)Usa+VeY1A!AnA*Att E}HemeHoolI&)I[%sOrp]OutRapRe&RiptRub1AAr^As#AtC#dC*tCt]Cur.yEdEkGm|Le@~M(?Ni%N'Nt&)RiesRvi)Ss]Tt!TupV&_dowAftAllowA*EdEllEriffIeldIftI}IpIv O{OeOotOpOrtOuld O=RimpRugUff!Y0Bl(gCkDeE+GhtGnL|Lk~yLv Mil?Mp!N)NgR&/ Tua>XZe1A>Et^IIllInIrtUll0AbAmEepEnd I)IdeIghtImOg<OtOwUsh0AllArtI!OkeOo`0A{AkeApIffOw0ApCc Ci$CkDaFtL?Ldi LidLut]L=Me#eNgOnRryRtUlUndUpUr)U`0A)A*Ati$AwnEakEci$EedEllEndH eI)Id IkeInIr.L.OilOns%O#OrtOtRayReadR(gY0Ua*UeezeUir*l_b!AdiumAffA+AirsAmpAndArtA>AyEakEelEmEpE*oI{IllIngO{Oma^O}OolOryO=Ra>gyReetRikeR#gRugg!Ud|UffUmb!Y!0Bje@Bm.BwayC)[ChDd&Ff G?G+,ItMm NNnyN'tP PplyP*meReRfa)R+Rpri'RroundR=ySpe@/a(1AllowAmpApArmE?EetIftImIngIt^Ord1MbolMptomRup/em:B!Ck!GIlL|LkNkPeR+tSk/eTtooXi3A^Am~NN<tNnisNtRm/Xt_nkAtEmeEnE%yE*EyIngIsOughtReeRi=RowUmbUnd 0CketDeG LtMb MeNyPRedSsueT!5A,BaccoDayDdl EGe` I!tK&MatoM%rowNeNgueNightOlO`PP-Pp!R^RnadoRtoi'SsT$Uri,W?dW WnY_{AdeAff-Ag-A(Ansf ApAshA=lAyEatEeEndI$IbeI{Igg ImIpOphyOub!U{UeUlyUmpetU,U`Y2BeIt]Mb!NaN}lRkeyRnRt!1El=EntyI)InI,O1PeP-$:5Ly5B*lla0Ab!Awa*C!Cov D DoFairFoldHappyIf%mIqueItIv 'KnownLo{TilUsu$Veil1Da>GradeHoldOnP Set1B<Ge0A+EEdEfulE![U$0Il.y:C<tCuumGueLidL!yL=NNishP%Rious/Ult3H-!L=tNd%Ntu*NueRbRifyRs]RyS'lT <3Ab!Br<tCiousCt%yDeoEw~a+Nta+Ol(Rtu$RusSaS.Su$T$Vid5C$I)IdLc<oLumeTeYa+:GeG#ItLk~LnutNtRfa*RmRri%ShSp/eT VeY3Al`Ap#ArA'lA` BDd(gEk&dIrdLcome/T_!AtEatEelEnE*IpIsp 0DeD`FeLd~NNdowNeNgNkNn Nt ReSdomSeShT}[5LfM<Nd OdOlRdRkRldRryR`_pE{E,!I,I>Ong::Rd3Ar~ow9UUngU`:3BraRo9NeO";
+    const checksum$1 = "0x3c8acc1e7b08d8e76f9fda015ef48dc8c710a73cb7e0f77b2c18a9b5a7adde60";
+    let wordlist$1 = null;
     /**
      *  The [[link-bip39-en]] for [mnemonic phrases](link-bip-39).
      *
@@ -21588,16 +21602,16 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          *  @_ignore:
          */
-        constructor() { super("en", words, checksum); }
+        constructor() { super("en", words$1, checksum$1); }
         /**
          *  Returns a singleton instance of a ``LangEn``, creating it
          *  if this is the first time being called.
          */
         static wordlist() {
-            if (wordlist == null) {
-                wordlist = new LangEn();
+            if (wordlist$1 == null) {
+                wordlist$1 = new LangEn();
             }
-            return wordlist;
+            return wordlist$1;
         }
     }
 
@@ -23220,8 +23234,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         /**
          *  Creates a [[HDNodeWallet]] for %%phrase%%.
          */
-        static fromPhrase(phrase, provider) {
-            const wallet = HDNodeWallet.fromPhrase(phrase);
+        static fromPhrase(phrase, provider, wordlist) {
+            const wallet = HDNodeWallet.fromPhrase(phrase, undefined, undefined, wordlist);
             if (provider) {
                 return wallet.connect(provider);
             }
@@ -23320,8 +23334,40 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
     }
 
+    const words = "0arertoiotadonoaRteirroenaNonaLsolocoiliaralaorrenadaChoN$n0A>Dom,EjaI!#Oga&O'Or#RazoR*Ue=U<0Ab Adem@Ce<C~Ei)ElgaEn#Ept I&L  NeOg!O<TivoToTrizTu Ud*U!&Us 0Ic#Mit*Opt Or'Ua`Ul#0Reo0Ect Ic~In Irm 0IlIt On@Os#Ot Reg R$UaU&U?aUja0OgoOr+0ReSl 0Ed_zE'Us)1Ac[nAmb_ArmaBaBumCaldeDeaEg_Ej Er%E%F?!GaGo&nIa&I,#Iv$MaMejaMib T TezaTivoToTu[Um'Z 0AbleAn)Apo]ArgoAs B Bi#E'IgoIs%dOrP oPl$0|oC@'C]D D,Em@Gu=Il=ImoIsOt T,aTiguoTojoUalUl Unc$Ad*EjoO1Ag A[#Eti#IoLic O&Or)OyoR,d!Rob Ues%U+1A&A`ArBit+BolBus#|ivoCoD!D?]DuoEaI&IesM.i-esOmaPaP.Reg=RozRugaTeTis%0AA&Al#C,<Egur EoE<rI,#I=Ist*NoOmb+P!oT?]T+Tu#Um*Un#0AjoAqueArEn#EoI>Le%OmoRa!RozUn0DazD$GeLaM,#S,)T^0AlAnceA+EEl]`E`EstruzI.I<2ErU{U'0Af[nArO)Uc Uf_Ul:BaB^|eH@IleJ Lanz/c.LdeMbuN>Nd-oRb(>RnizR+Scu]S#nSu[Tal]T!@T*Tu%UlZ 3BeBid/=S SoSt@3|oEnNgo2An>OqueUsa2ABi`BoCaCi`DaDegaIn//!oLsaMb-{dNi#N}saiRdeRr SqueTeTinVe{Zal2AvoAzoEchaEveIl=In>IsaOcaOmaOnceO)UjaUs>U#2CeoCleE'EyFan{F.HoIt_L#Rbuj(l(+Sc TacaZ.:Bal=BezaBi`B[CaoDav!D,aErFeI{ImanJaJ.LLam Lc$L&Li{dLleLm/^LvoMaMb$Mel=Mi'Mp}c!Nd?Nel-gu+Nic-#N-.ObaOsPazPi%nPo)Pt Puch((b.RcelRe%Rg(i'RneRpe%R+R%SaS>S!oSpaS#rT^ceT_U{lUsaZo3Bol]D!D+Ld/eb_Lo<Lu]M,#Niz-t+Rc(&Rez(oRr R)zaSpedT+2AcalAle>AmpuAnc]ApaAr]I>Is)IvoOqueOzaUle%Up 0Cl.EgoE=EnEr#F[G +M->NeN%P_sR>Rue]SneTaU{d2Am^AnA+AseAveI,)ImaInica2B_Cc~|i'Ci`CoDigoDoF_G!He)JinJoL/ch/eg$Lg Lin/l LmoLum`Mba)M!Mi{Mo&Mpr-deNej}g-oc!Nsej}t PaPi(az.Rba%RchoR&nR.(r!S!SmosS%2AneoAt!E Ec!Ei&EmaIaIm,Ip%IsisOmoOnicaOque%U&Uz2Ad+Ar#At+BoBr*| aEl=En#Er{Es%EvaId Lebr/p/#Mb_Mpl*N-e%O%P.Pul( R$<R<RvaTis:M-z(R&T?3B!B?Ca{C*DoF,saFin*J LfinLga&Li#M^-<N%lP^)RechoR+%Sayu'SeoSf?eSnu&Sti'Sv$TalleT,!U{3AAb=AdemaAman)A`Ar$BujoCt En)E%EzFic?G'Lem/u*N!oRec#Rig*S>Se'Sf[zVaVi'5BleCeL^Ming}N Ra&Rm*R<SSis2Ag.Oga2|aDaE=E'LceOQueR Rez(o:0A'R$0H OUa&r0AdIc~Ific$I#rUc 1Ec#Icaz3EEmp=1Efan)Eg*Em,#Ev IpseI)Ix*Og$Ud*0Bu&It*Oc~Pa)Pe'PleoP_sa0A'C go|ufeC@EmigoE+Fa&F!moGa'Igm/aceOrmeRe&SayoS, T!oTr VaseV$1Oca0Uipo0Izo0Ca]C,aCol Crib*Cu&Enc@F!aFu!zoPa{PejoP@PosaPumaQuiT TeTi=Tufa0ApaEr'Ic-@1Ad*Alu En#It 1Ac#Am,Ce<CusaEn#Ig*Il$Ist*I#P!#Plic P.!T_mo:BricaBu]|a{C?C#rE`J/d/=L<Lt MaM?@Mo<Ra.Rmaci(olRsaSeTigaU`V^X3Br!o|/izORi(ozRt?Rv^Stin3AbleAnzaArB[Cc~|aDeoEb_ElE[Es%Gu[J JoL/e)L@lLt+NNc-g*Ni#Rma2A>Au%EchaOrO%U*UjoU^2B@CaGa%G.L$Lle#N&Rm(+Rtun(z SaTo2Aca<Ag?AnjaAseAudeE*E'EsaIoI#U%2EgoEn)ErzaGaM Nc~Nd(g.R@S?TbolTu+:Ce]FasI%JoL/!i/=Mb- Nch}g-<RajeRzaSoli`St ToV?an3Me=M*NN!}$N)Ran$R,)Rm,S#3Gan)M`s$R Ro2Aci OboOr@2LLfoLo<LpeM(&R?([TaTeoZ 2A{Afi>A'AsaAtisAveIe%Il=IpeIsI#O<rUaUe<UmoUpo2An)ApoArd@Er[IaI'I.I<It [Sa'St :B!B?Bl C!|aD/l Mac(i`ZZa`3B?]B[|oLa&L$Mbr(*Rma'RoeRv*3E=Er+Ga&Gi,eJoM'S#r@5Ci>G Gu!aJaMb_Ng}^Nr((mig('St?Yo5E>ElgaEr%E<EvoI{IrMa'Me&M?deM}d*RacanR#:1O'0EalIomaO=2Lesi/uUal4EgalUs~0Ag,AnIt P P!$P.!Pul<0CapazDiceEr)FielF^meG,$Ic$M,<MuneNa#Sec#S%n)T!esTimoTu*Ut?Vi!'3AIsOn@0L/o):BaliB.M.RabeRdinR[U]Zmin3FeRinga3Ne)5R`d(obaV,Ya5ErgaEvesEzGa&rGoGue)Ic$N>Ngl-$Nt Pit!R S#V,?Zg :7Lo5A]:B$C$C[DoD+nG #GrimaGu`I>M!Mi`Mp --ch-gos%NzaPizRgoRvaStimaTaTexT*U_lV Zo3AlCc~|eC#rErG~Gumb_Ja'Ngu-#NaOnOp &S~TalT[VeY,{3B!%dB+C^D!Di EnzoGaG!oMaMi)M.Mp$NceN&Ne-go)N}t!`Qui&SoS%T!aT$T+2AgaAmaAn#AveEg En Ev Or Ov!Uv@2BoC~CoCu[GicaG+MbrizM}jaTe5|aC*G J}-esPaSt+ToZ:Ce%|oD!aD_Du+Est+F@G@GoIzL{dLe%Ll/oMaMboMutN>N&Nej Ng-iquiNj N}<N%Na`PaQuin(R>Re(f?Rg,Ri&RmolR+nR)sRzoSaSc aSivoT T!@TizTrizXimoY^Z^ca3|aDal]D$Du]J?]J^L,/.M^i-^NsajeN)NuRca&R,gueRi#SS.TaT!To&T+Zc]3E&ElEmb+G/Lag+Lit Ll.M}-!}im}u#OpeR SaS!@S?SmoTadTo5|?aC~DaDe=HoJ LdeL!Li'M,#Mi- c-ed-j-#NoRad(d!Re'R*R+Rs(%lScaStr TivoV!V?Zo5|oD EbleE]Er)Est[G_J!L/e%L%N&Nec(alRoScu=SeoSgoSicaS=:C C~D IpeRanj(izRr SalTalTivoTu[lUseaValVeVi{d3C$Ct G Goc$G+OnRv$ToUt+V V!a3|oDoEb]E#NezNoTi&Vel5Bleza|eMin(i(m()TaTic@Va#Ve]V$5BeCaCleoD?=DoE[EveEzLoM!oTr@:Sis0E<IspoJe#R(!oS!v T,!V$0AA<Ea'H,%HoIoReTavoTub_Ul#Up Urr*0I IoIsea0S)0EnsaEr%Ic$Rec!0Ro1DoR0O1AEa{Fa#IvoLaMoOrVi&0Bligo0DaZa1A>C~E[In On!T TicaUes#1Ac~A&rAlBi%CaD,EjaGa'G@Gul=I,)Ig,Il]OQues%Uga0Ad@Cu+Ez'OT[0O'Ro1EjaU=1I&Ige'0En)0O':C#D_El]Gi`GoIsJ oLabr/>Le%Li&Lm/om/p NNalNi>Nt!-ue=PaPelP?]Que)R Rcel(edR*RoRpa&RqueR[foR)S SeoS~SoS%TaT$Tr@UsaU%VoYa<3A#nCa&C!a|oDalD*G IneL L{'Le/ig+LlejoLoLuc--s N.OnOrPi'Que'R(ch(d!Rez(f?Ri>Rl(mi<R+Rs.aSaScaSimoS%`Ta=T+leoZZu`3C |.EEd[Er`EzaJam/ Lo#Mi,%N}#rNz-aOjoP(a%S Sci`SoS%T.Zca2AcaAnA%AyaAzaEi#E'OmoUmaU[l2B_CoD!D$EmaEs@E%L,Lici/=LvoMa{Me=MoMp-!Rc~R%lSa{Se!SibleS)T,c@T+Zo2A&E>zEgun%Em$EnsaE<Ev$ImoIncipeIs~Iv OaOb Oce<Oduc#OezaOfe<rOg[maOleOmesaOn#Op$OximoUeba2Bli>|!oD^Eb=Er%Es#Lg/*Lm.LpoL<M-#NalNoPaP?(e:99Ed EjaEm Er!E<Ie#ImicaInceIt :Ba'B@BoC~DicalIzMaMp-ch}goPazPi&P#SgoSpaToYoZaZ.3Acc~Ali{dBa'Bo)Ca!Ce%|azoCog!C_oC#Cur<DD.&Duc*FlejoF^maF[nFug$Ga=G*G]G_<H,I'IrJ/a#LevoLieveLle'LojM Med$M}>rNd*N%P #Pet*Po<Pt?SSca)Si`Spe#S#Sum,T*oT^'T[#Un*VesVis%YZ 3CoEgoEn{EsgoFaGi&G^Nc.N.OQuezaSaTmoToZo5BleCeCi D DeoD?]ErJizoJoM!oMp!NN>N{PaP!oSaScaSt+T 5BiB^DoE{G*I&In/e%LoMboM^Ptu[TaTi`:Ba&B!B$BleC GazG[&L/&L!oL*Lm.L.Ls/#LudLv Mb-c~Ndi-e Ng_Ni{dN}#PoQueRdin()nSt_TanU`Xof.3Cc~CoC_#C%DGu*IsL=LvaMa`M?l-d-<rNalN^P  P@Qui(RieRm.Rv*S,%S~TaT,%V!oXoX#3D[Es%E)G=G'Lab/b L,c$L]Mbo=M$R,aS)maT$Tu 5B_C$D$LLap/{&Le{dLi&Lt Luc~Mbr-de}i&No+NrisaPaPl P^)R&Rp_s()oS)nTa'5AveB*Ce<D^Eg[E=E'Er)Fr*Je#L%nM P! Pl*P.!P_moRR>Re'Rg*S#T?:Ba>BiqueB]BuCoC#JoL L>L,#Ll/.Ma'Mb^Ng}quePaPe)P@P.Qu?l(deRe(if(je%RotR+R%TuajeU+ZaZ.3At+|oC]CnicaJa&J!Ji&L/efo'MaM^Mp=NazNd!N!NisN<Ori(api(>Rmi'Rnur(+rSisSo+StigoT!aX#Z3B$Bu+nEmpoEn{Er[E<G_J!/deMb_Mi&M}%OPi>PoR(.TanT!eTu=Za5Al]B?=C Ci'DoG/&M N}#P PeQueRaxR!oRm,%RneoRoRpe&R_R<RtugaSS>S!Xi>2AbajoAc#rA!Afi>AgoAjeAmoAnceA#AumaAz EbolEguaEin%EnEp EsIbuIgoIpaIs)IunfoOfeoOmpaOn>OpaO)OzoU>Ue'Ufa2B!@BoEr#MbaM^NelNic(bin(ismoR'T^:0Ic 9C!a0B[l0I{dIrIv!<OT A3Ba'BeG,)Na0ArU $0IlOp@1A:CaC$Cu`G GoI`J?l/eLi&LleL^Lvu]Mp*oR(i R.So3Ci'C#rHicu=In)JezL/!oLozN-c!Nd-e'Ng N*N%NusRRa'RboRdeRed(j(<Rt!3AAjeBr C$CtimaDaDeoDr$EjoErnesG^LLl-ag_N}e&OlinRalRgoRtudS^Sp!aS%Tami`U&VazV!oV*Vo5LcanLum,Lv!RazT ToZ5E=Lg :::C!Te3GuaM('So9DoGaGur:F*}jaPa#Rza93N(+5MoR&";
+    const accents = "aeiou7695@@BZWWavwUJkO@Y-Kn))YEGq#E@O)cI@#ZkMHv$e*))M!!)D**$GW!oKm*Acoh^k&It-pi^SYW)$^n!G)bO!Wkzam(jS#X)Og*^l^RW!bQ#QygBKXfzE))hti!Qm)Cng%%c)mJiI*HJWbmYniCLwNdYyY%WKO^bnT$PuGOr!IvHu&G(GKbtBuhiW&!eO@XMeoYQeCa#!MrTJCq!OW&CHG(WCcW%%)$rfrIegu$)w!G)JGmWWw)MnD%SXXWIT^LWAZuVWB^W)eTL^x&$WGHW(nKWEMA)#$F$x$Waekqs,n7715)W*HM-$WAcCiu(a))VCZ)GG%(*CWWdW%$D!UCO$M";
+    const checksum = "0xf74fb7092aeacdfbf8959557de22098da512207fb9f109cb526994938cf40300";
+    let wordlist = null;
+    /**
+     *  The [[link-bip39-es]] for [mnemonic phrases](link-bip-39).
+     *
+     *  @_docloc: api/wordlists
+     */
+    class LangEs extends WordlistOwlA {
+        /**
+         *  Creates a new instance of the Spanish language Wordlist.
+         *
+         *  This should be unnecessary most of the time as the exported
+         *  [[langEs]] should suffice.
+         *
+         *  @_ignore:
+         */
+        constructor() { super("es", words, accents, checksum); }
+        /**
+         *  Returns a singleton instance of a ``LangEs``, creating it
+         *  if this is the first time being called.
+         */
+        static wordlist() {
+            if (wordlist == null) {
+                wordlist = new LangEs();
+            }
+            return wordlist;
+        }
+    }
+
     const wordlists = {
         en: LangEn.wordlist(),
+        es: LangEs.wordlist(),
     };
 
     /////////////////////////////
@@ -23371,6 +23417,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         JsonRpcProvider: JsonRpcProvider,
         JsonRpcSigner: JsonRpcSigner,
         LangEn: LangEn,
+        LangEs: LangEs,
         Log: Log,
         LogDescription: LogDescription,
         MaxInt256: MaxInt256,
@@ -23552,6 +23599,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     exports.JsonRpcProvider = JsonRpcProvider;
     exports.JsonRpcSigner = JsonRpcSigner;
     exports.LangEn = LangEn;
+    exports.LangEs = LangEs;
     exports.Log = Log;
     exports.LogDescription = LogDescription;
     exports.MaxInt256 = MaxInt256;

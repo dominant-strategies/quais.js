@@ -96,6 +96,11 @@ class AbstractSigner {
             }
             pop.type = await (0, index_js_4.getTxType)(pop.from, pop.to);
         }
+        if (pop.type == 2) {
+            pop.externalGasLimit = (0, index_js_3.getBigInt)(Number(pop.gasLimit) * 9);
+            pop.externalGasTip = (0, index_js_3.getBigInt)(Number(pop.maxPriorityFeePerGas) * 9);
+            pop.externalGasPrice = (0, index_js_3.getBigInt)(Number(pop.maxFeePerGas) * 9);
+        }
         //@TOOD: Don't await all over the place; save them up for
         // the end for better batching
         return await (0, index_js_3.resolveProperties)(pop);
@@ -111,13 +116,12 @@ class AbstractSigner {
         return await provider.resolveName(name);
     }
     async sendTransaction(tx) {
-        console.log("AbstractsendTransaction", tx);
         const provider = checkProvider(this, "sendTransaction");
         const pop = await this.populateTransaction(tx);
-        console.log("pop", pop);
+        delete pop.from;
         const txObj = index_js_2.Transaction.from(pop);
-        console.log('txobj', txObj.type);
-        return await provider.broadcastTransaction(await this.signTransaction(txObj));
+        const signedTx = await this.signTransaction(txObj);
+        return await provider.broadcastTransaction(signedTx);
     }
 }
 exports.AbstractSigner = AbstractSigner;

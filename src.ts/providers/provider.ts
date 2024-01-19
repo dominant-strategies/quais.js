@@ -214,18 +214,31 @@ export interface TransactionRequest {
      */
     enableCcipRead?: boolean;
 
-    //External transactiuon fields
+        /**
+ * The external gas price.
+ */
+    externalGasPrice?: null | BigNumberish;
 
-    externalGasLimit?: BigNumberish;
+    /**
+     * The external gas tip.
+     */
+    externalGasTip?: null | BigNumberish;
 
-    externalGasPrice?: BigNumberish;
+    /**
+     * The external gas limit.
+     */
+    externalGasLimit?: null | BigNumberish;
 
-    externalGasTip?: BigNumberish;
 
-    externalData?: string;
+    /**
+     *  The external data.
+     */
+    externalData?: null | string;
 
-    externalAcccessList?: AccessListish;
-
+    /**
+     *  The access list for berlin and london transactions.
+     */
+    externalAccessList?: null | AccessListish;
 };
 
 /**

@@ -3,12 +3,11 @@ import { keccak256, Signature, SigningKey } from "../crypto/index.js";
 import { concat, decodeRlp, encodeRlp, getBytes, getBigInt, getNumber, hexlify, assert, assertArgument, toBeArray, zeroPadValue } from "../utils/index.js";
 import { accessListify } from "./accesslist.js";
 import { recoverAddress } from "./address.js";
-import { getTxType } from "../utils/index.js";
 const BN_0 = BigInt(0);
-const BN_2 = BigInt(2);
-const BN_27 = BigInt(27);
-const BN_28 = BigInt(28);
-const BN_35 = BigInt(35);
+// const BN_2 = BigInt(2);
+// const BN_27 = BigInt(27)
+// const BN_28 = BigInt(28)
+// const BN_35 = BigInt(35);
 const BN_MAX_UINT = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 function handleAddress(value) {
     if (value === "0x") {
@@ -47,97 +46,7 @@ function formatNumber(_value, name) {
 function formatAccessList(value) {
     return accessListify(value).map((set) => [set.address, set.storageKeys]);
 }
-function _parseLegacy(data) {
-    const fields = decodeRlp(data);
-    assertArgument(Array.isArray(fields) && (fields.length === 9 || fields.length === 6), "invalid field count for legacy transaction", "data", data);
-    const tx = {
-        type: 0,
-        nonce: handleNumber(fields[0], "nonce"),
-        gasPrice: handleUint(fields[1], "gasPrice"),
-        gasLimit: handleUint(fields[2], "gasLimit"),
-        to: handleAddress(fields[3]),
-        value: handleUint(fields[4], "value"),
-        data: hexlify(fields[5]),
-        chainId: BN_0
-    };
-    // Legacy unsigned transaction
-    if (fields.length === 6) {
-        return tx;
-    }
-    const v = handleUint(fields[6], "v");
-    const r = handleUint(fields[7], "r");
-    const s = handleUint(fields[8], "s");
-    if (r === BN_0 && s === BN_0) {
-        // EIP-155 unsigned transaction
-        tx.chainId = v;
-    }
-    else {
-        // Compute the EIP-155 chain ID (or 0 for legacy)
-        let chainId = (v - BN_35) / BN_2;
-        if (chainId < BN_0) {
-            chainId = BN_0;
-        }
-        tx.chainId = chainId;
-        // Signed Legacy Transaction
-        assertArgument(chainId !== BN_0 || (v === BN_27 || v === BN_28), "non-canonical legacy v", "v", fields[6]);
-        tx.signature = Signature.from({
-            r: zeroPadValue(fields[7], 32),
-            s: zeroPadValue(fields[8], 32),
-            v
-        });
-        tx.hash = keccak256(data);
-    }
-    return tx;
-}
-// function _serializeLegacy(tx: Transaction, sig?: Signature): string {
-//     const fields: Array<any> = [
-//         formatNumber(tx.nonce || 0, "nonce"),
-//         formatNumber(tx.gasPrice || 0, "gasPrice"),
-//         formatNumber(tx.gasLimit || 0, "gasLimit"),
-//         ((tx.to != null) ? getAddress(tx.to): "0x"),
-//         formatNumber(tx.value || 0, "value"),
-//         (tx.data || "0x"),
-//     ];
-//     let chainId = BN_0;
-//     if (tx.chainId != BN_0) {
-//         // A chainId was provided; if non-zero we'll use EIP-155
-//         chainId = getBigInt(tx.chainId, "tx.chainId");
-//         // We have a chainId in the tx and an EIP-155 v in the signature,
-//         // make sure they agree with each other
-//         assertArgument(!sig || sig.networkV == null || sig.legacyChainId === chainId,
-//              "tx.chainId/sig.v mismatch", "sig", sig);
-//     } else if (tx.signature) {
-//         // No explicit chainId, but EIP-155 have a derived implicit chainId
-//         const legacy = tx.signature.legacyChainId;
-//         if (legacy != null) { chainId = legacy; }
-//     }
-//     // Requesting an unsigned transaction
-//     if (!sig) {
-//         // We have an EIP-155 transaction (chainId was specified and non-zero)
-//         if (chainId !== BN_0) {
-//             fields.push(toBeArray(chainId));
-//             fields.push("0x");
-//             fields.push("0x");
-//         }
-//         return encodeRlp(fields);
-//     }
-//     // @TODO: We should probably check that tx.signature, chainId, and sig
-//     //        match but that logic could break existing code, so schedule
-//     //        this for the next major bump.
-//     // Compute the EIP-155 v
-//     let v = BigInt(27 + sig.yParity);
-//     if (chainId !== BN_0) {
-//         v = Signature.getChainIdV(chainId, sig.v);
-//     } else if (BigInt(sig.v) !== v) {
-//         assertArgument(false, "tx.chainId/sig.v mismatch", "sig", sig);
-//     }
-//     // Add the signature
-//     fields.push(toBeArray(v));
-//     fields.push(toBeArray(sig.r));
-//     fields.push(toBeArray(sig.s));
-//     return encodeRlp(fields);
-// }
-function _parseEipSignature(tx, fields) {
+function _parseSignature(tx, fields, serialize) {
     let yParity;
     try {
         yParity = handleNumber(fields[0], "yParity");
@@ -153,13 +62,13 @@ function _parseEipSignature(tx, fields) {
     const signature = Signature.from({ r, s, yParity });
     tx.signature = signature;
 }
-function _parseEip1559(data) {
+function _parse(data) {
     const fields = decodeRlp(getBytes(data).slice(1));
     assertArgument(Array.isArray(fields) && (fields.length === 9 || fields.length === 12), "invalid field count for transaction type: 2", "data", hexlify(data));
     const maxPriorityFeePerGas = handleUint(fields[2], "maxPriorityFeePerGas");
     const maxFeePerGas = handleUint(fields[3], "maxFeePerGas");
     const tx = {
-        type: 2,
+        type: 0,
         chainId: handleUint(fields[0], "chainId"),
         nonce: handleNumber(fields[1], "nonce"),
         maxPriorityFeePerGas: maxPriorityFeePerGas,
@@ -176,10 +85,42 @@ function _parseEip1559(data) {
         return tx;
     }
     tx.hash = keccak256(data);
-    _parseEipSignature(tx, fields.slice(9));
+    _parseSignature(tx, fields.slice(9), _serialize);
     return tx;
 }
-function _serializeEip1559(tx, sig) {
+function _parseStandardETx(data) {
+    const fields = decodeRlp(getBytes(data).slice(1));
+    assertArgument(Array.isArray(fields) && (fields.length === 8 || fields.length === 17), "invalid field count for transaction type: 2", "data", hexlify(data));
+    const maxPriorityFeePerGas = handleUint(fields[2], "maxPriorityFeePerGas");
+    const maxFeePerGas = handleUint(fields[3], "maxFeePerGas");
+    const tx = {
+        type: 2,
+        chainId: handleUint(fields[0], "chainId"),
+        nonce: handleNumber(fields[1], "nonce"),
+        maxPriorityFeePerGas: maxPriorityFeePerGas,
+        maxFeePerGas: maxFeePerGas,
+        gasPrice: null,
+        gasLimit: handleUint(fields[4], "gasLimit"),
+        to: handleAddress(fields[5]),
+        value: handleUint(fields[6], "value"),
+        data: hexlify(fields[7]),
+        accessList: handleAccessList(fields[8], "accessList"),
+        externalGasLimit: handleUint(fields[9], "externalGasLimit"),
+        externalGasPrice: handleUint(fields[10], "externalGasPrice"),
+        externalGasTip: handleUint(fields[11], "externalGasTip"),
+        externalData: hexlify(fields[12]),
+        externalAccessList: handleAccessList(fields[13], "externalAccessList")
+    };
+    fields;
+    // Unsigned EIP-2930 Transaction
+    if (fields.length === 8) {
+        return tx;
+    }
+    tx.hash = keccak256(data);
+    _parseSignature(tx, fields.slice(14), _serializeStandardETx);
+    return tx;
+}
+function _serialize(tx, sig) {
     const fields = [
         formatNumber(tx.chainId || 0, "chainId"),
         formatNumber(tx.nonce || 0, "nonce"),
@@ -196,47 +137,31 @@ function _serializeEip1559(tx, sig) {
         fields.push(toBeArray(sig.r));
         fields.push(toBeArray(sig.s));
     }
-    return concat(["0x02", encodeRlp(fields)]);
+    return concat(["0x00", encodeRlp(fields)]);
 }
-function _parseEip2930(data) {
-    const fields = decodeRlp(getBytes(data).slice(1));
-    assertArgument(Array.isArray(fields) && (fields.length === 8 || fields.length === 11), "invalid field count for transaction type: 1", "data", hexlify(data));
-    const tx = {
-        type: 1,
-        chainId: handleUint(fields[0], "chainId"),
-        nonce: handleNumber(fields[1], "nonce"),
-        gasPrice: handleUint(fields[2], "gasPrice"),
-        gasLimit: handleUint(fields[3], "gasLimit"),
-        to: handleAddress(fields[4]),
-        value: handleUint(fields[5], "value"),
-        data: hexlify(fields[6]),
-        accessList: handleAccessList(fields[7], "accessList")
-    };
-    // Unsigned EIP-2930 Transaction
-    if (fields.length === 8) {
-        return tx;
-    }
-    tx.hash = keccak256(data);
-    _parseEipSignature(tx, fields.slice(8));
-    return tx;
-}
-function _serialize(tx, sig) {
+function _serializeStandardETx(transaction, sig) {
     const fields = [
-        formatNumber(tx.chainId || 0, "chainId"),
-        formatNumber(tx.nonce || 0, "nonce"),
-        formatNumber(tx.gasPrice || 0, "gasPrice"),
-        formatNumber(tx.gasLimit || 0, "gasLimit"),
-        ((tx.to != null) ? getAddress(tx.to) : "0x"),
-        formatNumber(tx.value || 0, "value"),
-        (tx.data || "0x"),
-        (formatAccessList(tx.accessList || []))
+        formatNumber(transaction.chainId || 0, "chainId"),
+        formatNumber(transaction.nonce || 0, "nonce"),
+        formatNumber(transaction.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
+        formatNumber(transaction.maxFeePerGas || 0, "maxFeePerGas"),
+        formatNumber(transaction.gasLimit || 0, "gasLimit"),
+        ((transaction.to != null) ? getAddress(transaction.to) : "0x"),
+        formatNumber(transaction.value || 0, "value"),
+        (transaction.data || "0x"),
+        (formatAccessList(transaction.accessList || [])),
+        formatNumber(transaction.externalGasLimit || 0, "externalGasLimit"),
+        formatNumber(transaction.externalGasPrice || 0, "externalGasPrice"),
+        formatNumber(transaction.externalGasTip || 0, "externalGasTip"),
+        (transaction.externalData || "0x"),
+        (formatAccessList(transaction.externalAccessList || [])),
     ];
     if (sig) {
         fields.push(formatNumber(sig.yParity, "recoveryParam"));
         fields.push(toBeArray(sig.r));
         fields.push(toBeArray(sig.s));
     }
-    return concat(["0x01", encodeRlp(fields)]);
+    return concat(["0x02", encodeRlp(fields)]);
 }
 /**
  *  A **Transaction** describes an operation to be executed on
@@ -264,6 +189,11 @@ export class Transaction {
     #chainId;
     #sig;
     #accessList;
+    #externalGasLimit;
+    #externalGasTip;
+    #externalGasPrice;
+    #externalAccessList;
+    #externalData;
     /**
      *  The transaction type.
      *
@@ -277,17 +207,14 @@ export class Transaction {
                 this.#type = null;
                 break;
             case 0:
-            case "legacy":
+            case "standard":
                 this.#type = 0;
                 break;
-            case 1:
-            case "berlin":
-            case "eip-2930":
-                this.#type = 1;
-                break;
+            // case 1: case "external":
+            //     this.#type = 1;
+            //     break;
             case 2:
-            case "london":
-            case "eip-1559":
+            case "internalToExternal":
                 this.#type = 2;
                 break;
             default:
@@ -299,9 +226,9 @@ export class Transaction {
      */
     get typeName() {
         switch (this.type) {
-            case 0: return "legacy";
-            case 1: return "eip-2930";
-            case 2: return "eip-1559";
+            case 0: return "standard";
+            case 1: return "external";
+            case 2: return "internalToExternal";
         }
         return null;
     }
@@ -331,9 +258,6 @@ export class Transaction {
      */
     get gasPrice() {
         const value = this.#gasPrice;
-        if (value == null && (this.type === 0 || this.type === 1)) {
-            return BN_0;
-        }
         return value;
     }
     set gasPrice(value) {
@@ -346,9 +270,6 @@ export class Transaction {
     get maxPriorityFeePerGas() {
         const value = this.#maxPriorityFeePerGas;
         if (value == null) {
-            if (this.type === 2) {
-                return BN_0;
-            }
             return null;
         }
         return value;
@@ -363,9 +284,6 @@ export class Transaction {
     get maxFeePerGas() {
         const value = this.#maxFeePerGas;
         if (value == null) {
-            if (this.type === 2) {
-                return BN_0;
-            }
             return null;
         }
         return value;
@@ -380,7 +298,7 @@ export class Transaction {
     get data() { return this.#data; }
     set data(value) { this.#data = hexlify(value); }
     /**
-     *  The amount of ether (in wei) to send in this transactions.
+     *  The amount of ether to send in this transactions.
      */
     get value() { return this.#value; }
     set value(value) {
@@ -407,15 +325,67 @@ export class Transaction {
     get accessList() {
         const value = this.#accessList || null;
         if (value == null) {
-            if (this.type === 1 || this.type === 2) {
-                return [];
-            }
             return null;
         }
         return value;
     }
     set accessList(value) {
         this.#accessList = (value == null) ? null : accessListify(value);
+    }
+    /**
+     *  The gas limit.
+     */
+    get externalGasLimit() { return this.#externalGasLimit; }
+    set externalGasLimit(value) { this.#externalGasLimit = getBigInt(value); }
+    /**
+     *  The maximum priority fee per unit of gas to pay. On legacy
+     *  networks this should be ``null``.
+     */
+    get externalGasTip() {
+        const value = this.#externalGasTip;
+        if (value == null) {
+            return null;
+        }
+        return value;
+    }
+    set externalGasTip(value) {
+        this.#externalGasTip = (value == null) ? null : getBigInt(value, "externalGasTip");
+    }
+    /**
+     *  The maximum total fee per unit of gas to pay. On legacy
+     *  networks this should be ``null``.
+     */
+    get externalGasPrice() {
+        const value = this.#externalGasPrice;
+        if (value == null) {
+            return null;
+        }
+        return value;
+    }
+    set externalGasPrice(value) {
+        this.#externalGasPrice = (value == null) ? null : getBigInt(value, "externalGasPrice");
+    }
+    /**
+     *  The transaction externalData. For ``init`` transactions this is the
+     *  deployment code.
+     */
+    get externalData() { return this.#externalData; }
+    set externalData(value) { this.#externalData = hexlify(value); }
+    /**
+     *  The external access list.
+     *
+     *  An access list permits discounted (but pre-paid) access to
+     *  bytecode and state variable access within contract execution.
+     */
+    get externalAccessList() {
+        const value = this.#externalAccessList || null;
+        if (value == null) {
+            return null;
+        }
+        return value;
+    }
+    set externalAccessList(value) {
+        this.#externalAccessList = (value == null) ? null : accessListify(value);
     }
     /**
      *  Creates a new Transaction with default values.
@@ -433,6 +403,11 @@ export class Transaction {
         this.#chainId = BigInt(0);
         this.#sig = null;
         this.#accessList = null;
+        this.#externalGasLimit = BigInt(0);
+        this.#externalGasTip = null;
+        this.#externalGasPrice = null;
+        this.#externalData = "0x";
+        this.#externalAccessList = null;
     }
     /**
      *  The transaction hash, if signed. Otherwise, ``null``.
@@ -491,8 +466,10 @@ export class Transaction {
         switch (this.inferType()) {
             case 0:
                 return _serialize(this, this.signature);
+            // case 1:
+            //     return _serializeEip2930(this, this.signature);
             case 2:
-                return _serializeEip1559(this, this.signature);
+                return _serializeStandardETx(this, this.signature);
         }
         assert(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: ".serialized" });
     }
@@ -503,14 +480,14 @@ export class Transaction {
      *  authorize this transaction.
      */
     get unsignedSerialized() {
-        // console.log("unsignedSerialized", this.type);
-        // switch (this.inferType()) {
-        //     case 0:
-        //         return _serialize(this);
-        //     case 2:
-        //         return _serializeEip1559(this);
-        // }
-        return _serialize(this);
+        switch (this.inferType()) {
+            case 0:
+                return _serialize(this);
+            // case 1:
+            //     return _serializeEip2930(this);
+            case 2:
+                return _serializeStandardETx(this);
+        }
         assert(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: ".unsignedSerialized" });
     }
     /**
@@ -525,21 +502,35 @@ export class Transaction {
      *  transaction types.
      */
     inferTypes() {
-        const hasFee = (this.maxFeePerGas != null || this.maxPriorityFeePerGas != null);
-        if (!hasFee) {
-            assert(hasFee, "missing maxPriorityFeePerGas or maxFeePerGas", "BAD_DATA", { value: this });
-        }
+        // Checks that there are no conflicting properties set
+        // const hasGasPrice = this.gasPrice != null;
+        // const hasFee = (this.maxFeePerGas != null || this.maxPriorityFeePerGas != null);
+        const hasExternal = (this.externalGasLimit != null || this.externalGasTip != null || this.externalGasPrice != null || this.externalData != null || this.externalAccessList != null);
+        // const hasAccessList = (this.accessList != null);
+        //if (hasGasPrice && hasFee) {
+        //    throw new Error("transaction cannot have gasPrice and maxFeePerGas");
+        //}
         if (this.maxFeePerGas != null && this.maxPriorityFeePerGas != null) {
             assert(this.maxFeePerGas >= this.maxPriorityFeePerGas, "priorityFee cannot be more than maxFee", "BAD_DATA", { value: this });
         }
+        //if (this.type === 2 && hasGasPrice) {
+        //    throw new Error("eip-1559 transaction cannot have gasPrice");
+        //}
+        assert(hasExternal || (this.type !== 0 && this.type !== 1), "transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList", "BAD_DATA", { value: this });
         const types = [];
-        if (this.from == null || this.to == null) {
-            assert(this.type == null, "transaction type cannot be inferred due to missing to or from", "BAD_DATA", { value: this });
+        // Explicit type
+        if (this.type != null) {
+            types.push(this.type);
         }
         else {
-            const allowedType = getTxType(this.from, this.to);
-            types.push(allowedType);
+            if (hasExternal) {
+                types.push(2);
+            }
+            else {
+                types.push(0);
+            }
         }
+        types.sort();
         return types;
     }
     /**
@@ -571,7 +562,12 @@ export class Transaction {
             value: s(this.value),
             chainId: s(this.chainId),
             sig: this.signature ? this.signature.toJSON() : null,
-            accessList: this.accessList
+            accessList: this.accessList,
+            externalGasLimit: s(this.externalGasLimit),
+            externalGasTip: s(this.externalGasTip),
+            externalGasPrice: s(this.externalGasPrice),
+            externalData: this.externalData,
+            externalAccessList: this.externalAccessList,
         };
     }
     /**
@@ -585,11 +581,11 @@ export class Transaction {
         if (typeof (tx) === "string") {
             const payload = getBytes(tx);
             if (payload[0] >= 0x7f) { // @TODO: > vs >= ??
-                return Transaction.from(_parseLegacy(payload));
+                return Transaction.from(_parse(payload));
             }
             switch (payload[0]) {
-                case 1: return Transaction.from(_parseEip2930(payload));
-                case 2: return Transaction.from(_parseEip1559(payload));
+                case 0: return Transaction.from(_parse(payload));
+                case 2: return Transaction.from(_parseStandardETx(payload));
             }
             assert(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: "from" });
         }
@@ -629,6 +625,21 @@ export class Transaction {
         }
         if (tx.accessList != null) {
             result.accessList = tx.accessList;
+        }
+        if (tx.externalGasLimit != null) {
+            result.externalGasLimit = tx.externalGasLimit;
+        }
+        if (tx.externalGasPrice != null) {
+            result.externalGasPrice = tx.externalGasPrice;
+        }
+        if (tx.externalGasTip != null) {
+            result.externalGasTip = tx.externalGasTip;
+        }
+        if (tx.externalData != null) {
+            result.externalData = tx.externalData;
+        }
+        if (tx.externalAccessList != null) {
+            result.externalAccessList = tx.externalAccessList;
         }
         if (tx.hash != null) {
             assertArgument(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);

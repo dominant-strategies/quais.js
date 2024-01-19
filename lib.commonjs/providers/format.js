@@ -268,7 +268,21 @@ function formatTransactionResponse(value) {
         delete result.etxData;
         delete result.etxAccessList;
     }
-    // @TODO: Check fee data
+    else {
+        //Needed due to go-quai api using both external as naming and etx as naming
+        //External is for when creating an external transaction
+        //Etx is for when reading an external transaction
+        if (result.etxGasLimit == null && value.externalGasLimit != null)
+            result.etxGasLimit = value.externalGasLimit;
+        if (result.etxGasPrice == null && value.externalGasPrice != null)
+            result.etxGasPrice = value.externalGasPrice;
+        if (result.etxGasTip == null && value.externalGasTip != null)
+            result.etxGasTip = value.externalGasTip;
+        if (result.etxData == null && value.externalData != null)
+            result.etxData = value.externalData;
+        if (result.etxAccessList == null && value.externalAccessList != null)
+            result.etxAccessList = value.externalAccessList;
+    }
     // Add an access list to supported transaction types
     if ((value.type === 1 || value.type === 2) && value.accessList == null) {
         result.accessList = [];

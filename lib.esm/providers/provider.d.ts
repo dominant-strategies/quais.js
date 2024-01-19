@@ -144,11 +144,26 @@ export interface TransactionRequest {
      *  the fetch to unexpected parties.
      */
     enableCcipRead?: boolean;
-    externalGasLimit?: BigNumberish;
-    externalGasPrice?: BigNumberish;
-    externalGasTip?: BigNumberish;
-    externalData?: string;
-    externalAcccessList?: AccessListish;
+    /**
+* The external gas price.
+*/
+    externalGasPrice?: null | BigNumberish;
+    /**
+     * The external gas tip.
+     */
+    externalGasTip?: null | BigNumberish;
+    /**
+     * The external gas limit.
+     */
+    externalGasLimit?: null | BigNumberish;
+    /**
+     *  The external data.
+     */
+    externalData?: null | string;
+    /**
+     *  The access list for berlin and london transactions.
+     */
+    externalAccessList?: null | AccessListish;
 }
 /**
  *  A **PreparedTransactionRequest** is identical to a [[TransactionRequest]]
