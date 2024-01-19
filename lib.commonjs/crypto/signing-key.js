@@ -50,8 +50,8 @@ class SigningKey {
             lowS: true
         });
         return signature_js_1.Signature.from({
-            r: (0, index_js_1.toBeHex)(sig.r, 32),
-            s: (0, index_js_1.toBeHex)(sig.s, 32),
+            r: (0, index_js_1.toBeHex)("0x" + sig.r.toString(16), 32),
+            s: (0, index_js_1.toBeHex)("0x" + sig.s.toString(16), 32),
             v: (sig.recovery ? 0x1c : 0x1b)
         });
     }

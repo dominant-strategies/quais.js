@@ -69,13 +69,12 @@ export class BaseWallet extends AbstractSigner {
     }
 
     async signTransaction(tx: TransactionRequest): Promise<string> {
-
         // Replace any Addressable or ENS name with an address
         const { to, from } = await resolveProperties({
             to: (tx.to ? resolveAddress(tx.to, this.provider): undefined),
             from: (tx.from ? resolveAddress(tx.from, this.provider): undefined)
         });
-
+        
         if (to != null) { tx.to = to; }
         if (from != null) { tx.from = from; }
 
@@ -84,7 +83,7 @@ export class BaseWallet extends AbstractSigner {
                 "transaction from address mismatch", "tx.from", tx.from);
             delete tx.from;
         }
-
+        
         // Build the transaction
         const btx = Transaction.from(<TransactionLike<string>>tx);
         btx.signature = this.signingKey.sign(btx.unsignedHash);
