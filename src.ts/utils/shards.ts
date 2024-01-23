@@ -12,7 +12,8 @@ export function getShardForAddress(address: string): string | null {
     return null;
 }
 
-export function getTxType(from: string, to: string): number {
+export function getTxType(from: string | null , to: string | null ): number {
+    if (from === null || to === null) return 0;
     const fromShard = getShardForAddress(from);
     const toShard = getShardForAddress(to);
 
