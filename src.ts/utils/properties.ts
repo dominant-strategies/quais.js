@@ -39,6 +39,16 @@ export async function resolveProperties<T>(value: { [ P in keyof T ]: T[P] | Pro
     }, <{ [ P in keyof T]: T[P] }>{ });
 }
 
+// Crawl up the constructor chain to find a static method
+export function getStatic<T>(ctor: any, key: string): T | null {
+    for (let i = 0; i < 32; i++) {
+        if (ctor[key]) { return ctor[key]; }
+        if (!ctor.prototype || typeof(ctor.prototype) !== "object") { break; }
+        ctor = Object.getPrototypeOf(ctor.prototype).constructor;
+    }
+    return null;
+}
+
 /**
  *  Assigns the %%values%% to %%target%% as read-only values.
  *

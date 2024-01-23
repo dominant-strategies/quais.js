@@ -10,6 +10,7 @@
 export declare function resolveProperties<T>(value: {
     [P in keyof T]: T[P] | Promise<T[P]>;
 }): Promise<T>;
+export declare function getStatic<T>(ctor: any, key: string): T | null;
 /**
  *  Assigns the %%values%% to %%target%% as read-only values.
  *

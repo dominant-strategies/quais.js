@@ -15,6 +15,8 @@ function getShardForAddress(address) {
 }
 exports.getShardForAddress = getShardForAddress;
 function getTxType(from, to) {
+    if (from === null || to === null)
+        return 0;
     const fromShard = getShardForAddress(from);
     const toShard = getShardForAddress(to);
     if (fromShard === null || toShard === null) {

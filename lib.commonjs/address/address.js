@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getIcapAddress = exports.getAddress = void 0;
+exports.getContractAddress = exports.getIcapAddress = exports.getAddress = void 0;
 const index_js_1 = require("../crypto/index.js");
 const index_js_2 = require("../utils/index.js");
 const BN_0 = BigInt(0);
@@ -158,4 +158,9 @@ function getIcapAddress(address) {
     return "XE" + ibanChecksum("XE00" + base36) + base36;
 }
 exports.getIcapAddress = getIcapAddress;
+function getContractAddress(from, nonce, data) {
+    const nonceBytes = (0, index_js_2.zeroPadValue)((0, index_js_2.toBeHex)((0, index_js_2.toBigInt)(nonce)), 8);
+    return getAddress((0, index_js_2.dataSlice)((0, index_js_1.keccak256)((0, index_js_2.concat)([getAddress(from), nonceBytes, (0, index_js_2.stripZerosLeft)(data)])), 12));
+}
+exports.getContractAddress = getContractAddress;
 //# sourceMappingURL=address.js.map
