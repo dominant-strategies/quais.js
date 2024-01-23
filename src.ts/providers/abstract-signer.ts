@@ -96,7 +96,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         const provider = checkProvider(this, "populateTransaction");
 
         const pop = await populate(this, tx);
-
         if (pop.nonce == null) {
             pop.nonce = await this.getNonce("pending");
         }
@@ -125,10 +124,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         }
         
         if (pop.type == null) {
-            if(pop.to ==  null || pop.from == null) {
-                throw new Error("Cannot determine transaction type, please specify a type or provide a from and to address");
-            }
-            pop.type = await getTxType(pop.from, pop.to);
+            pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
         }
 
                 if (pop.type == 2) {
@@ -161,8 +157,9 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
         delete pop.from;
         const txObj = Transaction.from(pop);
-
+        console.log("sendTransaction2", JSON.stringify(txObj));
         const signedTx = await this.signTransaction(txObj);
+        console.log("sendTransaction3", JSON.stringify(signedTx));
         return await provider.broadcastTransaction(signedTx);
     }
 

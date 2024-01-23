@@ -88,10 +88,7 @@ export class AbstractSigner {
             }
         }
         if (pop.type == null) {
-            if (pop.to == null || pop.from == null) {
-                throw new Error("Cannot determine transaction type, please specify a type or provide a from and to address");
-            }
-            pop.type = await getTxType(pop.from, pop.to);
+            pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
         }
         if (pop.type == 2) {
             pop.externalGasLimit = getBigInt(Number(pop.gasLimit) * 9);
@@ -117,7 +114,9 @@ export class AbstractSigner {
         const pop = await this.populateTransaction(tx);
         delete pop.from;
         const txObj = Transaction.from(pop);
+        console.log("sendTransaction2", JSON.stringify(txObj));
         const signedTx = await this.signTransaction(txObj);
+        console.log("sendTransaction3", JSON.stringify(signedTx));
         return await provider.broadcastTransaction(signedTx);
     }
 }

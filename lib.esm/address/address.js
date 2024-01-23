@@ -1,5 +1,5 @@
 import { keccak256 } from "../crypto/index.js";
-import { getBytes, assertArgument } from "../utils/index.js";
+import { getBytes, assertArgument, concat, zeroPadValue, dataSlice, toBigInt, toBeHex, stripZerosLeft } from "../utils/index.js";
 const BN_0 = BigInt(0);
 const BN_36 = BigInt(36);
 function getChecksumAddress(address) {
@@ -152,5 +152,9 @@ export function getIcapAddress(address) {
         base36 = "0" + base36;
     }
     return "XE" + ibanChecksum("XE00" + base36) + base36;
+}
+export function getContractAddress(from, nonce, data) {
+    const nonceBytes = zeroPadValue(toBeHex(toBigInt(nonce)), 8);
+    return getAddress(dataSlice(keccak256(concat([getAddress(from), nonceBytes, stripZerosLeft(data)])), 12));
 }
 //# sourceMappingURL=address.js.map

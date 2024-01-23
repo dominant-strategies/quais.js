@@ -5,7 +5,7 @@
  *  @_subsection api/utils:Properties  [about-properties]
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.defineProperties = exports.resolveProperties = void 0;
+exports.defineProperties = exports.getStatic = exports.resolveProperties = void 0;
 function checkType(value, type, name) {
     const types = type.split("|").map(t => t.trim());
     for (let i = 0; i < types.length; i++) {
@@ -40,6 +40,20 @@ async function resolveProperties(value) {
     }, {});
 }
 exports.resolveProperties = resolveProperties;
+// Crawl up the constructor chain to find a static method
+function getStatic(ctor, key) {
+    for (let i = 0; i < 32; i++) {
+        if (ctor[key]) {
+            return ctor[key];
+        }
+        if (!ctor.prototype || typeof (ctor.prototype) !== "object") {
+            break;
+        }
+        ctor = Object.getPrototypeOf(ctor.prototype).constructor;
+    }
+    return null;
+}
+exports.getStatic = getStatic;
 /**
  *  Assigns the %%values%% to %%target%% as read-only values.
  *

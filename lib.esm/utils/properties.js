@@ -36,6 +36,19 @@ export async function resolveProperties(value) {
         return accum;
     }, {});
 }
+// Crawl up the constructor chain to find a static method
+export function getStatic(ctor, key) {
+    for (let i = 0; i < 32; i++) {
+        if (ctor[key]) {
+            return ctor[key];
+        }
+        if (!ctor.prototype || typeof (ctor.prototype) !== "object") {
+            break;
+        }
+        ctor = Object.getPrototypeOf(ctor.prototype).constructor;
+    }
+    return null;
+}
 /**
  *  Assigns the %%values%% to %%target%% as read-only values.
  *

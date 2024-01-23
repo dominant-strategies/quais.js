@@ -1,3 +1,4 @@
+import { BytesLike, BigNumberish } from "../utils/index.js";
 /**
  *  Returns a normalized and checksumed address for %%address%%.
  *  This accepts non-checksum addresses, checksum addresses and
@@ -53,4 +54,5 @@ export declare function getAddress(address: string): string;
  *    //_error:
  */
 export declare function getIcapAddress(address: string): string;
+export declare function getContractAddress(from: string, nonce: BigNumberish, data: BytesLike): string;
 //# sourceMappingURL=address.d.ts.map
