@@ -131,7 +131,6 @@ export class ContractFactory {
         }
         const grindedTx = await this.grindContractAddress(tx);
         const sentTx = await this.runner.sendTransaction(grindedTx);
-        console.log('Sent', sentTx);
         const address = getStatic(this.constructor, "getContractAddress")?.(tx);
         //const address = getCreateAddress(sentTx);
         return new BaseContract(address, this.interface, this.runner, sentTx);

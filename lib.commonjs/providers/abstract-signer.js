@@ -117,9 +117,7 @@ class AbstractSigner {
         const pop = await this.populateTransaction(tx);
         delete pop.from;
         const txObj = index_js_2.Transaction.from(pop);
-        console.log("sendTransaction2", JSON.stringify(txObj));
         const signedTx = await this.signTransaction(txObj);
-        console.log("sendTransaction3", JSON.stringify(signedTx));
         return await provider.broadcastTransaction(signedTx);
     }
 }
