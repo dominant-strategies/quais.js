@@ -169,7 +169,6 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         const grindedTx = await this.grindContractAddress(tx); 
         
         const sentTx = await this.runner.sendTransaction(grindedTx);
-        console.log('Sent', sentTx)
         const address = getStatic<(tx: ContractDeployTransaction) => string>(
             this.constructor,
             "getContractAddress"
