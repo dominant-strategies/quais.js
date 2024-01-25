@@ -116,7 +116,7 @@ export type DebugEventJsonRpcApiProvider = {
  *  **``cacheTimeout``** - passed as [[AbstractProviderOptions]].
  */
 export type JsonRpcApiProviderOptions = {
-    staticNetwork?: null | Network;
+    staticNetwork?: null | Network | boolean;
     batchStallTime?: number;
     batchMaxSize?: number;
     batchMaxCount?: number;

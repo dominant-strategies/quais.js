@@ -2,5 +2,5 @@
 /**
  *  The current version of quais.
  */
-export const version = "6.9.2";
+export const version = "0.0.1";
 //# sourceMappingURL=_version.js.map

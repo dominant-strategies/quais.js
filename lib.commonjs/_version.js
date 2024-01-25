@@ -5,5 +5,5 @@ exports.version = void 0;
 /**
  *  The current version of quais.
  */
-exports.version = "6.9.2";
+exports.version = "0.0.1";
 //# sourceMappingURL=_version.js.map

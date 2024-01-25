@@ -3,4 +3,4 @@
 /**
  *  The current version of quais.
  */
-export const version: string = "6.9.2";
+export const version: string = "0.0.1";

@@ -8,10 +8,18 @@ function escver(v) {
 (async function () {
     let versions = await getVersions("quais");
     versions = versions.filter((h) => (h.version.match(/^6\.[0-9]+\.[0-9]+$/)));
-    for (let i = 1; i < versions.length; i++) {
-        const tag0 = versions[i - 1].gitHead, tag1 = versions[i].gitHead;
-        const diff = await getDiff(resolve("dist/quais.js"), tag0, tag1);
-        console.log(diff);
+    fs.writeFileSync(resolve("misc/diffs/versions.txt"), versions.map((h) => h.version).join(","));
+    for (let i = 0; i < versions.length; i++) {
+        for (let j = i + 1; j < versions.length; j++) {
+            const filename = resolve(`misc/diffs/diff-${escver(versions[i].version)}_${escver(versions[j].version)}.txt`);
+            if (fs.existsSync(filename)) {
+                continue;
+            }
+            const tag0 = versions[i].gitHead, tag1 = versions[j].gitHead;
+            const diff = await getDiff(resolve("src.ts"), tag0, tag1);
+            console.log({ diff });
+            fs.writeFileSync(filename, diff);
+        }
     }
 })();
 //# sourceMappingURL=generate-diffs.js.map

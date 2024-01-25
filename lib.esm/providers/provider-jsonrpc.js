@@ -405,26 +405,42 @@ export class JsonRpcApiProvider extends AbstractProvider {
         }
         // If we are ready, use ``send``, which enabled requests to be batched
         if (this.ready) {
-            return Network.from(getBigInt(await this.send("quai_chainId", [])));
+            this.#pendingDetectNetwork = (async () => {
+                try {
+                    const result = Network.from(getBigInt(await this.send("quai_chainId", [])));
+                    this.#pendingDetectNetwork = null;
+                    return result;
+                }
+                catch (error) {
+                    this.#pendingDetectNetwork = null;
+                    throw error;
+                }
+            })();
+            return await this.#pendingDetectNetwork;
         }
         // We are not ready yet; use the primitive _send
-        const payload = {
-            id: this.#nextId++, method: "quai_chainId", params: [], jsonrpc: "2.0"
-        };
-        this.emit("debug", { action: "sendRpcPayload", payload });
-        let result;
-        try {
-            result = (await this._send(payload))[0];
-        }
-        catch (error) {
-            this.emit("debug", { action: "receiveRpcError", error });
-            throw error;
-        }
-        this.emit("debug", { action: "receiveRpcResult", result });
-        if ("result" in result) {
-            return Network.from(getBigInt(result.result));
-        }
-        throw this.getRpcError(payload, result);
+        this.#pendingDetectNetwork = (async () => {
+            const payload = {
+                id: this.#nextId++, method: "quai_chainId", params: [], jsonrpc: "2.0"
+            };
+            this.emit("debug", { action: "sendRpcPayload", payload });
+            let result;
+            try {
+                result = (await this._send(payload))[0];
+                this.#pendingDetectNetwork = null;
+            }
+            catch (error) {
+                this.#pendingDetectNetwork = null;
+                this.emit("debug", { action: "receiveRpcError", error });
+                throw error;
+            }
+            this.emit("debug", { action: "receiveRpcResult", result });
+            if ("result" in result) {
+                return Network.from(getBigInt(result.result));
+            }
+            throw this.getRpcError(payload, result);
+        })();
+        return await this.#pendingDetectNetwork;
     }
     /**
      *  Sub-classes **MUST** call this. Until [[_start]] has been called, no calls
