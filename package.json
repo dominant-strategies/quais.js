@@ -86,13 +86,13 @@
   "homepage": "https://qu.ai",
   "keywords": [
     "quainetwork",
-    "quais",
+    "quais6",
     "quaisjs"
   ],
   "license": "MIT",
   "main": "./lib.commonjs/index.js",
   "module": "./lib.esm/index.js",
-  "name": "quais",
+  "name": "quais6",
   "publishConfig": {
     "access": "public",
     "tag": "latest"
