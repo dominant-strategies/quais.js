@@ -1,13 +1,15 @@
 {
   "compilerOptions": {
     "declaration": true,
+    "module": "esnext",
     "importHelpers": false,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "lib": [
       "dom",
       "es2020",
       "es5"
     ],
-    "module": "${TS_MODULE}",
     "moduleResolution": "${TS_MODULE_RESOLUTION}",
     "strict": true,
     "target": "es2022"

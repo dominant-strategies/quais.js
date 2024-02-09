@@ -5,7 +5,7 @@ import { getAddress, getCreateAddress } from "../address/index.js";
 import { Signature } from "../crypto/index.js"
 import { accessListify } from "../transaction/index.js";
 import {
-    getBigInt, getNumber, hexlify, isHexString, zeroPadValue,
+    getBigInt, getNumber, isHexString, zeroPadValue,
     assert, assertArgument
 } from "../utils/index.js";
 
@@ -202,7 +202,6 @@ const _formatTransactionReceipt = object({
     contractAddress: allowNull(getAddress, null),
     // should be allowNull(hash), but broken-EIP-658 support is handled in receipt
     index: getNumber,
-    root: allowNull(hexlify),
     gasUsed: getBigInt,
     logsBloom: allowNull(formatData),
     blockHash: formatHash,
