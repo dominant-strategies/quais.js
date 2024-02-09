@@ -1,25 +1,18 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.connect = exports.checkProvider = exports.getProvider = exports.getProviderNetworks = exports.providerNames = exports.setupProviders = void 0;
+const tslib_1 = require("tslib");
 const index_js_1 = require("../index.js");
+const dotenv_1 = tslib_1.__importDefault(require("dotenv"));
+dotenv_1.default.config();
 ;
-const ethNetworks = ["default", "mainnet"];
+const quaiNetworks = ["colosseum"];
 const ProviderCreators = [
     {
-        name: "FallbackProvider",
-        networks: ethNetworks,
+        name: "JsonRpcProvider",
+        networks: quaiNetworks,
         create: function (network) {
-            const providers = [];
-            for (const providerName of ["JsonRpcProvider"]) {
-                const provider = getProvider(providerName, network);
-                if (provider) {
-                    providers.push(provider);
-                }
-            }
-            if (providers.length === 0) {
-                throw new Error("UNSUPPORTED NETWORK");
-            }
-            return new index_js_1.FallbackProvider(providers);
+            return new index_js_1.JsonRpcProvider(process.env.RPC_URL, network);
         }
     },
 ];
@@ -54,7 +47,6 @@ function getProvider(provider, network) {
     if (setup == false) {
         throw new Error("MUST CALL setupProviders in root context");
     }
-    console.log(`getProvider: ${provider}.${network}`);
     const creator = getCreator(provider);
     try {
         if (creator) {
@@ -79,7 +71,7 @@ function checkProvider(provider, network) {
 }
 exports.checkProvider = checkProvider;
 function connect(network) {
-    const provider = getProvider("InfuraProvider", network);
+    const provider = getProvider("JsonRpcProvider", network);
     if (provider == null) {
         throw new Error(`could not connect to ${network}`);
     }

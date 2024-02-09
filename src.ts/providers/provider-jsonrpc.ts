@@ -1075,6 +1075,9 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
      *
      *  Throws if the account doesn't exist.
      */
+    
+    // Works only if using a local node or browser wallet for this, otherwise cannot get accounts
+    
     async getSigner(address?: number | string): Promise<JsonRpcSigner> {
         if (address == null) { address = 0; }
 

@@ -2,6 +2,9 @@ import assert from "assert";
 import { concat, dataSlice, id, toBeArray, zeroPadValue, isCallException, isError, Wallet } from "../index.js";
 import { getProvider, setupProviders, providerNames } from "./create-provider.js";
 import { stall } from "./utils.js";
+//require('dotenv').config();
+import dotenv from "dotenv";
+dotenv.config();
 setupProviders();
 describe("Tests Provider Call Exception", function () {
     const panics = [
@@ -16,8 +19,8 @@ describe("Tests Provider Call Exception", function () {
         //{ code: 0x41, reason: "OUT_OF_MEMORY" },
         //{ code: 0x51, reason: "UNINITIALIZED_FUNCTION_CALL" },
     ];
-    const testAddr = "0xF20Ba47c47a32fc2d9ad846fF06f2fa6e89eeC74";
-    const networkName = "goerli";
+    const testAddr = "0x0aff86a125b29b25a9e418c2fb64f1753532c0ca"; //Cyprus1
+    const networkName = "colosseum";
     for (const { code, reason } of panics) {
         for (const method of ["call", "estimateGas"]) {
             for (const providerName of providerNames) {
@@ -129,7 +132,7 @@ describe("Tests Provider Call Exception", function () {
 });
 describe("Test Provider Blockchain Errors", function () {
     const wallet = new Wallet((process.env.FAUCET_PRIVATEKEY));
-    const networkName = "goerli";
+    const networkName = "colosseum";
     for (const providerName of providerNames) {
         const provider = getProvider(providerName, networkName);
         if (provider == null) {

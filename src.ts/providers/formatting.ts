@@ -284,28 +284,9 @@ export interface TransactionReceiptParams {
      */
     status: null | number;
 
-    /**
-     *  The root of this transaction in a pre-bazatium block. In
-     *  post-byzantium blocks this is null.
-     */
-    root: null | string;
-
     etxs: ReadonlyArray<string>;
 }
 
-/*
-export interface LegacyTransactionReceipt {
-    byzantium: false;
-    status: null;
-    root: string;
-}
-
-export interface ByzantiumTransactionReceipt {
-    byzantium: true;
-    status: number;
-    root: null;
-}
-*/
 
 
 

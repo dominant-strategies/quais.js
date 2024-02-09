@@ -130,17 +130,17 @@ describe("Test EIP-191 Personal Message Hash", function () {
         {
             test: "hello-world",
             message: "Hello World",
-            hash: "0xa1de988600a42c4b4ab089b619297c17d53cffae5d5120d82d8a92d0bb3b78f2"
+            hash: "0xca6464b285e602e01f3261caa151da2bd35fe19cb3532f7acd0d594ca0d810c5"
         },
         {
             test: "binary-message",
             message: new Uint8Array([0x42, 0x43]),
-            hash: "0x0d3abc18ec299cf9b42ba439ac6f7e3e6ec9f5c048943704e30fc2d9c7981438"
+            hash: "0xd2ca8706bdbb1255b510b6acf42339faabf95bb8192cc7c562a6019ad8463c60"
         },
         {
             test: "hex-looking-string",
             message: "0x4243",
-            hash: "0x6d91b221f765224b256762dcba32d62209cf78e9bebb0a1b758ca26c76db3af4"
+            hash: "0xcfe58e0f243f48080feeeb86f9b27e35f65955d3b39a644478c376b2733d9804"
         }
     ];
     for (const test of tests) {

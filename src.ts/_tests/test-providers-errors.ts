@@ -11,6 +11,9 @@ import { getProvider, setupProviders, providerNames } from "./create-provider.js
 import { stall } from "./utils.js";
 
 import type { TransactionResponse } from "../index.js";
+//require('dotenv').config();
+import dotenv from "dotenv";
+dotenv.config();
 
 type TestCustomError = {
     name: string;
@@ -42,9 +45,9 @@ describe("Tests Provider Call Exception", function() {
         //{ code: 0x51, reason: "UNINITIALIZED_FUNCTION_CALL" },
     ];
 
-    const testAddr = "0xF20Ba47c47a32fc2d9ad846fF06f2fa6e89eeC74";
+    const testAddr = "0x0aff86a125b29b25a9e418c2fb64f1753532c0ca"; //Cyprus1
 
-    const networkName = "goerli";
+    const networkName = "colosseum";
     for (const { code, reason } of panics) {
         for (const method of [ "call", "estimateGas" ]) {
             for (const providerName of providerNames) {
@@ -166,7 +169,7 @@ describe("Tests Provider Call Exception", function() {
 describe("Test Provider Blockchain Errors", function() {
     const wallet = new Wallet(<string>(process.env.FAUCET_PRIVATEKEY));
 
-    const networkName = "goerli";
+    const networkName = "colosseum";
     for (const providerName of providerNames) {
 
         const provider = getProvider(providerName, networkName);

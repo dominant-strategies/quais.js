@@ -981,19 +981,6 @@ export class Log implements LogParams {
 //////////////////////
 // Transaction Receipt
 
-/*
-export interface LegacyTransactionReceipt {
-    byzantium: false;
-    status: null;
-    root: string;
-}
-
-export interface ByzantiumTransactionReceipt {
-    byzantium: true;
-    status: number;
-    root: null;
-}
-*/
 
 /**
  *  A **TransactionReceipt** includes additional information about a
@@ -1100,7 +1087,6 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
      *  This is no present and was only included in pre-byzantium blocks, but
      *  could be used to validate certain parts of the receipt.
      */
-    readonly root!: null | string;
 
     readonly #logs: ReadonlyArray<Log>;
 
@@ -1144,7 +1130,6 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             type: tx.type,
             //byzantium: tx.byzantium,
             status: tx.status,
-            root: tx.root
         });
     }
 
@@ -1160,7 +1145,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
         const {
             to, from, contractAddress, hash, index, blockHash, blockNumber, logsBloom,
             logs, //byzantium, 
-            status, root
+            status
         } = this;
 
         return {
@@ -1172,7 +1157,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             from,
             gasPrice: toJson(this.gasPrice),
             gasUsed: toJson(this.gasUsed),
-            hash, index, logs, logsBloom, root, status, to
+            hash, index, logs, logsBloom, status, to
         };
     }
 

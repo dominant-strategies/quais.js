@@ -76,7 +76,6 @@ function _parse(data) {
         nonce: handleNumber(fields[1], "nonce"),
         maxPriorityFeePerGas: maxPriorityFeePerGas,
         maxFeePerGas: maxFeePerGas,
-        gasPrice: null,
         gasLimit: handleUint(fields[4], "gasLimit"),
         to: handleAddress(fields[5]),
         value: handleUint(fields[6], "value"),
@@ -102,7 +101,6 @@ function _parseStandardETx(data) {
         nonce: handleNumber(fields[1], "nonce"),
         maxPriorityFeePerGas: maxPriorityFeePerGas,
         maxFeePerGas: maxFeePerGas,
-        gasPrice: null,
         gasLimit: handleUint(fields[4], "gasLimit"),
         to: handleAddress(fields[5]),
         value: handleUint(fields[6], "value"),
@@ -604,9 +602,6 @@ class Transaction {
         }
         if (tx.gasLimit != null) {
             result.gasLimit = tx.gasLimit;
-        }
-        if (tx.gasPrice != null) {
-            result.gasPrice = tx.gasPrice;
         }
         if (tx.maxPriorityFeePerGas != null) {
             result.maxPriorityFeePerGas = tx.maxPriorityFeePerGas;

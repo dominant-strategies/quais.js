@@ -214,11 +214,6 @@ export interface TransactionReceiptParams {
      *  some nodes may have backfilled this data.
      */
     status: null | number;
-    /**
-     *  The root of this transaction in a pre-bazatium block. In
-     *  post-byzantium blocks this is null.
-     */
-    root: null | string;
     etxs: ReadonlyArray<string>;
 }
 /**

@@ -12,6 +12,7 @@ const StatusMessages: Record<number, string> = {
   500: "SERVER ERROR",
 };
 
+//Requires running a local node and working quai_accounts api call
 
 type ProcessRequest = (method: string, params: Array<string>, blockNumber: number) => any;
 
@@ -28,13 +29,13 @@ function createProvider(testFunc: ProcessRequest): JsonRpcProvider {
         let result = testFunc(req.method, req.params, blockNumber);
         if (result === undefined) {
             switch (req.method) {
-                case "eth_blockNumber":
+                case "quai_blockNumber":
                     result = blockNumber;
                     break;
-                case "eth_chainId":
+                case "quai_chainId":
                     result = "0x1337";
                     break;
-                case "eth_accounts":
+                case "quai_accounts":
                     result = [ wallet.address ];
                     break;
                 default:
@@ -98,10 +99,10 @@ describe("Ensure Catchable Errors", function() {
         const provider = createProvider((method, params, blockNumber) => {
 
             switch (method) {
-                case "eth_sendTransaction":
+                case "quai_sendTransaction":
                     return txObj.hash;
 
-                case "eth_getTransactionByHash": {
+                case "quai_getTransactionByHash": {
                     count++;
 
                     // First time; fail!
@@ -162,10 +163,10 @@ describe("Ensure Catchable Errors", function() {
         const provider = createProvider((method, params, blockNumber) => {
 
             switch (method) {
-                case "eth_sendTransaction":
+                case "quai_sendTransaction":
                     return txObj.hash;
 
-                case "eth_getTransactionByHash": {
+                case "quai_getTransactionByHash": {
                     count++;
 
                     // The fully valid tx response

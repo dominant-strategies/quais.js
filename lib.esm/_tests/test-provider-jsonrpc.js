@@ -16,13 +16,13 @@ function createProvider(testFunc) {
         let result = testFunc(req.method, req.params, blockNumber);
         if (result === undefined) {
             switch (req.method) {
-                case "eth_blockNumber":
+                case "quai_blockNumber":
                     result = blockNumber;
                     break;
-                case "eth_chainId":
+                case "quai_chainId":
                     result = "0x1337";
                     break;
-                case "eth_accounts":
+                case "quai_accounts":
                     result = [wallet.address];
                     break;
                 default:
@@ -75,9 +75,9 @@ describe("Ensure Catchable Errors", function () {
         let count = 0;
         const provider = createProvider((method, params, blockNumber) => {
             switch (method) {
-                case "eth_sendTransaction":
+                case "quai_sendTransaction":
                     return txObj.hash;
-                case "eth_getTransactionByHash": {
+                case "quai_getTransactionByHash": {
                     count++;
                     // First time; fail!
                     if (count === 1) {
@@ -122,9 +122,9 @@ describe("Ensure Catchable Errors", function () {
         // in getTransaction
         const provider = createProvider((method, params, blockNumber) => {
             switch (method) {
-                case "eth_sendTransaction":
+                case "quai_sendTransaction":
                     return txObj.hash;
-                case "eth_getTransactionByHash": {
+                case "quai_getTransactionByHash": {
                     count++;
                     // The fully valid tx response
                     const result = Object.assign({}, txObj.toJSON(), txObj.signature.toJSON(), { hash: txObj.hash, from: wallet.address, sig: null });

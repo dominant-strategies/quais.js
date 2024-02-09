@@ -613,19 +613,6 @@ export class Log {
 }
 //////////////////////
 // Transaction Receipt
-/*
-export interface LegacyTransactionReceipt {
-    byzantium: false;
-    status: null;
-    root: string;
-}
-
-export interface ByzantiumTransactionReceipt {
-    byzantium: true;
-    status: number;
-    root: null;
-}
-*/
 /**
  *  A **TransactionReceipt** includes additional information about a
  *  transaction that is only available after it has been mined.
@@ -717,7 +704,6 @@ export class TransactionReceipt {
      *  This is no present and was only included in pre-byzantium blocks, but
      *  could be used to validate certain parts of the receipt.
      */
-    root;
     #logs;
     etxs;
     /**
@@ -751,7 +737,6 @@ export class TransactionReceipt {
             type: tx.type,
             //byzantium: tx.byzantium,
             status: tx.status,
-            root: tx.root
         });
     }
     /**
@@ -763,7 +748,7 @@ export class TransactionReceipt {
      */
     toJSON() {
         const { to, from, contractAddress, hash, index, blockHash, blockNumber, logsBloom, logs, //byzantium, 
-        status, root } = this;
+        status } = this;
         return {
             _type: "TransactionReceipt",
             blockHash, blockNumber,
@@ -773,7 +758,7 @@ export class TransactionReceipt {
             from,
             gasPrice: toJson(this.gasPrice),
             gasUsed: toJson(this.gasUsed),
-            hash, index, logs, logsBloom, root, status, to
+            hash, index, logs, logsBloom, status, to
         };
     }
     /**

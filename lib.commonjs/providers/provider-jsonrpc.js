@@ -752,6 +752,7 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
      *
      *  Throws if the account doesn't exist.
      */
+    // Works only if using a local node or browser wallet for this, otherwise cannot get accounts
     async getSigner(address) {
         if (address == null) {
             address = 0;

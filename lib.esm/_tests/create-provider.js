@@ -1,22 +1,14 @@
-import { FallbackProvider, isError, } from "../index.js";
+import { isError, JsonRpcProvider, } from "../index.js";
+import dotenv from "dotenv";
+dotenv.config();
 ;
-const ethNetworks = ["default", "mainnet"];
+const quaiNetworks = ["colosseum"];
 const ProviderCreators = [
     {
-        name: "FallbackProvider",
-        networks: ethNetworks,
+        name: "JsonRpcProvider",
+        networks: quaiNetworks,
         create: function (network) {
-            const providers = [];
-            for (const providerName of ["JsonRpcProvider"]) {
-                const provider = getProvider(providerName, network);
-                if (provider) {
-                    providers.push(provider);
-                }
-            }
-            if (providers.length === 0) {
-                throw new Error("UNSUPPORTED NETWORK");
-            }
-            return new FallbackProvider(providers);
+            return new JsonRpcProvider(process.env.RPC_URL, network);
         }
     },
 ];
@@ -49,7 +41,6 @@ export function getProvider(provider, network) {
     if (setup == false) {
         throw new Error("MUST CALL setupProviders in root context");
     }
-    console.log(`getProvider: ${provider}.${network}`);
     const creator = getCreator(provider);
     try {
         if (creator) {
@@ -72,7 +63,7 @@ export function checkProvider(provider, network) {
     return (creator != null);
 }
 export function connect(network) {
-    const provider = getProvider("InfuraProvider", network);
+    const provider = getProvider("JsonRpcProvider", network);
     if (provider == null) {
         throw new Error(`could not connect to ${network}`);
     }
