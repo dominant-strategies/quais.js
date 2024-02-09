@@ -104,7 +104,7 @@ async function sendTransaction(to) {
                 data: '',
                 type: typeValue,
                 gasLimit: typeValue == 0 ? 21000 : 42000,
-                chainId: Number(9000),
+                chainId: Number(process.env.CHAIN_ID || 1337),
             };
             txResponse = await wallet.sendTransaction(tx);
             await (0, utils_js_1.stall)(15000);

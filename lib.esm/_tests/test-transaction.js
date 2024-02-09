@@ -1,7 +1,6 @@
 import assert from "assert";
 import { loadTests } from "./utils.js";
 import { isError, Transaction } from "../index.js";
-import { serialize } from "v8";
 const BN_0 = BigInt(0);
 describe("Tests Unsigned Transaction Serializing", function () {
     const tests = loadTests("transactions");
@@ -36,10 +35,7 @@ describe("Tests Signed Transaction Serializing", function () {
                 maxPriorityFeePerGas: 0,
                 signature: test.signatureEip155
             });
-            // console.log('TXDATA: ', txData)
             const tx = Transaction.from(txData);
-            // console.log('EXPECTED: ', test.signedEip155)
-            // console.log("ACTUAL: ", tx.serialized)
             assert.equal(tx.serialized, test.signedEip155, "signedEip155");
         });
     }
@@ -106,7 +102,6 @@ describe("Tests Signed Transaction Parsing", function () {
         }
         it(`parses signed EIP-155 transaction: ${test.name}`, function () {
             let tx = Transaction.from(test.signedEip155);
-            console.log(serialize(tx));
             const expected = addDefaults(test.transaction);
             expected.maxFeePerGas = 0;
             expected.maxPriorityFeePerGas = 0;
@@ -160,7 +155,7 @@ describe("Tests Transaction Parameters", function () {
                 // The access list is a single value: 0x09 instead of
                 // structured data
                 const result = Transaction.from(data);
-                console.log('Result: ', result);
+                console.log(result);
             }, (error) => {
                 return (isError(error, "INVALID_ARGUMENT") &&
                     error.argument === argument &&

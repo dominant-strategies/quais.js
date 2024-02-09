@@ -20,7 +20,7 @@ describe("Test Contract", function () {
         this.timeout(60000);
         await (0, utils_js_1.stall)(10000);
         const factory = new index_js_1.ContractFactory(abi, bytecode, wallet);
-        contract = await factory.deploy({ gasLimit: 5000000, maxFeePerGas: index_js_2.quais.parseUnits('5', 'gwei'), maxPriorityFeePerGas: index_js_2.quais.parseUnits('1', 'gwei') });
+        contract = await factory.deploy({ gasLimit: 5000000, maxFeePerGas: index_js_2.quais.parseUnits('10', 'gwei'), maxPriorityFeePerGas: index_js_2.quais.parseUnits('3', 'gwei') });
         addr = await contract.getAddress();
         console.log("Contract deployed to: ", addr);
         await (0, utils_js_1.stall)(30000);
@@ -199,18 +199,16 @@ describe("Test Typed Contract Interaction", function () {
     const abi = TypedContract_js_1.default.abi;
     const provider = new index_js_2.quais.JsonRpcProvider(process.env.RPC_URL);
     const wallet = new index_js_2.quais.Wallet(process.env.FAUCET_PRIVATEKEY || '', provider);
-    const bytecode = TestContract_js_1.default.bytecode;
+    const bytecode = TypedContract_js_1.default.bytecode;
     let contract;
     let addr;
     before(async function () {
-        this.timeout(100000);
-        await (0, utils_js_1.stall)(10000);
+        this.timeout(120000);
         const factory = new index_js_1.ContractFactory(abi, bytecode, wallet);
-        contract = await factory.deploy({ gasLimit: 5000000, maxFeePerGas: index_js_2.quais.parseUnits('5', 'gwei'), maxPriorityFeePerGas: index_js_2.quais.parseUnits('1', 'gwei'), });
+        contract = await factory.deploy({ gasLimit: 5000000, maxFeePerGas: index_js_2.quais.parseUnits('10', 'gwei'), maxPriorityFeePerGas: index_js_2.quais.parseUnits('3', 'gwei'), });
         addr = await contract.getAddress();
         console.log("Contract deployed to: ", addr);
         await (0, utils_js_1.stall)(50000);
-        console.log(contract);
     });
     for (const { types, valueFunc } of tests) {
         for (const type of types) {
@@ -218,9 +216,7 @@ describe("Test Typed Contract Interaction", function () {
             it(`tests typed value: Typed.from(${type})`, async function () {
                 this.timeout(10000);
                 const v = index_js_1.Typed.from(type, value);
-                console.log('v: ', v);
                 const result = await contract.testTyped(v);
-                console.log("result: ", result);
                 assert_1.default.equal(result, type);
             });
             it(`tests typed value: Typed.${type}()`, async function () {

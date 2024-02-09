@@ -4,7 +4,6 @@ const tslib_1 = require("tslib");
 const assert_1 = tslib_1.__importDefault(require("assert"));
 const utils_js_1 = require("./utils.js");
 const index_js_1 = require("../index.js");
-const v8_1 = require("v8");
 const BN_0 = BigInt(0);
 describe("Tests Unsigned Transaction Serializing", function () {
     const tests = (0, utils_js_1.loadTests)("transactions");
@@ -39,10 +38,7 @@ describe("Tests Signed Transaction Serializing", function () {
                 maxPriorityFeePerGas: 0,
                 signature: test.signatureEip155
             });
-            // console.log('TXDATA: ', txData)
             const tx = index_js_1.Transaction.from(txData);
-            // console.log('EXPECTED: ', test.signedEip155)
-            // console.log("ACTUAL: ", tx.serialized)
             assert_1.default.equal(tx.serialized, test.signedEip155, "signedEip155");
         });
     }
@@ -109,7 +105,6 @@ describe("Tests Signed Transaction Parsing", function () {
         }
         it(`parses signed EIP-155 transaction: ${test.name}`, function () {
             let tx = index_js_1.Transaction.from(test.signedEip155);
-            console.log((0, v8_1.serialize)(tx));
             const expected = addDefaults(test.transaction);
             expected.maxFeePerGas = 0;
             expected.maxPriorityFeePerGas = 0;
@@ -163,7 +158,7 @@ describe("Tests Transaction Parameters", function () {
                 // The access list is a single value: 0x09 instead of
                 // structured data
                 const result = index_js_1.Transaction.from(data);
-                console.log('Result: ', result);
+                console.log(result);
             }, (error) => {
                 return ((0, index_js_1.isError)(error, "INVALID_ARGUMENT") &&
                     error.argument === argument &&
