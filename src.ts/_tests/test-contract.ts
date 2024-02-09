@@ -24,7 +24,7 @@ describe("Test Contract", function() {
         this.timeout(60000);
         await stall(10000);
         const factory = new ContractFactory(abi, bytecode, wallet);
-        contract = await factory.deploy({gasLimit: 5000000, maxFeePerGas: quais.parseUnits('5', 'gwei'), maxPriorityFeePerGas: quais.parseUnits('1', 'gwei')}) as Contract;
+        contract = await factory.deploy({gasLimit: 5000000, maxFeePerGas: quais.parseUnits('10', 'gwei'), maxPriorityFeePerGas: quais.parseUnits('3', 'gwei')}) as Contract;
         addr = await contract.getAddress();
         console.log("Contract deployed to: ", addr);
         await stall(30000);
@@ -249,18 +249,16 @@ describe("Test Typed Contract Interaction", function() {
     const abi = TypedContract.abi
     const provider = new quais.JsonRpcProvider(process.env.RPC_URL);
     const wallet = new quais.Wallet(process.env.FAUCET_PRIVATEKEY || '', provider); 
-    const bytecode = TestContract.bytecode;
+    const bytecode = TypedContract.bytecode;
     let contract: Contract;
     let addr: string
     before( async function () {
-        this.timeout(100000);
-        await stall(10000);
+        this.timeout(120000);
         const factory = new ContractFactory(abi, bytecode, wallet);
-        contract = await factory.deploy({gasLimit: 5000000, maxFeePerGas: quais.parseUnits('5', 'gwei'), maxPriorityFeePerGas: quais.parseUnits('1', 'gwei'),}) as Contract;
+        contract = await factory.deploy({gasLimit: 5000000, maxFeePerGas: quais.parseUnits('10', 'gwei'), maxPriorityFeePerGas: quais.parseUnits('3', 'gwei'),}) as Contract;
         addr = await contract.getAddress();
         console.log("Contract deployed to: ", addr);
         await stall(50000);
-        console.log(contract)
     })
 
 
@@ -272,9 +270,7 @@ describe("Test Typed Contract Interaction", function() {
                 this.timeout(10000);
 
                 const v = Typed.from(type, value);
-                console.log('v: ', v)
                 const result = await contract.testTyped(v);
-                console.log("result: ", result)
                 assert.equal(result, type);
             });
 
