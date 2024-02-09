@@ -17,42 +17,18 @@ describe("Test Private Key Wallet", function () {
 describe("Test Transaction Signing", function () {
     const tests = (0, utils_js_1.loadTests)("transactions");
     for (const test of tests) {
-        it(`tests signing a legacy transaction: ${test.name}`, async function () {
-            const wallet = new index_js_1.Wallet(test.privateKey);
-            const txData = Object.assign({}, test.transaction, { type: 0, accessList: undefined, maxFeePerGas: undefined, maxPriorityFeePerGas: undefined });
-            // Use the testcase sans the chainId for a legacy test
-            if (txData.chainId != null && parseInt(txData.chainId) != 0) {
-                txData.chainId = "0x00";
-            }
-            const signed = await wallet.signTransaction(txData);
-            assert_1.default.equal(signed, test.signedLegacy, "signedLegacy");
-        });
-    }
-    for (const test of tests) {
         if (!test.signedEip155) {
             continue;
         }
         it(`tests signing an EIP-155 transaction: ${test.name}`, async function () {
             const wallet = new index_js_1.Wallet(test.privateKey);
-            const txData = Object.assign({}, test.transaction, { type: 0, accessList: undefined, maxFeePerGas: undefined, maxPriorityFeePerGas: undefined });
+            const txData = Object.assign({}, test.transaction, { type: 0, accessList: [], maxFeePerGas: 0, maxPriorityFeePerGas: 0 });
             const signed = await wallet.signTransaction(txData);
+            // let parsed = Transaction.from(signed);
+            // // console.log('txData: ', JSON.stringify(parsed))
+            // // console.log('EXPECTED: ', test.signedEip155)
+            // // console.log("ACTUAL: ", signed)
             assert_1.default.equal(signed, test.signedEip155, "signedEip155");
-        });
-    }
-    for (const test of tests) {
-        it(`tests signing a Berlin transaction: ${test.name}`, async function () {
-            const wallet = new index_js_1.Wallet(test.privateKey);
-            const txData = Object.assign({}, test.transaction, { type: 1, maxFeePerGas: undefined, maxPriorityFeePerGas: undefined });
-            const signed = await wallet.signTransaction(txData);
-            assert_1.default.equal(signed, test.signedBerlin, "signedBerlin");
-        });
-    }
-    for (const test of tests) {
-        it(`tests signing a London transaction: ${test.name}`, async function () {
-            const wallet = new index_js_1.Wallet(test.privateKey);
-            const txData = Object.assign({}, test.transaction, { type: 2 });
-            const signed = await wallet.signTransaction(txData);
-            assert_1.default.equal(signed, test.signedLondon, "signedLondon");
         });
     }
 });

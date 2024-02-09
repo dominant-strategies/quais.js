@@ -186,7 +186,6 @@ function _parse(data: Uint8Array): TransactionLike {
         nonce:                 handleNumber(fields[1], "nonce"),
         maxPriorityFeePerGas:  maxPriorityFeePerGas,
         maxFeePerGas:          maxFeePerGas,
-        gasPrice:              null,
         gasLimit:              handleUint(fields[4], "gasLimit"),
         to:                    handleAddress(fields[5]),
         value:                 handleUint(fields[6], "value"),
@@ -220,7 +219,6 @@ function _parseStandardETx(data: Uint8Array): TransactionLike {
         nonce:                 handleNumber(fields[1], "nonce"),
         maxPriorityFeePerGas:  maxPriorityFeePerGas,
         maxFeePerGas:          maxFeePerGas,
-        gasPrice:              null,
         gasLimit:              handleUint(fields[4], "gasLimit"),
         to:                    handleAddress(fields[5]),
         value:                 handleUint(fields[6], "value"),
@@ -747,7 +745,6 @@ export class Transaction implements TransactionLike<string> {
             if (payload[0] >= 0x7f) { // @TODO: > vs >= ??
                 return Transaction.from(_parse(payload));
             }
-
             switch(payload[0]) {
                 case 0: return Transaction.from(_parse(payload));
 
@@ -761,7 +758,6 @@ export class Transaction implements TransactionLike<string> {
         if (tx.to != null) { result.to = tx.to; }
         if (tx.nonce != null) { result.nonce = tx.nonce; }
         if (tx.gasLimit != null) { result.gasLimit = tx.gasLimit; }
-        if (tx.gasPrice != null) { result.gasPrice = tx.gasPrice; }
         if (tx.maxPriorityFeePerGas != null) { result.maxPriorityFeePerGas = tx.maxPriorityFeePerGas; }
         if (tx.maxFeePerGas != null) { result.maxFeePerGas = tx.maxFeePerGas; }
         if (tx.data != null) { result.data = tx.data; }

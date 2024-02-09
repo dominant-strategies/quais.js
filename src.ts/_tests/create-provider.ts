@@ -1,9 +1,11 @@
 import {
-    FallbackProvider,
     isError,
+    JsonRpcProvider,
 } from "../index.js";
 
 import type { AbstractProvider } from "../index.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 interface ProviderCreator {
     name: string;
@@ -11,23 +13,18 @@ interface ProviderCreator {
     create: (network: string) => null | AbstractProvider;
 };
 
-const ethNetworks = [ "default", "mainnet" ];
+const quaiNetworks = [ "colosseum" ];
 
 const ProviderCreators: Array<ProviderCreator> = [
     {
-        name: "FallbackProvider",
-        networks: ethNetworks,
+        name: "JsonRpcProvider",
+        networks: quaiNetworks,
         create: function(network: string) {
-            const providers: Array<AbstractProvider> = [];
-            for (const providerName of [ "JsonRpcProvider" ]) {
-                const provider = getProvider(providerName, network);
-                if (provider) { providers.push(provider); }
-            }
-            if (providers.length === 0) { throw new Error("UNSUPPORTED NETWORK"); }
-            return new FallbackProvider(providers);
+            return new JsonRpcProvider(process.env.RPC_URL, network);
         }
     },
 ];
+
 
 let setup = false;
 const cleanup: Array<() => void> = [ ];
@@ -54,7 +51,6 @@ export function getProviderNetworks(provider: string): Array<string> {
 
 export function getProvider(provider: string, network: string): null | AbstractProvider {
     if (setup == false) { throw new Error("MUST CALL setupProviders in root context"); }
-    console.log(`getProvider: ${ provider }.${ network }`);
     const creator = getCreator(provider);
     try {
         if (creator) {
@@ -76,7 +72,7 @@ export function checkProvider(provider: string, network: string): boolean {
 }
 
 export function connect(network: string): AbstractProvider {
-    const provider = getProvider("InfuraProvider", network);
+    const provider = getProvider("JsonRpcProvider", network);
     if (provider == null) { throw new Error(`could not connect to ${ network }`); }
     return provider;
 }

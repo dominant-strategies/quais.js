@@ -195,7 +195,6 @@ const _formatTransactionReceipt = object({
     contractAddress: allowNull(index_js_1.getAddress, null),
     // should be allowNull(hash), but broken-EIP-658 support is handled in receipt
     index: index_js_4.getNumber,
-    root: allowNull(index_js_4.hexlify),
     gasUsed: index_js_4.getBigInt,
     logsBloom: allowNull(formatData),
     blockHash: formatHash,

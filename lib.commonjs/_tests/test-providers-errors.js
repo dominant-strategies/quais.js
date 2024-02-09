@@ -5,6 +5,9 @@ const assert_1 = tslib_1.__importDefault(require("assert"));
 const index_js_1 = require("../index.js");
 const create_provider_js_1 = require("./create-provider.js");
 const utils_js_1 = require("./utils.js");
+//require('dotenv').config();
+const dotenv_1 = tslib_1.__importDefault(require("dotenv"));
+dotenv_1.default.config();
 (0, create_provider_js_1.setupProviders)();
 describe("Tests Provider Call Exception", function () {
     const panics = [
@@ -19,8 +22,8 @@ describe("Tests Provider Call Exception", function () {
         //{ code: 0x41, reason: "OUT_OF_MEMORY" },
         //{ code: 0x51, reason: "UNINITIALIZED_FUNCTION_CALL" },
     ];
-    const testAddr = "0xF20Ba47c47a32fc2d9ad846fF06f2fa6e89eeC74";
-    const networkName = "goerli";
+    const testAddr = "0x0aff86a125b29b25a9e418c2fb64f1753532c0ca"; //Cyprus1
+    const networkName = "colosseum";
     for (const { code, reason } of panics) {
         for (const method of ["call", "estimateGas"]) {
             for (const providerName of create_provider_js_1.providerNames) {
@@ -132,7 +135,7 @@ describe("Tests Provider Call Exception", function () {
 });
 describe("Test Provider Blockchain Errors", function () {
     const wallet = new index_js_1.Wallet((process.env.FAUCET_PRIVATEKEY));
-    const networkName = "goerli";
+    const networkName = "colosseum";
     for (const providerName of create_provider_js_1.providerNames) {
         const provider = (0, create_provider_js_1.getProvider)(providerName, networkName);
         if (provider == null) {

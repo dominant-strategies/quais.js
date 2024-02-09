@@ -4,147 +4,138 @@ const tslib_1 = require("tslib");
 const assert_1 = tslib_1.__importDefault(require("assert"));
 const create_provider_js_1 = require("./create-provider.js");
 const index_js_1 = require("../index.js");
+const TestContract_js_1 = tslib_1.__importDefault(require("./contracts/TestContract.js"));
+const TypedContract_js_1 = tslib_1.__importDefault(require("./contracts/TypedContract.js"));
+const index_js_2 = require("../index.js");
+const utils_js_1 = require("./utils.js");
 (0, create_provider_js_1.setupProviders)();
 describe("Test Contract", function () {
-    const addr = "0x99417252Aad7B065940eBdF50d665Fb8879c5958";
-    const abi = [
-        "error CustomError1(uint256 code, string message)",
-        "event EventUint256(uint256 indexed value)",
-        "event EventAddress(address indexed value)",
-        "event EventString(string value)",
-        "event EventBytes(bytes value)",
-        "function testCustomError1(bool pass, uint code, string calldata message) pure returns (uint256)",
-        "function testErrorString(bool pass, string calldata message) pure returns (uint256)",
-        "function testPanic(uint256 code) returns (uint256)",
-        "function testEvent(uint256 valueUint256, address valueAddress, string valueString, bytes valueBytes) public",
-        "function testCallAdd(uint256 a, uint256 b) pure returns (uint256 result)",
-    ];
+    const provider = new index_js_2.quais.JsonRpcProvider(process.env.RPC_URL);
+    const wallet = new index_js_2.quais.Wallet(process.env.FAUCET_PRIVATEKEY || '', provider);
+    const abi = TestContract_js_1.default.abi;
+    const bytecode = TestContract_js_1.default.bytecode;
+    let contract;
+    let addr;
+    before(async function () {
+        this.timeout(60000);
+        await (0, utils_js_1.stall)(10000);
+        const factory = new index_js_1.ContractFactory(abi, bytecode, wallet);
+        contract = await factory.deploy({ gasLimit: 5000000, maxFeePerGas: index_js_2.quais.parseUnits('5', 'gwei'), maxPriorityFeePerGas: index_js_2.quais.parseUnits('1', 'gwei') });
+        addr = await contract.getAddress();
+        console.log("Contract deployed to: ", addr);
+        await (0, utils_js_1.stall)(30000);
+    });
     it("tests contract calls", async function () {
         this.timeout(10000);
-        const provider = (0, create_provider_js_1.getProvider)("InfuraProvider", "goerli");
-        const contract = new index_js_1.Contract(addr, abi, provider);
         assert_1.default.equal(await contract.testCallAdd(4, 5), BigInt(9), "testCallAdd(4, 5)");
         assert_1.default.equal(await contract.testCallAdd(6, 0), BigInt(6), "testCallAdd(6, 0)");
     });
-    it("tests events", async function () {
-        this.timeout(60000);
-        const provider = (0, create_provider_js_1.getProvider)("InfuraProvider", "goerli");
-        assert_1.default.ok(provider);
-        const contract = new index_js_1.Contract(addr, abi, provider);
-        const signer = new index_js_1.Wallet((process.env.FAUCET_PRIVATEKEY), provider);
-        const contractSigner = contract.connect(signer);
-        const vUint256 = 42;
-        const vAddrName = "quais.eth";
-        const vAddr = "0x228568EA92aC5Bc281c1E30b1893735c60a139F1";
-        const vString = "Hello";
-        const vBytes = "0x12345678";
-        let hash = null;
-        // Test running a listener for a specific event
-        const specificEvent = new Promise((resolve, reject) => {
-            contract.on("EventUint256", async (value, event) => {
-                // Triggered by someone else
-                if (hash == null || hash !== event.log.transactionHash) {
-                    return;
-                }
-                try {
-                    assert_1.default.equal(event.filter, "EventUint256", "event.filter");
-                    assert_1.default.equal(event.fragment.name, "EventUint256", "event.fragment.name");
-                    assert_1.default.equal(event.log.address, addr, "event.log.address");
-                    assert_1.default.equal(event.args.length, 1, "event.args.length");
-                    assert_1.default.equal(event.args[0], BigInt(42), "event.args[0]");
-                    const count = await contract.listenerCount("EventUint256");
-                    await event.removeListener();
-                    assert_1.default.equal(await contract.listenerCount("EventUint256"), count - 1, "decrement event count");
-                    resolve(null);
-                }
-                catch (e) {
-                    event.removeListener();
-                    reject(e);
-                }
-            });
-        });
-        // Test running a listener on all (i.e. "*") events
-        const allEvents = new Promise((resolve, reject) => {
-            const waitingFor = {
-                EventUint256: vUint256,
-                EventAddress: vAddr,
-                EventString: vString,
-                EventBytes: vBytes
-            };
-            contract.on("*", (event) => {
-                // Triggered by someone else
-                if (hash == null || hash !== event.log.transactionHash) {
-                    return;
-                }
-                try {
-                    const name = event.eventName;
-                    assert_1.default.equal(event.args[0], waitingFor[name], `${name}`);
-                    delete waitingFor[name];
-                    if (Object.keys(waitingFor).length === 0) {
-                        event.removeListener();
-                        resolve(null);
-                    }
-                }
-                catch (error) {
-                    reject(error);
-                }
-            });
-        });
-        // Send a transaction to trigger some events
-        const tx = await contractSigner.testEvent(vUint256, vAddr, vString, vBytes);
-        hash = tx.hash;
-        const checkEvent = (filter, event) => {
-            const values = {
-                EventUint256: vUint256,
-                EventString: vString,
-                EventAddress: vAddr,
-                EventBytes: vBytes
-            };
-            assert_1.default.ok(event instanceof index_js_1.EventLog, `queryFilter(${filter}):isEventLog`);
-            const name = event.eventName;
-            assert_1.default.equal(event.address, addr, `queryFilter(${filter}):address`);
-            assert_1.default.equal(event.args[0], values[name], `queryFilter(${filter}):args[0]`);
-        };
-        const checkEventFilter = async (filter) => {
-            const events = (await contract.queryFilter(filter, -10)).filter((e) => (e.transactionHash === hash));
-            assert_1.default.equal(events.length, 1, `queryFilter(${filter}).length`);
-            checkEvent(filter, events[0]);
-            return events[0];
-        };
-        const receipt = await tx.wait();
-        // Check the logs in the receipt
-        for (const log of receipt.logs) {
-            checkEvent("receipt", log);
-        }
-        // Various options for queryFilter
-        await checkEventFilter("EventUint256");
-        await checkEventFilter(["EventUint256"]);
-        await checkEventFilter([["EventUint256"]]);
-        await checkEventFilter("EventUint256(uint)");
-        await checkEventFilter(["EventUint256(uint)"]);
-        await checkEventFilter([["EventUint256(uint)"]]);
-        await checkEventFilter([["EventUint256", "EventUint256(uint)"]]);
-        await checkEventFilter("0x85c55bbb820e6d71c71f4894e57751de334b38c421f9c170b0e66d32eafea337");
-        // Query by Event
-        await checkEventFilter(contract.filters.EventUint256);
-        // Query by Deferred Topic Filter; address
-        await checkEventFilter(contract.filters.EventUint256(vUint256));
-        // Query by Deferred Topic Filter; address
-        await checkEventFilter(contract.filters.EventAddress(vAddr));
-        // Query by Deferred Topic Filter; ENS name => address
-        await checkEventFilter(contract.filters.EventAddress(vAddrName));
-        // Multiple Methods
-        {
-            const filter = [["EventUint256", "EventString"]];
-            const events = (await contract.queryFilter(filter, -10)).filter((e) => (e.transactionHash === hash));
-            assert_1.default.equal(events.length, 2, `queryFilter(${filter}).length`);
-            for (const event of events) {
-                checkEvent(filter, event);
-            }
-        }
-        await specificEvent;
-        await allEvents;
-    });
+    //Awaiting Quai subscrigbe functionality 
+    // it("tests events", async function() {
+    //     this.timeout(60000);
+    //     assert.ok(provider)
+    //     const vUint256 = 42;
+    //     const vAddrName = "quais.eth";
+    //     const vAddr = "0x228568EA92aC5Bc281c1E30b1893735c60a139F1";
+    //     const vString = "Hello";
+    //     const vBytes = "0x12345678";
+    //     let hash: null | string = null;
+    //     // Test running a listener for a specific event
+    //     const specificEvent = new Promise((resolve, reject) => {
+    //         contract.on("EventUint256", async (value, event) => {
+    //             // Triggered by someone else
+    //             if (hash == null || hash !== event.log.transactionHash) { return; }
+    //             try {
+    //                 assert.equal(event.filter, "EventUint256", "event.filter");
+    //                 assert.equal(event.fragment.name, "EventUint256", "event.fragment.name");
+    //                 assert.equal(event.log.address, addr, "event.log.address");
+    //                 assert.equal(event.args.length, 1, "event.args.length");
+    //                 assert.equal(event.args[0], BigInt(42), "event.args[0]");
+    //                 const count = await contract.listenerCount("EventUint256");
+    //                 await event.removeListener();
+    //                 assert.equal(await contract.listenerCount("EventUint256"), count - 1, "decrement event count");
+    //                 resolve(null);
+    //             } catch (e) {
+    //                 event.removeListener();
+    //                 reject(e);
+    //             }
+    //         });
+    //     });
+    //     // Test running a listener on all (i.e. "*") events
+    //     const allEvents = new Promise((resolve, reject) => {
+    //         const waitingFor: Record<string, any> = {
+    //             EventUint256: vUint256,
+    //             EventAddress: vAddr,
+    //             EventString: vString,
+    //             EventBytes: vBytes
+    //         };
+    //         contract.on("*", (event: ContractEventPayload) => {
+    //             // Triggered by someone else
+    //             if (hash == null || hash !== event.log.transactionHash) { return; }
+    //             try {
+    //                 const name = event.eventName;
+    //                 assert.equal(event.args[0], waitingFor[name], `${ name }`);
+    //                 delete waitingFor[name];
+    //                 if (Object.keys(waitingFor).length === 0) {
+    //                     event.removeListener();
+    //                     resolve(null);
+    //                 }
+    //             } catch (error) {
+    //                 reject(error);
+    //             }
+    //         });
+    //     });
+    //     // Send a transaction to trigger some events
+    //     const tx = await contractSigner.testEvent(vUint256, vAddr, vString, vBytes);
+    //     hash = tx.hash;
+    //     const checkEvent = (filter: ContractEventName, event: EventLog | Log) => {
+    //         const values: Record<string, any> = {
+    //             EventUint256: vUint256,
+    //             EventString: vString,
+    //             EventAddress: vAddr,
+    //             EventBytes: vBytes
+    //         };
+    //         assert.ok(event instanceof EventLog, `queryFilter(${ filter }):isEventLog`);
+    //         const name = event.eventName;
+    //         assert.equal(event.address, addr, `queryFilter(${ filter }):address`);
+    //         assert.equal(event.args[0], values[name], `queryFilter(${ filter }):args[0]`);
+    //     };
+    //     const checkEventFilter = async (filter: ContractEventName) => {
+    //         const events = (await contract.queryFilter(filter, -10)).filter((e) => (e.transactionHash === hash));
+    //         assert.equal(events.length, 1, `queryFilter(${ filter }).length`);
+    //         checkEvent(filter, events[0]);
+    //         return events[0];
+    //     };
+    //     const receipt = await tx.wait();
+    //     // Check the logs in the receipt
+    //     for (const log of receipt.logs) { checkEvent("receipt", log); }
+    //     // Various options for queryFilter
+    //     await checkEventFilter("EventUint256");
+    //     await checkEventFilter([ "EventUint256" ]);
+    //     await checkEventFilter([ [ "EventUint256" ] ]);
+    //     await checkEventFilter("EventUint256(uint)");
+    //     await checkEventFilter([ "EventUint256(uint)" ]);
+    //     await checkEventFilter([ [ "EventUint256(uint)" ] ]);
+    //     await checkEventFilter([ [ "EventUint256", "EventUint256(uint)" ] ]);
+    //     await checkEventFilter("0x85c55bbb820e6d71c71f4894e57751de334b38c421f9c170b0e66d32eafea337");
+    //     // Query by Event
+    //     await checkEventFilter(contract.filters.EventUint256);
+    //     // Query by Deferred Topic Filter; address
+    //     await checkEventFilter(contract.filters.EventUint256(vUint256));
+    //     // Query by Deferred Topic Filter; address
+    //     await checkEventFilter(contract.filters.EventAddress(vAddr));
+    //     // Query by Deferred Topic Filter; ENS name => address
+    //     await checkEventFilter(contract.filters.EventAddress(vAddrName));
+    //     // Multiple Methods
+    //     {
+    //         const filter = [ [ "EventUint256", "EventString" ] ];
+    //         const events = (await contract.queryFilter(filter, -10)).filter((e) => (e.transactionHash === hash));
+    //         assert.equal(events.length, 2, `queryFilter(${ filter }).length`);
+    //         for (const event of events) { checkEvent(filter, event); }
+    //     }
+    //     await specificEvent;
+    //     await allEvents;
+    // });
     it("tests the _in_ operator for functions", function () {
         const contract = new index_js_1.Contract(addr, abi);
         assert_1.default.equal("testCallAdd" in contract, true, "has(testCallAdd)");
@@ -205,26 +196,31 @@ describe("Test Typed Contract Interaction", function () {
             valueFunc: (type) => { return "someString"; }
         }
     ];
-    const abi = [];
-    for (let i = 1; i <= 32; i++) {
-        abi.push(`function testTyped(uint${i * 8}) public pure returns (string memory)`);
-        abi.push(`function testTyped(int${i * 8}) public pure returns (string memory)`);
-        abi.push(`function testTyped(bytes${i}) public pure returns (string memory)`);
-    }
-    abi.push(`function testTyped(address) public pure returns (string memory)`);
-    abi.push(`function testTyped(bool) public pure returns (string memory)`);
-    abi.push(`function testTyped(bytes memory) public pure returns (string memory)`);
-    abi.push(`function testTyped(string memory) public pure returns (string memory)`);
-    const addr = "0x838f41545DA5e18AA0e1ab391085d22E172B7B02";
-    const provider = (0, create_provider_js_1.getProvider)("InfuraProvider", "goerli");
-    const contract = new index_js_1.Contract(addr, abi, provider);
+    const abi = TypedContract_js_1.default.abi;
+    const provider = new index_js_2.quais.JsonRpcProvider(process.env.RPC_URL);
+    const wallet = new index_js_2.quais.Wallet(process.env.FAUCET_PRIVATEKEY || '', provider);
+    const bytecode = TestContract_js_1.default.bytecode;
+    let contract;
+    let addr;
+    before(async function () {
+        this.timeout(100000);
+        await (0, utils_js_1.stall)(10000);
+        const factory = new index_js_1.ContractFactory(abi, bytecode, wallet);
+        contract = await factory.deploy({ gasLimit: 5000000, maxFeePerGas: index_js_2.quais.parseUnits('5', 'gwei'), maxPriorityFeePerGas: index_js_2.quais.parseUnits('1', 'gwei'), });
+        addr = await contract.getAddress();
+        console.log("Contract deployed to: ", addr);
+        await (0, utils_js_1.stall)(50000);
+        console.log(contract);
+    });
     for (const { types, valueFunc } of tests) {
         for (const type of types) {
             const value = valueFunc(type);
             it(`tests typed value: Typed.from(${type})`, async function () {
                 this.timeout(10000);
                 const v = index_js_1.Typed.from(type, value);
+                console.log('v: ', v);
                 const result = await contract.testTyped(v);
+                console.log("result: ", result);
                 assert_1.default.equal(result, type);
             });
             it(`tests typed value: Typed.${type}()`, async function () {

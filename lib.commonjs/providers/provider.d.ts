@@ -600,13 +600,6 @@ export declare class TransactionReceipt implements TransactionReceiptParams, Ite
      *  backfill this value.
      */
     readonly status: null | number;
-    /**
-     *  The root hash of this transaction.
-     *
-     *  This is no present and was only included in pre-byzantium blocks, but
-     *  could be used to validate certain parts of the receipt.
-     */
-    readonly root: null | string;
     readonly etxs: ReadonlyArray<string>;
     /**
      *  @_ignore:
