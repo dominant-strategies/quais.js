@@ -1,11 +1,11 @@
-import { ShardData } from "../constants";
+import { ShardData } from "../constants/shards.js";
 
 
 export function getShardForAddress(address: string): string | null {
     if (address.length < 4) return null;
     const byteCode = address.substring(2, 4).toUpperCase();
     for (const shardInfo of ShardData) {
-        if (byteCode >= shardInfo.byte[0] && byteCode <= shardInfo.byte[1]) {
+        if (byteCode >= shardInfo.byte[0].toUpperCase() && byteCode <= shardInfo.byte[1].toUpperCase()) {
             return shardInfo.shard;
         }
     }
