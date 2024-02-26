@@ -544,7 +544,6 @@ export class AbstractProvider implements Provider {
     // Shares multiple identical requests made during the same 250ms
     async #perform<T = any>(req: PerformActionRequest): Promise<T> {
         const timeout = this.#options.cacheTimeout;
-
         // Caching disabled
         if (timeout < 0) { return await this._perform(req); }
 

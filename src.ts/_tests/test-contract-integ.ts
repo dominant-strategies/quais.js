@@ -58,7 +58,7 @@ describe("Tests contract integration", function() {
     });
 
     it("runs contract operations", async function() {
-        this.timeout(100000);
+        this.timeout(120000);
 
         assert.ok(address != null);
 
@@ -66,9 +66,10 @@ describe("Tests contract integration", function() {
         const CustomContract = quais.BaseContract.buildClass<ContractAbi>(abi);
 
         const contract = new CustomContract(address, wallet); //quais.Contract.from<ContractAbi>(address, abi, signer);
-
+        await stall(30000);
         // Test implicit staticCall (i.e. view/pure)
         {
+            console.log('herhreerer', contract.interface.fragments);
             const supply0 = await contract.totalSupply();
             assert.equal(supply0, BigInt(1000), "initial supply 0; default");
         }
@@ -85,13 +86,14 @@ describe("Tests contract integration", function() {
             assert.equal(supply0[0], BigInt(1000), "initial supply 0; staticCallResult");
         }
 
-        const reciever = '0x0aff86a125b29b25a9e418c2fb64f1753532c0ca'
+        const reciever = '0x00E8ABF5494e0E0632A89995BBAEe9335044df13'
         // Test transfer (default)
         const tx = await contract.transfer(reciever,BigInt(1));
-
+        console.log('TX:  ', tx)
         await stall(60000)
         
         const receipt = await provider.getTransactionReceipt(tx.hash);
+        console.log('Receipt:  ', receipt)
         await stall(10000)
         assert.ok(receipt, "receipt not null");
 

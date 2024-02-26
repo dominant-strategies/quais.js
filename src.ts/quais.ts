@@ -108,7 +108,7 @@ export {
     toUtf8Bytes, toUtf8CodePoints, toUtf8String,
     Utf8ErrorFuncs,
     decodeRlp, encodeRlp,
-    uuidV4,
+    uuidV4,getTxType,getShardForAddress, getAddressDetails, isUTXOAddress,
 } from "./utils/index.js";
 
 export {
@@ -116,13 +116,14 @@ export {
     BaseWallet, HDNodeWallet, HDNodeVoidWallet,
     Wallet,
 
-    defaultPath,
 
     getAccountPath, getIndexedAccountPath,
-    isCrowdsaleJson, isKeystoreJson,
+    isCrowdsaleJson, isKeystoreJson, 
 
     decryptCrowdsaleJson, decryptKeystoreJsonSync, decryptKeystoreJson,
     encryptKeystoreJson, encryptKeystoreJsonSync,
+
+    quaiHDAccountPath, qiHDAccountPath,
 } from "./wallet/index.js";
 
 export {
