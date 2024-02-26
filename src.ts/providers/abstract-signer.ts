@@ -157,6 +157,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
         delete pop.from;
         const txObj = Transaction.from(pop);
+        console.log(JSON.stringify(txObj));
         const signedTx = await this.signTransaction(txObj);
         return await provider.broadcastTransaction(signedTx);
     }

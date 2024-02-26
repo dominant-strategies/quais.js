@@ -11,10 +11,8 @@ import { LangEn } from "../wordlists/lang-en.js";
 import { BaseWallet } from "./base-wallet.js";
 import { Mnemonic } from "./mnemonic.js";
 import { encryptKeystoreJson, encryptKeystoreJsonSync, } from "./json-keystore.js";
-/**
- *  The default derivation path for Ethereum HD Nodes. (i.e. ``"m/44'/60'/0'/0/0"``)
- */
-export const defaultPath = "m/44'/60'/0'/0/0";
+import { ShardData } from "../constants/index.js";
+import { getShardForAddress, isUTXOAddress } from "../utils/index.js";
 // "Bitcoin seed"
 const MasterSecret = new Uint8Array([66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100]);
 const HardenedBit = 0x80000000;
@@ -81,6 +79,9 @@ function derivePath(node, path) {
             assertArgument(false, "invalid path component", `path[${i}]`, component);
         }
     }
+    // Extract the coin type from the path and set it on the node
+    if (result.setCoinType)
+        result.setCoinType();
     return result;
 }
 /**
@@ -95,7 +96,7 @@ export class HDNodeWallet extends BaseWallet {
     /**
      *  The compressed public key.
      */
-    publicKey;
+    #publicKey;
     /**
      *  The fingerprint.
      *
@@ -107,7 +108,7 @@ export class HDNodeWallet extends BaseWallet {
     /**
      *  The parent fingerprint.
      */
-    parentFingerprint;
+    accountFingerprint;
     /**
      *  The mnemonic used to create this HD Node, if available.
      *
@@ -138,22 +139,23 @@ export class HDNodeWallet extends BaseWallet {
      *  in its path.
      */
     depth;
+    coinType;
     /**
      *  @private
      */
-    constructor(guard, signingKey, parentFingerprint, chainCode, path, index, depth, mnemonic, provider) {
+    constructor(guard, signingKey, accountFingerprint, chainCode, path, index, depth, mnemonic, provider) {
         super(signingKey, provider);
         assertPrivate(guard, _guard, "HDNodeWallet");
-        defineProperties(this, { publicKey: signingKey.compressedPublicKey });
-        const fingerprint = dataSlice(ripemd160(sha256(this.publicKey)), 0, 4);
+        this.#publicKey = signingKey.compressedPublicKey;
+        const fingerprint = dataSlice(ripemd160(sha256(this.#publicKey)), 0, 4);
         defineProperties(this, {
-            parentFingerprint, fingerprint,
+            accountFingerprint, fingerprint,
             chainCode, path, index, depth
         });
         defineProperties(this, { mnemonic });
     }
     connect(provider) {
-        return new HDNodeWallet(_guard, this.signingKey, this.parentFingerprint, this.chainCode, this.path, this.index, this.depth, this.mnemonic, provider);
+        return new HDNodeWallet(_guard, this.signingKey, this.accountFingerprint, this.chainCode, this.path, this.index, this.depth, this.mnemonic, provider);
     }
     #account() {
         const account = { address: this.address, privateKey: this.privateKey };
@@ -204,10 +206,16 @@ export class HDNodeWallet extends BaseWallet {
         //   - Testnet: public=0x043587CF, private=0x04358394
         assert(this.depth < 256, "Depth too deep", "UNSUPPORTED_OPERATION", { operation: "extendedKey" });
         return encodeBase58Check(concat([
-            "0x0488ADE4", zpad(this.depth, 1), this.parentFingerprint,
+            "0x0488ADE4", zpad(this.depth, 1), this.accountFingerprint ?? '',
             zpad(this.index, 4), this.chainCode,
             concat(["0x00", this.privateKey])
         ]));
+    }
+    /**
+     * Gets the current publicKey
+     */
+    get publicKey() {
+        return this.#publicKey;
     }
     /**
      *  Returns true if this wallet has a path, providing a Type Guard
@@ -222,7 +230,7 @@ export class HDNodeWallet extends BaseWallet {
      *  child addresses and other public data about the HD Node.
      */
     neuter() {
-        return new HDNodeVoidWallet(_guard, this.address, this.publicKey, this.parentFingerprint, this.chainCode, this.path, this.index, this.depth, this.provider);
+        return new HDNodeVoidWallet(_guard, this.address, this.#publicKey, this.accountFingerprint ?? '', this.chainCode, this.path ?? '', this.index, this.depth, this.provider);
     }
     /**
      *  Return the child for %%index%%.
@@ -238,9 +246,11 @@ export class HDNodeWallet extends BaseWallet {
                 path += "'";
             }
         }
-        const { IR, IL } = ser_I(index, this.chainCode, this.publicKey, this.privateKey);
+        const { IR, IL } = ser_I(index, this.chainCode, this.#publicKey, this.privateKey);
         const ki = new SigningKey(toBeHex((toBigInt(IL) + BigInt(this.privateKey)) % N, 32));
-        return new HDNodeWallet(_guard, ki, this.fingerprint, hexlify(IR), path, index, this.depth + 1, this.mnemonic, this.provider);
+        //BIP44 if we are at the account depth get that fingerprint, otherwise continue with the current one
+        let newFingerprint = this.depth == 3 ? this.fingerprint : this.accountFingerprint;
+        return new HDNodeWallet(_guard, ki, newFingerprint, hexlify(IR), path, index, this.depth + 1, this.mnemonic, this.provider);
     }
     /**
      *  Return the HDNode for %%path%% from this node.
@@ -248,13 +258,17 @@ export class HDNodeWallet extends BaseWallet {
     derivePath(path) {
         return derivePath(this, path);
     }
+    setCoinType() {
+        this.coinType = Number(this.path?.split("/")[2].replace("'", ""));
+    }
     static #fromSeed(_seed, mnemonic) {
         assertArgument(isBytesLike(_seed), "invalid seed", "seed", "[REDACTED]");
         const seed = getBytes(_seed, "seed");
         assertArgument(seed.length >= 16 && seed.length <= 64, "invalid seed", "seed", "[REDACTED]");
         const I = getBytes(computeHmac("sha512", MasterSecret, seed));
         const signingKey = new SigningKey(hexlify(I.slice(0, 32)));
-        return new HDNodeWallet(_guard, signingKey, "0x00000000", hexlify(I.slice(32)), "m", 0, 0, mnemonic, null);
+        const result = new HDNodeWallet(_guard, signingKey, "0x00000000", hexlify(I.slice(32)), "m", 0, 0, mnemonic, null);
+        return result;
     }
     /**
      *  Creates a new HD Node from %%extendedKey%%.
@@ -267,7 +281,7 @@ export class HDNodeWallet extends BaseWallet {
         const bytes = toBeArray(decodeBase58(extendedKey)); // @TODO: redact
         assertArgument(bytes.length === 82 || encodeBase58Check(bytes.slice(0, 78)) === extendedKey, "invalid extended key", "extendedKey", "[ REDACTED ]");
         const depth = bytes[4];
-        const parentFingerprint = hexlify(bytes.slice(5, 9));
+        const accountFingerprint = hexlify(bytes.slice(5, 9));
         const index = parseInt(hexlify(bytes.slice(9, 13)).substring(2), 16);
         const chainCode = hexlify(bytes.slice(13, 45));
         const key = bytes.slice(45, 78);
@@ -276,7 +290,7 @@ export class HDNodeWallet extends BaseWallet {
             case "0x0488b21e":
             case "0x043587cf": {
                 const publicKey = hexlify(key);
-                return new HDNodeVoidWallet(_guard, computeAddress(publicKey), publicKey, parentFingerprint, chainCode, null, index, depth, null);
+                return new HDNodeVoidWallet(_guard, computeAddress(publicKey), publicKey, accountFingerprint, chainCode, null, index, depth, null);
             }
             // Private Key
             case "0x0488ade4":
@@ -284,19 +298,19 @@ export class HDNodeWallet extends BaseWallet {
                 if (key[0] !== 0) {
                     break;
                 }
-                return new HDNodeWallet(_guard, new SigningKey(key.slice(1)), parentFingerprint, chainCode, null, index, depth, null, null);
+                return new HDNodeWallet(_guard, new SigningKey(key.slice(1)), accountFingerprint, chainCode, null, index, depth, null, null);
         }
         assertArgument(false, "invalid extended key prefix", "extendedKey", "[ REDACTED ]");
     }
     /**
      *  Creates a new random HDNode.
      */
-    static createRandom(password, path, wordlist) {
+    static createRandom(path, password, wordlist) {
         if (password == null) {
             password = "";
         }
-        if (path == null) {
-            path = defaultPath;
+        if (path == null || !this.isValidPath(path)) {
+            throw new Error('Invalid path: ' + path);
         }
         if (wordlist == null) {
             wordlist = LangEn.wordlist();
@@ -308,20 +322,20 @@ export class HDNodeWallet extends BaseWallet {
      *  Create an HD Node from %%mnemonic%%.
      */
     static fromMnemonic(mnemonic, path) {
-        if (!path) {
-            path = defaultPath;
+        if (path == null || !this.isValidPath(path)) {
+            throw new Error('Invalid path: ' + path);
         }
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
     /**
      *  Creates an HD Node from a mnemonic %%phrase%%.
      */
-    static fromPhrase(phrase, password, path, wordlist) {
+    static fromPhrase(phrase, path, password, wordlist) {
         if (password == null) {
             password = "";
         }
-        if (path == null) {
-            path = defaultPath;
+        if (path == null || !this.isValidPath(path)) {
+            throw new Error('Invalid path: ' + path);
         }
         if (wordlist == null) {
             wordlist = LangEn.wordlist();
@@ -330,12 +344,70 @@ export class HDNodeWallet extends BaseWallet {
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
     /**
+     * Checks if the provided BIP44 path is valid and limited to the change level.
+     * @param path The BIP44 path to check.
+     * @returns true if the path is valid and does not include the address_index; false otherwise.
+     */
+    static isValidPath(path) {
+        // BIP44 path regex pattern for up to the 'change' level, excluding 'address_index'
+        // This pattern matches paths like "m/44'/0'/0'/0" and "m/44'/60'/0'/1", but not "m/44'/60'/0'/0/0"
+        const pathRegex = /^m\/44'\/\d+'\/\d+'\/[01]$/;
+        return pathRegex.test(path);
+    }
+    /**
      *  Creates an HD Node from a %%seed%%.
      */
     static fromSeed(seed) {
         return HDNodeWallet.#fromSeed(seed, null);
     }
+    /**
+     * Derives address by incrementing address_index according to BIP44
+     */
+    deriveAddress(index, zone) {
+        //Case for a non quai/qi wallet where zone is not needed
+        if (!zone) {
+            if (this.coinType == 994 || this.coinType == 969) {
+                //Zone not provided but wallet cointype is quai/qi
+                throw new Error("No zone provided for a Quai / Qi wallet");
+            }
+            //Return address for any other cointype with no 
+            return this.derivePath(this.path + "/" + index.toString());
+        }
+        zone = zone.toLowerCase();
+        // Check if zone is valid
+        const shard = ShardData.find(shard => shard.name.toLowerCase() === zone || shard.nickname.toLowerCase() === zone || shard.byte.toLowerCase() === zone);
+        if (!shard) {
+            throw new Error("Invalid zone");
+        }
+        if (!this.path)
+            throw new Error("Missing Path");
+        let newWallet;
+        let addrIndex = 0;
+        let zoneIndex = index + 1;
+        do {
+            // const pathComponents = this.path?.split('/');
+            // let newPath;
+            // if (pathComponents.length == 5) {
+            //     newPath = this.path + "/" + addrIndex.toString();
+            // } else if (pathComponents.length == 6)
+            //     newPath = this.path.replace(pathComponents[pathComponents.length - 1], addrIndex.toString());
+            //     else throw new Error(`Invalid or uncomplete path: ${newPath} ${this.path}`);
+            newWallet = this.derivePath(addrIndex.toString());
+            console.log(newWallet.address);
+            if (getShardForAddress(newWallet.address) == shard && ((newWallet.coinType == 969) == isUTXOAddress(newWallet.address)))
+                zoneIndex--;
+            addrIndex++;
+        } while (zoneIndex > 0);
+        return newWallet;
+    }
 }
+// // In crements the address_ index according to BIP-44
+// function incrementPathIndex(path: string): string {
+//     const parts = path.split('/');
+//     const lastIndex = parseInt(parts[parts.length - 1], 10);
+//     parts[parts.length - 1] = (lastIndex + 1).toString();
+//     return parts.join('/');
+// }
 /**
  *  A **HDNodeVoidWallet** cannot sign, but provides access to
  *  the children nodes of a [[link-bip-32]] HD wallet addresses.
@@ -360,7 +432,7 @@ export class HDNodeVoidWallet extends VoidSigner {
     /**
      *  The parent node fingerprint.
      */
-    parentFingerprint;
+    accountFingerprint;
     /**
      *  The chaincode, which is effectively a public key used
      *  to derive children.
@@ -387,17 +459,17 @@ export class HDNodeVoidWallet extends VoidSigner {
     /**
      *  @private
      */
-    constructor(guard, address, publicKey, parentFingerprint, chainCode, path, index, depth, provider) {
+    constructor(guard, address, publicKey, accountFingerprint, chainCode, path, index, depth, provider) {
         super(address, provider);
         assertPrivate(guard, _guard, "HDNodeVoidWallet");
         defineProperties(this, { publicKey });
         const fingerprint = dataSlice(ripemd160(sha256(publicKey)), 0, 4);
         defineProperties(this, {
-            publicKey, fingerprint, parentFingerprint, chainCode, path, index, depth
+            publicKey, fingerprint, accountFingerprint, chainCode, path, index, depth
         });
     }
     connect(provider) {
-        return new HDNodeVoidWallet(_guard, this.address, this.publicKey, this.parentFingerprint, this.chainCode, this.path, this.index, this.depth, provider);
+        return new HDNodeVoidWallet(_guard, this.address, this.publicKey, this.accountFingerprint ?? '', this.chainCode, this.path, this.index, this.depth, provider);
     }
     /**
      *  The extended key.
@@ -415,7 +487,7 @@ export class HDNodeVoidWallet extends VoidSigner {
         return encodeBase58Check(concat([
             "0x0488B21E",
             zpad(this.depth, 1),
-            this.parentFingerprint,
+            this.accountFingerprint ?? '',
             zpad(this.index, 4),
             this.chainCode,
             this.publicKey,
@@ -494,5 +566,21 @@ export function getIndexedAccountPath(_index) {
     const index = getNumber(_index, "index");
     assertArgument(index >= 0 && index < HardenedBit, "invalid account index", "index", index);
     return `m/44'/60'/0'/0/${index}`;
+}
+/**
+ * Returns a derivation path for a Qi blockchain account.
+ * @param {number} account - The account index (defaults to 0).
+ * @returns {string} The BIP44 derivation path for the specified account on the Qi blockchain.
+ */
+export function qiHDAccountPath(account = 0, change = false) {
+    return `m/44'/969'/${account}'/${change ? 1 : 0}`;
+}
+/**
+ * Returns a derivation path for a Quai blockchain account.
+ * @param {number} account - The account index (defaults to 0).
+ * @returns {string} The BIP44 derivation path for the specified account on the Quai blockchain.
+ */
+export function quaiHDAccountPath(account = 0) {
+    return `m/44'/994'/${account}'/0`;
 }
 //# sourceMappingURL=hdwallet.js.map

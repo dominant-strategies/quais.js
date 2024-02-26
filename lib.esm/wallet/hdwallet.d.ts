@@ -12,10 +12,6 @@ import type { Provider } from "../providers/index.js";
 import type { BytesLike, Numeric } from "../utils/index.js";
 import type { Wordlist } from "../wordlists/index.js";
 /**
- *  The default derivation path for Ethereum HD Nodes. (i.e. ``"m/44'/60'/0'/0/0"``)
- */
-export declare const defaultPath: string;
-/**
  *  An **HDNodeWallet** is a [[Signer]] backed by the private key derived
  *  from an HD Node using the [[link-bip-32]] stantard.
  *
@@ -25,10 +21,6 @@ export declare const defaultPath: string;
  */
 export declare class HDNodeWallet extends BaseWallet {
     #private;
-    /**
-     *  The compressed public key.
-     */
-    readonly publicKey: string;
     /**
      *  The fingerprint.
      *
@@ -40,7 +32,7 @@ export declare class HDNodeWallet extends BaseWallet {
     /**
      *  The parent fingerprint.
      */
-    readonly parentFingerprint: string;
+    readonly accountFingerprint: string;
     /**
      *  The mnemonic used to create this HD Node, if available.
      *
@@ -71,10 +63,11 @@ export declare class HDNodeWallet extends BaseWallet {
      *  in its path.
      */
     readonly depth: number;
+    coinType?: number;
     /**
      *  @private
      */
-    constructor(guard: any, signingKey: SigningKey, parentFingerprint: string, chainCode: string, path: null | string, index: number, depth: number, mnemonic: null | Mnemonic, provider: null | Provider);
+    constructor(guard: any, signingKey: SigningKey, accountFingerprint: string, chainCode: string, path: null | string, index: number, depth: number, mnemonic: null | Mnemonic, provider: null | Provider);
     connect(provider: null | Provider): HDNodeWallet;
     /**
      *  Resolves to a [JSON Keystore Wallet](json-wallets) encrypted with
@@ -103,6 +96,10 @@ export declare class HDNodeWallet extends BaseWallet {
      */
     get extendedKey(): string;
     /**
+     * Gets the current publicKey
+     */
+    get publicKey(): string;
+    /**
      *  Returns true if this wallet has a path, providing a Type Guard
      *  that the path is non-null.
      */
@@ -125,6 +122,7 @@ export declare class HDNodeWallet extends BaseWallet {
      *  Return the HDNode for %%path%% from this node.
      */
     derivePath(path: string): HDNodeWallet;
+    setCoinType(): void;
     /**
      *  Creates a new HD Node from %%extendedKey%%.
      *
@@ -136,19 +134,29 @@ export declare class HDNodeWallet extends BaseWallet {
     /**
      *  Creates a new random HDNode.
      */
-    static createRandom(password?: string, path?: string, wordlist?: Wordlist): HDNodeWallet;
+    static createRandom(path: string, password?: string, wordlist?: Wordlist): HDNodeWallet;
     /**
      *  Create an HD Node from %%mnemonic%%.
      */
-    static fromMnemonic(mnemonic: Mnemonic, path?: string): HDNodeWallet;
+    static fromMnemonic(mnemonic: Mnemonic, path: string): HDNodeWallet;
     /**
      *  Creates an HD Node from a mnemonic %%phrase%%.
      */
-    static fromPhrase(phrase: string, password?: string, path?: string, wordlist?: Wordlist): HDNodeWallet;
+    static fromPhrase(phrase: string, path: string, password?: string, wordlist?: Wordlist): HDNodeWallet;
+    /**
+     * Checks if the provided BIP44 path is valid and limited to the change level.
+     * @param path The BIP44 path to check.
+     * @returns true if the path is valid and does not include the address_index; false otherwise.
+     */
+    static isValidPath(path: string): boolean;
     /**
      *  Creates an HD Node from a %%seed%%.
      */
     static fromSeed(seed: BytesLike): HDNodeWallet;
+    /**
+     * Derives address by incrementing address_index according to BIP44
+     */
+    deriveAddress(index: number, zone?: string): HDNodeWallet;
 }
 /**
  *  A **HDNodeVoidWallet** cannot sign, but provides access to
@@ -174,7 +182,7 @@ export declare class HDNodeVoidWallet extends VoidSigner {
     /**
      *  The parent node fingerprint.
      */
-    readonly parentFingerprint: string;
+    readonly accountFingerprint: string;
     /**
      *  The chaincode, which is effectively a public key used
      *  to derive children.
@@ -201,7 +209,7 @@ export declare class HDNodeVoidWallet extends VoidSigner {
     /**
      *  @private
      */
-    constructor(guard: any, address: string, publicKey: string, parentFingerprint: string, chainCode: string, path: null | string, index: number, depth: number, provider: null | Provider);
+    constructor(guard: any, address: string, publicKey: string, accountFingerprint: string, chainCode: string, path: null | string, index: number, depth: number, provider: null | Provider);
     connect(provider: null | Provider): HDNodeVoidWallet;
     /**
      *  The extended key.
@@ -245,4 +253,16 @@ export declare function getAccountPath(_index: Numeric): string;
  *  This is the pattern used by wallets like MetaMask.
  */
 export declare function getIndexedAccountPath(_index: Numeric): string;
+/**
+ * Returns a derivation path for a Qi blockchain account.
+ * @param {number} account - The account index (defaults to 0).
+ * @returns {string} The BIP44 derivation path for the specified account on the Qi blockchain.
+ */
+export declare function qiHDAccountPath(account?: number, change?: boolean): string;
+/**
+ * Returns a derivation path for a Quai blockchain account.
+ * @param {number} account - The account index (defaults to 0).
+ * @returns {string} The BIP44 derivation path for the specified account on the Quai blockchain.
+ */
+export declare function quaiHDAccountPath(account?: number): string;
 //# sourceMappingURL=hdwallet.d.ts.map

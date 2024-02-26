@@ -57,7 +57,7 @@ describe("Tests JSON Wallet Formats", function () {
     });
     it("tests encrypting wallet with mnemonic", function () {
         this.timeout(20000);
-        const wallet = HDNodeWallet.createRandom();
+        const wallet = HDNodeWallet.createRandom("m/44'/60'/0'/0/0");
         assert.ok(wallet.mnemonic, "mnemonic");
         const phrase = wallet.mnemonic.phrase;
         const json = wallet.encryptSync("foobar");
@@ -138,7 +138,7 @@ describe("Tests Extra JSON Wallet Functions", function () {
             error: "invalid scrypt p parameter"
         },
     ];
-    const wallet = Wallet.createRandom();
+    const wallet = Wallet.createRandom("m/44'/60'/0'/0/0");
     const account = { address: wallet.address, privateKey: wallet.privateKey };
     const password = "foobar";
     for (const { name, options, error } of badKeystoreOptions) {

@@ -4,7 +4,7 @@ import assert from "assert";
 // } from "./create-provider.js";
 // import { retryIt } from "./utils.js";
 //import type { Provider } from "../index.js";
-import { quais } from "../index.js";
+import { getTxType, quais } from "../index.js";
 import axios from 'axios';
 import { stall } from "./utils.js";
 // import {
@@ -15,8 +15,8 @@ import { stall } from "./utils.js";
 //setupProviders();
 const providerC1 = new quais.JsonRpcProvider(process.env.RPC_URL);
 const wallet = new quais.Wallet(process.env.FAUCET_PRIVATEKEY || '', providerC1);
-const destinationC1 = '0x0aff86a125b29b25a9e418c2fb64f1753532c0ca';
-const destinationC2 = '0x261ee260b611a0e4c76c8f148cdf7cad65e0daf8';
+const destinationC1 = '0x00E8ABF5494e0E0632A89995BBAEe9335044df13';
+const destinationC2 = '0x011ae0a1Bd5B71b4F16F8FdD3AEF278C3D042449';
 function equals(name, actual, expected) {
     if (expected && expected.eq) {
         if (actual == null) {
@@ -86,9 +86,9 @@ async function sendTransaction(to) {
     let txResponse;
     let typeValue;
     try {
+        console.log("Nonce: ", await providerC1.getTransactionCount(wallet.address, 'latest'));
         do {
-            const prefix = to.substring(0, 4);
-            typeValue = (Number(prefix) > 29) ? 2 : 0;
+            typeValue = getTxType(wallet.address, to);
             const gas = await getRPCGasPrice(process.env.RPC_URL);
             let tx = {
                 from: wallet.address,
@@ -104,6 +104,7 @@ async function sendTransaction(to) {
                 chainId: Number(process.env.CHAIN_ID || 1337),
             };
             txResponse = await wallet.sendTransaction(tx);
+            console.log(txResponse);
             await stall(15000);
         } while (txResponse.hash == null);
         console.log(`Transaction hash for type ${typeValue}: `, txResponse.hash);
@@ -316,6 +317,8 @@ describe("Test Transaction operations", function () {
             ...receiptResponse,
             logs: receiptResponse?.logs
         };
+        console.log(receiptResult);
+        console.log(expectedReceipt);
         equals("Internal to External Tx Receipt", receiptResult, expectedReceipt);
     });
 });

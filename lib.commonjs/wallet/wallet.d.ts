@@ -63,10 +63,10 @@ export declare class Wallet extends BaseWallet {
      *
      *  If there is no crytographic random source, this will throw.
      */
-    static createRandom(provider?: null | Provider): HDNodeWallet;
-    /**
+    static createRandom(path: string, provider?: null | Provider): HDNodeWallet;
+    /**"m/44'/60'/0'/0/0"
      *  Creates a [[HDNodeWallet]] for %%phrase%%.
      */
-    static fromPhrase(phrase: string, provider?: Provider, wordlist?: Wordlist): HDNodeWallet;
+    static fromPhrase(phrase: string, path: string, provider?: Provider, wordlist?: Wordlist): HDNodeWallet;
 }
 //# sourceMappingURL=wallet.d.ts.map

@@ -2,7 +2,7 @@ import { getAddress, resolveAddress } from "../address/index.js";
 import { hashMessage, TypedDataEncoder } from "../hash/index.js";
 import { AbstractSigner } from "../providers/index.js";
 import { computeAddress, Transaction } from "../transaction/index.js";
-import { defineProperties, resolveProperties, assert, assertArgument } from "../utils/index.js";
+import { resolveProperties, assert, assertArgument } from "../utils/index.js";
 /**
  *  The **BaseWallet** is a stream-lined implementation of a
  *  [[Signer]] that operates with a private key.
@@ -18,7 +18,7 @@ export class BaseWallet extends AbstractSigner {
     /**
      *  The wallet address.
      */
-    address;
+    #address;
     #signingKey;
     /**
      *  Creates a new BaseWallet for %%privateKey%%, optionally
@@ -31,11 +31,14 @@ export class BaseWallet extends AbstractSigner {
         super(provider);
         assertArgument(privateKey && typeof (privateKey.sign) === "function", "invalid private key", "privateKey", "[ REDACTED ]");
         this.#signingKey = privateKey;
-        const address = computeAddress(this.signingKey.publicKey);
-        defineProperties(this, { address });
+        this.#address = computeAddress(this.signingKey.publicKey);
     }
     // Store private values behind getters to reduce visibility
     // in console.log
+    /**
+     * The address of this wallet.
+     */
+    get address() { return this.#address; }
     /**
      *  The [[SigningKey]] used for signing payloads.
      */
@@ -44,7 +47,7 @@ export class BaseWallet extends AbstractSigner {
      *  The private key for this wallet.
      */
     get privateKey() { return this.signingKey.privateKey; }
-    async getAddress() { return this.address; }
+    async getAddress() { return this.#address; }
     connect(provider) {
         return new BaseWallet(this.#signingKey, provider);
     }
@@ -61,7 +64,7 @@ export class BaseWallet extends AbstractSigner {
             tx.from = from;
         }
         if (tx.from != null) {
-            assertArgument(getAddress((tx.from)) === this.address, "transaction from address mismatch", "tx.from", tx.from);
+            assertArgument(getAddress((tx.from)) === this.#address, "transaction from address mismatch", "tx.from", tx.from);
             delete tx.from;
         }
         // Build the transaction

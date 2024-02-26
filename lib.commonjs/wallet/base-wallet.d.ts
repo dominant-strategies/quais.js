@@ -16,10 +16,6 @@ import type { Provider, TransactionRequest } from "../providers/index.js";
 export declare class BaseWallet extends AbstractSigner {
     #private;
     /**
-     *  The wallet address.
-     */
-    readonly address: string;
-    /**
      *  Creates a new BaseWallet for %%privateKey%%, optionally
      *  connected to %%provider%%.
      *
@@ -27,6 +23,10 @@ export declare class BaseWallet extends AbstractSigner {
      *  be used.
      */
     constructor(privateKey: SigningKey, provider?: null | Provider);
+    /**
+     * The address of this wallet.
+     */
+    get address(): string;
     /**
      *  The [[SigningKey]] used for signing payloads.
      */

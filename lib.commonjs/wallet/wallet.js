@@ -65,7 +65,7 @@ class Wallet extends base_wallet_js_1.BaseWallet {
         (0, index_js_2.assertArgument)(account, "invalid JSON wallet", "json", "[ REDACTED ]");
         if ("mnemonic" in account && account.mnemonic && account.mnemonic.locale === "en") {
             const mnemonic = mnemonic_js_1.Mnemonic.fromEntropy(account.mnemonic.entropy);
-            const wallet = hdwallet_js_1.HDNodeWallet.fromMnemonic(mnemonic, account.mnemonic.path);
+            const wallet = hdwallet_js_1.HDNodeWallet.fromMnemonic(mnemonic, account.mnemonic.path || ''); // Add a check for undefined path
             if (wallet.address === account.address && wallet.privateKey === account.privateKey) {
                 return wallet;
             }
@@ -126,18 +126,18 @@ class Wallet extends base_wallet_js_1.BaseWallet {
      *
      *  If there is no crytographic random source, this will throw.
      */
-    static createRandom(provider) {
-        const wallet = hdwallet_js_1.HDNodeWallet.createRandom();
+    static createRandom(path, provider) {
+        const wallet = hdwallet_js_1.HDNodeWallet.createRandom(path);
         if (provider) {
             return wallet.connect(provider);
         }
         return wallet;
     }
-    /**
+    /**"m/44'/60'/0'/0/0"
      *  Creates a [[HDNodeWallet]] for %%phrase%%.
      */
-    static fromPhrase(phrase, provider, wordlist) {
-        const wallet = hdwallet_js_1.HDNodeWallet.fromPhrase(phrase, undefined, undefined, wordlist);
+    static fromPhrase(phrase, path, provider, wordlist) {
+        const wallet = hdwallet_js_1.HDNodeWallet.fromPhrase(phrase, path, undefined, wordlist);
         if (provider) {
             return wallet.connect(provider);
         }

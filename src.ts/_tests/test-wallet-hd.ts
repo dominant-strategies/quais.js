@@ -34,7 +34,7 @@ describe("Test HDWallets", function() {
         assert.equal(wallet.depth, test.depth, "depth");
         assert.equal(wallet.index, test.index, "index");
         assert.equal(wallet.fingerprint, test.fingerprint, "fingerprint");
-        assert.equal(wallet.parentFingerprint, test.parentFingerprint, "parentFingerprint");
+        assert.equal(wallet.accountFingerprint, test.parentFingerprint, "parentFingerprint");
         assert.equal(wallet.publicKey, test.publicKey, "publicKey");
 
         if (wallet instanceof HDNodeWallet) {

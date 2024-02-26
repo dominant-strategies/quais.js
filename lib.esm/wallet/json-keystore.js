@@ -15,7 +15,7 @@ import { computeAddress } from "../transaction/index.js";
 import { concat, getBytes, hexlify, uuidV4, assert, assertArgument } from "../utils/index.js";
 import { getPassword, spelunk, zpad } from "./utils.js";
 import { version } from "../_version.js";
-const defaultPath = "m/44'/60'/0'/0/0";
+const defaultPath = "m/44'/994'/0'/0/0";
 /**
  *  Returns true if %%json%% is a valid JSON Keystore Wallet.
  */
