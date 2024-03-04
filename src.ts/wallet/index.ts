@@ -22,7 +22,7 @@ export { BaseWallet } from "./base-wallet.js";
 export {
 
     getAccountPath, getIndexedAccountPath,
-    quaiHDAccountPath, qiHDAccountPath,
+    quaiHDAccountPath, qiHDAccountPath, 
     HDNodeWallet,
     HDNodeVoidWallet,
 } from "./hdwallet.js";

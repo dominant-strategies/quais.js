@@ -158,7 +158,7 @@ describe("Tests Extra JSON Wallet Functions", function() {
         },
     ];
 
-    const wallet = Wallet.createRandom("m/44'/60'/0'/0/0");
+    const wallet = Wallet.createRandom("m/44'/994'/0'/0");
     const account = { address: wallet.address, privateKey: wallet.privateKey };
     const password = "foobar";
 
