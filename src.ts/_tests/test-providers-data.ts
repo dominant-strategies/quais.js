@@ -22,7 +22,7 @@ import { stall } from "./utils.js";
 
 const providerC1 = new quais.JsonRpcProvider(process.env.RPC_URL);
 const wallet = new quais.Wallet(process.env.FAUCET_PRIVATEKEY || '', providerC1); 
-const destinationC1 = '0x00E8ABF5494e0E0632A89995BBAEe9335044df13'
+const destinationC1 = '0x0047f9CEa7662C567188D58640ffC48901cde02a'
 const destinationC2 = '0x011ae0a1Bd5B71b4F16F8FdD3AEF278C3D042449'
 
 function equals(name: string, actual: any, expected: any): void {

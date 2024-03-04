@@ -55,7 +55,6 @@ describe("Tests contract integration", function () {
         await (0, utils_js_1.stall)(30000);
         // Test implicit staticCall (i.e. view/pure)
         {
-            console.log('herhreerer', contract.interface.fragments);
             const supply0 = await contract.totalSupply();
             assert_1.default.equal(supply0, BigInt(1000), "initial supply 0; default");
         }
@@ -69,10 +68,9 @@ describe("Tests contract integration", function () {
             const supply0 = await contract.totalSupply.staticCallResult();
             assert_1.default.equal(supply0[0], BigInt(1000), "initial supply 0; staticCallResult");
         }
-        const reciever = '0x00E8ABF5494e0E0632A89995BBAEe9335044df13';
+        const reciever = '0x0047f9CEa7662C567188D58640ffC48901cde02a';
         // Test transfer (default)
         const tx = await contract.transfer(reciever, BigInt(1));
-        console.log('TX:  ', tx);
         await (0, utils_js_1.stall)(60000);
         const receipt = await provider.getTransactionReceipt(tx.hash);
         console.log('Receipt:  ', receipt);

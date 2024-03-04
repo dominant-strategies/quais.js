@@ -61,7 +61,7 @@ exports.getAddressDetails = getAddressDetails;
  */
 function getTxType(from, to) {
     if (from === null || to === null)
-        throw new Error("Invalid address for from or to");
+        return 0;
     const fromDetails = getAddressDetails(from);
     const toDetails = getAddressDetails(to);
     if (fromDetails === null || toDetails === null) {
@@ -81,7 +81,7 @@ exports.getTxType = getTxType;
 * @returns {boolean} True if the address is a UTXO address, false otherwise.
 */
 function isUTXOAddress(address) {
-    const secondByte = address.substring(3, 5);
+    const secondByte = address.substring(4, 6);
     const binaryString = parseInt(secondByte, 16).toString(2).padStart(8, '0');
     const isUTXO = binaryString[0] === '1';
     return isUTXO;

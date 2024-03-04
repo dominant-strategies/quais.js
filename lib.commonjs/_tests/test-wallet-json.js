@@ -141,7 +141,7 @@ describe("Tests Extra JSON Wallet Functions", function () {
             error: "invalid scrypt p parameter"
         },
     ];
-    const wallet = index_js_1.Wallet.createRandom("m/44'/60'/0'/0/0");
+    const wallet = index_js_1.Wallet.createRandom("m/44'/994'/0'/0");
     const account = { address: wallet.address, privateKey: wallet.privateKey };
     const password = "foobar";
     for (const { name, options, error } of badKeystoreOptions) {

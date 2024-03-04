@@ -11,7 +11,7 @@ import type { InterfaceAbi } from "../abi/index.js";
 import type { Addressable } from "../address/index.js";
 import type { ContractRunner, TransactionRequest } from "../providers/index.js";
 import type { BytesLike } from "../utils/index.js";
-import { getShardForAddress } from "../utils/index.js";
+import { getShardForAddress, isUTXOAddress } from "../utils/index.js";
 import type {
     ContractInterface, ContractMethodArgs, ContractDeployTransaction,
 } from "./types.js";
@@ -203,7 +203,8 @@ static getContractAddress(transaction: {
         while (i < 10000) {
             var contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
             var contractShard = getShardForAddress(contractAddress);
-            if (contractShard === toShard) {
+            var utxo = isUTXOAddress(contractAddress);
+            if (contractShard === toShard && !utxo) {
                 return tx;
             }
             var salt = randomBytes(32);

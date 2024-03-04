@@ -903,7 +903,6 @@ export class AbstractProvider implements Provider {
 
     async getFeeData(): Promise<FeeData> {
         const network = await this.getNetwork();
-
         const getFeeDataFunc = async () => {
             const { _block, gasPrice, priorityFee } = await resolveProperties({
                 _block: this.#getBlock("latest", false),

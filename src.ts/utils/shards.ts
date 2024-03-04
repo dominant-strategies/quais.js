@@ -61,7 +61,7 @@ export function getAddressDetails(address: string) {
  * @throws {Error} If either address is null or if the shard cannot be determined.
  */
   export function getTxType(from: string | null, to: string | null): number {
-    if (from === null || to === null) throw new Error("Invalid address for from or to");
+    if (from === null || to === null) return 0;
     const fromDetails = getAddressDetails(from);
     const toDetails = getAddressDetails(to);
   
@@ -84,10 +84,8 @@ export function getAddressDetails(address: string) {
  * @returns {boolean} True if the address is a UTXO address, false otherwise.
  */
   export function isUTXOAddress(address: string) {
-    const secondByte = address.substring(3, 5); 
-    
+    const secondByte = address.substring(4, 6); 
     const binaryString = parseInt(secondByte, 16).toString(2).padStart(8, '0'); 
-    
     const isUTXO = binaryString[0] === '1';
     
     return isUTXO;
