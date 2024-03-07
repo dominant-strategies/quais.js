@@ -15,6 +15,7 @@ jobs:
       skip_deploy: true
       update_version: false
       needs_docker: false
+      include_chart: false
     secrets:
       GH_PAT: ${{ secrets.GH_PAT }}
       BUILD_ARGS: ''
