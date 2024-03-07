@@ -11,6 +11,7 @@ jobs:
       cloud_deploy: false
       skip_deploy: true
       update_version: true
+      include_chart: false
     secrets:
       GH_PAT: ${{ secrets.GH_PAT }}
       BUILD_ARGS: ''
