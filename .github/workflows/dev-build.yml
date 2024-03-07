@@ -9,7 +9,7 @@ jobs:
     with:
       needs_build: true
       install_command: "npm ci"
-      build_command: "npm run build-dist"
+      build_command: "npm run build-clean"
       cloud_deploy: false
       skip_deploy: true
       update_version: false
