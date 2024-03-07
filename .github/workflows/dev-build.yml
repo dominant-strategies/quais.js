@@ -2,7 +2,7 @@ name: Auto Dev Workflow
 on:
   pull_request:
     types: [closed]
-    branches: [ "main" ]
+    branches: [ "master" ]
 jobs:
   call-common-workflow:
     uses: dominant-strategies/quai-cicd/.github/workflows/deploy-dev-common.yml@main
