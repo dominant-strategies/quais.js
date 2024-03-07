@@ -10,7 +10,7 @@ jobs:
   call-common-workflow:
     uses: dominant-strategies/quai-cicd/.github/workflows/cut-release-common.yml@main
     with:
-      branch: main
+      branch: ${{ github.event.inputs.branch }}
       needs_build: true
       needs_docker: false
       install_command: "npm ci"
