@@ -1,0 +1,19 @@
+name: Auto Dev Workflow
+on:
+  pull_request:
+    types: [closed]
+    branches: [ "main" ]
+jobs:
+  call-common-workflow:
+    uses: dominant-strategies/quai-cicd/.github/workflows/deploy-dev-common.yml@main
+    with:
+      needs_build: true
+      install_command: "npm ci"
+      build_command: "npm run build-dist"
+      cloud_deploy: false
+      skip_deploy: true
+      update_version: false
+      needs_docker: false
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}
+      BUILD_ARGS: ''
