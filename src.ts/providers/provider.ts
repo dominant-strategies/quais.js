@@ -520,7 +520,8 @@ export class Block implements BlockParams, Iterable<string> {
     readonly receiptsRoot!: string;
     readonly sha3Uncles!: string;
     readonly size!: bigint;
-    readonly stateRoot!: string;
+    readonly evmRoot!: string;
+    readonly utxoRoot!: string;
     readonly uncles!: Array<string> | null;
 
     readonly #transactions: Array<string | TransactionResponse>;
@@ -589,7 +590,8 @@ export class Block implements BlockParams, Iterable<string> {
             receiptsRoot: block.receiptsRoot,
             sha3Uncles: block.sha3Uncles,
             size: block.size,
-            stateRoot: block.stateRoot,
+            evmRoot: block.evmRoot,
+            utxoRoot: block.utxoRoot,
             uncles: block.uncles,
             transactionsRoot: block.transactionsRoot,
             extRollupRoot: block.extRollupRoot,
@@ -661,7 +663,7 @@ export class Block implements BlockParams, Iterable<string> {
             miner, nonce, number, parentHash, timestamp,
             manifestHash, location, parentDeltaS, parentEntropy,
             order, subManifest, totalEntropy, mixHash, receiptsRoot,
-            sha3Uncles, size, stateRoot, uncles, transactionsRoot,
+            sha3Uncles, size, evmRoot, utxoRoot, uncles, transactionsRoot,
             extRollupRoot, extTransactionsRoot
         } = this;
     
@@ -693,7 +695,8 @@ export class Block implements BlockParams, Iterable<string> {
             receiptsRoot,
             sha3Uncles, 
             size, 
-            stateRoot, 
+            evmRoot,
+            utxoRoot,
             uncles, 
             transactionsRoot,
             extRollupRoot, 
