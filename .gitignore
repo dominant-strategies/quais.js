@@ -5,3 +5,4 @@ output/**
 **/*.tgz
 dist/*.gz
 /*.env
+.idea/**

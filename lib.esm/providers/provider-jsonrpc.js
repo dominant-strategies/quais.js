@@ -553,6 +553,8 @@ export class JsonRpcApiProvider extends AbstractProvider {
                 return { method: "quai_blockNumber", args: [] };
             case "getGasPrice":
                 return { method: "quai_gasPrice", args: [] };
+            case "getMaxPriorityFeePerGas":
+                return { method: "quai_maxPriorityFeePerGas", args: [] };
             case "getBalance":
                 return {
                     method: "quai_getBalance",
@@ -615,6 +617,18 @@ export class JsonRpcApiProvider extends AbstractProvider {
                 return {
                     method: "quai_estimateGas",
                     args: [this.getRpcTransaction(req.transaction)]
+                };
+            }
+            case "getRunningLocations": {
+                return {
+                    method: "quai_listRunningChains",
+                    args: []
+                };
+            }
+            case "getProtocolTrieExpansionCount": {
+                return {
+                    method: "quai_getProtocolExpansionNumber",
+                    args: []
                 };
             }
             case "getLogs":

@@ -366,7 +366,8 @@ export declare class Block implements BlockParams, Iterable<string> {
     readonly receiptsRoot: string;
     readonly sha3Uncles: string;
     readonly size: bigint;
-    readonly stateRoot: string;
+    readonly evmRoot: string;
+    readonly utxoRoot: string;
     readonly uncles: Array<string> | null;
     readonly transactionsRoot: string;
     readonly extRollupRoot: string;

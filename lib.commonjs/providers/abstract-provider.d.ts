@@ -209,7 +209,7 @@ export type PerformActionRequest = {
     method: "getLogs";
     filter: PerformActionFilter;
 } | {
-    method: "getPriorityFee";
+    method: "getMaxPriorityFeePerGas";
 } | {
     method: "getStorage";
     address: string;

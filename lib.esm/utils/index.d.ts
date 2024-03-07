@@ -16,6 +16,8 @@ export { fromTwos, toTwos, mask, getBigInt, getNumber, getUint, toBigInt, toNumb
 export { resolveProperties, defineProperties } from "./properties.js";
 export { decodeRlp } from "./rlp-decode.js";
 export { encodeRlp } from "./rlp-encode.js";
+export { encodeProto } from "./proto-encode.js";
+export { decodeProto } from "./proto-decode.js";
 export { formatEther, parseEther, formatUnits, parseUnits } from "./units.js";
 export { toUtf8Bytes, toUtf8CodePoints, toUtf8String, Utf8ErrorFuncs, } from "./utf8.js";
 export { uuidV4 } from "./uuid.js";

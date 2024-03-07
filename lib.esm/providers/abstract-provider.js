@@ -578,6 +578,12 @@ export class AbstractProvider {
         }
         return expected.clone();
     }
+    async getRunningLocations() {
+        return await this.#perform({ method: "getRunningLocations" });
+    }
+    async getProtocolTrieExpansionCount() {
+        return await this.#perform({ method: "getProtocolTrieExpansionCount" });
+    }
     async getFeeData() {
         const network = await this.getNetwork();
         const getFeeDataFunc = async () => {
@@ -593,7 +599,7 @@ export class AbstractProvider {
                 })()),
                 priorityFee: ((async () => {
                     try {
-                        const value = await this.#perform({ method: "getPriorityFee" });
+                        const value = await this.#perform({ method: "getMaxPriorityFeePerGas" });
                         return getBigInt(value, "%response");
                     }
                     catch (error) { }
