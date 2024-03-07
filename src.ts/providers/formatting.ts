@@ -98,7 +98,9 @@ export interface BlockParams {
 
     size: bigint;
 
-    stateRoot: string;
+    evmRoot: string;
+
+    utxoRoot: string;
 
     uncles: Array<string> | null;
 
