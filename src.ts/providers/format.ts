@@ -140,7 +140,8 @@ const _formatBlock = object({
     receiptsRoot: formatHash,
     sha3Uncles: formatHash,
     size: getBigInt,
-    stateRoot: formatHash,
+    evmRoot: formatHash,
+    utxoRoot: formatHash,
     uncles: arrayOf(formatHash),
 });
 

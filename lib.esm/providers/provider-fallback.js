@@ -298,7 +298,7 @@ export class FallbackProvider extends AbstractProvider {
                 return await provider.getCode(req.address, req.blockTag);
             case "getGasPrice":
                 return (await provider.getFeeData()).gasPrice;
-            case "getPriorityFee":
+            case "getMaxPriorityFeePerGas":
                 return (await provider.getFeeData()).maxPriorityFeePerGas;
             case "getLogs":
                 return await provider.getLogs(req.filter);
@@ -445,7 +445,7 @@ export class FallbackProvider extends AbstractProvider {
                 return this.#height;
             }
             case "getGasPrice":
-            case "getPriorityFee":
+            case "getMaxPriorityFeePerGas":
             case "estimateGas":
                 return getMedian(this.quorum, results);
             case "getBlock":

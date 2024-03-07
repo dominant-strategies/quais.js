@@ -593,7 +593,7 @@ export class AbstractProvider {
                 })()),
                 priorityFee: ((async () => {
                     try {
-                        const value = await this.#perform({ method: "getPriorityFee" });
+                        const value = await this.#perform({ method: "getMaxPriorityFeePerGas" });
                         return getBigInt(value, "%response");
                     }
                     catch (error) { }

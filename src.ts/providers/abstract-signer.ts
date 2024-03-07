@@ -11,7 +11,6 @@ import {
     defineProperties, getBigInt, resolveProperties,
     assert, assertArgument
 } from "../utils/index.js";
-
 import { copyRequest } from "./provider.js";
 
 import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
@@ -100,8 +99,19 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             pop.nonce = await this.getNonce("pending");
         }
 
+        if (pop.type == null) {
+            pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
+        }
+
         if (pop.gasLimit == null) {
-            pop.gasLimit = await this.estimateGas(pop);
+            if (tx.type == 0 ) pop.gasLimit = await this.estimateGas(pop);
+            else {
+                //Special cases for type 2 tx to bypass address out of scope in the node
+                let temp = pop.to
+                pop.to =  "0x0000000000000000000000000000000000000000"
+                pop.gasLimit = getBigInt(2 * Number(await this.estimateGas(pop)));
+                pop.to = temp
+            }
         }
 
         // Populate the chain ID
@@ -113,7 +123,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         } else {
             pop.chainId = network.chainId;
         }
-
         if (pop.maxFeePerGas == null || pop.maxPriorityFeePerGas == null) {
             const feeData = await provider.getFeeData();
 
@@ -125,20 +134,17 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             }
         }
 
-        if (pop.type == null) {
-            pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
+        if (pop.type == 2) {
+            pop.externalGasLimit = getBigInt(Number(pop.gasLimit) * 9);
+            pop.externalGasTip = getBigInt(Number(pop.maxPriorityFeePerGas) * 9);
+            pop.externalGasPrice = getBigInt(Number(pop.maxFeePerGas) * 9);
         }
-                if (pop.type == 2) {
-                    pop.externalGasLimit = getBigInt(Number(pop.gasLimit) * 9);
-                    pop.externalGasTip = getBigInt(Number(pop.maxPriorityFeePerGas) * 9);
-                    pop.externalGasPrice = getBigInt(Number(pop.maxFeePerGas) * 9);
-                }
         //@TOOD: Don't await all over the place; save them up for
         // the end for better batching
-                return await resolveProperties(pop);
-            }
+        return await resolveProperties(pop);
+    }
 
-            async estimateGas(tx: TransactionRequest): Promise<bigint> {
+    async estimateGas(tx: TransactionRequest): Promise<bigint> {
                 return checkProvider(this, "estimateGas").estimateGas(await this.populateCall(tx));
     }
 
@@ -157,6 +163,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         delete pop.from;
         const txObj = Transaction.from(pop);
         const signedTx = await this.signTransaction(txObj);
+        console.log("signedTX: ", JSON.stringify(txObj))
         return await provider.broadcastTransaction(signedTx);
     }
 

@@ -70,7 +70,8 @@ export interface BlockParams {
     receiptsRoot: string;
     sha3Uncles: string;
     size: bigint;
-    stateRoot: string;
+    evmRoot: string;
+    utxoRoot: string;
     uncles: Array<string> | null;
     /**
      *  The list of transactions in the block.

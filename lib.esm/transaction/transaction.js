@@ -1,50 +1,19 @@
 import { getAddress } from "../address/index.js";
 import { keccak256, Signature, SigningKey } from "../crypto/index.js";
-import { concat, decodeRlp, encodeRlp, getBytes, getBigInt, getNumber, hexlify, assert, assertArgument, toBeArray, zeroPadValue } from "../utils/index.js";
+import { getBytes, getBigInt, getNumber, hexlify, assert, assertArgument, toBeArray, zeroPadValue, encodeProto, decodeProto, toBigInt } from "../utils/index.js";
 import { accessListify } from "./accesslist.js";
 import { recoverAddress } from "./address.js";
-const BN_0 = BigInt(0);
-// const BN_2 = BigInt(2);
-// const BN_27 = BigInt(27)
-// const BN_28 = BigInt(28)
-// const BN_35 = BigInt(35);
-const BN_MAX_UINT = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-function handleAddress(value) {
-    if (value === "0x") {
-        return null;
-    }
-    return getAddress(value);
-}
-function handleAccessList(value, param) {
-    try {
-        return accessListify(value);
-    }
-    catch (error) {
-        assertArgument(false, error.message, param, value);
-    }
-}
 function handleNumber(_value, param) {
     if (_value === "0x") {
         return 0;
     }
     return getNumber(_value, param);
 }
-function handleUint(_value, param) {
-    if (_value === "0x") {
-        return BN_0;
-    }
-    const value = getBigInt(_value, param);
-    assertArgument(value <= BN_MAX_UINT, "value exceeds uint size", param, value);
-    return value;
-}
 function formatNumber(_value, name) {
     const value = getBigInt(_value, "value");
     const result = toBeArray(value);
     assertArgument(result.length <= 32, `value too large`, `tx.${name}`, value);
     return result;
-}
-function formatAccessList(value) {
-    return accessListify(value).map((set) => [set.address, set.storageKeys]);
 }
 function _parseSignature(tx, fields, serialize) {
     let yParity;
@@ -63,103 +32,61 @@ function _parseSignature(tx, fields, serialize) {
     tx.signature = signature;
 }
 function _parse(data) {
-    const fields = decodeRlp(getBytes(data).slice(1));
-    assertArgument(Array.isArray(fields) && (fields.length === 9 || fields.length === 12), "invalid field count for transaction type: 2", "data", hexlify(data));
-    const maxPriorityFeePerGas = handleUint(fields[2], "maxPriorityFeePerGas");
-    const maxFeePerGas = handleUint(fields[3], "maxFeePerGas");
+    const decodedTx = decodeProto(getBytes(data));
     const tx = {
-        type: 0,
-        chainId: handleUint(fields[0], "chainId"),
-        nonce: handleNumber(fields[1], "nonce"),
-        maxPriorityFeePerGas: maxPriorityFeePerGas,
-        maxFeePerGas: maxFeePerGas,
-        gasLimit: handleUint(fields[4], "gasLimit"),
-        to: handleAddress(fields[5]),
-        value: handleUint(fields[6], "value"),
-        data: hexlify(fields[7]),
-        accessList: handleAccessList(fields[8], "accessList"),
+        type: decodedTx.type,
+        chainId: toBigInt(decodedTx.chain_id),
+        nonce: decodedTx.nonce,
+        maxPriorityFeePerGas: toBigInt(decodedTx.gas_tip_cap),
+        maxFeePerGas: toBigInt(decodedTx.gas_fee_cap),
+        gasLimit: toBigInt(decodedTx.gas),
+        to: hexlify(decodedTx.to),
+        value: toBigInt(decodedTx.value),
+        data: hexlify(decodedTx.data),
+        accessList: decodedTx.access_list.access_tuples,
     };
-    // Unsigned EIP-1559 Transaction
-    if (fields.length === 9) {
-        return tx;
+    if (decodedTx.type == 2) {
+        tx.externalGasLimit = toBigInt(decodedTx.etx_gas_limit);
+        tx.externalGasPrice = toBigInt(decodedTx.etx_gas_price);
+        tx.externalGasTip = toBigInt(decodedTx.etx_gas_tip);
+        tx.externalData = hexlify(decodedTx.etx_data);
+        tx.externalAccessList = decodedTx.etx_access_list.access_tuples;
     }
     tx.hash = keccak256(data);
-    _parseSignature(tx, fields.slice(9), _serialize);
-    return tx;
-}
-function _parseStandardETx(data) {
-    const fields = decodeRlp(getBytes(data).slice(1));
-    assertArgument(Array.isArray(fields) && (fields.length === 8 || fields.length === 17), "invalid field count for transaction type: 2", "data", hexlify(data));
-    const maxPriorityFeePerGas = handleUint(fields[2], "maxPriorityFeePerGas");
-    const maxFeePerGas = handleUint(fields[3], "maxFeePerGas");
-    const tx = {
-        type: 2,
-        chainId: handleUint(fields[0], "chainId"),
-        nonce: handleNumber(fields[1], "nonce"),
-        maxPriorityFeePerGas: maxPriorityFeePerGas,
-        maxFeePerGas: maxFeePerGas,
-        gasLimit: handleUint(fields[4], "gasLimit"),
-        to: handleAddress(fields[5]),
-        value: handleUint(fields[6], "value"),
-        data: hexlify(fields[7]),
-        accessList: handleAccessList(fields[8], "accessList"),
-        externalGasLimit: handleUint(fields[9], "externalGasLimit"),
-        externalGasPrice: handleUint(fields[10], "externalGasPrice"),
-        externalGasTip: handleUint(fields[11], "externalGasTip"),
-        externalData: hexlify(fields[12]),
-        externalAccessList: handleAccessList(fields[13], "externalAccessList")
-    };
-    fields;
-    // Unsigned EIP-2930 Transaction
-    if (fields.length === 8) {
-        return tx;
-    }
-    tx.hash = keccak256(data);
-    _parseSignature(tx, fields.slice(14), _serializeStandardETx);
+    const signatureFields = [
+        hexlify(decodedTx.v),
+        hexlify(decodedTx.r),
+        hexlify(decodedTx.s),
+    ];
+    _parseSignature(tx, signatureFields, _serialize);
     return tx;
 }
 function _serialize(tx, sig) {
-    const fields = [
-        formatNumber(tx.chainId || 0, "chainId"),
-        formatNumber(tx.nonce || 0, "nonce"),
-        formatNumber(tx.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
-        formatNumber(tx.maxFeePerGas || 0, "maxFeePerGas"),
-        formatNumber(tx.gasLimit || 0, "gasLimit"),
-        ((tx.to != null) ? getAddress(tx.to) : "0x"),
-        formatNumber(tx.value || 0, "value"),
-        (tx.data || "0x"),
-        (formatAccessList(tx.accessList || []))
-    ];
-    if (sig) {
-        fields.push(formatNumber(sig.yParity, "yParity"));
-        fields.push(toBeArray(sig.r));
-        fields.push(toBeArray(sig.s));
+    const formattedTx = {
+        chain_id: formatNumber(tx.chainId || 0, "chainId"),
+        nonce: (tx.nonce || 0),
+        gas_tip_cap: formatNumber(tx.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
+        gas_fee_cap: formatNumber(tx.maxFeePerGas || 0, "maxFeePerGas"),
+        gas: Number(tx.gasLimit || 0),
+        to: tx.to != null ? getBytes(tx.to) : "0x",
+        value: formatNumber(tx.value || 0, "value"),
+        data: getBytes(tx.data || "0x"),
+        access_list: { access_tuples: tx.accessList || [] },
+        type: (tx.type || 0),
+    };
+    if (tx.type == 2) {
+        formattedTx.etx_gas_limit = Number(tx.externalGasLimit || 0);
+        formattedTx.etx_gas_price = formatNumber(tx.externalGasPrice || 0, "externalGasPrice");
+        formattedTx.etx_gas_tip = formatNumber(tx.externalGasTip || 0, "externalGasTip");
+        formattedTx.etx_data = getBytes(tx.externalData || "0x");
+        formattedTx.etx_access_list = { access_tuples: tx.externalAccessList || [] };
     }
-    return concat(["0x00", encodeRlp(fields)]);
-}
-function _serializeStandardETx(transaction, sig) {
-    const fields = [
-        formatNumber(transaction.chainId || 0, "chainId"),
-        formatNumber(transaction.nonce || 0, "nonce"),
-        formatNumber(transaction.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
-        formatNumber(transaction.maxFeePerGas || 0, "maxFeePerGas"),
-        formatNumber(transaction.gasLimit || 0, "gasLimit"),
-        ((transaction.to != null) ? getAddress(transaction.to) : "0x"),
-        formatNumber(transaction.value || 0, "value"),
-        (transaction.data || "0x"),
-        (formatAccessList(transaction.accessList || [])),
-        formatNumber(transaction.externalGasLimit || 0, "externalGasLimit"),
-        formatNumber(transaction.externalGasPrice || 0, "externalGasPrice"),
-        formatNumber(transaction.externalGasTip || 0, "externalGasTip"),
-        (transaction.externalData || "0x"),
-        (formatAccessList(transaction.externalAccessList || [])),
-    ];
     if (sig) {
-        fields.push(formatNumber(sig.yParity, "recoveryParam"));
-        fields.push(toBeArray(sig.r));
-        fields.push(toBeArray(sig.s));
+        formattedTx.v = formatNumber(sig.yParity, "yParity"),
+            formattedTx.r = toBeArray(sig.r),
+            formattedTx.s = toBeArray(sig.s);
     }
-    return concat(["0x02", encodeRlp(fields)]);
+    return encodeProto(formattedTx);
 }
 /**
  *  A **Transaction** describes an operation to be executed on
@@ -461,15 +388,7 @@ export class Transaction {
      */
     get serialized() {
         assert(this.signature != null, "cannot serialize unsigned transaction; maybe you meant .unsignedSerialized", "UNSUPPORTED_OPERATION", { operation: ".serialized" });
-        switch (this.inferType()) {
-            case 0:
-                return _serialize(this, this.signature);
-            // case 1:
-            //     return _serializeEip2930(this, this.signature);
-            case 2:
-                return _serializeStandardETx(this, this.signature);
-        }
-        assert(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: ".serialized" });
+        return _serialize(this, this.signature);
     }
     /**
      *  The transaction pre-image.
@@ -478,15 +397,7 @@ export class Transaction {
      *  authorize this transaction.
      */
     get unsignedSerialized() {
-        switch (this.inferType()) {
-            case 0:
-                return _serialize(this);
-            // case 1:
-            //     return _serializeEip2930(this);
-            case 2:
-                return _serializeStandardETx(this);
-        }
-        assert(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: ".unsignedSerialized" });
+        return _serialize(this);
     }
     /**
      *  Return the most "likely" type; currently the highest
@@ -578,14 +489,7 @@ export class Transaction {
         }
         if (typeof (tx) === "string") {
             const payload = getBytes(tx);
-            if (payload[0] >= 0x7f) { // @TODO: > vs >= ??
-                return Transaction.from(_parse(payload));
-            }
-            switch (payload[0]) {
-                case 0: return Transaction.from(_parse(payload));
-                case 2: return Transaction.from(_parseStandardETx(payload));
-            }
-            assert(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: "from" });
+            return Transaction.from(_parse(payload));
         }
         const result = new Transaction();
         if (tx.type != null) {

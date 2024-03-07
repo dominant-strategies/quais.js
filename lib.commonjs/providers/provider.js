@@ -206,7 +206,8 @@ class Block {
     receiptsRoot;
     sha3Uncles;
     size;
-    stateRoot;
+    evmRoot;
+    utxoRoot;
     uncles;
     #transactions;
     transactionsRoot;
@@ -259,7 +260,8 @@ class Block {
             receiptsRoot: block.receiptsRoot,
             sha3Uncles: block.sha3Uncles,
             size: block.size,
-            stateRoot: block.stateRoot,
+            evmRoot: block.evmRoot,
+            utxoRoot: block.utxoRoot,
             uncles: block.uncles,
             transactionsRoot: block.transactionsRoot,
             extRollupRoot: block.extRollupRoot,
@@ -322,7 +324,7 @@ class Block {
      *  Returns a JSON-friendly value.
      */
     toJSON() {
-        const { baseFeePerGas, difficulty, extraData, gasLimit, gasUsed, hash, miner, nonce, number, parentHash, timestamp, manifestHash, location, parentDeltaS, parentEntropy, order, subManifest, totalEntropy, mixHash, receiptsRoot, sha3Uncles, size, stateRoot, uncles, transactionsRoot, extRollupRoot, extTransactionsRoot } = this;
+        const { baseFeePerGas, difficulty, extraData, gasLimit, gasUsed, hash, miner, nonce, number, parentHash, timestamp, manifestHash, location, parentDeltaS, parentEntropy, order, subManifest, totalEntropy, mixHash, receiptsRoot, sha3Uncles, size, evmRoot, utxoRoot, uncles, transactionsRoot, extRollupRoot, extTransactionsRoot } = this;
         // Using getters to retrieve the transactions and extTransactions
         const transactions = this.transactions;
         const extTransactions = this.extTransactions;
@@ -350,7 +352,8 @@ class Block {
             receiptsRoot,
             sha3Uncles,
             size,
-            stateRoot,
+            evmRoot,
+            utxoRoot,
             uncles,
             transactionsRoot,
             extRollupRoot,
