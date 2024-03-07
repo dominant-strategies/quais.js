@@ -1,0 +1,25 @@
+name: Cut Release
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to use'
+        required: true
+        default: 'main'
+jobs:
+  call-common-workflow:
+    uses: dominant-strategies/quai-cicd/.github/workflows/cut-release-common.yml@main
+    with:
+      branch: main
+      needs_build: true
+      needs_docker: false
+      install_command: "npm ci"
+      build_command: "npm run build-dist"
+      cloud_deploy: false
+      skip_deploy: true
+      update_version: true
+    secrets:
+      GH_PAT: ${{ secrets.GH_PAT }}
+      BUILD_ARGS: ''
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY2 }}
+      GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
