@@ -205,6 +205,7 @@ export type PerformActionRequest = {
     blockTag: BlockTag;
 } | {
     method: "getGasPrice";
+    txType: boolean;
 } | {
     method: "getLogs";
     filter: PerformActionFilter;
@@ -348,7 +349,7 @@ export declare class AbstractProvider implements Provider {
      */
     _getTransactionRequest(_request: TransactionRequest): PerformActionTransaction | Promise<PerformActionTransaction>;
     getNetwork(): Promise<Network>;
-    getFeeData(): Promise<FeeData>;
+    getFeeData(txType?: boolean): Promise<FeeData>;
     estimateGas(_tx: TransactionRequest): Promise<bigint>;
     call(_tx: TransactionRequest): Promise<string>;
     getBalance(address: AddressLike, blockTag?: BlockTag): Promise<bigint>;
