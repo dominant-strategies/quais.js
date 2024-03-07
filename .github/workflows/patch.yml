@@ -7,7 +7,7 @@ jobs:
       needs_build: true
       needs_docker: false
       install_command: "npm ci"
-      build_command: "npm run build-dist"
+      build_command: "npm run build-clean"
       cloud_deploy: false
       skip_deploy: true
       update_version: true
