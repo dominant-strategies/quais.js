@@ -1,6 +1,7 @@
 import { getAddress } from "../address/index.js";
 import { getBigInt } from "../utils/index.js";
 import type { BigNumberish } from "../utils/index.js";
+import { bigIntAbs } from "../utils/maths.js";
 
 type OutPoint = {
     txhash: string;
@@ -205,7 +206,7 @@ export class CoinSelector {
      * target amount, the remaining value is returned as a change output.
      * @param target The target amount to select UTXOs for.
      */
-    largestFirst(target: SpendTarget): SelectedCoinsResult {
+    performSelection(target: SpendTarget): SelectedCoinsResult {
         if (target.value <= BigInt(0)) {
             throw new Error("Target amount must be greater than 0");
         }
@@ -223,13 +224,43 @@ export class CoinSelector {
         let totalValue = BigInt(0);
         const selectedUTXOs: UTXO[] = [];
 
-        // Select UTXOs until the target amount is reached or exceeded
-        for (const utxo of sortedUTXOs) {
-            if (utxo.denomination == null) continue; // Skip UTXOs without a denomination
-            if (totalValue >= target.value) break; // Stop if we've reached or exceeded the target
+        // Get UTXOs that meets or exceeds the target value
+        const UTXOsEqualOrGreaterThanTarget = sortedUTXOs.filter(utxo => utxo.denomination && utxo.denomination >= target.value);
 
-            selectedUTXOs.push(utxo);
-            totalValue += utxo.denomination;
+        if (UTXOsEqualOrGreaterThanTarget.length > 0) {
+            // Find the smallest UTXO that meets or exceeds the target value
+            const optimalUTXO = UTXOsEqualOrGreaterThanTarget.reduce((minDenominationUTXO, currentUTXO) => {
+                if (!currentUTXO.denomination) return minDenominationUTXO;
+                return currentUTXO.denomination < minDenominationUTXO.denomination! ? currentUTXO : minDenominationUTXO;
+            }, UTXOsEqualOrGreaterThanTarget[0]); // Initialize with the first UTXO in the list
+
+            selectedUTXOs.push(optimalUTXO);
+            totalValue += optimalUTXO.denomination!;
+        } else {
+            // If no single UTXO meets or exceeds the target, aggregate smaller denominations
+            // until the target is met/exceeded or there are no more UTXOs to aggregate
+            while (sortedUTXOs.length > 0 && totalValue < target.value) {
+                const nextOptimalUTXO = sortedUTXOs.reduce<UTXO>((closest, utxo) => {
+                    if (!utxo.denomination) return closest;
+
+                    // Prioritize UTXOs that bring totalValue closer to target.value
+                    const absThisDiff = bigIntAbs(target.value - (totalValue + utxo.denomination));
+                    const currentClosestDiff = closest && closest.denomination
+                        ? bigIntAbs(target.value - (totalValue + closest.denomination))
+                        : BigInt(Infinity);
+
+                    return absThisDiff < currentClosestDiff ? utxo : closest;
+
+                }, sortedUTXOs[0]);
+
+                // Add the selected UTXO to the selection and update totalValue
+                selectedUTXOs.push(nextOptimalUTXO);
+                totalValue += nextOptimalUTXO.denomination!;
+
+                // Remove the selected UTXO from the list of available UTXOs
+                const index = sortedUTXOs.findIndex(utxo => utxo.denomination === nextOptimalUTXO.denomination && utxo.address === nextOptimalUTXO.address);
+                sortedUTXOs.splice(index, 1);
+            }
         }
 
         // Check if the selected UTXOs meet or exceed the target amount
