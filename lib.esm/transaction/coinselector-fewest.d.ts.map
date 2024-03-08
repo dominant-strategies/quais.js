@@ -1,0 +1,1 @@
+{"version":3,"file":"coinselector-fewest.d.ts","sourceRoot":"","sources":["../../src.ts/transaction/coinselector-fewest.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,oBAAoB,EAAE,mBAAmB,EAAE,WAAW,EAAE,MAAM,4BAA4B,CAAC;AAIpG;;;;;;;GAOG;AACH,qBAAa,kBAAmB,SAAQ,oBAAoB;IAExD;;;;;;;OAOG;IACH,gBAAgB,CAAC,MAAM,EAAE,WAAW,GAAG,mBAAmB;CA8F7D"}

@@ -31,6 +31,10 @@ export declare function mask(_value: BigNumberish, _bits: Numeric): bigint;
  */
 export declare function getBigInt(value: BigNumberish, name?: string): bigint;
 /**
+ * Returns absolute value of bigint %%value%%.
+ */
+export declare function bigIntAbs(value: BigNumberish): bigint;
+/**
  *  Returns %%value%% as a bigint, validating it is valid as a bigint
  *  value and that it is positive.
  */
