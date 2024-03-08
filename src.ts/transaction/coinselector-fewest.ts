@@ -22,22 +22,13 @@ export class FewestCoinSelector extends AbstractCoinSelector {
      * @param target The target amount to select UTXOs for.
      */
     performSelection(target: SpendTarget): SelectedCoinsResult {
-        if (target.value <= BigInt(0)) {
-            throw new Error("Target amount must be greater than 0");
-        }
+        this.validateTarget(target);
+        this.validateUTXOs();
 
-        if (this.availableUXTOs.length === 0) {
-            throw new Error("No UTXOs available");
-        }
-
-        // Sort UTXOs in descending order based on their denomination
-        const sortedUTXOs = this.availableUXTOs.sort((a, b) => {
-            const diff = (b.denomination ?? BigInt(0)) - (a.denomination ?? BigInt(0));
-            return diff > 0 ? 1 : diff < 0 ? -1 : 0;
-        });
+        const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUXTOs, "desc");
 
         let totalValue = BigInt(0);
-        const selectedUTXOs: UTXO[] = [];
+        let selectedUTXOs: UTXO[] = [];
 
         // Get UTXOs that meets or exceeds the target value
         const UTXOsEqualOrGreaterThanTarget = sortedUTXOs.filter(utxo => utxo.denomination && utxo.denomination >= target.value);
@@ -83,6 +74,31 @@ export class FewestCoinSelector extends AbstractCoinSelector {
             throw new Error("Insufficient funds");
         }
 
+        // // Check if any denominations can be removed from the input set and it still remain valid
+        selectedUTXOs = this.sortUTXOsByDenomination(selectedUTXOs, "asc");
+
+        let runningTotal = totalValue;
+        let lastRemovableIndex = -1; // Index of the last UTXO that can be removed
+
+        // Iterate through selectedUTXOs to find the last removable UTXO
+        for (let i = 0; i < selectedUTXOs.length; i++) {
+            const utxo = selectedUTXOs[i];
+            if (utxo.denomination) {
+                if (runningTotal - utxo.denomination >= target.value) {
+                    runningTotal -= utxo.denomination;
+                    lastRemovableIndex = i;
+                } else {
+                    // Once a UTXO makes the total less than target.value, stop the loop
+                    break;
+                }
+            }
+        }
+
+        if (lastRemovableIndex >= 0) {
+            totalValue -= selectedUTXOs[lastRemovableIndex].denomination!;
+            selectedUTXOs.splice(lastRemovableIndex, 1);
+        }
+
         // Break down the total spend into properly denominatated UTXOs
         const spendDenominations = denominate(target.value);
         this.spendOutputs = spendDenominations.map(denomination => {
@@ -113,6 +129,31 @@ export class FewestCoinSelector extends AbstractCoinSelector {
             spendOutputs: this.spendOutputs,
             changeOutputs: this.changeOutputs,
         };
+    }
+
+    private sortUTXOsByDenomination(utxos: UTXO[], direction: "asc" | "desc"): UTXO[] {
+        if (direction === "asc") {
+            return [...utxos].sort((a, b) => {
+                const diff = (a.denomination ?? BigInt(0)) - (b.denomination ?? BigInt(0));
+                return diff > 0 ? 1 : diff < 0 ? -1 : 0;
+            });
+        }
+        return [...utxos].sort((a, b) => {
+            const diff = (b.denomination ?? BigInt(0)) - (a.denomination ?? BigInt(0));
+            return diff > 0 ? 1 : diff < 0 ? -1 : 0;
+        });
+    }
+
+    private validateTarget(target: SpendTarget) {
+        if (target.value <= BigInt(0)) {
+            throw new Error("Target amount must be greater than 0");
+        }
+    }
+
+    private validateUTXOs() {
+        if (this.availableUXTOs.length === 0) {
+            throw new Error("No UTXOs available");
+        }
     }
 
 }
