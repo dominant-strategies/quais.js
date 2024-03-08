@@ -1,8 +1,4 @@
-import { getAddress } from "../address/index.js";
-import { getBigInt } from "../utils/index.js";
-import type { BigNumberish } from "../utils/index.js";
-import { bigIntAbs } from "../utils/maths.js";
-import { UTXO, UTXOLike, denominations } from "./utxo.js";
+import { UTXO, UTXOLike } from "./utxo.js";
 
 export type SpendTarget = {
     address: string;
@@ -53,8 +49,12 @@ export abstract class AbstractCoinSelector {
     /**
      * Constructs a new AbstractCoinSelector instance with an empty UTXO array.
      */
-    constructor() {
-        this.#availableUXTOs = [];
+    constructor(availableUXTOs: UTXOLike[] = []) {
+        this.#availableUXTOs = availableUXTOs.map((val: UTXOLike) => {
+            const utxo = UTXO.from(val);
+            this._validateUTXO(utxo);
+            return utxo;
+        });
         this.#spendOutputs = [];
         this.#changeOutputs = [];
     }
