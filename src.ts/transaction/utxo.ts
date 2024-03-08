@@ -1,6 +1,6 @@
-import { getAddress } from "../address/index.js";
-import { getBigInt } from "../utils/index.js";
-import type { BigNumberish } from "../utils/index.js";
+import { getAddress } from "../address/index";
+import { getBigInt } from "../utils/index";
+import type { BigNumberish } from "../utils/index";
 
 export type OutPoint = {
     txhash: string;
@@ -99,6 +99,8 @@ export function denominate(value: bigint): bigint[] {
         throw new Error("Unable to match the value with available denominations");
     }
 
+
+
     return result;
 }
 
@@ -157,7 +159,7 @@ export class UTXO implements UTXOLike {
             txhash: this.txhash,
             index: this.index,
             address: this.address,
-            denomination: this.denomination ? this.denomination.toString() : null,
+            denomination: this.denomination,
         };
     }
 
