@@ -70,31 +70,32 @@ The bundled library is available in the `./dist/` folder in this repo.
 </script>
 ```
 
-### Local Development with quais**
+### Using Local Version as Dependency in Other Projects
+
 For developers looking to contribute to quais or integrate it into their projects with local modifications, setting up a local development environment is essential. This section guides you through the process of building quais and linking it to another project on your machine using npm link.
 
-**Building quais**
+**Prepare quais for Symbolic Linking**
 
 1. Clone the quais repository and navigate into it.
+
     ```bash
     git clone https://github.com/dominant-strategies/quais-6.js.git
     cd quais-6.js
     ```
 
 2. Install dependencies.
+
     ``` bash
     npm install
     ```
 
-3. Build the project.
-    ```bash
-    npm run build
-    ```
+3. Create a global symbolic link for quais. This makes the quais package available to link in any other project. Whenever a local change is made to quais that you want to test in another project, you must run this command again to update the symbolic link. 
 
-4. Create a global symlink for quais. This makes the quais package available to link in any other project. Whenever a local change is made to quais that you want to test in another project, you must run this command to update the symlink.
     ```bash
     npm run update-symlink
     ```
+
+    _Caution - The `update-symlink` command updates the globally available symbolic link to the build of the current branch you are on when the command is run. This can potentially lead to incompatible version usage if quais is linked to multiple projects locally._
 
 **Linking quais to Another Project**
 
@@ -114,7 +115,8 @@ npm run build
 **Testing Changes**
 
 With quais linked to your project, any changes made to the quais library can be immediately tested within the context of your project. Remember to rebuild quais (`npm run update-symlink`) after making changes to ensure they are reflected in your project.
-Reverting to the Published Package
+
+**Reverting to the Published Package**
 
 If you need to revert back to the official quais package published on npm, you can unlink quais and reinstall the package.
 1. Unlink quais by removing the symlink.
