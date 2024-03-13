@@ -210,6 +210,36 @@ class AbstractProvider {
         this.#timers = new Map();
         this.#disableCcipRead = false;
     }
+    async getLatestQuaiRate(amt = 1) {
+        const blockNumber = await this.getBlockNumber();
+        return this.getQuaiRateAtBlock(blockNumber, amt);
+    }
+    async getQuaiRateAtBlock(blockTag, amt = 1) {
+        let resolvedBlockTag = this._getBlockTag(blockTag);
+        if (typeof resolvedBlockTag !== "string") {
+            resolvedBlockTag = await resolvedBlockTag;
+        }
+        return await this.#perform({
+            method: "getQuaiRateAtBlock",
+            blockTag: resolvedBlockTag,
+            amt
+        });
+    }
+    async getLatestQiRate(amt = 1) {
+        const blockNumber = await this.getBlockNumber();
+        return this.getQiRateAtBlock(blockNumber, amt);
+    }
+    async getQiRateAtBlock(blockTag, amt = 1) {
+        let resolvedBlockTag = this._getBlockTag(blockTag);
+        if (typeof resolvedBlockTag !== "string") {
+            resolvedBlockTag = await resolvedBlockTag;
+        }
+        return await this.#perform({
+            method: "getQiRateAtBlock",
+            blockTag: resolvedBlockTag,
+            amt
+        });
+    }
     get pollingInterval() { return this.#options.pollingInterval; }
     /**
      *  Returns ``this``, to allow an **AbstractProvider** to implement
