@@ -841,7 +841,10 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
                 return { method: "quai_blockNumber", args: [ ] };
 
             case "getGasPrice":
-                return { method: "quai_gasPrice", args: [] };
+                return {
+                    method: "quai_baseFee",
+                    args: [ req.txType ]
+                };
 
             case "getMaxPriorityFeePerGas":
                 return { method: "quai_maxPriorityFeePerGas", args: []};

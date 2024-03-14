@@ -584,14 +584,13 @@ export class AbstractProvider {
     async getProtocolTrieExpansionCount() {
         return await this.#perform({ method: "getProtocolTrieExpansionCount" });
     }
-    async getFeeData() {
+    async getFeeData(txType = true) {
         const network = await this.getNetwork();
         const getFeeDataFunc = async () => {
-            const { _block, gasPrice, priorityFee } = await resolveProperties({
-                _block: this.#getBlock("latest", false),
+            const { gasPrice, priorityFee } = await resolveProperties({
                 gasPrice: ((async () => {
                     try {
-                        const value = await this.#perform({ method: "getGasPrice" });
+                        const value = await this.#perform({ method: "getGasPrice", txType });
                         return getBigInt(value, "%response");
                     }
                     catch (error) { }
@@ -599,21 +598,21 @@ export class AbstractProvider {
                 })()),
                 priorityFee: ((async () => {
                     try {
-                        const value = await this.#perform({ method: "getMaxPriorityFeePerGas" });
+                        const value = txType ? await this.#perform({ method: "getMaxPriorityFeePerGas" }) : 0;
                         return getBigInt(value, "%response");
                     }
                     catch (error) { }
                     return null;
                 })())
             });
+            if (gasPrice == null) {
+                throw new Error("could not determine gasPrice");
+            }
             let maxFeePerGas = null;
             let maxPriorityFeePerGas = null;
             // These are the recommended EIP-1559 heuristics for fee data
-            const block = this._wrapBlock(_block, network);
-            if (block && block.baseFeePerGas) {
-                maxPriorityFeePerGas = (priorityFee != null) ? priorityFee : BigInt("1000000000");
-                maxFeePerGas = (block.baseFeePerGas * BN_2) + maxPriorityFeePerGas;
-            }
+            maxPriorityFeePerGas = (priorityFee != null) ? priorityFee : BigInt("1000000000");
+            maxFeePerGas = (gasPrice * BN_2) + maxPriorityFeePerGas;
             return new FeeData(gasPrice, maxFeePerGas, maxPriorityFeePerGas);
         };
         // Check for a FeeDataNetWorkPlugin
