@@ -1,7 +1,8 @@
 import { getAddress, resolveAddress } from "../address/index.js";
 import { hashMessage, TypedDataEncoder } from "../hash/index.js";
 import { AbstractSigner } from "../providers/index.js";
-import { computeAddress, Transaction } from "../transaction/index.js";
+import { computeAddress } from "../transaction/index.js";
+// import { computeAddress, Transaction } from "../transaction/index.js";
 import {
     resolveProperties, assert, assertArgument
 } from "../utils/index.js";
@@ -9,7 +10,7 @@ import {
 import type { SigningKey } from "../crypto/index.js";
 import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
 import type { Provider, TransactionRequest } from "../providers/index.js";
-import type { TransactionLike } from "../transaction/index.js";
+import type { Transaction, TransactionLike } from "../transaction/index.js";
 import { WorkObject } from "../transaction/work-object.js";
 
 
