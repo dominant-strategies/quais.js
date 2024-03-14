@@ -532,7 +532,6 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
                             // Find the matching result
                             const resp = result.filter((r) => (r.id === payload.id))[0];
-
                             // No result; the node failed us in unexpected ways
                             if (resp == null) {
                                 const error = makeError("missing response for request", "BAD_DATA", {
@@ -1048,7 +1047,6 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         if (this.destroyed) {
             return Promise.reject(makeError("provider destroyed; cancelled request", "UNSUPPORTED_OPERATION", { operation: method }));
         }
-
         const id = this.#nextId++;
         const promise = new Promise((resolve, reject) => {
             this.#payloads.push({

@@ -153,7 +153,8 @@ class ContractFactory {
         while (i < 10000) {
             var contractAddress = (0, address_js_1.getContractAddress)(sender, BigInt(tx.nonce || 0), tx.data || '');
             var contractShard = (0, index_js_3.getShardForAddress)(contractAddress);
-            if (contractShard === toShard) {
+            var utxo = (0, index_js_3.isUTXOAddress)(contractAddress);
+            if (contractShard === toShard && !utxo) {
                 return tx;
             }
             var salt = (0, quais_js_1.randomBytes)(32);

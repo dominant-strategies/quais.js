@@ -21,7 +21,7 @@ class BaseWallet extends index_js_3.AbstractSigner {
     /**
      *  The wallet address.
      */
-    address;
+    #address;
     #signingKey;
     /**
      *  Creates a new BaseWallet for %%privateKey%%, optionally
@@ -34,11 +34,14 @@ class BaseWallet extends index_js_3.AbstractSigner {
         super(provider);
         (0, index_js_5.assertArgument)(privateKey && typeof (privateKey.sign) === "function", "invalid private key", "privateKey", "[ REDACTED ]");
         this.#signingKey = privateKey;
-        const address = (0, index_js_4.computeAddress)(this.signingKey.publicKey);
-        (0, index_js_5.defineProperties)(this, { address });
+        this.#address = (0, index_js_4.computeAddress)(this.signingKey.publicKey);
     }
     // Store private values behind getters to reduce visibility
     // in console.log
+    /**
+     * The address of this wallet.
+     */
+    get address() { return this.#address; }
     /**
      *  The [[SigningKey]] used for signing payloads.
      */
@@ -47,7 +50,7 @@ class BaseWallet extends index_js_3.AbstractSigner {
      *  The private key for this wallet.
      */
     get privateKey() { return this.signingKey.privateKey; }
-    async getAddress() { return this.address; }
+    async getAddress() { return this.#address; }
     connect(provider) {
         return new BaseWallet(this.#signingKey, provider);
     }
@@ -64,7 +67,7 @@ class BaseWallet extends index_js_3.AbstractSigner {
             tx.from = from;
         }
         if (tx.from != null) {
-            (0, index_js_5.assertArgument)((0, index_js_1.getAddress)((tx.from)) === this.address, "transaction from address mismatch", "tx.from", tx.from);
+            (0, index_js_5.assertArgument)((0, index_js_1.getAddress)((tx.from)) === this.#address, "transaction from address mismatch", "tx.from", tx.from);
             delete tx.from;
         }
         // Build the transaction

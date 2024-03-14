@@ -54,7 +54,7 @@ describe("Test Wallet Encryption", function () {
     //  1 : random wallet (uses HDNodeWallet under the hood)
     //  2 : Wallet using private key (uses Wallet explicitly)
     for (let i = 0; i < 2; i++) {
-        let wallet = index_js_1.Wallet.createRandom();
+        let wallet = index_js_1.Wallet.createRandom("m/44'/994'/0'/0");
         it("encrypts a random wallet: sync", function () {
             this.timeout(30000);
             const json = wallet.encryptSync(password);

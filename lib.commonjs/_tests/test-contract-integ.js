@@ -48,10 +48,11 @@ describe("Tests contract integration", function () {
         assert_1.default.ok(contract, "Contract instance should be available");
     });
     it("runs contract operations", async function () {
-        this.timeout(100000);
+        this.timeout(120000);
         assert_1.default.ok(address != null);
         const CustomContract = index_js_1.quais.BaseContract.buildClass(abi);
         const contract = new CustomContract(address, wallet); //quais.Contract.from<ContractAbi>(address, abi, signer);
+        await (0, utils_js_1.stall)(30000);
         // Test implicit staticCall (i.e. view/pure)
         {
             const supply0 = await contract.totalSupply();
@@ -67,11 +68,12 @@ describe("Tests contract integration", function () {
             const supply0 = await contract.totalSupply.staticCallResult();
             assert_1.default.equal(supply0[0], BigInt(1000), "initial supply 0; staticCallResult");
         }
-        const reciever = '0x0aff86a125b29b25a9e418c2fb64f1753532c0ca';
+        const reciever = '0x0047f9CEa7662C567188D58640ffC48901cde02a';
         // Test transfer (default)
         const tx = await contract.transfer(reciever, BigInt(1));
         await (0, utils_js_1.stall)(60000);
         const receipt = await provider.getTransactionReceipt(tx.hash);
+        console.log('Receipt:  ', receipt);
         await (0, utils_js_1.stall)(10000);
         assert_1.default.ok(receipt, "receipt not null");
         const contractAddr = await contract.getAddress();

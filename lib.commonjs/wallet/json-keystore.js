@@ -18,7 +18,7 @@ const index_js_3 = require("../transaction/index.js");
 const index_js_4 = require("../utils/index.js");
 const utils_js_1 = require("./utils.js");
 const _version_js_1 = require("../_version.js");
-const defaultPath = "m/44'/60'/0'/0/0";
+const defaultPath = "m/44'/994'/0'/0/0";
 /**
  *  Returns true if %%json%% is a valid JSON Keystore Wallet.
  */

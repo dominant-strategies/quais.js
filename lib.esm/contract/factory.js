@@ -1,7 +1,7 @@
 import { Interface } from "../abi/index.js";
 import { concat, defineProperties, getBytes, hexlify, assert, assertArgument } from "../utils/index.js";
 import { BaseContract, copyOverrides, resolveArgs } from "./contract.js";
-import { getShardForAddress } from "../utils/index.js";
+import { getShardForAddress, isUTXOAddress } from "../utils/index.js";
 import { Wallet, randomBytes } from "../quais.js";
 import { getContractAddress } from "../address/address.js";
 import { getStatic } from "../utils/properties.js";
@@ -150,7 +150,8 @@ export class ContractFactory {
         while (i < 10000) {
             var contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
             var contractShard = getShardForAddress(contractAddress);
-            if (contractShard === toShard) {
+            var utxo = isUTXOAddress(contractAddress);
+            if (contractShard === toShard && !utxo) {
                 return tx;
             }
             var salt = randomBytes(32);
