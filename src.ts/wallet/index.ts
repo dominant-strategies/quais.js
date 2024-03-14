@@ -20,10 +20,9 @@
 export { BaseWallet } from "./base-wallet.js";
 
 export {
-    defaultPath,
 
     getAccountPath, getIndexedAccountPath,
-
+    quaiHDAccountPath, qiHDAccountPath, 
     HDNodeWallet,
     HDNodeVoidWallet,
 } from "./hdwallet.js";

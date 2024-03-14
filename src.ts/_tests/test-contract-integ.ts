@@ -28,6 +28,7 @@ describe("Tests contract integration", function() {
 
     before(async function() {
         this.timeout(100000);
+
         const factory = new quais.ContractFactory(abi, bytecode, wallet);
         contract = await factory.deploy(constructorArgs.name, constructorArgs.symbol, constructorArgs.totalSupply, {
             gasLimit: 5000000 }) as Contract;
@@ -58,7 +59,7 @@ describe("Tests contract integration", function() {
     });
 
     it("runs contract operations", async function() {
-        this.timeout(100000);
+        this.timeout(120000);
 
         assert.ok(address != null);
 
@@ -66,7 +67,7 @@ describe("Tests contract integration", function() {
         const CustomContract = quais.BaseContract.buildClass<ContractAbi>(abi);
 
         const contract = new CustomContract(address, wallet); //quais.Contract.from<ContractAbi>(address, abi, signer);
-
+        await stall(30000);
         // Test implicit staticCall (i.e. view/pure)
         {
             const supply0 = await contract.totalSupply();
@@ -85,13 +86,13 @@ describe("Tests contract integration", function() {
             assert.equal(supply0[0], BigInt(1000), "initial supply 0; staticCallResult");
         }
 
-        const reciever = '0x0aff86a125b29b25a9e418c2fb64f1753532c0ca'
+        const reciever = '0x0047f9CEa7662C567188D58640ffC48901cde02a'
         // Test transfer (default)
         const tx = await contract.transfer(reciever,BigInt(1));
-
         await stall(60000)
         
         const receipt = await provider.getTransactionReceipt(tx.hash);
+        console.log('Receipt:  ', receipt)
         await stall(10000)
         assert.ok(receipt, "receipt not null");
 

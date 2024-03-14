@@ -233,7 +233,7 @@ describe("Test Provider Blockchain Errors", function() {
         it(`tests insufficient funds: ${ providerName }`, async function() {
             this.timeout(60000);
 
-            const w = Wallet.createRandom().connect(provider);
+            const w = Wallet.createRandom("m/44'/60'/0'/0/0").connect(provider);
 
             await assert.rejects(async function() {
                 const tx = await w.sendTransaction({

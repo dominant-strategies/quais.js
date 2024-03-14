@@ -26,7 +26,7 @@ import type { BytesLike } from "../utils/index.js";
 import { version } from "../_version.js";
 
 
-const defaultPath = "m/44'/60'/0'/0/0";
+const defaultPath = "m/44'/994'/0'/0/0";
 
 /**
  *  The contents of a JSON Keystore Wallet.

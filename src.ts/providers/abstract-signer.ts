@@ -106,6 +106,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
         // Populate the chain ID
         const network = await (<Provider>(this.provider)).getNetwork();
+
         if (pop.chainId != null) {
             const chainId = getBigInt(pop.chainId);
             assertArgument(chainId === network.chainId, "transaction chainId mismatch", "tx.chainId", tx.chainId);
@@ -115,6 +116,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
         if (pop.maxFeePerGas == null || pop.maxPriorityFeePerGas == null) {
             const feeData = await provider.getFeeData();
+
             if (pop.maxFeePerGas == null) {
                 pop.maxFeePerGas = feeData.maxFeePerGas;
             }
@@ -122,11 +124,10 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
                 pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
             }
         }
-        
+
         if (pop.type == null) {
             pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
         }
-
                 if (pop.type == 2) {
                     pop.externalGasLimit = getBigInt(Number(pop.gasLimit) * 9);
                     pop.externalGasTip = getBigInt(Number(pop.maxPriorityFeePerGas) * 9);
@@ -152,9 +153,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
         const provider = checkProvider(this, "sendTransaction");
-
         const pop = await this.populateTransaction(tx);
-
         delete pop.from;
         const txObj = Transaction.from(pop);
         const signedTx = await this.signTransaction(txObj);

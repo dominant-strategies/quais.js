@@ -48,7 +48,7 @@ export class Wallet extends BaseWallet {
     }
 
     connect(provider: null | Provider): Wallet {
-        return new Wallet(this.signingKey, provider);
+        return new Wallet(this.signingKey!, provider);
     }
 
     /**
@@ -83,7 +83,7 @@ export class Wallet extends BaseWallet {
 
         if ("mnemonic" in account && account.mnemonic && account.mnemonic.locale === "en") {
             const mnemonic = Mnemonic.fromEntropy(account.mnemonic.entropy);
-            const wallet = HDNodeWallet.fromMnemonic(mnemonic, account.mnemonic.path);
+            const wallet = HDNodeWallet.fromMnemonic(mnemonic, account.mnemonic.path || ''); // Add a check for undefined path
             if (wallet.address === account.address && wallet.privateKey === account.privateKey) {
                 return wallet;
             }
@@ -146,17 +146,17 @@ export class Wallet extends BaseWallet {
      *
      *  If there is no crytographic random source, this will throw.
      */
-    static createRandom(provider?: null | Provider): HDNodeWallet {
-        const wallet = HDNodeWallet.createRandom();
+    static createRandom(path: string, provider?: null | Provider): HDNodeWallet {
+        const wallet = HDNodeWallet.createRandom(path);
         if (provider) { return wallet.connect(provider); }
         return wallet;
     }
 
-    /**
+    /**"m/44'/60'/0'/0/0"
      *  Creates a [[HDNodeWallet]] for %%phrase%%.
      */
-    static fromPhrase(phrase: string, provider?: Provider, wordlist?: Wordlist): HDNodeWallet {
-        const wallet = HDNodeWallet.fromPhrase(phrase, undefined, undefined, wordlist);
+    static fromPhrase(phrase: string, path: string, provider?: Provider, wordlist?: Wordlist): HDNodeWallet {
+        const wallet = HDNodeWallet.fromPhrase(phrase, path, undefined, wordlist);
         if (provider) { return wallet.connect(provider); }
         return wallet;
     }

@@ -3,7 +3,7 @@ import { hashMessage, TypedDataEncoder } from "../hash/index.js";
 import { AbstractSigner } from "../providers/index.js";
 import { computeAddress, Transaction } from "../transaction/index.js";
 import {
-    defineProperties, resolveProperties, assert, assertArgument
+     resolveProperties, assert, assertArgument
 } from "../utils/index.js";
 
 import type { SigningKey } from "../crypto/index.js";
@@ -27,7 +27,7 @@ export class BaseWallet extends AbstractSigner {
     /**
      *  The wallet address.
      */
-    readonly address!: string;
+    readonly #address!: string;
 
     readonly #signingKey: SigningKey;
 
@@ -45,12 +45,17 @@ export class BaseWallet extends AbstractSigner {
 
         this.#signingKey = privateKey;
 
-        const address = computeAddress(this.signingKey.publicKey);
-        defineProperties<BaseWallet>(this, { address });
+        this.#address = computeAddress(this.signingKey.publicKey);
     }
 
     // Store private values behind getters to reduce visibility
     // in console.log
+
+    /**
+     * The address of this wallet.
+     */
+    get address(): string { return this.#address; }
+
 
     /**
      *  The [[SigningKey]] used for signing payloads.
@@ -62,7 +67,7 @@ export class BaseWallet extends AbstractSigner {
      */
     get privateKey(): string { return this.signingKey.privateKey; }
 
-    async getAddress(): Promise<string> { return this.address; }
+    async getAddress(): Promise<string> { return this.#address; }
 
     connect(provider: null | Provider): BaseWallet {
         return new BaseWallet(this.#signingKey, provider);
@@ -79,7 +84,7 @@ export class BaseWallet extends AbstractSigner {
         if (from != null) { tx.from = from; }
 
         if (tx.from != null) {
-            assertArgument(getAddress(<string>(tx.from)) === this.address,
+            assertArgument(getAddress(<string>(tx.from)) === this.#address,
                 "transaction from address mismatch", "tx.from", tx.from);
             delete tx.from;
         }
