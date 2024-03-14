@@ -38,6 +38,7 @@ import type { Networkish } from "./network.js";
 import type { Provider, TransactionRequest, TransactionResponse } from "./provider.js";
 import type { Signer } from "./signer.js";
 
+
 type Timer = ReturnType<typeof setTimeout>;
 
 const Primitive = "bigint,boolean,function,number,string,symbol".split(/,/g);
@@ -933,6 +934,20 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
                 return {
                     method: "quai_getProtocolExpansionNumber",
                     args: []
+                }
+            }
+
+            case "getQiRateAtBlock": {
+                return {
+                    method: "quai_qiRateAtBlock",
+                    args: [ req.blockTag, req.amt ]
+                }
+            }
+
+            case "getQuaiRateAtBlock": {
+                return {
+                    method: "quai_quaiRateAtBlock",
+                    args: [ req.blockTag, req.amt ]
                 }
             }
 
