@@ -93,7 +93,7 @@ export function mask(_value: BigNumberish, _bits: Numeric): bigint {
  *  a BigInt, then an ArgumentError will be thrown for %%name%%.
  */
 export function getBigInt(value: BigNumberish, name?: string): bigint {
-    switch (typeof(value)) {
+    switch (typeof (value)) {
         case "bigint": return value;
         case "number":
             assertArgument(Number.isInteger(value), "underflow", name || "value", value);
@@ -106,11 +106,24 @@ export function getBigInt(value: BigNumberish, name?: string): bigint {
                     return -BigInt(value.substring(1));
                 }
                 return BigInt(value);
-            } catch(e: any) {
-                assertArgument(false, `invalid BigNumberish string: ${ e.message }`, name || "value", value);
+            } catch (e: any) {
+                assertArgument(false, `invalid BigNumberish string: ${e.message}`, name || "value", value);
             }
     }
     assertArgument(false, "invalid BigNumberish value", name || "value", value);
+}
+
+/**
+ * Returns absolute value of bigint %%value%%. 
+ */
+export function bigIntAbs(value: BigNumberish): bigint {
+    value = getBigInt(value);
+
+    // if value is negative (including -0), return -value, else return value
+    if (value === -BN_0 || value < BN_0) {
+        return -value;
+    }
+    return value;
 }
 
 /**
@@ -149,7 +162,7 @@ export function toBigInt(value: BigNumberish | Uint8Array): bigint {
  *  a //number//, then an ArgumentError will be thrown for %%name%%.
  */
 export function getNumber(value: BigNumberish, name?: string): number {
-    switch (typeof(value)) {
+    switch (typeof (value)) {
         case "bigint":
             assertArgument(value >= -maxValue && value <= maxValue, "overflow", name || "value", value);
             return Number(value);
@@ -161,8 +174,8 @@ export function getNumber(value: BigNumberish, name?: string): number {
             try {
                 if (value === "") { throw new Error("empty string"); }
                 return getNumber(BigInt(value), name);
-            } catch(e: any) {
-                assertArgument(false, `invalid numeric string: ${ e.message }`, name || "value", value);
+            } catch (e: any) {
+                assertArgument(false, `invalid numeric string: ${e.message}`, name || "value", value);
             }
     }
     assertArgument(false, "invalid numeric value", name || "value", value);
@@ -191,7 +204,7 @@ export function toBeHex(_value: BigNumberish, _width?: Numeric): string {
         if (result.length % 2) { result = "0" + result; }
     } else {
         const width = getNumber(_width, "width");
-        assert(width * 2 >= result.length, `value exceeds width (${ width } bytes)`, "NUMERIC_FAULT", {
+        assert(width * 2 >= result.length, `value exceeds width (${width} bytes)`, "NUMERIC_FAULT", {
             operation: "toBeHex",
             fault: "overflow",
             value: _value
@@ -211,7 +224,7 @@ export function toBeHex(_value: BigNumberish, _width?: Numeric): string {
 export function toBeArray(_value: BigNumberish): Uint8Array {
     const value = getUint(_value, "value");
 
-    if (value === BN_0) { return new Uint8Array([ ]); }
+    if (value === BN_0) { return new Uint8Array([]); }
 
     let hex = value.toString(16);
     if (hex.length % 2) { hex = "0" + hex; }
@@ -233,7 +246,7 @@ export function toBeArray(_value: BigNumberish): Uint8Array {
  *  numeric values.
  */
 export function toQuantity(value: BytesLike | BigNumberish): string {
-    let result = hexlify(isBytesLike(value) ? value: toBeArray(value)).substring(2);
+    let result = hexlify(isBytesLike(value) ? value : toBeArray(value)).substring(2);
     while (result.startsWith("0")) { result = result.substring(1); }
     if (result === "") { result = "0"; }
     return "0x" + result;

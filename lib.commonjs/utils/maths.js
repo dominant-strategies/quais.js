@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.toQuantity = exports.toBeArray = exports.toBeHex = exports.toNumber = exports.getNumber = exports.toBigInt = exports.getUint = exports.getBigInt = exports.mask = exports.toTwos = exports.fromTwos = void 0;
+exports.toQuantity = exports.toBeArray = exports.toBeHex = exports.toNumber = exports.getNumber = exports.toBigInt = exports.getUint = exports.bigIntAbs = exports.getBigInt = exports.mask = exports.toTwos = exports.fromTwos = void 0;
 /**
  *  Some mathematic operations.
  *
@@ -96,6 +96,18 @@ function getBigInt(value, name) {
     (0, errors_js_1.assertArgument)(false, "invalid BigNumberish value", name || "value", value);
 }
 exports.getBigInt = getBigInt;
+/**
+ * Returns absolute value of bigint %%value%%.
+ */
+function bigIntAbs(value) {
+    value = getBigInt(value);
+    // if value is negative (including -0), return -value, else return value
+    if (value === -BN_0 || value < BN_0) {
+        return -value;
+    }
+    return value;
+}
+exports.bigIntAbs = bigIntAbs;
 /**
  *  Returns %%value%% as a bigint, validating it is valid as a bigint
  *  value and that it is positive.

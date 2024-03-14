@@ -90,6 +90,17 @@ export function getBigInt(value, name) {
     assertArgument(false, "invalid BigNumberish value", name || "value", value);
 }
 /**
+ * Returns absolute value of bigint %%value%%.
+ */
+export function bigIntAbs(value) {
+    value = getBigInt(value);
+    // if value is negative (including -0), return -value, else return value
+    if (value === -BN_0 || value < BN_0) {
+        return -value;
+    }
+    return value;
+}
+/**
  *  Returns %%value%% as a bigint, validating it is valid as a bigint
  *  value and that it is positive.
  */
