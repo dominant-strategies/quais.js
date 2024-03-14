@@ -396,6 +396,10 @@ export type PerformActionRequest = {
 } | {
     method: "getTransactionResult",
     hash: string
+} | {
+    method: "getRunningLocations"
+} | {
+    method: "getProtocolTrieExpansionCount"
 };
 
 type _PerformAccountRequest = {
@@ -899,6 +903,16 @@ export class AbstractProvider implements Provider {
         }
 
         return expected.clone();
+    }
+
+    async getRunningLocations(): Promise<number[][]> {
+        return await this.#perform({ method: "getRunningLocations" });
+
+
+    }
+
+    async getProtocolTrieExpansionCount(): Promise<number> {
+        return await this.#perform({ method: "getProtocolTrieExpansionCount" });
     }
 
     async getFeeData(): Promise<FeeData> {

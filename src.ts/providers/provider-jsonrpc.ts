@@ -919,6 +919,20 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
                 };
             }
 
+            case "getRunningLocations": {
+                return {
+                    method: "quai_listRunningChains",
+                    args: []
+                }
+            }
+
+            case "getProtocolTrieExpansionCount": {
+                return {
+                    method: "quai_getProtocolExpansionNumber",
+                    args: []
+                }
+            }
+
             case "getLogs":
                 if (req.filter && req.filter.address != null) {
                     if (Array.isArray(req.filter.address)) {
