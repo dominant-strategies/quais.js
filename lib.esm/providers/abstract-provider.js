@@ -578,6 +578,12 @@ export class AbstractProvider {
         }
         return expected.clone();
     }
+    async getRunningLocations() {
+        return await this.#perform({ method: "getRunningLocations" });
+    }
+    async getProtocolTrieExpansionCount() {
+        return await this.#perform({ method: "getProtocolTrieExpansionCount" });
+    }
     async getFeeData() {
         const network = await this.getNetwork();
         const getFeeDataFunc = async () => {
