@@ -17,5 +17,8 @@ export declare class FewestCoinSelector extends AbstractCoinSelector {
      * @param target The target amount to select UTXOs for.
      */
     performSelection(target: SpendTarget): SelectedCoinsResult;
+    private sortUTXOsByDenomination;
+    private validateTarget;
+    private validateUTXOs;
 }
 //# sourceMappingURL=coinselector-fewest.d.ts.map

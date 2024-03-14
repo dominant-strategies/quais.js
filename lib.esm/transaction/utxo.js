@@ -112,7 +112,7 @@ export class UTXO {
             txhash: this.txhash,
             index: this.index,
             address: this.address,
-            denomination: this.denomination ? this.denomination.toString() : null,
+            denomination: this.denomination,
         };
     }
     /**
