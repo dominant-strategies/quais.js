@@ -209,7 +209,7 @@ export type PerformActionRequest = {
     method: "getLogs";
     filter: PerformActionFilter;
 } | {
-    method: "getPriorityFee";
+    method: "getMaxPriorityFeePerGas";
 } | {
     method: "getStorage";
     address: string;
@@ -228,6 +228,10 @@ export type PerformActionRequest = {
 } | {
     method: "getTransactionResult";
     hash: string;
+} | {
+    method: "getRunningLocations";
+} | {
+    method: "getProtocolTrieExpansionCount";
 };
 /**
  *  Options for configuring some internal aspects of an [[AbstractProvider]].
@@ -348,6 +352,8 @@ export declare class AbstractProvider implements Provider {
      */
     _getTransactionRequest(_request: TransactionRequest): PerformActionTransaction | Promise<PerformActionTransaction>;
     getNetwork(): Promise<Network>;
+    getRunningLocations(): Promise<number[][]>;
+    getProtocolTrieExpansionCount(): Promise<number>;
     getFeeData(): Promise<FeeData>;
     estimateGas(_tx: TransactionRequest): Promise<bigint>;
     call(_tx: TransactionRequest): Promise<string>;

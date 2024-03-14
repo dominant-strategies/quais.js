@@ -6,48 +6,17 @@ const index_js_2 = require("../crypto/index.js");
 const index_js_3 = require("../utils/index.js");
 const accesslist_js_1 = require("./accesslist.js");
 const address_js_1 = require("./address.js");
-const BN_0 = BigInt(0);
-// const BN_2 = BigInt(2);
-// const BN_27 = BigInt(27)
-// const BN_28 = BigInt(28)
-// const BN_35 = BigInt(35);
-const BN_MAX_UINT = BigInt("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-function handleAddress(value) {
-    if (value === "0x") {
-        return null;
-    }
-    return (0, index_js_1.getAddress)(value);
-}
-function handleAccessList(value, param) {
-    try {
-        return (0, accesslist_js_1.accessListify)(value);
-    }
-    catch (error) {
-        (0, index_js_3.assertArgument)(false, error.message, param, value);
-    }
-}
 function handleNumber(_value, param) {
     if (_value === "0x") {
         return 0;
     }
     return (0, index_js_3.getNumber)(_value, param);
 }
-function handleUint(_value, param) {
-    if (_value === "0x") {
-        return BN_0;
-    }
-    const value = (0, index_js_3.getBigInt)(_value, param);
-    (0, index_js_3.assertArgument)(value <= BN_MAX_UINT, "value exceeds uint size", param, value);
-    return value;
-}
 function formatNumber(_value, name) {
     const value = (0, index_js_3.getBigInt)(_value, "value");
     const result = (0, index_js_3.toBeArray)(value);
     (0, index_js_3.assertArgument)(result.length <= 32, `value too large`, `tx.${name}`, value);
     return result;
-}
-function formatAccessList(value) {
-    return (0, accesslist_js_1.accessListify)(value).map((set) => [set.address, set.storageKeys]);
 }
 function _parseSignature(tx, fields, serialize) {
     let yParity;
@@ -66,103 +35,61 @@ function _parseSignature(tx, fields, serialize) {
     tx.signature = signature;
 }
 function _parse(data) {
-    const fields = (0, index_js_3.decodeRlp)((0, index_js_3.getBytes)(data).slice(1));
-    (0, index_js_3.assertArgument)(Array.isArray(fields) && (fields.length === 9 || fields.length === 12), "invalid field count for transaction type: 2", "data", (0, index_js_3.hexlify)(data));
-    const maxPriorityFeePerGas = handleUint(fields[2], "maxPriorityFeePerGas");
-    const maxFeePerGas = handleUint(fields[3], "maxFeePerGas");
+    const decodedTx = (0, index_js_3.decodeProto)((0, index_js_3.getBytes)(data));
     const tx = {
-        type: 0,
-        chainId: handleUint(fields[0], "chainId"),
-        nonce: handleNumber(fields[1], "nonce"),
-        maxPriorityFeePerGas: maxPriorityFeePerGas,
-        maxFeePerGas: maxFeePerGas,
-        gasLimit: handleUint(fields[4], "gasLimit"),
-        to: handleAddress(fields[5]),
-        value: handleUint(fields[6], "value"),
-        data: (0, index_js_3.hexlify)(fields[7]),
-        accessList: handleAccessList(fields[8], "accessList"),
+        type: decodedTx.type,
+        chainId: (0, index_js_3.toBigInt)(decodedTx.chain_id),
+        nonce: decodedTx.nonce,
+        maxPriorityFeePerGas: (0, index_js_3.toBigInt)(decodedTx.gas_tip_cap),
+        maxFeePerGas: (0, index_js_3.toBigInt)(decodedTx.gas_fee_cap),
+        gasLimit: (0, index_js_3.toBigInt)(decodedTx.gas),
+        to: (0, index_js_3.hexlify)(decodedTx.to),
+        value: (0, index_js_3.toBigInt)(decodedTx.value),
+        data: (0, index_js_3.hexlify)(decodedTx.data),
+        accessList: decodedTx.access_list.access_tuples,
     };
-    // Unsigned EIP-1559 Transaction
-    if (fields.length === 9) {
-        return tx;
+    if (decodedTx.type == 2) {
+        tx.externalGasLimit = (0, index_js_3.toBigInt)(decodedTx.etx_gas_limit);
+        tx.externalGasPrice = (0, index_js_3.toBigInt)(decodedTx.etx_gas_price);
+        tx.externalGasTip = (0, index_js_3.toBigInt)(decodedTx.etx_gas_tip);
+        tx.externalData = (0, index_js_3.hexlify)(decodedTx.etx_data);
+        tx.externalAccessList = decodedTx.etx_access_list.access_tuples;
     }
     tx.hash = (0, index_js_2.keccak256)(data);
-    _parseSignature(tx, fields.slice(9), _serialize);
-    return tx;
-}
-function _parseStandardETx(data) {
-    const fields = (0, index_js_3.decodeRlp)((0, index_js_3.getBytes)(data).slice(1));
-    (0, index_js_3.assertArgument)(Array.isArray(fields) && (fields.length === 8 || fields.length === 17), "invalid field count for transaction type: 2", "data", (0, index_js_3.hexlify)(data));
-    const maxPriorityFeePerGas = handleUint(fields[2], "maxPriorityFeePerGas");
-    const maxFeePerGas = handleUint(fields[3], "maxFeePerGas");
-    const tx = {
-        type: 2,
-        chainId: handleUint(fields[0], "chainId"),
-        nonce: handleNumber(fields[1], "nonce"),
-        maxPriorityFeePerGas: maxPriorityFeePerGas,
-        maxFeePerGas: maxFeePerGas,
-        gasLimit: handleUint(fields[4], "gasLimit"),
-        to: handleAddress(fields[5]),
-        value: handleUint(fields[6], "value"),
-        data: (0, index_js_3.hexlify)(fields[7]),
-        accessList: handleAccessList(fields[8], "accessList"),
-        externalGasLimit: handleUint(fields[9], "externalGasLimit"),
-        externalGasPrice: handleUint(fields[10], "externalGasPrice"),
-        externalGasTip: handleUint(fields[11], "externalGasTip"),
-        externalData: (0, index_js_3.hexlify)(fields[12]),
-        externalAccessList: handleAccessList(fields[13], "externalAccessList")
-    };
-    fields;
-    // Unsigned EIP-2930 Transaction
-    if (fields.length === 8) {
-        return tx;
-    }
-    tx.hash = (0, index_js_2.keccak256)(data);
-    _parseSignature(tx, fields.slice(14), _serializeStandardETx);
+    const signatureFields = [
+        (0, index_js_3.hexlify)(decodedTx.v),
+        (0, index_js_3.hexlify)(decodedTx.r),
+        (0, index_js_3.hexlify)(decodedTx.s),
+    ];
+    _parseSignature(tx, signatureFields, _serialize);
     return tx;
 }
 function _serialize(tx, sig) {
-    const fields = [
-        formatNumber(tx.chainId || 0, "chainId"),
-        formatNumber(tx.nonce || 0, "nonce"),
-        formatNumber(tx.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
-        formatNumber(tx.maxFeePerGas || 0, "maxFeePerGas"),
-        formatNumber(tx.gasLimit || 0, "gasLimit"),
-        ((tx.to != null) ? (0, index_js_1.getAddress)(tx.to) : "0x"),
-        formatNumber(tx.value || 0, "value"),
-        (tx.data || "0x"),
-        (formatAccessList(tx.accessList || []))
-    ];
-    if (sig) {
-        fields.push(formatNumber(sig.yParity, "yParity"));
-        fields.push((0, index_js_3.toBeArray)(sig.r));
-        fields.push((0, index_js_3.toBeArray)(sig.s));
+    const formattedTx = {
+        chain_id: formatNumber(tx.chainId || 0, "chainId"),
+        nonce: (tx.nonce || 0),
+        gas_tip_cap: formatNumber(tx.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
+        gas_fee_cap: formatNumber(tx.maxFeePerGas || 0, "maxFeePerGas"),
+        gas: Number(tx.gasLimit || 0),
+        to: tx.to != null ? (0, index_js_3.getBytes)(tx.to) : "0x",
+        value: formatNumber(tx.value || 0, "value"),
+        data: (0, index_js_3.getBytes)(tx.data || "0x"),
+        access_list: { access_tuples: tx.accessList || [] },
+        type: (tx.type || 0),
+    };
+    if (tx.type == 2) {
+        formattedTx.etx_gas_limit = Number(tx.externalGasLimit || 0);
+        formattedTx.etx_gas_price = formatNumber(tx.externalGasPrice || 0, "externalGasPrice");
+        formattedTx.etx_gas_tip = formatNumber(tx.externalGasTip || 0, "externalGasTip");
+        formattedTx.etx_data = (0, index_js_3.getBytes)(tx.externalData || "0x");
+        formattedTx.etx_access_list = { access_tuples: tx.externalAccessList || [] };
     }
-    return (0, index_js_3.concat)(["0x00", (0, index_js_3.encodeRlp)(fields)]);
-}
-function _serializeStandardETx(transaction, sig) {
-    const fields = [
-        formatNumber(transaction.chainId || 0, "chainId"),
-        formatNumber(transaction.nonce || 0, "nonce"),
-        formatNumber(transaction.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
-        formatNumber(transaction.maxFeePerGas || 0, "maxFeePerGas"),
-        formatNumber(transaction.gasLimit || 0, "gasLimit"),
-        ((transaction.to != null) ? (0, index_js_1.getAddress)(transaction.to) : "0x"),
-        formatNumber(transaction.value || 0, "value"),
-        (transaction.data || "0x"),
-        (formatAccessList(transaction.accessList || [])),
-        formatNumber(transaction.externalGasLimit || 0, "externalGasLimit"),
-        formatNumber(transaction.externalGasPrice || 0, "externalGasPrice"),
-        formatNumber(transaction.externalGasTip || 0, "externalGasTip"),
-        (transaction.externalData || "0x"),
-        (formatAccessList(transaction.externalAccessList || [])),
-    ];
     if (sig) {
-        fields.push(formatNumber(sig.yParity, "recoveryParam"));
-        fields.push((0, index_js_3.toBeArray)(sig.r));
-        fields.push((0, index_js_3.toBeArray)(sig.s));
+        formattedTx.v = formatNumber(sig.yParity, "yParity"),
+            formattedTx.r = (0, index_js_3.toBeArray)(sig.r),
+            formattedTx.s = (0, index_js_3.toBeArray)(sig.s);
     }
-    return (0, index_js_3.concat)(["0x02", (0, index_js_3.encodeRlp)(fields)]);
+    return (0, index_js_3.encodeProto)(formattedTx);
 }
 /**
  *  A **Transaction** describes an operation to be executed on
@@ -464,15 +391,7 @@ class Transaction {
      */
     get serialized() {
         (0, index_js_3.assert)(this.signature != null, "cannot serialize unsigned transaction; maybe you meant .unsignedSerialized", "UNSUPPORTED_OPERATION", { operation: ".serialized" });
-        switch (this.inferType()) {
-            case 0:
-                return _serialize(this, this.signature);
-            // case 1:
-            //     return _serializeEip2930(this, this.signature);
-            case 2:
-                return _serializeStandardETx(this, this.signature);
-        }
-        (0, index_js_3.assert)(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: ".serialized" });
+        return _serialize(this, this.signature);
     }
     /**
      *  The transaction pre-image.
@@ -481,15 +400,7 @@ class Transaction {
      *  authorize this transaction.
      */
     get unsignedSerialized() {
-        switch (this.inferType()) {
-            case 0:
-                return _serialize(this);
-            // case 1:
-            //     return _serializeEip2930(this);
-            case 2:
-                return _serializeStandardETx(this);
-        }
-        (0, index_js_3.assert)(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: ".unsignedSerialized" });
+        return _serialize(this);
     }
     /**
      *  Return the most "likely" type; currently the highest
@@ -581,14 +492,7 @@ class Transaction {
         }
         if (typeof (tx) === "string") {
             const payload = (0, index_js_3.getBytes)(tx);
-            if (payload[0] >= 0x7f) { // @TODO: > vs >= ??
-                return Transaction.from(_parse(payload));
-            }
-            switch (payload[0]) {
-                case 0: return Transaction.from(_parse(payload));
-                case 2: return Transaction.from(_parseStandardETx(payload));
-            }
-            (0, index_js_3.assert)(false, "unsupported transaction type", "UNSUPPORTED_OPERATION", { operation: "from" });
+            return Transaction.from(_parse(payload));
         }
         const result = new Transaction();
         if (tx.type != null) {

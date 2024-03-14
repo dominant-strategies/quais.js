@@ -167,6 +167,7 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
            tx.from = this.runner.address;
         }
         const grindedTx = await this.grindContractAddress(tx); 
+        console.log("grindedTx", grindedTx);
         const sentTx = await this.runner.sendTransaction(grindedTx);
         const address = getStatic<(tx: ContractDeployTransaction) => string>(
             this.constructor,
@@ -203,6 +204,7 @@ static getContractAddress(transaction: {
         while (i < 10000) {
             var contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
             var contractShard = getShardForAddress(contractAddress);
+            console.log("contractAddress ", contractAddress);
             var utxo = isUTXOAddress(contractAddress);
             if (contractShard === toShard && !utxo) {
                 return tx;

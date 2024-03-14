@@ -133,6 +133,7 @@ class ContractFactory {
             tx.from = this.runner.address;
         }
         const grindedTx = await this.grindContractAddress(tx);
+        console.log("grindedTx", grindedTx);
         const sentTx = await this.runner.sendTransaction(grindedTx);
         const address = (0, properties_js_1.getStatic)(this.constructor, "getContractAddress")?.(tx);
         //const address = getCreateAddress(sentTx);
@@ -153,6 +154,7 @@ class ContractFactory {
         while (i < 10000) {
             var contractAddress = (0, address_js_1.getContractAddress)(sender, BigInt(tx.nonce || 0), tx.data || '');
             var contractShard = (0, index_js_3.getShardForAddress)(contractAddress);
+            console.log("contractAddress ", contractAddress);
             var utxo = (0, index_js_3.isUTXOAddress)(contractAddress);
             if (contractShard === toShard && !utxo) {
                 return tx;

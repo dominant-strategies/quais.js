@@ -7,8 +7,8 @@
  *  @_section api/utils:Utilities  [about-utils]
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.toUtf8String = exports.toUtf8CodePoints = exports.toUtf8Bytes = exports.parseUnits = exports.formatUnits = exports.parseEther = exports.formatEther = exports.encodeRlp = exports.decodeRlp = exports.defineProperties = exports.resolveProperties = exports.toQuantity = exports.toBeArray = exports.toBeHex = exports.toNumber = exports.toBigInt = exports.getUint = exports.getNumber = exports.getBigInt = exports.mask = exports.toTwos = exports.fromTwos = exports.FixedNumber = exports.FetchCancelSignal = exports.FetchResponse = exports.FetchRequest = exports.EventPayload = exports.makeError = exports.assertNormalize = exports.assertPrivate = exports.assertArgumentCount = exports.assertArgument = exports.assert = exports.isError = exports.isCallException = exports.zeroPadBytes = exports.zeroPadValue = exports.stripZerosLeft = exports.dataSlice = exports.dataLength = exports.concat = exports.hexlify = exports.isBytesLike = exports.isHexString = exports.getBytesCopy = exports.getBytes = exports.encodeBase64 = exports.decodeBase64 = exports.encodeBase58 = exports.decodeBase58 = void 0;
-exports.isUTXOAddress = exports.getAddressDetails = exports.getShardForAddress = exports.getTxType = exports.uuidV4 = exports.Utf8ErrorFuncs = void 0;
+exports.toUtf8Bytes = exports.parseUnits = exports.formatUnits = exports.parseEther = exports.formatEther = exports.decodeProto = exports.encodeProto = exports.encodeRlp = exports.decodeRlp = exports.defineProperties = exports.resolveProperties = exports.toQuantity = exports.toBeArray = exports.toBeHex = exports.toNumber = exports.toBigInt = exports.getUint = exports.getNumber = exports.getBigInt = exports.mask = exports.toTwos = exports.fromTwos = exports.FixedNumber = exports.FetchCancelSignal = exports.FetchResponse = exports.FetchRequest = exports.EventPayload = exports.makeError = exports.assertNormalize = exports.assertPrivate = exports.assertArgumentCount = exports.assertArgument = exports.assert = exports.isError = exports.isCallException = exports.zeroPadBytes = exports.zeroPadValue = exports.stripZerosLeft = exports.dataSlice = exports.dataLength = exports.concat = exports.hexlify = exports.isBytesLike = exports.isHexString = exports.getBytesCopy = exports.getBytes = exports.encodeBase64 = exports.decodeBase64 = exports.encodeBase58 = exports.decodeBase58 = void 0;
+exports.isUTXOAddress = exports.getAddressDetails = exports.getShardForAddress = exports.getTxType = exports.uuidV4 = exports.Utf8ErrorFuncs = exports.toUtf8String = exports.toUtf8CodePoints = void 0;
 var base58_js_1 = require("./base58.js");
 Object.defineProperty(exports, "decodeBase58", { enumerable: true, get: function () { return base58_js_1.decodeBase58; } });
 Object.defineProperty(exports, "encodeBase58", { enumerable: true, get: function () { return base58_js_1.encodeBase58; } });
@@ -63,6 +63,10 @@ var rlp_decode_js_1 = require("./rlp-decode.js");
 Object.defineProperty(exports, "decodeRlp", { enumerable: true, get: function () { return rlp_decode_js_1.decodeRlp; } });
 var rlp_encode_js_1 = require("./rlp-encode.js");
 Object.defineProperty(exports, "encodeRlp", { enumerable: true, get: function () { return rlp_encode_js_1.encodeRlp; } });
+var proto_encode_js_1 = require("./proto-encode.js");
+Object.defineProperty(exports, "encodeProto", { enumerable: true, get: function () { return proto_encode_js_1.encodeProto; } });
+var proto_decode_js_1 = require("./proto-decode.js");
+Object.defineProperty(exports, "decodeProto", { enumerable: true, get: function () { return proto_decode_js_1.decodeProto; } });
 var units_js_1 = require("./units.js");
 Object.defineProperty(exports, "formatEther", { enumerable: true, get: function () { return units_js_1.formatEther; } });
 Object.defineProperty(exports, "parseEther", { enumerable: true, get: function () { return units_js_1.parseEther; } });
