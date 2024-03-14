@@ -233,6 +233,14 @@ export type PerformActionRequest = {
     method: "getRunningLocations";
 } | {
     method: "getProtocolTrieExpansionCount";
+} | {
+    method: "getQiRateAtBlock";
+    blockTag: BlockTag;
+    amt: number;
+} | {
+    method: "getQuaiRateAtBlock";
+    blockTag: BlockTag;
+    amt: number;
 };
 /**
  *  Options for configuring some internal aspects of an [[AbstractProvider]].
@@ -262,6 +270,10 @@ export declare class AbstractProvider implements Provider {
      *  [[Network]] if necessary.
      */
     constructor(_network?: "any" | Networkish, options?: AbstractProviderOptions);
+    getLatestQuaiRate(amt?: number): Promise<bigint>;
+    getQuaiRateAtBlock(blockTag: BlockTag, amt?: number): Promise<bigint>;
+    getLatestQiRate(amt?: number): Promise<bigint>;
+    getQiRateAtBlock(blockTag: BlockTag, amt?: number): Promise<bigint>;
     get pollingInterval(): number;
     /**
      *  Returns ``this``, to allow an **AbstractProvider** to implement

@@ -634,6 +634,18 @@ export class JsonRpcApiProvider extends AbstractProvider {
                     args: []
                 };
             }
+            case "getQiRateAtBlock": {
+                return {
+                    method: "quai_qiRateAtBlock",
+                    args: [req.blockTag, req.amt]
+                };
+            }
+            case "getQuaiRateAtBlock": {
+                return {
+                    method: "quai_quaiRateAtBlock",
+                    args: [req.blockTag, req.amt]
+                };
+            }
             case "getLogs":
                 if (req.filter && req.filter.address != null) {
                     if (Array.isArray(req.filter.address)) {

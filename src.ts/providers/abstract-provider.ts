@@ -398,10 +398,20 @@ export type PerformActionRequest = {
     method: "getTransactionResult",
     hash: string
 } | {
+
     method: "getRunningLocations"
 } | {
     method: "getProtocolTrieExpansionCount"
+} | {
+    method: "getQiRateAtBlock",
+    blockTag: BlockTag
+    amt: number
+} | {
+    method: "getQuaiRateAtBlock",
+    blockTag: BlockTag,
+    amt: number
 };
+
 
 type _PerformAccountRequest = {
     method: "getBalance" | "getTransactionCount" | "getCode"
@@ -504,6 +514,42 @@ export class AbstractProvider implements Provider {
         this.#timers = new Map();
 
         this.#disableCcipRead = false;
+    }
+
+    async getLatestQuaiRate(amt: number = 1): Promise<bigint> {
+        const blockNumber = await this.getBlockNumber();
+        return this.getQuaiRateAtBlock(blockNumber, amt);
+    }
+
+    async getQuaiRateAtBlock(blockTag: BlockTag, amt: number = 1): Promise<bigint> {
+        let resolvedBlockTag = this._getBlockTag(blockTag);
+        if (typeof resolvedBlockTag !== "string") {
+            resolvedBlockTag = await resolvedBlockTag;
+        }
+
+        return await this.#perform({
+            method: "getQuaiRateAtBlock",
+            blockTag: resolvedBlockTag,
+            amt
+        });
+    }
+
+    async getLatestQiRate(amt: number = 1): Promise<bigint> {
+        const blockNumber = await this.getBlockNumber();
+        return this.getQiRateAtBlock(blockNumber, amt);
+    }
+
+    async getQiRateAtBlock(blockTag: BlockTag, amt: number = 1): Promise<bigint> {
+        let resolvedBlockTag = this._getBlockTag(blockTag);
+        if (typeof resolvedBlockTag !== "string") {
+            resolvedBlockTag = await resolvedBlockTag;
+        }
+
+        return await this.#perform({
+            method: "getQiRateAtBlock",
+            blockTag: resolvedBlockTag,
+            amt
+        });
     }
 
     get pollingInterval(): number { return this.#options.pollingInterval; }
