@@ -35,6 +35,7 @@ import {
     BlockParams, LogParams, TransactionReceiptParams,
     TransactionResponseParams
 } from "./formatting.js";
+import { WorkObjectLike } from "../transaction/work-object.js";
 
 // -----------------------
 
@@ -214,9 +215,9 @@ export interface TransactionRequest {
      */
     enableCcipRead?: boolean;
 
-        /**
- * The external gas price.
- */
+    /**
+* The external gas price.
+*/
     externalGasPrice?: null | BigNumberish;
 
     /**
@@ -347,7 +348,7 @@ export interface PreparedTransactionRequest {
  *  types.
  */
 export function copyRequest(req: TransactionRequest): PreparedTransactionRequest {
-    const result: any = { };
+    const result: any = {};
 
     // These could be addresses, ENS names or Addressables
     if (req.to) { result.to = req.to; }
@@ -358,13 +359,13 @@ export function copyRequest(req: TransactionRequest): PreparedTransactionRequest
     const bigIntKeys = "chainId,gasLimit,gasPrice,maxFeePerGas,maxPriorityFeePerGas,value".split(/,/);
     for (const key of bigIntKeys) {
         if (!(key in req) || (<any>req)[key] == null) { continue; }
-        result[key] = getBigInt((<any>req)[key], `request.${ key }`);
+        result[key] = getBigInt((<any>req)[key], `request.${key}`);
     }
 
     const numberKeys = "type,nonce".split(/,/);
     for (const key of numberKeys) {
         if (!(key in req) || (<any>req)[key] == null) { continue; }
-        result[key] = getNumber((<any>req)[key], `request.${ key }`);
+        result[key] = getNumber((<any>req)[key], `request.${key}`);
     }
 
     if (req.accessList) {
@@ -421,6 +422,9 @@ export interface MinedBlock extends Block {
      */
     readonly miner: string;
 }
+
+
+
 
 /**
  *  A **Block** represents the data associated with a full block on
@@ -538,16 +542,16 @@ export class Block implements BlockParams, Iterable<string> {
      */
     constructor(block: BlockParams, provider: Provider) {
 
-        
+
         this.#transactions = block.transactions.map((tx) => {
-            if (typeof(tx) !== "string") {
+            if (typeof (tx) !== "string") {
                 return new TransactionResponse(tx, provider);
             }
             return tx;
         });
 
         this.#extTransactions = block.extTransactions.map((tx) => {
-            if (typeof(tx) !== "string") {
+            if (typeof (tx) !== "string") {
                 return new TransactionResponse(tx, provider);
             }
             return tx;
@@ -605,14 +609,14 @@ export class Block implements BlockParams, Iterable<string> {
      */
     get transactions(): ReadonlyArray<string> {
         return this.#transactions.map((tx) => {
-            if (typeof(tx) === "string") { return tx; }
+            if (typeof (tx) === "string") { return tx; }
             return tx.hash;
         });
     }
 
     get extTransactions(): ReadonlyArray<string> {
         return this.#extTransactions.map((tx) => {
-            if (typeof(tx) === "string") { return tx; }
+            if (typeof (tx) === "string") { return tx; }
             return tx.hash;
         });
     }
@@ -629,10 +633,10 @@ export class Block implements BlockParams, Iterable<string> {
         const txs = this.#transactions.slice();
 
         // Doesn't matter...
-        if (txs.length === 0) { return [ ]; }
+        if (txs.length === 0) { return []; }
 
         // Make sure we prefetched the transactions
-        assert(typeof(txs[0]) === "object", "transactions were not prefetched with block request", "UNSUPPORTED_OPERATION", {
+        assert(typeof (txs[0]) === "object", "transactions were not prefetched with block request", "UNSUPPORTED_OPERATION", {
             operation: "transactionResponses()"
         });
 
@@ -643,10 +647,10 @@ export class Block implements BlockParams, Iterable<string> {
         const txs = this.#extTransactions.slice();
 
         // Doesn't matter...
-        if (txs.length === 0) { return [ ]; }
+        if (txs.length === 0) { return []; }
 
         // Make sure we prefetched the transactions
-        assert(typeof(txs[0]) === "object", "transactions were not prefetched with block request", "UNSUPPORTED_OPERATION", {
+        assert(typeof (txs[0]) === "object", "transactions were not prefetched with block request", "UNSUPPORTED_OPERATION", {
             operation: "transactionResponses()"
         });
 
@@ -666,11 +670,11 @@ export class Block implements BlockParams, Iterable<string> {
             sha3Uncles, size, evmRoot, utxoRoot, uncles, transactionsRoot,
             extRollupRoot, extTransactionsRoot
         } = this;
-    
+
         // Using getters to retrieve the transactions and extTransactions
         const transactions = this.transactions;
         const extTransactions = this.extTransactions;
-    
+
         return {
             _type: "Block",
             baseFeePerGas: toJson(baseFeePerGas),
@@ -678,34 +682,34 @@ export class Block implements BlockParams, Iterable<string> {
             extraData,
             gasLimit: toJson(gasLimit),
             gasUsed: toJson(gasUsed),
-            hash, 
-            miner, 
-            nonce, 
-            number, 
-            parentHash, 
+            hash,
+            miner,
+            nonce,
+            number,
+            parentHash,
             timestamp,
-            manifestHash, 
-            location, 
-            parentDeltaS, 
+            manifestHash,
+            location,
+            parentDeltaS,
             parentEntropy,
-            order, 
-            subManifest, 
-            totalEntropy, 
-            mixHash, 
+            order,
+            subManifest,
+            totalEntropy,
+            mixHash,
             receiptsRoot,
-            sha3Uncles, 
-            size, 
+            sha3Uncles,
+            size,
             evmRoot,
             utxoRoot,
-            uncles, 
+            uncles,
             transactionsRoot,
-            extRollupRoot, 
+            extRollupRoot,
             extTransactionsRoot,
             transactions, // Includes the transaction hashes or full transactions based on the prefetched data
             extTransactions // Includes the extended transaction hashes or full transactions based on the prefetched data
         };
     }
-    
+
 
     [Symbol.iterator](): Iterator<string> {
         let index = 0;
@@ -741,13 +745,13 @@ export class Block implements BlockParams, Iterable<string> {
     async getTransaction(indexOrHash: number | string): Promise<TransactionResponse> {
         // Find the internal value by its index or hash
         let tx: string | TransactionResponse | undefined = undefined;
-        if (typeof(indexOrHash) === "number") {
+        if (typeof (indexOrHash) === "number") {
             tx = this.#transactions[indexOrHash];
 
         } else {
             const hash = indexOrHash.toLowerCase();
             for (const v of this.#transactions) {
-                if (typeof(v) === "string") {
+                if (typeof (v) === "string") {
                     if (v !== hash) { continue; }
                     tx = v;
                     break;
@@ -760,7 +764,7 @@ export class Block implements BlockParams, Iterable<string> {
         }
         if (tx == null) { throw new Error("no such tx"); }
 
-        if (typeof(tx) === "string") {
+        if (typeof (tx) === "string") {
             return <TransactionResponse>(await this.provider.getTransaction(tx));
         } else {
             return tx;
@@ -770,13 +774,13 @@ export class Block implements BlockParams, Iterable<string> {
     async getExtTransaction(indexOrHash: number | string): Promise<TransactionResponse> {
         // Find the internal value by its index or hash
         let tx: string | TransactionResponse | undefined = undefined;
-        if (typeof(indexOrHash) === "number") {
+        if (typeof (indexOrHash) === "number") {
             tx = this.#extTransactions[indexOrHash];
-                
+
         } else {
             const hash = indexOrHash.toLowerCase();
             for (const v of this.#extTransactions) {
-                if (typeof(v) === "string") {
+                if (typeof (v) === "string") {
                     if (v !== hash) { continue; }
                     tx = v;
                     break;
@@ -789,7 +793,7 @@ export class Block implements BlockParams, Iterable<string> {
         }
         if (tx == null) { throw new Error("no such tx"); }
 
-        if (typeof(tx) === "string") {
+        if (typeof (tx) === "string") {
             return <TransactionResponse>(await this.provider.getTransaction(tx));
         } else {
             return tx;
@@ -804,7 +808,7 @@ export class Block implements BlockParams, Iterable<string> {
      */
     getPrefetchedTransaction(indexOrHash: number | string): TransactionResponse {
         const txs = this.prefetchedTransactions;
-        if (typeof(indexOrHash) === "number") {
+        if (typeof (indexOrHash) === "number") {
             return txs[indexOrHash];
         }
 
@@ -950,7 +954,7 @@ export class Log implements LogParams {
      */
     async getBlock(): Promise<Block> {
         const block = await this.provider.getBlock(this.blockHash);
-        assert(!!block, "failed to find transaction", "UNKNOWN_ERROR", { });
+        assert(!!block, "failed to find transaction", "UNKNOWN_ERROR", {});
         return block;
     }
 
@@ -959,7 +963,7 @@ export class Log implements LogParams {
      */
     async getTransaction(): Promise<TransactionResponse> {
         const tx = await this.provider.getTransaction(this.transactionHash);
-        assert(!!tx, "failed to find transaction", "UNKNOWN_ERROR", { });
+        assert(!!tx, "failed to find transaction", "UNKNOWN_ERROR", {});
         return tx;
     }
 
@@ -969,7 +973,7 @@ export class Log implements LogParams {
      */
     async getTransactionReceipt(): Promise<TransactionReceipt> {
         const receipt = await this.provider.getTransactionReceipt(this.transactionHash);
-        assert(!!receipt, "failed to find transaction receipt", "UNKNOWN_ERROR", { });
+        assert(!!receipt, "failed to find transaction receipt", "UNKNOWN_ERROR", {});
         return receipt;
     }
 
@@ -1389,15 +1393,15 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
 
     // Extrernal transaction specific fields
 
-    readonly etxGasLimit?: bigint ;
+    readonly etxGasLimit?: bigint;
 
-    readonly etxGasPrice?: bigint ;
+    readonly etxGasPrice?: bigint;
 
-    readonly etxGasTip?: bigint ;
+    readonly etxGasTip?: bigint;
 
-    readonly etxData?: string ;
+    readonly etxData?: string;
 
-    readonly etxAccessList?: AccessList ;
+    readonly etxAccessList?: AccessList;
 
     #startBlock: number;
 
@@ -1407,8 +1411,8 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
     constructor(tx: TransactionResponseParams, provider: Provider) {
         this.provider = provider;
 
-        this.blockNumber = (tx.blockNumber != null) ? tx.blockNumber: null;
-        this.blockHash = (tx.blockHash != null) ? tx.blockHash: null;
+        this.blockNumber = (tx.blockNumber != null) ? tx.blockNumber : null;
+        this.blockHash = (tx.blockHash != null) ? tx.blockHash : null;
 
         this.hash = tx.hash;
         this.index = tx.index;
@@ -1423,13 +1427,13 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
         this.data = tx.data;
         this.value = tx.value;
 
-        this.maxPriorityFeePerGas = (tx.maxPriorityFeePerGas != null) ? tx.maxPriorityFeePerGas: null;
-        this.maxFeePerGas = (tx.maxFeePerGas != null) ? tx.maxFeePerGas: null;
+        this.maxPriorityFeePerGas = (tx.maxPriorityFeePerGas != null) ? tx.maxPriorityFeePerGas : null;
+        this.maxFeePerGas = (tx.maxFeePerGas != null) ? tx.maxFeePerGas : null;
 
         this.chainId = tx.chainId;
         this.signature = tx.signature;
 
-        this.accessList = (tx.accessList != null) ? tx.accessList: null;
+        this.accessList = (tx.accessList != null) ? tx.accessList : null;
 
         if (tx.type != 2) {
             delete tx.etxGasLimit;
@@ -1457,7 +1461,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
             data, signature, accessList,
             //etxGasLimit, etxGasPrice, etxGasTip, etxData, etxAccessList // Include new fields
         } = this;
-        let result ={
+        let result = {
             _type: "TransactionReceipt",
             accessList, blockNumber, blockHash,
             chainId: toJson(this.chainId),
@@ -1478,7 +1482,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
 
         return result;
     }
-    
+
 
     /**
      *  Resolves to the Block that this transaction was included in.
@@ -1536,12 +1540,12 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      *  wait until enough confirmations have completed.
      */
     async wait(_confirms?: number, _timeout?: number): Promise<null | TransactionReceipt> {
-        const confirms = (_confirms == null) ? 1: _confirms;
-        const timeout = (_timeout == null) ? 0: _timeout;
+        const confirms = (_confirms == null) ? 1 : _confirms;
+        const timeout = (_timeout == null) ? 0 : _timeout;
 
         let startBlock = this.#startBlock
         let nextScan = -1;
-        let stopScanning = (startBlock === -1) ? true: false;
+        let stopScanning = (startBlock === -1) ? true : false;
         const checkReplacement = async () => {
             // Get the current transaction count for this sender
             if (stopScanning) { return null; }
@@ -1602,7 +1606,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
                         let reason: "replaced" | "repriced" | "cancelled" = "replaced";
                         if (tx.data === this.data && tx.to === this.to && tx.value === this.value) {
                             reason = "repriced";
-                        } else  if (tx.data === "0x" && tx.from === tx.to && tx.value === BN_0) {
+                        } else if (tx.data === "0x" && tx.from === tx.to && tx.value === BN_0) {
                             reason = "cancelled"
                         }
 
@@ -1653,7 +1657,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
 
         const waiter = new Promise((resolve, reject) => {
             // List of things to cancel when we have a result (one way or the other)
-            const cancellers: Array<() => void> = [ ];
+            const cancellers: Array<() => void> = [];
             const cancel = () => { cancellers.forEach((c) => c()); };
 
             // On cancel, stop scanning for replacements
@@ -1813,15 +1817,17 @@ function createRemovedTransactionFilter(tx: { hash: string, blockHash: string, b
 }
 
 function createRemovedLogFilter(log: { blockHash: string, transactionHash: string, blockNumber: number, address: string, data: string, topics: ReadonlyArray<string>, index: number }): OrphanFilter {
-    return { orphan: "drop-log", log: {
-        transactionHash: log.transactionHash,
-        blockHash: log.blockHash,
-        blockNumber: log.blockNumber,
-        address: log.address,
-        data: log.data,
-        topics: Object.freeze(log.topics.slice()),
-        index: log.index
-    } };
+    return {
+        orphan: "drop-log", log: {
+            transactionHash: log.transactionHash,
+            blockHash: log.blockHash,
+            blockNumber: log.blockNumber,
+            address: log.address,
+            data: log.data,
+            topics: Object.freeze(log.topics.slice()),
+            index: log.index
+        }
+    };
 }
 
 //////////////////////
@@ -1966,6 +1972,11 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  Get the best guess at the recommended [[FeeData]].
      */
     getFeeData(): Promise<FeeData>;
+
+    /**
+     * Get a work object to package a transaction in.
+     */
+    getPendingHeader(): Promise<WorkObjectLike>;
 
 
     ////////////////////

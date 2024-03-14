@@ -37,7 +37,7 @@ async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise
         pop.from = Promise.all([
             signer.getAddress(),
             resolveAddress(from, signer)
-        ]).then(([ address, from ]) => {
+        ]).then(([address, from]) => {
             assertArgument(address.toLowerCase() === from.toLowerCase(),
                 "transaction from mismatch", "tx.from", from);
             return address;
@@ -100,15 +100,15 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         }
 
         if (pop.type == null) {
-            pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
+            pop.type = getTxType(pop.from ?? null, pop.to ?? null);
         }
 
         if (pop.gasLimit == null) {
-            if (tx.type == 0 ) pop.gasLimit = await this.estimateGas(pop);
+            if (pop.type == 0) pop.gasLimit = await this.estimateGas(pop);
             else {
                 //Special cases for type 2 tx to bypass address out of scope in the node
                 let temp = pop.to
-                pop.to =  "0x0000000000000000000000000000000000000000"
+                pop.to = "0x0000000000000000000000000000000000000000"
                 pop.gasLimit = getBigInt(2 * Number(await this.estimateGas(pop)));
                 pop.to = temp
             }
@@ -145,7 +145,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
     }
 
     async estimateGas(tx: TransactionRequest): Promise<bigint> {
-                return checkProvider(this, "estimateGas").estimateGas(await this.populateCall(tx));
+        return checkProvider(this, "estimateGas").estimateGas(await this.populateCall(tx));
     }
 
     async call(tx: TransactionRequest): Promise<string> {
@@ -163,7 +163,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         delete pop.from;
         const txObj = Transaction.from(pop);
         const signedTx = await this.signTransaction(txObj);
-        console.log("signedTX: ", JSON.stringify(txObj))
         return await provider.broadcastTransaction(signedTx);
     }
 
@@ -202,7 +201,7 @@ export class VoidSigner extends AbstractSigner {
     }
 
     #throwUnsupported(suffix: string, operation: string): never {
-        assert(false, `VoidSigner cannot sign ${ suffix }`, "UNSUPPORTED_OPERATION", { operation });
+        assert(false, `VoidSigner cannot sign ${suffix}`, "UNSUPPORTED_OPERATION", { operation });
     }
 
     async signTransaction(tx: TransactionRequest): Promise<string> {

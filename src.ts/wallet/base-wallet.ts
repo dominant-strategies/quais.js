@@ -1,15 +1,17 @@
 import { getAddress, resolveAddress } from "../address/index.js";
 import { hashMessage, TypedDataEncoder } from "../hash/index.js";
 import { AbstractSigner } from "../providers/index.js";
-import { computeAddress, Transaction } from "../transaction/index.js";
+import { computeAddress } from "../transaction/index.js";
+// import { computeAddress, Transaction } from "../transaction/index.js";
 import {
-     resolveProperties, assert, assertArgument
+    resolveProperties, assert, assertArgument
 } from "../utils/index.js";
 
 import type { SigningKey } from "../crypto/index.js";
 import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
 import type { Provider, TransactionRequest } from "../providers/index.js";
 import type { TransactionLike } from "../transaction/index.js";
+import { WorkObject } from "../transaction/work-object.js";
 
 
 /**
@@ -41,7 +43,7 @@ export class BaseWallet extends AbstractSigner {
     constructor(privateKey: SigningKey, provider?: null | Provider) {
         super(provider);
 
-        assertArgument(privateKey && typeof(privateKey.sign) === "function", "invalid private key", "privateKey", "[ REDACTED ]");
+        assertArgument(privateKey && typeof (privateKey.sign) === "function", "invalid private key", "privateKey", "[ REDACTED ]");
 
         this.#signingKey = privateKey;
 
@@ -76,10 +78,10 @@ export class BaseWallet extends AbstractSigner {
     async signTransaction(tx: TransactionRequest): Promise<string> {
         // Replace any Addressable or ENS name with an address
         const { to, from } = await resolveProperties({
-            to: (tx.to ? resolveAddress(tx.to, this.provider): undefined),
-            from: (tx.from ? resolveAddress(tx.from, this.provider): undefined)
+            to: (tx.to ? resolveAddress(tx.to, this.provider) : undefined),
+            from: (tx.from ? resolveAddress(tx.from, this.provider) : undefined)
         });
-        
+
         if (to != null) { tx.to = to; }
         if (from != null) { tx.from = from; }
 
@@ -88,12 +90,24 @@ export class BaseWallet extends AbstractSigner {
                 "transaction from address mismatch", "tx.from", tx.from);
             delete tx.from;
         }
-        
-        // Build the transaction
-        const btx = Transaction.from(<TransactionLike<string>>tx);
-        btx.signature = this.signingKey.sign(btx.unsignedHash);
 
-        return btx.serialized;
+        const wo = await this.provider?.getPendingHeader();
+        if (!wo) {
+            throw new Error("No pending header found");
+        }
+
+        // Sign the work object header hash
+        const sig = this.signingKey.sign(wo.woHeader.woheaderHash);
+
+        // Build the work object
+        const bwo = new WorkObject(
+            wo.woHeader,
+            wo.woBody,
+            <TransactionLike<string>>tx,
+            sig
+        );
+        const serializedWorkObject = bwo.serialized;
+        return serializedWorkObject;
     }
 
     async signMessage(message: string | Uint8Array): Promise<string> {

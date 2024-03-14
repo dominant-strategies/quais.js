@@ -32,7 +32,14 @@ message ProtoTransaction {
   optional bytes signature = 24;
 }
 
+message ProtoTransactions { repeated ProtoTransaction transactions = 1; }
+
+message ProtoHeaders { repeated ProtoHeader headers = 1; }
+
+message ProtoManifest { repeated common.ProtoHash manifest = 1; }
+
 message ProtoAccessList { repeated ProtoAccessTuple access_tuples = 1; }
+
 
 message ProtoTxIns { repeated ProtoTxIn tx_ins = 1; }
 
@@ -56,4 +63,77 @@ message ProtoTxOut {
 message ProtoAccessTuple {
   bytes address = 1;
   repeated common.ProtoHash storage_key = 2;
+}
+
+message ProtoBlock {
+  optional ProtoHeader header = 1;
+  optional ProtoBody body = 2;
+}
+
+message ProtoBody {
+  optional ProtoTransactions txs = 1;
+  optional ProtoHeaders uncles = 2;
+  optional ProtoTransactions etxs = 3;
+  optional ProtoManifest manifest = 4;
+}
+
+message ProtoHeader {
+  repeated common.ProtoHash parent_hash = 1;
+  optional common.ProtoHash uncle_hash = 2;
+  optional bytes coinbase = 3;
+  optional common.ProtoHash evm_root = 4;
+  optional common.ProtoHash tx_hash = 5;
+  optional common.ProtoHash etx_hash = 6;
+  optional common.ProtoHash etx_rollup_hash = 7;
+  repeated common.ProtoHash manifest_hash = 8;
+  optional common.ProtoHash receipt_hash = 9;
+  optional bytes difficulty = 10;
+  repeated bytes parent_entropy = 11;
+  repeated bytes parent_delta_s = 12;
+  repeated bytes number = 13;
+  optional uint64 gas_limit = 14;
+  optional uint64 gas_used = 15;
+  optional bytes base_fee = 16;
+  optional common.ProtoLocation location = 17;
+  optional uint64 time = 18;
+  optional bytes extra = 19;
+  optional common.ProtoHash mix_hash = 20;
+  optional uint64 nonce = 21;
+  optional common.ProtoHash utxo_root = 22;
+}
+
+message ProtoWorkObjectHeader {
+  optional common.ProtoHash header_hash = 1;
+  optional common.ProtoHash parent_hash = 2;
+  optional bytes number = 3;
+  optional bytes difficulty = 4;
+  optional common.ProtoHash tx_hash = 5;
+  optional uint64 nonce = 6;
+  optional common.ProtoLocation location = 7;
+}
+
+message ProtoWorkObjectBody {
+  optional ProtoHeader header = 1;
+  optional ProtoTransactions transactions = 2;
+  optional ProtoTransactions ext_transactions = 3;
+  optional ProtoWorkObjects uncles = 4;
+  optional ProtoManifest manifest = 5;
+}
+
+message ProtoWorkObject {
+  optional ProtoWorkObjectHeader wo_header = 1;
+  optional ProtoWorkObjectBody wo_body = 2;
+  optional ProtoTransaction tx = 3;
+}
+
+message ProtoWorkObjects { repeated ProtoWorkObject work_objects = 1; }
+
+message ProtoPendingHeader {
+  optional ProtoWorkObject wo = 1;
+  optional ProtoTermini termini = 2;
+}
+
+message ProtoTermini {
+  repeated common.ProtoHash dom_termini = 1;
+  repeated common.ProtoHash sub_termini = 2;
 }

@@ -33,12 +33,12 @@ export {
     getBigInt, getNumber, getUint, toBigInt, toNumber, toBeHex, toBeArray, toQuantity
 } from "./maths.js";
 
-export { resolveProperties, defineProperties} from "./properties.js";
+export { resolveProperties, defineProperties } from "./properties.js";
 
 export { decodeRlp } from "./rlp-decode.js";
 export { encodeRlp } from "./rlp-encode.js";
-export { encodeProto } from "./proto-encode.js";
-export { decodeProto } from "./proto-decode.js";
+export { encodeProtoTransaction, encodeProtoWorkObject } from "./proto-encode.js";
+export { decodeProtoTransaction, decodeProtoWorkObject } from "./proto-decode.js";
 
 export { formatEther, parseEther, formatUnits, parseUnits } from "./units.js";
 

@@ -6,12 +6,12 @@
 import * as pb_1 from "google-protobuf";
 export namespace common {
     export class ProtoLocation extends pb_1.Message {
-        one_of_decls: number[][] = [];
+        #one_of_decls: number[][] = [];
         constructor(data?: any[] | {
             value?: Uint8Array;
         }) {
             super();
-            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.one_of_decls);
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
             if (!Array.isArray(data) && typeof data == "object") {
                 if ("value" in data && data.value != undefined) {
                     this.value = data.value;
@@ -73,12 +73,12 @@ export namespace common {
         }
     }
     export class ProtoHash extends pb_1.Message {
-        one_of_decls: number[][] = [];
+        #one_of_decls: number[][] = [];
         constructor(data?: any[] | {
             value?: Uint8Array;
         }) {
             super();
-            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.one_of_decls);
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
             if (!Array.isArray(data) && typeof data == "object") {
                 if ("value" in data && data.value != undefined) {
                     this.value = data.value;
@@ -140,12 +140,12 @@ export namespace common {
         }
     }
     export class ProtoHashes extends pb_1.Message {
-        one_of_decls: number[][] = [];
+        #one_of_decls: number[][] = [];
         constructor(data?: any[] | {
             hashes?: ProtoHash[];
         }) {
             super();
-            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.one_of_decls);
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
             if (!Array.isArray(data) && typeof data == "object") {
                 if ("hashes" in data && data.hashes != undefined) {
                     this.hashes = data.hashes;
@@ -207,12 +207,12 @@ export namespace common {
         }
     }
     export class ProtoAddress extends pb_1.Message {
-        one_of_decls: number[][] = [];
+        #one_of_decls: number[][] = [];
         constructor(data?: any[] | {
             value?: Uint8Array;
         }) {
             super();
-            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.one_of_decls);
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
             if (!Array.isArray(data) && typeof data == "object") {
                 if ("value" in data && data.value != undefined) {
                     this.value = data.value;

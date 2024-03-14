@@ -3,7 +3,7 @@ import { getAddress } from "../address/index.js";
 import { keccak256, Signature, SigningKey } from "../crypto/index.js";
 import {
     getBytes, getBigInt, getNumber, hexlify,
-    assert, assertArgument, toBeArray, zeroPadValue, encodeProto, decodeProto, toBigInt
+    assert, assertArgument, toBeArray, zeroPadValue, toBigInt
 } from "../utils/index.js";
 
 import { accessListify } from "./accesslist.js";
@@ -12,6 +12,9 @@ import { recoverAddress } from "./address.js";
 import type { BigNumberish, BytesLike } from "../utils/index.js";
 import type { SignatureLike } from "../crypto/index.js";
 import type { AccessList, AccessListish } from "./index.js";
+import { encodeProtoTransaction } from "../utils/proto-encode.js";
+import { decodeProtoTransaction } from "../utils/proto-decode.js";
+import { handleNumber, formatNumber } from "../providers/format.js";
 
 
 export interface TransactionLike<A = string> {
@@ -112,19 +115,41 @@ export interface TransactionLike<A = string> {
     externalAccessList?: null | AccessListish;
 }
 
-function handleNumber(_value: string, param: string): number {
-    if (_value === "0x") { return 0; }
-    return getNumber(_value, param);
+export interface ProtoTransaction {
+    type: number
+    to: Uint8Array
+    nonce: number
+    value: Uint8Array
+    gas: number
+    data: Uint8Array
+    chain_id: Uint8Array
+    gas_fee_cap: Uint8Array
+    gas_tip_cap: Uint8Array
+    access_list: ProtoAccessList
+    etx_gas_limit?: number
+    etx_gas_price?: Uint8Array
+    etx_gas_tip?: Uint8Array
+    etx_data?: Uint8Array
+    etx_access_list?: ProtoAccessList
+    v?: Uint8Array
+    r?: Uint8Array
+    s?: Uint8Array
+    originating_tx_hash?: string
+    etx_index?: number
+    etx_sender?: Uint8Array
+    signature?: Uint8Array
 }
 
-function formatNumber(_value: BigNumberish, name: string): Uint8Array {
-    const value = getBigInt(_value, "value");
-    const result = toBeArray(value);
-    assertArgument(result.length <= 32, `value too large`, `tx.${ name }`, value);
-    return result;
+export interface ProtoAccessList {
+    access_tuples: Array<ProtoAccessTuple>
 }
 
-function _parseSignature(tx: TransactionLike, fields: Array<string>, serialize: (tx: TransactionLike) => string): void {
+export interface ProtoAccessTuple {
+    address: Uint8Array
+    storage_key: Array<Uint8Array>
+}
+
+function _parseSignature(tx: TransactionLike, fields: Array<string>): void {
     let yParity: number;
     try {
         yParity = handleNumber(fields[0], "yParity");
@@ -141,22 +166,22 @@ function _parseSignature(tx: TransactionLike, fields: Array<string>, serialize: 
 }
 
 function _parse(data: Uint8Array): TransactionLike {
-    const decodedTx: any = decodeProto(getBytes(data));
+    const decodedTx: any = decodeProtoTransaction(getBytes(data));
 
     const tx: TransactionLike = {
-        type:                  decodedTx.type,
-        chainId:               toBigInt(decodedTx.chain_id),
-        nonce:                 decodedTx.nonce,
-        maxPriorityFeePerGas:  toBigInt(decodedTx.gas_tip_cap),
-        maxFeePerGas:          toBigInt(decodedTx.gas_fee_cap),
-        gasLimit:              toBigInt(decodedTx.gas),
-        to:                    hexlify(decodedTx.to),
-        value:                 toBigInt(decodedTx.value),
-        data:                  hexlify(decodedTx.data),
-        accessList:            decodedTx.access_list.access_tuples ,
+        type: decodedTx.type,
+        chainId: toBigInt(decodedTx.chain_id),
+        nonce: decodedTx.nonce,
+        maxPriorityFeePerGas: toBigInt(decodedTx.gas_tip_cap),
+        maxFeePerGas: toBigInt(decodedTx.gas_fee_cap),
+        gasLimit: toBigInt(decodedTx.gas),
+        to: hexlify(decodedTx.to),
+        value: toBigInt(decodedTx.value),
+        data: hexlify(decodedTx.data),
+        accessList: decodedTx.access_list.access_tuples,
     };
 
-    if (decodedTx.type == 2){
+    if (decodedTx.type == 2) {
         tx.externalGasLimit = toBigInt(decodedTx.etx_gas_limit)
         tx.externalGasPrice = toBigInt(decodedTx.etx_gas_price)
         tx.externalGasTip = toBigInt(decodedTx.etx_gas_tip)
@@ -172,40 +197,9 @@ function _parse(data: Uint8Array): TransactionLike {
         hexlify(decodedTx.s),
     ]
 
-    _parseSignature(tx, signatureFields, _serialize);
+    _parseSignature(tx, signatureFields);
 
     return tx;
-}
-
-function _serialize(tx: TransactionLike, sig?: Signature): string {
-    const formattedTx: any = {
-        chain_id: formatNumber(tx.chainId || 0, "chainId"),
-        nonce: (tx.nonce || 0),
-        gas_tip_cap: formatNumber(tx.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
-        gas_fee_cap: formatNumber(tx.maxFeePerGas || 0, "maxFeePerGas"),
-        gas: Number(tx.gasLimit || 0),
-        to: tx.to != null ? getBytes(tx.to) : "0x",
-        value: formatNumber(tx.value || 0, "value"),
-        data: getBytes(tx.data || "0x"),
-        access_list: {access_tuples: tx.accessList || []},
-        type: (tx.type || 0),
-    }
-
-    if (tx.type == 2){
-        formattedTx.etx_gas_limit = Number(tx.externalGasLimit || 0)
-        formattedTx.etx_gas_price = formatNumber(tx.externalGasPrice || 0, "externalGasPrice")
-        formattedTx.etx_gas_tip = formatNumber(tx.externalGasTip || 0, "externalGasTip")
-        formattedTx.etx_data = getBytes(tx.externalData || "0x")
-        formattedTx.etx_access_list = {access_tuples: tx.externalAccessList || []}
-    }
-
-    if (sig) {
-        formattedTx.v =  formatNumber(sig.yParity, "yParity"),
-        formattedTx.r = toBeArray(sig.r),
-        formattedTx.s = toBeArray(sig.s)
-    }
-
-    return encodeProto(formattedTx);
 }
 
 /**
@@ -236,7 +230,7 @@ export class Transaction implements TransactionLike<string> {
     #accessList: null | AccessList;
     #externalGasLimit: bigint;
     #externalGasTip: null | bigint;
-    #externalGasPrice: null | bigint; 
+    #externalGasPrice: null | bigint;
     #externalAccessList: null | AccessList;
     #externalData: string;
 
@@ -285,7 +279,7 @@ export class Transaction implements TransactionLike<string> {
      */
     get to(): null | string { return this.#to; }
     set to(value: null | string) {
-        this.#to = (value == null) ? null: getAddress(value);
+        this.#to = (value == null) ? null : getAddress(value);
     }
 
     /**
@@ -311,7 +305,7 @@ export class Transaction implements TransactionLike<string> {
         return value;
     }
     set gasPrice(value: null | BigNumberish) {
-        this.#gasPrice = (value == null) ? null: getBigInt(value, "gasPrice");
+        this.#gasPrice = (value == null) ? null : getBigInt(value, "gasPrice");
     }
 
     /**
@@ -326,7 +320,7 @@ export class Transaction implements TransactionLike<string> {
         return value;
     }
     set maxPriorityFeePerGas(value: null | BigNumberish) {
-        this.#maxPriorityFeePerGas = (value == null) ? null: getBigInt(value, "maxPriorityFeePerGas");
+        this.#maxPriorityFeePerGas = (value == null) ? null : getBigInt(value, "maxPriorityFeePerGas");
     }
 
     /**
@@ -341,7 +335,7 @@ export class Transaction implements TransactionLike<string> {
         return value;
     }
     set maxFeePerGas(value: null | BigNumberish) {
-        this.#maxFeePerGas = (value == null) ? null: getBigInt(value, "maxFeePerGas");
+        this.#maxFeePerGas = (value == null) ? null : getBigInt(value, "maxFeePerGas");
     }
 
     /**
@@ -370,7 +364,7 @@ export class Transaction implements TransactionLike<string> {
      */
     get signature(): null | Signature { return this.#sig || null; }
     set signature(value: null | SignatureLike) {
-        this.#sig = (value == null) ? null: Signature.from(value);
+        this.#sig = (value == null) ? null : Signature.from(value);
     }
 
     /**
@@ -387,7 +381,7 @@ export class Transaction implements TransactionLike<string> {
         return value;
     }
     set accessList(value: null | AccessListish) {
-        this.#accessList = (value == null) ? null: accessListify(value);
+        this.#accessList = (value == null) ? null : accessListify(value);
     }
 
     /**
@@ -408,7 +402,7 @@ export class Transaction implements TransactionLike<string> {
         return value;
     }
     set externalGasTip(value: null | BigNumberish) {
-        this.#externalGasTip = (value == null) ? null: getBigInt(value, "externalGasTip");
+        this.#externalGasTip = (value == null) ? null : getBigInt(value, "externalGasTip");
     }
 
     /**
@@ -423,7 +417,7 @@ export class Transaction implements TransactionLike<string> {
         return value;
     }
     set externalGasPrice(value: null | BigNumberish) {
-        this.#externalGasPrice = (value == null) ? null: getBigInt(value, "externalGasPrice");
+        this.#externalGasPrice = (value == null) ? null : getBigInt(value, "externalGasPrice");
     }
 
     /**
@@ -447,10 +441,8 @@ export class Transaction implements TransactionLike<string> {
         return value;
     }
     set externalAccessList(value: null | AccessListish) {
-        this.#externalAccessList = (value == null) ? null: accessListify(value);
+        this.#externalAccessList = (value == null) ? null : accessListify(value);
     }
-
-        
 
     /**
      *  Creates a new Transaction with default values.
@@ -516,7 +508,7 @@ export class Transaction implements TransactionLike<string> {
      *  transaction are non-null.
      */
     isSigned(): this is (Transaction & { type: number, typeName: string, from: string, signature: Signature }) {
-    //isSigned(): this is SignedTransaction {
+        //isSigned(): this is SignedTransaction {
         return this.signature != null;
     }
 
@@ -527,9 +519,8 @@ export class Transaction implements TransactionLike<string> {
      *  use [[unsignedSerialized]].
      */
     get serialized(): string {
-        assert(this.signature != null, "cannot serialize unsigned transaction; maybe you meant .unsignedSerialized", "UNSUPPORTED_OPERATION", { operation: ".serialized"});
-
-        return _serialize(this, this.signature);
+        assert(this.signature != null, "cannot serialize unsigned transaction; maybe you meant .unsignedSerialized", "UNSUPPORTED_OPERATION", { operation: ".serialized" });
+        return this.#serialize();
     }
 
     /**
@@ -539,7 +530,7 @@ export class Transaction implements TransactionLike<string> {
      *  authorize this transaction.
      */
     get unsignedSerialized(): string {
-        return _serialize(this);
+        return this.#serialize();
     }
 
     /**
@@ -576,7 +567,7 @@ export class Transaction implements TransactionLike<string> {
 
         assert(hasExternal || (this.type !== 0 && this.type !== 1), "transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList", "BAD_DATA", { value: this });
 
-        const types: Array<number> = [ ];
+        const types: Array<number> = [];
 
         // Explicit type
         if (this.type != null) {
@@ -605,7 +596,7 @@ export class Transaction implements TransactionLike<string> {
     /**
      *  Return a JSON-friendly object.
      */
-    toJSON(): any {
+    toJSON(): TransactionLike {
         const s = (v: null | bigint) => {
             if (v == null) { return null; }
             return v.toString();
@@ -614,7 +605,7 @@ export class Transaction implements TransactionLike<string> {
         return {
             type: this.type,
             to: this.to,
-//            from: this.from,
+            // from: this.from,
             data: this.data,
             nonce: this.nonce,
             gasLimit: s(this.gasLimit),
@@ -623,7 +614,8 @@ export class Transaction implements TransactionLike<string> {
             maxFeePerGas: s(this.maxFeePerGas),
             value: s(this.value),
             chainId: s(this.chainId),
-            sig: this.signature ? this.signature.toJSON(): null,
+            signature: this.signature ? this.signature.toJSON() : null,
+            hash: this.hash,
             accessList: this.accessList,
             externalGasLimit: s(this.externalGasLimit),
             externalGasTip: s(this.externalGasTip),
@@ -634,16 +626,51 @@ export class Transaction implements TransactionLike<string> {
     }
 
     /**
+     *  Return a protobuf-friendly JSON object.
+     */
+    toProtobuf(): ProtoTransaction {
+        const protoTx: ProtoTransaction = {
+            type: (this.type || 0),
+            chain_id: formatNumber(this.chainId || 0, "chainId"),
+            nonce: (this.nonce || 0),
+            gas_tip_cap: formatNumber(this.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
+            gas_fee_cap: formatNumber(this.maxFeePerGas || 0, "maxFeePerGas"),
+            gas: Number(this.gasLimit || 0),
+            to: this.to != null ? getBytes(this.to as string) : new Uint8Array(0),
+            value: formatNumber(this.value || 0, "value"),
+            data: getBytes(this.data || "0x"),
+            access_list: { access_tuples: [] },
+        }
+
+        if (this.type == 2) {
+            protoTx.etx_gas_limit = Number(this.externalGasLimit || 0)
+            protoTx.etx_gas_price = formatNumber(this.externalGasPrice || 0, "externalGasPrice")
+            protoTx.etx_gas_tip = formatNumber(this.externalGasTip || 0, "externalGasTip")
+            protoTx.etx_data = getBytes(this.externalData || "0x")
+            protoTx.etx_access_list = { access_tuples: [] }
+        }
+
+        if (this.signature) {
+            protoTx.v = formatNumber(this.signature.yParity, "yParity"),
+                protoTx.r = toBeArray(this.signature.r),
+                protoTx.s = toBeArray(this.signature.s)
+            protoTx.signature = getBytes(this.signature.serialized)
+        }
+        console.log("formatted tx ", protoTx);
+        return protoTx;
+    }
+
+    /**
      *  Create a **Transaction** from a serialized transaction or a
      *  Transaction-like object.
      */
     static from(tx?: string | TransactionLike<string>): Transaction {
         if (tx == null) { return new Transaction(); }
-        
-        if (typeof(tx) === "string") {
+
+        if (typeof (tx) === "string") {
             const payload = getBytes(tx);
             return Transaction.from(_parse(payload));
-           } 
+        }
         const result = new Transaction();
         if (tx.type != null) { result.type = tx.type; }
         if (tx.to != null) { result.to = tx.to; }
@@ -675,4 +702,14 @@ export class Transaction implements TransactionLike<string> {
 
         return result;
     }
+
+    /**
+     *  Serializes the WorkObject to a string.
+     *  
+     *  @returns The serialized string representation of the WorkObject.
+     */
+    #serialize(): string {
+        return encodeProtoTransaction(this.toProtobuf());
+    }
 }
+

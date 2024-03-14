@@ -1,11 +1,11 @@
 import * as Proto from "./ProtoBuf/proto-block"
 
-function _decode(object: any): any {
+export function decodeProtoTransaction(object: any): any {
     const tx = Proto.block.ProtoTransaction.deserialize(object);
-    const result = tx.toObject();
-    return result;
+    return tx.toObject();
 }
 
-export function decodeProto(object: Uint8Array): string{
-    return _decode(object);
+export function decodeProtoWorkObject(object: any): any {
+    const wo = Proto.block.ProtoWorkObject.deserialize(object);
+    return wo.toObject();
 }
