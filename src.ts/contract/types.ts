@@ -62,7 +62,8 @@ export interface ContractTransaction extends PreparedTransactionRequest {
     /**
      *  The from address, if any.
      */
-    from?: string;
+    from: string;
+
 }
 
 /**

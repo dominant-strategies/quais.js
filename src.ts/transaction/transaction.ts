@@ -1,5 +1,5 @@
 
-import { getAddress } from "../address/index.js";
+import {getAddress} from "../address/index.js";
 import { keccak256, Signature, SigningKey } from "../crypto/index.js";
 import {
     getBytes, getBigInt, getNumber, hexlify,
@@ -28,8 +28,7 @@ export interface TransactionLike<A = string> {
     /**
      *  The sender.
      */
-    from?: null | A;
-
+    from: A;
     /**
      *  The nonce.
      */
@@ -123,6 +122,7 @@ function _parse(data: Uint8Array): TransactionLike {
     const decodedTx: any = decodeProto(getBytes(data));
     const tx: TransactionLike = {
         type:                  decodedTx.type,
+        from:                  decodedTx.from,
         chainId:               toBigInt(decodedTx.chain_id),
         nonce:                 decodedTx.nonce,
         maxPriorityFeePerGas:  toBigInt(decodedTx.gas_tip_cap),
@@ -143,7 +143,7 @@ function _parse(data: Uint8Array): TransactionLike {
     _parseSignature(tx, signatureFields);
 
     tx.hash = getTransactionHash(tx, data);
-    
+
     return tx;
 }
 
@@ -166,8 +166,8 @@ function getTransactionHash (tx: TransactionLike, data: Uint8Array): string {
 
     let hash = keccak256(data)
     hash = '0x' + originShardByte + (originUtxo ? 'F' : '1') + hash.charAt(5) + originShardByte + (destUtxo ? 'F' : '1') + hash.slice(9)
-    
-    //TODO alter comparison  
+
+    //TODO alter comparison
     return hash;
 }
 
@@ -229,6 +229,7 @@ export class Transaction implements TransactionLike<string> {
     #hash: null | string;
     #inputsUTXO: null | UTXOTransactionInput[];
     #outputsUTXO: null | UTXOTransactionOutput[];
+    from: string;
 
     /**
      *  The transaction type.
@@ -391,7 +392,7 @@ export class Transaction implements TransactionLike<string> {
     /**
      *  Creates a new Transaction with default values.
      */
-    constructor() {
+    constructor(from: string) {
         this.#type = null;
         this.#to = null;
         this.#nonce = 0;
@@ -407,6 +408,7 @@ export class Transaction implements TransactionLike<string> {
         this.#hash = null;
         this.#inputsUTXO = null;
         this.#outputsUTXO = null;
+        this.from = from
     }
 
     /**
@@ -430,14 +432,6 @@ export class Transaction implements TransactionLike<string> {
      */
     get unsignedHash(): string {
         return keccak256(this.unsignedSerialized);
-    }
-
-    /**
-     *  The sending address, if signed. Otherwise, ``null``.
-     */
-    get from(): null | string {
-        if (this.signature == null) { return null; }
-        return recoverAddress(this.unsignedHash, this.signature);
     }
 
     /**
@@ -514,7 +508,7 @@ export class Transaction implements TransactionLike<string> {
 
         } else {
                 types.push(0);
-            
+
         }
 
         types.sort();
@@ -559,14 +553,14 @@ export class Transaction implements TransactionLike<string> {
      *  Create a **Transaction** from a serialized transaction or a
      *  Transaction-like object.
      */
-    static from(tx?: string | TransactionLike<string>): Transaction {
-        if (tx == null) { return new Transaction(); }
-        
+    static from(tx: string | TransactionLike<string>): Transaction {
+//        if (tx == null) { return new Transaction(); }
+
         if (typeof(tx) === "string") {
             const payload = getBytes(tx);
             return Transaction.from(_parse(payload));
            } 
-        const result = new Transaction();
+        const result = new Transaction(tx.from);
         if (tx.type != null) { result.type = tx.type; }
         if (tx.to != null) { result.to = tx.to; }
         if (tx.nonce != null) { result.nonce = tx.nonce; }
@@ -578,7 +572,7 @@ export class Transaction implements TransactionLike<string> {
         if (tx.chainId != null) { result.chainId = tx.chainId; }
         if (tx.signature != null) { result.signature = Signature.from(tx.signature); }
         if (tx.accessList != null) { result.accessList = tx.accessList; }
-        
+
 
         if (tx.hash != null) {
             assertArgument(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);
@@ -586,7 +580,7 @@ export class Transaction implements TransactionLike<string> {
         }
 
         if (tx.from != null) {
-            assertArgument(result.isSigned(), "unsigned transaction cannot define from", "tx", tx);
+//             assertArgument(result.isSigned(), "unsigned transaction cannot define from", "tx", tx);
             assertArgument(result.from.toLowerCase() === (tx.from || "").toLowerCase(), "from mismatch", "tx", tx);
         }
         return result;

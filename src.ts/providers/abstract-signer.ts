@@ -5,7 +5,7 @@
  *
  *  @_section: api/providers/abstract-signer: Subclassing Signer [abstract-signer]
  */
-import { resolveAddress } from "../address/index.js";
+import {AddressLike, resolveAddress} from "../address/index.js";
 import { Transaction } from "../transaction/index.js";
 import {
     defineProperties, getBigInt, resolveProperties,
@@ -74,6 +74,15 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
      */
     abstract getAddress(): Promise<string>;
 
+
+    _getAddress(address: AddressLike): string | Promise<string> {
+        return resolveAddress(address, this);
+    }
+
+    async shardFromAddress(_address: AddressLike): Promise<string> {
+        let address: string | Promise<string> = this._getAddress(_address);
+        return (await address).slice(0, 4)
+    }
     /**
      *  Returns the signer connected to %%provider%%.
      *
@@ -98,6 +107,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
     async populateTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
         console.log("populateTransaction")
         const provider = checkProvider(this, "populateTransaction");
+        const shard = await this.shardFromAddress(tx.from)
 
         const pop = await populate(this, tx);
 
@@ -125,12 +135,12 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
         if (pop.chainId != null) {
             const chainId = getBigInt(pop.chainId);
-            assertArgument(chainId === network.chainId, "transaction chainId mismatch", "tx.chainId", tx.chainId);
+            assertArgument(chainId === network.chainId, "transaction chainId mismatch", "tx.chainId", shard);
         } else {
             pop.chainId = network.chainId;
         }
         if (pop.maxFeePerGas == null || pop.maxPriorityFeePerGas == null) {
-            const feeData = await provider.getFeeData();
+            const feeData = await provider.getFeeData(shard);
 
             if (pop.maxFeePerGas == null) {
                 pop.maxFeePerGas = feeData.maxFeePerGas;
@@ -160,14 +170,14 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
         console.log('sendTransaction', tx)
         const provider = checkProvider(this, "sendTransaction");
+        const shard = await this.shardFromAddress(tx.from)
         const pop = await this.populateTransaction(tx);
         console.log("populated tx", pop)
-        delete pop.from;
-        
+//        delete pop.from;
         const txObj = Transaction.from(pop);
         const signedTx = await this.signTransaction(txObj);
-        const result = await provider.broadcastTransaction(signedTx);
-        return result
+        console.log("signedTX: ", JSON.stringify(txObj))
+        return await provider.broadcastTransaction(shard, signedTx);
     }
 
     abstract signTransaction(tx: TransactionRequest): Promise<string>;
