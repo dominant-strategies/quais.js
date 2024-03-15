@@ -134,7 +134,7 @@ export interface TransactionRequest {
     /**
      *  The sender of the transaction.
      */
-    from?: null | AddressLike;
+    from: AddressLike;
 
     /**
      *  The nonce of the transaction, used to prevent replay attacks.
@@ -226,7 +226,7 @@ export interface PreparedTransactionRequest {
     /**
      *  The sender of the transaction.
      */
-    from?: AddressLike;
+    from: AddressLike;
 
     /**
      *  The nonce of the transaction, used to prevent replay attacks.
@@ -907,8 +907,8 @@ export class Log implements LogParams {
     /**
      *  Returns the block that this log occurred in.
      */
-    async getBlock(): Promise<Block> {
-        const block = await this.provider.getBlock(this.blockHash);
+    async getBlock(shard: string): Promise<Block> {
+        const block = await this.provider.getBlock(shard, this.blockHash);
         assert(!!block, "failed to find transaction", "UNKNOWN_ERROR", { });
         return block;
     }
@@ -944,6 +944,9 @@ export class Log implements LogParams {
 // Transaction Receipt
 
 
+export function shardFromHash(hash: string): string {
+    return hash.slice(0, 4);
+}
 /**
  *  A **TransactionReceipt** includes additional information about a
  *  transaction that is only available after it has been mined.
@@ -1150,8 +1153,8 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
     /**
      *  Resolves to the block this transaction occurred in.
      */
-    async getBlock(): Promise<Block> {
-        const block = await this.provider.getBlock(this.blockHash);
+    async getBlock(shard: string): Promise<Block> {
+        const block = await this.provider.getBlock(shard, this.blockHash);
         if (block == null) { throw new Error("TODO"); }
         return block;
     }
@@ -1179,7 +1182,8 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
      *  Resolves to the number of confirmations this transaction has.
      */
     async confirmations(): Promise<number> {
-        return (await this.provider.getBlockNumber()) - this.blockNumber + 1;
+        const shard = shardFromHash(this.hash);
+        return (await this.provider.getBlockNumber(shard)) - this.blockNumber + 1;
     }
 
     /**
@@ -1414,14 +1418,14 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      *
      *  This will return null if the transaction has not been included yet.
      */
-    async getBlock(): Promise<null | Block> {
+    async getBlock(shard: string): Promise<null | Block> {
         let blockNumber = this.blockNumber;
         if (blockNumber == null) {
             const tx = await this.getTransaction();
             if (tx) { blockNumber = tx.blockNumber; }
         }
         if (blockNumber == null) { return null; }
-        const block = this.provider.getBlock(blockNumber);
+        const block = this.provider.getBlock(shard, blockNumber);
         if (block == null) { throw new Error("TODO"); }
         return block;
     }
@@ -1439,10 +1443,11 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      *  Resolve to the number of confirmations this transaction has.
      */
     async confirmations(): Promise<number> {
+        const shard = shardFromHash(this.hash);
         if (this.blockNumber == null) {
             const { tx, blockNumber } = await resolveProperties({
                 tx: this.getTransaction(),
-                blockNumber: this.provider.getBlockNumber()
+                blockNumber: this.provider.getBlockNumber(shard)
             });
 
             // Not mined yet...
@@ -1451,7 +1456,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
             return blockNumber - tx.blockNumber + 1;
         }
 
-        const blockNumber = await this.provider.getBlockNumber();
+        const blockNumber = await this.provider.getBlockNumber(shard);
         return blockNumber - this.blockNumber + 1;
     }
 
@@ -1471,11 +1476,12 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
         let startBlock = this.#startBlock
         let nextScan = -1;
         let stopScanning = (startBlock === -1) ? true: false;
+        const shard = shardFromHash(this.hash);
         const checkReplacement = async () => {
             // Get the current transaction count for this sender
             if (stopScanning) { return null; }
             const { blockNumber, nonce } = await resolveProperties({
-                blockNumber: this.provider.getBlockNumber(),
+                blockNumber: this.provider.getBlockNumber(shard),
                 nonce: this.provider.getTransactionCount(this.from)
             });
 
@@ -1502,7 +1508,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
             while (nextScan <= blockNumber) {
                 // Get the next block to scan
                 if (stopScanning) { return null; }
-                const block = await this.provider.getBlock(nextScan, true);
+                const block = await this.provider.getBlock(shard, nextScan, true);
 
                 // This should not happen; but we'll try again shortly
                 if (block == null) { return; }
@@ -1794,6 +1800,8 @@ export interface Filter extends EventFilter {
      *  The end block for the filter (inclusive).
      */
     toBlock?: BlockTag;
+
+    shard: string
 }
 
 /**
@@ -1805,6 +1813,7 @@ export interface FilterByBlockHash extends EventFilter {
      *  The blockhash of the specific block for the filter.
      */
     blockHash?: string;
+    shard: string;
 }
 
 
@@ -1884,17 +1893,17 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
     /**
      *  Get the current block number.
      */
-    getBlockNumber(): Promise<number>;
+    getBlockNumber(shard: string): Promise<number>;
 
     /**
      *  Get the connected [[Network]].
      */
-    getNetwork(): Promise<Network>;
+    getNetwork(shard?: string): Promise<Network>;
 
     /**
      *  Get the best guess at the recommended [[FeeData]].
      */
-    getFeeData(): Promise<FeeData>;
+    getFeeData(shard: string): Promise<FeeData>;
 
 
     ////////////////////
@@ -1958,7 +1967,7 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  memory pool of any node for which the transaction meets the
      *  rebroadcast requirements.
      */
-    broadcastTransaction(signedTx: string): Promise<TransactionResponse>;
+    broadcastTransaction(shard: string, signedTx: string): Promise<TransactionResponse>;
 
 
     ////////////////////
@@ -1972,7 +1981,7 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  [[Block]] object will not need to make remote calls for getting
      *  transactions.
      */
-    getBlock(blockHashOrBlockTag: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block>;
+    getBlock(shard: string, blockHashOrBlockTag: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block>;
 
     /**
      *  Resolves to the transaction for %%hash%%.
@@ -2039,5 +2048,5 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  This can be useful for waiting some number of blocks by using
      *  the ``currentBlockNumber + N``.
      */
-    waitForBlock(blockTag?: BlockTag): Promise<Block>;
+    waitForBlock(shard: string, blockTag?: BlockTag): Promise<Block>;
 }

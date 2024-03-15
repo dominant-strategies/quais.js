@@ -160,8 +160,8 @@ export  class ContractUnknownEventPayload extends EventPayload<ContractEventName
     /**
      *  Resolves to the block the event occured in.
      */
-    async getBlock(): Promise<Block> {
-        return await this.log.getBlock();
+    async getBlock(shard: string): Promise<Block> {
+        return await this.log.getBlock(shard);
     }
 
     /**

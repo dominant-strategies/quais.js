@@ -57,7 +57,7 @@ describe("Test Fallback broadcast", function() {
         });;
 
         const provider = new FallbackProvider(providers);
-        return await provider.broadcastTransaction(tx);
+        return await provider.broadcastTransaction('0,1', tx);
     }
 
     it("picks late non-failed broadcasts", async function() {

@@ -278,13 +278,20 @@ function buildWrappedMethod<A extends Array<any> = Array<any>, R = any, D extend
         const fragment = getFragment(...args);
 
         // If an overrides was passed in, copy it and normalize the values
-        let overrides: Omit<ContractTransaction, "data" | "to"> = { };
+        let overrides: Omit<ContractTransaction, "data" | "to">;
         if (fragment.inputs.length + 1 === args.length) {
             overrides = await copyOverrides(args.pop());
 
-            if (overrides.from) {
-                overrides.from = await resolveAddress(overrides.from, getResolver(contract.runner));
-            }
+            const resolvedArgs = await resolveArgs(contract.runner, fragment.inputs, args);
+
+            return Object.assign({ }, overrides, await resolveProperties({
+                to: contract.getAddress(),
+                data: contract.interface.encodeFunctionData(fragment, resolvedArgs)
+            }));
+
+            // if (overrides.from) {
+            //     overrides.from = await resolveAddress(overrides.from, getResolver(contract.runner));
+            // }
         }
 
         if (fragment.inputs.length !== args.length) {
@@ -293,10 +300,11 @@ function buildWrappedMethod<A extends Array<any> = Array<any>, R = any, D extend
 
         const resolvedArgs = await resolveArgs(contract.runner, fragment.inputs, args);
 
-        return Object.assign({ }, overrides, await resolveProperties({
+        return await resolveProperties({
             to: contract.getAddress(),
+            from: args.pop().from,
             data: contract.interface.encodeFunctionData(fragment, resolvedArgs)
-        }));
+        });
     }
 
     const staticCall = async function(...args: ContractMethodArgs<A>): Promise<R> {
@@ -930,13 +938,13 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
      *  %%fromBlock%% (default: ``0``) to %%toBlock%% (default: ``"latest"``)
      *  inclusive.
      */
-    async queryFilter(event: ContractEventName, fromBlock?: BlockTag, toBlock?: BlockTag): Promise<Array<EventLog | Log>> {
+    async queryFilter(shard: string, event: ContractEventName, fromBlock?: BlockTag, toBlock?: BlockTag): Promise<Array<EventLog | Log>> {
         if (fromBlock == null) { fromBlock = 0; }
         if (toBlock == null) { toBlock = "latest"; }
         const { addr, addrPromise } = getInternal(this);
         const address = (addr ? addr: (await addrPromise));
         const { fragment, topics } = await getSubInfo(this, event);
-        const filter = { address, topics, fromBlock, toBlock };
+        const filter = { address, topics, fromBlock, toBlock, shard: shard };
 
         const provider = getProvider(this.runner);
         assert(provider, "contract runner does not have a provider",

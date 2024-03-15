@@ -183,6 +183,7 @@ export interface TestCaseRlp {
 
 export interface TestCaseTransactionTx {
     to?: string;
+    from: string;
     nonce?: number;
     gasLimit?: string;
 

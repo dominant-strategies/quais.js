@@ -287,6 +287,7 @@ export interface TransactionReceiptParams {
     status: null | number;
 
     etxs: ReadonlyArray<string>;
+
 }
 
 

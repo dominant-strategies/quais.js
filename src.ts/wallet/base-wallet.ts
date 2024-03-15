@@ -91,7 +91,7 @@ export class BaseWallet extends AbstractSigner {
         if (tx.from != null) {
             assertArgument(getAddress(<string>(tx.from)) === this.#address,
                 "transaction from address mismatch", "tx.from", tx.from);
-            delete tx.from;
+//            delete tx.from;
         }
         
         // Build the transaction
