@@ -339,7 +339,8 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
         // This cannot be mined any earlier than any recent block
-        const blockNumber = await this.provider.getBlockNumber();
+        const shard = await this.shardFromAddress(tx.from);
+        const blockNumber = await this.provider.getBlockNumber(shard);
         // Send the transaction
         const hash = await this.sendUncheckedTransaction(tx);
 
@@ -456,7 +457,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 type ResolveFunc = (result: JsonRpcResult) => void;
 type RejectFunc = (error: Error) => void;
 
-type Payload = { payload: JsonRpcPayload, resolve: ResolveFunc, reject: RejectFunc };
+type Payload = { payload: JsonRpcPayload, resolve: ResolveFunc, reject: RejectFunc, shard?: string };
 
 /**
  *  The JsonRpcApiProvider is an abstract class and **MUST** be
@@ -487,6 +488,8 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     #network: null | Network;
     #pendingDetectNetwork: null | Promise<Network>;
 
+    initPromise?: Promise<void>;
+
     #scheduleDrain(): void {
         if (this.#drainTimer) { return; }
 
@@ -515,13 +518,30 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
                 // Process the result to each payload
                 (async () => {
-                    const payload = ((batch.length === 1) ? batch[0].payload: batch.map((p) => p.payload));
+                    const payloadMap: Map<string | undefined, Array<JsonRpcPayload>> = new Map()
+                    for (let i = 0; i < batch.length; i++) {
+                        if (!payloadMap.has(batch[i].shard)) {
+                            if (batch[i].payload != null) { payloadMap.set(batch[i].shard, [batch[i].payload]) };
+                        } else {
+                            payloadMap.get(batch[i].shard)?.push(batch[i].payload);
+                        }
+                    }
 
-                    this.emit("debug", { action: "sendRpcPayload", payload });
+                    let rawResult: Array<Array<JsonRpcResult | JsonRpcError>> = []
+                    await Promise.all(Array.from(payloadMap).map(async ([key, value]) => {
+                        const payload = value.length === 1 ? value[0] : value;
+                        const shard = key;
+
+                        this.emit("debug", { action: "sendRpcPayload", payload });
+
+                        rawResult.push(await this._send(payload, shard));
+
+                        this.emit("debug", { action: "receiveRpcResult", payload });
+                    }));
+
+                    const result: Array<JsonRpcResult | JsonRpcError> = rawResult.flat();
 
                     try {
-                        const result = await this._send(payload);
-                        this.emit("debug", { action: "receiveRpcResult", result });
 
                         // Process results in batch order
                         for (const { resolve, reject, payload } of batch) {
@@ -624,7 +644,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
      *
      *  Sub-classes **MUST** override this.
      */
-    abstract _send(payload: JsonRpcPayload | Array<JsonRpcPayload>): Promise<Array<JsonRpcResult | JsonRpcError>>;
+    abstract _send(payload: JsonRpcPayload | Array<JsonRpcPayload>, shard?: string): Promise<Array<JsonRpcResult | JsonRpcError>>;
 
 
     /**
@@ -636,12 +656,13 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     async _perform(req: PerformActionRequest): Promise<any> {
         // Legacy networks do not like the type field being passed along (which
         // is fair), so we delete type if it is 0 and a non-EIP-1559 network
+        await this.initPromise;
         if (req.method === "call" || req.method === "estimateGas") {
             let tx = req.transaction;
             if (tx && tx.type != null && getBigInt(tx.type)) {
                 // If there are no EIP-1559 properties, it might be non-EIP-a559
                 if (tx.maxFeePerGas == null && tx.maxPriorityFeePerGas == null) {
-                    const feeData = await this.getFeeData();
+                    const feeData = await this.getFeeData(req.shard);
                     if (feeData.maxFeePerGas == null && feeData.maxPriorityFeePerGas == null) {
                         // Network doesn't know about EIP-1559 (and hence type)
                         req = Object.assign({ }, req, {
@@ -655,7 +676,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         const request = this.getRpcRequest(req);
 
         if (request != null) {
-            return await this.send(request.method, request.args);
+            return await this.send(request.method, request.args, req.shard);
         }
 
         return super._perform(req);
@@ -1075,7 +1096,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
      *  override [[_send]] or force the options values in the
      *  call to the constructor to modify this method's behavior.
      */
-    send(method: string, params: Array<any> | Record<string, any>): Promise<any> {
+    send(method: string, params: Array<any> | Record<string, any>, shard?: string): Promise<any> {
         // @TODO: cache chainId?? purge on switch_networks
 
         // We have been destroyed; no operations are supported anymore
@@ -1086,7 +1107,8 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         const promise = new Promise((resolve, reject) => {
             this.#payloads.push({
                 resolve, reject,
-                payload: { method, params, id, jsonrpc: "2.0" }
+                payload: { method, params, id, jsonrpc: "2.0" },
+                shard: shard
             });
         });
 
@@ -1174,16 +1196,17 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
  *  for updates.
  */
 export class JsonRpcProvider extends JsonRpcApiProvider {
-    #connect: FetchRequest;
 
-    constructor(url?: string | FetchRequest, network?: Networkish, options?: JsonRpcApiProviderOptions) {
-        if (url == null) { url = "http:/\/localhost:8545"; }
+    constructor(urls?: string | string[] | FetchRequest, network?: Networkish, options?: JsonRpcApiProviderOptions) {
+        if (urls == null) { urls = ["http:/\/localhost:8545"]; }
         super(network, options);
 
-        if (typeof(url) === "string") {
-            this.#connect = new FetchRequest(url);
+        if (Array.isArray(urls)) {
+            this.initPromise = this.initUrlMap(urls);
+        } else if(typeof urls === "string") {
+            this.initPromise = this.initUrlMap([urls]);
         } else {
-            this.#connect = url.clone();
+            this.initPromise = this.initUrlMap(urls.clone());
         }
     }
 
@@ -1192,22 +1215,28 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         return subscriber;
     }
 
-    _getConnection(): FetchRequest {
-        return this.#connect.clone();
+    _getConnection(shard?: string): FetchRequest {
+        const connection =  this.connect[this.connect.length - 1]!.clone();
+        if (typeof shard === "string") {
+            const shardBytes = this.shardBytes(shard);
+            connection.url = this._urlMap.get(shardBytes) ?? connection.url;
+        }
+        return connection
     }
 
-    async send(method: string, params: Array<any> | Record<string, any>): Promise<any> {
+    async send(method: string, params: Array<any> | Record<string, any>, shard?: string): Promise<any> {
         // All requests are over HTTP, so we can just start handling requests
         // We do this here rather than the constructor so that we don't send any
         // requests to the network (i.e. quai_chainId) until we absolutely have to.
+//        await this.initPromise;
         await this._start();
 
-        return await super.send(method, params);
+        return await super.send(method, params, shard);
     }
 
-    async _send(payload: JsonRpcPayload | Array<JsonRpcPayload>): Promise<Array<JsonRpcResult>> {
+    async _send(payload: JsonRpcPayload | Array<JsonRpcPayload>, shard?: string): Promise<Array<JsonRpcResult>> {
         // Configure a POST connection for the requested method
-        const request = this._getConnection();
+        const request = this._getConnection(shard);
         request.body = JSON.stringify(payload);
         request.setHeader("content-type", "application/json");
         const response = await request.send();
