@@ -6,7 +6,7 @@
 import * as pb_1 from "google-protobuf";
 export declare namespace common {
     class ProtoLocation extends pb_1.Message {
-        one_of_decls: number[][];
+        #private;
         constructor(data?: any[] | {
             value?: Uint8Array;
         });
@@ -25,7 +25,7 @@ export declare namespace common {
         static deserializeBinary(bytes: Uint8Array): ProtoLocation;
     }
     class ProtoHash extends pb_1.Message {
-        one_of_decls: number[][];
+        #private;
         constructor(data?: any[] | {
             value?: Uint8Array;
         });
@@ -44,7 +44,7 @@ export declare namespace common {
         static deserializeBinary(bytes: Uint8Array): ProtoHash;
     }
     class ProtoHashes extends pb_1.Message {
-        one_of_decls: number[][];
+        #private;
         constructor(data?: any[] | {
             hashes?: ProtoHash[];
         });
@@ -65,7 +65,7 @@ export declare namespace common {
         static deserializeBinary(bytes: Uint8Array): ProtoHashes;
     }
     class ProtoAddress extends pb_1.Message {
-        one_of_decls: number[][];
+        #private;
         constructor(data?: any[] | {
             value?: Uint8Array;
         });

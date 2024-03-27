@@ -91,16 +91,22 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         return pop;
     }
 
+    // async populateQiTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
+
+    // }
+
     async populateTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
+        console.log("populateTransaction")
         const provider = checkProvider(this, "populateTransaction");
 
         const pop = await populate(this, tx);
-        if (pop.nonce == null) {
-            pop.nonce = await this.getNonce("pending");
-        }
 
         if (pop.type == null) {
             pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
+        }
+
+        if (pop.nonce == null) {
+            pop.nonce = await this.getNonce("pending");
         }
 
         if (pop.gasLimit == null) {
@@ -152,9 +158,12 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
     }
 
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
+        console.log('sendTransaction', tx)
         const provider = checkProvider(this, "sendTransaction");
         const pop = await this.populateTransaction(tx);
+        console.log("populated tx", pop)
         delete pop.from;
+        
         const txObj = Transaction.from(pop);
         const signedTx = await this.signTransaction(txObj);
         const result = await provider.broadcastTransaction(signedTx);

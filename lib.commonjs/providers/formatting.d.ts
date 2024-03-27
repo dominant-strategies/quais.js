@@ -5,6 +5,7 @@
  */
 import type { Signature } from "../crypto/index.js";
 import type { AccessList } from "../transaction/index.js";
+import type { UTXOTransactionInput, UTXOTransactionOutput } from "../transaction/utxo.js";
 /**
  *  a **BlockParams** encodes the minimal required properties for a
  *  formatted block.
@@ -286,5 +287,7 @@ export interface TransactionResponseParams {
      *  The transaction access list.
      */
     accessList: null | AccessList;
+    UTXOoutputs?: UTXOTransactionOutput[];
+    UTXOinputs?: UTXOTransactionInput[];
 }
 //# sourceMappingURL=formatting.d.ts.map

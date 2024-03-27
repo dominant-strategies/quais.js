@@ -12,7 +12,7 @@ import type { AccessList, AccessListish, TransactionLike } from "../transaction/
 
 import type { ContractRunner } from "./contracts.js";
 import type { Network } from "./network.js";
-
+import type { UTXOTransactionInput, UTXOTransactionOutput } from "../transaction/utxo.js";
 
 const BN_0 = BigInt(0);
 
@@ -113,7 +113,6 @@ export class FeeData {
     }
 }
 
-
 /**
  *  A **TransactionRequest** is a transactions with potentially various
  *  properties not defined, or with less strict types for its values.
@@ -203,16 +202,9 @@ export interface TransactionRequest {
      */
     blockTag?: BlockTag;
 
-    /**
-     *  When using ``call``, this enables CCIP-read, which permits the
-     *  provider to be redirected to web-based content during execution,
-     *  which is then further validated by the contract.
-     *
-     *  There are potential security implications allowing CCIP-read, as
-     *  it could be used to expose the IP address or user activity during
-     *  the fetch to unexpected parties.
-     */
-    enableCcipRead?: boolean;
+    inputs?: null | Array<UTXOTransactionInput>;
+
+    outputs?: null | Array<UTXOTransactionOutput>;
 };
 
 /**
@@ -304,16 +296,9 @@ export interface PreparedTransactionRequest {
      */
     blockTag?: BlockTag;
 
-    /**
-     *  When using ``call``, this enables CCIP-read, which permits the
-     *  provider to be redirected to web-based content during execution,
-     *  which is then further validated by the contract.
-     *
-     *  There are potential security implications allowing CCIP-read, as
-     *  it could be used to expose the IP address or user activity during
-     *  the fetch to unexpected parties.
-     */
-    enableCcipRead?: boolean;
+    inputs?: null | Array<UTXOTransactionInput>;
+
+    outputs?: null | Array<UTXOTransactionOutput>;
 }
 
 /**
@@ -1360,6 +1345,10 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      *  support it, otherwise ``null``.
      */
     readonly accessList!: null | AccessList;
+
+    readonly inputs ?: Array<UTXOTransactionInput> ;
+
+    readonly outputs ?: Array<UTXOTransactionOutput> ;
 
     #startBlock: number;
 

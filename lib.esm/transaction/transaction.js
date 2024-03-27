@@ -85,6 +85,10 @@ function _serialize(tx, sig) {
         access_list: { access_tuples: tx.accessList || [] },
         type: (tx.type || 0),
     };
+    if (tx.type == 2) {
+        formattedTx.tx_ins = tx.UTXOinputs;
+        formattedTx.tx_outs = tx.UTXOoutputs;
+    }
     if (sig) {
         formattedTx.v = formatNumber(sig.yParity, "yParity"),
             formattedTx.r = toBeArray(sig.r),
@@ -119,6 +123,8 @@ export class Transaction {
     #sig;
     #accessList;
     #hash;
+    #UTXOinputs;
+    #UTXOoutputs;
     /**
      *  The transaction type.
      *
@@ -257,6 +263,10 @@ export class Transaction {
     set accessList(value) {
         this.#accessList = (value == null) ? null : accessListify(value);
     }
+    get UTXOinputs() { return this.#UTXOinputs; }
+    set UTXOinputs(value) { this.#UTXOinputs = value; }
+    get UTXOoutputs() { return this.#UTXOoutputs; }
+    set UTXOoutputs(value) { this.#UTXOoutputs = value; }
     /**
      *  Creates a new Transaction with default values.
      */
@@ -274,6 +284,8 @@ export class Transaction {
         this.#sig = null;
         this.#accessList = null;
         this.#hash = null;
+        this.#UTXOinputs = null;
+        this.#UTXOoutputs = null;
     }
     /**
      *  The transaction hash, if signed. Otherwise, ``null``.

@@ -9,6 +9,7 @@ function _decode(object) {
     return result;
 }
 function decodeProto(object) {
+    console.log('Test decode');
     return _decode(object);
 }
 exports.decodeProto = decodeProto;

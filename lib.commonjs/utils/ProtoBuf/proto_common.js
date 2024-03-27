@@ -11,10 +11,10 @@ const pb_1 = tslib_1.__importStar(require("google-protobuf"));
 var common;
 (function (common) {
     class ProtoLocation extends pb_1.Message {
-        one_of_decls = [];
+        #one_of_decls = [];
         constructor(data) {
             super();
-            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.one_of_decls);
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
             if (!Array.isArray(data) && typeof data == "object") {
                 if ("value" in data && data.value != undefined) {
                     this.value = data.value;
@@ -71,10 +71,10 @@ var common;
     }
     common.ProtoLocation = ProtoLocation;
     class ProtoHash extends pb_1.Message {
-        one_of_decls = [];
+        #one_of_decls = [];
         constructor(data) {
             super();
-            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.one_of_decls);
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
             if (!Array.isArray(data) && typeof data == "object") {
                 if ("value" in data && data.value != undefined) {
                     this.value = data.value;
@@ -131,10 +131,10 @@ var common;
     }
     common.ProtoHash = ProtoHash;
     class ProtoHashes extends pb_1.Message {
-        one_of_decls = [];
+        #one_of_decls = [];
         constructor(data) {
             super();
-            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.one_of_decls);
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
             if (!Array.isArray(data) && typeof data == "object") {
                 if ("hashes" in data && data.hashes != undefined) {
                     this.hashes = data.hashes;
@@ -191,10 +191,10 @@ var common;
     }
     common.ProtoHashes = ProtoHashes;
     class ProtoAddress extends pb_1.Message {
-        one_of_decls = [];
+        #one_of_decls = [];
         constructor(data) {
             super();
-            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.one_of_decls);
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
             if (!Array.isArray(data) && typeof data == "object") {
                 if ("value" in data && data.value != undefined) {
                     this.value = data.value;

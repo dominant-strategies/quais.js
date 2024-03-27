@@ -5,6 +5,7 @@ function _decode(object) {
     return result;
 }
 export function decodeProto(object) {
+    console.log('Test decode');
     return _decode(object);
 }
 //# sourceMappingURL=proto-decode.js.map

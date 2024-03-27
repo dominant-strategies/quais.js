@@ -937,6 +937,8 @@ export class TransactionResponse {
      *  support it, otherwise ``null``.
      */
     accessList;
+    inputs;
+    outputs;
     #startBlock;
     /**
      *  @_ignore:
