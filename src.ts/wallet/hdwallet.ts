@@ -460,7 +460,6 @@ export class HDNodeWallet extends BaseWallet {
             //     newPath = this.path.replace(pathComponents[pathComponents.length - 1], addrIndex.toString());
             //     else throw new Error(`Invalid or uncomplete path: ${newPath} ${this.path}`);
             newWallet = this.derivePath(addrIndex.toString());
-            console.log(newWallet.address)
             if (getShardForAddress(newWallet.address) == shard && ((newWallet.coinType == 969) == isUTXOAddress(newWallet.address)))
             zoneIndex--;
             addrIndex++;

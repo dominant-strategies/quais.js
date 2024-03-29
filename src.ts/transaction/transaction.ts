@@ -12,7 +12,7 @@ import { computeAddress, recoverAddress } from "./address.js";
 import type { BigNumberish, BytesLike } from "../utils/index.js";
 import type { SignatureLike } from "../crypto/index.js";
 import type { AccessList, AccessListish } from "./index.js";
-
+import type { UTXOTransactionInput, UTXOTransactionOutput } from "./utxo.js";
 
 export interface TransactionLike<A = string> {
     /**
@@ -84,6 +84,11 @@ export interface TransactionLike<A = string> {
      *  The access list for berlin and london transactions.
      */
     accessList?: null | AccessListish;
+
+
+    inputsUTXO?: null | Array<UTXOTransactionInput>;
+
+    outputsUTXO?: null | Array<UTXOTransactionOutput>;
 }
 
 function handleNumber(_value: string, param: string): number {
@@ -181,6 +186,11 @@ function _serialize(tx: TransactionLike, sig?: Signature): string {
         type: (tx.type || 0),
     }
 
+    if (tx.type == 2){
+        formattedTx.tx_ins = tx.inputsUTXO
+        formattedTx.tx_outs = tx.outputsUTXO
+    }
+
     if (sig) {
         formattedTx.v =  formatNumber(sig.yParity, "yParity"),
         formattedTx.r = toBeArray(sig.r),
@@ -217,6 +227,8 @@ export class Transaction implements TransactionLike<string> {
     #sig: null | Signature;
     #accessList: null | AccessList;
     #hash: null | string;
+    #inputsUTXO: null | UTXOTransactionInput[];
+    #outputsUTXO: null | UTXOTransactionOutput[];
 
     /**
      *  The transaction type.
@@ -368,6 +380,12 @@ export class Transaction implements TransactionLike<string> {
         this.#accessList = (value == null) ? null: accessListify(value);
     }
 
+
+    get inputsUTXO(): null | UTXOTransactionInput[] { return this.#inputsUTXO; }
+    set inputsUTXO(value: null | UTXOTransactionInput[]) { this.#inputsUTXO = value; }
+
+    get outputsUTXO(): null | UTXOTransactionOutput[] { return this.#outputsUTXO; }
+    set outputsUTXO(value: null | UTXOTransactionOutput[]) { this.#outputsUTXO = value; }
         
 
     /**
@@ -387,6 +405,8 @@ export class Transaction implements TransactionLike<string> {
         this.#sig = null;
         this.#accessList = null;
         this.#hash = null;
+        this.#inputsUTXO = null;
+        this.#outputsUTXO = null;
     }
 
     /**
