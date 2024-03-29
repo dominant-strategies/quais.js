@@ -1,5 +1,5 @@
 import { hexlify } from "./data";
-import * as Proto from "./ProtoBuf/proto-block"
+import * as Proto from "./ProtoBuf/proto_block"
 
 function _encode(object: any): Uint8Array {
     const tx = Proto.block.ProtoTransaction.fromObject(object);
