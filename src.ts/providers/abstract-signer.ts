@@ -104,7 +104,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         }
 
         if (pop.gasLimit == null) {
-            if (tx.type == 0 ) pop.gasLimit = await this.estimateGas(pop);
+            if (pop.type == 0 ) pop.gasLimit = await this.estimateGas(pop);
             else {
                 //Special cases for type 2 tx to bypass address out of scope in the node
                 let temp = pop.to
@@ -133,12 +133,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
                 pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
             }
         }
-
-        if (pop.type == 2) {
-            pop.externalGasLimit = getBigInt(Number(pop.gasLimit) * 9);
-            pop.externalGasTip = getBigInt(Number(pop.maxPriorityFeePerGas) * 9);
-            pop.externalGasPrice = getBigInt(Number(pop.maxFeePerGas) * 9);
-        }
         //@TOOD: Don't await all over the place; save them up for
         // the end for better batching
         return await resolveProperties(pop);
@@ -163,8 +157,8 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         delete pop.from;
         const txObj = Transaction.from(pop);
         const signedTx = await this.signTransaction(txObj);
-        console.log("signedTX: ", JSON.stringify(txObj))
-        return await provider.broadcastTransaction(signedTx);
+        const result = await provider.broadcastTransaction(signedTx);
+        return result
     }
 
     abstract signTransaction(tx: TransactionRequest): Promise<string>;

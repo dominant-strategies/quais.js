@@ -1140,11 +1140,20 @@ export class AbstractProvider implements Provider {
         });
 
         const tx = Transaction.from(signedTx);
-        if (tx.hash !== hash) {
-            throw new Error("@TODO: the returned hash did not match");
-        }
-
+        this.#validateTransactionHash(tx.hash || '', hash)
+        tx.hash = hash;
         return this._wrapTransactionResponse(<any>tx, network).replaceableTransaction(blockNumber);
+    }
+
+    async #validateTransactionHash(computedHash: string, nodehash: string){
+        if (computedHash.substring(0,4) !== nodehash.substring(0,4)) 
+          throw new Error("Transaction hash mismatch in origin Zone");
+        if (computedHash.substring(6,8) !== nodehash.substring(6,8)) 
+          throw new Error("Transaction hash mismatch in destination Zone");
+        if (parseInt(computedHash[4], 16) < 8 !== parseInt(nodehash[4], 16) < 8) 
+            throw new Error("Transaction ledger mismatch in origin Zone");
+        if (parseInt(computedHash[8], 16) < 8 !== parseInt(nodehash[8], 16) < 8) 
+            throw new Error("Transaction ledger mismatch in destination Zone"); 
     }
 
     async #getBlock(block: BlockTag | string, includeTransactions: boolean): Promise<any> {

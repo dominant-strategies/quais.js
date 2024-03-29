@@ -213,32 +213,6 @@ export interface TransactionRequest {
      *  the fetch to unexpected parties.
      */
     enableCcipRead?: boolean;
-
-        /**
- * The external gas price.
- */
-    externalGasPrice?: null | BigNumberish;
-
-    /**
-     * The external gas tip.
-     */
-    externalGasTip?: null | BigNumberish;
-
-    /**
-     * The external gas limit.
-     */
-    externalGasLimit?: null | BigNumberish;
-
-
-    /**
-     *  The external data.
-     */
-    externalData?: null | string;
-
-    /**
-     *  The access list for berlin and london transactions.
-     */
-    externalAccessList?: null | AccessListish;
 };
 
 /**
@@ -1387,18 +1361,6 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      */
     readonly accessList!: null | AccessList;
 
-    // Extrernal transaction specific fields
-
-    readonly etxGasLimit?: bigint ;
-
-    readonly etxGasPrice?: bigint ;
-
-    readonly etxGasTip?: bigint ;
-
-    readonly etxData?: string ;
-
-    readonly etxAccessList?: AccessList ;
-
     #startBlock: number;
 
     /**
@@ -1430,21 +1392,6 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
         this.signature = tx.signature;
 
         this.accessList = (tx.accessList != null) ? tx.accessList: null;
-
-        if (tx.type != 2) {
-            delete tx.etxGasLimit;
-            delete tx.etxGasPrice;
-            delete tx.etxGasTip;
-            delete tx.etxData;
-            delete tx.etxAccessList;
-        }
-
-        if (tx.etxGasLimit) this.etxGasLimit = tx.etxGasLimit;
-        if (tx.etxGasPrice) this.etxGasPrice = tx.etxGasPrice;
-        if (tx.etxGasTip) this.etxGasTip = tx.etxGasTip;
-        if (tx.etxData) this.etxData = tx.etxData;
-        if (tx.etxAccessList) this.etxAccessList = tx.etxAccessList;
-
         this.#startBlock = -1;
     }
 
@@ -1455,7 +1402,6 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
         const {
             blockNumber, blockHash, index, hash, type, to, from, nonce,
             data, signature, accessList,
-            //etxGasLimit, etxGasPrice, etxGasTip, etxData, etxAccessList // Include new fields
         } = this;
         let result ={
             _type: "TransactionReceipt",
@@ -1468,12 +1414,6 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
             maxPriorityFeePerGas: toJson(this.maxPriorityFeePerGas),
             nonce, signature, to, index, type,
             value: toJson(this.value),
-            // Include new fields in the output
-            // etxGasLimit: etxGasLimit ? toJson(etxGasLimit) : null,
-            // etxGasPrice: etxGasPrice ? toJson(etxGasPrice) : null,
-            // etxGasTip: etxGasTip ? toJson(etxGasTip) : null,
-            // etxData: etxData ? etxData : null,
-            // etxAccessList: etxAccessList ? etxAccessList : null
         }
 
         return result;

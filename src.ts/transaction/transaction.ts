@@ -3,11 +3,11 @@ import { getAddress } from "../address/index.js";
 import { keccak256, Signature, SigningKey } from "../crypto/index.js";
 import {
     getBytes, getBigInt, getNumber, hexlify,
-    assert, assertArgument, toBeArray, zeroPadValue, encodeProto, decodeProto, toBigInt
+    assert, assertArgument, toBeArray, zeroPadValue, encodeProto, decodeProto, toBigInt, getShardForAddress, isUTXOAddress
 } from "../utils/index.js";
 
 import { accessListify } from "./accesslist.js";
-import { recoverAddress } from "./address.js";
+import { computeAddress, recoverAddress } from "./address.js";
 
 import type { BigNumberish, BytesLike } from "../utils/index.js";
 import type { SignatureLike } from "../crypto/index.js";
@@ -84,32 +84,6 @@ export interface TransactionLike<A = string> {
      *  The access list for berlin and london transactions.
      */
     accessList?: null | AccessListish;
-
-    /**
-     * The external gas price.
-     */
-    externalGasPrice?: null | BigNumberish;
-
-    /**
-     * The external gas tip.
-     */
-    externalGasTip?: null | BigNumberish;
-
-    /**
-     * The external gas limit.
-     */
-    externalGasLimit?: null | BigNumberish;
-
-
-    /**
-     *  The external data.
-     */
-    externalData?: null | string;
-
-    /**
-     *  The access list for berlin and london transactions.
-     */
-    externalAccessList?: null | AccessListish;
 }
 
 function handleNumber(_value: string, param: string): number {
@@ -124,7 +98,7 @@ function formatNumber(_value: BigNumberish, name: string): Uint8Array {
     return result;
 }
 
-function _parseSignature(tx: TransactionLike, fields: Array<string>, serialize: (tx: TransactionLike) => string): void {
+function _parseSignature(tx: TransactionLike, fields: Array<string>): void {
     let yParity: number;
     try {
         yParity = handleNumber(fields[0], "yParity");
@@ -142,7 +116,6 @@ function _parseSignature(tx: TransactionLike, fields: Array<string>, serialize: 
 
 function _parse(data: Uint8Array): TransactionLike {
     const decodedTx: any = decodeProto(getBytes(data));
-
     const tx: TransactionLike = {
         type:                  decodedTx.type,
         chainId:               toBigInt(decodedTx.chain_id),
@@ -156,26 +129,43 @@ function _parse(data: Uint8Array): TransactionLike {
         accessList:            decodedTx.access_list.access_tuples ,
     };
 
-    if (decodedTx.type == 2){
-        tx.externalGasLimit = toBigInt(decodedTx.etx_gas_limit)
-        tx.externalGasPrice = toBigInt(decodedTx.etx_gas_price)
-        tx.externalGasTip = toBigInt(decodedTx.etx_gas_tip)
-        tx.externalData = hexlify(decodedTx.etx_data)
-        tx.externalAccessList = decodedTx.etx_access_list.access_tuples
-    }
-
-    tx.hash = keccak256(data);
-
     const signatureFields = [
         hexlify(decodedTx.v),
         hexlify(decodedTx.r),
         hexlify(decodedTx.s),
     ]
 
-    _parseSignature(tx, signatureFields, _serialize);
+    _parseSignature(tx, signatureFields);
 
+    tx.hash = getTransactionHash(tx, data);
+    
     return tx;
 }
+
+function getTransactionHash (tx: TransactionLike, data: Uint8Array): string {
+    const destShardbyte = getShardForAddress(tx.to || "")?.byte.slice(2);
+    const destUtxo = isUTXOAddress(tx.to || "");
+
+    const pubKey = Transaction.from(tx).fromPublicKey
+    const senderAddr = computeAddress(pubKey || "")
+
+    const originShardByte = getShardForAddress(senderAddr)?.byte.slice(2);
+    const originUtxo = isUTXOAddress(senderAddr);
+
+    if (!destShardbyte || !originShardByte) {
+        throw new Error("Invalid Shard for from or to address");
+    }
+    if(destShardbyte !== originShardByte && destUtxo !== originUtxo) {
+        throw new Error("Cross-shard & cross-ledger transactions are not supported");
+    }
+
+    let hash = keccak256(data)
+    hash = '0x' + originShardByte + (originUtxo ? 'F' : '1') + hash.charAt(5) + originShardByte + (destUtxo ? 'F' : '1') + hash.slice(9)
+    
+    //TODO alter comparison  
+    return hash;
+}
+
 
 function _serialize(tx: TransactionLike, sig?: Signature): string {
     const formattedTx: any = {
@@ -189,14 +179,6 @@ function _serialize(tx: TransactionLike, sig?: Signature): string {
         data: getBytes(tx.data || "0x"),
         access_list: {access_tuples: tx.accessList || []},
         type: (tx.type || 0),
-    }
-
-    if (tx.type == 2){
-        formattedTx.etx_gas_limit = Number(tx.externalGasLimit || 0)
-        formattedTx.etx_gas_price = formatNumber(tx.externalGasPrice || 0, "externalGasPrice")
-        formattedTx.etx_gas_tip = formatNumber(tx.externalGasTip || 0, "externalGasTip")
-        formattedTx.etx_data = getBytes(tx.externalData || "0x")
-        formattedTx.etx_access_list = {access_tuples: tx.externalAccessList || []}
     }
 
     if (sig) {
@@ -234,11 +216,7 @@ export class Transaction implements TransactionLike<string> {
     #chainId: bigint;
     #sig: null | Signature;
     #accessList: null | AccessList;
-    #externalGasLimit: bigint;
-    #externalGasTip: null | bigint;
-    #externalGasPrice: null | bigint; 
-    #externalAccessList: null | AccessList;
-    #externalData: string;
+    #hash: null | string;
 
     /**
      *  The transaction type.
@@ -258,7 +236,7 @@ export class Transaction implements TransactionLike<string> {
             // case 1: case "external":
             //     this.#type = 1;
             //     break;
-            case 2: case "internalToExternal":
+            case 2: case "utxo":
                 this.#type = 2;
                 break;
             default:
@@ -273,7 +251,7 @@ export class Transaction implements TransactionLike<string> {
         switch (this.type) {
             case 0: return "standard";
             case 1: return "external";
-            case 2: return "internalToExternal";
+            case 2: return "utxo";
         }
 
         return null;
@@ -390,66 +368,6 @@ export class Transaction implements TransactionLike<string> {
         this.#accessList = (value == null) ? null: accessListify(value);
     }
 
-    /**
-     *  The gas limit.
-     */
-    get externalGasLimit(): bigint { return this.#externalGasLimit; }
-    set externalGasLimit(value: BigNumberish) { this.#externalGasLimit = getBigInt(value); }
-
-    /**
-     *  The maximum priority fee per unit of gas to pay. On legacy
-     *  networks this should be ``null``.
-     */
-    get externalGasTip(): null | bigint {
-        const value = this.#externalGasTip;
-        if (value == null) {
-            return null;
-        }
-        return value;
-    }
-    set externalGasTip(value: null | BigNumberish) {
-        this.#externalGasTip = (value == null) ? null: getBigInt(value, "externalGasTip");
-    }
-
-    /**
-     *  The maximum total fee per unit of gas to pay. On legacy
-     *  networks this should be ``null``.
-     */
-    get externalGasPrice(): null | bigint {
-        const value = this.#externalGasPrice;
-        if (value == null) {
-            return null;
-        }
-        return value;
-    }
-    set externalGasPrice(value: null | BigNumberish) {
-        this.#externalGasPrice = (value == null) ? null: getBigInt(value, "externalGasPrice");
-    }
-
-    /**
-     *  The transaction externalData. For ``init`` transactions this is the
-     *  deployment code.
-     */
-    get externalData(): string { return this.#externalData; }
-    set externalData(value: BytesLike) { this.#externalData = hexlify(value); }
-
-    /**
-     *  The external access list.
-     *
-     *  An access list permits discounted (but pre-paid) access to
-     *  bytecode and state variable access within contract execution.
-     */
-    get externalAccessList(): null | AccessList {
-        const value = this.#externalAccessList || null;
-        if (value == null) {
-            return null;
-        }
-        return value;
-    }
-    set externalAccessList(value: null | AccessListish) {
-        this.#externalAccessList = (value == null) ? null: accessListify(value);
-    }
-
         
 
     /**
@@ -468,11 +386,7 @@ export class Transaction implements TransactionLike<string> {
         this.#chainId = BigInt(0);
         this.#sig = null;
         this.#accessList = null;
-        this.#externalGasLimit = BigInt(0);
-        this.#externalGasTip = null;
-        this.#externalGasPrice = null;
-        this.#externalData = "0x";
-        this.#externalAccessList = null;
+        this.#hash = null;
     }
 
     /**
@@ -480,8 +394,13 @@ export class Transaction implements TransactionLike<string> {
      */
     get hash(): null | string {
         if (this.signature == null) { return null; }
+        if (this.#hash) { return this.#hash; }
         return keccak256(this.serialized);
     }
+    set hash(value: null | string) {
+       this.#hash = value;
+    }
+
 
     /**
      *  The pre-image hash of this transaction.
@@ -556,15 +475,6 @@ export class Transaction implements TransactionLike<string> {
      */
     inferTypes(): Array<number> {
 
-        // Checks that there are no conflicting properties set
-        // const hasGasPrice = this.gasPrice != null;
-        // const hasFee = (this.maxFeePerGas != null || this.maxPriorityFeePerGas != null);
-        const hasExternal = (this.externalGasLimit != null || this.externalGasTip != null || this.externalGasPrice != null || this.externalData != null || this.externalAccessList != null);
-        // const hasAccessList = (this.accessList != null);
-
-        //if (hasGasPrice && hasFee) {
-        //    throw new Error("transaction cannot have gasPrice and maxFeePerGas");
-        //}
 
         if (this.maxFeePerGas != null && this.maxPriorityFeePerGas != null) {
             assert(this.maxFeePerGas >= this.maxPriorityFeePerGas, "priorityFee cannot be more than maxFee", "BAD_DATA", { value: this });
@@ -574,7 +484,7 @@ export class Transaction implements TransactionLike<string> {
         //    throw new Error("eip-1559 transaction cannot have gasPrice");
         //}
 
-        assert(hasExternal || (this.type !== 0 && this.type !== 1), "transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList", "BAD_DATA", { value: this });
+        assert((this.type !== 0 && this.type !== 1), "transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList", "BAD_DATA", { value: this });
 
         const types: Array<number> = [ ];
 
@@ -583,11 +493,8 @@ export class Transaction implements TransactionLike<string> {
             types.push(this.type);
 
         } else {
-            if (hasExternal) {
-                types.push(2);
-            } else {
                 types.push(0);
-            }
+            
         }
 
         types.sort();
@@ -625,11 +532,6 @@ export class Transaction implements TransactionLike<string> {
             chainId: s(this.chainId),
             sig: this.signature ? this.signature.toJSON(): null,
             accessList: this.accessList,
-            externalGasLimit: s(this.externalGasLimit),
-            externalGasTip: s(this.externalGasTip),
-            externalGasPrice: s(this.externalGasPrice),
-            externalData: this.externalData,
-            externalAccessList: this.externalAccessList,
         };
     }
 
@@ -656,23 +558,17 @@ export class Transaction implements TransactionLike<string> {
         if (tx.chainId != null) { result.chainId = tx.chainId; }
         if (tx.signature != null) { result.signature = Signature.from(tx.signature); }
         if (tx.accessList != null) { result.accessList = tx.accessList; }
-        if (tx.externalGasLimit != null) { result.externalGasLimit = tx.externalGasLimit; }
-        if (tx.externalGasPrice != null) { result.externalGasPrice = tx.externalGasPrice; }
-        if (tx.externalGasTip != null) { result.externalGasTip = tx.externalGasTip; }
-        if (tx.externalData != null) { result.externalData = tx.externalData; }
-        if (tx.externalAccessList != null) { result.externalAccessList = tx.externalAccessList; }
-
+        
 
         if (tx.hash != null) {
             assertArgument(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);
-            assertArgument(result.hash === tx.hash, "hash mismatch", "tx", tx);
+            result.hash = tx.hash;
         }
 
         if (tx.from != null) {
             assertArgument(result.isSigned(), "unsigned transaction cannot define from", "tx", tx);
             assertArgument(result.from.toLowerCase() === (tx.from || "").toLowerCase(), "from mismatch", "tx", tx);
         }
-
         return result;
     }
 }
