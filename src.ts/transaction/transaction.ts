@@ -86,9 +86,9 @@ export interface TransactionLike<A = string> {
     accessList?: null | AccessListish;
 
 
-    UTXOinputs?: null | Array<UTXOTransactionInput>;
+    inputsUTXO?: null | Array<UTXOTransactionInput>;
 
-    UTXOoutputs?: null | Array<UTXOTransactionOutput>;
+    outputsUTXO?: null | Array<UTXOTransactionOutput>;
 }
 
 function handleNumber(_value: string, param: string): number {
@@ -187,8 +187,8 @@ function _serialize(tx: TransactionLike, sig?: Signature): string {
     }
 
     if (tx.type == 2){
-        formattedTx.tx_ins = tx.UTXOinputs
-        formattedTx.tx_outs = tx.UTXOoutputs
+        formattedTx.tx_ins = tx.inputsUTXO
+        formattedTx.tx_outs = tx.outputsUTXO
     }
 
     if (sig) {
@@ -227,8 +227,8 @@ export class Transaction implements TransactionLike<string> {
     #sig: null | Signature;
     #accessList: null | AccessList;
     #hash: null | string;
-    #UTXOinputs: null | UTXOTransactionInput[];
-    #UTXOoutputs: null | UTXOTransactionOutput[];
+    #inputsUTXO: null | UTXOTransactionInput[];
+    #outputsUTXO: null | UTXOTransactionOutput[];
 
     /**
      *  The transaction type.
@@ -381,11 +381,11 @@ export class Transaction implements TransactionLike<string> {
     }
 
 
-    get UTXOinputs(): null | UTXOTransactionInput[] { return this.#UTXOinputs; }
-    set UTXOinputs(value: null | UTXOTransactionInput[]) { this.#UTXOinputs = value; }
+    get inputsUTXO(): null | UTXOTransactionInput[] { return this.#inputsUTXO; }
+    set inputsUTXO(value: null | UTXOTransactionInput[]) { this.#inputsUTXO = value; }
 
-    get UTXOoutputs(): null | UTXOTransactionOutput[] { return this.#UTXOoutputs; }
-    set UTXOoutputs(value: null | UTXOTransactionOutput[]) { this.#UTXOoutputs = value; }
+    get outputsUTXO(): null | UTXOTransactionOutput[] { return this.#outputsUTXO; }
+    set outputsUTXO(value: null | UTXOTransactionOutput[]) { this.#outputsUTXO = value; }
         
 
     /**
@@ -405,8 +405,8 @@ export class Transaction implements TransactionLike<string> {
         this.#sig = null;
         this.#accessList = null;
         this.#hash = null;
-        this.#UTXOinputs = null;
-        this.#UTXOoutputs = null;
+        this.#inputsUTXO = null;
+        this.#outputsUTXO = null;
     }
 
     /**

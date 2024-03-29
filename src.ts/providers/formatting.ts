@@ -381,9 +381,9 @@ export interface TransactionResponseParams {
      */
     accessList: null | AccessList;
 
-    UTXOoutputs ?: UTXOTransactionOutput[];
+    outputsUTXO ?: UTXOTransactionOutput[];
 
-    UTXOinputs ?: UTXOTransactionInput[];
+    inputsUTXO ?: UTXOTransactionInput[];
 };
 
 
