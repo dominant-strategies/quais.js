@@ -1,4 +1,4 @@
-import * as Proto from "./ProtoBuf/proto-block";
+import * as Proto from "./ProtoBuf/proto_block";
 function _decode(object) {
     const tx = Proto.block.ProtoTransaction.deserialize(object);
     const result = tx.toObject();

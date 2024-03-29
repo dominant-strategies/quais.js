@@ -18,7 +18,7 @@ function formatNumber(_value, name) {
     (0, index_js_3.assertArgument)(result.length <= 32, `value too large`, `tx.${name}`, value);
     return result;
 }
-function _parseSignature(tx, fields, serialize) {
+function _parseSignature(tx, fields) {
     let yParity;
     try {
         yParity = handleNumber(fields[0], "yParity");
@@ -48,21 +48,32 @@ function _parse(data) {
         data: (0, index_js_3.hexlify)(decodedTx.data),
         accessList: decodedTx.access_list.access_tuples,
     };
-    if (decodedTx.type == 2) {
-        tx.externalGasLimit = (0, index_js_3.toBigInt)(decodedTx.etx_gas_limit);
-        tx.externalGasPrice = (0, index_js_3.toBigInt)(decodedTx.etx_gas_price);
-        tx.externalGasTip = (0, index_js_3.toBigInt)(decodedTx.etx_gas_tip);
-        tx.externalData = (0, index_js_3.hexlify)(decodedTx.etx_data);
-        tx.externalAccessList = decodedTx.etx_access_list.access_tuples;
-    }
-    tx.hash = (0, index_js_2.keccak256)(data);
     const signatureFields = [
         (0, index_js_3.hexlify)(decodedTx.v),
         (0, index_js_3.hexlify)(decodedTx.r),
         (0, index_js_3.hexlify)(decodedTx.s),
     ];
-    _parseSignature(tx, signatureFields, _serialize);
+    _parseSignature(tx, signatureFields);
+    tx.hash = getTransactionHash(tx, data);
     return tx;
+}
+function getTransactionHash(tx, data) {
+    const destShardbyte = (0, index_js_3.getShardForAddress)(tx.to || "")?.byte.slice(2);
+    const destUtxo = (0, index_js_3.isUTXOAddress)(tx.to || "");
+    const pubKey = Transaction.from(tx).fromPublicKey;
+    const senderAddr = (0, address_js_1.computeAddress)(pubKey || "");
+    const originShardByte = (0, index_js_3.getShardForAddress)(senderAddr)?.byte.slice(2);
+    const originUtxo = (0, index_js_3.isUTXOAddress)(senderAddr);
+    if (!destShardbyte || !originShardByte) {
+        throw new Error("Invalid Shard for from or to address");
+    }
+    if (destShardbyte !== originShardByte && destUtxo !== originUtxo) {
+        throw new Error("Cross-shard & cross-ledger transactions are not supported");
+    }
+    let hash = (0, index_js_2.keccak256)(data);
+    hash = '0x' + originShardByte + (originUtxo ? 'F' : '1') + hash.charAt(5) + originShardByte + (destUtxo ? 'F' : '1') + hash.slice(9);
+    //TODO alter comparison  
+    return hash;
 }
 function _serialize(tx, sig) {
     const formattedTx = {
@@ -77,13 +88,6 @@ function _serialize(tx, sig) {
         access_list: { access_tuples: tx.accessList || [] },
         type: (tx.type || 0),
     };
-    if (tx.type == 2) {
-        formattedTx.etx_gas_limit = Number(tx.externalGasLimit || 0);
-        formattedTx.etx_gas_price = formatNumber(tx.externalGasPrice || 0, "externalGasPrice");
-        formattedTx.etx_gas_tip = formatNumber(tx.externalGasTip || 0, "externalGasTip");
-        formattedTx.etx_data = (0, index_js_3.getBytes)(tx.externalData || "0x");
-        formattedTx.etx_access_list = { access_tuples: tx.externalAccessList || [] };
-    }
     if (sig) {
         formattedTx.v = formatNumber(sig.yParity, "yParity"),
             formattedTx.r = (0, index_js_3.toBeArray)(sig.r),
@@ -117,11 +121,7 @@ class Transaction {
     #chainId;
     #sig;
     #accessList;
-    #externalGasLimit;
-    #externalGasTip;
-    #externalGasPrice;
-    #externalAccessList;
-    #externalData;
+    #hash;
     /**
      *  The transaction type.
      *
@@ -142,7 +142,7 @@ class Transaction {
             //     this.#type = 1;
             //     break;
             case 2:
-            case "internalToExternal":
+            case "utxo":
                 this.#type = 2;
                 break;
             default:
@@ -156,7 +156,7 @@ class Transaction {
         switch (this.type) {
             case 0: return "standard";
             case 1: return "external";
-            case 2: return "internalToExternal";
+            case 2: return "utxo";
         }
         return null;
     }
@@ -261,61 +261,6 @@ class Transaction {
         this.#accessList = (value == null) ? null : (0, accesslist_js_1.accessListify)(value);
     }
     /**
-     *  The gas limit.
-     */
-    get externalGasLimit() { return this.#externalGasLimit; }
-    set externalGasLimit(value) { this.#externalGasLimit = (0, index_js_3.getBigInt)(value); }
-    /**
-     *  The maximum priority fee per unit of gas to pay. On legacy
-     *  networks this should be ``null``.
-     */
-    get externalGasTip() {
-        const value = this.#externalGasTip;
-        if (value == null) {
-            return null;
-        }
-        return value;
-    }
-    set externalGasTip(value) {
-        this.#externalGasTip = (value == null) ? null : (0, index_js_3.getBigInt)(value, "externalGasTip");
-    }
-    /**
-     *  The maximum total fee per unit of gas to pay. On legacy
-     *  networks this should be ``null``.
-     */
-    get externalGasPrice() {
-        const value = this.#externalGasPrice;
-        if (value == null) {
-            return null;
-        }
-        return value;
-    }
-    set externalGasPrice(value) {
-        this.#externalGasPrice = (value == null) ? null : (0, index_js_3.getBigInt)(value, "externalGasPrice");
-    }
-    /**
-     *  The transaction externalData. For ``init`` transactions this is the
-     *  deployment code.
-     */
-    get externalData() { return this.#externalData; }
-    set externalData(value) { this.#externalData = (0, index_js_3.hexlify)(value); }
-    /**
-     *  The external access list.
-     *
-     *  An access list permits discounted (but pre-paid) access to
-     *  bytecode and state variable access within contract execution.
-     */
-    get externalAccessList() {
-        const value = this.#externalAccessList || null;
-        if (value == null) {
-            return null;
-        }
-        return value;
-    }
-    set externalAccessList(value) {
-        this.#externalAccessList = (value == null) ? null : (0, accesslist_js_1.accessListify)(value);
-    }
-    /**
      *  Creates a new Transaction with default values.
      */
     constructor() {
@@ -331,11 +276,7 @@ class Transaction {
         this.#chainId = BigInt(0);
         this.#sig = null;
         this.#accessList = null;
-        this.#externalGasLimit = BigInt(0);
-        this.#externalGasTip = null;
-        this.#externalGasPrice = null;
-        this.#externalData = "0x";
-        this.#externalAccessList = null;
+        this.#hash = null;
     }
     /**
      *  The transaction hash, if signed. Otherwise, ``null``.
@@ -344,7 +285,13 @@ class Transaction {
         if (this.signature == null) {
             return null;
         }
+        if (this.#hash) {
+            return this.#hash;
+        }
         return (0, index_js_2.keccak256)(this.serialized);
+    }
+    set hash(value) {
+        this.#hash = value;
     }
     /**
      *  The pre-image hash of this transaction.
@@ -414,33 +361,20 @@ class Transaction {
      *  transaction types.
      */
     inferTypes() {
-        // Checks that there are no conflicting properties set
-        // const hasGasPrice = this.gasPrice != null;
-        // const hasFee = (this.maxFeePerGas != null || this.maxPriorityFeePerGas != null);
-        const hasExternal = (this.externalGasLimit != null || this.externalGasTip != null || this.externalGasPrice != null || this.externalData != null || this.externalAccessList != null);
-        // const hasAccessList = (this.accessList != null);
-        //if (hasGasPrice && hasFee) {
-        //    throw new Error("transaction cannot have gasPrice and maxFeePerGas");
-        //}
         if (this.maxFeePerGas != null && this.maxPriorityFeePerGas != null) {
             (0, index_js_3.assert)(this.maxFeePerGas >= this.maxPriorityFeePerGas, "priorityFee cannot be more than maxFee", "BAD_DATA", { value: this });
         }
         //if (this.type === 2 && hasGasPrice) {
         //    throw new Error("eip-1559 transaction cannot have gasPrice");
         //}
-        (0, index_js_3.assert)(hasExternal || (this.type !== 0 && this.type !== 1), "transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList", "BAD_DATA", { value: this });
+        (0, index_js_3.assert)((this.type !== 0 && this.type !== 1), "transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList", "BAD_DATA", { value: this });
         const types = [];
         // Explicit type
         if (this.type != null) {
             types.push(this.type);
         }
         else {
-            if (hasExternal) {
-                types.push(2);
-            }
-            else {
-                types.push(0);
-            }
+            types.push(0);
         }
         types.sort();
         return types;
@@ -475,11 +409,6 @@ class Transaction {
             chainId: s(this.chainId),
             sig: this.signature ? this.signature.toJSON() : null,
             accessList: this.accessList,
-            externalGasLimit: s(this.externalGasLimit),
-            externalGasTip: s(this.externalGasTip),
-            externalGasPrice: s(this.externalGasPrice),
-            externalData: this.externalData,
-            externalAccessList: this.externalAccessList,
         };
     }
     /**
@@ -528,24 +457,9 @@ class Transaction {
         if (tx.accessList != null) {
             result.accessList = tx.accessList;
         }
-        if (tx.externalGasLimit != null) {
-            result.externalGasLimit = tx.externalGasLimit;
-        }
-        if (tx.externalGasPrice != null) {
-            result.externalGasPrice = tx.externalGasPrice;
-        }
-        if (tx.externalGasTip != null) {
-            result.externalGasTip = tx.externalGasTip;
-        }
-        if (tx.externalData != null) {
-            result.externalData = tx.externalData;
-        }
-        if (tx.externalAccessList != null) {
-            result.externalAccessList = tx.externalAccessList;
-        }
         if (tx.hash != null) {
             (0, index_js_3.assertArgument)(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);
-            (0, index_js_3.assertArgument)(result.hash === tx.hash, "hash mismatch", "tx", tx);
+            result.hash = tx.hash;
         }
         if (tx.from != null) {
             (0, index_js_3.assertArgument)(result.isSigned(), "unsigned transaction cannot define from", "tx", tx);

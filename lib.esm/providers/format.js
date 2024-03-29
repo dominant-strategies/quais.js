@@ -232,11 +232,6 @@ export function formatTransactionResponse(value) {
         nonce: getNumber,
         creates: allowNull(getAddress, null),
         chainId: allowNull(getBigInt, null),
-        etxGasLimit: allowNull(getBigInt, null),
-        etxGasPrice: allowNull(getBigInt, null),
-        etxGasTip: allowNull(getBigInt, null),
-        etxData: allowNull(formatData, null),
-        etxAccessList: allowNull(accessListify, null),
     }, {
         data: ["input"],
         gasLimit: ["gas"],
@@ -245,28 +240,6 @@ export function formatTransactionResponse(value) {
     // If to and creates are empty, populate the creates from the value
     if (result.to == null && result.creates == null) {
         result.creates = getCreateAddress(result);
-    }
-    if (result.type !== 2) {
-        delete result.etxGasLimit;
-        delete result.etxGasPrice;
-        delete result.etxGasTip;
-        delete result.etxData;
-        delete result.etxAccessList;
-    }
-    else {
-        //Needed due to go-quai api using both external as naming and etx as naming
-        //External is for when creating an external transaction
-        //Etx is for when reading an external transaction
-        if (result.etxGasLimit == null && value.externalGasLimit != null)
-            result.etxGasLimit = value.externalGasLimit;
-        if (result.etxGasPrice == null && value.externalGasPrice != null)
-            result.etxGasPrice = value.externalGasPrice;
-        if (result.etxGasTip == null && value.externalGasTip != null)
-            result.etxGasTip = value.externalGasTip;
-        if (result.etxData == null && value.externalData != null)
-            result.etxData = value.externalData;
-        if (result.etxAccessList == null && value.externalAccessList != null)
-            result.etxAccessList = value.externalAccessList;
     }
     // Add an access list to supported transaction types
     if ((value.type === 1 || value.type === 2) && value.accessList == null) {

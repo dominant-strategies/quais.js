@@ -937,12 +937,6 @@ export class TransactionResponse {
      *  support it, otherwise ``null``.
      */
     accessList;
-    // Extrernal transaction specific fields
-    etxGasLimit;
-    etxGasPrice;
-    etxGasTip;
-    etxData;
-    etxAccessList;
     #startBlock;
     /**
      *  @_ignore:
@@ -965,32 +959,13 @@ export class TransactionResponse {
         this.chainId = tx.chainId;
         this.signature = tx.signature;
         this.accessList = (tx.accessList != null) ? tx.accessList : null;
-        if (tx.type != 2) {
-            delete tx.etxGasLimit;
-            delete tx.etxGasPrice;
-            delete tx.etxGasTip;
-            delete tx.etxData;
-            delete tx.etxAccessList;
-        }
-        if (tx.etxGasLimit)
-            this.etxGasLimit = tx.etxGasLimit;
-        if (tx.etxGasPrice)
-            this.etxGasPrice = tx.etxGasPrice;
-        if (tx.etxGasTip)
-            this.etxGasTip = tx.etxGasTip;
-        if (tx.etxData)
-            this.etxData = tx.etxData;
-        if (tx.etxAccessList)
-            this.etxAccessList = tx.etxAccessList;
         this.#startBlock = -1;
     }
     /**
      *  Returns a JSON-compatible representation of this transaction.
      */
     toJSON() {
-        const { blockNumber, blockHash, index, hash, type, to, from, nonce, data, signature, accessList,
-        //etxGasLimit, etxGasPrice, etxGasTip, etxData, etxAccessList // Include new fields
-         } = this;
+        const { blockNumber, blockHash, index, hash, type, to, from, nonce, data, signature, accessList, } = this;
         let result = {
             _type: "TransactionReceipt",
             accessList, blockNumber, blockHash,
@@ -1002,12 +977,6 @@ export class TransactionResponse {
             maxPriorityFeePerGas: toJson(this.maxPriorityFeePerGas),
             nonce, signature, to, index, type,
             value: toJson(this.value),
-            // Include new fields in the output
-            // etxGasLimit: etxGasLimit ? toJson(etxGasLimit) : null,
-            // etxGasPrice: etxGasPrice ? toJson(etxGasPrice) : null,
-            // etxGasTip: etxGasTip ? toJson(etxGasTip) : null,
-            // etxData: etxData ? etxData : null,
-            // etxAccessList: etxAccessList ? etxAccessList : null
         };
         return result;
     }

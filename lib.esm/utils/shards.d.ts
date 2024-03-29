@@ -38,16 +38,9 @@ export declare function getAddressDetails(address: string): {
     isUTXO: boolean;
 } | null;
 /**
- * Determines the transaction type based on the shard information of the 'from' and 'to'
- * addresses. If both addresses belong to the same shard, it returns 0, indicating an
- * intra-shard transaction. Otherwise, it returns 2, indicating an inter-shard transaction.
- * Throws an error if either address is null or if the shard cannot be found.
- *
- * @param {string|null} from - The sender's blockchain address.
- * @param {string|null} to - The recipient's blockchain address.
- *
- * @returns {number} The transaction type: 0 for intra-shard, 2 for inter-shard.
- * @throws {Error} If either address is null or if the shard cannot be determined.
+ * @param from address
+ * @param to adress
+ * @returns txtype
  */
 export declare function getTxType(from: string | null, to: string | null): number;
 /**

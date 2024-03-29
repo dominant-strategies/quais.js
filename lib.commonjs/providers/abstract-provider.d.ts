@@ -230,6 +230,10 @@ export type PerformActionRequest = {
     method: "getTransactionResult";
     hash: string;
 } | {
+    method: "getRunningLocations";
+} | {
+    method: "getProtocolTrieExpansionCount";
+} | {
     method: "getQiRateAtBlock";
     blockTag: BlockTag;
     amt: number;
@@ -361,6 +365,8 @@ export declare class AbstractProvider implements Provider {
      */
     _getTransactionRequest(_request: TransactionRequest): PerformActionTransaction | Promise<PerformActionTransaction>;
     getNetwork(): Promise<Network>;
+    getRunningLocations(): Promise<number[][]>;
+    getProtocolTrieExpansionCount(): Promise<number>;
     getFeeData(txType?: boolean): Promise<FeeData>;
     estimateGas(_tx: TransactionRequest): Promise<bigint>;
     call(_tx: TransactionRequest): Promise<string>;
