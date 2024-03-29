@@ -247,11 +247,6 @@ function formatTransactionResponse(value) {
         nonce: index_js_4.getNumber,
         creates: allowNull(index_js_1.getAddress, null),
         chainId: allowNull(index_js_4.getBigInt, null),
-        etxGasLimit: allowNull(index_js_4.getBigInt, null),
-        etxGasPrice: allowNull(index_js_4.getBigInt, null),
-        etxGasTip: allowNull(index_js_4.getBigInt, null),
-        etxData: allowNull(formatData, null),
-        etxAccessList: allowNull(index_js_3.accessListify, null),
     }, {
         data: ["input"],
         gasLimit: ["gas"],
@@ -260,28 +255,6 @@ function formatTransactionResponse(value) {
     // If to and creates are empty, populate the creates from the value
     if (result.to == null && result.creates == null) {
         result.creates = (0, index_js_1.getCreateAddress)(result);
-    }
-    if (result.type !== 2) {
-        delete result.etxGasLimit;
-        delete result.etxGasPrice;
-        delete result.etxGasTip;
-        delete result.etxData;
-        delete result.etxAccessList;
-    }
-    else {
-        //Needed due to go-quai api using both external as naming and etx as naming
-        //External is for when creating an external transaction
-        //Etx is for when reading an external transaction
-        if (result.etxGasLimit == null && value.externalGasLimit != null)
-            result.etxGasLimit = value.externalGasLimit;
-        if (result.etxGasPrice == null && value.externalGasPrice != null)
-            result.etxGasPrice = value.externalGasPrice;
-        if (result.etxGasTip == null && value.externalGasTip != null)
-            result.etxGasTip = value.externalGasTip;
-        if (result.etxData == null && value.externalData != null)
-            result.etxData = value.externalData;
-        if (result.etxAccessList == null && value.externalAccessList != null)
-            result.etxAccessList = value.externalAccessList;
     }
     // Add an access list to supported transaction types
     if ((value.type === 1 || value.type === 2) && value.accessList == null) {

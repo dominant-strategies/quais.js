@@ -43,26 +43,23 @@ export function getAddressDetails(address) {
     return { shard: filteredShards[0], isUTXO };
 }
 /**
- * Determines the transaction type based on the shard information of the 'from' and 'to'
- * addresses. If both addresses belong to the same shard, it returns 0, indicating an
- * intra-shard transaction. Otherwise, it returns 2, indicating an inter-shard transaction.
- * Throws an error if either address is null or if the shard cannot be found.
- *
- * @param {string|null} from - The sender's blockchain address.
- * @param {string|null} to - The recipient's blockchain address.
- *
- * @returns {number} The transaction type: 0 for intra-shard, 2 for inter-shard.
- * @throws {Error} If either address is null or if the shard cannot be determined.
+ * @param from address
+ * @param to adress
+ * @returns txtype
  */
 export function getTxType(from, to) {
     if (from === null || to === null)
         return 0;
-    const fromDetails = getAddressDetails(from);
-    const toDetails = getAddressDetails(to);
-    if (fromDetails === null || toDetails === null) {
-        throw new Error("Invalid address or shard not found");
+    const fromUTXO = isUTXOAddress(from);
+    const toUTXO = isUTXOAddress(to);
+    switch (true) {
+        case fromUTXO && toUTXO:
+            return 2;
+        case fromUTXO && !toUTXO:
+            return 2;
+        default:
+            return 0;
     }
-    return fromDetails.shard === toDetails.shard ? 0 : 2;
 }
 /**
 * Checks whether a given blockchain address is a UTXO address based on the 9th bit of

@@ -144,26 +144,6 @@ export interface TransactionRequest {
      *  the fetch to unexpected parties.
      */
     enableCcipRead?: boolean;
-    /**
-* The external gas price.
-*/
-    externalGasPrice?: null | BigNumberish;
-    /**
-     * The external gas tip.
-     */
-    externalGasTip?: null | BigNumberish;
-    /**
-     * The external gas limit.
-     */
-    externalGasLimit?: null | BigNumberish;
-    /**
-     *  The external data.
-     */
-    externalData?: null | string;
-    /**
-     *  The access list for berlin and london transactions.
-     */
-    externalAccessList?: null | AccessListish;
 }
 /**
  *  A **PreparedTransactionRequest** is identical to a [[TransactionRequest]]
@@ -774,11 +754,6 @@ export declare class TransactionResponse implements TransactionLike<string>, Tra
      *  support it, otherwise ``null``.
      */
     readonly accessList: null | AccessList;
-    readonly etxGasLimit?: bigint;
-    readonly etxGasPrice?: bigint;
-    readonly etxGasTip?: bigint;
-    readonly etxData?: string;
-    readonly etxAccessList?: AccessList;
     /**
      *  @_ignore:
      */

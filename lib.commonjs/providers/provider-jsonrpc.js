@@ -385,25 +385,6 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
         }
         return super._perform(req);
     }
-    //    async getQuaiRateAtBlock(blockTag: BlockTag, amt: number = 1): Promise<bigint> {
-    //        try {
-    //            const result = await this.send("quai_quaiRateAtBlock", [blockTag, amt]);
-    //
-    //            return result;
-    //        } catch (error: any) {
-    //            throw new Error(`Failed to get Quai rate at block: ${error.message}`);
-    //        }
-    //    }
-    //
-    //    async getQiRateAtBlock(blockTag: BlockTag, amt: number = 1): Promise<bigint> {
-    //        try {
-    //            const result = await this.send("quai_qiRateAtBlock", [blockTag, amt]);
-    //
-    //            return result;
-    //        } catch (error: any) {
-    //            throw new Error(`Failed to get Qi rate at block: ${error.message}`);
-    //        }
-    //    }
     /**
      *  Sub-classes may override this; it detects the *actual* network that
      *  we are **currently** connected to.
@@ -643,6 +624,18 @@ class JsonRpcApiProvider extends abstract_provider_js_1.AbstractProvider {
                 return {
                     method: "quai_estimateGas",
                     args: [this.getRpcTransaction(req.transaction)]
+                };
+            }
+            case "getRunningLocations": {
+                return {
+                    method: "quai_listRunningChains",
+                    args: []
+                };
+            }
+            case "getProtocolTrieExpansionCount": {
+                return {
+                    method: "quai_getProtocolExpansionNumber",
+                    args: []
                 };
             }
             case "getQiRateAtBlock": {

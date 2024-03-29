@@ -73,7 +73,7 @@ class AbstractSigner {
             pop.type = await (0, index_js_4.getTxType)(pop.from ?? null, pop.to ?? null);
         }
         if (pop.gasLimit == null) {
-            if (tx.type == 0)
+            if (pop.type == 0)
                 pop.gasLimit = await this.estimateGas(pop);
             else {
                 //Special cases for type 2 tx to bypass address out of scope in the node
@@ -101,11 +101,6 @@ class AbstractSigner {
                 pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
             }
         }
-        if (pop.type == 2) {
-            pop.externalGasLimit = (0, index_js_3.getBigInt)(Number(pop.gasLimit) * 9);
-            pop.externalGasTip = (0, index_js_3.getBigInt)(Number(pop.maxPriorityFeePerGas) * 9);
-            pop.externalGasPrice = (0, index_js_3.getBigInt)(Number(pop.maxFeePerGas) * 9);
-        }
         //@TOOD: Don't await all over the place; save them up for
         // the end for better batching
         return await (0, index_js_3.resolveProperties)(pop);
@@ -126,8 +121,8 @@ class AbstractSigner {
         delete pop.from;
         const txObj = index_js_2.Transaction.from(pop);
         const signedTx = await this.signTransaction(txObj);
-        console.log("signedTX: ", JSON.stringify(txObj));
-        return await provider.broadcastTransaction(signedTx);
+        const result = await provider.broadcastTransaction(signedTx);
+        return result;
     }
 }
 exports.AbstractSigner = AbstractSigner;

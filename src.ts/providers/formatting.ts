@@ -380,18 +380,6 @@ export interface TransactionResponseParams {
      *  The transaction access list.
      */
     accessList: null | AccessList;
-
-    //External Transaction fields
-
-    etxGasLimit ?: bigint ;
-
-    etxGasPrice ?: bigint ;
-
-    etxGasTip   ?: bigint ;
-
-    etxData     ?: string ;
-
-    etxAccessList ?: AccessList ;
 };
 
 
