@@ -1169,7 +1169,7 @@ export class AbstractProvider implements Provider {
             blockTag: this._getBlockTag(shard, _tx.blockTag)
         });
 
-        return await this.#checkNetwork(this.#call(tx, blockTag, _tx.enableCcipRead ? 0: -1), shard);
+        return await this.#checkNetwork(this.#call(tx, blockTag, -1), shard);
     }
 
     // Account
