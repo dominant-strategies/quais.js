@@ -6,6 +6,10 @@ const index_js_2 = require("../hash/index.js");
 const index_js_3 = require("../providers/index.js");
 const index_js_4 = require("../transaction/index.js");
 const index_js_5 = require("../utils/index.js");
+// import { MuSigFactory } from "@brandonblack/musig"
+// import { nobleCrypto } from "./musig-crypto.js";
+// import { UTXOTransaction } from "../transaction/utxo.js";
+// import { schnorr } from "@noble/curves/secp256k1";
 /**
  *  The **BaseWallet** is a stream-lined implementation of a
  *  [[Signer]] that operates with a private key.
@@ -55,6 +59,7 @@ class BaseWallet extends index_js_3.AbstractSigner {
         return new BaseWallet(this.#signingKey, provider);
     }
     async signTransaction(tx) {
+        console.log("signTransaction");
         // Replace any Addressable or ENS name with an address
         const { to, from } = await (0, index_js_5.resolveProperties)({
             to: (tx.to ? (0, index_js_1.resolveAddress)(tx.to, this.provider) : undefined),
@@ -75,6 +80,18 @@ class BaseWallet extends index_js_3.AbstractSigner {
         btx.signature = this.signingKey.sign(btx.unsignedHash);
         return btx.serialized;
     }
+    // async signUTXOTransaction(tx: UTXOTransaction, pk: Uint8Array): Promise<string> {
+    //     const factory = MuSigFactory(nobleCrypto);
+    //     //const transactionHash = tx.serialize()
+    //     // Check if there is only one private key
+    //     if (pk.length === 1) {
+    //         // Single key scenario: Perform a simple Schnorr signature
+    //         const publicKey = factory.getXOnlyPubkey(pk[0]);
+    //         const signature = schnorr.sign(transactionHash, BigInt(pk[0]), publicKey); 
+    //         // Attach the signature to the transaction
+    //         transaction.signature = signature;
+    //     }
+    // }
     async signMessage(message) {
         return this.signMessageSync(message);
     }

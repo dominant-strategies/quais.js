@@ -7,7 +7,7 @@ import {
 } from "../utils/index.js";
 
 import { accessListify } from "./accesslist.js";
-import { computeAddress, recoverAddress } from "./address.js";
+import { computeAddress } from "./address.js";
 
 import type { BigNumberish, BytesLike } from "../utils/index.js";
 import type { SignatureLike } from "../crypto/index.js";

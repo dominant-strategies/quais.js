@@ -67,18 +67,21 @@ export class AbstractSigner {
         const pop = await populate(this, tx);
         return pop;
     }
+    // async populateQiTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
+    // }
     async populateTransaction(tx) {
+        console.log("populateTransaction");
         const provider = checkProvider(this, "populateTransaction");
         const shard = await this.shardFromAddress(tx.from);
         const pop = await populate(this, tx);
-        if (pop.nonce == null) {
-            pop.nonce = await this.getNonce("pending");
-        }
         if (pop.type == null) {
             pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
         }
+        if (pop.nonce == null) {
+            pop.nonce = await this.getNonce("pending");
+        }
         if (pop.gasLimit == null) {
-            if (tx.type == 0)
+            if (pop.type == 0)
                 pop.gasLimit = await this.estimateGas(pop);
             else {
                 //Special cases for type 2 tx to bypass address out of scope in the node
@@ -106,11 +109,6 @@ export class AbstractSigner {
                 pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
             }
         }
-        if (pop.type == 2) {
-            pop.externalGasLimit = getBigInt(Number(pop.gasLimit) * 9);
-            pop.externalGasTip = getBigInt(Number(pop.maxPriorityFeePerGas) * 9);
-            pop.externalGasPrice = getBigInt(Number(pop.maxFeePerGas) * 9);
-        }
         //@TOOD: Don't await all over the place; save them up for
         // the end for better batching
         return await resolveProperties(pop);
@@ -126,9 +124,11 @@ export class AbstractSigner {
         return await provider.resolveName(name);
     }
     async sendTransaction(tx) {
+        console.log('sendTransaction', tx);
         const provider = checkProvider(this, "sendTransaction");
         const shard = await this.shardFromAddress(tx.from);
         const pop = await this.populateTransaction(tx);
+        console.log("populated tx", pop);
         //        delete pop.from;
         const txObj = Transaction.from(pop);
         const signedTx = await this.signTransaction(txObj);
