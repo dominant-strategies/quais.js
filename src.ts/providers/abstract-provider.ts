@@ -1203,6 +1203,8 @@ export class AbstractProvider implements Provider {
         return hexlify(await this.#getAccountValue({ method: "getStorage", position}, address, blockTag));
     }
 
+    //TODO: Provider method which gets unspent utxos for an address
+
     // Write
     async broadcastTransaction(shard: string, signedTx: string): Promise<TransactionResponse> {
         const { blockNumber, hash, network } = await resolveProperties({

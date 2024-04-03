@@ -61,6 +61,7 @@ export const ShardData = [
         shard: "zone-2-2",
         context: 2,
         byte: "0x22" // 0010 0010 region-2 zone-2
+<<<<<<< HEAD
     },
     {
         name: "Prime",
@@ -68,6 +69,8 @@ export const ShardData = [
         shard: "prime",
         context: 2,
         byte: "0x"
+=======
+>>>>>>> ee35178e (utxohdwallet)
     }
 ];
 //# sourceMappingURL=shards.js.map

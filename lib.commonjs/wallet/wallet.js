@@ -8,6 +8,10 @@ const hdwallet_js_1 = require("./hdwallet.js");
 const json_crowdsale_js_1 = require("./json-crowdsale.js");
 const json_keystore_js_1 = require("./json-keystore.js");
 const mnemonic_js_1 = require("./mnemonic.js");
+<<<<<<< HEAD
+=======
+const utxohdwallet_js_1 = require("./utxohdwallet.js");
+>>>>>>> ee35178e (utxohdwallet)
 function stall(duration) {
     return new Promise((resolve) => { setTimeout(() => { resolve(); }, duration); });
 }
@@ -137,11 +141,38 @@ class Wallet extends base_wallet_js_1.BaseWallet {
      *  Creates a [[HDNodeWallet]] for %%phrase%%.
      */
     static fromPhrase(phrase, path, provider, wordlist) {
+<<<<<<< HEAD
         const wallet = hdwallet_js_1.HDNodeWallet.fromPhrase(phrase, path, undefined, wordlist);
         if (provider) {
             return wallet.connect(provider);
         }
         return wallet;
+=======
+        const splitPath = path.split('/');
+        if (splitPath.length < 3)
+            throw new Error(`Incomplete path for wallet derivation ${path}`);
+        let coinTypeStr = splitPath[2];
+        coinTypeStr = coinTypeStr.replace("'", "");
+        const coinType = parseInt(coinTypeStr);
+        let wallet;
+        switch (coinType) {
+            case 994:
+                wallet = hdwallet_js_1.HDNodeWallet.fromPhrase(phrase, path, undefined, wordlist);
+                if (provider) {
+                    return wallet.connect(provider);
+                }
+                return wallet;
+            case 969:
+                console.log('utxo wallet');
+                wallet = utxohdwallet_js_1.UTXOHDWallet.fromPhrase(phrase, path, undefined, wordlist);
+                if (provider) {
+                    return wallet.connect(provider);
+                }
+                return wallet;
+            default:
+                throw new Error(`Unsupported cointype ${coinType} for HD wallet derivation`);
+        }
+>>>>>>> ee35178e (utxohdwallet)
     }
 }
 exports.Wallet = Wallet;

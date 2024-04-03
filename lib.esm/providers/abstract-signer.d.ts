@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /**
  *  Generally the [[Wallet]] and [[JsonRpcSigner]] and their sub-classes
  *  are sufficent for most developers, but this is provided to
@@ -6,6 +7,8 @@
  *  @_section: api/providers/abstract-signer: Subclassing Signer [abstract-signer]
  */
 import { AddressLike } from "../address/index.js";
+=======
+>>>>>>> ee35178e (utxohdwallet)
 import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
 import type { TransactionLike } from "../transaction/index.js";
 import type { BlockTag, Provider, TransactionRequest, TransactionResponse } from "./provider.js";
@@ -29,8 +32,11 @@ export declare abstract class AbstractSigner<P extends null | Provider = null | 
      *  Resolves to the Signer address.
      */
     abstract getAddress(): Promise<string>;
+<<<<<<< HEAD
     _getAddress(address: AddressLike): string | Promise<string>;
     shardFromAddress(_address: AddressLike): Promise<string>;
+=======
+>>>>>>> ee35178e (utxohdwallet)
     /**
      *  Returns the signer connected to %%provider%%.
      *
@@ -41,6 +47,10 @@ export declare abstract class AbstractSigner<P extends null | Provider = null | 
     getNonce(blockTag?: BlockTag): Promise<number>;
     populateCall(tx: TransactionRequest): Promise<TransactionLike<string>>;
     populateTransaction(tx: TransactionRequest): Promise<TransactionLike<string>>;
+<<<<<<< HEAD
+=======
+    populateUTXOTransaction(tx: TransactionRequest): Promise<TransactionLike<string>>;
+>>>>>>> ee35178e (utxohdwallet)
     estimateGas(tx: TransactionRequest): Promise<bigint>;
     call(tx: TransactionRequest): Promise<string>;
     resolveName(name: string): Promise<null | string>;

@@ -73,7 +73,11 @@ class BaseWallet extends index_js_3.AbstractSigner {
         }
         if (tx.from != null) {
             (0, index_js_5.assertArgument)((0, index_js_1.getAddress)((tx.from)) === this.#address, "transaction from address mismatch", "tx.from", tx.from);
+<<<<<<< HEAD
             //            delete tx.from;
+=======
+            delete tx.from;
+>>>>>>> ee35178e (utxohdwallet)
         }
         // Build the transaction
         const btx = index_js_4.Transaction.from(tx);

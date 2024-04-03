@@ -1,13 +1,19 @@
 /**
  *  @_ignore
  */
+<<<<<<< HEAD
 import { getBytesCopy, assertArgument, toUtf8Bytes } from "../utils/index.js";
+=======
+import { assert, computeHmac, sha256 } from "../quais.js";
+import { getBytesCopy, assertArgument, toUtf8Bytes, concat, dataSlice, encodeBase58, getBytes } from "../utils/index.js";
+>>>>>>> ee35178e (utxohdwallet)
 export function looseArrayify(hexString) {
     if (typeof (hexString) === "string" && !hexString.startsWith("0x")) {
         hexString = "0x" + hexString;
     }
     return getBytesCopy(hexString);
 }
+<<<<<<< HEAD
 export function zpad(value, length) {
     value = String(value);
     while (value.length < length) {
@@ -15,6 +21,8 @@ export function zpad(value, length) {
     }
     return value;
 }
+=======
+>>>>>>> ee35178e (utxohdwallet)
 export function getPassword(password) {
     if (typeof (password) === 'string') {
         return toUtf8Bytes(password, "NFKC");
@@ -83,6 +91,87 @@ export function spelunk(object, _path) {
     }
     return cur;
 }
+<<<<<<< HEAD
+=======
+// HDNODEWallet and UTXO Wallet util methods
+// "Bitcoin seed"
+export const MasterSecret = new Uint8Array([66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100]);
+export const HardenedBit = 0x80000000;
+export const N = BigInt("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");
+export const Nibbles = "0123456789abcdef";
+export function zpad(value, length) {
+    // Determine if the value is hexadecimal
+    const isHex = typeof value === "string" && value.startsWith("0x");
+    // Handle hexadecimal values
+    if (isHex) {
+        let hexValue = value.substring(2); // Remove the "0x" prefix
+        while (hexValue.length < length * 2) { // Hexadecimal characters count double
+            hexValue = "0" + hexValue;
+        }
+        return "0x" + hexValue;
+    }
+    // Handle numbers or non-hexadecimal strings
+    let result = String(value);
+    while (result.length < length) {
+        result = '0' + result;
+    }
+    return result;
+}
+export function encodeBase58Check(_value) {
+    const value = getBytes(_value);
+    const check = dataSlice(sha256(sha256(value)), 0, 4);
+    const bytes = concat([value, check]);
+    return encodeBase58(bytes);
+}
+export function ser_I(index, chainCode, publicKey, privateKey) {
+    const data = new Uint8Array(37);
+    if (index & HardenedBit) {
+        assert(privateKey != null, "cannot derive child of neutered node", "UNSUPPORTED_OPERATION", {
+            operation: "deriveChild"
+        });
+        // Data = 0x00 || ser_256(k_par)
+        data.set(getBytes(privateKey), 1);
+    }
+    else {
+        // Data = ser_p(point(k_par))
+        data.set(getBytes(publicKey));
+    }
+    // Data += ser_32(i)
+    for (let i = 24; i >= 0; i -= 8) {
+        data[33 + (i >> 3)] = ((index >> (24 - i)) & 0xff);
+    }
+    const I = getBytes(computeHmac("sha512", chainCode, data));
+    return { IL: I.slice(0, 32), IR: I.slice(32) };
+}
+export function derivePath(node, path) {
+    const components = path.split("/");
+    assertArgument(components.length > 0 && (components[0] === "m" || node.depth > 0), "invalid path", "path", path);
+    if (components[0] === "m") {
+        components.shift();
+    }
+    let result = node;
+    for (let i = 0; i < components.length; i++) {
+        const component = components[i];
+        if (component.match(/^[0-9]+'$/)) {
+            const index = parseInt(component.substring(0, component.length - 1));
+            assertArgument(index < HardenedBit, "invalid path index", `path[${i}]`, component);
+            result = result.deriveChild(HardenedBit + index);
+        }
+        else if (component.match(/^[0-9]+$/)) {
+            const index = parseInt(component);
+            assertArgument(index < HardenedBit, "invalid path index", `path[${i}]`, component);
+            result = result.deriveChild(index);
+        }
+        else {
+            assertArgument(false, "invalid path component", `path[${i}]`, component);
+        }
+    }
+    // Extract the coin type from the path and set it on the node
+    if (result.setCoinType)
+        result.setCoinType();
+    return result;
+}
+>>>>>>> ee35178e (utxohdwallet)
 /*
 export function follow(object: any, path: string): null | string {
     let currentChild = object;

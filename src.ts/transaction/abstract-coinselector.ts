@@ -1,4 +1,4 @@
-import { UTXO, UTXOLike } from "./utxo.js";
+import { UTXO, UTXOEntry, UTXOLike } from "./utxo.js";
 
 export type SpendTarget = {
     address: string;
@@ -49,7 +49,7 @@ export abstract class AbstractCoinSelector {
     /**
      * Constructs a new AbstractCoinSelector instance with an empty UTXO array.
      */
-    constructor(availableUXTOs: UTXOLike[] = []) {
+    constructor(availableUXTOs: UTXOEntry[] = []) {
         this.#availableUXTOs = availableUXTOs.map((val: UTXOLike) => {
             const utxo = UTXO.from(val);
             this._validateUTXO(utxo);

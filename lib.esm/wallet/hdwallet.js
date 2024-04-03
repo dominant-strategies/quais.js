@@ -6,6 +6,7 @@
 import { computeHmac, randomBytes, ripemd160, SigningKey, sha256 } from "../crypto/index.js";
 import { VoidSigner } from "../providers/index.js";
 import { computeAddress } from "../transaction/index.js";
+<<<<<<< HEAD
 import { concat, dataSlice, decodeBase58, defineProperties, encodeBase58, getBytes, hexlify, isBytesLike, getNumber, toBeArray, toBigInt, toBeHex, assertPrivate, assert, assertArgument } from "../utils/index.js";
 import { LangEn } from "../wordlists/lang-en.js";
 import { BaseWallet } from "./base-wallet.js";
@@ -84,6 +85,16 @@ function derivePath(node, path) {
         result.setCoinType();
     return result;
 }
+=======
+import { concat, dataSlice, decodeBase58, defineProperties, getBytes, hexlify, isBytesLike, getNumber, toBeArray, toBigInt, toBeHex, assertPrivate, assert, assertArgument } from "../utils/index.js";
+import { BaseWallet } from "./base-wallet.js";
+import { Mnemonic } from "./mnemonic.js";
+import { encryptKeystoreJson, encryptKeystoreJsonSync, } from "./json-keystore.js";
+import { N, ShardData } from "../constants/index.js";
+import { getShardForAddress, isUTXOAddress } from "../utils/index.js";
+import { encodeBase58Check, zpad, HardenedBit, ser_I, derivePath, MasterSecret } from "./utils.js";
+const _guard = {};
+>>>>>>> ee35178e (utxohdwallet)
 /**
  *  An **HDNodeWallet** is a [[Signer]] backed by the private key derived
  *  from an HD Node using the [[link-bip-32]] stantard.
@@ -145,7 +156,11 @@ export class HDNodeWallet extends BaseWallet {
      */
     constructor(guard, signingKey, accountFingerprint, chainCode, path, index, depth, mnemonic, provider) {
         super(signingKey, provider);
+<<<<<<< HEAD
         assertPrivate(guard, _guard, "HDNodeWallet");
+=======
+        assertPrivate(guard, _guard);
+>>>>>>> ee35178e (utxohdwallet)
         this.#publicKey = signingKey.compressedPublicKey;
         const fingerprint = dataSlice(ripemd160(sha256(this.#publicKey)), 0, 4);
         defineProperties(this, {
@@ -239,8 +254,20 @@ export class HDNodeWallet extends BaseWallet {
         const index = getNumber(_index, "index");
         assertArgument(index <= 0xffffffff, "invalid index", "index", index);
         // Base path
+<<<<<<< HEAD
         let path = this.path;
         if (path) {
+=======
+        let newDepth = this.depth + 1;
+        let path = this.path;
+        if (path) {
+            let pathFields = path.split("/");
+            if (pathFields.length == 6) {
+                pathFields.pop();
+                path = pathFields.join("/");
+                newDepth--;
+            }
+>>>>>>> ee35178e (utxohdwallet)
             path += "/" + (index & ~HardenedBit);
             if (index & HardenedBit) {
                 path += "'";
@@ -250,7 +277,11 @@ export class HDNodeWallet extends BaseWallet {
         const ki = new SigningKey(toBeHex((toBigInt(IL) + BigInt(this.privateKey)) % N, 32));
         //BIP44 if we are at the account depth get that fingerprint, otherwise continue with the current one
         let newFingerprint = this.depth == 3 ? this.fingerprint : this.accountFingerprint;
+<<<<<<< HEAD
         return new HDNodeWallet(_guard, ki, newFingerprint, hexlify(IR), path, index, this.depth + 1, this.mnemonic, this.provider);
+=======
+        return new HDNodeWallet(_guard, ki, newFingerprint, hexlify(IR), path, index, newDepth, this.mnemonic, this.provider);
+>>>>>>> ee35178e (utxohdwallet)
     }
     /**
      *  Return the HDNode for %%path%% from this node.
@@ -306,6 +337,7 @@ export class HDNodeWallet extends BaseWallet {
      *  Creates a new random HDNode.
      */
     static createRandom(path, password, wordlist) {
+<<<<<<< HEAD
         if (password == null) {
             password = "";
         }
@@ -315,6 +347,11 @@ export class HDNodeWallet extends BaseWallet {
         if (wordlist == null) {
             wordlist = LangEn.wordlist();
         }
+=======
+        if (path == null || !this.isValidPath(path)) {
+            throw new Error('Invalid path: ' + path);
+        }
+>>>>>>> ee35178e (utxohdwallet)
         const mnemonic = Mnemonic.fromEntropy(randomBytes(16), password, wordlist);
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
@@ -331,6 +368,7 @@ export class HDNodeWallet extends BaseWallet {
      *  Creates an HD Node from a mnemonic %%phrase%%.
      */
     static fromPhrase(phrase, path, password, wordlist) {
+<<<<<<< HEAD
         if (password == null) {
             password = "";
         }
@@ -340,6 +378,11 @@ export class HDNodeWallet extends BaseWallet {
         if (wordlist == null) {
             wordlist = LangEn.wordlist();
         }
+=======
+        if (path == null || !this.isValidPath(path)) {
+            throw new Error('Invalid path: ' + path);
+        }
+>>>>>>> ee35178e (utxohdwallet)
         const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist);
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
@@ -364,6 +407,11 @@ export class HDNodeWallet extends BaseWallet {
      * Derives address by incrementing address_index according to BIP44
      */
     deriveAddress(index, zone) {
+<<<<<<< HEAD
+=======
+        if (!this.path)
+            throw new Error("Missing Path");
+>>>>>>> ee35178e (utxohdwallet)
         //Case for a non quai/qi wallet where zone is not needed
         if (!zone) {
             if (this.coinType == 994 || this.coinType == 969) {
@@ -379,12 +427,16 @@ export class HDNodeWallet extends BaseWallet {
         if (!shard) {
             throw new Error("Invalid zone");
         }
+<<<<<<< HEAD
         if (!this.path)
             throw new Error("Missing Path");
+=======
+>>>>>>> ee35178e (utxohdwallet)
         let newWallet;
         let addrIndex = 0;
         let zoneIndex = index + 1;
         do {
+<<<<<<< HEAD
             // const pathComponents = this.path?.split('/');
             // let newPath;
             // if (pathComponents.length == 5) {
@@ -392,6 +444,8 @@ export class HDNodeWallet extends BaseWallet {
             // } else if (pathComponents.length == 6)
             //     newPath = this.path.replace(pathComponents[pathComponents.length - 1], addrIndex.toString());
             //     else throw new Error(`Invalid or uncomplete path: ${newPath} ${this.path}`);
+=======
+>>>>>>> ee35178e (utxohdwallet)
             newWallet = this.derivePath(addrIndex.toString());
             if (getShardForAddress(newWallet.address) == shard && ((newWallet.coinType == 969) == isUTXOAddress(newWallet.address)))
                 zoneIndex--;

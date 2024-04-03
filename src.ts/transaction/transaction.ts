@@ -12,7 +12,7 @@ import { computeAddress } from "./address.js";
 import type { BigNumberish, BytesLike } from "../utils/index.js";
 import type { SignatureLike } from "../crypto/index.js";
 import type { AccessList, AccessListish } from "./index.js";
-import type { UTXOTransactionInput, UTXOTransactionOutput } from "./utxo.js";
+import type { UTXOEntry, UTXOTransactionOutput } from "./utxo.js";
 
 export interface TransactionLike<A = string> {
     /**
@@ -85,7 +85,7 @@ export interface TransactionLike<A = string> {
     accessList?: null | AccessListish;
 
 
-    inputsUTXO?: null | Array<UTXOTransactionInput>;
+    inputsUTXO?: null | Array<UTXOEntry>;
 
     outputsUTXO?: null | Array<UTXOTransactionOutput>;
 }
@@ -227,7 +227,7 @@ export class Transaction implements TransactionLike<string> {
     #sig: null | Signature;
     #accessList: null | AccessList;
     #hash: null | string;
-    #inputsUTXO: null | UTXOTransactionInput[];
+    #inputsUTXO: null | UTXOEntry[];
     #outputsUTXO: null | UTXOTransactionOutput[];
     from: string;
 
@@ -382,8 +382,8 @@ export class Transaction implements TransactionLike<string> {
     }
 
 
-    get inputsUTXO(): null | UTXOTransactionInput[] { return this.#inputsUTXO; }
-    set inputsUTXO(value: null | UTXOTransactionInput[]) { this.#inputsUTXO = value; }
+    get inputsUTXO(): null | UTXOEntry[] { return this.#inputsUTXO; }
+    set inputsUTXO(value: null | UTXOEntry[]) { this.#inputsUTXO = value; }
 
     get outputsUTXO(): null | UTXOTransactionOutput[] { return this.#outputsUTXO; }
     set outputsUTXO(value: null | UTXOTransactionOutput[]) { this.#outputsUTXO = value; }
@@ -526,28 +526,48 @@ export class Transaction implements TransactionLike<string> {
     /**
      *  Return a JSON-friendly object.
      */
-    toJSON(): any {
-        const s = (v: null | bigint) => {
-            if (v == null) { return null; }
-            return v.toString();
-        };
+toJSON(): any {
+    const s = (v: null | bigint) => {
+        if (v == null) { return null; }
+        return v.toString();
+    };
 
-        return {
-            type: this.type,
-            to: this.to,
-//            from: this.from,
-            data: this.data,
-            nonce: this.nonce,
-            gasLimit: s(this.gasLimit),
-            gasPrice: s(this.gasPrice),
-            maxPriorityFeePerGas: s(this.maxPriorityFeePerGas),
-            maxFeePerGas: s(this.maxFeePerGas),
-            value: s(this.value),
-            chainId: s(this.chainId),
-            sig: this.signature ? this.signature.toJSON(): null,
-            accessList: this.accessList,
-        };
-    }
+    // A helper function to handle objects that might contain BigInt values
+    const handleObjectWithBigInt = (obj: any) => {
+        for (const key in obj) {
+            if (typeof obj[key] === 'bigint') {
+                obj[key] = obj[key].toString();
+            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                // Recursively handle nested objects
+                obj[key] = handleObjectWithBigInt(obj[key]);
+            }
+        }
+        return obj;
+    };
+
+    // Process arrays of objects for inputsUTXO and outputsUTXO
+    const processArrayWithBigInt = (arr: any[]) => {
+        return arr.map(item => handleObjectWithBigInt(item));
+    };
+
+    return {
+        type: this.type,
+        to: this.to,
+        //from: this.from,
+        data: this.data,
+        nonce: this.nonce,
+        gasLimit: s(this.gasLimit),
+        gasPrice: s(this.gasPrice),
+        maxPriorityFeePerGas: s(this.maxPriorityFeePerGas),
+        maxFeePerGas: s(this.maxFeePerGas),
+        value: s(this.value),
+        chainId: s(this.chainId),
+        sig: this.signature ? this.signature.toJSON() : null,
+        accessList: this.accessList,
+        inputsUTXO: processArrayWithBigInt(this.inputsUTXO || []),
+        outputsUTXO: processArrayWithBigInt(this.outputsUTXO || []),
+    };
+}
 
     /**
      *  Create a **Transaction** from a serialized transaction or a
@@ -572,6 +592,8 @@ export class Transaction implements TransactionLike<string> {
         if (tx.chainId != null) { result.chainId = tx.chainId; }
         if (tx.signature != null) { result.signature = Signature.from(tx.signature); }
         if (tx.accessList != null) { result.accessList = tx.accessList; }
+        if (tx.inputsUTXO != null) {  result.inputsUTXO = tx.inputsUTXO; }
+        if (tx.outputsUTXO != null) { result.outputsUTXO = tx.outputsUTXO; }
 
 
         if (tx.hash != null) {

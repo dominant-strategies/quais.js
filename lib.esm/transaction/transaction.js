@@ -2,7 +2,11 @@ import { getAddress } from "../address/index.js";
 import { keccak256, Signature, SigningKey } from "../crypto/index.js";
 import { getBytes, getBigInt, getNumber, hexlify, assert, assertArgument, toBeArray, zeroPadValue, encodeProto, decodeProto, toBigInt, getShardForAddress, isUTXOAddress } from "../utils/index.js";
 import { accessListify } from "./accesslist.js";
+<<<<<<< HEAD
 import { computeAddress } from "./address.js";
+=======
+import { computeAddress, recoverAddress } from "./address.js";
+>>>>>>> ee35178e (utxohdwallet)
 function handleNumber(_value, param) {
     if (_value === "0x") {
         return 0;
@@ -35,7 +39,10 @@ function _parse(data) {
     const decodedTx = decodeProto(getBytes(data));
     const tx = {
         type: decodedTx.type,
+<<<<<<< HEAD
         from: decodedTx.from,
+=======
+>>>>>>> ee35178e (utxohdwallet)
         chainId: toBigInt(decodedTx.chain_id),
         nonce: decodedTx.nonce,
         maxPriorityFeePerGas: toBigInt(decodedTx.gas_tip_cap),
@@ -70,7 +77,11 @@ function getTransactionHash(tx, data) {
     }
     let hash = keccak256(data);
     hash = '0x' + originShardByte + (originUtxo ? 'F' : '1') + hash.charAt(5) + originShardByte + (destUtxo ? 'F' : '1') + hash.slice(9);
+<<<<<<< HEAD
     //TODO alter comparison
+=======
+    //TODO alter comparison  
+>>>>>>> ee35178e (utxohdwallet)
     return hash;
 }
 function _serialize(tx, sig) {
@@ -126,7 +137,10 @@ export class Transaction {
     #hash;
     #inputsUTXO;
     #outputsUTXO;
+<<<<<<< HEAD
     from;
+=======
+>>>>>>> ee35178e (utxohdwallet)
     /**
      *  The transaction type.
      *
@@ -272,7 +286,11 @@ export class Transaction {
     /**
      *  Creates a new Transaction with default values.
      */
+<<<<<<< HEAD
     constructor(from) {
+=======
+    constructor() {
+>>>>>>> ee35178e (utxohdwallet)
         this.#type = null;
         this.#to = null;
         this.#nonce = 0;
@@ -288,7 +306,10 @@ export class Transaction {
         this.#hash = null;
         this.#inputsUTXO = null;
         this.#outputsUTXO = null;
+<<<<<<< HEAD
         this.from = from;
+=======
+>>>>>>> ee35178e (utxohdwallet)
     }
     /**
      *  The transaction hash, if signed. Otherwise, ``null``.
@@ -315,6 +336,18 @@ export class Transaction {
         return keccak256(this.unsignedSerialized);
     }
     /**
+<<<<<<< HEAD
+=======
+     *  The sending address, if signed. Otherwise, ``null``.
+     */
+    get from() {
+        if (this.signature == null) {
+            return null;
+        }
+        return recoverAddress(this.unsignedHash, this.signature);
+    }
+    /**
+>>>>>>> ee35178e (utxohdwallet)
      *  The public key of the sender, if signed. Otherwise, ``null``.
      */
     get fromPublicKey() {
@@ -398,10 +431,34 @@ export class Transaction {
             }
             return v.toString();
         };
+<<<<<<< HEAD
         return {
             type: this.type,
             to: this.to,
             //            from: this.from,
+=======
+        // A helper function to handle objects that might contain BigInt values
+        const handleObjectWithBigInt = (obj) => {
+            for (const key in obj) {
+                if (typeof obj[key] === 'bigint') {
+                    obj[key] = obj[key].toString();
+                }
+                else if (typeof obj[key] === 'object' && obj[key] !== null) {
+                    // Recursively handle nested objects
+                    obj[key] = handleObjectWithBigInt(obj[key]);
+                }
+            }
+            return obj;
+        };
+        // Process arrays of objects for inputsUTXO and outputsUTXO
+        const processArrayWithBigInt = (arr) => {
+            return arr.map(item => handleObjectWithBigInt(item));
+        };
+        return {
+            type: this.type,
+            to: this.to,
+            //from: this.from,
+>>>>>>> ee35178e (utxohdwallet)
             data: this.data,
             nonce: this.nonce,
             gasLimit: s(this.gasLimit),
@@ -412,6 +469,11 @@ export class Transaction {
             chainId: s(this.chainId),
             sig: this.signature ? this.signature.toJSON() : null,
             accessList: this.accessList,
+<<<<<<< HEAD
+=======
+            inputsUTXO: processArrayWithBigInt(this.inputsUTXO || []),
+            outputsUTXO: processArrayWithBigInt(this.outputsUTXO || []),
+>>>>>>> ee35178e (utxohdwallet)
         };
     }
     /**
@@ -419,12 +481,23 @@ export class Transaction {
      *  Transaction-like object.
      */
     static from(tx) {
+<<<<<<< HEAD
         //        if (tx == null) { return new Transaction(); }
+=======
+        if (tx == null) {
+            return new Transaction();
+        }
+        console.log("TX: ", tx);
+>>>>>>> ee35178e (utxohdwallet)
         if (typeof (tx) === "string") {
             const payload = getBytes(tx);
             return Transaction.from(_parse(payload));
         }
+<<<<<<< HEAD
         const result = new Transaction(tx.from);
+=======
+        const result = new Transaction();
+>>>>>>> ee35178e (utxohdwallet)
         if (tx.type != null) {
             result.type = tx.type;
         }
@@ -458,12 +531,25 @@ export class Transaction {
         if (tx.accessList != null) {
             result.accessList = tx.accessList;
         }
+<<<<<<< HEAD
+=======
+        if (tx.inputsUTXO != null) {
+            result.inputsUTXO = tx.inputsUTXO;
+        }
+        if (tx.outputsUTXO != null) {
+            result.outputsUTXO = tx.outputsUTXO;
+        }
+>>>>>>> ee35178e (utxohdwallet)
         if (tx.hash != null) {
             assertArgument(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);
             result.hash = tx.hash;
         }
         if (tx.from != null) {
+<<<<<<< HEAD
             //             assertArgument(result.isSigned(), "unsigned transaction cannot define from", "tx", tx);
+=======
+            assertArgument(result.isSigned(), "unsigned transaction cannot define from", "tx", tx);
+>>>>>>> ee35178e (utxohdwallet)
             assertArgument(result.from.toLowerCase() === (tx.from || "").toLowerCase(), "from mismatch", "tx", tx);
         }
         return result;

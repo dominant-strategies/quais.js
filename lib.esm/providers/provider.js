@@ -585,8 +585,13 @@ export class Log {
     /**
      *  Returns the block that this log occurred in.
      */
+<<<<<<< HEAD
     async getBlock(shard) {
         const block = await this.provider.getBlock(shard, this.blockHash);
+=======
+    async getBlock() {
+        const block = await this.provider.getBlock(this.blockHash);
+>>>>>>> ee35178e (utxohdwallet)
         assert(!!block, "failed to find transaction", "UNKNOWN_ERROR", {});
         return block;
     }
@@ -616,9 +621,12 @@ export class Log {
 }
 //////////////////////
 // Transaction Receipt
+<<<<<<< HEAD
 export function shardFromHash(hash) {
     return hash.slice(0, 4);
 }
+=======
+>>>>>>> ee35178e (utxohdwallet)
 /**
  *  A **TransactionReceipt** includes additional information about a
  *  transaction that is only available after it has been mined.
@@ -791,8 +799,13 @@ export class TransactionReceipt {
     /**
      *  Resolves to the block this transaction occurred in.
      */
+<<<<<<< HEAD
     async getBlock(shard) {
         const block = await this.provider.getBlock(shard, this.blockHash);
+=======
+    async getBlock() {
+        const block = await this.provider.getBlock(this.blockHash);
+>>>>>>> ee35178e (utxohdwallet)
         if (block == null) {
             throw new Error("TODO");
         }
@@ -821,8 +834,12 @@ export class TransactionReceipt {
      *  Resolves to the number of confirmations this transaction has.
      */
     async confirmations() {
+<<<<<<< HEAD
         const shard = shardFromHash(this.hash);
         return (await this.provider.getBlockNumber(shard)) - this.blockNumber + 1;
+=======
+        return (await this.provider.getBlockNumber()) - this.blockNumber + 1;
+>>>>>>> ee35178e (utxohdwallet)
     }
     /**
      *  @_ignore:
@@ -991,7 +1008,11 @@ export class TransactionResponse {
      *
      *  This will return null if the transaction has not been included yet.
      */
+<<<<<<< HEAD
     async getBlock(shard) {
+=======
+    async getBlock() {
+>>>>>>> ee35178e (utxohdwallet)
         let blockNumber = this.blockNumber;
         if (blockNumber == null) {
             const tx = await this.getTransaction();
@@ -1002,7 +1023,11 @@ export class TransactionResponse {
         if (blockNumber == null) {
             return null;
         }
+<<<<<<< HEAD
         const block = this.provider.getBlock(shard, blockNumber);
+=======
+        const block = this.provider.getBlock(blockNumber);
+>>>>>>> ee35178e (utxohdwallet)
         if (block == null) {
             throw new Error("TODO");
         }
@@ -1020,11 +1045,18 @@ export class TransactionResponse {
      *  Resolve to the number of confirmations this transaction has.
      */
     async confirmations() {
+<<<<<<< HEAD
         const shard = shardFromHash(this.hash);
         if (this.blockNumber == null) {
             const { tx, blockNumber } = await resolveProperties({
                 tx: this.getTransaction(),
                 blockNumber: this.provider.getBlockNumber(shard)
+=======
+        if (this.blockNumber == null) {
+            const { tx, blockNumber } = await resolveProperties({
+                tx: this.getTransaction(),
+                blockNumber: this.provider.getBlockNumber()
+>>>>>>> ee35178e (utxohdwallet)
             });
             // Not mined yet...
             if (tx == null || tx.blockNumber == null) {
@@ -1032,7 +1064,11 @@ export class TransactionResponse {
             }
             return blockNumber - tx.blockNumber + 1;
         }
+<<<<<<< HEAD
         const blockNumber = await this.provider.getBlockNumber(shard);
+=======
+        const blockNumber = await this.provider.getBlockNumber();
+>>>>>>> ee35178e (utxohdwallet)
         return blockNumber - this.blockNumber + 1;
     }
     /**
@@ -1050,14 +1086,21 @@ export class TransactionResponse {
         let startBlock = this.#startBlock;
         let nextScan = -1;
         let stopScanning = (startBlock === -1) ? true : false;
+<<<<<<< HEAD
         const shard = shardFromHash(this.hash);
+=======
+>>>>>>> ee35178e (utxohdwallet)
         const checkReplacement = async () => {
             // Get the current transaction count for this sender
             if (stopScanning) {
                 return null;
             }
             const { blockNumber, nonce } = await resolveProperties({
+<<<<<<< HEAD
                 blockNumber: this.provider.getBlockNumber(shard),
+=======
+                blockNumber: this.provider.getBlockNumber(),
+>>>>>>> ee35178e (utxohdwallet)
                 nonce: this.provider.getTransactionCount(this.from)
             });
             // No transaction or our nonce has not been mined yet; but we
@@ -1087,7 +1130,11 @@ export class TransactionResponse {
                 if (stopScanning) {
                     return null;
                 }
+<<<<<<< HEAD
                 const block = await this.provider.getBlock(shard, nextScan, true);
+=======
+                const block = await this.provider.getBlock(nextScan, true);
+>>>>>>> ee35178e (utxohdwallet)
                 // This should not happen; but we'll try again shortly
                 if (block == null) {
                     return;

@@ -36,7 +36,11 @@ describe("Test Fallback broadcast", function () {
         });
         ;
         const provider = new FallbackProvider(providers);
+<<<<<<< HEAD
         return await provider.broadcastTransaction('0,1', tx);
+=======
+        return await provider.broadcastTransaction(tx);
+>>>>>>> ee35178e (utxohdwallet)
     }
     it("picks late non-failed broadcasts", async function () {
         const result = await test([

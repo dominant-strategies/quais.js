@@ -105,7 +105,11 @@ export declare class BaseContract implements Addressable, EventEmitterable<Contr
      *  %%fromBlock%% (default: ``0``) to %%toBlock%% (default: ``"latest"``)
      *  inclusive.
      */
+<<<<<<< HEAD
     queryFilter(shard: string, event: ContractEventName, fromBlock?: BlockTag, toBlock?: BlockTag): Promise<Array<EventLog | Log>>;
+=======
+    queryFilter(event: ContractEventName, fromBlock?: BlockTag, toBlock?: BlockTag): Promise<Array<EventLog | Log>>;
+>>>>>>> ee35178e (utxohdwallet)
     /**
      *  Add an event %%listener%% for the %%event%%.
      */

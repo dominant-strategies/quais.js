@@ -44,5 +44,9 @@ import { WebSocketLike } from "./provider-websocket.js";
  *      exclusive: [ "quaiscan", "infura" ]
  *    });
  */
+<<<<<<< HEAD
 export declare function getDefaultProvider(network: string | string[] | Networkish | WebSocketLike, options?: any): AbstractProvider;
+=======
+export declare function getDefaultProvider(network: string | Networkish | WebSocketLike, options?: any): AbstractProvider;
+>>>>>>> ee35178e (utxohdwallet)
 //# sourceMappingURL=default-provider.d.ts.map
