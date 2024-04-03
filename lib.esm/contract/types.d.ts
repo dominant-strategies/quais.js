@@ -50,7 +50,11 @@ export interface ContractTransaction extends PreparedTransactionRequest {
     /**
      *  The from address, if any.
      */
+<<<<<<< HEAD
     from: string;
+=======
+    from?: string;
+>>>>>>> ee35178e (utxohdwallet)
 }
 /**
  *  A deployment transaction for a contract.

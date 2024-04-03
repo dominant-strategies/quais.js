@@ -122,6 +122,15 @@ class Mnemonic {
      */
     static fromPhrase(phrase, password, wordlist) {
         // Normalize the case and space; throws if invalid
+<<<<<<< HEAD
+=======
+        if (wordlist == null) {
+            wordlist = lang_en_js_1.LangEn.wordlist();
+        }
+        if (password == null) {
+            password = "";
+        }
+>>>>>>> ee35178e (utxohdwallet)
         const entropy = mnemonicToEntropy(phrase, wordlist);
         phrase = entropyToMnemonic((0, index_js_2.getBytes)(entropy), wordlist);
         return new Mnemonic(_guard, entropy, phrase, password, wordlist);
@@ -133,6 +142,15 @@ class Mnemonic {
      *  wordlist is the [English wordlists](LangEn).
      */
     static fromEntropy(_entropy, password, wordlist) {
+<<<<<<< HEAD
+=======
+        if (wordlist == null) {
+            wordlist = lang_en_js_1.LangEn.wordlist();
+        }
+        if (password == null) {
+            password = "";
+        }
+>>>>>>> ee35178e (utxohdwallet)
         const entropy = (0, index_js_2.getBytes)(_entropy, "entropy");
         const phrase = entropyToMnemonic(entropy, wordlist);
         return new Mnemonic(_guard, (0, index_js_2.hexlify)(entropy), phrase, password, wordlist);

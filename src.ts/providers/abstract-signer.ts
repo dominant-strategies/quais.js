@@ -9,7 +9,7 @@ import {AddressLike, resolveAddress} from "../address/index.js";
 import { Transaction } from "../transaction/index.js";
 import {
     defineProperties, getBigInt, resolveProperties,
-    assert, assertArgument
+    assert, assertArgument, isUTXOAddress
 } from "../utils/index.js";
 import { copyRequest } from "./provider.js";
 
@@ -105,7 +105,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
     // }
 
     async populateTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
-        console.log("populateTransaction")
         const provider = checkProvider(this, "populateTransaction");
         const shard = await this.shardFromAddress(tx.from)
 
@@ -154,6 +153,18 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         return await resolveProperties(pop);
     }
 
+    async populateUTXOTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
+        
+        const pop = {
+            inputsUTXO: tx.inputs,
+            outputsUTXO: tx.outputs,
+        }
+
+        //@TOOD: Don't await all over the place; save them up for
+        // the end for better batching
+        return await resolveProperties(pop);
+    }
+
     async estimateGas(tx: TransactionRequest): Promise<bigint> {
                 return checkProvider(this, "estimateGas").estimateGas(await this.populateCall(tx));
     }
@@ -171,10 +182,17 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         console.log('sendTransaction', tx)
         const provider = checkProvider(this, "sendTransaction");
         const shard = await this.shardFromAddress(tx.from)
-        const pop = await this.populateTransaction(tx);
+        let sender = await this.getAddress()
+        let pop;
+        if (isUTXOAddress(sender)) {
+            pop = await this.populateUTXOTransaction(tx);
+        } else {
+            pop = await this.populateTransaction(tx);
+        }
         console.log("populated tx", pop)
 //        delete pop.from;
         const txObj = Transaction.from(pop);
+        
         const signedTx = await this.signTransaction(txObj);
         console.log("signedTX: ", JSON.stringify(txObj))
         return await provider.broadcastTransaction(shard, signedTx);

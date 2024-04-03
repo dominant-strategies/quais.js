@@ -10,12 +10,16 @@ const index_js_1 = require("../crypto/index.js");
 const index_js_2 = require("../providers/index.js");
 const index_js_3 = require("../transaction/index.js");
 const index_js_4 = require("../utils/index.js");
+<<<<<<< HEAD
 const lang_en_js_1 = require("../wordlists/lang-en.js");
+=======
+>>>>>>> ee35178e (utxohdwallet)
 const base_wallet_js_1 = require("./base-wallet.js");
 const mnemonic_js_1 = require("./mnemonic.js");
 const json_keystore_js_1 = require("./json-keystore.js");
 const index_js_5 = require("../constants/index.js");
 const index_js_6 = require("../utils/index.js");
+<<<<<<< HEAD
 // "Bitcoin seed"
 const MasterSecret = new Uint8Array([66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100]);
 const HardenedBit = 0x80000000;
@@ -87,6 +91,10 @@ function derivePath(node, path) {
         result.setCoinType();
     return result;
 }
+=======
+const utils_js_1 = require("./utils.js");
+const _guard = {};
+>>>>>>> ee35178e (utxohdwallet)
 /**
  *  An **HDNodeWallet** is a [[Signer]] backed by the private key derived
  *  from an HD Node using the [[link-bip-32]] stantard.
@@ -148,7 +156,11 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
      */
     constructor(guard, signingKey, accountFingerprint, chainCode, path, index, depth, mnemonic, provider) {
         super(signingKey, provider);
+<<<<<<< HEAD
         (0, index_js_4.assertPrivate)(guard, _guard, "HDNodeWallet");
+=======
+        (0, index_js_4.assertPrivate)(guard, _guard);
+>>>>>>> ee35178e (utxohdwallet)
         this.#publicKey = signingKey.compressedPublicKey;
         const fingerprint = (0, index_js_4.dataSlice)((0, index_js_1.ripemd160)((0, index_js_1.sha256)(this.#publicKey)), 0, 4);
         (0, index_js_4.defineProperties)(this, {
@@ -208,9 +220,15 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
         //   - Mainnet: public=0x0488B21E, private=0x0488ADE4
         //   - Testnet: public=0x043587CF, private=0x04358394
         (0, index_js_4.assert)(this.depth < 256, "Depth too deep", "UNSUPPORTED_OPERATION", { operation: "extendedKey" });
+<<<<<<< HEAD
         return encodeBase58Check((0, index_js_4.concat)([
             "0x0488ADE4", zpad(this.depth, 1), this.accountFingerprint ?? '',
             zpad(this.index, 4), this.chainCode,
+=======
+        return (0, utils_js_1.encodeBase58Check)((0, index_js_4.concat)([
+            "0x0488ADE4", (0, utils_js_1.zpad)(this.depth, 1), this.accountFingerprint ?? '',
+            (0, utils_js_1.zpad)(this.index, 4), this.chainCode,
+>>>>>>> ee35178e (utxohdwallet)
             (0, index_js_4.concat)(["0x00", this.privateKey])
         ]));
     }
@@ -242,6 +260,7 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
         const index = (0, index_js_4.getNumber)(_index, "index");
         (0, index_js_4.assertArgument)(index <= 0xffffffff, "invalid index", "index", index);
         // Base path
+<<<<<<< HEAD
         let path = this.path;
         if (path) {
             path += "/" + (index & ~HardenedBit);
@@ -254,12 +273,37 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
         //BIP44 if we are at the account depth get that fingerprint, otherwise continue with the current one
         let newFingerprint = this.depth == 3 ? this.fingerprint : this.accountFingerprint;
         return new HDNodeWallet(_guard, ki, newFingerprint, (0, index_js_4.hexlify)(IR), path, index, this.depth + 1, this.mnemonic, this.provider);
+=======
+        let newDepth = this.depth + 1;
+        let path = this.path;
+        if (path) {
+            let pathFields = path.split("/");
+            if (pathFields.length == 6) {
+                pathFields.pop();
+                path = pathFields.join("/");
+                newDepth--;
+            }
+            path += "/" + (index & ~utils_js_1.HardenedBit);
+            if (index & utils_js_1.HardenedBit) {
+                path += "'";
+            }
+        }
+        const { IR, IL } = (0, utils_js_1.ser_I)(index, this.chainCode, this.#publicKey, this.privateKey);
+        const ki = new index_js_1.SigningKey((0, index_js_4.toBeHex)(((0, index_js_4.toBigInt)(IL) + BigInt(this.privateKey)) % index_js_5.N, 32));
+        //BIP44 if we are at the account depth get that fingerprint, otherwise continue with the current one
+        let newFingerprint = this.depth == 3 ? this.fingerprint : this.accountFingerprint;
+        return new HDNodeWallet(_guard, ki, newFingerprint, (0, index_js_4.hexlify)(IR), path, index, newDepth, this.mnemonic, this.provider);
+>>>>>>> ee35178e (utxohdwallet)
     }
     /**
      *  Return the HDNode for %%path%% from this node.
      */
     derivePath(path) {
+<<<<<<< HEAD
         return derivePath(this, path);
+=======
+        return (0, utils_js_1.derivePath)(this, path);
+>>>>>>> ee35178e (utxohdwallet)
     }
     setCoinType() {
         this.coinType = Number(this.path?.split("/")[2].replace("'", ""));
@@ -268,7 +312,11 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
         (0, index_js_4.assertArgument)((0, index_js_4.isBytesLike)(_seed), "invalid seed", "seed", "[REDACTED]");
         const seed = (0, index_js_4.getBytes)(_seed, "seed");
         (0, index_js_4.assertArgument)(seed.length >= 16 && seed.length <= 64, "invalid seed", "seed", "[REDACTED]");
+<<<<<<< HEAD
         const I = (0, index_js_4.getBytes)((0, index_js_1.computeHmac)("sha512", MasterSecret, seed));
+=======
+        const I = (0, index_js_4.getBytes)((0, index_js_1.computeHmac)("sha512", utils_js_1.MasterSecret, seed));
+>>>>>>> ee35178e (utxohdwallet)
         const signingKey = new index_js_1.SigningKey((0, index_js_4.hexlify)(I.slice(0, 32)));
         const result = new HDNodeWallet(_guard, signingKey, "0x00000000", (0, index_js_4.hexlify)(I.slice(32)), "m", 0, 0, mnemonic, null);
         return result;
@@ -282,7 +330,11 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
      */
     static fromExtendedKey(extendedKey) {
         const bytes = (0, index_js_4.toBeArray)((0, index_js_4.decodeBase58)(extendedKey)); // @TODO: redact
+<<<<<<< HEAD
         (0, index_js_4.assertArgument)(bytes.length === 82 || encodeBase58Check(bytes.slice(0, 78)) === extendedKey, "invalid extended key", "extendedKey", "[ REDACTED ]");
+=======
+        (0, index_js_4.assertArgument)(bytes.length === 82 || (0, utils_js_1.encodeBase58Check)(bytes.slice(0, 78)) === extendedKey, "invalid extended key", "extendedKey", "[ REDACTED ]");
+>>>>>>> ee35178e (utxohdwallet)
         const depth = bytes[4];
         const accountFingerprint = (0, index_js_4.hexlify)(bytes.slice(5, 9));
         const index = parseInt((0, index_js_4.hexlify)(bytes.slice(9, 13)).substring(2), 16);
@@ -309,6 +361,7 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
      *  Creates a new random HDNode.
      */
     static createRandom(path, password, wordlist) {
+<<<<<<< HEAD
         if (password == null) {
             password = "";
         }
@@ -318,6 +371,11 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
         if (wordlist == null) {
             wordlist = lang_en_js_1.LangEn.wordlist();
         }
+=======
+        if (path == null || !this.isValidPath(path)) {
+            throw new Error('Invalid path: ' + path);
+        }
+>>>>>>> ee35178e (utxohdwallet)
         const mnemonic = mnemonic_js_1.Mnemonic.fromEntropy((0, index_js_1.randomBytes)(16), password, wordlist);
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
@@ -334,6 +392,7 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
      *  Creates an HD Node from a mnemonic %%phrase%%.
      */
     static fromPhrase(phrase, path, password, wordlist) {
+<<<<<<< HEAD
         if (password == null) {
             password = "";
         }
@@ -343,6 +402,11 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
         if (wordlist == null) {
             wordlist = lang_en_js_1.LangEn.wordlist();
         }
+=======
+        if (path == null || !this.isValidPath(path)) {
+            throw new Error('Invalid path: ' + path);
+        }
+>>>>>>> ee35178e (utxohdwallet)
         const mnemonic = mnemonic_js_1.Mnemonic.fromPhrase(phrase, password, wordlist);
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
@@ -367,6 +431,11 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
      * Derives address by incrementing address_index according to BIP44
      */
     deriveAddress(index, zone) {
+<<<<<<< HEAD
+=======
+        if (!this.path)
+            throw new Error("Missing Path");
+>>>>>>> ee35178e (utxohdwallet)
         //Case for a non quai/qi wallet where zone is not needed
         if (!zone) {
             if (this.coinType == 994 || this.coinType == 969) {
@@ -382,12 +451,16 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
         if (!shard) {
             throw new Error("Invalid zone");
         }
+<<<<<<< HEAD
         if (!this.path)
             throw new Error("Missing Path");
+=======
+>>>>>>> ee35178e (utxohdwallet)
         let newWallet;
         let addrIndex = 0;
         let zoneIndex = index + 1;
         do {
+<<<<<<< HEAD
             // const pathComponents = this.path?.split('/');
             // let newPath;
             // if (pathComponents.length == 5) {
@@ -395,6 +468,8 @@ class HDNodeWallet extends base_wallet_js_1.BaseWallet {
             // } else if (pathComponents.length == 6)
             //     newPath = this.path.replace(pathComponents[pathComponents.length - 1], addrIndex.toString());
             //     else throw new Error(`Invalid or uncomplete path: ${newPath} ${this.path}`);
+=======
+>>>>>>> ee35178e (utxohdwallet)
             newWallet = this.derivePath(addrIndex.toString());
             if ((0, index_js_6.getShardForAddress)(newWallet.address) == shard && ((newWallet.coinType == 969) == (0, index_js_6.isUTXOAddress)(newWallet.address)))
                 zoneIndex--;
@@ -487,11 +562,19 @@ class HDNodeVoidWallet extends index_js_2.VoidSigner {
         //   - Mainnet: public=0x0488B21E, private=0x0488ADE4
         //   - Testnet: public=0x043587CF, private=0x04358394
         (0, index_js_4.assert)(this.depth < 256, "Depth too deep", "UNSUPPORTED_OPERATION", { operation: "extendedKey" });
+<<<<<<< HEAD
         return encodeBase58Check((0, index_js_4.concat)([
             "0x0488B21E",
             zpad(this.depth, 1),
             this.accountFingerprint ?? '',
             zpad(this.index, 4),
+=======
+        return (0, utils_js_1.encodeBase58Check)((0, index_js_4.concat)([
+            "0x0488B21E",
+            (0, utils_js_1.zpad)(this.depth, 1),
+            this.accountFingerprint ?? '',
+            (0, utils_js_1.zpad)(this.index, 4),
+>>>>>>> ee35178e (utxohdwallet)
             this.chainCode,
             this.publicKey,
         ]));
@@ -510,12 +593,21 @@ class HDNodeVoidWallet extends index_js_2.VoidSigner {
         // Base path
         let path = this.path;
         if (path) {
+<<<<<<< HEAD
             path += "/" + (index & ~HardenedBit);
             if (index & HardenedBit) {
                 path += "'";
             }
         }
         const { IR, IL } = ser_I(index, this.chainCode, this.publicKey, null);
+=======
+            path += "/" + (index & ~utils_js_1.HardenedBit);
+            if (index & utils_js_1.HardenedBit) {
+                path += "'";
+            }
+        }
+        const { IR, IL } = (0, utils_js_1.ser_I)(index, this.chainCode, this.publicKey, null);
+>>>>>>> ee35178e (utxohdwallet)
         const Ki = index_js_1.SigningKey.addPoints(IL, this.publicKey, true);
         const address = (0, index_js_3.computeAddress)(Ki);
         return new HDNodeVoidWallet(_guard, address, Ki, this.fingerprint, (0, index_js_4.hexlify)(IR), path, index, this.depth + 1, this.provider);
@@ -524,7 +616,11 @@ class HDNodeVoidWallet extends index_js_2.VoidSigner {
      *  Return the signer for %%path%% from this node.
      */
     derivePath(path) {
+<<<<<<< HEAD
         return derivePath(this, path);
+=======
+        return (0, utils_js_1.derivePath)(this, path);
+>>>>>>> ee35178e (utxohdwallet)
     }
 }
 exports.HDNodeVoidWallet = HDNodeVoidWallet;
@@ -554,7 +650,11 @@ export class HDNodeWalletManager {
  */
 function getAccountPath(_index) {
     const index = (0, index_js_4.getNumber)(_index, "index");
+<<<<<<< HEAD
     (0, index_js_4.assertArgument)(index >= 0 && index < HardenedBit, "invalid account index", "index", index);
+=======
+    (0, index_js_4.assertArgument)(index >= 0 && index < utils_js_1.HardenedBit, "invalid account index", "index", index);
+>>>>>>> ee35178e (utxohdwallet)
     return `m/44'/60'/${index}'/0/0`;
 }
 exports.getAccountPath = getAccountPath;
@@ -569,7 +669,11 @@ exports.getAccountPath = getAccountPath;
  */
 function getIndexedAccountPath(_index) {
     const index = (0, index_js_4.getNumber)(_index, "index");
+<<<<<<< HEAD
     (0, index_js_4.assertArgument)(index >= 0 && index < HardenedBit, "invalid account index", "index", index);
+=======
+    (0, index_js_4.assertArgument)(index >= 0 && index < utils_js_1.HardenedBit, "invalid account index", "index", index);
+>>>>>>> ee35178e (utxohdwallet)
     return `m/44'/60'/0'/0/${index}`;
 }
 exports.getIndexedAccountPath = getIndexedAccountPath;

@@ -4,6 +4,10 @@ import { HDNodeWallet } from "./hdwallet.js";
 import type { ProgressCallback } from "../crypto/index.js";
 import type { Provider } from "../providers/index.js";
 import type { Wordlist } from "../quais.js";
+<<<<<<< HEAD
+=======
+import { UTXOHDWallet } from "./utxohdwallet.js";
+>>>>>>> ee35178e (utxohdwallet)
 /**
  *  A **Wallet** manages a single private key which is used to sign
  *  transactions, messages and other common payloads.
@@ -67,6 +71,10 @@ export declare class Wallet extends BaseWallet {
     /**"m/44'/60'/0'/0/0"
      *  Creates a [[HDNodeWallet]] for %%phrase%%.
      */
+<<<<<<< HEAD
     static fromPhrase(phrase: string, path: string, provider?: Provider, wordlist?: Wordlist): HDNodeWallet;
+=======
+    static fromPhrase(phrase: string, path: string, provider?: Provider, wordlist?: Wordlist): HDNodeWallet | UTXOHDWallet;
+>>>>>>> ee35178e (utxohdwallet)
 }
 //# sourceMappingURL=wallet.d.ts.map

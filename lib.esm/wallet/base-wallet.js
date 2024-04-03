@@ -70,7 +70,11 @@ export class BaseWallet extends AbstractSigner {
         }
         if (tx.from != null) {
             assertArgument(getAddress((tx.from)) === this.#address, "transaction from address mismatch", "tx.from", tx.from);
+<<<<<<< HEAD
             //            delete tx.from;
+=======
+            delete tx.from;
+>>>>>>> ee35178e (utxohdwallet)
         }
         // Build the transaction
         const btx = Transaction.from(tx);
