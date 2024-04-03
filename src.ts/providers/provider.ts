@@ -12,7 +12,7 @@ import type { AccessList, AccessListish, TransactionLike } from "../transaction/
 
 import type { ContractRunner } from "./contracts.js";
 import type { Network } from "./network.js";
-import type { UTXOTransactionInput, UTXOTransactionOutput } from "../transaction/utxo.js";
+import type { UTXOEntry, UTXOTransactionOutput } from "../transaction/utxo.js";
 
 const BN_0 = BigInt(0);
 
@@ -202,7 +202,7 @@ export interface TransactionRequest {
      */
     blockTag?: BlockTag;
 
-    inputs?: null | Array<UTXOTransactionInput>;
+    inputs?: null | Array<UTXOEntry>;
 
     outputs?: null | Array<UTXOTransactionOutput>;
 };
@@ -296,7 +296,7 @@ export interface PreparedTransactionRequest {
      */
     blockTag?: BlockTag;
 
-    inputs?: null | Array<UTXOTransactionInput>;
+    inputs?: null | Array<UTXOEntry>;
 
     outputs?: null | Array<UTXOTransactionOutput>;
 }
@@ -1350,7 +1350,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      */
     readonly accessList!: null | AccessList;
 
-    readonly inputs ?: Array<UTXOTransactionInput> ;
+    readonly inputs ?: Array<UTXOEntry> ;
 
     readonly outputs ?: Array<UTXOTransactionOutput> ;
 
