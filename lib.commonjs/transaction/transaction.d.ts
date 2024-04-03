@@ -2,6 +2,7 @@ import { Signature } from "../crypto/index.js";
 import type { BigNumberish, BytesLike } from "../utils/index.js";
 import type { SignatureLike } from "../crypto/index.js";
 import type { AccessList, AccessListish } from "./index.js";
+import type { UTXOTransactionInput, UTXOTransactionOutput } from "./utxo.js";
 export interface TransactionLike<A = string> {
     /**
      *  The type.
@@ -59,26 +60,8 @@ export interface TransactionLike<A = string> {
      *  The access list for berlin and london transactions.
      */
     accessList?: null | AccessListish;
-    /**
-     * The external gas price.
-     */
-    externalGasPrice?: null | BigNumberish;
-    /**
-     * The external gas tip.
-     */
-    externalGasTip?: null | BigNumberish;
-    /**
-     * The external gas limit.
-     */
-    externalGasLimit?: null | BigNumberish;
-    /**
-     *  The external data.
-     */
-    externalData?: null | string;
-    /**
-     *  The access list for berlin and london transactions.
-     */
-    externalAccessList?: null | AccessListish;
+    inputsUTXO?: null | Array<UTXOTransactionInput>;
+    outputsUTXO?: null | Array<UTXOTransactionOutput>;
 }
 /**
  *  A **Transaction** describes an operation to be executed on
@@ -173,37 +156,10 @@ export declare class Transaction implements TransactionLike<string> {
      */
     get accessList(): null | AccessList;
     set accessList(value: null | AccessListish);
-    /**
-     *  The gas limit.
-     */
-    get externalGasLimit(): bigint;
-    set externalGasLimit(value: BigNumberish);
-    /**
-     *  The maximum priority fee per unit of gas to pay. On legacy
-     *  networks this should be ``null``.
-     */
-    get externalGasTip(): null | bigint;
-    set externalGasTip(value: null | BigNumberish);
-    /**
-     *  The maximum total fee per unit of gas to pay. On legacy
-     *  networks this should be ``null``.
-     */
-    get externalGasPrice(): null | bigint;
-    set externalGasPrice(value: null | BigNumberish);
-    /**
-     *  The transaction externalData. For ``init`` transactions this is the
-     *  deployment code.
-     */
-    get externalData(): string;
-    set externalData(value: BytesLike);
-    /**
-     *  The external access list.
-     *
-     *  An access list permits discounted (but pre-paid) access to
-     *  bytecode and state variable access within contract execution.
-     */
-    get externalAccessList(): null | AccessList;
-    set externalAccessList(value: null | AccessListish);
+    get inputsUTXO(): null | UTXOTransactionInput[];
+    set inputsUTXO(value: null | UTXOTransactionInput[]);
+    get outputsUTXO(): null | UTXOTransactionOutput[];
+    set outputsUTXO(value: null | UTXOTransactionOutput[]);
     /**
      *  Creates a new Transaction with default values.
      */
@@ -212,6 +168,7 @@ export declare class Transaction implements TransactionLike<string> {
      *  The transaction hash, if signed. Otherwise, ``null``.
      */
     get hash(): null | string;
+    set hash(value: null | string);
     /**
      *  The pre-image hash of this transaction.
      *

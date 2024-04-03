@@ -794,7 +794,7 @@ class AbstractProvider {
             tx: this._getTransactionRequest(_tx),
             blockTag: this._getBlockTag(shard, _tx.blockTag)
         });
-        return await this.#checkNetwork(this.#call(tx, blockTag, _tx.enableCcipRead ? 0 : -1), shard);
+        return await this.#checkNetwork(this.#call(tx, blockTag, -1), shard);
     }
     // Account
     async #getAccountValue(request, _address, _blockTag) {
@@ -831,10 +831,19 @@ class AbstractProvider {
             network: this.getNetwork()
         });
         const tx = index_js_5.Transaction.from(signedTx);
-        if (tx.hash !== hash) {
-            throw new Error("@TODO: the returned hash did not match");
-        }
+        this.#validateTransactionHash(tx.hash || '', hash);
+        tx.hash = hash;
         return this._wrapTransactionResponse(tx, network).replaceableTransaction(blockNumber);
+    }
+    async #validateTransactionHash(computedHash, nodehash) {
+        if (computedHash.substring(0, 4) !== nodehash.substring(0, 4))
+            throw new Error("Transaction hash mismatch in origin Zone");
+        if (computedHash.substring(6, 8) !== nodehash.substring(6, 8))
+            throw new Error("Transaction hash mismatch in destination Zone");
+        if (parseInt(computedHash[4], 16) < 8 !== parseInt(nodehash[4], 16) < 8)
+            throw new Error("Transaction ledger mismatch in origin Zone");
+        if (parseInt(computedHash[8], 16) < 8 !== parseInt(nodehash[8], 16) < 8)
+            throw new Error("Transaction ledger mismatch in destination Zone");
     }
     async #getBlock(shard, block, includeTransactions) {
         // @TODO: Add CustomBlockPlugin check
