@@ -100,11 +100,7 @@ export declare class ContractUnknownEventPayload extends EventPayload<ContractEv
     /**
      *  Resolves to the block the event occured in.
      */
-<<<<<<< HEAD
     getBlock(shard: string): Promise<Block>;
-=======
-    getBlock(): Promise<Block>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Resolves to the transaction the event occured in.
      */

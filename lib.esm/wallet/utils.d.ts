@@ -1,12 +1,6 @@
 /**
  *  @_ignore
  */
-<<<<<<< HEAD
-export declare function looseArrayify(hexString: string): Uint8Array;
-export declare function zpad(value: String | number, length: number): String;
-export declare function getPassword(password: string | Uint8Array): Uint8Array;
-export declare function spelunk<T>(object: any, _path: string): T;
-=======
 import { BytesLike } from "../utils/index.js";
 export declare function looseArrayify(hexString: string): Uint8Array;
 export declare function getPassword(password: string | Uint8Array): Uint8Array;
@@ -29,5 +23,4 @@ type HDNodeLike<T> = {
 };
 export declare function derivePath<T extends HDNodeLike<T>>(node: T, path: string): T;
 export {};
->>>>>>> ee35178e (utxohdwallet)
 //# sourceMappingURL=utils.d.ts.map

@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { UTXO, UTXOLike } from "./utxo.js";
-=======
 import { UTXO, UTXOEntry, UTXOLike } from "./utxo.js";
->>>>>>> ee35178e (utxohdwallet)
 export type SpendTarget = {
     address: string;
     value: bigint;
@@ -34,11 +30,7 @@ export declare abstract class AbstractCoinSelector {
     /**
      * Constructs a new AbstractCoinSelector instance with an empty UTXO array.
      */
-<<<<<<< HEAD
-    constructor(availableUXTOs?: UTXOLike[]);
-=======
     constructor(availableUXTOs?: UTXOEntry[]);
->>>>>>> ee35178e (utxohdwallet)
     /**
      * This method should be implemented by sub-classes to provide the actual
      * coin selection logic. It should select UTXOs from the available UTXOs

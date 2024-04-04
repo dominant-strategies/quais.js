@@ -68,10 +68,7 @@ describe("Ensure Catchable Errors", function () {
             maxFeePerGas: 2000000000,
             maxPriorityFeePerGas: 1000000000,
             to: wallet.address,
-<<<<<<< HEAD
             from: wallet.address,
-=======
->>>>>>> ee35178e (utxohdwallet)
             value: 1,
         };
         const txSign = await wallet.signTransaction(txInfo);
@@ -117,10 +114,7 @@ describe("Ensure Catchable Errors", function () {
             maxFeePerGas: 2000000000,
             maxPriorityFeePerGas: 1000000000,
             to: wallet.address,
-<<<<<<< HEAD
             from: wallet.address,
-=======
->>>>>>> ee35178e (utxohdwallet)
             value: 1,
         };
         const txSign = await wallet.signTransaction(txInfo);

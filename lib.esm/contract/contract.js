@@ -194,7 +194,6 @@ function buildWrappedMethod(contract, key) {
     const populateTransaction = async function (...args) {
         const fragment = getFragment(...args);
         // If an overrides was passed in, copy it and normalize the values
-<<<<<<< HEAD
         let overrides;
         if (fragment.inputs.length + 1 === args.length) {
             overrides = await copyOverrides(args.pop());
@@ -206,31 +205,16 @@ function buildWrappedMethod(contract, key) {
             // if (overrides.from) {
             //     overrides.from = await resolveAddress(overrides.from, getResolver(contract.runner));
             // }
-=======
-        let overrides = {};
-        if (fragment.inputs.length + 1 === args.length) {
-            overrides = await copyOverrides(args.pop());
-            if (overrides.from) {
-                overrides.from = await resolveAddress(overrides.from, getResolver(contract.runner));
-            }
->>>>>>> ee35178e (utxohdwallet)
         }
         if (fragment.inputs.length !== args.length) {
             throw new Error("internal error: fragment inputs doesn't match arguments; should not happen");
         }
         const resolvedArgs = await resolveArgs(contract.runner, fragment.inputs, args);
-<<<<<<< HEAD
         return await resolveProperties({
             to: contract.getAddress(),
             from: args.pop().from,
             data: contract.interface.encodeFunctionData(fragment, resolvedArgs)
         });
-=======
-        return Object.assign({}, overrides, await resolveProperties({
-            to: contract.getAddress(),
-            data: contract.interface.encodeFunctionData(fragment, resolvedArgs)
-        }));
->>>>>>> ee35178e (utxohdwallet)
     };
     const staticCall = async function (...args) {
         const result = await staticCallResult(...args);
@@ -789,11 +773,7 @@ export class BaseContract {
      *  %%fromBlock%% (default: ``0``) to %%toBlock%% (default: ``"latest"``)
      *  inclusive.
      */
-<<<<<<< HEAD
     async queryFilter(shard, event, fromBlock, toBlock) {
-=======
-    async queryFilter(event, fromBlock, toBlock) {
->>>>>>> ee35178e (utxohdwallet)
         if (fromBlock == null) {
             fromBlock = 0;
         }
@@ -803,11 +783,7 @@ export class BaseContract {
         const { addr, addrPromise } = getInternal(this);
         const address = (addr ? addr : (await addrPromise));
         const { fragment, topics } = await getSubInfo(this, event);
-<<<<<<< HEAD
         const filter = { address, topics, fromBlock, toBlock, shard: shard };
-=======
-        const filter = { address, topics, fromBlock, toBlock };
->>>>>>> ee35178e (utxohdwallet)
         const provider = getProvider(this.runner);
         assert(provider, "contract runner does not have a provider", "UNSUPPORTED_OPERATION", { operation: "queryFilter" });
         return (await provider.getLogs(filter)).map((log) => {

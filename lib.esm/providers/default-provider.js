@@ -70,7 +70,6 @@ export function getDefaultProvider(network, options) {
     if (typeof (network) === "string" && network.match(/^https?:/)) {
         return new JsonRpcProvider(network);
     }
-<<<<<<< HEAD
     if (Array.isArray(network) && network[0].match(/^https?:/)) {
         return new JsonRpcProvider(network);
     }
@@ -85,11 +84,6 @@ export function getDefaultProvider(network, options) {
             operation: "getDefaultProvider"
         });
     }
-=======
-    if (typeof (network) === "string" && network.match(/^wss?:/) || isWebSocketLike(network)) {
-        return new WebSocketProvider(network);
-    }
->>>>>>> ee35178e (utxohdwallet)
     // Get the network and name, if possible
     let staticNetwork = null;
     try {

@@ -20,10 +20,7 @@ describe("Tests Provider Call Exception", function () {
         //{ code: 0x51, reason: "UNINITIALIZED_FUNCTION_CALL" },
     ];
     const testAddr = "0x0aff86a125b29b25a9e418c2fb64f1753532c0ca"; //Cyprus1
-<<<<<<< HEAD
     const testAddr2 = "0x0aff86a125b29b25a9e418c2fb64f1753532c0ca"; //Cyprus1
-=======
->>>>>>> ee35178e (utxohdwallet)
     const networkName = "colosseum";
     for (const { code, reason } of panics) {
         for (const method of ["call", "estimateGas"]) {
@@ -39,11 +36,7 @@ describe("Tests Provider Call Exception", function () {
                         zeroPadValue(toBeArray(code), 32)
                     ]);
                     await stall(1000);
-<<<<<<< HEAD
                     const tx = { to: testAddr, from: testAddr2, data };
-=======
-                    const tx = { to: testAddr, data };
->>>>>>> ee35178e (utxohdwallet)
                     try {
                         const result = await (method === "call" ? provider.call(tx) : provider.estimateGas(tx));
                         console.log(result);
@@ -96,11 +89,7 @@ describe("Tests Provider Call Exception", function () {
     ];
     for (const { data, message, name, reason, revert } of customErrors) {
         for (const method of ["call", "estimateGas"]) {
-<<<<<<< HEAD
             const tx = { to: testAddr, from: testAddr2, data };
-=======
-            const tx = { to: testAddr, data };
->>>>>>> ee35178e (utxohdwallet)
             for (const providerName of providerNames) {
                 const provider = getProvider(providerName, networkName);
                 if (provider == null) {
@@ -144,10 +133,7 @@ describe("Tests Provider Call Exception", function () {
 });
 describe("Test Provider Blockchain Errors", function () {
     const wallet = new Wallet((process.env.FAUCET_PRIVATEKEY));
-<<<<<<< HEAD
     const wallet2 = new Wallet((process.env.FAUCET_PRIVATEKEY));
-=======
->>>>>>> ee35178e (utxohdwallet)
     const networkName = "colosseum";
     for (const providerName of providerNames) {
         const provider = getProvider(providerName, networkName);
@@ -168,11 +154,7 @@ describe("Test Provider Blockchain Errors", function () {
                 nonce = await w.getNonce("pending");
                 try {
                     tx1 = await w.sendTransaction({
-<<<<<<< HEAD
                         nonce, to: wallet, from: wallet2, value
-=======
-                        nonce, to: wallet, value
->>>>>>> ee35178e (utxohdwallet)
                     });
                 }
                 catch (error) {
@@ -192,11 +174,7 @@ describe("Test Provider Blockchain Errors", function () {
             const rejection = assert.rejects(async function () {
                 // Send another tx with the same nonce
                 const tx2 = await w.sendTransaction({
-<<<<<<< HEAD
                     nonce, to: wallet, from: wallet2, value: 1
-=======
-                    nonce, to: wallet, value: 1
->>>>>>> ee35178e (utxohdwallet)
                 });
                 console.log({ tx1, tx2 });
             }, (error) => {
@@ -219,11 +197,7 @@ describe("Test Provider Blockchain Errors", function () {
             const w = Wallet.createRandom("m/44'/60'/0'/0/0").connect(provider);
             await assert.rejects(async function () {
                 const tx = await w.sendTransaction({
-<<<<<<< HEAD
                     to: wallet, from: wallet2, value: 1
-=======
-                    to: wallet, value: 1
->>>>>>> ee35178e (utxohdwallet)
                 });
                 console.log(tx);
             }, (error) => {
@@ -243,11 +217,7 @@ describe("Test Provider Blockchain Errors", function () {
             const w = wallet.connect(provider);
             await assert.rejects(async function () {
                 const tx = await w.sendTransaction({
-<<<<<<< HEAD
                     to: wallet, from: wallet2, value: 1
-=======
-                    to: wallet, nonce: 1, value: 1
->>>>>>> ee35178e (utxohdwallet)
                 });
                 console.log(tx);
             }, (error) => {

@@ -1,28 +1,14 @@
 /**
  *  @_ignore
  */
-<<<<<<< HEAD
-import { getBytesCopy, assertArgument, toUtf8Bytes } from "../utils/index.js";
-=======
 import { assert, computeHmac, sha256 } from "../quais.js";
 import { getBytesCopy, assertArgument, toUtf8Bytes, concat, dataSlice, encodeBase58, getBytes } from "../utils/index.js";
->>>>>>> ee35178e (utxohdwallet)
 export function looseArrayify(hexString) {
     if (typeof (hexString) === "string" && !hexString.startsWith("0x")) {
         hexString = "0x" + hexString;
     }
     return getBytesCopy(hexString);
 }
-<<<<<<< HEAD
-export function zpad(value, length) {
-    value = String(value);
-    while (value.length < length) {
-        value = '0' + value;
-    }
-    return value;
-}
-=======
->>>>>>> ee35178e (utxohdwallet)
 export function getPassword(password) {
     if (typeof (password) === 'string') {
         return toUtf8Bytes(password, "NFKC");
@@ -91,8 +77,6 @@ export function spelunk(object, _path) {
     }
     return cur;
 }
-<<<<<<< HEAD
-=======
 // HDNODEWallet and UTXO Wallet util methods
 // "Bitcoin seed"
 export const MasterSecret = new Uint8Array([66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100]);
@@ -171,7 +155,6 @@ export function derivePath(node, path) {
         result.setCoinType();
     return result;
 }
->>>>>>> ee35178e (utxohdwallet)
 /*
 export function follow(object: any, path: string): null | string {
     let currentChild = object;

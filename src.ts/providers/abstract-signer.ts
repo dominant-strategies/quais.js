@@ -159,6 +159,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             inputsUTXO: tx.inputs,
             outputsUTXO: tx.outputs,
             type: 2,
+            from: String(tx.from)
         }
 
         //@TOOD: Don't await all over the place; save them up for
@@ -181,8 +182,11 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
         const provider = checkProvider(this, "sendTransaction");
-        const shard = await this.shardFromAddress(tx.from)
         let sender = await this.getAddress()
+        tx.from = sender
+        const shard = await this.shardFromAddress(tx.from)
+
+
         let pop;
         if (isUTXOAddress(sender)) {
             pop = await this.populateUTXOTransaction(tx);

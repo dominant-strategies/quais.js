@@ -16,11 +16,7 @@ import { AbiCoder } from "../abi/index.js";
 import { getAddress, resolveAddress } from "../address/index.js";
 import { TypedDataEncoder } from "../hash/index.js";
 import { accessListify } from "../transaction/index.js";
-<<<<<<< HEAD
 import { defineProperties, getBigInt, hexlify, isHexString, toQuantity, toUtf8Bytes, isError, makeError, assert, assertArgument, resolveProperties } from "../utils/index.js";
-=======
-import { defineProperties, getBigInt, hexlify, isHexString, toQuantity, toUtf8Bytes, isError, makeError, assert, assertArgument, FetchRequest, resolveProperties } from "../utils/index.js";
->>>>>>> ee35178e (utxohdwallet)
 import { AbstractProvider, UnmanagedSubscriber } from "./abstract-provider.js";
 import { AbstractSigner } from "./abstract-signer.js";
 import { Network } from "./network.js";
@@ -123,12 +119,8 @@ export class JsonRpcSigner extends AbstractSigner {
     }
     async sendTransaction(tx) {
         // This cannot be mined any earlier than any recent block
-<<<<<<< HEAD
         const shard = await this.shardFromAddress(tx.from);
         const blockNumber = await this.provider.getBlockNumber(shard);
-=======
-        const blockNumber = await this.provider.getBlockNumber();
->>>>>>> ee35178e (utxohdwallet)
         // Send the transaction
         const hash = await this.sendUncheckedTransaction(tx);
         // Unfortunately, JSON-RPC only provides and opaque transaction hash
@@ -248,10 +240,7 @@ export class JsonRpcApiProvider extends AbstractProvider {
     #notReady;
     #network;
     #pendingDetectNetwork;
-<<<<<<< HEAD
     initPromise;
-=======
->>>>>>> ee35178e (utxohdwallet)
     #scheduleDrain() {
         if (this.#drainTimer) {
             return;
@@ -278,7 +267,6 @@ export class JsonRpcApiProvider extends AbstractProvider {
                 }
                 // Process the result to each payload
                 (async () => {
-<<<<<<< HEAD
                     const payloadMap = new Map();
                     for (let i = 0; i < batch.length; i++) {
                         if (!payloadMap.has(batch[i].shard)) {
@@ -301,13 +289,6 @@ export class JsonRpcApiProvider extends AbstractProvider {
                     }));
                     const result = rawResult.flat();
                     try {
-=======
-                    const payload = ((batch.length === 1) ? batch[0].payload : batch.map((p) => p.payload));
-                    this.emit("debug", { action: "sendRpcPayload", payload });
-                    try {
-                        const result = await this._send(payload);
-                        this.emit("debug", { action: "receiveRpcResult", result });
->>>>>>> ee35178e (utxohdwallet)
                         // Process results in batch order
                         for (const { resolve, reject, payload } of batch) {
                             if (this.destroyed) {
@@ -398,20 +379,13 @@ export class JsonRpcApiProvider extends AbstractProvider {
     async _perform(req) {
         // Legacy networks do not like the type field being passed along (which
         // is fair), so we delete type if it is 0 and a non-EIP-1559 network
-<<<<<<< HEAD
         await this.initPromise;
-=======
->>>>>>> ee35178e (utxohdwallet)
         if (req.method === "call" || req.method === "estimateGas") {
             let tx = req.transaction;
             if (tx && tx.type != null && getBigInt(tx.type)) {
                 // If there are no EIP-1559 properties, it might be non-EIP-a559
                 if (tx.maxFeePerGas == null && tx.maxPriorityFeePerGas == null) {
-<<<<<<< HEAD
                     const feeData = await this.getFeeData(req.shard);
-=======
-                    const feeData = await this.getFeeData();
->>>>>>> ee35178e (utxohdwallet)
                     if (feeData.maxFeePerGas == null && feeData.maxPriorityFeePerGas == null) {
                         // Network doesn't know about EIP-1559 (and hence type)
                         req = Object.assign({}, req, {
@@ -423,11 +397,7 @@ export class JsonRpcApiProvider extends AbstractProvider {
         }
         const request = this.getRpcRequest(req);
         if (request != null) {
-<<<<<<< HEAD
             return await this.send(request.method, request.args, req.shard);
-=======
-            return await this.send(request.method, request.args);
->>>>>>> ee35178e (utxohdwallet)
         }
         return super._perform(req);
     }
@@ -798,11 +768,7 @@ export class JsonRpcApiProvider extends AbstractProvider {
      *  override [[_send]] or force the options values in the
      *  call to the constructor to modify this method's behavior.
      */
-<<<<<<< HEAD
     send(method, params, shard) {
-=======
-    send(method, params) {
->>>>>>> ee35178e (utxohdwallet)
         // @TODO: cache chainId?? purge on switch_networks
         // We have been destroyed; no operations are supported anymore
         if (this.destroyed) {
@@ -812,12 +778,8 @@ export class JsonRpcApiProvider extends AbstractProvider {
         const promise = new Promise((resolve, reject) => {
             this.#payloads.push({
                 resolve, reject,
-<<<<<<< HEAD
                 payload: { method, params, id, jsonrpc: "2.0" },
                 shard: shard
-=======
-                payload: { method, params, id, jsonrpc: "2.0" }
->>>>>>> ee35178e (utxohdwallet)
             });
         });
         // If there is not a pending drainTimer, set one
@@ -891,7 +853,6 @@ export class JsonRpcApiProvider extends AbstractProvider {
  *  for updates.
  */
 export class JsonRpcProvider extends JsonRpcApiProvider {
-<<<<<<< HEAD
     constructor(urls, network, options) {
         if (urls == null) {
             urls = ["http:/\/localhost:8545"];
@@ -905,26 +866,12 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         }
         else {
             this.initPromise = this.initUrlMap(urls.clone());
-=======
-    #connect;
-    constructor(url, network, options) {
-        if (url == null) {
-            url = "http:/\/localhost:8545";
-        }
-        super(network, options);
-        if (typeof (url) === "string") {
-            this.#connect = new FetchRequest(url);
-        }
-        else {
-            this.#connect = url.clone();
->>>>>>> ee35178e (utxohdwallet)
         }
     }
     _getSubscriber(sub) {
         const subscriber = super._getSubscriber(sub);
         return subscriber;
     }
-<<<<<<< HEAD
     _getConnection(shard) {
         const connection = this.connect[this.connect.length - 1].clone();
         if (typeof shard === "string") {
@@ -944,21 +891,6 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
     async _send(payload, shard) {
         // Configure a POST connection for the requested method
         const request = this._getConnection(shard);
-=======
-    _getConnection() {
-        return this.#connect.clone();
-    }
-    async send(method, params) {
-        // All requests are over HTTP, so we can just start handling requests
-        // We do this here rather than the constructor so that we don't send any
-        // requests to the network (i.e. quai_chainId) until we absolutely have to.
-        await this._start();
-        return await super.send(method, params);
-    }
-    async _send(payload) {
-        // Configure a POST connection for the requested method
-        const request = this._getConnection();
->>>>>>> ee35178e (utxohdwallet)
         request.body = JSON.stringify(payload);
         request.setHeader("content-type", "application/json");
         const response = await request.send();

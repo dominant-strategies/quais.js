@@ -2,11 +2,7 @@ import { Signature } from "../crypto/index.js";
 import type { BigNumberish, BytesLike } from "../utils/index.js";
 import type { SignatureLike } from "../crypto/index.js";
 import type { AccessList, AccessListish } from "./index.js";
-<<<<<<< HEAD
-import type { UTXOTransactionInput, UTXOTransactionOutput } from "./utxo.js";
-=======
 import type { UTXOEntry, UTXOTransactionOutput } from "./utxo.js";
->>>>>>> ee35178e (utxohdwallet)
 export interface TransactionLike<A = string> {
     /**
      *  The type.
@@ -19,11 +15,7 @@ export interface TransactionLike<A = string> {
     /**
      *  The sender.
      */
-<<<<<<< HEAD
     from: A;
-=======
-    from?: null | A;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  The nonce.
      */
@@ -68,11 +60,7 @@ export interface TransactionLike<A = string> {
      *  The access list for berlin and london transactions.
      */
     accessList?: null | AccessListish;
-<<<<<<< HEAD
-    inputsUTXO?: null | Array<UTXOTransactionInput>;
-=======
     inputsUTXO?: null | Array<UTXOEntry>;
->>>>>>> ee35178e (utxohdwallet)
     outputsUTXO?: null | Array<UTXOTransactionOutput>;
 }
 /**
@@ -90,10 +78,7 @@ export interface TransactionLike<A = string> {
  */
 export declare class Transaction implements TransactionLike<string> {
     #private;
-<<<<<<< HEAD
     from: string;
-=======
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  The transaction type.
      *
@@ -171,23 +156,14 @@ export declare class Transaction implements TransactionLike<string> {
      */
     get accessList(): null | AccessList;
     set accessList(value: null | AccessListish);
-<<<<<<< HEAD
-    get inputsUTXO(): null | UTXOTransactionInput[];
-    set inputsUTXO(value: null | UTXOTransactionInput[]);
-=======
     get inputsUTXO(): null | UTXOEntry[];
     set inputsUTXO(value: null | UTXOEntry[]);
->>>>>>> ee35178e (utxohdwallet)
     get outputsUTXO(): null | UTXOTransactionOutput[];
     set outputsUTXO(value: null | UTXOTransactionOutput[]);
     /**
      *  Creates a new Transaction with default values.
      */
-<<<<<<< HEAD
     constructor(from: string);
-=======
-    constructor();
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  The transaction hash, if signed. Otherwise, ``null``.
      */
@@ -201,13 +177,6 @@ export declare class Transaction implements TransactionLike<string> {
      */
     get unsignedHash(): string;
     /**
-<<<<<<< HEAD
-=======
-     *  The sending address, if signed. Otherwise, ``null``.
-     */
-    get from(): null | string;
-    /**
->>>>>>> ee35178e (utxohdwallet)
      *  The public key of the sender, if signed. Otherwise, ``null``.
      */
     get fromPublicKey(): null | string;
@@ -259,10 +228,6 @@ export declare class Transaction implements TransactionLike<string> {
      *  Create a **Transaction** from a serialized transaction or a
      *  Transaction-like object.
      */
-<<<<<<< HEAD
     static from(tx: string | TransactionLike<string>): Transaction;
-=======
-    static from(tx?: string | TransactionLike<string>): Transaction;
->>>>>>> ee35178e (utxohdwallet)
 }
 //# sourceMappingURL=transaction.d.ts.map
