@@ -432,6 +432,7 @@ export class Transaction {
             return v.toString();
         };
 <<<<<<< HEAD
+<<<<<<< HEAD
         return {
             type: this.type,
             to: this.to,
@@ -451,8 +452,14 @@ export class Transaction {
             return obj;
         };
         // Process arrays of objects for inputsUTXO and outputsUTXO
+=======
+        // Adjusted function to specifically handle the conversion of 'denomination' fields in array items
+>>>>>>> 756167a0 (musig  signing for utxos)
         const processArrayWithBigInt = (arr) => {
-            return arr.map(item => handleObjectWithBigInt(item));
+            return arr.map(item => ({
+                address: item.address,
+                denomination: s(item.denomination) // Convert 'denomination' to string
+            }));
         };
         return {
             type: this.type,
@@ -487,8 +494,11 @@ export class Transaction {
         if (tx == null) {
             return new Transaction();
         }
+<<<<<<< HEAD
         console.log("TX: ", tx);
 >>>>>>> ee35178e (utxohdwallet)
+=======
+>>>>>>> 756167a0 (musig  signing for utxos)
         if (typeof (tx) === "string") {
             const payload = getBytes(tx);
             return Transaction.from(_parse(payload));

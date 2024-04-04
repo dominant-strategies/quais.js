@@ -52,6 +52,7 @@ export declare class UTXOHDWallet extends BaseWallet {
     readonly depth: number;
     coinType?: number;
     get utxoAddresses(): UTXOAddress[];
+    set utxoAddresses(addresses: UTXOAddress[]);
     /**
      * Gets the current publicKey
      */

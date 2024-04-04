@@ -138,6 +138,7 @@ export class AbstractSigner {
         const pop = {
             inputsUTXO: tx.inputs,
             outputsUTXO: tx.outputs,
+            type: 2,
         };
         //@TOOD: Don't await all over the place; save them up for
         // the end for better batching
@@ -155,7 +156,6 @@ export class AbstractSigner {
         return await provider.resolveName(name);
     }
     async sendTransaction(tx) {
-        console.log('sendTransaction', tx);
         const provider = checkProvider(this, "sendTransaction");
 <<<<<<< HEAD
         const shard = await this.shardFromAddress(tx.from);
@@ -175,7 +175,6 @@ export class AbstractSigner {
         else {
             pop = await this.populateTransaction(tx);
         }
-        console.log("populated tx", pop);
         delete pop.from;
         const txObj = Transaction.from(pop);
         const signedTx = await this.signTransaction(txObj);

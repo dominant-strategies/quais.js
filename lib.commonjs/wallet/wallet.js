@@ -163,7 +163,6 @@ class Wallet extends base_wallet_js_1.BaseWallet {
                 }
                 return wallet;
             case 969:
-                console.log('utxo wallet');
                 wallet = utxohdwallet_js_1.UTXOHDWallet.fromPhrase(phrase, path, undefined, wordlist);
                 if (provider) {
                     return wallet.connect(provider);

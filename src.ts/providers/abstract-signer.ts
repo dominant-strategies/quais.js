@@ -158,6 +158,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         const pop = {
             inputsUTXO: tx.inputs,
             outputsUTXO: tx.outputs,
+            type: 2,
         }
 
         //@TOOD: Don't await all over the place; save them up for
@@ -179,7 +180,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
     }
 
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
-        console.log('sendTransaction', tx)
         const provider = checkProvider(this, "sendTransaction");
         const shard = await this.shardFromAddress(tx.from)
         let sender = await this.getAddress()
@@ -189,10 +189,10 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         } else {
             pop = await this.populateTransaction(tx);
         }
-        console.log("populated tx", pop)
+
 //        delete pop.from;
         const txObj = Transaction.from(pop);
-        
+
         const signedTx = await this.signTransaction(txObj);
         console.log("signedTX: ", JSON.stringify(txObj))
         return await provider.broadcastTransaction(shard, signedTx);
