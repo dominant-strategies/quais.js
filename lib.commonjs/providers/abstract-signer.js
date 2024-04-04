@@ -116,6 +116,19 @@ class AbstractSigner {
         // the end for better batching
         return await (0, index_js_3.resolveProperties)(pop);
     }
+<<<<<<< HEAD
+=======
+    async populateUTXOTransaction(tx) {
+        const pop = {
+            inputsUTXO: tx.inputs,
+            outputsUTXO: tx.outputs,
+            type: 2,
+        };
+        //@TOOD: Don't await all over the place; save them up for
+        // the end for better batching
+        return await (0, index_js_3.resolveProperties)(pop);
+    }
+>>>>>>> 756167a0 (musig  signing for utxos)
     async estimateGas(tx) {
         return checkProvider(this, "estimateGas").estimateGas(await this.populateCall(tx));
     }
@@ -127,12 +140,23 @@ class AbstractSigner {
         return await provider.resolveName(name);
     }
     async sendTransaction(tx) {
-        console.log('sendTransaction', tx);
         const provider = checkProvider(this, "sendTransaction");
+<<<<<<< HEAD
         const shard = await this.shardFromAddress(tx.from);
         const pop = await this.populateTransaction(tx);
         console.log("populated tx", pop);
         //        delete pop.from;
+=======
+        let sender = await this.getAddress();
+        let pop;
+        if ((0, index_js_3.isUTXOAddress)(sender)) {
+            pop = await this.populateUTXOTransaction(tx);
+        }
+        else {
+            pop = await this.populateTransaction(tx);
+        }
+        delete pop.from;
+>>>>>>> 756167a0 (musig  signing for utxos)
         const txObj = index_js_2.Transaction.from(pop);
         const signedTx = await this.signTransaction(txObj);
         console.log("signedTX: ", JSON.stringify(txObj));

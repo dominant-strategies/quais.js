@@ -1,10 +1,14 @@
 
 import { N, ShardData } from '../constants';
 import { SigningKey } from "../crypto/index.js";
-import { BytesLike, Numeric, Provider, TransactionRequest, Wordlist, assertArgument, assertPrivate, computeHmac, dataSlice, defineProperties, getBytes, getNumber, getShardForAddress, hexlify, isBytesLike, isUTXOAddress, randomBytes, ripemd160, sha256, toBeHex, toBigInt } from '../quais.js';
+import { BytesLike, Numeric, Provider, Transaction, TransactionLike, TransactionRequest, Wordlist, assertArgument, assertPrivate, computeHmac, dataSlice, defineProperties, getBytes, getNumber, getShardForAddress, hexlify, isBytesLike, isUTXOAddress, randomBytes, ripemd160, sha256, toBeHex, toBigInt } from '../quais.js';
 import { Mnemonic } from './mnemonic.js';
 import { HardenedBit, derivePath, ser_I } from './utils.js';
 import { BaseWallet } from "./base-wallet.js";
+import { MuSigFactory } from "@brandonblack/musig"
+import { nobleCrypto } from "./musig-crypto.js";
+import { schnorr } from "@noble/curves/secp256k1";
+import { keccak_256 } from "@noble/hashes/sha3";
 
 interface UTXOAddress {
     pubKey: string;
@@ -80,6 +84,11 @@ export class UTXOHDWallet extends BaseWallet {
     get utxoAddresses(): UTXOAddress[] {
         return this.#utxoAddresses;
     }
+
+    set utxoAddresses(addresses: UTXOAddress[]) {
+        this.#utxoAddresses = addresses;
+    }
+
     /**
      * Gets the current publicKey
      */
@@ -201,7 +210,6 @@ export class UTXOHDWallet extends BaseWallet {
     }
         
     async generateUTXOs(zone: string, gap: number = 20  ){
-        console.log("GENERATING UTXOS")
         zone = zone.toLowerCase();
         // Check if zone is valid
         const shard = ShardData.find(shard => shard.name.toLowerCase() === zone || shard.nickname.toLowerCase() === zone || shard.byte.toLowerCase() === zone);
@@ -221,19 +229,20 @@ export class UTXOHDWallet extends BaseWallet {
             const pubKey = wallet.address;
             const privKey = wallet.privateKey;
 
-            //check available utxos through node
-            //if ( have utxos)
+            /*check available utxos throught node JSONRPC call
+                if we have utxos at this address add it to currentUtxoAddresses
+            */
             currentUtxoAddresses.push({ pubKey , privKey });
-            console.log(wallet.path)
-            //      empty = 0
-            //else 
-            empty ++ 
+            //reset empty = 0
 
-            //increment addrIndex in bip44
+            //else increment empty untill we have gap amount 
+                empty ++ 
+
+
+            //increment addrIndex in bip44 always
             accIndex ++;
-
         }
-        console.log('UTXO addr:', currentUtxoAddresses)
+        this.utxoAddresses = currentUtxoAddresses;
     }
 
     /**
@@ -268,7 +277,57 @@ export class UTXOHDWallet extends BaseWallet {
     }
     
     async signTransaction(tx: TransactionRequest): Promise<string> {
-        console.log('herwhhhzafhdhdzhfgxzdhgvajhsvs', tx.type)
-        return 'hey';
+        const txobj = Transaction.from((<TransactionLike<string>>tx))
+        if (!txobj.inputsUTXO || !txobj.outputsUTXO) throw new Error('Invalid UTXO transaction, missing inputs or outputs')
+        
+        const hash = keccak_256(txobj.unsignedSerialized)
+
+        const musig = MuSigFactory(nobleCrypto);
+
+        if (txobj.inputsUTXO.length == 1){
+            const pubKey = txobj.inputsUTXO[0].address
+
+            const privKey =  this.utxoAddresses.find(utxoAddr => utxoAddr.pubKey === pubKey)?.privKey;
+
+            if(!privKey) throw new Error(`Missing private key for ${pubKey}`)
+            
+            const signature = schnorr.sign(hash, BigInt(privKey));
+            return hexlify(signature);
+        } else {
+            const privKeys = txobj.inputsUTXO.map(input => {
+                const utxoAddrObj = this.utxoAddresses.find(utxoAddr => utxoAddr.pubKey === input.address);
+                return utxoAddrObj ? utxoAddrObj.privKey : null;
+            }).filter(privKey => privKey !== null);
+
+            const pubKeys: Uint8Array[] = privKeys.map(privKey => nobleCrypto.getPublicKey(getBytes(privKey!), true)).filter(pubKey => pubKey !== null) as Uint8Array[];
+
+            //const aggPublicKey = musig.getPlainPubkey(musig.keyAgg(pubKeys));
+
+            const nonces = pubKeys.map(pk => musig.nonceGen({publicKey: getBytes(pk!)}));
+            const aggNonce = musig.nonceAgg(nonces);
+
+            const signingSession = musig.startSigningSession(
+                aggNonce,
+                hash,
+                pubKeys
+            );
+
+            //Each signer creates a partial signature
+            const partialSignatures = privKeys.map((sk, index) =>
+                musig.partialSign({
+                    secretKey: getBytes(sk || ''),
+                    publicNonce: nonces[index],
+                    sessionKey: signingSession,
+                    verify: true
+                })
+            );
+
+            // Aggregate the partial signatures into a final aggregated signature
+            const finalSignature = musig.signAgg(partialSignatures, signingSession);
+            
+            // //Verify signature using schnorr
+            // const isValid = schnorr.verify(finalSignature, hash, aggPublicKey);
+             return hexlify(finalSignature);
+        }   
     }
 }

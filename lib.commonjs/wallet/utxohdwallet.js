@@ -7,6 +7,10 @@ const quais_js_1 = require("../quais.js");
 const mnemonic_js_1 = require("./mnemonic.js");
 const utils_js_1 = require("./utils.js");
 const base_wallet_js_1 = require("./base-wallet.js");
+const musig_1 = require("@brandonblack/musig");
+const musig_crypto_js_1 = require("./musig-crypto.js");
+const secp256k1_1 = require("@noble/curves/secp256k1");
+const sha3_1 = require("@noble/hashes/sha3");
 const MasterSecret = new Uint8Array([66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100]);
 const _guard = {};
 class UTXOHDWallet extends base_wallet_js_1.BaseWallet {
@@ -64,6 +68,9 @@ class UTXOHDWallet extends base_wallet_js_1.BaseWallet {
     #utxoAddresses = [];
     get utxoAddresses() {
         return this.#utxoAddresses;
+    }
+    set utxoAddresses(addresses) {
+        this.#utxoAddresses = addresses;
     }
     /**
      * Gets the current publicKey
@@ -171,7 +178,6 @@ class UTXOHDWallet extends base_wallet_js_1.BaseWallet {
         return new UTXOHDWallet(_guard, ki, newFingerprint, (0, quais_js_1.hexlify)(IR), path, index, newDepth, this.mnemonic, this.provider);
     }
     async generateUTXOs(zone, gap = 20) {
-        console.log("GENERATING UTXOS");
         zone = zone.toLowerCase();
         // Check if zone is valid
         const shard = constants_1.ShardData.find(shard => shard.name.toLowerCase() === zone || shard.nickname.toLowerCase() === zone || shard.byte.toLowerCase() === zone);
@@ -193,14 +199,13 @@ class UTXOHDWallet extends base_wallet_js_1.BaseWallet {
             //check available utxos through node
             //if ( have utxos)
             currentUtxoAddresses.push({ pubKey, privKey });
-            console.log(wallet.path);
             //      empty = 0
             //else 
             empty++;
             //increment addrIndex in bip44
             accIndex++;
         }
-        console.log('UTXO addr:', currentUtxoAddresses);
+        this.utxoAddresses = currentUtxoAddresses;
     }
     /**
      * Derives address by incrementing address_index according to BIP44
@@ -230,8 +235,42 @@ class UTXOHDWallet extends base_wallet_js_1.BaseWallet {
         return newWallet;
     }
     async signTransaction(tx) {
-        console.log('herwhhhzafhdhdzhfgxzdhgvajhsvs', tx.type);
-        return 'hey';
+        const txobj = quais_js_1.Transaction.from(tx);
+        if (!txobj.inputsUTXO || !txobj.outputsUTXO)
+            throw new Error('Invalid UTXO transaction, missing inputs or outputs');
+        const hash = (0, sha3_1.keccak_256)(txobj.unsignedSerialized);
+        const musig = (0, musig_1.MuSigFactory)(musig_crypto_js_1.nobleCrypto);
+        if (txobj.inputsUTXO.length == 1) {
+            const pubKey = txobj.inputsUTXO[0].address;
+            const privKey = this.utxoAddresses.find(utxoAddr => utxoAddr.pubKey === pubKey)?.privKey;
+            if (!privKey)
+                throw new Error(`Missing private key for ${pubKey}`);
+            const signature = secp256k1_1.schnorr.sign(hash, BigInt(privKey));
+            return (0, quais_js_1.hexlify)(signature);
+        }
+        else {
+            const privKeys = txobj.inputsUTXO.map(input => {
+                const utxoAddrObj = this.utxoAddresses.find(utxoAddr => utxoAddr.pubKey === input.address);
+                return utxoAddrObj ? utxoAddrObj.privKey : null;
+            }).filter(privKey => privKey !== null);
+            const pubKeys = privKeys.map(privKey => musig_crypto_js_1.nobleCrypto.getPublicKey((0, quais_js_1.getBytes)(privKey), true)).filter(pubKey => pubKey !== null);
+            //const aggPublicKey = musig.getPlainPubkey(musig.keyAgg(pubKeys));
+            const nonces = pubKeys.map(pk => musig.nonceGen({ publicKey: (0, quais_js_1.getBytes)(pk) }));
+            const aggNonce = musig.nonceAgg(nonces);
+            const signingSession = musig.startSigningSession(aggNonce, hash, pubKeys);
+            //Each signer creates a partial signature
+            const partialSignatures = privKeys.map((sk, index) => musig.partialSign({
+                secretKey: (0, quais_js_1.getBytes)(sk || ''),
+                publicNonce: nonces[index],
+                sessionKey: signingSession,
+                verify: true
+            }));
+            // Aggregate the partial signatures into a final aggregated signature
+            const finalSignature = musig.signAgg(partialSignatures, signingSession);
+            // //Verify signature using schnorr
+            // const isValid = schnorr.verify(finalSignature, hash, aggPublicKey);
+            return (0, quais_js_1.hexlify)(finalSignature);
+        }
     }
 }
 exports.UTXOHDWallet = UTXOHDWallet;

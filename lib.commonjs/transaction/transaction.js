@@ -401,6 +401,16 @@ class Transaction {
             }
             return v.toString();
         };
+<<<<<<< HEAD
+=======
+        // Adjusted function to specifically handle the conversion of 'denomination' fields in array items
+        const processArrayWithBigInt = (arr) => {
+            return arr.map(item => ({
+                address: item.address,
+                denomination: s(item.denomination) // Convert 'denomination' to string
+            }));
+        };
+>>>>>>> 756167a0 (musig  signing for utxos)
         return {
             type: this.type,
             to: this.to,
@@ -422,7 +432,13 @@ class Transaction {
      *  Transaction-like object.
      */
     static from(tx) {
+<<<<<<< HEAD
         //        if (tx == null) { return new Transaction(); }
+=======
+        if (tx == null) {
+            return new Transaction();
+        }
+>>>>>>> 756167a0 (musig  signing for utxos)
         if (typeof (tx) === "string") {
             const payload = (0, index_js_3.getBytes)(tx);
             return Transaction.from(_parse(payload));
