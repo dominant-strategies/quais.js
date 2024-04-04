@@ -526,48 +526,39 @@ export class Transaction implements TransactionLike<string> {
     /**
      *  Return a JSON-friendly object.
      */
-toJSON(): any {
-    const s = (v: null | bigint) => {
-        if (v == null) { return null; }
-        return v.toString();
-    };
-
-    // A helper function to handle objects that might contain BigInt values
-    const handleObjectWithBigInt = (obj: any) => {
-        for (const key in obj) {
-            if (typeof obj[key] === 'bigint') {
-                obj[key] = obj[key].toString();
-            } else if (typeof obj[key] === 'object' && obj[key] !== null) {
-                // Recursively handle nested objects
-                obj[key] = handleObjectWithBigInt(obj[key]);
-            }
-        }
-        return obj;
-    };
-
-    // Process arrays of objects for inputsUTXO and outputsUTXO
-    const processArrayWithBigInt = (arr: any[]) => {
-        return arr.map(item => handleObjectWithBigInt(item));
-    };
-
-    return {
-        type: this.type,
-        to: this.to,
-        //from: this.from,
-        data: this.data,
-        nonce: this.nonce,
-        gasLimit: s(this.gasLimit),
-        gasPrice: s(this.gasPrice),
-        maxPriorityFeePerGas: s(this.maxPriorityFeePerGas),
-        maxFeePerGas: s(this.maxFeePerGas),
-        value: s(this.value),
-        chainId: s(this.chainId),
-        sig: this.signature ? this.signature.toJSON() : null,
-        accessList: this.accessList,
-        inputsUTXO: processArrayWithBigInt(this.inputsUTXO || []),
-        outputsUTXO: processArrayWithBigInt(this.outputsUTXO || []),
-    };
-}
+    toJSON(): any {
+        const s = (v: null | bigint) => {
+            if (v == null) { return null; }
+            return v.toString();
+        };
+    
+        // Adjusted function to specifically handle the conversion of 'denomination' fields in array items
+        const processArrayWithBigInt = (arr: UTXOEntry[] | UTXOTransactionOutput[]) => {
+            return arr.map(item => ({
+                address: item.address,
+                denomination: s(item.denomination) // Convert 'denomination' to string
+            }));
+        };
+    
+        return {
+            type: this.type,
+            to: this.to,
+            //from: this.from,
+            data: this.data,
+            nonce: this.nonce,
+            gasLimit: s(this.gasLimit),
+            gasPrice: s(this.gasPrice),
+            maxPriorityFeePerGas: s(this.maxPriorityFeePerGas),
+            maxFeePerGas: s(this.maxFeePerGas),
+            value: s(this.value),
+            chainId: s(this.chainId),
+            sig: this.signature ? this.signature.toJSON() : null,
+            accessList: this.accessList,
+            inputsUTXO: processArrayWithBigInt(this.inputsUTXO || []),
+            outputsUTXO: processArrayWithBigInt(this.outputsUTXO || []),
+        };
+    }
+    
 
     /**
      *  Create a **Transaction** from a serialized transaction or a

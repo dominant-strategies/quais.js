@@ -170,7 +170,6 @@ export class Wallet extends BaseWallet {
                 if (provider) { return wallet.connect(provider); }
                 return wallet;
             case 969:
-                console.log('utxo wallet')
                 wallet = UTXOHDWallet.fromPhrase(phrase, path, undefined, wordlist);
                 if (provider) { return wallet.connect(provider); }
                 return wallet;

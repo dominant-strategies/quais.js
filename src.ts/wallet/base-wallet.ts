@@ -11,11 +11,6 @@ import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
 import type { Provider, TransactionRequest } from "../providers/index.js";
 import type { TransactionLike } from "../transaction/index.js";
 
-// import { MuSigFactory } from "@brandonblack/musig"
-// import { nobleCrypto } from "./musig-crypto.js";
-// import { UTXOTransaction } from "../transaction/utxo.js";
-// import { schnorr } from "@noble/curves/secp256k1";
-
 /**
  *  The **BaseWallet** is a stream-lined implementation of a
  *  [[Signer]] that operates with a private key.
@@ -78,7 +73,6 @@ export class BaseWallet extends AbstractSigner {
     }
 
     async signTransaction(tx: TransactionRequest ): Promise<string> {
-        console.log("signTransaction")
         // Replace any Addressable or ENS name with an address
         const { to, from } = await resolveProperties({
             to: (tx.to ? resolveAddress(tx.to, this.provider): undefined),
@@ -101,21 +95,6 @@ export class BaseWallet extends AbstractSigner {
         return btx.serialized;
     }
 
-    // async signUTXOTransaction(tx: UTXOTransaction, pk: Uint8Array): Promise<string> {
-    //     const factory = MuSigFactory(nobleCrypto);
-
-    //     //const transactionHash = tx.serialize()
-
-    //     // Check if there is only one private key
-    //     if (pk.length === 1) {
-    //         // Single key scenario: Perform a simple Schnorr signature
-    //         const publicKey = factory.getXOnlyPubkey(pk[0]);
-    //         const signature = schnorr.sign(transactionHash, BigInt(pk[0]), publicKey); 
-
-    //         // Attach the signature to the transaction
-    //         transaction.signature = signature;
-    //     }
-    // }
 
     async signMessage(message: string | Uint8Array): Promise<string> {
         return this.signMessageSync(message);
