@@ -275,7 +275,7 @@ export class UTXOHDWallet extends BaseWallet {
 
         return newWallet;   
     }
-    
+
     async signTransaction(tx: TransactionRequest): Promise<string> {
         const txobj = Transaction.from((<TransactionLike<string>>tx))
         if (!txobj.inputsUTXO || !txobj.outputsUTXO) throw new Error('Invalid UTXO transaction, missing inputs or outputs')
