@@ -165,43 +165,6 @@ function _parseSignature(tx: TransactionLike, fields: Array<string>): void {
     tx.signature = signature;
 }
 
-function _parse(data: Uint8Array): TransactionLike {
-    const decodedTx: any = decodeProtoTransaction(getBytes(data));
-
-    const tx: TransactionLike = {
-        type: decodedTx.type,
-        chainId: toBigInt(decodedTx.chain_id),
-        nonce: decodedTx.nonce,
-        maxPriorityFeePerGas: toBigInt(decodedTx.gas_tip_cap),
-        maxFeePerGas: toBigInt(decodedTx.gas_fee_cap),
-        gasLimit: toBigInt(decodedTx.gas),
-        to: hexlify(decodedTx.to),
-        value: toBigInt(decodedTx.value),
-        data: hexlify(decodedTx.data),
-        accessList: decodedTx.access_list.access_tuples,
-    };
-
-    if (decodedTx.type == 2) {
-        tx.externalGasLimit = toBigInt(decodedTx.etx_gas_limit)
-        tx.externalGasPrice = toBigInt(decodedTx.etx_gas_price)
-        tx.externalGasTip = toBigInt(decodedTx.etx_gas_tip)
-        tx.externalData = hexlify(decodedTx.etx_data)
-        tx.externalAccessList = decodedTx.etx_access_list.access_tuples
-    }
-
-    tx.hash = keccak256(data);
-
-    const signatureFields = [
-        hexlify(decodedTx.v),
-        hexlify(decodedTx.r),
-        hexlify(decodedTx.s),
-    ]
-
-    _parseSignature(tx, signatureFields);
-
-    return tx;
-}
-
 /**
  *  A **Transaction** describes an operation to be executed on
  *  Ethereum by an Externally Owned Account (EOA). It includes
@@ -651,12 +614,11 @@ export class Transaction implements TransactionLike<string> {
         }
 
         if (this.signature) {
-            protoTx.v = formatNumber(this.signature.yParity, "yParity"),
-                protoTx.r = toBeArray(this.signature.r),
-                protoTx.s = toBeArray(this.signature.s)
+            protoTx.v = formatNumber(this.signature.yParity, "yParity")
+            protoTx.r = toBeArray(this.signature.r)
+            protoTx.s = toBeArray(this.signature.s)
             protoTx.signature = getBytes(this.signature.serialized)
         }
-        console.log("formatted tx ", protoTx);
         return protoTx;
     }
 
@@ -668,8 +630,8 @@ export class Transaction implements TransactionLike<string> {
         if (tx == null) { return new Transaction(); }
 
         if (typeof (tx) === "string") {
-            const payload = getBytes(tx);
-            return Transaction.from(_parse(payload));
+            const decodedProtoTx: ProtoTransaction = decodeProtoTransaction(getBytes(tx));
+            return Transaction.fromProto(decodedProtoTx);
         }
         const result = new Transaction();
         if (tx.type != null) { result.type = tx.type; }
@@ -701,6 +663,49 @@ export class Transaction implements TransactionLike<string> {
         }
 
         return result;
+    }
+
+    /**
+    * Create a **Transaction** from a ProtoTransaction object.
+    */
+    static fromProto(protoTx: ProtoTransaction): Transaction {
+        const tx = new Transaction();
+
+        tx.type = protoTx.type;
+        tx.chainId = toBigInt(protoTx.chain_id);
+        tx.nonce = protoTx.nonce;
+        tx.maxPriorityFeePerGas = toBigInt(protoTx.gas_tip_cap);
+        tx.maxFeePerGas = toBigInt(protoTx.gas_fee_cap);
+        tx.gasLimit = toBigInt(protoTx.gas);
+        tx.to = hexlify(protoTx.to);
+        tx.value = toBigInt(protoTx.value);
+        tx.data = hexlify(protoTx.data);
+        tx.accessList = protoTx.access_list.access_tuples.map(tuple => ({
+            address: hexlify(tuple.address),
+            storageKeys: tuple.storage_key.map(key => hexlify(key))
+        }));
+
+        if (protoTx.type == 2) {
+            tx.externalGasLimit = toBigInt(protoTx.etx_gas_limit!);
+            tx.externalGasPrice = toBigInt(protoTx.etx_gas_price!);
+            tx.externalGasTip = toBigInt(protoTx.etx_gas_tip!);
+            tx.externalData = hexlify(protoTx.etx_data!);
+            tx.externalAccessList = protoTx.etx_access_list!.access_tuples.map(tuple => ({
+                address: hexlify(tuple.address),
+                storageKeys: tuple.storage_key.map(key => hexlify(key))
+            }));
+        }
+
+        if (protoTx.signature) {
+            const signatureFields = [
+                hexlify(protoTx.v!),
+                hexlify(protoTx.r!),
+                hexlify(protoTx.s!),
+            ];
+            _parseSignature(tx, signatureFields);
+        }
+
+        return tx;
     }
 
     /**

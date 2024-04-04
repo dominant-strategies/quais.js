@@ -1,8 +1,7 @@
 import { getAddress, resolveAddress } from "../address/index.js";
 import { hashMessage, TypedDataEncoder } from "../hash/index.js";
 import { AbstractSigner } from "../providers/index.js";
-import { computeAddress } from "../transaction/index.js";
-// import { computeAddress, Transaction } from "../transaction/index.js";
+import { computeAddress, Transaction } from "../transaction/index.js";
 import {
     resolveProperties, assert, assertArgument
 } from "../utils/index.js";
@@ -51,7 +50,6 @@ export class BaseWallet extends AbstractSigner {
     }
 
     // Store private values behind getters to reduce visibility
-    // in console.log
 
     /**
      * The address of this wallet.
@@ -95,19 +93,16 @@ export class BaseWallet extends AbstractSigner {
         if (!wo) {
             throw new Error("No pending header found");
         }
-
-        // Sign the work object header hash
-        const sig = this.signingKey.sign(wo.woHeader.woheaderHash);
+        const btx = Transaction.from(<TransactionLike<string>>tx);
+        btx.signature = this.signingKey.sign(btx.unsignedHash);
 
         // Build the work object
         const bwo = new WorkObject(
             wo.woHeader,
             wo.woBody,
-            <TransactionLike<string>>tx,
-            sig
+            btx,
         );
-        const serializedWorkObject = bwo.serialized;
-        return serializedWorkObject;
+        return bwo.serialized;
     }
 
     async signMessage(message: string | Uint8Array): Promise<string> {

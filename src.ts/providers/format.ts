@@ -128,7 +128,6 @@ const _formatBlock = object({
 
     timestamp: getNumber,
     nonce: allowNull(formatData),
-    difficulty: getBigInt,
 
     gasLimit: getBigInt,
     gasUsed: getBigInt,
@@ -139,24 +138,17 @@ const _formatBlock = object({
     baseFeePerGas: allowNull(getBigInt),
 
     extRollupRoot: formatHash,
-    // extTransactions: arrayOf(formatTransaction), 
     extTransactionsRoot: formatHash,
-    // transactions:
     transactionsRoot: formatHash,
     manifestHash: arrayOf(formatHash),
-    location: formatData,
     parentDeltaS: arrayOf(getBigInt),
     parentEntropy: arrayOf(getBigInt),
-    order: getNumber,
     subManifest: arrayOf(formatData),
-    totalEntropy: getBigInt,
-    mixHash: formatHash,
     receiptsRoot: formatHash,
     sha3Uncles: formatHash,
     size: getBigInt,
     evmRoot: formatHash,
     utxoRoot: formatHash,
-    uncles: arrayOf(formatHash),
 });
 
 export function formatBlock(value: any): BlockParams {

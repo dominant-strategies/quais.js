@@ -18,7 +18,6 @@ import { getAddress, resolveAddress } from "../address/index.js";
 import { ZeroAddress } from "../constants/index.js";
 import { Contract } from "../contract/index.js";
 import { namehash } from "../hash/index.js";
-import { Transaction } from "../transaction/index.js";
 import {
     concat, dataLength, dataSlice, hexlify, isHexString,
     getBigInt, getBytes, getNumber,
@@ -53,7 +52,7 @@ import type {
     PreparedTransactionRequest, Provider, ProviderEvent,
     TransactionRequest,
 } from "./provider.js";
-import { WorkObjectLike } from "../transaction/work-object.js";
+import { WorkObject, WorkObjectLike } from "../transaction/work-object.js";
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -633,6 +632,8 @@ export class AbstractProvider implements Provider {
      *  sub-class of [[Block]].
      */
     _wrapBlock(value: BlockParams, network: Network): Block {
+        // Handle known node by -> remove null values from the number array
+        value.number = Array.isArray(value.number) ? value.number.filter((n: any) => n != null) : value.number;
         return new Block(formatBlock(value), this);
     }
 
@@ -929,7 +930,6 @@ export class AbstractProvider implements Provider {
             let maxPriorityFeePerGas: null | bigint = null;
 
             // These are the recommended EIP-1559 heuristics for fee data
-
             const block = this._wrapBlock(_block, network);
             if (block && block.baseFeePerGas) {
                 maxPriorityFeePerGas = (priorityFee != null) ? priorityFee : BigInt("1000000000");
@@ -1079,22 +1079,24 @@ export class AbstractProvider implements Provider {
     }
 
     // Write
-    async broadcastTransaction(signedTx: string): Promise<TransactionResponse> {
-        const { blockNumber, hash, network } = await resolveProperties({
+    async broadcastTransaction(signedWo: string): Promise<TransactionResponse> {
+        const { blockNumber, network } = await resolveProperties({
             blockNumber: this.getBlockNumber(),
             hash: this._perform({
                 method: "broadcastTransaction",
-                signedTransaction: signedTx
+                signedTransaction: signedWo
             }),
             network: this.getNetwork()
         });
 
-        const tx = Transaction.from(signedTx);
-        if (tx.hash !== hash) {
-            throw new Error("@TODO: the returned hash did not match");
-        }
+        const wo = WorkObject.from(signedWo);
 
-        return this._wrapTransactionResponse(<any>tx, network).replaceableTransaction(blockNumber);
+        // TODO: Check which hash to use here
+        // if (wo.woHeader.headerHash !== hash) {
+        //     throw new Error("@TODO: the returned hash did not match");
+        // }
+
+        return this._wrapTransactionResponse(<any>wo.tx, network).replaceableTransaction(blockNumber);
     }
 
     async #getBlock(block: BlockTag | string, includeTransactions: boolean): Promise<any> {
@@ -1257,7 +1259,7 @@ export class AbstractProvider implements Provider {
                         }
                     }
                 } catch (error) {
-                    console.log("EEE", error);
+                    console.log("Error occured while waiting for transaction:", error);
                 }
                 this.once("block", listener);
             });
