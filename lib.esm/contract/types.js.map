@@ -1,5 +1,1 @@
-<<<<<<< HEAD
 {"version":3,"file":"types.js","sourceRoot":"","sources":["../../src.ts/contract/types.ts"],"names":[],"mappings":"AAqCC,CAAC;AAuC4E,CAAC;AA4H9E,CAAC"}
-=======
-{"version":3,"file":"types.js","sourceRoot":"","sources":["../../src.ts/contract/types.ts"],"names":[],"mappings":"AAqCC,CAAC;AAsC4E,CAAC;AA4H9E,CAAC"}
->>>>>>> ee35178e (utxohdwallet)

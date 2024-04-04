@@ -6,86 +6,6 @@
 import { computeHmac, randomBytes, ripemd160, SigningKey, sha256 } from "../crypto/index.js";
 import { VoidSigner } from "../providers/index.js";
 import { computeAddress } from "../transaction/index.js";
-<<<<<<< HEAD
-import { concat, dataSlice, decodeBase58, defineProperties, encodeBase58, getBytes, hexlify, isBytesLike, getNumber, toBeArray, toBigInt, toBeHex, assertPrivate, assert, assertArgument } from "../utils/index.js";
-import { LangEn } from "../wordlists/lang-en.js";
-import { BaseWallet } from "./base-wallet.js";
-import { Mnemonic } from "./mnemonic.js";
-import { encryptKeystoreJson, encryptKeystoreJsonSync, } from "./json-keystore.js";
-import { ShardData } from "../constants/index.js";
-import { getShardForAddress, isUTXOAddress } from "../utils/index.js";
-// "Bitcoin seed"
-const MasterSecret = new Uint8Array([66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100]);
-const HardenedBit = 0x80000000;
-const N = BigInt("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");
-const Nibbles = "0123456789abcdef";
-function zpad(value, length) {
-    let result = "";
-    while (value) {
-        result = Nibbles[value % 16] + result;
-        value = Math.trunc(value / 16);
-    }
-    while (result.length < length * 2) {
-        result = "0" + result;
-    }
-    return "0x" + result;
-}
-function encodeBase58Check(_value) {
-    const value = getBytes(_value);
-    const check = dataSlice(sha256(sha256(value)), 0, 4);
-    const bytes = concat([value, check]);
-    return encodeBase58(bytes);
-}
-const _guard = {};
-function ser_I(index, chainCode, publicKey, privateKey) {
-    const data = new Uint8Array(37);
-    if (index & HardenedBit) {
-        assert(privateKey != null, "cannot derive child of neutered node", "UNSUPPORTED_OPERATION", {
-            operation: "deriveChild"
-        });
-        // Data = 0x00 || ser_256(k_par)
-        data.set(getBytes(privateKey), 1);
-    }
-    else {
-        // Data = ser_p(point(k_par))
-        data.set(getBytes(publicKey));
-    }
-    // Data += ser_32(i)
-    for (let i = 24; i >= 0; i -= 8) {
-        data[33 + (i >> 3)] = ((index >> (24 - i)) & 0xff);
-    }
-    const I = getBytes(computeHmac("sha512", chainCode, data));
-    return { IL: I.slice(0, 32), IR: I.slice(32) };
-}
-function derivePath(node, path) {
-    const components = path.split("/");
-    assertArgument(components.length > 0 && (components[0] === "m" || node.depth > 0), "invalid path", "path", path);
-    if (components[0] === "m") {
-        components.shift();
-    }
-    let result = node;
-    for (let i = 0; i < components.length; i++) {
-        const component = components[i];
-        if (component.match(/^[0-9]+'$/)) {
-            const index = parseInt(component.substring(0, component.length - 1));
-            assertArgument(index < HardenedBit, "invalid path index", `path[${i}]`, component);
-            result = result.deriveChild(HardenedBit + index);
-        }
-        else if (component.match(/^[0-9]+$/)) {
-            const index = parseInt(component);
-            assertArgument(index < HardenedBit, "invalid path index", `path[${i}]`, component);
-            result = result.deriveChild(index);
-        }
-        else {
-            assertArgument(false, "invalid path component", `path[${i}]`, component);
-        }
-    }
-    // Extract the coin type from the path and set it on the node
-    if (result.setCoinType)
-        result.setCoinType();
-    return result;
-}
-=======
 import { concat, dataSlice, decodeBase58, defineProperties, getBytes, hexlify, isBytesLike, getNumber, toBeArray, toBigInt, toBeHex, assertPrivate, assert, assertArgument } from "../utils/index.js";
 import { BaseWallet } from "./base-wallet.js";
 import { Mnemonic } from "./mnemonic.js";
@@ -94,7 +14,6 @@ import { N, ShardData } from "../constants/index.js";
 import { getShardForAddress, isUTXOAddress } from "../utils/index.js";
 import { encodeBase58Check, zpad, HardenedBit, ser_I, derivePath, MasterSecret } from "./utils.js";
 const _guard = {};
->>>>>>> ee35178e (utxohdwallet)
 /**
  *  An **HDNodeWallet** is a [[Signer]] backed by the private key derived
  *  from an HD Node using the [[link-bip-32]] stantard.
@@ -156,11 +75,7 @@ export class HDNodeWallet extends BaseWallet {
      */
     constructor(guard, signingKey, accountFingerprint, chainCode, path, index, depth, mnemonic, provider) {
         super(signingKey, provider);
-<<<<<<< HEAD
-        assertPrivate(guard, _guard, "HDNodeWallet");
-=======
         assertPrivate(guard, _guard);
->>>>>>> ee35178e (utxohdwallet)
         this.#publicKey = signingKey.compressedPublicKey;
         const fingerprint = dataSlice(ripemd160(sha256(this.#publicKey)), 0, 4);
         defineProperties(this, {
@@ -254,10 +169,6 @@ export class HDNodeWallet extends BaseWallet {
         const index = getNumber(_index, "index");
         assertArgument(index <= 0xffffffff, "invalid index", "index", index);
         // Base path
-<<<<<<< HEAD
-        let path = this.path;
-        if (path) {
-=======
         let newDepth = this.depth + 1;
         let path = this.path;
         if (path) {
@@ -267,7 +178,6 @@ export class HDNodeWallet extends BaseWallet {
                 path = pathFields.join("/");
                 newDepth--;
             }
->>>>>>> ee35178e (utxohdwallet)
             path += "/" + (index & ~HardenedBit);
             if (index & HardenedBit) {
                 path += "'";
@@ -277,11 +187,7 @@ export class HDNodeWallet extends BaseWallet {
         const ki = new SigningKey(toBeHex((toBigInt(IL) + BigInt(this.privateKey)) % N, 32));
         //BIP44 if we are at the account depth get that fingerprint, otherwise continue with the current one
         let newFingerprint = this.depth == 3 ? this.fingerprint : this.accountFingerprint;
-<<<<<<< HEAD
-        return new HDNodeWallet(_guard, ki, newFingerprint, hexlify(IR), path, index, this.depth + 1, this.mnemonic, this.provider);
-=======
         return new HDNodeWallet(_guard, ki, newFingerprint, hexlify(IR), path, index, newDepth, this.mnemonic, this.provider);
->>>>>>> ee35178e (utxohdwallet)
     }
     /**
      *  Return the HDNode for %%path%% from this node.
@@ -337,21 +243,9 @@ export class HDNodeWallet extends BaseWallet {
      *  Creates a new random HDNode.
      */
     static createRandom(path, password, wordlist) {
-<<<<<<< HEAD
-        if (password == null) {
-            password = "";
-        }
         if (path == null || !this.isValidPath(path)) {
             throw new Error('Invalid path: ' + path);
         }
-        if (wordlist == null) {
-            wordlist = LangEn.wordlist();
-        }
-=======
-        if (path == null || !this.isValidPath(path)) {
-            throw new Error('Invalid path: ' + path);
-        }
->>>>>>> ee35178e (utxohdwallet)
         const mnemonic = Mnemonic.fromEntropy(randomBytes(16), password, wordlist);
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
@@ -368,21 +262,9 @@ export class HDNodeWallet extends BaseWallet {
      *  Creates an HD Node from a mnemonic %%phrase%%.
      */
     static fromPhrase(phrase, path, password, wordlist) {
-<<<<<<< HEAD
-        if (password == null) {
-            password = "";
-        }
         if (path == null || !this.isValidPath(path)) {
             throw new Error('Invalid path: ' + path);
         }
-        if (wordlist == null) {
-            wordlist = LangEn.wordlist();
-        }
-=======
-        if (path == null || !this.isValidPath(path)) {
-            throw new Error('Invalid path: ' + path);
-        }
->>>>>>> ee35178e (utxohdwallet)
         const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist);
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
@@ -407,11 +289,8 @@ export class HDNodeWallet extends BaseWallet {
      * Derives address by incrementing address_index according to BIP44
      */
     deriveAddress(index, zone) {
-<<<<<<< HEAD
-=======
         if (!this.path)
             throw new Error("Missing Path");
->>>>>>> ee35178e (utxohdwallet)
         //Case for a non quai/qi wallet where zone is not needed
         if (!zone) {
             if (this.coinType == 994 || this.coinType == 969) {
@@ -427,25 +306,10 @@ export class HDNodeWallet extends BaseWallet {
         if (!shard) {
             throw new Error("Invalid zone");
         }
-<<<<<<< HEAD
-        if (!this.path)
-            throw new Error("Missing Path");
-=======
->>>>>>> ee35178e (utxohdwallet)
         let newWallet;
         let addrIndex = 0;
         let zoneIndex = index + 1;
         do {
-<<<<<<< HEAD
-            // const pathComponents = this.path?.split('/');
-            // let newPath;
-            // if (pathComponents.length == 5) {
-            //     newPath = this.path + "/" + addrIndex.toString();
-            // } else if (pathComponents.length == 6)
-            //     newPath = this.path.replace(pathComponents[pathComponents.length - 1], addrIndex.toString());
-            //     else throw new Error(`Invalid or uncomplete path: ${newPath} ${this.path}`);
-=======
->>>>>>> ee35178e (utxohdwallet)
             newWallet = this.derivePath(addrIndex.toString());
             if (getShardForAddress(newWallet.address) == shard && ((newWallet.coinType == 969) == isUTXOAddress(newWallet.address)))
                 zoneIndex--;

@@ -193,13 +193,14 @@ export class UTXOHDWallet extends BaseWallet {
             const wallet = this.deriveAddress(accIndex, zone);
             const pubKey = wallet.address;
             const privKey = wallet.privateKey;
-            //check available utxos through node
-            //if ( have utxos)
+            /*check available utxos throught node JSONRPC call
+                if we have utxos at this address add it to currentUtxoAddresses
+            */
             currentUtxoAddresses.push({ pubKey, privKey });
-            //      empty = 0
-            //else 
+            //reset empty = 0
+            //else increment empty untill we have gap amount 
             empty++;
-            //increment addrIndex in bip44
+            //increment addrIndex in bip44 always
             accIndex++;
         }
         this.utxoAddresses = currentUtxoAddresses;

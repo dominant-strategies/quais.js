@@ -4,11 +4,7 @@ import type { Signature } from "../crypto/index.js";
 import type { AccessList, AccessListish, TransactionLike } from "../transaction/index.js";
 import type { ContractRunner } from "./contracts.js";
 import type { Network } from "./network.js";
-<<<<<<< HEAD
-import type { UTXOTransactionInput, UTXOTransactionOutput } from "../transaction/utxo.js";
-=======
 import type { UTXOEntry, UTXOTransactionOutput } from "../transaction/utxo.js";
->>>>>>> ee35178e (utxohdwallet)
 /**
  *  A **BlockTag** specifies a specific block.
  *
@@ -85,11 +81,7 @@ export interface TransactionRequest {
     /**
      *  The sender of the transaction.
      */
-<<<<<<< HEAD
     from: AddressLike;
-=======
-    from?: null | AddressLike;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  The nonce of the transaction, used to prevent replay attacks.
      */
@@ -143,11 +135,7 @@ export interface TransactionRequest {
      *  unsupported errors are silently squelched and ``"latest"`` is used.
      */
     blockTag?: BlockTag;
-<<<<<<< HEAD
-    inputs?: null | Array<UTXOTransactionInput>;
-=======
     inputs?: null | Array<UTXOEntry>;
->>>>>>> ee35178e (utxohdwallet)
     outputs?: null | Array<UTXOTransactionOutput>;
 }
 /**
@@ -166,11 +154,7 @@ export interface PreparedTransactionRequest {
     /**
      *  The sender of the transaction.
      */
-<<<<<<< HEAD
     from: AddressLike;
-=======
-    from?: AddressLike;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  The nonce of the transaction, used to prevent replay attacks.
      */
@@ -224,11 +208,7 @@ export interface PreparedTransactionRequest {
      *  unsupported errors are silently squelched and ``"latest"`` is used.
      */
     blockTag?: BlockTag;
-<<<<<<< HEAD
-    inputs?: null | Array<UTXOTransactionInput>;
-=======
     inputs?: null | Array<UTXOEntry>;
->>>>>>> ee35178e (utxohdwallet)
     outputs?: null | Array<UTXOTransactionOutput>;
 }
 /**
@@ -486,11 +466,7 @@ export declare class Log implements LogParams {
     /**
      *  Returns the block that this log occurred in.
      */
-<<<<<<< HEAD
     getBlock(shard: string): Promise<Block>;
-=======
-    getBlock(): Promise<Block>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Returns the transaction that this log occurred in.
      */
@@ -505,10 +481,7 @@ export declare class Log implements LogParams {
      */
     removedEvent(): OrphanFilter;
 }
-<<<<<<< HEAD
 export declare function shardFromHash(hash: string): string;
-=======
->>>>>>> ee35178e (utxohdwallet)
 /**
  *  A **TransactionReceipt** includes additional information about a
  *  transaction that is only available after it has been mined.
@@ -619,11 +592,7 @@ export declare class TransactionReceipt implements TransactionReceiptParams, Ite
     /**
      *  Resolves to the block this transaction occurred in.
      */
-<<<<<<< HEAD
     getBlock(shard: string): Promise<Block>;
-=======
-    getBlock(): Promise<Block>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Resolves to the transaction this transaction occurred in.
      */
@@ -771,11 +740,7 @@ export declare class TransactionResponse implements TransactionLike<string>, Tra
      *  support it, otherwise ``null``.
      */
     readonly accessList: null | AccessList;
-<<<<<<< HEAD
-    readonly inputs?: Array<UTXOTransactionInput>;
-=======
     readonly inputs?: Array<UTXOEntry>;
->>>>>>> ee35178e (utxohdwallet)
     readonly outputs?: Array<UTXOTransactionOutput>;
     /**
      *  @_ignore:
@@ -790,11 +755,7 @@ export declare class TransactionResponse implements TransactionLike<string>, Tra
      *
      *  This will return null if the transaction has not been included yet.
      */
-<<<<<<< HEAD
     getBlock(shard: string): Promise<null | Block>;
-=======
-    getBlock(): Promise<null | Block>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Resolves to this transaction being re-requested from the
      *  provider. This can be used if you have an unmined transaction
@@ -926,10 +887,7 @@ export interface Filter extends EventFilter {
      *  The end block for the filter (inclusive).
      */
     toBlock?: BlockTag;
-<<<<<<< HEAD
     shard: string;
-=======
->>>>>>> ee35178e (utxohdwallet)
 }
 /**
  *  A **FilterByBlockHash** allows searching a specific block for mathcing
@@ -940,10 +898,7 @@ export interface FilterByBlockHash extends EventFilter {
      *  The blockhash of the specific block for the filter.
      */
     blockHash?: string;
-<<<<<<< HEAD
     shard: string;
-=======
->>>>>>> ee35178e (utxohdwallet)
 }
 /**
  *  A **ProviderEvent** provides the types of events that can be subscribed
@@ -1007,7 +962,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
     /**
      *  Get the current block number.
      */
-<<<<<<< HEAD
     getBlockNumber(shard: string): Promise<number>;
     /**
      *  Get the connected [[Network]].
@@ -1017,17 +971,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  Get the best guess at the recommended [[FeeData]].
      */
     getFeeData(shard: string): Promise<FeeData>;
-=======
-    getBlockNumber(): Promise<number>;
-    /**
-     *  Get the connected [[Network]].
-     */
-    getNetwork(): Promise<Network>;
-    /**
-     *  Get the best guess at the recommended [[FeeData]].
-     */
-    getFeeData(): Promise<FeeData>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Get the account balance (in wei) of %%address%%. If %%blockTag%%
      *  is specified and the node supports archive access for that
@@ -1076,11 +1019,7 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  memory pool of any node for which the transaction meets the
      *  rebroadcast requirements.
      */
-<<<<<<< HEAD
     broadcastTransaction(shard: string, signedTx: string): Promise<TransactionResponse>;
-=======
-    broadcastTransaction(signedTx: string): Promise<TransactionResponse>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Resolves to the block for %%blockHashOrBlockTag%%.
      *
@@ -1089,11 +1028,7 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  [[Block]] object will not need to make remote calls for getting
      *  transactions.
      */
-<<<<<<< HEAD
     getBlock(shard: string, blockHashOrBlockTag: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block>;
-=======
-    getBlock(blockHashOrBlockTag: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Resolves to the transaction for %%hash%%.
      *
@@ -1144,10 +1079,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  This can be useful for waiting some number of blocks by using
      *  the ``currentBlockNumber + N``.
      */
-<<<<<<< HEAD
     waitForBlock(shard: string, blockTag?: BlockTag): Promise<Block>;
-=======
-    waitForBlock(blockTag?: BlockTag): Promise<Block>;
->>>>>>> ee35178e (utxohdwallet)
 }
 //# sourceMappingURL=provider.d.ts.map

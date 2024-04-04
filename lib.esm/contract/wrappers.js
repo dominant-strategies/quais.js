@@ -132,13 +132,8 @@ export class ContractUnknownEventPayload extends EventPayload {
     /**
      *  Resolves to the block the event occured in.
      */
-<<<<<<< HEAD
     async getBlock(shard) {
         return await this.log.getBlock(shard);
-=======
-    async getBlock() {
-        return await this.log.getBlock();
->>>>>>> ee35178e (utxohdwallet)
     }
     /**
      *  Resolves to the transaction the event occured in.

@@ -151,18 +151,12 @@ export type PerformActionFilter = {
     topics?: Array<null | string | Array<string>>;
     fromBlock?: BlockTag;
     toBlock?: BlockTag;
-<<<<<<< HEAD
     shard: string;
-=======
->>>>>>> ee35178e (utxohdwallet)
 } | {
     address?: string | Array<string>;
     topics?: Array<null | string | Array<string>>;
     blockHash?: string;
-<<<<<<< HEAD
     shard: string;
-=======
->>>>>>> ee35178e (utxohdwallet)
 };
 /**
  *  A normalized transactions used for [[PerformActionRequest]] objects.
@@ -175,11 +169,7 @@ export interface PerformActionTransaction extends PreparedTransactionRequest {
     /**
      *  The sender of the transaction.
      */
-<<<<<<< HEAD
     from: string;
-=======
-    from?: string;
->>>>>>> ee35178e (utxohdwallet)
 }
 /**
  *  The [[AbstractProvider]] methods will normalize all values and pass this
@@ -188,15 +178,11 @@ export interface PerformActionTransaction extends PreparedTransactionRequest {
 export type PerformActionRequest = {
     method: "broadcastTransaction";
     signedTransaction: string;
-<<<<<<< HEAD
     shard: string;
-=======
->>>>>>> ee35178e (utxohdwallet)
 } | {
     method: "call";
     transaction: PerformActionTransaction;
     blockTag: BlockTag;
-<<<<<<< HEAD
     shard?: string;
 } | {
     method: "chainId";
@@ -205,47 +191,28 @@ export type PerformActionRequest = {
     method: "estimateGas";
     transaction: PerformActionTransaction;
     shard?: string;
-=======
-} | {
-    method: "chainId";
-} | {
-    method: "estimateGas";
-    transaction: PerformActionTransaction;
->>>>>>> ee35178e (utxohdwallet)
 } | {
     method: "getBalance";
     address: string;
     blockTag: BlockTag;
-<<<<<<< HEAD
     shard: string;
-=======
->>>>>>> ee35178e (utxohdwallet)
 } | {
     method: "getBlock";
     blockTag: BlockTag;
     includeTransactions: boolean;
-<<<<<<< HEAD
     shard: string;
-=======
->>>>>>> ee35178e (utxohdwallet)
 } | {
     method: "getBlock";
     blockHash: string;
     includeTransactions: boolean;
-<<<<<<< HEAD
     shard: string;
 } | {
     method: "getBlockNumber";
     shard?: string;
-=======
-} | {
-    method: "getBlockNumber";
->>>>>>> ee35178e (utxohdwallet)
 } | {
     method: "getCode";
     address: string;
     blockTag: BlockTag;
-<<<<<<< HEAD
     shard: string;
 } | {
     method: "getGasPrice";
@@ -258,37 +225,20 @@ export type PerformActionRequest = {
 } | {
     method: "getMaxPriorityFeePerGas";
     shard?: string;
-=======
-} | {
-    method: "getGasPrice";
-    txType: boolean;
-} | {
-    method: "getLogs";
-    filter: PerformActionFilter;
-} | {
-    method: "getMaxPriorityFeePerGas";
->>>>>>> ee35178e (utxohdwallet)
 } | {
     method: "getStorage";
     address: string;
     position: bigint;
     blockTag: BlockTag;
-<<<<<<< HEAD
     shard: string;
 } | {
     method: "getTransaction";
     hash: string;
     shard: string;
-=======
-} | {
-    method: "getTransaction";
-    hash: string;
->>>>>>> ee35178e (utxohdwallet)
 } | {
     method: "getTransactionCount";
     address: string;
     blockTag: BlockTag;
-<<<<<<< HEAD
     shard: string;
 } | {
     method: "getTransactionReceipt";
@@ -304,34 +254,16 @@ export type PerformActionRequest = {
 } | {
     method: "getProtocolTrieExpansionCount";
     shard: string;
-=======
-} | {
-    method: "getTransactionReceipt";
-    hash: string;
-} | {
-    method: "getTransactionResult";
-    hash: string;
-} | {
-    method: "getRunningLocations";
-} | {
-    method: "getProtocolTrieExpansionCount";
->>>>>>> ee35178e (utxohdwallet)
 } | {
     method: "getQiRateAtBlock";
     blockTag: BlockTag;
     amt: number;
-<<<<<<< HEAD
     shard: string;
-=======
->>>>>>> ee35178e (utxohdwallet)
 } | {
     method: "getQuaiRateAtBlock";
     blockTag: BlockTag;
     amt: number;
-<<<<<<< HEAD
     shard: string;
-=======
->>>>>>> ee35178e (utxohdwallet)
 };
 /**
  *  Options for configuring some internal aspects of an [[AbstractProvider]].
@@ -355,17 +287,13 @@ export type AbstractProviderOptions = {
  */
 export declare class AbstractProvider implements Provider {
     #private;
-<<<<<<< HEAD
     _urlMap: Map<string, string>;
-=======
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Create a new **AbstractProvider** connected to %%network%%, or
      *  use the various network detection capabilities to discover the
      *  [[Network]] if necessary.
      */
     constructor(_network?: "any" | Networkish, options?: AbstractProviderOptions);
-<<<<<<< HEAD
     initUrlMap(urls: string[] | FetchRequest): Promise<void>;
     shardBytes(shard: string): string;
     get connect(): FetchRequest[];
@@ -375,12 +303,6 @@ export declare class AbstractProvider implements Provider {
     getQuaiRateAtBlock(shard: string, blockTag: BlockTag, amt?: number): Promise<bigint>;
     getLatestQiRate(shard: string, amt?: number): Promise<bigint>;
     getQiRateAtBlock(shard: string, blockTag: BlockTag, amt?: number): Promise<bigint>;
-=======
-    getLatestQuaiRate(amt?: number): Promise<bigint>;
-    getQuaiRateAtBlock(blockTag: BlockTag, amt?: number): Promise<bigint>;
-    getLatestQiRate(amt?: number): Promise<bigint>;
-    getQiRateAtBlock(blockTag: BlockTag, amt?: number): Promise<bigint>;
->>>>>>> ee35178e (utxohdwallet)
     get pollingInterval(): number;
     /**
      *  Returns ``this``, to allow an **AbstractProvider** to implement
@@ -439,11 +361,7 @@ export declare class AbstractProvider implements Provider {
      *
      *  Sub-classes **must** override this.
      */
-<<<<<<< HEAD
     _detectNetwork(shard?: string): Promise<Network>;
-=======
-    _detectNetwork(): Promise<Network>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Sub-classes should use this to perform all built-in operations. All
      *  methods sanitizes and normalizes the values passed into this.
@@ -451,11 +369,7 @@ export declare class AbstractProvider implements Provider {
      *  Sub-classes **must** override this.
      */
     _perform<T = any>(req: PerformActionRequest): Promise<T>;
-<<<<<<< HEAD
     getBlockNumber(shard?: string): Promise<number>;
-=======
-    getBlockNumber(): Promise<number>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Returns or resolves to the address for %%address%%, resolving ENS
      *  names and [[Addressable]] objects and returning if already an
@@ -466,11 +380,7 @@ export declare class AbstractProvider implements Provider {
      *  Returns or resolves to a valid block tag for %%blockTag%%, resolving
      *  negative values and returning if already a valid block tag.
      */
-<<<<<<< HEAD
     _getBlockTag(shard?: string, blockTag?: BlockTag): string | Promise<string>;
-=======
-    _getBlockTag(blockTag?: BlockTag): string | Promise<string>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Returns or resolves to a filter for %%filter%%, resolving any ENS
      *  names or [[Addressable]] object and returning if already a valid
@@ -483,30 +393,18 @@ export declare class AbstractProvider implements Provider {
      *  transaction.
      */
     _getTransactionRequest(_request: TransactionRequest): PerformActionTransaction | Promise<PerformActionTransaction>;
-<<<<<<< HEAD
     getNetwork(shard?: string): Promise<Network>;
     getRunningLocations(shard?: string): Promise<number[][]>;
     getProtocolTrieExpansionCount(shard: string): Promise<number>;
     getFeeData(shard?: string, txType?: boolean): Promise<FeeData>;
-=======
-    getNetwork(): Promise<Network>;
-    getRunningLocations(): Promise<number[][]>;
-    getProtocolTrieExpansionCount(): Promise<number>;
-    getFeeData(txType?: boolean): Promise<FeeData>;
->>>>>>> ee35178e (utxohdwallet)
     estimateGas(_tx: TransactionRequest): Promise<bigint>;
     call(_tx: TransactionRequest): Promise<string>;
     getBalance(address: AddressLike, blockTag?: BlockTag): Promise<bigint>;
     getTransactionCount(address: AddressLike, blockTag?: BlockTag): Promise<number>;
     getCode(address: AddressLike, blockTag?: BlockTag): Promise<string>;
     getStorage(address: AddressLike, _position: BigNumberish, blockTag?: BlockTag): Promise<string>;
-<<<<<<< HEAD
     broadcastTransaction(shard: string, signedTx: string): Promise<TransactionResponse>;
     getBlock(shard: string, block: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block>;
-=======
-    broadcastTransaction(signedTx: string): Promise<TransactionResponse>;
-    getBlock(block: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block>;
->>>>>>> ee35178e (utxohdwallet)
     getTransaction(hash: string): Promise<null | TransactionResponse>;
     getTransactionReceipt(hash: string): Promise<null | TransactionReceipt>;
     getTransactionResult(hash: string): Promise<null | string>;
@@ -517,11 +415,7 @@ export declare class AbstractProvider implements Provider {
     resolveName(name: string): Promise<null | string>;
     lookupAddress(address: string): Promise<null | string>;
     waitForTransaction(hash: string, _confirms?: null | number, timeout?: null | number): Promise<null | TransactionReceipt>;
-<<<<<<< HEAD
     waitForBlock(shard: string, blockTag?: BlockTag): Promise<Block>;
-=======
-    waitForBlock(blockTag?: BlockTag): Promise<Block>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Clear a timer created using the [[_setTimeout]] method.
      */

@@ -213,11 +213,7 @@ describe("Test Provider Block operations", function () {
         };
     });
     it('should fetch block by number', async function () {
-<<<<<<< HEAD
         let responseBlock = await providerC1.getBlock('0,0', '0xA');
-=======
-        let responseBlock = await providerC1.getBlock('0xA');
->>>>>>> ee35178e (utxohdwallet)
         assert.ok(responseBlock != null, "block != null");
         let { provider, ...formatBlock } = {
             ...responseBlock,
@@ -228,11 +224,7 @@ describe("Test Provider Block operations", function () {
     });
     it('should fetch block by hash', async function () {
         assert.ok(block.hash != null, 'block.hash != null');
-<<<<<<< HEAD
         let responseBlock = await providerC1.getBlock('0,0', block.hash);
-=======
-        let responseBlock = await providerC1.getBlock(block.hash);
->>>>>>> ee35178e (utxohdwallet)
         assert.ok(responseBlock != null, "block != null");
         let { provider, ...formatBlock } = {
             ...responseBlock,

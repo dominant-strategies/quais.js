@@ -7,11 +7,7 @@
  */
 import { resolveAddress } from "../address/index.js";
 import { Transaction } from "../transaction/index.js";
-<<<<<<< HEAD
-import { defineProperties, getBigInt, resolveProperties, assert, assertArgument } from "../utils/index.js";
-=======
 import { defineProperties, getBigInt, resolveProperties, assert, assertArgument, isUTXOAddress } from "../utils/index.js";
->>>>>>> ee35178e (utxohdwallet)
 import { copyRequest } from "./provider.js";
 import { getTxType } from "../utils/index.js";
 function checkProvider(signer, operation) {
@@ -57,7 +53,6 @@ export class AbstractSigner {
     constructor(provider) {
         defineProperties(this, { provider: (provider || null) });
     }
-<<<<<<< HEAD
     _getAddress(address) {
         return resolveAddress(address, this);
     }
@@ -65,8 +60,6 @@ export class AbstractSigner {
         let address = this._getAddress(_address);
         return (await address).slice(0, 4);
     }
-=======
->>>>>>> ee35178e (utxohdwallet)
     async getNonce(blockTag) {
         return checkProvider(this, "getTransactionCount").getTransactionCount(await this.getAddress(), blockTag);
     }
@@ -77,13 +70,8 @@ export class AbstractSigner {
     // async populateQiTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
     // }
     async populateTransaction(tx) {
-<<<<<<< HEAD
-        console.log("populateTransaction");
         const provider = checkProvider(this, "populateTransaction");
         const shard = await this.shardFromAddress(tx.from);
-=======
-        const provider = checkProvider(this, "populateTransaction");
->>>>>>> ee35178e (utxohdwallet)
         const pop = await populate(this, tx);
         if (pop.type == null) {
             pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
@@ -106,21 +94,13 @@ export class AbstractSigner {
         const network = await (this.provider).getNetwork();
         if (pop.chainId != null) {
             const chainId = getBigInt(pop.chainId);
-<<<<<<< HEAD
             assertArgument(chainId === network.chainId, "transaction chainId mismatch", "tx.chainId", shard);
-=======
-            assertArgument(chainId === network.chainId, "transaction chainId mismatch", "tx.chainId", tx.chainId);
->>>>>>> ee35178e (utxohdwallet)
         }
         else {
             pop.chainId = network.chainId;
         }
         if (pop.maxFeePerGas == null || pop.maxPriorityFeePerGas == null) {
-<<<<<<< HEAD
             const feeData = await provider.getFeeData(shard);
-=======
-            const feeData = await provider.getFeeData();
->>>>>>> ee35178e (utxohdwallet)
             if (pop.maxFeePerGas == null) {
                 pop.maxFeePerGas = feeData.maxFeePerGas;
             }
@@ -132,19 +112,17 @@ export class AbstractSigner {
         // the end for better batching
         return await resolveProperties(pop);
     }
-<<<<<<< HEAD
-=======
     async populateUTXOTransaction(tx) {
         const pop = {
             inputsUTXO: tx.inputs,
             outputsUTXO: tx.outputs,
             type: 2,
+            from: String(tx.from)
         };
         //@TOOD: Don't await all over the place; save them up for
         // the end for better batching
         return await resolveProperties(pop);
     }
->>>>>>> ee35178e (utxohdwallet)
     async estimateGas(tx) {
         return checkProvider(this, "estimateGas").estimateGas(await this.populateCall(tx));
     }
@@ -157,17 +135,9 @@ export class AbstractSigner {
     }
     async sendTransaction(tx) {
         const provider = checkProvider(this, "sendTransaction");
-<<<<<<< HEAD
-        const shard = await this.shardFromAddress(tx.from);
-        const pop = await this.populateTransaction(tx);
-        console.log("populated tx", pop);
-        //        delete pop.from;
-        const txObj = Transaction.from(pop);
-        const signedTx = await this.signTransaction(txObj);
-        console.log("signedTX: ", JSON.stringify(txObj));
-        return await provider.broadcastTransaction(shard, signedTx);
-=======
         let sender = await this.getAddress();
+        tx.from = sender;
+        const shard = await this.shardFromAddress(tx.from);
         let pop;
         if (isUTXOAddress(sender)) {
             pop = await this.populateUTXOTransaction(tx);
@@ -175,12 +145,11 @@ export class AbstractSigner {
         else {
             pop = await this.populateTransaction(tx);
         }
-        delete pop.from;
+        //        delete pop.from;
         const txObj = Transaction.from(pop);
         const signedTx = await this.signTransaction(txObj);
-        const result = await provider.broadcastTransaction(signedTx);
-        return result;
->>>>>>> ee35178e (utxohdwallet)
+        console.log("signedTX: ", JSON.stringify(txObj));
+        return await provider.broadcastTransaction(shard, signedTx);
     }
 }
 /**

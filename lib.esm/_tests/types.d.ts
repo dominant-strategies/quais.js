@@ -143,10 +143,7 @@ export interface TestCaseRlp {
 }
 export interface TestCaseTransactionTx {
     to?: string;
-<<<<<<< HEAD
     from: string;
-=======
->>>>>>> ee35178e (utxohdwallet)
     nonce?: number;
     gasLimit?: string;
     gasPrice?: string;

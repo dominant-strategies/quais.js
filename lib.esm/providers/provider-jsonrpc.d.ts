@@ -208,10 +208,7 @@ export declare class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
  */
 export declare abstract class JsonRpcApiProvider extends AbstractProvider {
     #private;
-<<<<<<< HEAD
     initPromise?: Promise<void>;
-=======
->>>>>>> ee35178e (utxohdwallet)
     constructor(network?: Networkish, options?: JsonRpcApiProviderOptions);
     /**
      *  Returns the value associated with the option %%key%%.
@@ -229,11 +226,7 @@ export declare abstract class JsonRpcApiProvider extends AbstractProvider {
      *
      *  Sub-classes **MUST** override this.
      */
-<<<<<<< HEAD
     abstract _send(payload: JsonRpcPayload | Array<JsonRpcPayload>, shard?: string): Promise<Array<JsonRpcResult | JsonRpcError>>;
-=======
-    abstract _send(payload: JsonRpcPayload | Array<JsonRpcPayload>): Promise<Array<JsonRpcResult | JsonRpcError>>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Resolves to the non-normalized value by performing %%req%%.
      *
@@ -308,11 +301,7 @@ export declare abstract class JsonRpcApiProvider extends AbstractProvider {
      *  override [[_send]] or force the options values in the
      *  call to the constructor to modify this method's behavior.
      */
-<<<<<<< HEAD
     send(method: string, params: Array<any> | Record<string, any>, shard?: string): Promise<any>;
-=======
-    send(method: string, params: Array<any> | Record<string, any>): Promise<any>;
->>>>>>> ee35178e (utxohdwallet)
     /**
      *  Resolves to the [[Signer]] account for  %%address%% managed by
      *  the client.
@@ -338,19 +327,10 @@ export declare abstract class JsonRpcApiProvider extends AbstractProvider {
  *  for updates.
  */
 export declare class JsonRpcProvider extends JsonRpcApiProvider {
-<<<<<<< HEAD
     constructor(urls?: string | string[] | FetchRequest, network?: Networkish, options?: JsonRpcApiProviderOptions);
     _getSubscriber(sub: Subscription): Subscriber;
     _getConnection(shard?: string): FetchRequest;
     send(method: string, params: Array<any> | Record<string, any>, shard?: string): Promise<any>;
     _send(payload: JsonRpcPayload | Array<JsonRpcPayload>, shard?: string): Promise<Array<JsonRpcResult>>;
-=======
-    #private;
-    constructor(url?: string | FetchRequest, network?: Networkish, options?: JsonRpcApiProviderOptions);
-    _getSubscriber(sub: Subscription): Subscriber;
-    _getConnection(): FetchRequest;
-    send(method: string, params: Array<any> | Record<string, any>): Promise<any>;
-    _send(payload: JsonRpcPayload | Array<JsonRpcPayload>): Promise<Array<JsonRpcResult>>;
->>>>>>> ee35178e (utxohdwallet)
 }
 //# sourceMappingURL=provider-jsonrpc.d.ts.map

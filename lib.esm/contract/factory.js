@@ -57,7 +57,6 @@ export class ContractFactory {
      *  into the constructor.
      */
     async getDeployTransaction(...args) {
-<<<<<<< HEAD
         let overrides;
         const fragment = this.interface.deploy;
         if (fragment.inputs.length + 1 === args.length) {
@@ -65,23 +64,13 @@ export class ContractFactory {
             const resolvedArgs = await resolveArgs(this.runner, fragment.inputs, args);
             const data = concat([this.bytecode, this.interface.encodeDeploy(resolvedArgs)]);
             return Object.assign({}, overrides, { data });
-=======
-        let overrides = {};
-        const fragment = this.interface.deploy;
-        if (fragment.inputs.length + 1 === args.length) {
-            overrides = await copyOverrides(args.pop());
->>>>>>> ee35178e (utxohdwallet)
         }
         if (fragment.inputs.length !== args.length) {
             throw new Error("incorrect number of arguments to constructor");
         }
         const resolvedArgs = await resolveArgs(this.runner, fragment.inputs, args);
         const data = concat([this.bytecode, this.interface.encodeDeploy(resolvedArgs)]);
-<<<<<<< HEAD
         return Object.assign({}, args.pop().from, { data });
-=======
-        return Object.assign({}, overrides, { data });
->>>>>>> ee35178e (utxohdwallet)
     }
     // getDeployTransaction3(...args: Array<any>): TransactionRequest {
     //     let tx: TransactionRequest = {};
