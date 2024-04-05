@@ -78,7 +78,7 @@ export function parseUnits(value: string, unit?: string | Numeric): bigint {
 /**
  *  Converts %%value%% into a //decimal string// using 18 decimal places.
  */
-export function formatEther(wei: BigNumberish): string {
+export function formatQuai(wei: BigNumberish): string {
     return formatUnits(wei, 18);
 }
 
@@ -90,10 +90,10 @@ export function formatQi(value: BigNumberish): string {
 }
 
 /**
- *  Converts the //decimal string// %%ether%% to a BigInt, using 18
+ *  Converts the //decimal string// %%quai%% to a BigInt, using 18
  *  decimal places.
  */
-export function parseEther(ether: string): bigint {
+export function parseQuai(ether: string): bigint {
     return parseUnits(ether, 18);
 }
 
@@ -103,3 +103,7 @@ export function parseEther(ether: string): bigint {
 export function parseQi(value: string): bigint {
     return parseUnits(value, 3);
 }
+
+// Aliases to maintain backwards compatibility. These will be removed in the future.
+export const formatEther = formatQuai;
+export const parseEther = parseQuai;
