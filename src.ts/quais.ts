@@ -1,5 +1,3 @@
-
-
 /////////////////////////////
 //
 
@@ -104,11 +102,11 @@ export {
     FixedNumber,
     getBigInt, getNumber, getUint, toBeArray, toBigInt, toBeHex, toNumber, toQuantity,
     fromTwos, toTwos, mask,
-    formatEther, parseEther, formatUnits, parseUnits,
+    formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits,
     toUtf8Bytes, toUtf8CodePoints, toUtf8String,
     Utf8ErrorFuncs,
     decodeRlp, encodeRlp,
-    uuidV4,getTxType,getShardForAddress, getAddressDetails, isUTXOAddress,
+    uuidV4, getTxType, getShardForAddress, getAddressDetails, isUTXOAddress,
 } from "./utils/index.js";
 
 export {
@@ -118,7 +116,7 @@ export {
 
 
     getAccountPath, getIndexedAccountPath,
-    isCrowdsaleJson, isKeystoreJson, 
+    isCrowdsaleJson, isKeystoreJson,
 
     decryptCrowdsaleJson, decryptKeystoreJsonSync, decryptKeystoreJson,
     encryptKeystoreJson, encryptKeystoreJsonSync,
