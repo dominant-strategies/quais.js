@@ -44,7 +44,7 @@ const names = [
  */
 export function formatUnits(value: BigNumberish, unit?: string | Numeric): string {
     let decimals = 18;
-    if (typeof(unit) === "string") {
+    if (typeof (unit) === "string") {
         const index = names.indexOf(unit);
         assertArgument(index >= 0, "invalid unit", "unit", unit);
         decimals = 3 * index;
@@ -61,10 +61,10 @@ export function formatUnits(value: BigNumberish, unit?: string | Numeric): strin
  *  or the name of a unit (e.g. ``"gwei"`` for 9 decimal places).
  */
 export function parseUnits(value: string, unit?: string | Numeric): bigint {
-    assertArgument(typeof(value) === "string", "value must be a string", "value", value);
+    assertArgument(typeof (value) === "string", "value must be a string", "value", value);
 
     let decimals = 18;
-    if (typeof(unit) === "string") {
+    if (typeof (unit) === "string") {
         const index = names.indexOf(unit);
         assertArgument(index >= 0, "invalid unit", "unit", unit);
         decimals = 3 * index;
@@ -83,9 +83,23 @@ export function formatEther(wei: BigNumberish): string {
 }
 
 /**
+ *  Converts %%value%% into a //decimal string// using 3 decimal places.
+ */
+export function formatQi(value: BigNumberish): string {
+    return formatUnits(value, 3);
+}
+
+/**
  *  Converts the //decimal string// %%ether%% to a BigInt, using 18
  *  decimal places.
  */
 export function parseEther(ether: string): bigint {
     return parseUnits(ether, 18);
+}
+
+/**
+ *  Converts %%value%% into a //decimal string// using 3 decimal places.
+ */
+export function parseQi(value: string): bigint {
+    return parseUnits(value, 3);
 }
