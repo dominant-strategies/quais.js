@@ -7,6 +7,6 @@ function _decode(object: any): any {
 }
 
 export function decodeProto(object: Uint8Array): string{
-    console.log('Test decode')
+    // console.log('Test decode')
     return _decode(object);
 }

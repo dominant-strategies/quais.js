@@ -198,7 +198,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         const txObj = Transaction.from(pop);
 
         const signedTx = await this.signTransaction(txObj);
-        console.log("signedTX: ", JSON.stringify(txObj))
+        // console.log("signedTX: ", JSON.stringify(txObj))
         return await provider.broadcastTransaction(shard, signedTx);
     }
 
