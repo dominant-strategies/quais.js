@@ -7,7 +7,7 @@ import {
 } from "../utils/index.js";
 
 import { accessListify } from "./accesslist.js";
-import { computeAddress } from "./address.js";
+import { computeAddress, recoverAddress } from "./address.js";
 
 import type { BigNumberish, BytesLike } from "../utils/index.js";
 import type { SignatureLike } from "../crypto/index.js";
@@ -143,6 +143,9 @@ function _parse(data: Uint8Array): TransactionLike {
     _parseSignature(tx, signatureFields);
 
     tx.hash = getTransactionHash(tx, data);
+
+    // Compute the sender address since it's not included in the transaction
+    tx.from = recoverAddress(tx.hash, tx.signature!);
 
     return tx;
 }
@@ -595,6 +598,7 @@ export class Transaction implements TransactionLike<string> {
         if (tx.from != null) {
 //             assertArgument(result.isSigned(), "unsigned transaction cannot define from", "tx", tx);
             assertArgument(result.from.toLowerCase() === (tx.from || "").toLowerCase(), "from mismatch", "tx", tx);
+            result.from = tx.from;
         }
         return result;
     }
