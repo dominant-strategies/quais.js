@@ -2,13 +2,14 @@ import { getAddress } from "../address/index";
 import { getBigInt } from "../utils/index";
 import type { BigNumberish } from "../utils/index";
 
-export type OutPoint = {
-    txhash: string;
-    index: number;
+export type Outpoint = {
+    Txhash: string;
+    Index: number;
+    Denomination: number;
 };
 
 export type UTXOTransactionInput = {
-    previousOutPoint: OutPoint;
+    previousOutPoint: Outpoint;
     pubKey: Uint8Array;
 };
 

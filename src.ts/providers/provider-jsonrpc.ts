@@ -44,25 +44,25 @@ type Timer = ReturnType<typeof setTimeout>;
 const Primitive = "bigint,boolean,function,number,string,symbol".split(/,/g);
 //const Methods = "getAddress,then".split(/,/g);
 function deepCopy<T = any>(value: T): T {
-    if (value == null || Primitive.indexOf(typeof(value)) >= 0) {
+    if (value == null || Primitive.indexOf(typeof (value)) >= 0) {
         return value;
     }
 
     // Keep any Addressable
-    if (typeof((<any>value).getAddress) === "function") {
+    if (typeof ((<any>value).getAddress) === "function") {
         return value;
     }
 
     if (Array.isArray(value)) { return <any>(value.map(deepCopy)); }
 
-    if (typeof(value) === "object") {
+    if (typeof (value) === "object") {
         return Object.keys(value).reduce((accum, key) => {
             accum[key] = (<any>value)[key];
             return accum;
-        }, <any>{ });
+        }, <any>{});
     }
 
-    throw new Error(`should not happen: ${ value } (${ typeof(value) })`);
+    throw new Error(`should not happen: ${value} (${typeof (value)})`);
 }
 
 function stall(duration: number): Promise<void> {
@@ -203,68 +203,68 @@ const defaultOptions = {
  *  Ethereum API specification.
  */
 export interface JsonRpcTransactionRequest {
-     /**
-      *  The sender address to use when signing.
-      */
-     from?: string;
+    /**
+     *  The sender address to use when signing.
+     */
+    from?: string;
 
-     /**
-      *  The target address.
-      */
-     to?: string;
+    /**
+     *  The target address.
+     */
+    to?: string;
 
-     /**
-      *  The transaction data.
-      */
-     data?: string;
+    /**
+     *  The transaction data.
+     */
+    data?: string;
 
-     /**
-      *  The chain ID the transaction is valid on.
-      */
-     chainId?: string;
+    /**
+     *  The chain ID the transaction is valid on.
+     */
+    chainId?: string;
 
-     /**
-      *  The [[link-eip-2718]] transaction type.
-      */
-     type?: string;
+    /**
+     *  The [[link-eip-2718]] transaction type.
+     */
+    type?: string;
 
-     /**
-      *  The maximum amount of gas to allow a transaction to consume.
-      *
-      *  In most other places in quais, this is called ``gasLimit`` which
-      *  differs from the JSON-RPC Ethereum API specification.
-      */
-     gas?: string;
+    /**
+     *  The maximum amount of gas to allow a transaction to consume.
+     *
+     *  In most other places in quais, this is called ``gasLimit`` which
+     *  differs from the JSON-RPC Ethereum API specification.
+     */
+    gas?: string;
 
-     /**
-      *  The gas price per wei for transactions prior to [[link-eip-1559]].
-      */
-     gasPrice?: string;
+    /**
+     *  The gas price per wei for transactions prior to [[link-eip-1559]].
+     */
+    gasPrice?: string;
 
-     /**
-      *  The maximum fee per gas for [[link-eip-1559]] transactions.
-      */
-     maxFeePerGas?: string;
+    /**
+     *  The maximum fee per gas for [[link-eip-1559]] transactions.
+     */
+    maxFeePerGas?: string;
 
-     /**
-      *  The maximum priority fee per gas for [[link-eip-1559]] transactions.
-      */
-     maxPriorityFeePerGas?: string;
+    /**
+     *  The maximum priority fee per gas for [[link-eip-1559]] transactions.
+     */
+    maxPriorityFeePerGas?: string;
 
-     /**
-      *  The nonce for the transaction.
-      */
-     nonce?: string;
+    /**
+     *  The nonce for the transaction.
+     */
+    nonce?: string;
 
-     /**
-      *  The transaction value (in wei).
-      */
-     value?: string;
+    /**
+     *  The transaction value (in wei).
+     */
+    value?: string;
 
-     /**
-      *  The transaction access list.
-      */
-     accessList?: Array<{ address: string, storageKeys: Array<string> }>;
+    /**
+     *  The transaction access list.
+     */
+    accessList?: Array<{ address: string, storageKeys: Array<string> }>;
 }
 
 // @TODO: Unchecked Signers
@@ -318,7 +318,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
         // we look it up for them.
         if (tx.gasLimit == null) {
             promises.push((async () => {
-                tx.gasLimit = await this.provider.estimateGas({ ...tx, from: this.address});
+                tx.gasLimit = await this.provider.estimateGas({ ...tx, from: this.address });
             })());
         }
 
@@ -334,7 +334,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
         if (promises.length) { await Promise.all(promises); }
         const hexTx = this.provider.getRpcTransaction(tx);
 
-        return this.provider.send("quai_sendTransaction", [ hexTx ]);
+        return this.provider.send("quai_sendTransaction", [hexTx]);
     }
 
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
@@ -348,7 +348,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
         // for a response, and we need the actual transaction, so we poll
         // for it; it should show up very quickly
         return await (new Promise((resolve, reject) => {
-            const timeouts = [ 1000, 100 ];
+            const timeouts = [1000, 100];
             let invalids = 0;
 
             const checkTx = async () => {
@@ -371,7 +371,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
                     if (isError(error, "CANCELLED") || isError(error, "BAD_DATA") ||
                         isError(error, "NETWORK_ERROR" || isError(error, "UNSUPPORTED_OPERATION"))) {
 
-                        if (error.info == null) { error.info = { }; }
+                        if (error.info == null) { error.info = {}; }
                         error.info.sendTransactionHash = hash;
 
                         reject(error);
@@ -381,7 +381,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
                     // Stop-gap for misbehaving backends; see #4513
                     if (isError(error, "INVALID_ARGUMENT")) {
                         invalids++;
-                        if (error.info == null) { error.info = { }; }
+                        if (error.info == null) { error.info = {}; }
                         error.info.sendTransactionHash = hash;
                         if (invalids > 10) {
                             reject(error);
@@ -415,14 +415,14 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
         }
 
         const hexTx = this.provider.getRpcTransaction(tx);
-        return await this.provider.send("quai_signTransaction", [ hexTx ]);
+        return await this.provider.send("quai_signTransaction", [hexTx]);
     }
 
 
     async signMessage(_message: string | Uint8Array): Promise<string> {
-        const message = ((typeof(_message) === "string") ? toUtf8Bytes(_message): _message);
+        const message = ((typeof (_message) === "string") ? toUtf8Bytes(_message) : _message);
         return await this.provider.send("personal_sign", [
-            hexlify(message), this.address.toLowerCase() ]);
+            hexlify(message), this.address.toLowerCase()]);
     }
 
     async signTypedData(domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, _value: Record<string, any>): Promise<string> {
@@ -436,14 +436,14 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 
     async unlock(password: string): Promise<boolean> {
         return this.provider.send("personal_unlockAccount", [
-            this.address.toLowerCase(), password, null ]);
+            this.address.toLowerCase(), password, null]);
     }
 
     // https://github.com/ethereum/wiki/wiki/JSON-RPC#quai_sign
     async _legacySignMessage(_message: string | Uint8Array): Promise<string> {
-        const message = ((typeof(_message) === "string") ? toUtf8Bytes(_message): _message);
+        const message = ((typeof (_message) === "string") ? toUtf8Bytes(_message) : _message);
         return await this.provider.send("quai_sign", [
-            this.address.toLowerCase(), hexlify(message) ]);
+            this.address.toLowerCase(), hexlify(message)]);
     }
 }
 
@@ -487,18 +487,18 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         if (this.#drainTimer) { return; }
 
         // If we aren't using batching, no harm in sending it immediately
-        const stallTime = (this._getOption("batchMaxCount") === 1) ? 0: this._getOption("batchStallTime");
+        const stallTime = (this._getOption("batchMaxCount") === 1) ? 0 : this._getOption("batchStallTime");
 
         this.#drainTimer = setTimeout(() => {
             this.#drainTimer = null;
 
             const payloads = this.#payloads;
-            this.#payloads = [ ];
+            this.#payloads = [];
 
             while (payloads.length) {
 
                 // Create payload batches that satisfy our batch constraints
-                const batch = [ <Payload>(payloads.shift()) ];
+                const batch = [<Payload>(payloads.shift())];
                 while (payloads.length) {
                     if (batch.length === this.#options.batchMaxCount) { break; }
                     batch.push(<Payload>(payloads.shift()));
@@ -583,9 +583,9 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         super(network, options);
 
         this.#nextId = 1;
-        this.#options = Object.assign({ }, defaultOptions, options || { });
+        this.#options = Object.assign({}, defaultOptions, options || {});
 
-        this.#payloads = [ ];
+        this.#payloads = [];
         this.#drainTimer = null;
 
         this.#network = null;
@@ -600,7 +600,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         }
 
         const staticNetwork = this._getOption("staticNetwork");
-        if (typeof(staticNetwork) === "boolean") {
+        if (typeof (staticNetwork) === "boolean") {
             assertArgument(!staticNetwork || network !== "any", "staticNetwork cannot be used on special network 'any'", "options", options);
             if (staticNetwork && network != null) {
                 this.#network = Network.from(network);
@@ -628,7 +628,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
      *  is detected, and if it has changed, the call will reject.
      */
     get _network(): Network {
-        assert (this.#network, "network is not available yet", "NETWORK_ERROR");
+        assert(this.#network, "network is not available yet", "NETWORK_ERROR");
         return this.#network;
     }
 
@@ -658,8 +658,8 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
                     const feeData = await this.getFeeData(req.shard);
                     if (feeData.maxFeePerGas == null && feeData.maxPriorityFeePerGas == null) {
                         // Network doesn't know about EIP-1559 (and hence type)
-                        req = Object.assign({ }, req, {
-                            transaction: Object.assign({ }, tx, { type: undefined })
+                        req = Object.assign({}, req, {
+                            transaction: Object.assign({}, tx, { type: undefined })
                         });
                     }
                 }
@@ -701,7 +701,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         if (this.ready) {
             this.#pendingDetectNetwork = (async () => {
                 try {
-                    const result = Network.from(getBigInt(await this.send("quai_chainId", [ ])));
+                    const result = Network.from(getBigInt(await this.send("quai_chainId", [])));
                     this.#pendingDetectNetwork = null;
                     return result;
                 } catch (error) {
@@ -715,7 +715,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         // We are not ready yet; use the primitive _send
         this.#pendingDetectNetwork = (async () => {
             const payload: JsonRpcPayload = {
-                id: this.#nextId++, method: "quai_chainId", params: [ ], jsonrpc: "2.0"
+                id: this.#nextId++, method: "quai_chainId", params: [], jsonrpc: "2.0"
             };
 
             this.emit("debug", { action: "sendRpcPayload", payload });
@@ -827,7 +827,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             if ((<any>tx)[key] == null) { return; }
             let dstKey = key;
             if (key === "gasLimit") { dstKey = "gas"; }
-            (<any>result)[dstKey] = toQuantity(getBigInt((<any>tx)[key], `tx.${ key }`));
+            (<any>result)[dstKey] = toQuantity(getBigInt((<any>tx)[key], `tx.${key}`));
         });
 
         // Make sure addresses and data are lowercase
@@ -851,36 +851,41 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     getRpcRequest(req: PerformActionRequest): null | { method: string, args: Array<any> } {
         switch (req.method) {
             case "chainId":
-                return { method: "quai_chainId", args: [ ] };
+                return { method: "quai_chainId", args: [] };
 
             case "getBlockNumber":
-                return { method: "quai_blockNumber", args: [ ] };
+                return { method: "quai_blockNumber", args: [] };
 
             case "getGasPrice":
                 return {
                     method: "quai_baseFee",
-                    args: [ req.txType ]
+                    args: [req.txType]
                 };
 
             case "getMaxPriorityFeePerGas":
-                return { method: "quai_maxPriorityFeePerGas", args: []};
-                    
+                return { method: "quai_maxPriorityFeePerGas", args: [] };
+
             case "getBalance":
                 return {
                     method: "quai_getBalance",
-                    args: [ getLowerCase(req.address), req.blockTag ]
+                    args: [getLowerCase(req.address), req.blockTag]
                 };
 
+            case "getOutpointsByAddress":
+                return {
+                    method: "quai_getOutpointsByAddress",
+                    args: [getLowerCase(req.address)]
+                };
             case "getTransactionCount":
                 return {
                     method: "quai_getTransactionCount",
-                    args: [ getLowerCase(req.address), req.blockTag ]
+                    args: [getLowerCase(req.address), req.blockTag]
                 };
 
             case "getCode":
                 return {
                     method: "quai_getCode",
-                    args: [ getLowerCase(req.address), req.blockTag ]
+                    args: [getLowerCase(req.address), req.blockTag]
                 };
 
             case "getStorage":
@@ -896,19 +901,19 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             case "broadcastTransaction":
                 return {
                     method: "quai_sendRawTransaction",
-                    args: [ req.signedTransaction ]
+                    args: [req.signedTransaction]
                 };
 
             case "getBlock":
                 if ("blockTag" in req) {
                     return {
                         method: "quai_getBlockByNumber",
-                        args: [ req.blockTag, !!req.includeTransactions ]
+                        args: [req.blockTag, !!req.includeTransactions]
                     };
                 } else if ("blockHash" in req) {
                     return {
                         method: "quai_getBlockByHash",
-                        args: [ req.blockHash, !!req.includeTransactions ]
+                        args: [req.blockHash, !!req.includeTransactions]
                     };
                 }
                 break;
@@ -916,25 +921,25 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             case "getTransaction":
                 return {
                     method: "quai_getTransactionByHash",
-                    args: [ req.hash ]
+                    args: [req.hash]
                 };
 
             case "getTransactionReceipt":
                 return {
                     method: "quai_getTransactionReceipt",
-                    args: [ req.hash ]
+                    args: [req.hash]
                 };
 
             case "call":
                 return {
                     method: "quai_call",
-                    args: [ this.getRpcTransaction(req.transaction), req.blockTag ]
+                    args: [this.getRpcTransaction(req.transaction), req.blockTag]
                 };
 
             case "estimateGas": {
                 return {
                     method: "quai_estimateGas",
-                    args: [ this.getRpcTransaction(req.transaction) ]
+                    args: [this.getRpcTransaction(req.transaction)]
                 };
             }
 
@@ -962,14 +967,14 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             case "getQiRateAtBlock": {
                 return {
                     method: "quai_qiRateAtBlock",
-                    args: [ req.blockTag, req.amt ]
+                    args: [req.blockTag, req.amt]
                 }
             }
 
             case "getQuaiRateAtBlock": {
                 return {
                     method: "quai_quaiRateAtBlock",
-                    args: [ req.blockTag, req.amt ]
+                    args: [req.blockTag, req.amt]
                 }
             }
 
@@ -981,7 +986,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
                         req.filter.address = getLowerCase(req.filter.address);
                     }
                 }
-                return { method: "quai_getLogs", args: [ req.filter ] };
+                return { method: "quai_getLogs", args: [req.filter] };
         }
 
         return null;
@@ -1011,9 +1016,9 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             const result = spelunkData(error);
 
             const e = AbiCoder.getBuiltinCallException(
-                (method === "quai_call") ? "call": "estimateGas",
+                (method === "quai_call") ? "call" : "estimateGas",
                 ((<any>payload).params[0]),
-                (result ? result.data: null)
+                (result ? result.data : null)
             );
             e.info = { error, payload };
             return e;
@@ -1024,7 +1029,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
         const message = JSON.stringify(spelunkMessage(error));
 
-        if (typeof(error.message) === "string" && error.message.match(/user denied|quais-user-denied/i)) {
+        if (typeof (error.message) === "string" && error.message.match(/user denied|quais-user-denied/i)) {
             const actionMap: Record<string, "requestAccess" | "sendTransaction" | "signMessage" | "signTransaction" | "signTypedData"> = {
                 quai_sign: "signMessage",
                 personal_sign: "signMessage",
@@ -1036,7 +1041,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             };
 
             return makeError(`user rejected action`, "ACTION_REJECTED", {
-                action: (actionMap[method] || "unknown") ,
+                action: (actionMap[method] || "unknown"),
                 reason: "rejected",
                 info: { payload, error }
             });
@@ -1131,16 +1136,16 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
      *
      *  Throws if the account doesn't exist.
      */
-    
+
     // Works only if using a local node or browser wallet for this, otherwise cannot get accounts
-    
+
     async getSigner(address?: number | string): Promise<JsonRpcSigner> {
         if (address == null) { address = 0; }
 
-        const accountsPromise = this.send("quai_accounts", [ ]);
+        const accountsPromise = this.send("quai_accounts", []);
 
         // Account index
-        if (typeof(address) === "number") {
+        if (typeof (address) === "number") {
             const accounts = <Array<string>>(await accountsPromise);
             if (address >= accounts.length) { throw new Error("no such account"); }
             return new JsonRpcSigner(this, accounts[address]);
@@ -1163,7 +1168,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     }
 
     async listAccounts(): Promise<Array<JsonRpcSigner>> {
-        const accounts: Array<string> = await this.send("quai_accounts", [ ]);
+        const accounts: Array<string> = await this.send("quai_accounts", []);
         return accounts.map((a) => new JsonRpcSigner(this, a));
     }
 
@@ -1180,7 +1185,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             reject(makeError("provider destroyed; cancelled request", "UNSUPPORTED_OPERATION", { operation: payload.method }));
         }
 
-        this.#payloads = [ ];
+        this.#payloads = [];
 
         // Parent clean-up
         super.destroy();
@@ -1204,7 +1209,7 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
 
         if (Array.isArray(urls)) {
             this.initPromise = this.initUrlMap(urls);
-        } else if(typeof urls === "string") {
+        } else if (typeof urls === "string") {
             this.initPromise = this.initUrlMap([urls]);
         } else {
             this.initPromise = this.initUrlMap(urls.clone());
@@ -1217,7 +1222,7 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
     }
 
     _getConnection(shard?: string): FetchRequest {
-        const connection =  this.connect[this.connect.length - 1]!.clone();
+        const connection = this.connect[this.connect.length - 1]!.clone();
         if (typeof shard === "string") {
             const shardBytes = this.shardBytes(shard);
             connection.url = this._urlMap.get(shardBytes) ?? connection.url;
@@ -1229,7 +1234,7 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         // All requests are over HTTP, so we can just start handling requests
         // We do this here rather than the constructor so that we don't send any
         // requests to the network (i.e. quai_chainId) until we absolutely have to.
-//        await this.initPromise;
+        //        await this.initPromise;
         await this._start();
 
         return await super.send(method, params, shard);
@@ -1244,7 +1249,7 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         response.assertOk();
 
         let resp = response.bodyJson;
-        if (!Array.isArray(resp)) { resp = [ resp ]; }
+        if (!Array.isArray(resp)) { resp = [resp]; }
 
         return resp;
     }
@@ -1254,12 +1259,12 @@ function spelunkData(value: any): null | { message: string, data: string } {
     if (value == null) { return null; }
 
     // These *are* the droids we're looking for.
-    if (typeof(value.message) === "string" && value.message.match(/revert/i) && isHexString(value.data)) {
+    if (typeof (value.message) === "string" && value.message.match(/revert/i) && isHexString(value.data)) {
         return { message: value.message, data: value.data };
     }
 
     // Spelunk further...
-    if (typeof(value) === "object") {
+    if (typeof (value) === "object") {
         for (const key in value) {
             const result = spelunkData(value[key]);
             if (result) { return result; }
@@ -1268,7 +1273,7 @@ function spelunkData(value: any): null | { message: string, data: string } {
     }
 
     // Might be a JSON string we can further descend...
-    if (typeof(value) === "string") {
+    if (typeof (value) === "string") {
         try {
             return spelunkData(JSON.parse(value));
         } catch (error) { }
@@ -1281,19 +1286,19 @@ function _spelunkMessage(value: any, result: Array<string>): void {
     if (value == null) { return; }
 
     // These *are* the droids we're looking for.
-    if (typeof(value.message) === "string") {
+    if (typeof (value.message) === "string") {
         result.push(value.message);
     }
 
     // Spelunk further...
-    if (typeof(value) === "object") {
+    if (typeof (value) === "object") {
         for (const key in value) {
             _spelunkMessage(value[key], result);
         }
     }
 
     // Might be a JSON string we can further descend...
-    if (typeof(value) === "string") {
+    if (typeof (value) === "string") {
         try {
             return _spelunkMessage(JSON.parse(value), result);
         } catch (error) { }
@@ -1301,7 +1306,7 @@ function _spelunkMessage(value: any, result: Array<string>): void {
 }
 
 function spelunkMessage(value: any): Array<string> {
-    const result: Array<string> = [ ];
+    const result: Array<string> = [];
     _spelunkMessage(value, result);
     return result;
 }
