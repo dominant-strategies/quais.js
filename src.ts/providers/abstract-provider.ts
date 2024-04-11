@@ -17,6 +17,7 @@
 import { resolveAddress } from "../address/index.js";
 import { ShardData } from "../constants/index.js";
 import { Transaction } from "../transaction/index.js";
+import { Outpoint } from "../transaction/utxo.js";
 import {
     hexlify, isHexString,
     getBigInt, getNumber,
@@ -57,23 +58,23 @@ type Timer = ReturnType<typeof setTimeout>;
 const BN_2 = BigInt(2);
 
 function isPromise<T = any>(value: any): value is Promise<T> {
-    return (value && typeof(value.then) === "function");
+    return (value && typeof (value.then) === "function");
 }
 
 function getTag(prefix: string, value: any): string {
     return prefix + ":" + JSON.stringify(value, (k, v) => {
         if (v == null) { return "null"; }
-        if (typeof(v) === "bigint") { return `bigint:${ v.toString() }`}
-        if (typeof(v) === "string") { return v.toLowerCase(); }
+        if (typeof (v) === "bigint") { return `bigint:${v.toString()}` }
+        if (typeof (v) === "string") { return v.toLowerCase(); }
 
         // Sort object keys
-        if (typeof(v) === "object" && !Array.isArray(v)) {
+        if (typeof (v) === "object" && !Array.isArray(v)) {
             const keys = Object.keys(v);
             keys.sort();
             return keys.reduce((accum, key) => {
                 accum[key] = v[key];
                 return accum;
-            }, <any>{ });
+            }, <any>{});
         }
 
         return v;
@@ -224,7 +225,7 @@ async function getSubscription(_event: ProviderEvent, provider: AbstractProvider
     // Normalize topic array info an EventFilter
     if (Array.isArray(_event)) { _event = { topics: _event }; }
 
-    if (typeof(_event) === "string") {
+    if (typeof (_event) === "string") {
         switch (_event) {
             case "block":
             case "debug":
@@ -263,8 +264,8 @@ async function getSubscription(_event: ProviderEvent, provider: AbstractProvider
         };
 
         if (event.address) {
-            const addresses: Array<string> = [ ];
-            const promises: Array<Promise<void>> = [ ];
+            const addresses: Array<string> = [];
+            const promises: Array<Promise<void>> = [];
 
             const addAddress = (addr: AddressLike) => {
                 if (isHexString(addr)) {
@@ -362,6 +363,9 @@ export type PerformActionRequest = {
     method: "getBalance",
     address: string, blockTag: BlockTag, shard: string
 } | {
+    method: "getOutpointsByAddress",
+    address: string, shard: string
+} | {
     method: "getBlock",
     blockTag: BlockTag, includeTransactions: boolean,
     shard: string
@@ -427,7 +431,7 @@ export type PerformActionRequest = {
 
 
 type _PerformAccountRequest = {
-    method: "getBalance" | "getTransactionCount" | "getCode"
+    method: "getBalance" | "getTransactionCount" | "getCode" | "getOutpointsByAddress",
 } | {
     method: "getStorage", position: bigint
 }
@@ -500,7 +504,7 @@ export class AbstractProvider implements Provider {
      *  [[Network]] if necessary.
      */
     constructor(_network?: "any" | Networkish, options?: AbstractProviderOptions) {
-        this.#options = Object.assign({ }, defaultOptions, options || { });
+        this.#options = Object.assign({}, defaultOptions, options || {});
 
         if (_network === "any") {
             this.#anyNetwork = true;
@@ -568,7 +572,7 @@ export class AbstractProvider implements Provider {
         )?.byte || '';
     }
 
-    get connect(): FetchRequest[]  { return this.#connect; }
+    get connect(): FetchRequest[] { return this.#connect; }
 
     async shardFromAddress(_address: AddressLike): Promise<string> {
         let address: string | Promise<string> = this._getAddress(_address);
@@ -643,9 +647,9 @@ export class AbstractProvider implements Provider {
      */
     attachPlugin(plugin: AbstractProviderPlugin): this {
         if (this.#plugins.get(plugin.name)) {
-            throw new Error(`cannot replace existing plugin: ${ plugin.name } `);
+            throw new Error(`cannot replace existing plugin: ${plugin.name} `);
         }
-        this.#plugins.set(plugin.name,  plugin.connect(this));
+        this.#plugins.set(plugin.name, plugin.connect(this));
         return this;
     }
 
@@ -743,7 +747,7 @@ export class AbstractProvider implements Provider {
      *  Sub-classes **must** override this.
      */
     async _perform<T = any>(req: PerformActionRequest): Promise<T> {
-        assert(false, `unsupported method: ${ req.method }`, "UNSUPPORTED_OPERATION", {
+        assert(false, `unsupported method: ${req.method}`, "UNSUPPORTED_OPERATION", {
             operation: req.method,
             info: req
         });
@@ -789,11 +793,11 @@ export class AbstractProvider implements Provider {
             return toQuantity(blockTag);
         }
 
-        if (typeof(blockTag) === "bigint") {
+        if (typeof (blockTag) === "bigint") {
             blockTag = getNumber(blockTag, "blockTag");
         }
 
-        if (typeof(blockTag) === "number") {
+        if (typeof (blockTag) === "number") {
             if (blockTag >= 0) { return toQuantity(blockTag); }
             if (this.#lastBlockNumber >= 0) { return toQuantity(this.#lastBlockNumber + blockTag); }
             return this.getBlockNumber(shard).then((b) => toQuantity(b + <number>blockTag));
@@ -810,7 +814,7 @@ export class AbstractProvider implements Provider {
     _getFilter(filter: Filter | FilterByBlockHash): PerformActionFilter | Promise<PerformActionFilter> {
 
         // Create a canonical representation of the topics
-        const topics = (filter.topics || [ ]).map((t) => {
+        const topics = (filter.topics || []).map((t) => {
             if (t == null) { return null; }
             if (Array.isArray(t)) {
                 return concisify(t.map((t) => t.toLowerCase()));
@@ -818,7 +822,7 @@ export class AbstractProvider implements Provider {
             return t.toLowerCase();
         });
 
-        const blockHash = ("blockHash" in filter) ? filter.blockHash: undefined;
+        const blockHash = ("blockHash" in filter) ? filter.blockHash : undefined;
 
         const resolve = (_address: Array<string>, fromBlock?: string, toBlock?: string, shard?: string) => {
             let address: undefined | string | Array<string> = undefined;
@@ -838,7 +842,7 @@ export class AbstractProvider implements Provider {
                 }
             }
 
-            const filter = <any>{ };
+            const filter = <any>{};
             if (address) { filter.address = address; }
             if (topics.length) { filter.topics = topics; }
             if (fromBlock) { filter.fromBlock = fromBlock; }
@@ -850,7 +854,7 @@ export class AbstractProvider implements Provider {
         };
 
         // Addresses could be async (ENS names or Addressables)
-        let address: Array<string | Promise<string>> = [ ];
+        let address: Array<string | Promise<string>> = [];
         if (filter.address) {
             if (Array.isArray(filter.address)) {
                 for (const addr of filter.address) { address.push(this._getAddress(addr)); }
@@ -867,11 +871,11 @@ export class AbstractProvider implements Provider {
 
         const shard = filter.shard
 
-        if (address.filter((a) => (typeof(a) !== "string")).length ||
-            (fromBlock != null && typeof(fromBlock) !== "string") ||
-            (toBlock != null && typeof(toBlock) !== "string")) {
+        if (address.filter((a) => (typeof (a) !== "string")).length ||
+            (fromBlock != null && typeof (fromBlock) !== "string") ||
+            (toBlock != null && typeof (toBlock) !== "string")) {
 
-            return Promise.all([ Promise.all(address), fromBlock, toBlock, shard ]).then((result) => {
+            return Promise.all([Promise.all(address), fromBlock, toBlock, shard]).then((result) => {
                 return resolve(result[0], result[1], result[2]);
             });
         }
@@ -887,13 +891,13 @@ export class AbstractProvider implements Provider {
     _getTransactionRequest(_request: TransactionRequest): PerformActionTransaction | Promise<PerformActionTransaction> {
         const request = <PerformActionTransaction>copyRequest(_request);
 
-        const promises: Array<Promise<void>> = [ ];
-        [ "to", "from" ].forEach((key) => {
+        const promises: Array<Promise<void>> = [];
+        ["to", "from"].forEach((key) => {
             if ((<any>request)[key] == null) { return; }
 
             const addr = resolveAddress((<any>request)[key]);
             if (isPromise(addr)) {
-                promises.push((async function() { (<any>request)[key] = await addr; })());
+                promises.push((async function () { (<any>request)[key] = await addr; })());
             } else {
                 (<any>request)[key] = addr;
             }
@@ -902,14 +906,14 @@ export class AbstractProvider implements Provider {
         if (request.blockTag != null) {
             const blockTag = this._getBlockTag(request.chainId?.toString(), request.blockTag);
             if (isPromise(blockTag)) {
-                promises.push((async function() { request.blockTag = await blockTag; })());
+                promises.push((async function () { request.blockTag = await blockTag; })());
             } else {
                 request.blockTag = blockTag;
             }
         }
 
         if (promises.length) {
-            return (async function() {
+            return (async function () {
                 await Promise.all(promises);
                 return request;
             })();
@@ -943,7 +947,7 @@ export class AbstractProvider implements Provider {
 
         const networkPromise = this.#networkPromise;
 
-        const [ expected, actual ] = await Promise.all([
+        const [expected, actual] = await Promise.all([
             networkPromise,          // Possibly an explicit Network
             this._detectNetwork(shard)    // The actual connected network
         ]);
@@ -959,7 +963,7 @@ export class AbstractProvider implements Provider {
                 }
             } else {
                 // Otherwise, we do not allow changes to the underlying network
-                assert(false, `network changed: ${ expected.chainId } => ${ actual.chainId } `, "NETWORK_ERROR", {
+                assert(false, `network changed: ${expected.chainId} => ${actual.chainId} `, "NETWORK_ERROR", {
                     event: "changed"
                 });
             }
@@ -968,7 +972,7 @@ export class AbstractProvider implements Provider {
         return expected.clone();
     }
 
-    async getRunningLocations(shard?:string): Promise<number[][]> {
+    async getRunningLocations(shard?: string): Promise<number[][]> {
         return await this.#perform(shard ? { method: "getRunningLocations", shard: shard } : { method: "getRunningLocations" });
 
 
@@ -991,7 +995,7 @@ export class AbstractProvider implements Provider {
                 })()),
                 priorityFee: ((async () => {
                     try {
-                        const value = txType ? await this.#perform({ method: "getMaxPriorityFeePerGas", shard: shard }): 0;
+                        const value = txType ? await this.#perform({ method: "getMaxPriorityFeePerGas", shard: shard }) : 0;
                         return getBigInt(value, "%response");
                     } catch (error) { }
                     return null;
@@ -1005,7 +1009,7 @@ export class AbstractProvider implements Provider {
 
             // These are the recommended EIP-1559 heuristics for fee data
 
-            maxPriorityFeePerGas = (priorityFee != null) ? priorityFee: BigInt("1000000000");
+            maxPriorityFeePerGas = (priorityFee != null) ? priorityFee : BigInt("1000000000");
             maxFeePerGas = (gasPrice * BN_2) + maxPriorityFeePerGas;
 
             return new FeeData(gasPrice, maxFeePerGas, maxPriorityFeePerGas);
@@ -1034,68 +1038,68 @@ export class AbstractProvider implements Provider {
 
     async #call(tx: PerformActionTransaction, blockTag: string, attempt: number): Promise<string> {
 
-         // This came in as a PerformActionTransaction, so to/from are safe; we can cast
-         const transaction = <PerformActionTransaction>copyRequest(tx);
+        // This came in as a PerformActionTransaction, so to/from are safe; we can cast
+        const transaction = <PerformActionTransaction>copyRequest(tx);
 
-         try {
-             return hexlify(await this._perform({ method: "call", transaction, blockTag }));
+        try {
+            return hexlify(await this._perform({ method: "call", transaction, blockTag }));
 
-         } catch (error: any) {
-             // CCIP Read OffchainLookup
-             // if (!this.disableCcipRead && isCallException(error) && error.data && attempt >= 0 && blockTag === "latest" && transaction.to != null && dataSlice(error.data, 0, 4) === "0x556f1830") {
-             //     const data = error.data;
+        } catch (error: any) {
+            // CCIP Read OffchainLookup
+            // if (!this.disableCcipRead && isCallException(error) && error.data && attempt >= 0 && blockTag === "latest" && transaction.to != null && dataSlice(error.data, 0, 4) === "0x556f1830") {
+            //     const data = error.data;
 
-             //     const txSender = await resolveAddress(transaction.to, this);
+            //     const txSender = await resolveAddress(transaction.to, this);
 
-             //     // Parse the CCIP Read Arguments
-             //     let ccipArgs: CcipArgs;
-             //     try {
-             //         ccipArgs = parseOffchainLookup(dataSlice(error.data, 4));
-             //     } catch (error: any) {
-             //         assert(false, error.message, "OFFCHAIN_FAULT", {
-             //             reason: "BAD_DATA", transaction, info: { data } });
-             //     }
+            //     // Parse the CCIP Read Arguments
+            //     let ccipArgs: CcipArgs;
+            //     try {
+            //         ccipArgs = parseOffchainLookup(dataSlice(error.data, 4));
+            //     } catch (error: any) {
+            //         assert(false, error.message, "OFFCHAIN_FAULT", {
+            //             reason: "BAD_DATA", transaction, info: { data } });
+            //     }
 
-             //     // Check the sender of the OffchainLookup matches the transaction
-             //     assert(ccipArgs.sender.toLowerCase() === txSender.toLowerCase(),
-             //         "CCIP Read sender mismatch", "CALL_EXCEPTION", {
-             //             action: "call",
-             //             data,
-             //             reason: "OffchainLookup",
-             //             transaction: <any>transaction, // @TODO: populate data?
-             //             invocation: null,
-             //             revert: {
-             //                 signature: "OffchainLookup(address,string[],bytes,bytes4,bytes)",
-             //                 name: "OffchainLookup",
-             //                 args: ccipArgs.errorArgs
-             //             }
-             //         });
+            //     // Check the sender of the OffchainLookup matches the transaction
+            //     assert(ccipArgs.sender.toLowerCase() === txSender.toLowerCase(),
+            //         "CCIP Read sender mismatch", "CALL_EXCEPTION", {
+            //             action: "call",
+            //             data,
+            //             reason: "OffchainLookup",
+            //             transaction: <any>transaction, // @TODO: populate data?
+            //             invocation: null,
+            //             revert: {
+            //                 signature: "OffchainLookup(address,string[],bytes,bytes4,bytes)",
+            //                 name: "OffchainLookup",
+            //                 args: ccipArgs.errorArgs
+            //             }
+            //         });
 
-             //     const ccipResult = await this.ccipReadFetch(transaction, ccipArgs.calldata, ccipArgs.urls);
-             //     assert(ccipResult != null, "CCIP Read failed to fetch data", "OFFCHAIN_FAULT", {
-             //         reason: "FETCH_FAILED", transaction, info: { data: error.data, errorArgs: ccipArgs.errorArgs } });
+            //     const ccipResult = await this.ccipReadFetch(transaction, ccipArgs.calldata, ccipArgs.urls);
+            //     assert(ccipResult != null, "CCIP Read failed to fetch data", "OFFCHAIN_FAULT", {
+            //         reason: "FETCH_FAILED", transaction, info: { data: error.data, errorArgs: ccipArgs.errorArgs } });
 
-             //     const tx = {
-             //         to: txSender,
-             //         data: concat([ ccipArgs.selector, encodeBytes([ ccipResult, ccipArgs.extraData ]) ])
-             //     };
+            //     const tx = {
+            //         to: txSender,
+            //         data: concat([ ccipArgs.selector, encodeBytes([ ccipResult, ccipArgs.extraData ]) ])
+            //     };
 
-             //     this.emit("debug", { action: "sendCcipReadCall", transaction: tx });
-             //     try {
-             //         const result = await this.#call(tx, blockTag, attempt + 1);
-             //         this.emit("debug", { action: "receiveCcipReadCallResult", transaction: Object.assign({ }, tx), result });
-             //         return result;
-             //     } catch (error) {
-             //         this.emit("debug", { action: "receiveCcipReadCallError", transaction: Object.assign({ }, tx), error });
-             //         throw error;
-             //     }
-             // }
+            //     this.emit("debug", { action: "sendCcipReadCall", transaction: tx });
+            //     try {
+            //         const result = await this.#call(tx, blockTag, attempt + 1);
+            //         this.emit("debug", { action: "receiveCcipReadCallResult", transaction: Object.assign({ }, tx), result });
+            //         return result;
+            //     } catch (error) {
+            //         this.emit("debug", { action: "receiveCcipReadCallError", transaction: Object.assign({ }, tx), error });
+            //         throw error;
+            //     }
+            // }
 
-             throw error;
-         }
+            throw error;
+        }
     }
 
-    async #checkNetwork<T>(promise: Promise<T>, shard?: string, ): Promise<T> {
+    async #checkNetwork<T>(promise: Promise<T>, shard?: string,): Promise<T> {
         const { value } = await resolveProperties({
             network: this.getNetwork(),
             value: promise
@@ -1120,15 +1124,19 @@ export class AbstractProvider implements Provider {
 
         let blockTag: string | Promise<string> = this._getBlockTag(shard, _blockTag);
 
-        if (typeof(address) !== "string" || typeof(blockTag) !== "string") {
-            [ address, blockTag ] = await Promise.all([ address, blockTag ]);
+        if (typeof (address) !== "string" || typeof (blockTag) !== "string") {
+            [address, blockTag] = await Promise.all([address, blockTag]);
         }
 
-        return await this.#checkNetwork(this.#perform(Object.assign(request, { address, blockTag, shard: shard })), shard);
+        return await this.#checkNetwork(this.#perform(Object.assign(request, { address, blockTag, shard: shard }) as PerformActionRequest), shard);
     }
 
     async getBalance(address: AddressLike, blockTag?: BlockTag): Promise<bigint> {
         return getBigInt(await this.#getAccountValue({ method: "getBalance" }, address, blockTag), "%response");
+    }
+
+    async getOutpointsByAddress(address: AddressLike): Promise<Outpoint[]> {
+        return await this.#getAccountValue({ method: "getOutpointsByAddress" }, address, "latest");
     }
 
     async getTransactionCount(address: AddressLike, blockTag?: BlockTag): Promise<number> {
@@ -1141,21 +1149,22 @@ export class AbstractProvider implements Provider {
 
     async getStorage(address: AddressLike, _position: BigNumberish, blockTag?: BlockTag): Promise<string> {
         const position = getBigInt(_position, "position");
-        return hexlify(await this.#getAccountValue({ method: "getStorage", position}, address, blockTag));
+        return hexlify(await this.#getAccountValue({ method: "getStorage", position }, address, blockTag));
     }
+
 
     //TODO: Provider method which gets unspent utxos for an address
 
     // Write
     async broadcastTransaction(shard: string, signedTx: string): Promise<TransactionResponse> {
         const { blockNumber, hash, network } = await resolveProperties({
-             blockNumber: this.getBlockNumber(shard),
-             hash: this._perform({
-                 method: "broadcastTransaction",
-                 signedTransaction: signedTx,
-                 shard: shard
-             }),
-             network: this.getNetwork()
+            blockNumber: this.getBlockNumber(shard),
+            hash: this._perform({
+                method: "broadcastTransaction",
+                signedTransaction: signedTx,
+                shard: shard
+            }),
+            network: this.getNetwork()
         });
 
         const tx = Transaction.from(signedTx);
@@ -1164,11 +1173,11 @@ export class AbstractProvider implements Provider {
         return this._wrapTransactionResponse(<any>tx, network).replaceableTransaction(blockNumber);
     }
 
-    async #validateTransactionHash(computedHash: string, nodehash: string){
-        if (computedHash.substring(0,4) !== nodehash.substring(0,4))
-          throw new Error("Transaction hash mismatch in origin Zone");
-        if (computedHash.substring(6,8) !== nodehash.substring(6,8))
-          throw new Error("Transaction hash mismatch in destination Zone");
+    async #validateTransactionHash(computedHash: string, nodehash: string) {
+        if (computedHash.substring(0, 4) !== nodehash.substring(0, 4))
+            throw new Error("Transaction hash mismatch in origin Zone");
+        if (computedHash.substring(6, 8) !== nodehash.substring(6, 8))
+            throw new Error("Transaction hash mismatch in destination Zone");
         if (parseInt(computedHash[4], 16) < 8 !== parseInt(nodehash[4], 16) < 8)
             throw new Error("Transaction ledger mismatch in origin Zone");
         if (parseInt(computedHash[8], 16) < 8 !== parseInt(nodehash[8], 16) < 8)
@@ -1184,7 +1193,7 @@ export class AbstractProvider implements Provider {
         }
 
         let blockTag = this._getBlockTag(shard, block);
-        if (typeof(blockTag) !== "string") { blockTag = await blockTag; }
+        if (typeof (blockTag) !== "string") { blockTag = await blockTag; }
 
         return await this.#perform({
             method: "getBlock", blockTag, includeTransactions, shard: shard
@@ -1263,7 +1272,7 @@ export class AbstractProvider implements Provider {
 
     async waitForTransaction(hash: string, _confirms?: null | number, timeout?: null | number): Promise<null | TransactionReceipt> {
         const shard = this.shardFromHash(hash);
-        const confirms = (_confirms != null) ? _confirms: 1;
+        const confirms = (_confirms != null) ? _confirms : 1;
         if (confirms === 0) { return this.getTransactionReceipt(hash); }
 
         return new Promise(async (resolve, reject) => {
@@ -1411,7 +1420,7 @@ export class AbstractProvider implements Provider {
 
             const addressableMap = new WeakMap();
             const nameMap = new Map();
-            sub = { subscriber, tag, addressableMap, nameMap, started: false, listeners: [ ] };
+            sub = { subscriber, tag, addressableMap, nameMap, started: false, listeners: [] };
             this.#subs.set(tag, sub);
         }
 
@@ -1448,10 +1457,10 @@ export class AbstractProvider implements Provider {
 
         const count = sub.listeners.length;
         sub.listeners = sub.listeners.filter(({ listener, once }) => {
-            const payload = new EventPayload(this, (once ? null: listener), event);
+            const payload = new EventPayload(this, (once ? null : listener), event);
             try {
                 listener.call(this, ...args, payload);
-            } catch(error) { }
+            } catch (error) { }
             return !once;
         });
 
@@ -1480,10 +1489,10 @@ export class AbstractProvider implements Provider {
     async listeners(event?: ProviderEvent): Promise<Array<Listener>> {
         if (event) {
             const sub = await this.#hasSub(event);
-            if (!sub) { return  [ ]; }
+            if (!sub) { return []; }
             return sub.listeners.map(({ listener }) => listener);
         }
-        let result: Array<Listener> = [ ];
+        let result: Array<Listener> = [];
         for (const { listeners } of this.#subs.values()) {
             result = result.concat(listeners.map(({ listener }) => listener));
         }
@@ -1513,7 +1522,7 @@ export class AbstractProvider implements Provider {
             if (started) { subscriber.stop(); }
             this.#subs.delete(tag);
         } else {
-            for (const [ tag, { started, subscriber } ] of this.#subs) {
+            for (const [tag, { started, subscriber }] of this.#subs) {
                 if (started) { subscriber.stop(); }
                 this.#subs.delete(tag);
             }
@@ -1523,12 +1532,12 @@ export class AbstractProvider implements Provider {
 
     // Alias for "on"
     async addListener(event: ProviderEvent, listener: Listener): Promise<this> {
-       return await this.on(event, listener);
+        return await this.on(event, listener);
     }
 
     // Alias for "off"
     async removeListener(event: ProviderEvent, listener: Listener): Promise<this> {
-       return this.off(event, listener);
+        return this.off(event, listener);
     }
 
     /**
