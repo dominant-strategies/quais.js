@@ -2049,4 +2049,9 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  the ``currentBlockNumber + N``.
      */
     waitForBlock(shard: string, blockTag?: BlockTag): Promise<Block>;
+
+    /**
+     *  Resolves to the number indicating the size of the network
+     */
+    getProtocolExpansionNumber(): Promise<number>;
 }
