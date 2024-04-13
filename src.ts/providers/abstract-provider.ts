@@ -426,6 +426,8 @@ export type PerformActionRequest = {
     blockTag: BlockTag,
     amt: number,
     shard: string
+} | {
+    method: "getProtocolExpansionNumber",
 };
 
 
@@ -598,6 +600,12 @@ export class AbstractProvider implements Provider {
             blockTag: resolvedBlockTag,
             amt,
             shard: shard
+        });
+    }
+
+    async getProtocolExpansionNumber(): Promise<number> {
+        return await this.#perform({
+            method: "getProtocolExpansionNumber"
         });
     }
 

@@ -472,6 +472,8 @@ export class FallbackProvider extends AbstractProvider {
                 return await provider.getTransactionReceipt(req.hash);
             case "getTransactionResult":
                 return await provider.getTransactionResult(req.hash);
+            case "getProtocolExpansionNumber":
+                return await provider.getProtocolExpansionNumber();
         }
     }
 

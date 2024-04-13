@@ -676,7 +676,8 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         const request = this.getRpcRequest(req);
 
         if (request != null) {
-            return await this.send(request.method, request.args, req.shard);
+            const shard = 'shard' in req ? req.shard : undefined;
+            return await this.send(request.method, request.args, shard);
         }
 
         return super._perform(req);
@@ -952,6 +953,13 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             }
 
             case "getProtocolTrieExpansionCount": {
+                return {
+                    method: "quai_getProtocolExpansionNumber",
+                    args: []
+                }
+            }
+
+            case "getProtocolExpansionNumber": {
                 return {
                     method: "quai_getProtocolExpansionNumber",
                     args: []
