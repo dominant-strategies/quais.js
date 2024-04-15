@@ -28,8 +28,13 @@
     "@types/google-protobuf": "^3.15.12",
     "@types/mocha": "^9.1.1",
     "@types/semver": "7.5.0",
+    "@typescript-eslint/eslint-plugin": "^7.7.0",
+    "@typescript-eslint/parser": "^7.7.0",
     "axios": "^1.6.7",
     "c8": "7.12.0",
+    "eslint": "^8.57.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2",
     "mocha": "10.0.0",
     "rollup": "3.21.5",
     "semver": "7.5.4",
@@ -113,6 +118,7 @@
     "_build-dist": "rollup -c && uglifyjs ./dist/quais.js -o ./dist/quais.min.js && uglifyjs ./dist/quais.umd.js -o ./dist/quais.umd.min.js && uglifyjs ./dist/wordlists-extra.js -o ./dist/wordlists-extra.min.js",
     "_dist-stats": "gzip -k9f -S '.gz' ./dist/quais.min.js && gzip -k9f -S '.gz' ./dist/quais.umd.min.js && gzip -k9f -S '.gz' ./dist/wordlists-extra.min.js && du -hs ./dist/*.gz && echo '' && du -hs ./dist/*.js",
     "auto-build": "npm run build -- -w",
+    "lint": "eslint 'src/**/*.{js,ts}'",
     "build": "tsc --project tsconfig.esm.json",
     "build-all": "npm run build && npm run build-commonjs",
     "build-clean": "npm run clean && npm run build && npm run build-all && npm run _build-dist && npm run _dist-stats",
@@ -129,5 +135,15 @@
     "test-esm": "mocha --trace-warnings --reporter ./reporter.cjs ./lib.esm/_tests/test-*.js"
   },
   "sideEffects": false,
-  "version": "v0.1.0-pre"
+  "version": "v0.1.0-pre",
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,ts}": [
+      "eslint"
+    ]
+  }
 }
