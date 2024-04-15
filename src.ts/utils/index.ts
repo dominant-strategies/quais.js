@@ -69,8 +69,8 @@ export type {
     quaisError, UnknownError, NotImplementedError, UnsupportedOperationError, NetworkError,
     ServerError, TimeoutError, BadDataError, CancelledError, BufferOverrunError,
     NumericFaultError, InvalidArgumentError, MissingArgumentError, UnexpectedArgumentError,
-    CallExceptionError, InsufficientFundsError, NonceExpiredError, OffchainFaultError,
-    ReplacementUnderpricedError, TransactionReplacedError, UnconfiguredNameError,
+    CallExceptionError, InsufficientFundsError, NonceExpiredError,
+    ReplacementUnderpricedError, TransactionReplacedError,
     ActionRejectedError,
 
     CallExceptionAction, CallExceptionTransaction,

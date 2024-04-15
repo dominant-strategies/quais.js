@@ -3,7 +3,7 @@ import { getAddress } from "../address/index.js";
 import { keccak256 } from "../crypto/index.js";
 import { recoverAddress } from "../transaction/index.js";
 import {
-    concat, defineProperties, getBigInt, getBytes, hexlify, isHexString, mask, toBeHex, toQuantity, toTwos, zeroPadValue,
+    concat, defineProperties, getBigInt, getBytes, hexlify, mask, toBeHex, toQuantity, toTwos, zeroPadValue,
     assertArgument
 } from "../utils/index.js";
 
@@ -490,60 +490,6 @@ export class TypedDataEncoder {
      */
     static hash(domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, value: Record<string, any>): string {
         return keccak256(TypedDataEncoder.encode(domain, types, value));
-    }
-
-    // Replaces all address types with ENS names with their looked up address
-    /**
-     * Resolves to the value from resolving all addresses in %%value%% for
-     * %%types%% and the %%domain%%.
-     */
-    static async resolveNames(domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, value: Record<string, any>, resolveName: (name: string) => Promise<string>): Promise<{ domain: TypedDataDomain, value: any }> {
-        // Make a copy to isolate it from the object passed in
-        domain = Object.assign({ }, domain);
-
-        // Allow passing null to ignore value
-        for (const key in domain) {
-            if ((<Record<string, any>>domain)[key] == null) {
-                delete (<Record<string, any>>domain)[key];
-            }
-        }
-
-        // Look up all ENS names
-        const ensCache: Record<string, string> = { };
-
-        // Do we need to look up the domain's verifyingContract?
-        if (domain.verifyingContract && !isHexString(domain.verifyingContract, 20)) {
-            ensCache[domain.verifyingContract] = "0x";
-        }
-
-        // We are going to use the encoder to visit all the base values
-        const encoder = TypedDataEncoder.from(types);
-
-        // Get a list of all the addresses
-        encoder.visit(value, (type: string, value: any) => {
-            if (type === "address" && !isHexString(value, 20)) {
-                ensCache[value] = "0x";
-            }
-            return value;
-        });
-
-        // Lookup each name
-        for (const name in ensCache) {
-            ensCache[name] = await resolveName(name);
-        }
-
-        // Replace the domain verifyingContract if needed
-        if (domain.verifyingContract && ensCache[domain.verifyingContract]) {
-            domain.verifyingContract = ensCache[domain.verifyingContract];
-        }
-
-        // Replace all ENS names with their address
-        value = encoder.visit(value, (type: string, value: any) => {
-            if (type === "address" && ensCache[value]) { return ensCache[value]; }
-            return value;
-        });
-
-        return { domain, value };
     }
 
     /**

@@ -26,11 +26,6 @@ export {
 
 export { getDefaultProvider } from "./default-provider.js";
 
-export {
-    EnsResolver,
-    MulticoinProviderPlugin
-} from "./ens-resolver.js";
-
 export { Network } from "./network.js";
 
 export { NonceManager } from "./signer-noncemanager.js";

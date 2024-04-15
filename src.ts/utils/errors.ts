@@ -478,22 +478,6 @@ export interface NonceExpiredError extends quaisError<"NONCE_EXPIRED"> {
 }
 
 /**
- *  A CCIP-read exception, which cannot be recovered from or
- *  be further processed.
- */
-export interface OffchainFaultError extends quaisError<"OFFCHAIN_FAULT"> {
-    /**
-     *  The transaction.
-     */
-    transaction?: TransactionRequest;
-
-    /**
-     *  The reason the CCIP-read failed.
-     */
-    reason: string;
-}
-
-/**
  *  An attempt was made to replace a transaction, but with an
  *  insufficient additional fee to afford evicting the old
  *  transaction from the memory pool.
@@ -534,20 +518,6 @@ export interface TransactionReplacedError extends quaisError<"TRANSACTION_REPLAC
      *  The receipt of the transaction that replace the transaction.
      */
     receipt: TransactionReceipt;
-}
-
-/**
- *  This Error indicates an ENS name was used, but the name has not
- *  been configured.
- *
- *  This could indicate an ENS name is unowned or that the current
- *  address being pointed to is the [[ZeroAddress]].
- */
-export interface UnconfiguredNameError extends quaisError<"UNCONFIGURED_NAME"> {
-    /**
-     *  The ENS name that was requested
-     */
-    value: string;
 }
 
 /**
@@ -602,10 +572,8 @@ export type CodedquaisError<T> =
     T extends "CALL_EXCEPTION" ? CallExceptionError:
     T extends "INSUFFICIENT_FUNDS" ? InsufficientFundsError:
     T extends "NONCE_EXPIRED" ? NonceExpiredError:
-    T extends "OFFCHAIN_FAULT" ? OffchainFaultError:
     T extends "REPLACEMENT_UNDERPRICED" ? ReplacementUnderpricedError:
     T extends "TRANSACTION_REPLACED" ? TransactionReplacedError:
-    T extends "UNCONFIGURED_NAME" ? UnconfiguredNameError:
 
     T extends "ACTION_REJECTED" ? ActionRejectedError:
 

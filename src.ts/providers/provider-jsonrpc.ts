@@ -304,7 +304,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
         if (tx.from) {
             const _from = tx.from;
             promises.push((async () => {
-                const from = await resolveAddress(_from, this.provider);
+                const from = await resolveAddress(_from);
                 assertArgument(from != null && from.toLowerCase() === this.address.toLowerCase(),
                     "from address mismatch", "transaction", _tx);
                 tx.from = from;
@@ -326,7 +326,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
         if (tx.to != null) {
             const _to = tx.to;
             promises.push((async () => {
-                tx.to = await resolveAddress(_to, this.provider);
+                tx.to = await resolveAddress(_to);
             })());
         }
 
@@ -406,7 +406,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 
         // Make sure the from matches the sender
         if (tx.from) {
-            const from = await resolveAddress(tx.from, this.provider);
+            const from = await resolveAddress(tx.from);
             assertArgument(from != null && from.toLowerCase() === this.address.toLowerCase(),
                 "from address mismatch", "transaction", _tx);
             tx.from = from;
@@ -427,17 +427,10 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 
     async signTypedData(domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, _value: Record<string, any>): Promise<string> {
         const value = deepCopy(_value);
-
-        // Populate any ENS names (in-place)
-        const populated = await TypedDataEncoder.resolveNames(domain, types, value, async (value: string) => {
-            const address = await resolveAddress(value);
-            assertArgument(address != null, "TypedData does not support null address", "value", value);
-            return address;
-        });
-
+        
         return await this.provider.send("quai_signTypedData_v4", [
             this.address.toLowerCase(),
-            JSON.stringify(TypedDataEncoder.getPayload(populated.domain, types, populated.value))
+            JSON.stringify(TypedDataEncoder.getPayload(domain, types, value))
         ]);
     }
 

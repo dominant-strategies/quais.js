@@ -30,13 +30,13 @@ function checkProvider(signer: AbstractSigner, operation: string): Provider {
 async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise<TransactionLike<string>> {
     let pop: any = copyRequest(tx);
 
-    if (pop.to != null) { pop.to = resolveAddress(pop.to, signer); }
+    if (pop.to != null) { pop.to = resolveAddress(pop.to); }
 
     if (pop.from != null) {
         const from = pop.from;
         pop.from = Promise.all([
             signer.getAddress(),
-            resolveAddress(from, signer)
+            resolveAddress(from)
         ]).then(([ address, from ]) => {
             assertArgument(address.toLowerCase() === from.toLowerCase(),
                 "transaction from mismatch", "tx.from", from);
@@ -76,7 +76,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
 
     _getAddress(address: AddressLike): string | Promise<string> {
-        return resolveAddress(address, this);
+        return resolveAddress(address);
     }
 
     async shardFromAddress(_address: AddressLike): Promise<string> {
@@ -173,11 +173,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
     async call(tx: TransactionRequest): Promise<string> {
         return checkProvider(this, "call").call(await this.populateCall(tx));
-    }
-
-    async resolveName(name: string): Promise<null | string> {
-        const provider = checkProvider(this, "resolveName");
-        return await provider.resolveName(name);
     }
 
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {

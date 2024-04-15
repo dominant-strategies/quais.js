@@ -5,7 +5,7 @@ import { isAddressable, resolveAddress } from "../address/index.js";
 import { copyRequest, Log, TransactionResponse } from "../providers/provider.js";
 import {
     defineProperties, getBigInt, isCallException, isHexString, resolveProperties,
-    isError, makeError, assert, assertArgument
+    isError, assert, assertArgument
 } from "../utils/index.js";
 
 import {
@@ -15,7 +15,7 @@ import {
 } from "./wrappers.js";
 
 import type { EventFragment, FunctionFragment, InterfaceAbi, ParamType, Result } from "../abi/index.js";
-import type { Addressable, NameResolver } from "../address/index.js";
+import type { Addressable } from "../address/index.js";
 import type { EventEmitterable, Listener } from "../utils/index.js";
 import type {
     BlockTag, ContractRunner, Provider, TransactionRequest, TopicFilter
@@ -48,10 +48,6 @@ interface ContractRunnerSender extends ContractRunner {
     sendTransaction: (tx: TransactionRequest) => Promise<TransactionResponse>;
 }
 
-interface ContractRunnerResolver extends ContractRunner {
-    resolveName: (name: string | Addressable) => Promise<null | string>;
-}
-
 function canCall(value: any): value is ContractRunnerCaller {
     return (value && typeof(value.call) === "function");
 }
@@ -60,20 +56,8 @@ function canEstimate(value: any): value is ContractRunnerEstimater {
     return (value && typeof(value.estimateGas) === "function");
 }
 
-function canResolve(value: any): value is ContractRunnerResolver {
-    return (value && typeof(value.resolveName) === "function");
-}
-
 function canSend(value: any): value is ContractRunnerSender {
     return (value && typeof(value.sendTransaction) === "function");
-}
-
-function getResolver(value: any): undefined | NameResolver {
-    if (value != null) {
-        if (canResolve(value)) { return value; }
-        if (value.provider) { return value.provider; }
-    }
-    return undefined;
 }
 
 class PreparedTopicFilter implements DeferredTopicFilter {
@@ -86,9 +70,6 @@ class PreparedTopicFilter implements DeferredTopicFilter {
             throw new Error("too many arguments");
         }
 
-        // Recursively descend into args and resolve any addresses
-        const runner = getRunner(contract.runner, "resolveName");
-        const resolver = canResolve(runner) ? runner: null;
         this.#filter = (async function() {
             const resolvedArgs = await Promise.all(fragment.inputs.map((param, index) => {
                 const arg = args[index];
@@ -97,9 +78,9 @@ class PreparedTopicFilter implements DeferredTopicFilter {
                 return param.walkAsync(args[index], (type, value) => {
                     if (type === "address") {
                         if (Array.isArray(value)) {
-                            return Promise.all(value.map((v) => resolveAddress(v, resolver)));
+                            return Promise.all(value.map((v) => resolveAddress(v)));
                         }
-                        return resolveAddress(value, resolver);
+                        return resolveAddress(value);
                     }
                     return value;
                 });
@@ -164,12 +145,10 @@ export async function copyOverrides<O extends string = "data" | "to">(arg: any, 
  */
 export async function resolveArgs(_runner: null | ContractRunner, inputs: ReadonlyArray<ParamType>, args: Array<any>): Promise<Array<any>> {
     // Recursively descend into args and resolve any addresses
-    const runner = getRunner(_runner, "resolveName");
-    const resolver = canResolve(runner) ? runner: null;
     return await Promise.all(inputs.map((param, index) => {
         return param.walkAsync(args[index], (type, value) => {
             value = Typed.dereference(value, type);
-            if (type === "address") { return resolveAddress(value, resolver); }
+            if (type === "address") { return resolveAddress(value); }
             return value;
         });
     }));
@@ -184,7 +163,7 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
         tx.to = await contract.getAddress();
 
         if (tx.from) {
-            tx.from = await resolveAddress(tx.from, getResolver(contract.runner));
+            tx.from = await resolveAddress(tx.from);
         }
 
         const iface = contract.interface;
@@ -715,28 +694,8 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
         // Resolve the target as the address
         if (typeof(target) === "string") {
-            if (isHexString(target)) {
                 addr = target;
                 addrPromise = Promise.resolve(target);
-
-            } else {
-                const resolver = getRunner(runner, "resolveName");
-                if (!canResolve(resolver)) {
-                    throw makeError("contract runner does not support name resolution", "UNSUPPORTED_OPERATION", {
-                        operation: "resolveName"
-                    });
-                }
-
-                addrPromise = resolver.resolveName(target).then((addr) => {
-                    if (addr == null) {
-                        throw makeError("an ENS name used for a contract target must be correctly configured", "UNCONFIGURED_NAME", {
-                            value: target
-                        });
-                    }
-                    getInternal(this).addr = addr;
-                    return addr;
-                });
-            }
         } else {
             addrPromise = target.getAddress().then((addr) => {
                 if (addr == null) { throw new Error("TODO"); }

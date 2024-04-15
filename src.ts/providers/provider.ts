@@ -5,7 +5,7 @@ import {
 } from "../utils/index.js";
 import { accessListify } from "../transaction/index.js";
 
-import type { AddressLike, NameResolver } from "../address/index.js";
+import type { AddressLike } from "../address/index.js";
 import type { BigNumberish, EventEmitterable } from "../utils/index.js";
 import type { Signature } from "../crypto/index.js";
 import type { AccessList, AccessListish, TransactionLike } from "../transaction/index.js";
@@ -1870,7 +1870,7 @@ export type ProviderEvent = string | Array<string | Array<string>> | EventFilter
  *  private key must be used to sign the transaction before it can be
  *  broadcast.
  */
-export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent>, NameResolver {
+export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent> {
 
     /**
      *  The provider iteself.
@@ -2016,25 +2016,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  Resolves to the list of Logs that match %%filter%%
      */
     getLogs(filter: Filter | FilterByBlockHash): Promise<Array<Log>>;
-
-
-    ////////////////////
-    // ENS
-
-    /**
-     *  Resolves to the address configured for the %%ensName%% or
-     *  ``null`` if unconfigured.
-     */
-    resolveName(ensName: string): Promise<null | string>;
-
-    /**
-     *  Resolves to the ENS name associated for the %%address%% or
-     *  ``null`` if the //primary name// is not configured.
-     *
-     *  Users must perform additional steps to configure a //primary name//,
-     *  which is not currently common.
-     */
-    lookupAddress(address: string): Promise<null | string>;
 
     /**
      *  Waits until the transaction %%hash%% is mined and has %%confirms%%
