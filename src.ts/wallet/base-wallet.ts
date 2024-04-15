@@ -9,8 +9,7 @@ import {
 import type { SigningKey } from "../crypto/index.js";
 import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
 import type { Provider, TransactionRequest } from "../providers/index.js";
-import type { Transaction, TransactionLike } from "../transaction/index.js";
-import { WorkObject } from "../transaction/work-object.js";
+import type { TransactionLike } from "../transaction/index.js";
 
 
 /**
@@ -89,20 +88,10 @@ export class BaseWallet extends AbstractSigner {
             delete tx.from;
         }
 
-        const wo = await this.provider?.getPendingHeader();
-        if (!wo) {
-            throw new Error("No pending header found");
-        }
         const btx = Transaction.from(<TransactionLike<string>>tx);
         btx.signature = this.signingKey.sign(btx.unsignedHash);
 
-        // Build the work object
-        const bwo = new WorkObject(
-            wo.woHeader,
-            wo.woBody,
-            btx,
-        );
-        return bwo.serialized;
+        return btx.serialized;
     }
 
     async signMessage(message: string | Uint8Array): Promise<string> {

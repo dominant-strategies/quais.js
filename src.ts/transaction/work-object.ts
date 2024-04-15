@@ -404,10 +404,6 @@ export class WorkObject {
         return new WorkObject(woHeader, woBody, tx);
     }
 
-
-
-
-
     /**
      *  Serializes the WorkObject to a string.
      *  
