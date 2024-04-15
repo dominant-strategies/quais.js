@@ -35,21 +35,7 @@ export interface Addressable {
  */
 export type AddressLike = string | Promise<string> | Addressable;
 
-/**
- *  An interface for any object which can resolve an ENS name.
- */
-export interface NameResolver {
-    /**
-     *  Resolve to the address for the ENS %%name%%.
-     *
-     *  Resolves to ``null`` if the name is unconfigued. Use
-     *  [[resolveAddress]] (passing this object as %%resolver%%) to
-     *  throw for names that are unconfigured.
-     */
-    resolveName(name: string): Promise<null | string>;
-}
-
-export { getAddress, getIcapAddress } from "./address.js";
+export { getAddress } from "./address.js";
 
 export { getCreateAddress, getCreate2Address } from "./contract-address.js";
 

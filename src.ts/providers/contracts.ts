@@ -31,11 +31,6 @@ export interface ContractRunner {
     call?: (tx: TransactionRequest) => Promise<string>;
 
     /**
-     *  Required to support ENS names
-     */
-    resolveName?: (name: string) => Promise<null | string>;
-
-    /**
      *  Required for state mutating calls
      */
     sendTransaction?: (tx: TransactionRequest) => Promise<TransactionResponse>;

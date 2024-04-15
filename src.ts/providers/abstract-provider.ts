@@ -14,21 +14,18 @@
 //   migrate the listener to the static event. We also need to maintain a map
 //   of Signer/ENS name to address so we can sync respond to listenerCount.
 
-import { getAddress, resolveAddress } from "../address/index.js";
-import { ShardData, ZeroAddress } from "../constants/index.js";
-import { Contract } from "../contract/index.js";
-import { namehash } from "../hash/index.js";
+import { resolveAddress } from "../address/index.js";
+import { ShardData } from "../constants/index.js";
 import { Transaction } from "../transaction/index.js";
 import {
     hexlify, isHexString,
     getBigInt, getNumber,
-    isError, makeError, assert, assertArgument,
+    makeError, assert, assertArgument,
     FetchRequest,
     toQuantity,
     defineProperties, EventPayload, resolveProperties,
 } from "../utils/index.js";
 
-import { EnsResolver } from "./ens-resolver.js";
 import {
     formatBlock, formatLog, formatTransactionReceipt, formatTransactionResponse
 } from "./format.js";
@@ -58,8 +55,6 @@ type Timer = ReturnType<typeof setTimeout>;
 
 // Constants
 const BN_2 = BigInt(2);
-
-const MAX_CCIP_REDIRECTS = 10;
 
 function isPromise<T = any>(value: any): value is Promise<T> {
     return (value && typeof(value.then) === "function");
@@ -276,7 +271,7 @@ async function getSubscription(_event: ProviderEvent, provider: AbstractProvider
                     addresses.push(addr);
                 } else {
                     promises.push((async () => {
-                        addresses.push(await resolveAddress(addr, provider));
+                        addresses.push(await resolveAddress(addr));
                     })());
                 }
             }
@@ -694,64 +689,6 @@ export class AbstractProvider implements Provider {
     }
 
     /**
-     *  Resolves to the data for executing the CCIP-read operations.
-     */
-    async ccipReadFetch(tx: PerformActionTransaction, calldata: string, urls: Array<string>): Promise<null | string> {
-        if (this.disableCcipRead || urls.length === 0 || tx.to == null) { return null; }
-
-        const sender = tx.to.toLowerCase();
-        const data = calldata.toLowerCase();
-
-        const errorMessages: Array<string> = [ ];
-
-        for (let i = 0; i < urls.length; i++) {
-            const url = urls[i];
-
-            // URL expansion
-            const href = url.replace("{sender}", sender).replace("{data}", data);
-
-            // If no {data} is present, use POST; otherwise GET
-            //const json: string | null = (url.indexOf("{data}") >= 0) ? null: JSON.stringify({ data, sender });
-
-            //const result = await fetchJson({ url: href, errorPassThrough: true }, json, (value, response) => {
-            //    value.status = response.statusCode;
-            //    return value;
-            //});
-            const request = new FetchRequest(href);
-            if (url.indexOf("{data}") === -1) {
-                request.body = { data, sender };
-            }
-
-            this.emit("debug", { action: "sendCcipReadFetchRequest", request, index: i, urls });
-
-            let errorMessage = "unknown error";
-
-            const resp = await request.send();
-            try {
-                 const result = resp.bodyJson;
-                 if (result.data) {
-                     this.emit("debug", { action: "receiveCcipReadFetchResult", request, result });
-                     return result.data;
-                 }
-                 if (result.message) { errorMessage = result.message; }
-                 this.emit("debug", { action: "receiveCcipReadFetchError", request, result });
-            } catch (error) { }
-
-            // 4xx indicates the result is not present; stop
-            assert(resp.statusCode < 400 || resp.statusCode >= 500, `response not found during CCIP fetch: ${ errorMessage }`,
-                "OFFCHAIN_FAULT", { reason: "404_MISSING_RESOURCE", transaction: tx, info: { url, errorMessage } });
-
-            // 5xx indicates server issue; try the next url
-            errorMessages.push(errorMessage);
-        }
-
-        assert(false, `error encountered during CCIP fetch: ${ errorMessages.map((m) => JSON.stringify(m)).join(", ") }`, "OFFCHAIN_FAULT", {
-            reason: "500_SERVER_ERROR",
-            transaction: tx, info: { urls, errorMessages }
-        });
-    }
-
-    /**
      *  Provides the opportunity for a sub-class to wrap a block before
      *  returning it, to add additional properties or an alternate
      *  sub-class of [[Block]].
@@ -826,7 +763,7 @@ export class AbstractProvider implements Provider {
      *  address.
      */
     _getAddress(address: AddressLike): string | Promise<string> {
-        return resolveAddress(address, this);
+        return resolveAddress(address);
     }
 
     /**
@@ -954,7 +891,7 @@ export class AbstractProvider implements Provider {
         [ "to", "from" ].forEach((key) => {
             if ((<any>request)[key] == null) { return; }
 
-            const addr = resolveAddress((<any>request)[key], this);
+            const addr = resolveAddress((<any>request)[key]);
             if (isPromise(addr)) {
                 promises.push((async function() { (<any>request)[key] = await addr; })());
             } else {
@@ -1096,10 +1033,6 @@ export class AbstractProvider implements Provider {
     }
 
     async #call(tx: PerformActionTransaction, blockTag: string, attempt: number): Promise<string> {
-        assert (attempt < MAX_CCIP_REDIRECTS, "CCIP read exceeded maximum redirections", "OFFCHAIN_FAULT", {
-             reason: "TOO_MANY_REDIRECTS",
-             transaction: Object.assign({ }, tx, { blockTag, enableCcipRead: true })
-         });
 
          // This came in as a PerformActionTransaction, so to/from are safe; we can cast
          const transaction = <PerformActionTransaction>copyRequest(tx);
@@ -1326,62 +1259,6 @@ export class AbstractProvider implements Provider {
         assert(false, "provider cannot connect to target network", "UNSUPPORTED_OPERATION", {
             operation: "_getProvider()"
         });
-    }
-
-    async getResolver(name: string): Promise<null | EnsResolver> {
-        return await EnsResolver.fromName(this, name);
-    }
-
-    async getAvatar(name: string): Promise<null | string> {
-        const resolver = await this.getResolver(name);
-        if (resolver) { return await resolver.getAvatar(); }
-        return null;
-    }
-
-    async resolveName(name: string): Promise<null | string>{
-        const resolver = await this.getResolver(name);
-        if (resolver) { return await resolver.getAddress(); }
-        return null;
-    }
-
-    async lookupAddress(address: string): Promise<null | string> {
-        address = getAddress(address);
-        const node = namehash(address.substring(2).toLowerCase() + ".addr.reverse");
-
-        try {
-
-            const ensAddr = await EnsResolver.getEnsAddress(this);
-            const ensContract = new Contract(ensAddr, [
-                "function resolver(bytes32) view returns (address)"
-            ], this);
-
-            const resolver = await ensContract.resolver(node);
-            if (resolver == null || resolver === ZeroAddress) { return null; }
-
-            const resolverContract = new Contract(resolver, [
-                "function name(bytes32) view returns (string)"
-            ], this);
-            const name = await resolverContract.name(node);
-
-            // Failed forward resolution
-            const check = await this.resolveName(name);
-            if (check !== address) { return null; }
-
-            return name;
-
-        } catch (error) {
-            // No data was returned from the resolver
-            if (isError(error, "BAD_DATA") && error.value === "0x") {
-                return null;
-            }
-
-            // Something reerted
-            if (isError(error, "CALL_EXCEPTION")) { return null; }
-
-            throw error;
-        }
-
-        return null;
     }
 
     async waitForTransaction(hash: string, _confirms?: null | number, timeout?: null | number): Promise<null | TransactionReceipt> {

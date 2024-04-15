@@ -9,7 +9,7 @@ import type {
 } from "./types.js";
 
 import {
-    getAddress, getIcapAddress,
+    getAddress,
     getCreateAddress, getCreate2Address
 } from "../index.js";
 
@@ -76,7 +76,6 @@ describe("computes ICAP address", function() {
     const tests = loadTests<TestCaseAccount>("accounts");
     for (const test of tests) {
         it(`computes the ICAP address: ${ test.name }`, function() {
-            assert.equal(getIcapAddress(test.address), test.icap);
             assert.equal(getAddress(test.address.toLowerCase()), test.address);
             assert.equal(getAddress("0x" + test.address.substring(2).toUpperCase()), test.address);
         });
