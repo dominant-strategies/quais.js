@@ -209,7 +209,6 @@ describe("Test Provider Block operations", function() {
             parentHash: rpcBlock.parentHash,
             parentEntropy: rpcBlock.parentEntropy.map((entropy: string) => BigInt(entropy)),
             extTransactions: rpcBlock.extTransactions,
-            timestamp: Number(rpcBlock.timestamp),
             nonce: rpcBlock.nonce,
             difficulty: BigInt(rpcBlock.difficulty),
             gasLimit: BigInt(rpcBlock.gasLimit),

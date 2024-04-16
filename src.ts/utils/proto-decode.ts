@@ -1,6 +1,6 @@
 import { ProtoTransaction } from "../transaction/transaction";
 import { ProtoWorkObject } from "../transaction/work-object";
-import * as Proto from "./ProtoBuf/proto-block"
+import * as Proto from "./ProtoBuf/proto_block"
 
 export function decodeProtoTransaction(bytes: Uint8Array): ProtoTransaction {
     const tx = Proto.block.ProtoTransaction.deserialize(bytes);

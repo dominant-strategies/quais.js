@@ -27,12 +27,6 @@ export interface BlockParams {
     number: Array<number> | number;
 
     /**
-     *  The timestamp for this block, which is the number of seconds
-     *  since epoch that this block was included.
-     */
-    timestamp: number;
-
-    /**
      *  The hash of the previous block in the blockchain. The genesis block
      *  has the parentHash of the [[ZeroHash]].
      */

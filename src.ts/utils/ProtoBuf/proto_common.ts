@@ -273,4 +273,138 @@ export namespace common {
             return ProtoAddress.deserialize(bytes);
         }
     }
+    export class ProtoNumber extends pb_1.Message {
+        #one_of_decls: number[][] = [];
+        constructor(data?: any[] | {
+            value?: number;
+        }) {
+            super();
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+            if (!Array.isArray(data) && typeof data == "object") {
+                if ("value" in data && data.value != undefined) {
+                    this.value = data.value;
+                }
+            }
+        }
+        get value() {
+            return pb_1.Message.getFieldWithDefault(this, 1, 0) as number;
+        }
+        set value(value: number) {
+            pb_1.Message.setField(this, 1, value);
+        }
+        static fromObject(data: {
+            value?: number;
+        }): ProtoNumber {
+            const message = new ProtoNumber({});
+            if (data.value != null) {
+                message.value = data.value;
+            }
+            return message;
+        }
+        toObject() {
+            const data: {
+                value?: number;
+            } = {};
+            if (this.value != null) {
+                data.value = this.value;
+            }
+            return data;
+        }
+        serialize(): Uint8Array;
+        serialize(w: pb_1.BinaryWriter): void;
+        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+            const writer = w || new pb_1.BinaryWriter();
+            if (this.value != 0)
+                writer.writeUint64(1, this.value);
+            if (!w)
+                return writer.getResultBuffer();
+        }
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): ProtoNumber {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new ProtoNumber();
+            while (reader.nextField()) {
+                if (reader.isEndGroup())
+                    break;
+                switch (reader.getFieldNumber()) {
+                    case 1:
+                        message.value = reader.readUint64();
+                        break;
+                    default: reader.skipField();
+                }
+            }
+            return message;
+        }
+        serializeBinary(): Uint8Array {
+            return this.serialize();
+        }
+        static deserializeBinary(bytes: Uint8Array): ProtoNumber {
+            return ProtoNumber.deserialize(bytes);
+        }
+    }
+    export class ProtoLocations extends pb_1.Message {
+        #one_of_decls: number[][] = [];
+        constructor(data?: any[] | {
+            locations?: ProtoLocation[];
+        }) {
+            super();
+            pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
+            if (!Array.isArray(data) && typeof data == "object") {
+                if ("locations" in data && data.locations != undefined) {
+                    this.locations = data.locations;
+                }
+            }
+        }
+        get locations() {
+            return pb_1.Message.getRepeatedWrapperField(this, ProtoLocation, 1) as ProtoLocation[];
+        }
+        set locations(value: ProtoLocation[]) {
+            pb_1.Message.setRepeatedWrapperField(this, 1, value);
+        }
+        static fromObject(data: {
+            locations?: ReturnType<typeof ProtoLocation.prototype.toObject>[];
+        }): ProtoLocations {
+            const message = new ProtoLocations({});
+            if (data.locations != null) {
+                message.locations = data.locations.map(item => ProtoLocation.fromObject(item));
+            }
+            return message;
+        }
+        toObject() {
+            const data: {
+                locations?: ReturnType<typeof ProtoLocation.prototype.toObject>[];
+            } = {};
+            if (this.locations != null) {
+                data.locations = this.locations.map((item: ProtoLocation) => item.toObject());
+            }
+            return data;
+        }
+        serialize(): Uint8Array;
+        serialize(w: pb_1.BinaryWriter): void;
+        serialize(w?: pb_1.BinaryWriter): Uint8Array | void {
+            const writer = w || new pb_1.BinaryWriter();
+            if (this.locations.length)
+                writer.writeRepeatedMessage(1, this.locations, (item: ProtoLocation) => item.serialize(writer));
+            if (!w)
+                return writer.getResultBuffer();
+        }
+        static deserialize(bytes: Uint8Array | pb_1.BinaryReader): ProtoLocations {
+            const reader = bytes instanceof pb_1.BinaryReader ? bytes : new pb_1.BinaryReader(bytes), message = new ProtoLocations();
+            while (reader.nextField()) {
+                if (reader.isEndGroup())
+                    break;
+                switch (reader.getFieldNumber()) {
+                    case 1:
+                        reader.readMessage(message.locations, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoLocation.deserialize(reader), ProtoLocation));
+                        break;
+                    default: reader.skipField();
+                }
+            }
+            return message;
+        }
+        serializeBinary(): Uint8Array {
+            return this.serialize();
+        }
+        static deserializeBinary(bytes: Uint8Array): ProtoLocations {
+            return ProtoLocations.deserialize(bytes);
+        }
+    }
 }
