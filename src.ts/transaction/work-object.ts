@@ -117,9 +117,6 @@ export interface HeaderLike {
     /** SHA3 uncles hash. */
     sha3Uncles: string
 
-    /** Timestamp of the block. */
-    timestamp: string
-
     /** Transactions root hash. */
     transactionsRoot: string
 
@@ -386,7 +383,6 @@ export class WorkObject {
                 parentHash: protoWo.wo_body?.header?.parent_hash?.map(hash => hexlify(hash.value)) || [],
                 receiptsRoot: hexlify(protoWo.wo_body?.header?.receipt_hash?.value || new Uint8Array()),
                 sha3Uncles: hexlify(protoWo.wo_body?.header?.uncle_hash?.value || new Uint8Array()),
-                timestamp: hexlify(protoWo.wo_body?.header?.time?.toString() || new Uint8Array()),
                 transactionsRoot: hexlify(protoWo.wo_body?.header?.tx_hash?.value || new Uint8Array()),
                 utxoRoot: hexlify(protoWo.wo_body?.header?.utxo_root?.value || new Uint8Array()),
             },

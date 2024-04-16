@@ -160,8 +160,10 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
         const provider = checkProvider(this, "sendTransaction");
         const pop = await this.populateTransaction(tx);
+        console.log('pop',pop.from)
         delete pop.from;
         const txObj = Transaction.from(pop);
+        console.log(JSON.stringify(txObj, null, 4))
         const signedTx = await this.signTransaction(txObj);
         return await provider.broadcastTransaction(signedTx);
     }

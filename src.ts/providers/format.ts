@@ -126,7 +126,6 @@ const _formatBlock = object({
     parentHash: arrayOf(formatHash),
     number: arrayOf(getNumber),
 
-    timestamp: getNumber,
     nonce: allowNull(formatData),
 
     gasLimit: getBigInt,

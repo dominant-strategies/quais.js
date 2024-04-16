@@ -1,0 +1,1 @@
+{"version":3,"file":"proto-decode.d.ts","sourceRoot":"","sources":["../../src.ts/utils/proto-decode.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,gBAAgB,EAAE,MAAM,4BAA4B,CAAC;AAC9D,OAAO,EAAE,eAAe,EAAE,MAAM,4BAA4B,CAAC;AAG7D,wBAAgB,sBAAsB,CAAC,KAAK,EAAE,UAAU,GAAG,gBAAgB,CAG1E;AAED,wBAAgB,qBAAqB,CAAC,KAAK,EAAE,UAAU,GAAG,eAAe,CAGxE"}

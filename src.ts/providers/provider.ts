@@ -569,7 +569,6 @@ export class Block implements BlockParams, Iterable<string> {
             hash: getValue(block.hash),
 
             number: block.number,
-            timestamp: block.timestamp,
 
             parentHash: block.parentHash,
 
