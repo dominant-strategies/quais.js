@@ -104,7 +104,6 @@ export {
     formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits,
     toUtf8Bytes, toUtf8CodePoints, toUtf8String,
     Utf8ErrorFuncs,
-    decodeRlp, encodeRlp,
     uuidV4, getTxType, getShardForAddress, getAddressDetails, isUTXOAddress,
 } from "./utils/index.js";
 
@@ -181,7 +180,6 @@ export type {
     ErrorCode,
     FixedFormat,
     Utf8ErrorFunc, UnicodeNormalizationForm, Utf8ErrorReason,
-    RlpStructuredData, RlpStructuredDataish,
 
     GetUrlResponse,
     FetchPreflightFunc, FetchProcessFunc, FetchRetryFunc,
