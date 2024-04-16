@@ -16,6 +16,7 @@ import type { Provider } from "../providers/index.js";
 import type { Wordlist } from "../quais.js";
 import type { CrowdsaleAccount } from "./json-crowdsale.js";
 import type { KeystoreAccount } from "./json-keystore.js";
+import { UTXOHDWallet } from "./utxohdwallet.js";
 
 
 function stall(duration: number): Promise<void> {
@@ -155,9 +156,25 @@ export class Wallet extends BaseWallet {
     /**"m/44'/60'/0'/0/0"
      *  Creates a [[HDNodeWallet]] for %%phrase%%.
      */
-    static fromPhrase(phrase: string, path: string, provider?: Provider, wordlist?: Wordlist): HDNodeWallet {
-        const wallet = HDNodeWallet.fromPhrase(phrase, path, undefined, wordlist);
-        if (provider) { return wallet.connect(provider); }
-        return wallet;
+    static fromPhrase(phrase: string, path: string, provider?: Provider, wordlist?: Wordlist): HDNodeWallet | UTXOHDWallet {
+        const splitPath = path.split('/');
+        if (splitPath.length < 3) throw new Error(`Incomplete path for wallet derivation ${path}`);
+        let coinTypeStr = splitPath[2];
+        coinTypeStr = coinTypeStr.replace("'", "");
+        const coinType = parseInt(coinTypeStr);
+
+        let wallet;
+        switch (coinType) {
+            case 994:
+                wallet = HDNodeWallet.fromPhrase(phrase, path, undefined, wordlist);
+                if (provider) { return wallet.connect(provider); }
+                return wallet;
+            case 969:
+                wallet = UTXOHDWallet.fromPhrase(phrase, path, undefined, wordlist);
+                if (provider) { return wallet.connect(provider); }
+                return wallet;
+            default:
+                throw new Error(`Unsupported cointype ${coinType} for HD wallet derivation`);
+        }
     }
 }

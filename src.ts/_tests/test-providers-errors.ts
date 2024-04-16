@@ -46,6 +46,7 @@ describe("Tests Provider Call Exception", function() {
     ];
 
     const testAddr = "0x0aff86a125b29b25a9e418c2fb64f1753532c0ca"; //Cyprus1
+    const testAddr2 = "0x0aff86a125b29b25a9e418c2fb64f1753532c0ca"; //Cyprus1
 
     const networkName = "colosseum";
     for (const { code, reason } of panics) {
@@ -64,7 +65,7 @@ describe("Tests Provider Call Exception", function() {
 
                     await stall(1000);
 
-                    const tx = { to: testAddr, data };
+                    const tx = { to: testAddr, from: testAddr2, data };
                     try {
                         const result = await (method === "call" ? provider.call(tx): provider.estimateGas(tx));
                         console.log(result);
@@ -123,7 +124,7 @@ describe("Tests Provider Call Exception", function() {
 
     for (const { data, message, name, reason, revert } of customErrors) {
         for (const method of [ "call", "estimateGas" ]) {
-            const tx = { to: testAddr, data };
+            const tx = { to: testAddr, from: testAddr2, data };
             for (const providerName of providerNames) {
                 const provider = getProvider(providerName, networkName);
                 if (provider == null) { continue; }
@@ -168,6 +169,7 @@ describe("Tests Provider Call Exception", function() {
 
 describe("Test Provider Blockchain Errors", function() {
     const wallet = new Wallet(<string>(process.env.FAUCET_PRIVATEKEY));
+    const wallet2 = new Wallet(<string>(process.env.FAUCET_PRIVATEKEY));
 
     const networkName = "colosseum";
     for (const providerName of providerNames) {
@@ -191,7 +193,7 @@ describe("Test Provider Blockchain Errors", function() {
                 nonce = await w.getNonce("pending");
                 try {
                     tx1 = await w.sendTransaction({
-                        nonce, to: wallet, value
+                        nonce, to: wallet, from: wallet2, value
                     });
                 } catch (error: any) {
                     // Another CI host beat us to this nonce
@@ -209,7 +211,7 @@ describe("Test Provider Blockchain Errors", function() {
             const rejection = assert.rejects(async function() {
                 // Send another tx with the same nonce
                 const tx2 = await w.sendTransaction({
-                    nonce, to: wallet, value: 1
+                    nonce, to: wallet, from: wallet2, value: 1
                 });
                 console.log({ tx1, tx2 });
             }, (error: unknown) => {
@@ -237,7 +239,7 @@ describe("Test Provider Blockchain Errors", function() {
 
             await assert.rejects(async function() {
                 const tx = await w.sendTransaction({
-                    to: wallet, value: 1
+                    to: wallet, from: wallet2, value: 1
                 });
                 console.log(tx);
             }, (error) => {
@@ -260,7 +262,7 @@ describe("Test Provider Blockchain Errors", function() {
 
             await assert.rejects(async function() {
                 const tx = await w.sendTransaction({
-                    to: wallet, nonce: 1, value: 1
+                    to: wallet, from: wallet2, value: 1
                 });
                 console.log(tx);
             }, (error) => {

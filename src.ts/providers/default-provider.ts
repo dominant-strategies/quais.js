@@ -60,7 +60,7 @@ const Testnets = "goerli kovan sepolia classicKotti optimism-goerli arbitrum-goe
  *      exclusive: [ "quaiscan", "infura" ]
  *    });
  */
-export function getDefaultProvider(network: string | Networkish | WebSocketLike, options?: any): AbstractProvider {
+export function getDefaultProvider(network: string | string[] | Networkish | WebSocketLike, options?: any): AbstractProvider {
     if (options == null) { options = { }; }
 
     const allowService = (name: string) => {
@@ -78,8 +78,22 @@ export function getDefaultProvider(network: string | Networkish | WebSocketLike,
         return new JsonRpcProvider(network);
     }
 
+    if (Array.isArray(network) && network[0].match(/^https?:/)) {
+        return new JsonRpcProvider(network);
+    }
+
     if (typeof(network) === "string" && network.match(/^wss?:/) || isWebSocketLike(network)) {
         return new WebSocketProvider(network);
+    }
+
+    if (Array.isArray(network) && (network[0].match(/^wss?:/) || isWebSocketLike(network[0]))) {
+        return new WebSocketProvider(network[0]);
+    }
+
+    if (Array.isArray(network)) {
+        assert(false, "unsupported default network", "UNSUPPORTED_OPERATION", {
+            operation: "getDefaultProvider"
+        });
     }
 
     // Get the network and name, if possible

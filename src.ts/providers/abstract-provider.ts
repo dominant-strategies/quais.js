@@ -15,17 +15,16 @@
 //   of Signer/ENS name to address so we can sync respond to listenerCount.
 
 import { getAddress, resolveAddress } from "../address/index.js";
-import { ZeroAddress } from "../constants/index.js";
+import { ShardData, ZeroAddress } from "../constants/index.js";
 import { Contract } from "../contract/index.js";
 import { namehash } from "../hash/index.js";
 import {
-    concat, dataLength, dataSlice, hexlify, isHexString,
-    getBigInt, getBytes, getNumber,
-    isCallException, isError, makeError, assert, assertArgument,
+    hexlify, isHexString,
+    getBigInt, getNumber,
+    isError, makeError, assert, assertArgument,
     FetchRequest,
-    toBeArray, toQuantity,
+    toQuantity,
     defineProperties, EventPayload, resolveProperties,
-    toUtf8String
 } from "../utils/index.js";
 
 import { EnsResolver } from "./ens-resolver.js";
@@ -36,7 +35,7 @@ import { Network } from "./network.js";
 import { copyRequest, Block, FeeData, Log, TransactionReceipt, TransactionResponse } from "./provider.js";
 
 import type { Addressable, AddressLike } from "../address/index.js";
-import type { BigNumberish, BytesLike } from "../utils/index.js";
+import type { BigNumberish } from "../utils/index.js";
 import type { Listener } from "../utils/index.js";
 
 import type { Networkish } from "./network.js";
@@ -324,10 +323,12 @@ export type PerformActionFilter = {
     topics?: Array<null | string | Array<string>>;
     fromBlock?: BlockTag;
     toBlock?: BlockTag;
+    shard: string;
 } | {
     address?: string | Array<string>;
     topics?: Array<null | string | Array<string>>;
     blockHash?: string;
+    shard: string;
 };
 
 /**
@@ -342,7 +343,7 @@ export interface PerformActionTransaction extends PreparedTransactionRequest {
     /**
      *  The sender of the transaction.
      */
-    from?: string;
+    from: string;
 }
 
 /**
@@ -351,54 +352,86 @@ export interface PerformActionTransaction extends PreparedTransactionRequest {
  */
 export type PerformActionRequest = {
     method: "broadcastTransaction",
-    signedTransaction: string
+    signedTransaction: string,
+    shard: string
 } | {
     method: "call",
-    transaction: PerformActionTransaction, blockTag: BlockTag
+    transaction: PerformActionTransaction, blockTag: BlockTag, shard?: string
 } | {
-    method: "chainId"
+    method: "chainId", shard?: string
 } | {
     method: "estimateGas",
-    transaction: PerformActionTransaction
+    transaction: PerformActionTransaction,
+    shard?: string
 } | {
     method: "getBalance",
-    address: string, blockTag: BlockTag
+    address: string, blockTag: BlockTag, shard: string
 } | {
     method: "getBlock",
-    blockTag: BlockTag, includeTransactions: boolean
+    blockTag: BlockTag, includeTransactions: boolean,
+    shard: string
 } | {
     method: "getBlock",
-    blockHash: string, includeTransactions: boolean
+    blockHash: string, includeTransactions: boolean,
+    shard: string
 } | {
-    method: "getBlockNumber"
+    method: "getBlockNumber",
+    shard?: string
 } | {
     method: "getCode",
-    address: string, blockTag: BlockTag
+    address: string, blockTag: BlockTag, shard: string
 } | {
-    method: "getGasPrice"
+    method: "getGasPrice",
+    txType: boolean,
+    shard?: string
 } | {
     method: "getLogs",
-    filter: PerformActionFilter
+    filter: PerformActionFilter,
+    shard: string
 } | {
-    method: "getMaxPriorityFeePerGas"
+    method: "getMaxPriorityFeePerGas",
+    shard?: string
 } | {
     method: "getStorage",
-    address: string, position: bigint, blockTag: BlockTag
+    address: string, position: bigint, blockTag: BlockTag, shard: string
 } | {
     method: "getTransaction",
-    hash: string
+    hash: string,
+    shard: string
 } | {
     method: "getTransactionCount",
-    address: string, blockTag: BlockTag
+    address: string, blockTag: BlockTag, shard: string
 } | {
     method: "getTransactionReceipt",
-    hash: string
+    hash: string,
+    shard: string
 } | {
     method: "getTransactionResult",
-    hash: string
+    hash: string,
+    shard: string
+} | {
+
+    method: "getRunningLocations",
+    shard?: string
+} | {
+    method: "getProtocolTrieExpansionCount",
+    shard: string
+} | {
+    method: "getQiRateAtBlock",
+    blockTag: BlockTag,
+    amt: number,
+    shard: string
+} | {
+    method: "getQuaiRateAtBlock",
+    blockTag: BlockTag,
+    amt: number,
+    shard: string
+} | {
+    method: "getProtocolExpansionNumber",
 } | {
     method: "getPendingHeader",
 };
+
 
 type _PerformAccountRequest = {
     method: "getBalance" | "getTransactionCount" | "getCode"
@@ -426,14 +459,14 @@ const defaultOptions = {
     pollingInterval: 4000
 };
 
-type CcipArgs = {
-    sender: string;
-    urls: Array<string>;
-    calldata: string;
-    selector: string;
-    extraData: string;
-    errorArgs: Array<any>
-};
+// type CcipArgs = {
+//     sender: string;
+//     urls: Array<string>;
+//     calldata: string;
+//     selector: string;
+//     extraData: string;
+//     errorArgs: Array<any>
+// };
 
 /**
  *  An **AbstractProvider** provides a base class for other sub-classes to
@@ -443,6 +476,8 @@ type CcipArgs = {
  */
 export class AbstractProvider implements Provider {
 
+    _urlMap: Map<string, string>;
+    #connect: FetchRequest[];
     #subs: Map<string, Sub>;
     #plugins: Map<string, AbstractProviderPlugin>;
 
@@ -501,6 +536,98 @@ export class AbstractProvider implements Provider {
         this.#timers = new Map();
 
         this.#disableCcipRead = false;
+        this.#connect = [];
+        this._urlMap = new Map();
+    }
+
+    async initUrlMap(urls: string[] | FetchRequest): Promise<void> {
+        if (urls instanceof FetchRequest) {
+            const primeUrl = urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":9001";
+            this._urlMap.set('0x', primeUrl);
+            urls.url = primeUrl;
+            this.#connect.push(urls);
+            const shards = await this.getRunningLocations();
+            shards.forEach((shard) => {
+                const port = 9100 + 20 * shard[0] + shard[1];
+                this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":" + port);
+            });
+            return;
+        }
+        for (const url of urls) {
+            const primeUrl = url.split(":")[0] + ":" + url.split(":")[1] + ":9001";
+            this._urlMap.set('0x', primeUrl);
+            this.#connect.push(new FetchRequest(primeUrl));
+            const shards = await this.getRunningLocations(); // Now waits for the previous to complete
+            shards.forEach((shard) => {
+                const port = 9100 + 20 * shard[0] + shard[1];
+                this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, url.split(":")[0] + ":" + url.split(":")[1] + ":" + port);
+            });
+        }
+
+    }
+
+    shardBytes(shard: string): string {
+        return ShardData.find(it =>
+            it.name == shard ||
+            it.byte == shard ||
+            it.nickname == shard ||
+            it.shard == shard
+        )?.byte || '';
+    }
+
+    get connect(): FetchRequest[] { return this.#connect; }
+
+    async shardFromAddress(_address: AddressLike): Promise<string> {
+        let address: string | Promise<string> = this._getAddress(_address);
+        return (await address).slice(0, 4)
+    }
+
+    shardFromHash(hash: string): string {
+        return hash.slice(0, 4);
+    }
+
+    async getLatestQuaiRate(shard: string, amt: number = 1): Promise<bigint> {
+        const blockNumber = await this.getBlockNumber(shard);
+        return this.getQuaiRateAtBlock(shard, blockNumber, amt);
+    }
+
+    async getQuaiRateAtBlock(shard: string, blockTag: BlockTag, amt: number = 1): Promise<bigint> {
+        let resolvedBlockTag = this._getBlockTag(shard, blockTag);
+        if (typeof resolvedBlockTag !== "string") {
+            resolvedBlockTag = await resolvedBlockTag;
+        }
+
+        return await this.#perform({
+            method: "getQuaiRateAtBlock",
+            blockTag: resolvedBlockTag,
+            amt,
+            shard: shard
+        });
+    }
+
+    async getProtocolExpansionNumber(): Promise<number> {
+        return await this.#perform({
+            method: "getProtocolExpansionNumber"
+        });
+    }
+
+    async getLatestQiRate(shard: string, amt: number = 1): Promise<bigint> {
+        const blockNumber = await this.getBlockNumber(shard);
+        return this.getQiRateAtBlock(shard, blockNumber, amt);
+    }
+
+    async getQiRateAtBlock(shard: string, blockTag: BlockTag, amt: number = 1): Promise<bigint> {
+        let resolvedBlockTag = this._getBlockTag(shard, blockTag);
+        if (typeof resolvedBlockTag !== "string") {
+            resolvedBlockTag = await resolvedBlockTag;
+        }
+
+        return await this.#perform({
+            method: "getQiRateAtBlock",
+            blockTag: resolvedBlockTag,
+            amt,
+            shard: shard
+        });
     }
 
     get pollingInterval(): number { return this.#options.pollingInterval; }
@@ -670,7 +797,7 @@ export class AbstractProvider implements Provider {
      *
      *  Sub-classes **must** override this.
      */
-    _detectNetwork(): Promise<Network> {
+    _detectNetwork(shard?: string): Promise<Network> {
         assert(false, "sub-classes must implement this", "UNSUPPORTED_OPERATION", {
             operation: "_detectNetwork"
         });
@@ -691,8 +818,8 @@ export class AbstractProvider implements Provider {
 
     // State
 
-    async getBlockNumber(): Promise<number> {
-        const blockNumber = getNumber(await this.#perform({ method: "getBlockNumber" }), "%response");
+    async getBlockNumber(shard?: string): Promise<number> {
+        const blockNumber = getNumber(await this.#perform({ method: "getBlockNumber", shard: shard }), "%response");
         if (this.#lastBlockNumber >= 0) { this.#lastBlockNumber = blockNumber; }
         return blockNumber;
     }
@@ -710,7 +837,7 @@ export class AbstractProvider implements Provider {
      *  Returns or resolves to a valid block tag for %%blockTag%%, resolving
      *  negative values and returning if already a valid block tag.
      */
-    _getBlockTag(blockTag?: BlockTag): string | Promise<string> {
+    _getBlockTag(shard?: string, blockTag?: BlockTag): string | Promise<string> {
         if (blockTag == null) { return "latest"; }
 
         switch (blockTag) {
@@ -736,7 +863,7 @@ export class AbstractProvider implements Provider {
         if (typeof (blockTag) === "number") {
             if (blockTag >= 0) { return toQuantity(blockTag); }
             if (this.#lastBlockNumber >= 0) { return toQuantity(this.#lastBlockNumber + blockTag); }
-            return this.getBlockNumber().then((b) => toQuantity(b + <number>blockTag));
+            return this.getBlockNumber(shard).then((b) => toQuantity(b + <number>blockTag));
         }
 
         assertArgument(false, "invalid blockTag", "blockTag", blockTag);
@@ -760,7 +887,7 @@ export class AbstractProvider implements Provider {
 
         const blockHash = ("blockHash" in filter) ? filter.blockHash : undefined;
 
-        const resolve = (_address: Array<string>, fromBlock?: string, toBlock?: string) => {
+        const resolve = (_address: Array<string>, fromBlock?: string, toBlock?: string, shard?: string) => {
             let address: undefined | string | Array<string> = undefined;
             switch (_address.length) {
                 case 0: break;
@@ -784,6 +911,7 @@ export class AbstractProvider implements Provider {
             if (fromBlock) { filter.fromBlock = fromBlock; }
             if (toBlock) { filter.toBlock = toBlock; }
             if (blockHash) { filter.blockHash = blockHash; }
+            if (shard) { filter.shard = shard; }
 
             return filter;
         };
@@ -799,21 +927,23 @@ export class AbstractProvider implements Provider {
         }
 
         let fromBlock: undefined | string | Promise<string> = undefined;
-        if ("fromBlock" in filter) { fromBlock = this._getBlockTag(filter.fromBlock); }
+        if ("fromBlock" in filter) { fromBlock = this._getBlockTag(filter.shard, filter.fromBlock); }
 
         let toBlock: undefined | string | Promise<string> = undefined;
-        if ("toBlock" in filter) { toBlock = this._getBlockTag(filter.toBlock); }
+        if ("toBlock" in filter) { toBlock = this._getBlockTag(filter.shard, filter.toBlock); }
+
+        const shard = filter.shard
 
         if (address.filter((a) => (typeof (a) !== "string")).length ||
             (fromBlock != null && typeof (fromBlock) !== "string") ||
             (toBlock != null && typeof (toBlock) !== "string")) {
 
-            return Promise.all([Promise.all(address), fromBlock, toBlock]).then((result) => {
+            return Promise.all([Promise.all(address), fromBlock, toBlock, shard]).then((result) => {
                 return resolve(result[0], result[1], result[2]);
             });
         }
 
-        return resolve(<Array<string>>address, fromBlock, toBlock);
+        return resolve(<Array<string>>address, fromBlock, toBlock, shard);
     }
 
     /**
@@ -837,7 +967,7 @@ export class AbstractProvider implements Provider {
         });
 
         if (request.blockTag != null) {
-            const blockTag = this._getBlockTag(request.blockTag);
+            const blockTag = this._getBlockTag(request.chainId?.toString(), request.blockTag);
             if (isPromise(blockTag)) {
                 promises.push((async function () { request.blockTag = await blockTag; })());
             } else {
@@ -855,7 +985,7 @@ export class AbstractProvider implements Provider {
         return request;
     }
 
-    async getNetwork(): Promise<Network> {
+    async getNetwork(shard: string = 'prime'): Promise<Network> {
 
         // No explicit network was set and this is our first time
         if (this.#networkPromise == null) {
@@ -863,7 +993,7 @@ export class AbstractProvider implements Provider {
             // Detect the current network (shared with all calls)
             const detectNetwork = (async () => {
                 try {
-                    const network = await this._detectNetwork();
+                    const network = await this._detectNetwork(shard);
                     this.emit("network", network, null);
                     return network;
                 } catch (error) {
@@ -882,7 +1012,7 @@ export class AbstractProvider implements Provider {
 
         const [expected, actual] = await Promise.all([
             networkPromise,          // Possibly an explicit Network
-            this._detectNetwork()    // The actual connected network
+            this._detectNetwork(shard)    // The actual connected network
         ]);
 
         if (expected.chainId !== actual.chainId) {
@@ -905,36 +1035,45 @@ export class AbstractProvider implements Provider {
         return expected.clone();
     }
 
-    async getFeeData(): Promise<FeeData> {
+    async getRunningLocations(shard?: string): Promise<number[][]> {
+        return await this.#perform(shard ? { method: "getRunningLocations", shard: shard } : { method: "getRunningLocations" });
+
+
+    }
+
+    async getProtocolTrieExpansionCount(shard: string): Promise<number> {
+        return await this.#perform({ method: "getProtocolTrieExpansionCount", shard: shard });
+    }
+
+    async getFeeData(shard?: string, txType: boolean = true): Promise<FeeData> {
         const network = await this.getNetwork();
         const getFeeDataFunc = async () => {
-            const { _block, gasPrice, priorityFee } = await resolveProperties({
-                _block: this.#getBlock("latest", false),
+            const { gasPrice, priorityFee } = await resolveProperties({
                 gasPrice: ((async () => {
                     try {
-                        const value = await this.#perform({ method: "getGasPrice" });
+                        const value = await this.#perform({ method: "getGasPrice", txType, shard: shard });
                         return getBigInt(value, "%response");
                     } catch (error) { }
                     return null
                 })()),
                 priorityFee: ((async () => {
                     try {
-                        const value = await this.#perform({ method: "getMaxPriorityFeePerGas" });
+                        const value = txType ? await this.#perform({ method: "getMaxPriorityFeePerGas", shard: shard }) : 0;
                         return getBigInt(value, "%response");
                     } catch (error) { }
                     return null;
                 })())
             });
 
+            if (gasPrice == null) { throw new Error("could not determine gasPrice"); }
+
             let maxFeePerGas: null | bigint = null;
             let maxPriorityFeePerGas: null | bigint = null;
 
             // These are the recommended EIP-1559 heuristics for fee data
-            const block = this._wrapBlock(_block, network);
-            if (block && block.baseFeePerGas) {
-                maxPriorityFeePerGas = (priorityFee != null) ? priorityFee : BigInt("1000000000");
-                maxFeePerGas = (block.baseFeePerGas * BN_2) + maxPriorityFeePerGas;
-            }
+
+            maxPriorityFeePerGas = (priorityFee != null) ? priorityFee : BigInt("1000000000");
+            maxFeePerGas = (gasPrice * BN_2) + maxPriorityFeePerGas;
 
             return new FeeData(gasPrice, maxFeePerGas, maxPriorityFeePerGas);
         };
@@ -954,8 +1093,9 @@ export class AbstractProvider implements Provider {
     async estimateGas(_tx: TransactionRequest): Promise<bigint> {
         let tx = this._getTransactionRequest(_tx);
         if (isPromise(tx)) { tx = await tx; }
+        const shard = await this.shardFromAddress(tx.from)
         return getBigInt(await this.#perform({
-            method: "estimateGas", transaction: tx
+            method: "estimateGas", transaction: tx, shard: shard
         }), "%response");
     }
 
@@ -973,62 +1113,60 @@ export class AbstractProvider implements Provider {
 
         } catch (error: any) {
             // CCIP Read OffchainLookup
-            if (!this.disableCcipRead && isCallException(error) && error.data && attempt >= 0 && blockTag === "latest" && transaction.to != null && dataSlice(error.data, 0, 4) === "0x556f1830") {
-                const data = error.data;
+            // if (!this.disableCcipRead && isCallException(error) && error.data && attempt >= 0 && blockTag === "latest" && transaction.to != null && dataSlice(error.data, 0, 4) === "0x556f1830") {
+            //     const data = error.data;
 
-                const txSender = await resolveAddress(transaction.to, this);
+            //     const txSender = await resolveAddress(transaction.to, this);
 
-                // Parse the CCIP Read Arguments
-                let ccipArgs: CcipArgs;
-                try {
-                    ccipArgs = parseOffchainLookup(dataSlice(error.data, 4));
-                } catch (error: any) {
-                    assert(false, error.message, "OFFCHAIN_FAULT", {
-                        reason: "BAD_DATA", transaction, info: { data }
-                    });
-                }
+            //     // Parse the CCIP Read Arguments
+            //     let ccipArgs: CcipArgs;
+            //     try {
+            //         ccipArgs = parseOffchainLookup(dataSlice(error.data, 4));
+            //     } catch (error: any) {
+            //         assert(false, error.message, "OFFCHAIN_FAULT", {
+            //             reason: "BAD_DATA", transaction, info: { data } });
+            //     }
 
-                // Check the sender of the OffchainLookup matches the transaction
-                assert(ccipArgs.sender.toLowerCase() === txSender.toLowerCase(),
-                    "CCIP Read sender mismatch", "CALL_EXCEPTION", {
-                    action: "call",
-                    data,
-                    reason: "OffchainLookup",
-                    transaction: <any>transaction, // @TODO: populate data?
-                    invocation: null,
-                    revert: {
-                        signature: "OffchainLookup(address,string[],bytes,bytes4,bytes)",
-                        name: "OffchainLookup",
-                        args: ccipArgs.errorArgs
-                    }
-                });
+            //     // Check the sender of the OffchainLookup matches the transaction
+            //     assert(ccipArgs.sender.toLowerCase() === txSender.toLowerCase(),
+            //         "CCIP Read sender mismatch", "CALL_EXCEPTION", {
+            //             action: "call",
+            //             data,
+            //             reason: "OffchainLookup",
+            //             transaction: <any>transaction, // @TODO: populate data?
+            //             invocation: null,
+            //             revert: {
+            //                 signature: "OffchainLookup(address,string[],bytes,bytes4,bytes)",
+            //                 name: "OffchainLookup",
+            //                 args: ccipArgs.errorArgs
+            //             }
+            //         });
 
-                const ccipResult = await this.ccipReadFetch(transaction, ccipArgs.calldata, ccipArgs.urls);
-                assert(ccipResult != null, "CCIP Read failed to fetch data", "OFFCHAIN_FAULT", {
-                    reason: "FETCH_FAILED", transaction, info: { data: error.data, errorArgs: ccipArgs.errorArgs }
-                });
+            //     const ccipResult = await this.ccipReadFetch(transaction, ccipArgs.calldata, ccipArgs.urls);
+            //     assert(ccipResult != null, "CCIP Read failed to fetch data", "OFFCHAIN_FAULT", {
+            //         reason: "FETCH_FAILED", transaction, info: { data: error.data, errorArgs: ccipArgs.errorArgs } });
 
-                const tx = {
-                    to: txSender,
-                    data: concat([ccipArgs.selector, encodeBytes([ccipResult, ccipArgs.extraData])])
-                };
+            //     const tx = {
+            //         to: txSender,
+            //         data: concat([ ccipArgs.selector, encodeBytes([ ccipResult, ccipArgs.extraData ]) ])
+            //     };
 
-                this.emit("debug", { action: "sendCcipReadCall", transaction: tx });
-                try {
-                    const result = await this.#call(tx, blockTag, attempt + 1);
-                    this.emit("debug", { action: "receiveCcipReadCallResult", transaction: Object.assign({}, tx), result });
-                    return result;
-                } catch (error) {
-                    this.emit("debug", { action: "receiveCcipReadCallError", transaction: Object.assign({}, tx), error });
-                    throw error;
-                }
-            }
+            //     this.emit("debug", { action: "sendCcipReadCall", transaction: tx });
+            //     try {
+            //         const result = await this.#call(tx, blockTag, attempt + 1);
+            //         this.emit("debug", { action: "receiveCcipReadCallResult", transaction: Object.assign({ }, tx), result });
+            //         return result;
+            //     } catch (error) {
+            //         this.emit("debug", { action: "receiveCcipReadCallError", transaction: Object.assign({ }, tx), error });
+            //         throw error;
+            //     }
+            // }
 
             throw error;
         }
     }
 
-    async #checkNetwork<T>(promise: Promise<T>): Promise<T> {
+    async #checkNetwork<T>(promise: Promise<T>, shard?: string,): Promise<T> {
         const { value } = await resolveProperties({
             network: this.getNetwork(),
             value: promise
@@ -1037,24 +1175,27 @@ export class AbstractProvider implements Provider {
     }
 
     async call(_tx: TransactionRequest): Promise<string> {
+        const shard = await this.shardFromAddress(_tx.from);
         const { tx, blockTag } = await resolveProperties({
             tx: this._getTransactionRequest(_tx),
-            blockTag: this._getBlockTag(_tx.blockTag)
+            blockTag: this._getBlockTag(shard, _tx.blockTag)
         });
 
-        return await this.#checkNetwork(this.#call(tx, blockTag, _tx.enableCcipRead ? 0 : -1));
+        return await this.#checkNetwork(this.#call(tx, blockTag, -1), shard);
     }
 
     // Account
     async #getAccountValue(request: _PerformAccountRequest, _address: AddressLike, _blockTag?: BlockTag): Promise<any> {
         let address: string | Promise<string> = this._getAddress(_address);
-        let blockTag: string | Promise<string> = this._getBlockTag(_blockTag);
+        const shard = await this.shardFromAddress(_address);
+
+        let blockTag: string | Promise<string> = this._getBlockTag(shard, _blockTag);
 
         if (typeof (address) !== "string" || typeof (blockTag) !== "string") {
             [address, blockTag] = await Promise.all([address, blockTag]);
         }
 
-        return await this.#checkNetwork(this.#perform(Object.assign(request, { address, blockTag })));
+        return await this.#checkNetwork(this.#perform(Object.assign(request, { address, blockTag, shard: shard })), shard);
     }
 
     async getBalance(address: AddressLike, blockTag?: BlockTag): Promise<bigint> {
@@ -1079,56 +1220,65 @@ export class AbstractProvider implements Provider {
     }
 
     // Write
-    async broadcastTransaction(signedWo: string): Promise<TransactionResponse> {
-        const { blockNumber, network } = await resolveProperties({
-            blockNumber: this.getBlockNumber(),
+    async broadcastTransaction(shard: string, signedTx: string): Promise<TransactionResponse> {
+        const { blockNumber, hash, network } = await resolveProperties({
+            blockNumber: this.getBlockNumber(shard),
             hash: this._perform({
                 method: "broadcastTransaction",
-                signedTransaction: signedWo
+                signedTransaction: signedTx,
+                shard: shard
             }),
             network: this.getNetwork()
         });
 
-        const wo = WorkObject.from(signedWo);
-
-        // TODO: Check which hash to use here
-        // if (wo.woHeader.headerHash !== hash) {
-        //     throw new Error("@TODO: the returned hash did not match");
-        // }
-
-        return this._wrapTransactionResponse(<any>wo.tx, network).replaceableTransaction(blockNumber);
+        const tx = Transaction.from(signedTx);
+        this.#validateTransactionHash(tx.hash || '', hash)
+        tx.hash = hash;
+        return this._wrapTransactionResponse(<any>tx, network).replaceableTransaction(blockNumber);
     }
 
-    async #getBlock(block: BlockTag | string, includeTransactions: boolean): Promise<any> {
+    async #validateTransactionHash(computedHash: string, nodehash: string) {
+        if (computedHash.substring(0, 4) !== nodehash.substring(0, 4))
+            throw new Error("Transaction hash mismatch in origin Zone");
+        if (computedHash.substring(6, 8) !== nodehash.substring(6, 8))
+            throw new Error("Transaction hash mismatch in destination Zone");
+        if (parseInt(computedHash[4], 16) < 8 !== parseInt(nodehash[4], 16) < 8)
+            throw new Error("Transaction ledger mismatch in origin Zone");
+        if (parseInt(computedHash[8], 16) < 8 !== parseInt(nodehash[8], 16) < 8)
+            throw new Error("Transaction ledger mismatch in destination Zone");
+    }
+
+    async #getBlock(shard: string, block: BlockTag | string, includeTransactions: boolean): Promise<any> {
         // @TODO: Add CustomBlockPlugin check
         if (isHexString(block, 32)) {
             return await this.#perform({
-                method: "getBlock", blockHash: block, includeTransactions
+                method: "getBlock", blockHash: block, includeTransactions, shard: shard
             });
         }
 
-        let blockTag = this._getBlockTag(block);
+        let blockTag = this._getBlockTag(shard, block);
         if (typeof (blockTag) !== "string") { blockTag = await blockTag; }
 
         return await this.#perform({
-            method: "getBlock", blockTag, includeTransactions
+            method: "getBlock", blockTag, includeTransactions, shard: shard
         });
     }
 
     // Queries
-    async getBlock(block: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block> {
+    async getBlock(shard: string, block: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block> {
         const { network, params } = await resolveProperties({
             network: this.getNetwork(),
-            params: this.#getBlock(block, !!prefetchTxs)
+            params: this.#getBlock(shard, block, !!prefetchTxs)
         });
         if (params == null) { return null; }
         return this._wrapBlock(params, network);
     }
 
     async getTransaction(hash: string): Promise<null | TransactionResponse> {
+        const shard = this.shardFromHash(hash);
         const { network, params } = await resolveProperties({
             network: this.getNetwork(),
-            params: this.#perform({ method: "getTransaction", hash })
+            params: this.#perform({ method: "getTransaction", hash, shard: shard })
         });
         if (params == null) { return null; }
 
@@ -1136,15 +1286,16 @@ export class AbstractProvider implements Provider {
     }
 
     async getTransactionReceipt(hash: string): Promise<null | TransactionReceipt> {
+        const shard = this.shardFromHash(hash);
         const { network, params } = await resolveProperties({
             network: this.getNetwork(),
-            params: this.#perform({ method: "getTransactionReceipt", hash })
+            params: this.#perform({ method: "getTransactionReceipt", hash, shard: shard })
         });
         if (params == null) { return null; }
         // Some backends did not backfill the effectiveGasPrice in to old transactions
         // in the receipt, so we look it up manually and inject it.
         if (params.gasPrice == null && params.effectiveGasPrice == null) {
-            const tx = await this.#perform({ method: "getTransaction", hash });
+            const tx = await this.#perform({ method: "getTransaction", hash, shard: shard });
             if (tx == null) { throw new Error("report this; could not find tx or effectiveGasPrice"); }
             params.effectiveGasPrice = tx.gasPrice;
         }
@@ -1153,9 +1304,10 @@ export class AbstractProvider implements Provider {
     }
 
     async getTransactionResult(hash: string): Promise<null | string> {
+        const shard = this.shardFromHash(hash);
         const { result } = await resolveProperties({
             network: this.getNetwork(),
-            result: this.#perform({ method: "getTransactionResult", hash })
+            result: this.#perform({ method: "getTransactionResult", hash, shard: shard })
         });
         if (result == null) { return null; }
         return hexlify(result);
@@ -1165,10 +1317,11 @@ export class AbstractProvider implements Provider {
     async getLogs(_filter: Filter | FilterByBlockHash): Promise<Array<Log>> {
         let filter = this._getFilter(_filter);
         if (isPromise(filter)) { filter = await filter; }
+        const shard = filter.shard
 
         const { network, params } = await resolveProperties({
             network: this.getNetwork(),
-            params: this.#perform<Array<LogParams>>({ method: "getLogs", filter })
+            params: this.#perform<Array<LogParams>>({ method: "getLogs", filter, shard: shard })
         });
 
         return params.map((p) => this._wrapLog(p, network));
@@ -1238,6 +1391,7 @@ export class AbstractProvider implements Provider {
     }
 
     async waitForTransaction(hash: string, _confirms?: null | number, timeout?: null | number): Promise<null | TransactionReceipt> {
+        const shard = this.shardFromHash(hash);
         const confirms = (_confirms != null) ? _confirms : 1;
         if (confirms === 0) { return this.getTransactionReceipt(hash); }
 
@@ -1273,11 +1427,11 @@ export class AbstractProvider implements Provider {
                 }, timeout);
             }
 
-            listener(await this.getBlockNumber());
+            listener(await this.getBlockNumber(shard));
         });
     }
 
-    async waitForBlock(blockTag?: BlockTag): Promise<Block> {
+    async waitForBlock(shard: string, blockTag?: BlockTag): Promise<Block> {
         assert(false, "not implemented yet", "NOT_IMPLEMENTED", {
             operation: "waitForBlock"
         });
@@ -1607,134 +1761,134 @@ export class AbstractProvider implements Provider {
 }
 
 
-function _parseString(result: string, start: number): null | string {
-    try {
-        const bytes = _parseBytes(result, start);
-        if (bytes) { return toUtf8String(bytes); }
-    } catch (error) { }
-    return null;
-}
+// function _parseString(result: string, start: number): null | string {
+//     try {
+//         const bytes = _parseBytes(result, start);
+//         if (bytes) { return toUtf8String(bytes); }
+//     } catch(error) { }
+//     return null;
+// }
 
-function _parseBytes(result: string, start: number): null | string {
-    if (result === "0x") { return null; }
-    try {
-        const offset = getNumber(dataSlice(result, start, start + 32));
-        const length = getNumber(dataSlice(result, offset, offset + 32));
+// function _parseBytes(result: string, start: number): null | string {
+//     if (result === "0x") { return null; }
+//     try {
+//         const offset = getNumber(dataSlice(result, start, start + 32));
+//         const length = getNumber(dataSlice(result, offset, offset + 32));
+//
+//         return dataSlice(result, offset + 32, offset + 32 + length);
+//     } catch (error) { }
+//     return null;
+// }
 
-        return dataSlice(result, offset + 32, offset + 32 + length);
-    } catch (error) { }
-    return null;
-}
+// function numPad(value: number): Uint8Array {
+//     const result = toBeArray(value);
+//     if (result.length > 32) { throw new Error("internal; should not happen"); }
+//
+//     const padded = new Uint8Array(32);
+//     padded.set(result, 32 - result.length);
+//     return padded;
+// }
 
-function numPad(value: number): Uint8Array {
-    const result = toBeArray(value);
-    if (result.length > 32) { throw new Error("internal; should not happen"); }
+// function bytesPad(value: Uint8Array): Uint8Array {
+//     if ((value.length % 32) === 0) { return value; }
+//
+//     const result = new Uint8Array(Math.ceil(value.length / 32) * 32);
+//     result.set(value);
+//     return result;
+// }
 
-    const padded = new Uint8Array(32);
-    padded.set(result, 32 - result.length);
-    return padded;
-}
-
-function bytesPad(value: Uint8Array): Uint8Array {
-    if ((value.length % 32) === 0) { return value; }
-
-    const result = new Uint8Array(Math.ceil(value.length / 32) * 32);
-    result.set(value);
-    return result;
-}
-
-const empty: Uint8Array = new Uint8Array([]);
+// const empty: Uint8Array = new Uint8Array([ ]);
 
 // ABI Encodes a series of (bytes, bytes, ...)
-function encodeBytes(datas: Array<BytesLike>): string {
-    const result: Array<Uint8Array> = [];
+// function encodeBytes(datas: Array<BytesLike>): string {
+//     const result: Array<Uint8Array> = [ ];
+//
+//     let byteCount = 0;
+//
+//     // Add place-holders for pointers as we add items
+//     for (let i = 0; i < datas.length; i++) {
+//         result.push(empty);
+//         byteCount += 32;
+//     }
+//
+//     for (let i = 0; i < datas.length; i++) {
+//         const data = getBytes(datas[i]);
+//
+//         // Update the bytes offset
+//         result[i] = numPad(byteCount);
+//
+//         // The length and padded value of data
+//         result.push(numPad(data.length));
+//         result.push(bytesPad(data));
+//         byteCount += 32 + Math.ceil(data.length / 32) * 32;
+//     }
+//
+//     return concat(result);
+// }
 
-    let byteCount = 0;
-
-    // Add place-holders for pointers as we add items
-    for (let i = 0; i < datas.length; i++) {
-        result.push(empty);
-        byteCount += 32;
-    }
-
-    for (let i = 0; i < datas.length; i++) {
-        const data = getBytes(datas[i]);
-
-        // Update the bytes offset
-        result[i] = numPad(byteCount);
-
-        // The length and padded value of data
-        result.push(numPad(data.length));
-        result.push(bytesPad(data));
-        byteCount += 32 + Math.ceil(data.length / 32) * 32;
-    }
-
-    return concat(result);
-}
-
-const zeros = "0x0000000000000000000000000000000000000000000000000000000000000000"
-function parseOffchainLookup(data: string): CcipArgs {
-    const result: CcipArgs = {
-        sender: "", urls: [], calldata: "", selector: "", extraData: "", errorArgs: []
-    };
-
-    assert(dataLength(data) >= 5 * 32, "insufficient OffchainLookup data", "OFFCHAIN_FAULT", {
-        reason: "insufficient OffchainLookup data"
-    });
-
-    const sender = dataSlice(data, 0, 32);
-    assert(dataSlice(sender, 0, 12) === dataSlice(zeros, 0, 12), "corrupt OffchainLookup sender", "OFFCHAIN_FAULT", {
-        reason: "corrupt OffchainLookup sender"
-    });
-    result.sender = dataSlice(sender, 12);
-
-    // Read the URLs from the response
-    try {
-        const urls: Array<string> = [];
-        const urlsOffset = getNumber(dataSlice(data, 32, 64));
-        const urlsLength = getNumber(dataSlice(data, urlsOffset, urlsOffset + 32));
-        const urlsData = dataSlice(data, urlsOffset + 32);
-        for (let u = 0; u < urlsLength; u++) {
-            const url = _parseString(urlsData, u * 32);
-            if (url == null) { throw new Error("abort"); }
-            urls.push(url);
-        }
-        result.urls = urls;
-    } catch (error) {
-        assert(false, "corrupt OffchainLookup urls", "OFFCHAIN_FAULT", {
-            reason: "corrupt OffchainLookup urls"
-        });
-    }
-
-    // Get the CCIP calldata to forward
-    try {
-        const calldata = _parseBytes(data, 64);
-        if (calldata == null) { throw new Error("abort"); }
-        result.calldata = calldata;
-    } catch (error) {
-        assert(false, "corrupt OffchainLookup calldata", "OFFCHAIN_FAULT", {
-            reason: "corrupt OffchainLookup calldata"
-        });
-    }
-
-    // Get the callbackSelector (bytes4)
-    assert(dataSlice(data, 100, 128) === dataSlice(zeros, 0, 28), "corrupt OffchainLookup callbaackSelector", "OFFCHAIN_FAULT", {
-        reason: "corrupt OffchainLookup callbaackSelector"
-    });
-    result.selector = dataSlice(data, 96, 100);
-
-    // Get the extra data to send back to the contract as context
-    try {
-        const extraData = _parseBytes(data, 128);
-        if (extraData == null) { throw new Error("abort"); }
-        result.extraData = extraData;
-    } catch (error) {
-        assert(false, "corrupt OffchainLookup extraData", "OFFCHAIN_FAULT", {
-            reason: "corrupt OffchainLookup extraData"
-        });
-    }
-
-    result.errorArgs = "sender,urls,calldata,selector,extraData".split(/,/).map((k) => (<any>result)[k])
-
-    return result;
-}
+// const zeros = "0x0000000000000000000000000000000000000000000000000000000000000000"
+// function parseOffchainLookup(data: string): CcipArgs {
+//     const result: CcipArgs = {
+//         sender: "", urls: [ ], calldata: "", selector: "", extraData: "", errorArgs: [ ]
+//     };
+//
+//     assert(dataLength(data) >= 5 * 32, "insufficient OffchainLookup data", "OFFCHAIN_FAULT", {
+//         reason: "insufficient OffchainLookup data"
+//     });
+//
+//     const sender = dataSlice(data, 0, 32);
+//     assert(dataSlice(sender, 0, 12) === dataSlice(zeros, 0, 12), "corrupt OffchainLookup sender", "OFFCHAIN_FAULT", {
+//         reason: "corrupt OffchainLookup sender"
+//     });
+//     result.sender = dataSlice(sender, 12);
+//
+//     // Read the URLs from the response
+//     try {
+//         const urls: Array<string> = [];
+//         const urlsOffset = getNumber(dataSlice(data, 32, 64));
+//         const urlsLength = getNumber(dataSlice(data, urlsOffset, urlsOffset + 32));
+//         const urlsData = dataSlice(data, urlsOffset + 32);
+//         for (let u = 0; u < urlsLength; u++) {
+//             const url = _parseString(urlsData, u * 32);
+//             if (url == null) { throw new Error("abort"); }
+//             urls.push(url);
+//         }
+//         result.urls = urls;
+//     } catch (error) {
+//         assert(false, "corrupt OffchainLookup urls", "OFFCHAIN_FAULT", {
+//             reason: "corrupt OffchainLookup urls"
+//         });
+//     }
+//
+//     // Get the CCIP calldata to forward
+//     try {
+//         const calldata = _parseBytes(data, 64);
+//         if (calldata == null) { throw new Error("abort"); }
+//         result.calldata = calldata;
+//     } catch (error) {
+//         assert(false, "corrupt OffchainLookup calldata", "OFFCHAIN_FAULT", {
+//             reason: "corrupt OffchainLookup calldata"
+//         });
+//     }
+//
+//     // Get the callbackSelector (bytes4)
+//     assert(dataSlice(data, 100, 128) === dataSlice(zeros, 0, 28), "corrupt OffchainLookup callbaackSelector", "OFFCHAIN_FAULT", {
+//         reason: "corrupt OffchainLookup callbaackSelector"
+//     });
+//     result.selector = dataSlice(data, 96, 100);
+//
+//     // Get the extra data to send back to the contract as context
+//     try {
+//         const extraData = _parseBytes(data, 128);
+//         if (extraData == null) { throw new Error("abort"); }
+//         result.extraData = extraData;
+//     } catch (error) {
+//         assert(false, "corrupt OffchainLookup extraData", "OFFCHAIN_FAULT", {
+//             reason: "corrupt OffchainLookup extraData"
+//         });
+//     }
+//
+//     result.errorArgs = "sender,urls,calldata,selector,extraData".split(/,/).map((k) => (<any>result)[k])
+//
+//     return result;
+// }

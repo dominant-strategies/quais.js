@@ -34,13 +34,14 @@ export {
 } from "./maths.js";
 
 export { resolveProperties, defineProperties } from "./properties.js";
+export { resolveProperties, defineProperties } from "./properties.js";
 
 export { decodeRlp } from "./rlp-decode.js";
 export { encodeRlp } from "./rlp-encode.js";
 export { encodeProtoTransaction, encodeProtoWorkObject } from "./proto-encode.js";
 export { decodeProtoTransaction, decodeProtoWorkObject } from "./proto-decode.js";
 
-export { formatEther, parseEther, formatUnits, parseUnits } from "./units.js";
+export { formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits } from "./units.js";
 
 export {
     toUtf8Bytes,

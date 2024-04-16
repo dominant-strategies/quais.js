@@ -237,7 +237,7 @@ describe("Test Provider Block operations", function() {
     })
 
     it('should fetch block by number', async function () {
-        let responseBlock = await providerC1.getBlock('0xA') as quais.Block;
+        let responseBlock = await providerC1.getBlock('0,0', '0xA') as quais.Block;
         assert.ok(responseBlock != null, "block != null");
     
         let { provider, ...formatBlock } = {
@@ -250,7 +250,7 @@ describe("Test Provider Block operations", function() {
     
     it('should fetch block by hash', async function() {
         assert.ok(block.hash != null, 'block.hash != null')
-        let responseBlock = await providerC1.getBlock(block.hash) as quais.Block;
+        let responseBlock = await providerC1.getBlock('0,0', block.hash) as quais.Block;
         assert.ok(responseBlock != null, "block != null");
     
         let { provider, ...formatBlock } = {

@@ -11,7 +11,6 @@ import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
 import type { Provider, TransactionRequest } from "../providers/index.js";
 import type { TransactionLike } from "../transaction/index.js";
 
-
 /**
  *  The **BaseWallet** is a stream-lined implementation of a
  *  [[Signer]] that operates with a private key.
@@ -72,7 +71,7 @@ export class BaseWallet extends AbstractSigner {
         return new BaseWallet(this.#signingKey, provider);
     }
 
-    async signTransaction(tx: TransactionRequest): Promise<string> {
+    async signTransaction(tx: TransactionRequest ): Promise<string> {
         // Replace any Addressable or ENS name with an address
         const { to, from } = await resolveProperties({
             to: (tx.to ? resolveAddress(tx.to, this.provider) : undefined),
@@ -85,7 +84,7 @@ export class BaseWallet extends AbstractSigner {
         if (tx.from != null) {
             assertArgument(getAddress(<string>(tx.from)) === this.#address,
                 "transaction from address mismatch", "tx.from", tx.from);
-            delete tx.from;
+//            delete tx.from;
         }
 
         const btx = Transaction.from(<TransactionLike<string>>tx);
@@ -93,6 +92,7 @@ export class BaseWallet extends AbstractSigner {
 
         return btx.serialized;
     }
+
 
     async signMessage(message: string | Uint8Array): Promise<string> {
         return this.signMessageSync(message);

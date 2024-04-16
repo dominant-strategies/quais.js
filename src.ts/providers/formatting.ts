@@ -6,7 +6,7 @@
 
 import type { Signature } from "../crypto/index.js";
 import type { AccessList } from "../transaction/index.js";
-
+import type { UTXOTransactionInput, UTXOTransactionOutput } from "../transaction/utxo.js";
 
 //////////////////////
 // Block
@@ -287,6 +287,7 @@ export interface TransactionReceiptParams {
     status: null | number;
 
     etxs: ReadonlyArray<string>;
+
 }
 
 
@@ -381,17 +382,9 @@ export interface TransactionResponseParams {
      */
     accessList: null | AccessList;
 
-    //External Transaction fields
+    outputsUTXO ?: UTXOTransactionOutput[];
 
-    etxGasLimit ?: bigint ;
-
-    etxGasPrice ?: bigint ;
-
-    etxGasTip   ?: bigint ;
-
-    etxData     ?: string ;
-
-    etxAccessList ?: AccessList ;
+    inputsUTXO ?: UTXOTransactionInput[];
 };
 
 

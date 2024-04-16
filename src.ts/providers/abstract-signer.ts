@@ -5,11 +5,11 @@
  *
  *  @_section: api/providers/abstract-signer: Subclassing Signer [abstract-signer]
  */
-import { resolveAddress } from "../address/index.js";
+import { AddressLike, resolveAddress } from "../address/index.js";
 import { Transaction } from "../transaction/index.js";
 import {
     defineProperties, getBigInt, resolveProperties,
-    assert, assertArgument
+    assert, assertArgument, isUTXOAddress
 } from "../utils/index.js";
 import { copyRequest } from "./provider.js";
 
@@ -74,6 +74,15 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
      */
     abstract getAddress(): Promise<string>;
 
+
+    _getAddress(address: AddressLike): string | Promise<string> {
+        return resolveAddress(address, this);
+    }
+
+    async shardFromAddress(_address: AddressLike): Promise<string> {
+        let address: string | Promise<string> = this._getAddress(_address);
+        return (await address).slice(0, 4)
+    }
     /**
      *  Returns the signer connected to %%provider%%.
      *
@@ -91,10 +100,20 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         return pop;
     }
 
+    // async populateQiTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
+
+    // }
+
     async populateTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
         const provider = checkProvider(this, "populateTransaction");
+        const shard = await this.shardFromAddress(tx.from)
 
         const pop = await populate(this, tx);
+
+        if (pop.type == null) {
+            pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
+        }
+
         if (pop.nonce == null) {
             pop.nonce = await this.getNonce("pending");
         }
@@ -119,12 +138,12 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
         if (pop.chainId != null) {
             const chainId = getBigInt(pop.chainId);
-            assertArgument(chainId === network.chainId, "transaction chainId mismatch", "tx.chainId", tx.chainId);
+            assertArgument(chainId === network.chainId, "transaction chainId mismatch", "tx.chainId", shard);
         } else {
             pop.chainId = network.chainId;
         }
         if (pop.maxFeePerGas == null || pop.maxPriorityFeePerGas == null) {
-            const feeData = await provider.getFeeData();
+            const feeData = await provider.getFeeData(shard);
 
             if (pop.maxFeePerGas == null) {
                 pop.maxFeePerGas = feeData.maxFeePerGas;
@@ -133,12 +152,20 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
                 pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
             }
         }
+        //@TOOD: Don't await all over the place; save them up for
+        // the end for better batching
+        return await resolveProperties(pop);
+    }
 
-        if (pop.type == 2) {
-            pop.externalGasLimit = getBigInt(Number(pop.gasLimit) * 9);
-            pop.externalGasTip = getBigInt(Number(pop.maxPriorityFeePerGas) * 9);
-            pop.externalGasPrice = getBigInt(Number(pop.maxFeePerGas) * 9);
+    async populateUTXOTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
+
+        const pop = {
+            inputsUTXO: tx.inputs,
+            outputsUTXO: tx.outputs,
+            type: 2,
+            from: String(tx.from)
         }
+
         //@TOOD: Don't await all over the place; save them up for
         // the end for better batching
         return await resolveProperties(pop);
@@ -159,11 +186,24 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
         const provider = checkProvider(this, "sendTransaction");
-        const pop = await this.populateTransaction(tx);
-        delete pop.from;
+        let sender = await this.getAddress()
+        tx.from = sender
+        const shard = await this.shardFromAddress(tx.from)
+
+
+        let pop;
+        if (isUTXOAddress(sender)) {
+            pop = await this.populateUTXOTransaction(tx);
+        } else {
+            pop = await this.populateTransaction(tx);
+        }
+
+        //        delete pop.from;
         const txObj = Transaction.from(pop);
+
         const signedTx = await this.signTransaction(txObj);
-        return await provider.broadcastTransaction(signedTx);
+        // console.log("signedTX: ", JSON.stringify(txObj))
+        return await provider.broadcastTransaction(shard, signedTx);
     }
 
     abstract signTransaction(tx: TransactionRequest): Promise<string>;

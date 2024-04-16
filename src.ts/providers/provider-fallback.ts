@@ -439,7 +439,7 @@ export class FallbackProvider extends AbstractProvider {
     async _translatePerform(provider: AbstractProvider, req: PerformActionRequest): Promise<any> {
         switch (req.method) {
             case "broadcastTransaction":
-                return await provider.broadcastTransaction(req.signedTransaction);
+                return await provider.broadcastTransaction(req.shard, req.signedTransaction);
             case "call":
                 return await provider.call(Object.assign({ }, req.transaction, { blockTag: req.blockTag }));
             case "chainId":
@@ -450,7 +450,7 @@ export class FallbackProvider extends AbstractProvider {
                 return await provider.getBalance(req.address, req.blockTag);
             case "getBlock": {
                 const block = ("blockHash" in req) ? req.blockHash: req.blockTag;
-                return await provider.getBlock(block, req.includeTransactions);
+                return await provider.getBlock(req.shard, block, req.includeTransactions);
             }
             case "getBlockNumber":
                 return await provider.getBlockNumber();
@@ -472,6 +472,8 @@ export class FallbackProvider extends AbstractProvider {
                 return await provider.getTransactionReceipt(req.hash);
             case "getTransactionResult":
                 return await provider.getTransactionResult(req.hash);
+            case "getProtocolExpansionNumber":
+                return await provider.getProtocolExpansionNumber();
         }
     }
 

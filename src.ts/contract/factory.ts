@@ -78,12 +78,16 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
      *  into the constructor.
      */
     async getDeployTransaction(...args: ContractMethodArgs<A>): Promise<ContractDeployTransaction> {
-        let overrides: Omit<ContractDeployTransaction, "data"> = { };
+        let overrides: Omit<ContractDeployTransaction, "data">;
 
         const fragment = this.interface.deploy;
 
         if (fragment.inputs.length + 1 === args.length) {
             overrides = await copyOverrides(args.pop());
+
+            const resolvedArgs = await resolveArgs(this.runner, fragment.inputs, args);
+            const data = concat([ this.bytecode, this.interface.encodeDeploy(resolvedArgs) ]);
+            return Object.assign({ }, overrides, { data });
         }
 
         if (fragment.inputs.length !== args.length) {
@@ -93,7 +97,7 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         const resolvedArgs = await resolveArgs(this.runner, fragment.inputs, args);
 
         const data = concat([ this.bytecode, this.interface.encodeDeploy(resolvedArgs) ]);
-        return Object.assign({ }, overrides, { data });
+        return Object.assign({ }, args.pop().from, { data });
     }
 
     // getDeployTransaction3(...args: Array<any>): TransactionRequest {
