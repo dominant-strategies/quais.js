@@ -1,6 +1,6 @@
 import { keccak256 } from "../crypto/index.js";
 import {
-    concat, dataSlice, getBigInt, getBytes, encodeRlp, assertArgument
+    concat, dataSlice, getBigInt, getBytes, assertArgument, encodeProto
 } from "../utils/index.js";
 
 import { getAddress } from "./address.js";
@@ -41,7 +41,7 @@ export function getCreateAddress(tx: { from: string, nonce: BigNumberish }): str
         nonceHex = "0x" + nonceHex;
     }
 
-    return getAddress(dataSlice(keccak256(encodeRlp([ from, nonceHex ])), 12));
+    return getAddress(dataSlice(keccak256(encodeProto([ from, nonceHex ])), 12));
 }
 
 /**
