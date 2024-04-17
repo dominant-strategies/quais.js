@@ -2,7 +2,8 @@ import { formatNumber } from "../providers/format"
 import { assert, getBytes, getNumber, hexlify } from "../quais"
 import { decodeProtoWorkObject } from "../utils"
 import { encodeProtoWorkObject } from "../utils/proto-encode"
-import { TransactionLike, ProtoTransaction, Transaction } from "./transaction"
+import { ProtoTransaction } from "./abstract-transaction"
+import { QuaiTransaction, QuaiTransactionLike } from "./quai-transaction"
 
 /**
  *  Interface representing a WorkObject, which includes
@@ -16,7 +17,7 @@ export interface WorkObjectLike {
     woBody: WorkObjectBodyLike
 
     /** Transaction information associated with the WorkObject. */
-    tx: TransactionLike
+    tx: QuaiTransactionLike
 }
 
 /**
@@ -214,7 +215,7 @@ export interface ProtoManifest { manifest: ProtoHash[] }
 export class WorkObject {
     #woHeader: WorkObjectHeaderLike;
     #woBody: WorkObjectBodyLike;
-    #tx: Transaction;
+    #tx: QuaiTransaction;
 
     /**
      *  Constructs a WorkObject instance.
@@ -224,10 +225,10 @@ export class WorkObject {
      *  @param tx The transaction associated with the WorkObject.
      *  @param signature The signature of the transaction (optional).
      */
-    constructor(woHeader: WorkObjectHeaderLike, woBody: WorkObjectBodyLike, tx: TransactionLike) {
+    constructor(woHeader: WorkObjectHeaderLike, woBody: WorkObjectBodyLike, tx: QuaiTransactionLike) {
         this.#woHeader = woHeader;
         this.#woBody = woBody;
-        this.#tx = Transaction.from(tx);
+        this.#tx = QuaiTransaction.from(tx);
 
         this.#woHeader.txHash = this.#tx.hash!;
         this.#validate();
@@ -242,8 +243,8 @@ export class WorkObject {
     set woBody(value: WorkObjectBodyLike) { this.#woBody = value; }
 
     /** Gets the transaction associated with the WorkObject. */
-    get tx(): Transaction { return this.#tx; }
-    set tx(value: TransactionLike) { this.#tx = Transaction.from(value); }
+    get tx(): QuaiTransaction { return this.#tx; }
+    set tx(value: QuaiTransactionLike) { this.#tx = QuaiTransaction.from(value); }
 
     /**
      *  Gets the serialized representation of the WorkObject.
@@ -392,12 +393,13 @@ export class WorkObject {
         };
 
         // Convert ProtoTransaction to TransactionLike using Transaction.fromProto
-        const tx: TransactionLike = protoWo.tx
-            ? Transaction.fromProto(protoWo.tx).toJSON()
-            : {};
 
-        // Create a new WorkObject instance with the converted header, body, and transaction
-        return new WorkObject(woHeader, woBody, tx);
+        if (protoWo.tx) {
+            const tx: QuaiTransactionLike<string> = QuaiTransaction.fromProto(protoWo.tx).toJSON()
+            return new WorkObject(woHeader, woBody, tx);
+        } else {
+            throw new Error("Invalid ProtoWorkObject: missing transaction");
+        }
     }
 
     /**

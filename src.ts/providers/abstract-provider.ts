@@ -15,25 +15,35 @@
 //   of Signer/ENS name to address so we can sync respond to listenerCount.
 
 import { getAddress, resolveAddress } from "../address/index.js";
-import { ShardData, ZeroAddress } from "../constants/index.js";
-import { Contract } from "../contract/index.js";
-import { namehash } from "../hash/index.js";
-import { Transaction } from "../transaction/index.js";
+import { ShardData } from "../constants/index.js";
+import { TxInput, TxOutput} from "../transaction/index.js";
 import { Outpoint } from "../transaction/utxo.js";
 import {
     hexlify, isHexString,
-    getBigInt, getNumber,
-    makeError, assert, assertArgument,
+    getBigInt, getBytes, getNumber,
+     makeError, assert, assertArgument,
     FetchRequest,
     toQuantity,
-    defineProperties, EventPayload, resolveProperties,
+    defineProperties, EventPayload, resolveProperties, decodeProtoTransaction,
 } from "../utils/index.js";
 
 import {
     formatBlock, formatLog, formatTransactionReceipt, formatTransactionResponse
 } from "./format.js";
 import { Network } from "./network.js";
-import { copyRequest, Block, FeeData, Log, TransactionReceipt, TransactionResponse } from "./provider.js";
+import {
+    copyRequest,
+    Block,
+    FeeData,
+    Log,
+    TransactionReceipt,
+    TransactionResponse,
+    addressFromTransactionRequest,
+    QiPreparedTransactionRequest,
+    QuaiPreparedTransactionRequest,
+    QuaiTransactionResponse,
+    QiTransactionResponse
+} from "./provider.js";
 
 import type { Addressable, AddressLike } from "../address/index.js";
 import type { BigNumberish } from "../utils/index.js";
@@ -41,18 +51,21 @@ import type { Listener } from "../utils/index.js";
 
 import type { Networkish } from "./network.js";
 import type { FetchUrlFeeDataNetworkPlugin } from "./plugins-network.js";
-//import type { MaxPriorityFeePlugin } from "./plugins-network.js";
 import type {
-    BlockParams, LogParams, TransactionReceiptParams,
+    BlockParams, LogParams, QiTransactionResponseParams, TransactionReceiptParams,
     TransactionResponseParams
 } from "./formatting.js";
 
 import type {
     BlockTag, EventFilter, Filter, FilterByBlockHash, OrphanFilter,
-    PreparedTransactionRequest, Provider, ProviderEvent,
+    Provider, ProviderEvent,
     TransactionRequest,
 } from "./provider.js";
-import { WorkObject, WorkObjectLike } from "../transaction/work-object.js";
+import { WorkObjectLike } from "../transaction/work-object.js";
+import {QiTransaction} from "../transaction/qi-transaction";
+import {QuaiTransaction} from "../transaction/quai-transaction";
+import {QuaiTransactionResponseParams} from "./formatting.js";
+import {keccak256, SigningKey} from "../crypto";
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -333,7 +346,9 @@ export type PerformActionFilter = {
 /**
  *  A normalized transactions used for [[PerformActionRequest]] objects.
  */
-export interface PerformActionTransaction extends PreparedTransactionRequest {
+export type PerformActionTransaction = QuaiPerformActionTransaction | QiPerformActionTransaction;
+
+export interface QuaiPerformActionTransaction extends QuaiPreparedTransactionRequest {
     /**
      *  The ``to`` address of the transaction.
      */
@@ -343,7 +358,18 @@ export interface PerformActionTransaction extends PreparedTransactionRequest {
      *  The sender of the transaction.
      */
     from: string;
+
+    [key: string]: any;
 }
+
+export interface QiPerformActionTransaction extends QiPreparedTransactionRequest {
+    inputs?: Array<TxInput>;
+    outputs?: Array<TxOutput>;
+
+    [key: string]: any;
+}
+
+
 
 /**
  *  The [[AbstractProvider]] methods will normalize all values and pass this
@@ -550,7 +576,7 @@ export class AbstractProvider implements Provider {
             this.#connect.push(urls);
             const shards = await this.getRunningLocations();
             shards.forEach((shard) => {
-                const port = 9100 + 20 * shard[0] + shard[1];
+                const port = 9200 + 20 * shard[0] + shard[1];
                 this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":" + port);
             });
             return;
@@ -561,7 +587,7 @@ export class AbstractProvider implements Provider {
             this.#connect.push(new FetchRequest(primeUrl));
             const shards = await this.getRunningLocations(); // Now waits for the previous to complete
             shards.forEach((shard) => {
-                const port = 9100 + 20 * shard[0] + shard[1];
+                const port = 9200 + 20 * shard[0] + shard[1];
                 this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, url.split(":")[0] + ":" + url.split(":")[1] + ":" + port);
             });
         }
@@ -732,7 +758,12 @@ export class AbstractProvider implements Provider {
      *  alternate sub-class of [[TransactionResponse]].
      */
     _wrapTransactionResponse(tx: TransactionResponseParams, network: Network): TransactionResponse {
-        return new TransactionResponse(formatTransactionResponse(tx), this);
+        if ("from" in tx) {
+            return new QuaiTransactionResponse(formatTransactionResponse(tx) as QuaiTransactionResponseParams, this);
+
+        } else {
+            return new QiTransactionResponse(formatTransactionResponse(tx) as QiTransactionResponseParams, this);
+        }
     }
 
     /**
@@ -899,12 +930,23 @@ export class AbstractProvider implements Provider {
         const request = <PerformActionTransaction>copyRequest(_request);
 
         const promises: Array<Promise<void>> = [];
-        ["to", "from"].forEach((key) => {
+        ["to", "from", "inputs", "outputs"].forEach((key) => {
             if ((<any>request)[key] == null) { return; }
 
-            const addr = resolveAddress((<any>request)[key]);
+            const addr = Array.isArray((<any>request)[key])
+                ? (
+                "address" in it
+                    ? (<TxOutput[]>(<any>request)[key]).map(it => resolveAddress(it.Address))
+                    : (<TxInput[]>(<any>request)[key]).map(it => resolveAddress(getAddress(keccak256("0x" + SigningKey.computePublicKey(it.pubKey).substring(4)).substring(26))))
+                ) : resolveAddress((<any>request)[key]);
             if (isPromise(addr)) {
-                promises.push((async function () { (<any>request)[key] = await addr; })());
+                if (Array.isArray(addr)) {
+                    for (let i = 0; i < addr.length; i++) {
+                        promises.push((async function () { (<any>request)[key][i].address = await addr[i]; })());
+                    }
+                } else {
+                    promises.push((async function () { (<any>request)[key] = await addr; })());
+                }
             } else {
                 (<any>request)[key] = addr;
             }
@@ -997,7 +1039,9 @@ export class AbstractProvider implements Provider {
                     try {
                         const value = await this.#perform({ method: "getGasPrice", txType, shard: shard });
                         return getBigInt(value, "%response");
-                    } catch (error) { }
+                    } catch (error) {
+                        console.log(error)
+                    }
                     return null
                 })()),
                 priorityFee: ((async () => {
@@ -1037,14 +1081,13 @@ export class AbstractProvider implements Provider {
     async estimateGas(_tx: TransactionRequest): Promise<bigint> {
         let tx = this._getTransactionRequest(_tx);
         if (isPromise(tx)) { tx = await tx; }
-        const shard = await this.shardFromAddress(tx.from)
+        const shard = await this.shardFromAddress(addressFromTransactionRequest(tx))
         return getBigInt(await this.#perform({
             method: "estimateGas", transaction: tx, shard: shard
         }), "%response");
     }
 
     async #call(tx: PerformActionTransaction, blockTag: string, attempt: number): Promise<string> {
-
         // This came in as a PerformActionTransaction, so to/from are safe; we can cast
         const transaction = <PerformActionTransaction>copyRequest(tx);
 
@@ -1052,55 +1095,6 @@ export class AbstractProvider implements Provider {
             return hexlify(await this._perform({ method: "call", transaction, blockTag }));
 
         } catch (error: any) {
-            // CCIP Read OffchainLookup
-            // if (!this.disableCcipRead && isCallException(error) && error.data && attempt >= 0 && blockTag === "latest" && transaction.to != null && dataSlice(error.data, 0, 4) === "0x556f1830") {
-            //     const data = error.data;
-
-            //     const txSender = await resolveAddress(transaction.to, this);
-
-            //     // Parse the CCIP Read Arguments
-            //     let ccipArgs: CcipArgs;
-            //     try {
-            //         ccipArgs = parseOffchainLookup(dataSlice(error.data, 4));
-            //     } catch (error: any) {
-            //         assert(false, error.message, "OFFCHAIN_FAULT", {
-            //             reason: "BAD_DATA", transaction, info: { data } });
-            //     }
-
-            //     // Check the sender of the OffchainLookup matches the transaction
-            //     assert(ccipArgs.sender.toLowerCase() === txSender.toLowerCase(),
-            //         "CCIP Read sender mismatch", "CALL_EXCEPTION", {
-            //             action: "call",
-            //             data,
-            //             reason: "OffchainLookup",
-            //             transaction: <any>transaction, // @TODO: populate data?
-            //             invocation: null,
-            //             revert: {
-            //                 signature: "OffchainLookup(address,string[],bytes,bytes4,bytes)",
-            //                 name: "OffchainLookup",
-            //                 args: ccipArgs.errorArgs
-            //             }
-            //         });
-
-            //     const ccipResult = await this.ccipReadFetch(transaction, ccipArgs.calldata, ccipArgs.urls);
-            //     assert(ccipResult != null, "CCIP Read failed to fetch data", "OFFCHAIN_FAULT", {
-            //         reason: "FETCH_FAILED", transaction, info: { data: error.data, errorArgs: ccipArgs.errorArgs } });
-
-            //     const tx = {
-            //         to: txSender,
-            //         data: concat([ ccipArgs.selector, encodeBytes([ ccipResult, ccipArgs.extraData ]) ])
-            //     };
-
-            //     this.emit("debug", { action: "sendCcipReadCall", transaction: tx });
-            //     try {
-            //         const result = await this.#call(tx, blockTag, attempt + 1);
-            //         this.emit("debug", { action: "receiveCcipReadCallResult", transaction: Object.assign({ }, tx), result });
-            //         return result;
-            //     } catch (error) {
-            //         this.emit("debug", { action: "receiveCcipReadCallError", transaction: Object.assign({ }, tx), error });
-            //         throw error;
-            //     }
-            // }
 
             throw error;
         }
@@ -1115,7 +1109,7 @@ export class AbstractProvider implements Provider {
     }
 
     async call(_tx: TransactionRequest): Promise<string> {
-        const shard = await this.shardFromAddress(_tx.from);
+        const shard = await this.shardFromAddress(addressFromTransactionRequest(_tx));
         const { tx, blockTag } = await resolveProperties({
             tx: this._getTransactionRequest(_tx),
             blockTag: this._getBlockTag(shard, _tx.blockTag)
@@ -1164,7 +1158,8 @@ export class AbstractProvider implements Provider {
     }
 
     // Write
-    async broadcastTransaction(shard: string, signedTx: string): Promise<TransactionResponse> {
+    async broadcastTransaction(shard: string, signedTx: string, from?: AddressLike): Promise<TransactionResponse> {
+        const type = decodeProtoTransaction(getBytes(signedTx)).type;
         const { blockNumber, hash, network } = await resolveProperties({
             blockNumber: this.getBlockNumber(shard),
             hash: this._perform({
@@ -1175,13 +1170,14 @@ export class AbstractProvider implements Provider {
             network: this.getNetwork()
         });
 
-        const tx = Transaction.from(signedTx);
+        let tx = type == 2 ? QiTransaction.from(signedTx) : QuaiTransaction.from(signedTx, from ? await resolveAddress(from) : "");
+
         this.#validateTransactionHash(tx.hash || '', hash)
         tx.hash = hash;
         return this._wrapTransactionResponse(<any>tx, network).replaceableTransaction(blockNumber);
     }
 
-    async #validateTransactionHash(computedHash: string, nodehash: string) {
+    #validateTransactionHash(computedHash: string, nodehash: string) {
         if (computedHash.substring(0, 4) !== nodehash.substring(0, 4))
             throw new Error("Transaction hash mismatch in origin Zone");
         if (computedHash.substring(6, 8) !== nodehash.substring(6, 8))

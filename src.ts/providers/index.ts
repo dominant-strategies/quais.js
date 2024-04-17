@@ -108,7 +108,7 @@ export type { FallbackProviderOptions } from "./provider-fallback.js";
 export type {
     JsonRpcPayload, JsonRpcResult, JsonRpcError,
     JsonRpcApiProviderOptions,
-    JsonRpcTransactionRequest,
+    JsonRpcTransactionRequest, QuaiJsonRpcTransactionRequest, QiJsonRpcTransactionRequest
 } from "./provider-jsonrpc.js";
 
 export type {

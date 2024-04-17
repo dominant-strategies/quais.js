@@ -10,9 +10,8 @@ import {
 import { getProvider, setupProviders, providerNames } from "./create-provider.js";
 import { stall } from "./utils.js";
 
-import type { TransactionResponse } from "../index.js";
-//require('dotenv').config();
 import dotenv from "dotenv";
+import { QuaiTransactionResponse } from "../providers/provider.js";
 dotenv.config();
 
 type TestCustomError = {
@@ -187,14 +186,14 @@ describe("Test Provider Blockchain Errors", function() {
 
             const w = wallet.connect(provider);
 
-            let tx1: null | TransactionResponse = null;
+            let tx1: null | QuaiTransactionResponse = null;
             let nonce: null | number = null;;
             for (let i = 0; i < 10; i++) {
                 nonce = await w.getNonce("pending");
                 try {
                     tx1 = await w.sendTransaction({
                         nonce, to: wallet, from: wallet2, value
-                    });
+                    }) as QuaiTransactionResponse;
                 } catch (error: any) {
                     // Another CI host beat us to this nonce
                     if (isError(error, "REPLACEMENT_UNDERPRICED") || isError(error, "NONCE_EXPIRED")) {
@@ -244,7 +243,7 @@ describe("Test Provider Blockchain Errors", function() {
                 console.log(tx);
             }, (error) => {
                 return (isError(error, "INSUFFICIENT_FUNDS") &&
-                    typeof(error.transaction.from) === "string" &&
+                    "from" in error.transaction && typeof(error.transaction.from) === "string" &&
                     error.transaction.from.toLowerCase() === w.address.toLowerCase());
             });
         });

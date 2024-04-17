@@ -2,7 +2,13 @@ import { Interface, Typed } from "../abi/index.js";
 import { isAddressable, resolveAddress } from "../address/index.js";
 // import from provider.ts instead of index.ts to prevent circular dep
 // from quaiscanProvider
-import { copyRequest, Log, TransactionResponse } from "../providers/provider.js";
+import {
+    copyRequest,
+    Log,
+    QuaiTransactionRequest,
+    QuaiTransactionResponse,
+    TransactionResponse,
+} from "../providers/provider.js";
 import {
     defineProperties, getBigInt, isCallException, isHexString, resolveProperties,
     isError, assert, assertArgument
@@ -129,13 +135,13 @@ export async function copyOverrides<O extends string = "data" | "to">(arg: any, 
     // Create a shallow copy (we'll deep-ify anything needed during normalizing)
     const overrides = copyRequest(_overrides);
 
-    assertArgument(overrides.to == null || (allowed || [ ]).indexOf("to") >= 0,
-      "cannot override to", "overrides.to", overrides.to);
-    assertArgument(overrides.data == null || (allowed || [ ]).indexOf("data") >= 0,
-      "cannot override data", "overrides.data", overrides.data);
+    assertArgument((! ("to" in overrides) || overrides.to == null) || (allowed || [ ]).indexOf("to") >= 0,
+      "cannot override to", "overrides.to", overrides);
+    assertArgument((! ("data" in overrides) || overrides.data == null) || (allowed || [ ]).indexOf("data") >= 0,
+      "cannot override data", "overrides.data", overrides);
 
     // Resolve any from
-    if (overrides.from) { overrides.from = overrides.from; }
+    if ("from" in overrides && overrides.from) { overrides.from = await overrides.from; }
 
     return <Omit<ContractTransaction, O>>overrides;
 }
@@ -156,7 +162,7 @@ export async function resolveArgs(_runner: null | ContractRunner, inputs: Readon
 
 function buildWrappedFallback(contract: BaseContract): WrappedFallback {
 
-    const populateTransaction = async function(overrides?: Omit<TransactionRequest, "to">): Promise<ContractTransaction> {
+    const populateTransaction = async function(overrides?: Omit<QuaiTransactionRequest, "to">): Promise<ContractTransaction> {
         // If an overrides was passed in, copy it and normalize the values
 
         const tx: ContractTransaction = <any>(await copyOverrides<"data">(overrides, [ "data" ]));
@@ -190,7 +196,7 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
         return tx;
     }
 
-    const staticCall = async function(overrides?: Omit<TransactionRequest, "to">): Promise<string> {
+    const staticCall = async function(overrides?: Omit<QuaiTransactionRequest, "to">): Promise<string> {
         const runner = getRunner(contract.runner, "call");
         assert(canCall(runner), "contract runner does not support calling",
             "UNSUPPORTED_OPERATION", { operation: "call" });
@@ -207,19 +213,19 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
         }
     }
 
-    const send = async function(overrides?: Omit<TransactionRequest, "to">): Promise<ContractTransactionResponse> {
+    const send = async function(overrides?: Omit<QuaiTransactionRequest, "to">): Promise<ContractTransactionResponse> {
         const runner = contract.runner;
         assert(canSend(runner), "contract runner does not support sending transactions",
             "UNSUPPORTED_OPERATION", { operation: "sendTransaction" });
 
-        const tx = await runner.sendTransaction(await populateTransaction(overrides));
+        const tx = await runner.sendTransaction(await populateTransaction(overrides)) as QuaiTransactionResponse;
         const provider = getProvider(contract.runner);
         // @TODO: the provider can be null; make a custom dummy provider that will throw a
         // meaningful error
         return new ContractTransactionResponse(contract.interface, <Provider>provider, tx);
     }
 
-    const estimateGas = async function(overrides?: Omit<TransactionRequest, "to">): Promise<bigint> {
+    const estimateGas = async function(overrides?: Omit<QuaiTransactionRequest, "to">): Promise<bigint> {
         const runner = getRunner(contract.runner, "estimateGas");
         assert(canEstimate(runner), "contract runner does not support gas estimation",
             "UNSUPPORTED_OPERATION", { operation: "estimateGas" });
@@ -227,7 +233,7 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
         return await runner.estimateGas(await populateTransaction(overrides));
     }
 
-    const method = async (overrides?: Omit<TransactionRequest, "to">) => {
+    const method = async (overrides?: Omit<QuaiTransactionRequest, "to">) => {
         return await send(overrides);
     };
 
@@ -297,7 +303,7 @@ function buildWrappedMethod<A extends Array<any> = Array<any>, R = any, D extend
         assert(canSend(runner), "contract runner does not support sending transactions",
             "UNSUPPORTED_OPERATION", { operation: "sendTransaction" });
 
-        const tx = await runner.sendTransaction(await populateTransaction(...args));
+        const tx = await runner.sendTransaction(await populateTransaction(...args)) as QuaiTransactionResponse;
         const provider = getProvider(contract.runner);
         // @TODO: the provider can be null; make a custom dummy provider that will throw a
         // meaningful error
@@ -669,7 +675,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
      *  optionally connected to a %%runner%% to perform operations on behalf
      *  of.
      */
-    constructor(target: string | Addressable, abi: Interface | InterfaceAbi, runner?: null | ContractRunner, _deployTx?: null | TransactionResponse) {
+    constructor(target: string | Addressable, abi: Interface | InterfaceAbi, runner?: null | ContractRunner, _deployTx?: null | QuaiTransactionResponse) {
         assertArgument(typeof(target) === "string" || isAddressable(target),
             "invalid value for Contract target", "target", target);
 

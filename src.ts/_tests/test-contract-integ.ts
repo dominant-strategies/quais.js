@@ -29,7 +29,7 @@ describe("Tests contract integration", function() {
     before(async function() {
         this.timeout(100000);
 
-        const factory = new quais.ContractFactory(abi, bytecode, wallet);
+        const factory = new quais.ContractFactory(abi, bytecode, wallet as quais.ContractRunner);
         contract = await factory.deploy(constructorArgs.name, constructorArgs.symbol, constructorArgs.totalSupply, {
             gasLimit: 5000000 }) as Contract;
         address = await contract.getAddress();
@@ -66,7 +66,7 @@ describe("Tests contract integration", function() {
 
         const CustomContract = quais.BaseContract.buildClass<ContractAbi>(abi);
 
-        const contract = new CustomContract(address, wallet); //quais.Contract.from<ContractAbi>(address, abi, signer);
+        const contract = new CustomContract(address, wallet as quais.ContractRunner ); //quais.Contract.from<ContractAbi>(address, abi, signer);
         await stall(30000);
         // Test implicit staticCall (i.e. view/pure)
         {

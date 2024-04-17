@@ -9,7 +9,7 @@ import { BaseContract, copyOverrides, resolveArgs } from "./contract.js";
 
 import type { InterfaceAbi } from "../abi/index.js";
 import type { Addressable } from "../address/index.js";
-import type { ContractRunner, TransactionRequest } from "../providers/index.js";
+import type { ContractRunner } from "../providers/index.js";
 import type { BytesLike } from "../utils/index.js";
 import { getShardForAddress, isUTXOAddress } from "../utils/index.js";
 import type {
@@ -19,6 +19,7 @@ import type { ContractTransactionResponse } from "./wrappers.js";
 import { Wallet, randomBytes } from "../quais.js";
 import { getContractAddress } from "../address/address.js";
 import { getStatic } from "../utils/properties.js";
+import {QuaiTransactionRequest} from "../providers/provider";
 
 
 // A = Arguments to the constructor
@@ -195,8 +196,8 @@ static getContractAddress(transaction: {
 }
 
     async grindContractAddress(
-        tx: TransactionRequest
-      ): Promise<TransactionRequest> {
+        tx: QuaiTransactionRequest
+      ): Promise<QuaiTransactionRequest> {
         if (tx.nonce == null && tx.from) {
           tx.nonce = await this.runner?.provider?.getTransactionCount(tx.from);
         }

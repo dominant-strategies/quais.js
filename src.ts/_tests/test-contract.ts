@@ -4,7 +4,7 @@ import assert from "assert";
 import { getProvider, setupProviders } from "./create-provider.js";
 
 import {
-    Contract, ContractFactory, isError, Typed,
+    Contract, ContractFactory, ContractRunner, isError, Typed,
 } from "../index.js";
 import TestContract from "./contracts/TestContract.js"
 import TypedContract from "./contracts/TypedContract.js"
@@ -23,7 +23,7 @@ describe("Test Contract", function() {
     before( async function () {
         this.timeout(60000);
         await stall(10000);
-        const factory = new ContractFactory(abi, bytecode, wallet);
+        const factory = new ContractFactory(abi, bytecode, wallet as ContractRunner);
         contract = await factory.deploy({gasLimit: 5000000, maxFeePerGas: quais.parseUnits('10', 'gwei'), maxPriorityFeePerGas: quais.parseUnits('3', 'gwei')}) as Contract;
         addr = await contract.getAddress();
         console.log("Contract deployed to: ", addr);
@@ -254,7 +254,7 @@ describe("Test Typed Contract Interaction", function() {
     let addr: string
     before( async function () {
         this.timeout(120000);
-        const factory = new ContractFactory(abi, bytecode, wallet);
+        const factory = new ContractFactory(abi, bytecode, wallet as ContractRunner);
         contract = await factory.deploy({gasLimit: 5000000, maxFeePerGas: quais.parseUnits('10', 'gwei'), maxPriorityFeePerGas: quais.parseUnits('3', 'gwei'),}) as Contract;
         addr = await contract.getAddress();
         console.log("Contract deployed to: ", addr);

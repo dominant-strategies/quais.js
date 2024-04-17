@@ -1,6 +1,12 @@
 import { keccak256 } from "../crypto/index.js";
 import {
-    concat, dataSlice, getBigInt, getBytes, assertArgument, encodeProto
+    concat,
+    dataSlice,
+    getBigInt,
+    getBytes,
+    assertArgument,
+    zeroPadValue,
+    toBeHex, toBigInt
 } from "../utils/index.js";
 
 import { getAddress } from "./address.js";
@@ -31,17 +37,9 @@ import type { BigNumberish, BytesLike } from "../utils/index.js";
 export function getCreateAddress(tx: { from: string, nonce: BigNumberish }): string {
     const from = getAddress(tx.from);
     const nonce = getBigInt(tx.nonce, "tx.nonce");
+    const nonceBytes = zeroPadValue(toBeHex(toBigInt(nonce)), 8);
 
-    let nonceHex = nonce.toString(16);
-    if (nonceHex === "0") {
-        nonceHex = "0x";
-    } else if (nonceHex.length % 2) {
-        nonceHex = "0x0" + nonceHex;
-    } else {
-        nonceHex = "0x" + nonceHex;
-    }
-
-    return getAddress(dataSlice(keccak256(encodeProto([ from, nonceHex ])), 12));
+    return getAddress(dataSlice(keccak256(concat([getAddress(from), nonceBytes ])), 12))
 }
 
 /**

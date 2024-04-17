@@ -3,8 +3,9 @@ import assert from "assert";
 import {
     id, isError, makeError, toUtf8Bytes, toUtf8String,
     FetchRequest,
-    JsonRpcProvider, Transaction, Wallet
+    JsonRpcProvider, Wallet
 } from "../index.js";
+import { QuaiTransaction } from "../transaction/quai-transaction.js";
 
 const StatusMessages: Record<number, string> = {
   200: "OK",
@@ -93,7 +94,7 @@ describe("Ensure Catchable Errors", function() {
           value: 1,
         };
         const txSign = await wallet.signTransaction(txInfo);
-        const txObj = Transaction.from(txSign);
+        const txObj = QuaiTransaction.from(txSign);
 
         let count = 0;
 
@@ -155,7 +156,7 @@ describe("Ensure Catchable Errors", function() {
           value: 1,
         };
         const txSign = await wallet.signTransaction(txInfo);
-        const txObj = Transaction.from(txSign);
+        const txObj = QuaiTransaction.from(txSign);
 
         let count = 0;
 

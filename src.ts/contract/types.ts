@@ -2,10 +2,11 @@ import type {
     EventFragment, FunctionFragment, Result, Typed
 } from "../abi/index.js";
 import type {
-    TransactionRequest, PreparedTransactionRequest, TopicFilter
+    TransactionRequest, TopicFilter
 } from "../providers/index.js";
 
 import type { ContractTransactionResponse } from "./wrappers.js";
+import {QuaiPreparedTransactionRequest} from "../providers/provider";
 
 
 /**
@@ -48,7 +49,7 @@ export interface DeferredTopicFilter {
 /**
  *  When populating a transaction this type is returned.
  */
-export interface ContractTransaction extends PreparedTransactionRequest {
+export interface ContractTransaction extends QuaiPreparedTransactionRequest {
     /**
      *  The target address.
      */

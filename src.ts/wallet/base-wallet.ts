@@ -1,15 +1,16 @@
 import { getAddress, resolveAddress } from "../address/index.js";
 import { hashMessage, TypedDataEncoder } from "../hash/index.js";
 import { AbstractSigner } from "../providers/index.js";
-import { computeAddress, Transaction } from "../transaction/index.js";
+import { computeAddress } from "../transaction/index.js";
 import {
-    resolveProperties, assert, assertArgument
+    resolveProperties, assertArgument
 } from "../utils/index.js";
 
 import type { SigningKey } from "../crypto/index.js";
 import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
-import type { Provider, TransactionRequest } from "../providers/index.js";
-import type { TransactionLike } from "../transaction/index.js";
+import type { Provider } from "../providers/index.js";
+import { QuaiTransactionRequest } from "../providers/provider.js";
+import { QuaiTransaction, QuaiTransactionLike } from "../transaction/quai-transaction.js";
 
 /**
  *  The **BaseWallet** is a stream-lined implementation of a
@@ -71,7 +72,7 @@ export class BaseWallet extends AbstractSigner {
         return new BaseWallet(this.#signingKey, provider);
     }
 
-    async signTransaction(tx: TransactionRequest ): Promise<string> {
+    async signTransaction(tx: QuaiTransactionRequest ): Promise<string> {
         // Replace any Addressable or ENS name with an address
         const { to, from } = await resolveProperties({
             to: (tx.to ? resolveAddress(tx.to): undefined),
@@ -87,7 +88,8 @@ export class BaseWallet extends AbstractSigner {
 //            delete tx.from;
         }
 
-        const btx = Transaction.from(<TransactionLike<string>>tx);
+        const btx = QuaiTransaction.from(<QuaiTransactionLike<string>>tx);
+
         btx.signature = this.signingKey.sign(btx.unsignedHash);
 
         return btx.serialized;

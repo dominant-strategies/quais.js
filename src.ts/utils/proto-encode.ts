@@ -1,4 +1,4 @@
-import { ProtoTransaction } from "../transaction/transaction";
+import { ProtoTransaction } from "../transaction/abstract-transaction";
 import { ProtoWorkObject } from "../transaction/work-object";
 import { hexlify } from "./data";
 import * as Proto from "./ProtoBuf/proto_block"

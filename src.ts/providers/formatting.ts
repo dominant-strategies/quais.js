@@ -5,8 +5,7 @@
  */
 
 import type { Signature } from "../crypto/index.js";
-import type { AccessList } from "../transaction/index.js";
-import type { UTXOTransactionInput, UTXOTransactionOutput } from "../transaction/utxo.js";
+import type {AccessList, TxInput, TxOutput} from "../transaction/index.js";
 
 //////////////////////
 // Block
@@ -101,13 +100,13 @@ export interface BlockParams {
     /**
      *  The list of transactions in the block.
      */
-    transactions: ReadonlyArray<string | TransactionResponseParams>;
+    transactions: ReadonlyArray<string | QuaiTransactionResponseParams>;
 
     transactionsRoot: string;
 
     extRollupRoot: string;
 
-    extTransactions: ReadonlyArray<string | TransactionResponseParams>;
+    extTransactions: ReadonlyArray<string | QuaiTransactionResponseParams>;
 
     extTransactionsRoot: string;
 };
@@ -286,6 +285,7 @@ export interface TransactionReceiptParams {
 
 
 
+export type TransactionResponseParams = QuaiTransactionResponseParams | QiTransactionResponseParams;
 
 //////////////////////
 // Transaction Response
@@ -294,7 +294,7 @@ export interface TransactionReceiptParams {
  *  a **TransactionResponseParams** encodes the minimal required properties
  *  for a formatted transaction response.
  */
-export interface TransactionResponseParams {
+export interface QuaiTransactionResponseParams {
     /**
      *  The block number of the block that included this transaction.
      */
@@ -375,10 +375,45 @@ export interface TransactionResponseParams {
      *  The transaction access list.
      */
     accessList: null | AccessList;
+};
 
-    outputsUTXO ?: UTXOTransactionOutput[];
+export interface QiTransactionResponseParams {
+    /**
+     *  The block number of the block that included this transaction.
+     */
+    blockNumber: null | number;
 
-    inputsUTXO ?: UTXOTransactionInput[];
+    /**
+     *  The block hash of the block that included this transaction.
+     */
+    blockHash: null | string;
+
+    /**
+     *  The transaction hash.
+     */
+    hash: string;
+
+    /**
+     *  The transaction index.
+     */
+    index: bigint;
+
+
+    type: number;
+
+    /**
+     *  The chain ID this transaction is valid on.
+     */
+    chainId: bigint;
+
+    /**
+     *  The signature of the transaction.
+     */
+    signature: Signature;
+
+    txOutputs ?: TxOutput[];
+
+    txInputs ?: TxInput[];
 };
 
 
