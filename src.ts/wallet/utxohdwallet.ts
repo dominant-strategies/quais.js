@@ -9,6 +9,7 @@ import { MuSigFactory } from "@brandonblack/musig"
 import { nobleCrypto } from "./musig-crypto.js";
 import { schnorr } from "@noble/curves/secp256k1";
 import { keccak_256 } from "@noble/hashes/sha3";
+import { Outpoint } from "../transaction/utxo.js";
 
 interface UTXOAddress {
     pubKey: string;
@@ -88,6 +89,20 @@ export class UTXOHDWallet extends BaseWallet {
     set utxoAddresses(addresses: UTXOAddress[]) {
         this.#utxoAddresses = addresses;
     }
+
+    // map of addresses to unspent outputs
+    #addressOutpoints: { [address: string]: Outpoint[] } = {};
+
+    get addressOutpoints(): { [address: string]: Outpoint[] } {
+        return this.#addressOutpoints;
+    }
+
+    set addressOutpoints(outpoints: { [address: string]: Outpoint[] }) {
+        this.#addressOutpoints = outpoints;
+    }
+
+    // contains the last BIP44 index derived by the wallet (-1 if none have been derived yet)
+    #lastDerivedAddressIndex: number = -1;    
 
     /**
      * Gets the current publicKey
@@ -209,7 +224,11 @@ export class UTXOHDWallet extends BaseWallet {
 
     }
         
-    async generateUTXOs(zone: string, gap: number = 20  ){
+    /**
+     *  Generates a list of addresses and private keys with UTXOs in the specified zone
+     *  It also updates the map of addresses to unspent outputs
+     */
+    async syncUTXOs(zone: string, gap: number = 20  ){
         zone = zone.toLowerCase();
         // Check if zone is valid
         const shard = ShardData.find(shard => shard.name.toLowerCase() === zone || shard.nickname.toLowerCase() === zone || shard.byte.toLowerCase() === zone);
@@ -221,28 +240,47 @@ export class UTXOHDWallet extends BaseWallet {
         check each address for utxos and add to utxoAddresses
         until we have had gap limit number of addresses with no utxos
         */
-        let currentUtxoAddresses: UTXOAddress[] = [];
+        const currentUtxoAddresses: UTXOAddress[] = [];
+        const currentAddressOutpoints: { [address: string]: Outpoint[] } = {};
         let empty = 0
-        let accIndex = 0
+        // let accIndex = 0
+        let currentIndex = this.#lastDerivedAddressIndex + 1;
+
         while (empty < gap) {
-            const wallet = this.deriveAddress(accIndex, zone);
-            const pubKey = wallet.address;
-            const privKey = wallet.privateKey;
+            // start from the last derived address index
+            if (currentIndex > this.#lastDerivedAddressIndex) {
+                const wallet = this.deriveAddress(currentIndex, zone);
+                const pubKey = wallet.address;
+                const privKey = wallet.privateKey;
 
-            /*check available utxos throught node JSONRPC call
-                if we have utxos at this address add it to currentUtxoAddresses
-            */
-            currentUtxoAddresses.push({ pubKey , privKey });
-            //reset empty = 0
+                // save the derived address
+                currentUtxoAddresses.push({ pubKey, privKey });
+                this.#lastDerivedAddressIndex = currentIndex;
 
-            //else increment empty untill we have gap amount 
-                empty ++ 
+                
+                // Check if the address has any UTXOs
+                try {
+                    // if provider is not set, throw error
+                    if (!this.provider) throw new Error("Provider not set");
+                    const outpointsMap = await this.provider?.getOutpointsByAddress(pubKey)
+                    if (!outpointsMap) {
+                        empty++;
+                    } else {
+                        // add the outpoints to the addressOutpoints map
+                        const outpoints = Object.values(outpointsMap);
+                        currentAddressOutpoints[pubKey]= outpoints;
+                        empty = 0; // Reset the gap counter
+                    }
 
-
+                } catch (error) {
+                    throw new Error(`Error getting utxos for address ${pubKey}: ${error}`)
+                }
+            }
             //increment addrIndex in bip44 always
-            accIndex ++;
+            currentIndex++;
         }
         this.utxoAddresses = currentUtxoAddresses;
+        this.addressOutpoints = currentAddressOutpoints;
     }
 
     /**
