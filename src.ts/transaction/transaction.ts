@@ -12,7 +12,7 @@ import { computeAddress, recoverAddress } from "./address.js";
 import type { BigNumberish, BytesLike } from "../utils/index.js";
 import type { SignatureLike } from "../crypto/index.js";
 import type { AccessList, AccessListish } from "./index.js";
-import type { UTXOEntry, UTXOTransactionOutput } from "./utxo.js";
+import type { TxInput, TxOutput } from "./utxo.js";
 
 export interface TransactionLike<A = string> {
     /**
@@ -85,9 +85,9 @@ export interface TransactionLike<A = string> {
     accessList?: null | AccessListish;
 
 
-    inputsUTXO?: null | Array<UTXOEntry>;
+    inputsUTXO?: null | Array<TxInput>;
 
-    outputsUTXO?: null | Array<UTXOTransactionOutput>;
+    outputsUTXO?: null | Array<TxOutput>;
 }
 
 function handleNumber(_value: string, param: string): number {
@@ -230,8 +230,8 @@ export class Transaction implements TransactionLike<string> {
     #sig: null | Signature;
     #accessList: null | AccessList;
     #hash: null | string;
-    #inputsUTXO: null | UTXOEntry[];
-    #outputsUTXO: null | UTXOTransactionOutput[];
+    #inputsUTXO: null | Array<TxInput>;
+    #outputsUTXO: null | Array<TxOutput>;
     from: string;
 
     /**
@@ -385,11 +385,11 @@ export class Transaction implements TransactionLike<string> {
     }
 
 
-    get inputsUTXO(): null | UTXOEntry[] { return this.#inputsUTXO; }
-    set inputsUTXO(value: null | UTXOEntry[]) { this.#inputsUTXO = value; }
+    get inputsUTXO(): null | Array<TxInput> { return this.#inputsUTXO; }
+    set inputsUTXO(value: null | Array<TxInput>) { this.#inputsUTXO = value; }
 
-    get outputsUTXO(): null | UTXOTransactionOutput[] { return this.#outputsUTXO; }
-    set outputsUTXO(value: null | UTXOTransactionOutput[]) { this.#outputsUTXO = value; }
+    get outputsUTXO(): null | Array<TxOutput> { return this.#outputsUTXO; }
+    set outputsUTXO(value: null | Array<TxOutput>) { this.#outputsUTXO = value; }
         
 
     /**
@@ -535,13 +535,34 @@ export class Transaction implements TransactionLike<string> {
             return v.toString();
         };
     
-        // Adjusted function to specifically handle the conversion of 'denomination' fields in array items
-        const processArrayWithBigInt = (arr: UTXOEntry[] | UTXOTransactionOutput[]) => {
-            return arr.map(item => ({
-                address: item.address,
-                denomination: s(item.denomination) // Convert 'denomination' to string
-            }));
+        // Helper function to convert bigint or number to string for JSON output
+        const bigIntToString = (value: number | bigint): string => {
+            return value.toString();
         };
+
+        function processArrayWithBigInt(items: TxOutput[]): any[];
+        function processArrayWithBigInt(items: TxInput[]): any[];
+
+        function processArrayWithBigInt(items: TxOutput[] | TxInput[]): any[] {
+            if (items.length === 0) {
+                return [];
+            }
+
+            if ('Address' in items[0]) {
+                // Process as Output
+                return (items as TxOutput[]).map(({ Address, Denomination }) => ({
+                    Address,
+                    Denomination: bigIntToString(Denomination)
+                }));
+            } else {
+                // Process as Input
+                return (items as TxInput[]).map(({ txhash, index, pubKey }) => ({
+                    txhash,
+                    index,
+                    pubKey: hexlify(pubKey)
+                }));
+            }
+        }
     
         return {
             type: this.type,

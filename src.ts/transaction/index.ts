@@ -31,3 +31,5 @@ export { Transaction } from "./transaction.js";
 export { FewestCoinSelector } from "./coinselector-fewest.js";
 
 export type { TransactionLike } from "./transaction.js";
+
+export type {TxInput, TxOutput} from "./utxo.js";
