@@ -535,11 +535,6 @@ export class Transaction implements TransactionLike<string> {
             return v.toString();
         };
     
-        // Helper function to convert bigint or number to string for JSON output
-        const bigIntToString = (value: number | bigint): string => {
-            return value.toString();
-        };
-
         function processArrayWithBigInt(items: TxOutput[]): any[];
         function processArrayWithBigInt(items: TxInput[]): any[];
 
@@ -552,7 +547,7 @@ export class Transaction implements TransactionLike<string> {
                 // Process as Output
                 return (items as TxOutput[]).map(({ Address, Denomination }) => ({
                     Address,
-                    Denomination: bigIntToString(Denomination)
+                    Denomination: Denomination.toString()
                 }));
             } else {
                 // Process as Input
