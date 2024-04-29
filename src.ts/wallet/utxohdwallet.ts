@@ -352,8 +352,7 @@ export class UTXOHDWallet extends BaseWallet {
         const privKey = this.utxoAddresses.find(utxoAddr => utxoAddr.address === address)?.privKey;
         if (!privKey) throw new Error(`Missing private key for ${hexlify(pubKey)}`);
         // create the schnorr signature
-        const digest = keccak_256(hash);
-        const signature = schnorr.sign(digest, getBytes(privKey) );
+        const signature = schnorr.sign(hash, getBytes(privKey) );
         return hexlify(signature);
     }    
     
