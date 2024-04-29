@@ -84,7 +84,8 @@ export {
 export {
     accessListify,
     computeAddress, recoverAddress,
-    AbstractTransaction, FewestCoinSelector
+    AbstractTransaction, FewestCoinSelector,
+    QiTransaction
 } from "./transaction/index.js";
 
 export {
@@ -120,6 +121,8 @@ export {
     encryptKeystoreJson, encryptKeystoreJsonSync,
 
     quaiHDAccountPath, qiHDAccountPath,
+
+    nobleCrypto,
 } from "./wallet/index.js";
 
 export {
