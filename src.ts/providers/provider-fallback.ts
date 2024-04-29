@@ -34,7 +34,7 @@ function getTime(): number { return (new Date()).getTime(); }
 
 function stringify(value: any): string {
     return JSON.stringify(value, (key, value) => {
-        if (typeof(value) === "bigint") {
+        if (typeof (value) === "bigint") {
             return { type: "bigint", value: value.toString() };
         }
         return value;
@@ -198,11 +198,11 @@ function _normalize(value: any): string {
         return "[" + (value.map(_normalize)).join(",") + "]";
     }
 
-    if (typeof(value) === "object" && typeof(value.toJSON) === "function") {
+    if (typeof (value) === "object" && typeof (value.toJSON) === "function") {
         return _normalize(value.toJSON());
     }
 
-    switch (typeof(value)) {
+    switch (typeof (value)) {
         case "boolean": case "symbol":
             return value.toString();
         case "bigint": case "number":
@@ -212,7 +212,7 @@ function _normalize(value: any): string {
         case "object": {
             const keys = Object.keys(value);
             keys.sort();
-            return "{" + keys.map((k) => `${ JSON.stringify(k) }:${ _normalize(value[k]) }`).join(",") + "}";
+            return "{" + keys.map((k) => `${JSON.stringify(k)}:${_normalize(value[k])}`).join(",") + "}";
         }
     }
 
@@ -266,7 +266,7 @@ function getMedian(quorum: number, results: Array<TallyResult>): undefined | big
     const errorMap: Map<string, { weight: number, value: Error }> = new Map();
     let bestError: null | { weight: number, value: Error } = null;
 
-    const values: Array<bigint> = [ ];
+    const values: Array<bigint> = [];
     for (const { value, tag, weight } of results) {
         if (value instanceof Error) {
             const e = errorMap.get(tag) || { value, weight: 0 };
@@ -289,7 +289,7 @@ function getMedian(quorum: number, results: Array<TallyResult>): undefined | big
     }
 
     // Get the sorted values
-    values.sort((a, b) => ((a < b) ? -1: (b > a) ? 1: 0));
+    values.sort((a, b) => ((a < b) ? -1 : (b > a) ? 1 : 0));
 
     const mid = Math.floor(values.length / 2);
 
@@ -389,9 +389,9 @@ export class FallbackProvider extends AbstractProvider {
 
         this.#configs = providers.map((p) => {
             if (p instanceof AbstractProvider) {
-                return Object.assign({ provider: p }, defaultConfig, defaultState );
+                return Object.assign({ provider: p }, defaultConfig, defaultState);
             } else {
-                return Object.assign({ }, defaultConfig, p, defaultState );
+                return Object.assign({}, defaultConfig, p, defaultState);
             }
         });
 
@@ -416,7 +416,7 @@ export class FallbackProvider extends AbstractProvider {
 
     get providerConfigs(): Array<FallbackProviderState> {
         return this.#configs.map((c) => {
-            const result: any = Object.assign({ }, c);
+            const result: any = Object.assign({}, c);
             for (const key in result) {
                 if (key[0] === "_") { delete result[key]; }
             }
@@ -441,15 +441,17 @@ export class FallbackProvider extends AbstractProvider {
             case "broadcastTransaction":
                 return await provider.broadcastTransaction(req.shard, req.signedTransaction);
             case "call":
-                return await provider.call(Object.assign({ }, req.transaction, { blockTag: req.blockTag }));
+                return await provider.call(Object.assign({}, req.transaction, { blockTag: req.blockTag }));
             case "chainId":
                 return (await provider.getNetwork()).chainId;
             case "estimateGas":
                 return await provider.estimateGas(req.transaction);
             case "getBalance":
                 return await provider.getBalance(req.address, req.blockTag);
+            case "getOutpointsByAddress":
+                return await provider.getOutpointsByAddress(req.address);
             case "getBlock": {
-                const block = ("blockHash" in req) ? req.blockHash: req.blockTag;
+                const block = ("blockHash" in req) ? req.blockHash : req.blockTag;
                 return await provider.getBlock(req.shard, block, req.includeTransactions);
             }
             case "getBlockNumber":
@@ -549,7 +551,7 @@ export class FallbackProvider extends AbstractProvider {
     async #initialSync(): Promise<void> {
         let initialSync = this.#initialSyncPromise;
         if (!initialSync) {
-            const promises: Array<Promise<any>> = [ ];
+            const promises: Array<Promise<any>> = [];
             this.#configs.forEach((config) => {
                 promises.push((async () => {
                     await waitForSync(config, 0);
@@ -585,7 +587,7 @@ export class FallbackProvider extends AbstractProvider {
 
     async #checkQuorum(running: Set<RunnerState>, req: PerformActionRequest): Promise<any> {
         // Get all the result objects
-        const results: Array<TallyResult> = [ ];
+        const results: Array<TallyResult> = [];
         for (const runner of running) {
             if (runner.result != null) {
                 const { tag, value } = normalizeResult(runner.result);
@@ -633,6 +635,7 @@ export class FallbackProvider extends AbstractProvider {
             case "call":
             case "chainId":
             case "getBalance":
+            case "getOutpointsByAddress":
             case "getTransactionCount":
             case "getCode":
             case "getStorage":
@@ -646,7 +649,7 @@ export class FallbackProvider extends AbstractProvider {
         }
 
         assert(false, "unsupported method", "UNSUPPORTED_OPERATION", {
-            operation: `_perform(${ stringify((<any>req).method) })`
+            operation: `_perform(${stringify((<any>req).method)})`
         });
     }
 
@@ -655,7 +658,7 @@ export class FallbackProvider extends AbstractProvider {
 
         // Any promises that are interesting to watch for; an expired stall
         // or a successful perform
-        const interesting: Array<Promise<void>> = [ ];
+        const interesting: Array<Promise<void>> = [];
 
         let newRunners = 0;
         for (const runner of running) {

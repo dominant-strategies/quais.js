@@ -14,7 +14,7 @@ export {
 } from "./abi/index.js";
 
 export {
-    getAddress, getIcapAddress,
+    getAddress,
     getCreateAddress, getCreate2Address,
     isAddressable, isAddress, resolveAddress
 } from "./address/index.js";
@@ -69,12 +69,11 @@ export {
 
     IpcSocketProvider, SocketProvider, WebSocketProvider,
 
-    EnsResolver,
     Network,
 
     EnsPlugin,
     FeeDataNetworkPlugin, FetchUrlFeeDataNetworkPlugin,
-    GasCostPlugin, NetworkPlugin, MulticoinProviderPlugin,
+    GasCostPlugin, NetworkPlugin,
 
     SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber,
     SocketSubscriber, UnmanagedSubscriber,
@@ -105,13 +104,12 @@ export {
     formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits,
     toUtf8Bytes, toUtf8CodePoints, toUtf8String,
     Utf8ErrorFuncs,
-    decodeRlp, encodeRlp,
     uuidV4, getTxType, getShardForAddress, getAddressDetails, isUTXOAddress,
 } from "./utils/index.js";
 
 export {
     Mnemonic,
-    BaseWallet, HDNodeWallet, HDNodeVoidWallet,
+    BaseWallet, HDNodeWallet, HDNodeVoidWallet, UTXOHDWallet,
     Wallet,
 
 
@@ -141,7 +139,7 @@ export type {
 } from "./abi/index.js";
 
 export type {
-    Addressable, AddressLike, NameResolver
+    Addressable, AddressLike
 } from "./address/index.js";
 
 export type {
@@ -182,7 +180,6 @@ export type {
     ErrorCode,
     FixedFormat,
     Utf8ErrorFunc, UnicodeNormalizationForm, Utf8ErrorReason,
-    RlpStructuredData, RlpStructuredDataish,
 
     GetUrlResponse,
     FetchPreflightFunc, FetchProcessFunc, FetchRetryFunc,
@@ -191,8 +188,8 @@ export type {
     quaisError, UnknownError, NotImplementedError, UnsupportedOperationError, NetworkError,
     ServerError, TimeoutError, BadDataError, CancelledError, BufferOverrunError,
     NumericFaultError, InvalidArgumentError, MissingArgumentError, UnexpectedArgumentError,
-    CallExceptionError, InsufficientFundsError, NonceExpiredError, OffchainFaultError,
-    ReplacementUnderpricedError, TransactionReplacedError, UnconfiguredNameError,
+    CallExceptionError, InsufficientFundsError, NonceExpiredError,
+    ReplacementUnderpricedError, TransactionReplacedError,
     ActionRejectedError,
     CodedquaisError,
 

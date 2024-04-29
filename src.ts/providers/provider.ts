@@ -5,14 +5,15 @@ import {
 } from "../utils/index.js";
 import { accessListify } from "../transaction/index.js";
 
-import type { AddressLike, NameResolver } from "../address/index.js";
+import type { AddressLike } from "../address/index.js";
 import type { BigNumberish, EventEmitterable } from "../utils/index.js";
 import type { Signature } from "../crypto/index.js";
 import type { AccessList, AccessListish, TransactionLike } from "../transaction/index.js";
 
 import type { ContractRunner } from "./contracts.js";
 import type { Network } from "./network.js";
-import type { UTXOEntry, UTXOTransactionOutput } from "../transaction/utxo.js";
+import type { Outpoint } from "../transaction/utxo.js";
+import type { TxInput, TxOutput } from "../transaction/utxo.js";
 
 const BN_0 = BigInt(0);
 
@@ -203,9 +204,9 @@ export interface TransactionRequest {
      */
     blockTag?: BlockTag;
 
-    inputs?: null | Array<UTXOEntry>;
+    inputs?: null | Array<TxInput>;
 
-    outputs?: null | Array<UTXOTransactionOutput>;
+    outputs?: null | Array<TxOutput>;
 };
 
 /**
@@ -297,9 +298,9 @@ export interface PreparedTransactionRequest {
      */
     blockTag?: BlockTag;
 
-    inputs?: null | Array<UTXOEntry>;
+    inputs?: null | Array<TxInput>;
 
-    outputs?: null | Array<UTXOTransactionOutput>;
+    outputs?: null | Array<TxOutput>;
 }
 
 /**
@@ -1353,9 +1354,9 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      */
     readonly accessList!: null | AccessList;
 
-    readonly inputs?: Array<UTXOEntry>;
+    readonly inputs?: Array<TxInput>;
 
-    readonly outputs?: Array<UTXOTransactionOutput>;
+    readonly outputs?: Array<TxOutput>;
 
     #startBlock: number;
 
@@ -1875,7 +1876,7 @@ export type ProviderEvent = string | Array<string | Array<string>> | EventFilter
  *  private key must be used to sign the transaction before it can be
  *  broadcast.
  */
-export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent>, NameResolver {
+export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent> {
 
     /**
      *  The provider iteself.
@@ -1928,6 +1929,14 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *        **silently ignored** by the node, which may cause issues if relied on.
      */
     getBalance(address: AddressLike, blockTag?: BlockTag): Promise<bigint>;
+
+    /**
+     *  Get the UTXO entries for %%address%%.
+     *
+     *  @note On nodes without archive access enabled, the %%blockTag%% may be
+     *        **silently ignored** by the node, which may cause issues if relied on.
+     */
+    getOutpointsByAddress(address: AddressLike): Promise<Array<Outpoint>>;
 
     /**
      *  Get the number of transactions ever sent for %%address%%, which
@@ -2026,25 +2035,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  Resolves to the list of Logs that match %%filter%%
      */
     getLogs(filter: Filter | FilterByBlockHash): Promise<Array<Log>>;
-
-
-    ////////////////////
-    // ENS
-
-    /**
-     *  Resolves to the address configured for the %%ensName%% or
-     *  ``null`` if unconfigured.
-     */
-    resolveName(ensName: string): Promise<null | string>;
-
-    /**
-     *  Resolves to the ENS name associated for the %%address%% or
-     *  ``null`` if the //primary name// is not configured.
-     *
-     *  Users must perform additional steps to configure a //primary name//,
-     *  which is not currently common.
-     */
-    lookupAddress(address: string): Promise<null | string>;
 
     /**
      *  Waits until the transaction %%hash%% is mined and has %%confirms%%

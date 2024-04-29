@@ -2,13 +2,15 @@ import { getAddress } from "../address/index";
 import { getBigInt } from "../utils/index";
 import type { BigNumberish } from "../utils/index";
 
-export type OutPoint = {
-    txhash: string;
-    index: number;
+
+export type Outpoint = {
+    Txhash: string;
+    Index: number;
+    Denomination: number;
 };
 
 export type UTXOTransactionInput = {
-    previousOutPoint: OutPoint;
+    previousOutPoint: Outpoint;
     pubKey: Uint8Array;
 };
 
@@ -19,12 +21,22 @@ export interface UTXOEntry {
 
 export type UTXOTransactionOutput = UTXOEntry;
 
-export type UTXOTransaction = {
-    chainId: bigint;
-    inputs: UTXOTransactionInput[];
-    outputs: UTXOTransactionOutput[];
-    signature?: Uint8Array;
+export type TxOutput = {
+    Address: string;
+    Denomination: number;
 };
+
+export type TxInput = {
+    txhash: string;
+    index: number;
+    pubKey: Uint8Array;
+}
+
+export interface UTXOEntry {
+    denomination: null | bigint;
+    address: null | string;
+};
+
 
 export interface UTXOLike extends UTXOEntry {
     txhash?: null | string;

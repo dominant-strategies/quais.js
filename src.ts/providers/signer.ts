@@ -1,5 +1,5 @@
 
-import type { Addressable, NameResolver } from "../address/index.js";
+import type { Addressable } from "../address/index.js";
 import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
 import type { TransactionLike } from "../transaction/index.js";
 
@@ -14,7 +14,7 @@ import type { BlockTag, Provider, TransactionRequest, TransactionResponse } from
  *  Signing entities, such as Smart Contract Wallets or Virtual Wallets (where the
  *  private key may not be known).
  */
-export interface Signer extends Addressable, ContractRunner, NameResolver {
+export interface Signer extends Addressable, ContractRunner {
 
     /**
      *  The [[Provider]] attached to this Signer (if any).
@@ -107,12 +107,6 @@ export interface Signer extends Addressable, ContractRunner, NameResolver {
      *  before actually performing an operation.
      */
     call(tx: TransactionRequest): Promise<string>;
-
-    /**
-     *  Resolves an ENS Name to an address.
-     */
-    resolveName(name: string): Promise<null | string>;
-
 
     ////////////////////
     // Signing

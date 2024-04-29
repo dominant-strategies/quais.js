@@ -74,8 +74,8 @@ export class BaseWallet extends AbstractSigner {
     async signTransaction(tx: TransactionRequest ): Promise<string> {
         // Replace any Addressable or ENS name with an address
         const { to, from } = await resolveProperties({
-            to: (tx.to ? resolveAddress(tx.to, this.provider) : undefined),
-            from: (tx.from ? resolveAddress(tx.from, this.provider) : undefined)
+            to: (tx.to ? resolveAddress(tx.to): undefined),
+            from: (tx.from ? resolveAddress(tx.from): undefined)
         });
 
         if (to != null) { tx.to = to; }
@@ -108,25 +108,6 @@ export class BaseWallet extends AbstractSigner {
     }
 
     async signTypedData(domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, value: Record<string, any>): Promise<string> {
-
-        // Populate any ENS names
-        const populated = await TypedDataEncoder.resolveNames(domain, types, value, async (name: string) => {
-            // @TODO: this should use resolveName; addresses don't
-            //        need a provider
-
-            assert(this.provider != null, "cannot resolve ENS names without a provider", "UNSUPPORTED_OPERATION", {
-                operation: "resolveName",
-                info: { name }
-            });
-
-            const address = await this.provider.resolveName(name);
-            assert(address != null, "unconfigured ENS name", "UNCONFIGURED_NAME", {
-                value: name
-            });
-
-            return address;
-        });
-
-        return this.signingKey.sign(TypedDataEncoder.hash(populated.domain, types, populated.value)).serialized;
+        return this.signingKey.sign(TypedDataEncoder.hash(domain, types, value)).serialized;
     }
 }

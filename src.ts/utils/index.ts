@@ -36,8 +36,8 @@ export {
 export { resolveProperties, defineProperties } from "./properties.js";
 export { resolveProperties, defineProperties } from "./properties.js";
 
-export { decodeRlp } from "./rlp-decode.js";
-export { encodeRlp } from "./rlp-encode.js";
+export { encodeProto } from "./proto-encode.js";
+export { decodeProto } from "./proto-decode.js";
 export { encodeProtoTransaction, encodeProtoWorkObject } from "./proto-encode.js";
 export { decodeProtoTransaction, decodeProtoWorkObject } from "./proto-decode.js";
 
@@ -70,8 +70,8 @@ export type {
     quaisError, UnknownError, NotImplementedError, UnsupportedOperationError, NetworkError,
     ServerError, TimeoutError, BadDataError, CancelledError, BufferOverrunError,
     NumericFaultError, InvalidArgumentError, MissingArgumentError, UnexpectedArgumentError,
-    CallExceptionError, InsufficientFundsError, NonceExpiredError, OffchainFaultError,
-    ReplacementUnderpricedError, TransactionReplacedError, UnconfiguredNameError,
+    CallExceptionError, InsufficientFundsError, NonceExpiredError,
+    ReplacementUnderpricedError, TransactionReplacedError,
     ActionRejectedError,
 
     CallExceptionAction, CallExceptionTransaction,
@@ -90,8 +90,6 @@ export type {
 export type { FixedFormat } from "./fixednumber.js"
 
 export type { BigNumberish, Numeric } from "./maths.js";
-
-export type { RlpStructuredData, RlpStructuredDataish } from "./rlp.js";
 
 export type {
     Utf8ErrorFunc,

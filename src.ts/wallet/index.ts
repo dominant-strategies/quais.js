@@ -44,3 +44,5 @@ export type { CrowdsaleAccount } from "./json-crowdsale.js";
 export type {
     KeystoreAccount, EncryptOptions
 } from "./json-keystore.js"
+
+export { UTXOHDWallet } from "./utxohdwallet.js";
