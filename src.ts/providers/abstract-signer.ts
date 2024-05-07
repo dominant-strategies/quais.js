@@ -5,13 +5,12 @@
  *
  *  @_section: api/providers/abstract-signer: Subclassing Signer [abstract-signer]
  */
-import {AddressLike, resolveAddress} from "../address/index.js";
-import { Transaction } from "../transaction/index.js";
+import { AddressLike, resolveAddress } from "../address/index.js";
 import {
     defineProperties, getBigInt, resolveProperties,
     assert, assertArgument, isUTXOAddress
 } from "../utils/index.js";
-import { copyRequest } from "./provider.js";
+import {addressFromTransactionRequest, copyRequest, QiTransactionRequest, QuaiTransactionRequest} from "./provider.js";
 
 import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
 import type { TransactionLike } from "../transaction/index.js";
@@ -21,13 +20,15 @@ import type {
 } from "./provider.js";
 import type { Signer } from "./signer.js";
 import { getTxType } from "../utils/index.js";
+import {QiTransaction, QiTransactionLike} from "../transaction/qi-transaction";
+import {QuaiTransaction, QuaiTransactionLike} from "../transaction/quai-transaction";
 
 function checkProvider(signer: AbstractSigner, operation: string): Provider {
     if (signer.provider) { return signer.provider; }
     assert(false, "missing provider", "UNSUPPORTED_OPERATION", { operation });
 }
 
-async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise<TransactionLike<string>> {
+async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise<TransactionLike> {
     let pop: any = copyRequest(tx);
 
     if (pop.to != null) { pop.to = resolveAddress(pop.to); }
@@ -95,20 +96,16 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         return checkProvider(this, "getTransactionCount").getTransactionCount(await this.getAddress(), blockTag);
     }
 
-    async populateCall(tx: TransactionRequest): Promise<TransactionLike<string>> {
+    async populateCall(tx: TransactionRequest): Promise<TransactionLike> {
         const pop = await populate(this, tx);
         return pop;
     }
 
-    // async populateQiTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
-
-    // }
-
-    async populateTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
+    async populateQuaiTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionLike> {
         const provider = checkProvider(this, "populateTransaction");
-        const shard = await this.shardFromAddress(tx.from)
+        const shard = await this.shardFromAddress(tx.from);
 
-        const pop = await populate(this, tx);
+        const pop = await populate(this, tx) as QuaiTransactionLike;
 
         if (pop.type == null) {
             pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
@@ -118,12 +115,16 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             pop.nonce = await this.getNonce("pending");
         }
 
+        if (pop.type == null) {
+            pop.type = getTxType(pop.from ?? null, pop.to ?? null);
+        }
+
         if (pop.gasLimit == null) {
-            if (pop.type == 0 ) pop.gasLimit = await this.estimateGas(pop);
+            if (pop.type == 0) pop.gasLimit = await this.estimateGas(pop);
             else {
                 //Special cases for type 2 tx to bypass address out of scope in the node
                 let temp = pop.to
-                pop.to =  "0x0000000000000000000000000000000000000000"
+                pop.to = "0x0000000000000000000000000000000000000000"
                 pop.gasLimit = getBigInt(2 * Number(await this.estimateGas(pop)));
                 pop.to = temp
             }
@@ -153,13 +154,13 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         return await resolveProperties(pop);
     }
 
-    async populateUTXOTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
-        
+    async populateQiTransaction(tx: QiTransactionRequest): Promise<QiTransactionLike> {
+
         const pop = {
             inputsUTXO: tx.inputs,
             outputsUTXO: tx.outputs,
+            chainId: tx.chainId,
             type: 2,
-            from: String(tx.from)
         }
 
         //@TOOD: Don't await all over the place; save them up for
@@ -168,7 +169,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
     }
 
     async estimateGas(tx: TransactionRequest): Promise<bigint> {
-                return checkProvider(this, "estimateGas").estimateGas(await this.populateCall(tx));
+        return checkProvider(this, "estimateGas").estimateGas(await this.populateCall(tx));
     }
 
     async call(tx: TransactionRequest): Promise<string> {
@@ -178,23 +179,21 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
         const provider = checkProvider(this, "sendTransaction");
         let sender = await this.getAddress()
-        tx.from = sender
-        const shard = await this.shardFromAddress(tx.from)
+        const shard = await this.shardFromAddress(addressFromTransactionRequest(tx))
 
 
         let pop;
+        let txObj;
         if (isUTXOAddress(sender)) {
-            pop = await this.populateUTXOTransaction(tx);
+            pop = await this.populateQiTransaction(tx);
+            txObj = QiTransaction.from(pop);
         } else {
-            pop = await this.populateTransaction(tx);
+            pop = await this.populateQuaiTransaction(tx as QuaiTransactionRequest);
+            txObj = QuaiTransaction.from(pop);
         }
 
-//        delete pop.from;
-        const txObj = Transaction.from(pop);
-
         const signedTx = await this.signTransaction(txObj);
-        // console.log("signedTX: ", JSON.stringify(txObj))
-        return await provider.broadcastTransaction(shard, signedTx);
+        return await provider.broadcastTransaction(shard, signedTx, "from" in tx ? tx.from : undefined);
     }
 
     abstract signTransaction(tx: TransactionRequest): Promise<string>;
@@ -232,7 +231,7 @@ export class VoidSigner extends AbstractSigner {
     }
 
     #throwUnsupported(suffix: string, operation: string): never {
-        assert(false, `VoidSigner cannot sign ${ suffix }`, "UNSUPPORTED_OPERATION", { operation });
+        assert(false, `VoidSigner cannot sign ${suffix}`, "UNSUPPORTED_OPERATION", { operation });
     }
 
     async signTransaction(tx: TransactionRequest): Promise<string> {

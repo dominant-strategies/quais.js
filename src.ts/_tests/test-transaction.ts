@@ -2,7 +2,8 @@ import assert from "assert";
 import { loadTests } from "./utils.js";
 import type { TestCaseTransaction, TestCaseTransactionTx } from "./types.js";
 
-import { isError, Transaction } from "../index.js";
+import {isError} from "../index.js";
+import {QuaiTransaction} from "../transaction/quai-transaction";
 
 
 const BN_0 = BigInt(0);
@@ -20,7 +21,7 @@ describe("Tests Unsigned Transaction Serializing", function() {
                 maxFeePerGas: undefined,
                 maxPriorityFeePerGas: undefined
             });
-            const tx = Transaction.from(txData);
+            const tx = QuaiTransaction.from(txData);
             assert.equal(tx.unsignedSerialized, test.unsignedEip155, "unsignedEip155");
         });
     }
@@ -39,7 +40,7 @@ describe("Tests Signed Transaction Serializing", function() {
                 maxPriorityFeePerGas: 0,
                 signature: test.signatureEip155
              });
-            const tx = Transaction.from(txData);
+            const tx = QuaiTransaction.from(txData);
             assert.equal(tx.serialized, test.signedEip155, "signedEip155");
         });
     }
@@ -50,7 +51,7 @@ function assertTxUint(actual: null | bigint, _expected: undefined | string, name
     assert.equal(actual, expected, name);
 }
 
-function assertTxEqual(actual: Transaction, expected: TestCaseTransactionTx): void {
+function assertTxEqual(actual: QuaiTransaction, expected: TestCaseTransactionTx): void {
     assert.equal(actual.to, expected.to, "to");
     assert.equal(actual.nonce, expected.nonce, "nonce");
 
@@ -95,7 +96,7 @@ describe("Tests Unsigned Transaction Parsing", function() {
     for (const test of tests) {
         if (!test.unsignedEip155) { continue; }
         it(`parses unsigned EIP-155 transaction: ${ test.name }`, function() {
-            const tx = Transaction.from(test.unsignedEip155);
+            const tx = QuaiTransaction.from(test.unsignedEip155);
 
             const expected = addDefaults(test.transaction);
             expected.maxFeePerGas = 0;
@@ -112,7 +113,7 @@ describe("Tests Signed Transaction Parsing", function() {
     for (const test of tests) {
         if (!test.unsignedEip155) { continue; }
         it(`parses signed EIP-155 transaction: ${ test.name }`, function() {
-            let tx = Transaction.from(test.signedEip155);
+            let tx = QuaiTransaction.from(test.signedEip155);
             const expected = addDefaults(test.transaction);
             expected.maxFeePerGas = 0;
             expected.maxPriorityFeePerGas = 0;
@@ -169,7 +170,7 @@ describe("Tests Transaction Parameters", function() {
             assert.throws(() => {
                 // The access list is a single value: 0x09 instead of
                 // structured data
-                const result = Transaction.from(data);
+                const result = QuaiTransaction.from(data);
                 console.log(result)
             }, (error: any) => {
                 return (isError(error, "INVALID_ARGUMENT") &&

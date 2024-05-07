@@ -55,7 +55,7 @@ export interface Signer extends Addressable, ContractRunner {
      *
      *  @param tx - The call to prepare
      */
-    populateCall(tx: TransactionRequest): Promise<TransactionLike<string>>;
+    populateCall(tx: TransactionRequest): Promise<TransactionLike>;
 
     /**
      *  Prepares a {@link TransactionRequest} for sending to the network by
@@ -74,7 +74,7 @@ export interface Signer extends Addressable, ContractRunner {
      *
      *  @param tx - The call to prepare
      */
-    populateTransaction(tx: TransactionRequest): Promise<TransactionLike<string>>;
+    populateQuaiTransaction(tx: TransactionRequest): Promise<TransactionLike>;
 
 
     ////////////////////

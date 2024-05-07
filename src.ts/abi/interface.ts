@@ -343,7 +343,7 @@ export class Interface {
             try {
                 frags.push(Fragment.from(a));
             } catch (error) {
-                console.log("EE", error);
+                console.log("Error parsing ABI fragment", error);
             }
         }
 

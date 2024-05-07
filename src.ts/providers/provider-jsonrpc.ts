@@ -35,8 +35,11 @@ import type { TransactionLike } from "../transaction/index.js";
 
 import type { PerformActionRequest, Subscriber, Subscription } from "./abstract-provider.js";
 import type { Networkish } from "./network.js";
-import type { Provider, TransactionRequest, TransactionResponse } from "./provider.js";
+import type {Provider, QuaiTransactionRequest, TransactionRequest} from "./provider.js";
 import type { Signer } from "./signer.js";
+import {QuaiTransactionLike} from "../transaction/quai-transaction";
+import {TransactionResponse, addressFromTransactionRequest} from "./provider.js";
+import { UTXOEntry, UTXOTransactionOutput } from "../transaction/utxo.js";
 
 
 type Timer = ReturnType<typeof setTimeout>;
@@ -67,11 +70,6 @@ function deepCopy<T = any>(value: T): T {
 
 function stall(duration: number): Promise<void> {
     return new Promise((resolve) => { setTimeout(resolve, duration); });
-}
-
-function getLowerCase(value: string): string {
-    if (value) { return value.toLowerCase(); }
-    return value;
 }
 
 /**
@@ -198,11 +196,32 @@ const defaultOptions = {
     cacheTimeout: 250
 }
 
+export interface AbstractJsonRpcTransactionRequest {
+
+        /**
+         *  The chain ID the transaction is valid on.
+         */
+        chainId?: string;
+
+        /**
+         *  The [[link-eip-2718]] transaction type.
+         */
+        type?: string;
+}
+
+export type JsonRpcTransactionRequest = QiJsonRpcTransactionRequest | QuaiJsonRpcTransactionRequest;
+
+export interface QiJsonRpcTransactionRequest extends AbstractJsonRpcTransactionRequest {
+    txInputs?: Array<UTXOEntry>;
+
+    txOutputs?: Array<UTXOTransactionOutput>;
+}
+
 /**
  *  A **JsonRpcTransactionRequest** is formatted as needed by the JSON-RPC
  *  Ethereum API specification.
  */
-export interface JsonRpcTransactionRequest {
+export interface QuaiJsonRpcTransactionRequest extends AbstractJsonRpcTransactionRequest {
     /**
      *  The sender address to use when signing.
      */
@@ -217,16 +236,6 @@ export interface JsonRpcTransactionRequest {
      *  The transaction data.
      */
     data?: string;
-
-    /**
-     *  The chain ID the transaction is valid on.
-     */
-    chainId?: string;
-
-    /**
-     *  The [[link-eip-2718]] transaction type.
-     */
-    type?: string;
 
     /**
      *  The maximum amount of gas to allow a transaction to consume.
@@ -269,183 +278,199 @@ export interface JsonRpcTransactionRequest {
 
 // @TODO: Unchecked Signers
 
-export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
-    address!: string;
+ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
+     address!: string;
 
-    constructor(provider: JsonRpcApiProvider, address: string) {
-        super(provider);
-        address = getAddress(address);
-        defineProperties<JsonRpcSigner>(this, { address });
-    }
+     constructor(provider: JsonRpcApiProvider, address: string) {
+         super(provider);
+         address = getAddress(address);
+         defineProperties<JsonRpcSigner>(this, { address });
+     }
 
-    connect(provider: null | Provider): Signer {
-        assert(false, "cannot reconnect JsonRpcSigner", "UNSUPPORTED_OPERATION", {
-            operation: "signer.connect"
-        });
-    }
+     connect(provider: null | Provider): Signer {
+         assert(false, "cannot reconnect JsonRpcSigner", "UNSUPPORTED_OPERATION", {
+             operation: "signer.connect"
+         });
+     }
 
-    async getAddress(): Promise<string> {
-        return this.address;
-    }
+     async getAddress(): Promise<string> {
+         return this.address;
+     }
 
-    // JSON-RPC will automatially fill in nonce, etc. so we just check from
-    async populateTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
-        return await this.populateCall(tx);
-    }
+     // JSON-RPC will automatially fill in nonce, etc. so we just check from
+     async populateQuaiTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionLike> {
+         return await this.populateCall(tx) as QuaiTransactionLike;
+     }
 
-    // Returns just the hash of the transaction after sent, which is what
-    // the bare JSON-RPC API does;
-    async sendUncheckedTransaction(_tx: TransactionRequest): Promise<string> {
-        const tx = deepCopy(_tx);
+     // Returns just the hash of the transaction after sent, which is what
+     // the bare JSON-RPC API does;
+     async sendUncheckedTransaction(_tx: TransactionRequest): Promise<string> {
+         const tx = deepCopy(_tx);
 
-        const promises: Array<Promise<void>> = [];
+         const promises: Array<Promise<void>> = [];
 
-        // Make sure the from matches the sender
-        if (tx.from) {
-            const _from = tx.from;
-            promises.push((async () => {
-                const from = await resolveAddress(_from);
-                assertArgument(from != null && from.toLowerCase() === this.address.toLowerCase(),
-                    "from address mismatch", "transaction", _tx);
-                tx.from = from;
-            })());
+         if ("from" in tx) {
+             // Make sure the from matches the sender
+             if (tx.from) {
+                 const _from = tx.from;
+                 promises.push((async () => {
+                     const from = await resolveAddress(_from);
+                     assertArgument(from != null && from.toLowerCase() === this.address.toLowerCase(),
+                         "from address mismatch", "transaction", _tx);
+                     tx.from = from;
+                 })());
+             } else {
+                 tx.from = this.address;
+             }
+
+             // The JSON-RPC for quai_sendTransaction uses 90000 gas; if the user
+             // wishes to use this, it is easy to specify explicitly, otherwise
+             // we look it up for them.
+             if (tx.gasLimit == null) {
+                 promises.push((async () => {
+                     tx.gasLimit = await this.provider.estimateGas({ ...tx, from: this.address });
+                 })());
+             }
+
+             // The address may be an ENS name or Addressable
+             if (tx.to != null) {
+                 const _to = tx.to;
+                 promises.push((async () => {
+                     tx.to = await resolveAddress(_to);
+                 })());
+             }
+         } else {
+             // Make sure the from matches the sender
+             if (tx.outputs) {
+                 for (let i = 0; i < tx.outputs.length; i++) {
+                     if (tx.outputs[i].Address) {
+                         promises.push((async () => {
+                             tx.outputs![i].Address = await resolveAddress(tx.outputs![i].Address);
+                         })());
+                     }
+                 }
+             }
+         }
+
+         // Wait until all of our properties are filled in
+         if (promises.length) { await Promise.all(promises); }
+         const hexTx = this.provider.getRpcTransaction(tx);
+
+         return this.provider.send("quai_sendTransaction", [hexTx]);
+     }
+
+     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
+         const shard = await this.shardFromAddress(addressFromTransactionRequest(tx))
+         // This cannot be mined any earlier than any recent block
+         const blockNumber = await this.provider.getBlockNumber(shard);
+         // Send the transaction
+         const hash = await this.sendUncheckedTransaction(tx);
+
+         // Unfortunately, JSON-RPC only provides and opaque transaction hash
+         // for a response, and we need the actual transaction, so we poll
+         // for it; it should show up very quickly
+         return await (new Promise((resolve, reject) => {
+             const timeouts = [1000, 100];
+             let invalids = 0;
+
+             const checkTx = async () => {
+
+                 try {
+                     // Try getting the transaction
+                     const tx = await this.provider.getTransaction(hash);
+
+                     if (tx != null) {
+                         resolve(tx.replaceableTransaction(blockNumber));
+                         return;
+                     }
+
+                 } catch (error) {
+
+                     // If we were cancelled: stop polling.
+                     // If the data is bad: the node returns bad transactions
+                     // If the network changed: calling again will also fail
+                     // If unsupported: likely destroyed
+                     if (isError(error, "CANCELLED") || isError(error, "BAD_DATA") ||
+                         isError(error, "NETWORK_ERROR" || isError(error, "UNSUPPORTED_OPERATION"))) {
+
+                         if (error.info == null) { error.info = {}; }
+                         error.info.sendTransactionHash = hash;
+
+                         reject(error);
+                         return;
+                     }
+
+                     // Stop-gap for misbehaving backends; see #4513
+                     if (isError(error, "INVALID_ARGUMENT")) {
+                         invalids++;
+                         if (error.info == null) { error.info = {}; }
+                         error.info.sendTransactionHash = hash;
+                         if (invalids > 10) {
+                             reject(error);
+                             return;
+                         }
+                     }
+
+                     // Notify anyone that cares; but we will try again, since
+                     // it is likely an intermittent service error
+                     this.provider.emit("error", makeError("failed to fetch transation after sending (will try again)", "UNKNOWN_ERROR", { error }));
+                 }
+
+                 // Wait another 4 seconds
+                 this.provider._setTimeout(() => { checkTx(); }, timeouts.pop() || 4000);
+             };
+             checkTx();
+         }));
+     }
+
+     async signTransaction(_tx: TransactionRequest): Promise<string> {
+         const tx = deepCopy(_tx);
+
+         // QuaiTransactionRequest
+         if ('from' in tx) {
+         if (tx.from) {
+             const from = await resolveAddress(tx.from);
+             assertArgument(from != null && from.toLowerCase() === this.address.toLowerCase(),
+                 "from address mismatch", "transaction", _tx);
+             tx.from = from;
+         } else {
+             tx.from = this.address;
+         }
         } else {
-            tx.from = this.address;
+            throw new Error("No QI signing implementation in provider-jsonrpc");
         }
-
-        // The JSON-RPC for quai_sendTransaction uses 90000 gas; if the user
-        // wishes to use this, it is easy to specify explicitly, otherwise
-        // we look it up for them.
-        if (tx.gasLimit == null) {
-            promises.push((async () => {
-                tx.gasLimit = await this.provider.estimateGas({ ...tx, from: this.address });
-            })());
-        }
-
-        // The address may be an ENS name or Addressable
-        if (tx.to != null) {
-            const _to = tx.to;
-            promises.push((async () => {
-                tx.to = await resolveAddress(_to);
-            })());
-        }
-
-        // Wait until all of our properties are filled in
-        if (promises.length) { await Promise.all(promises); }
-        const hexTx = this.provider.getRpcTransaction(tx);
-
-        return this.provider.send("quai_sendTransaction", [hexTx]);
-    }
-
-    async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
-        // This cannot be mined any earlier than any recent block
-        const shard = await this.shardFromAddress(tx.from);
-        const blockNumber = await this.provider.getBlockNumber(shard);
-        // Send the transaction
-        const hash = await this.sendUncheckedTransaction(tx);
-
-        // Unfortunately, JSON-RPC only provides and opaque transaction hash
-        // for a response, and we need the actual transaction, so we poll
-        // for it; it should show up very quickly
-        return await (new Promise((resolve, reject) => {
-            const timeouts = [1000, 100];
-            let invalids = 0;
-
-            const checkTx = async () => {
-
-                try {
-                    // Try getting the transaction
-                    const tx = await this.provider.getTransaction(hash);
-
-                    if (tx != null) {
-                        resolve(tx.replaceableTransaction(blockNumber));
-                        return;
-                    }
-
-                } catch (error) {
-
-                    // If we were cancelled: stop polling.
-                    // If the data is bad: the node returns bad transactions
-                    // If the network changed: calling again will also fail
-                    // If unsupported: likely destroyed
-                    if (isError(error, "CANCELLED") || isError(error, "BAD_DATA") ||
-                        isError(error, "NETWORK_ERROR" || isError(error, "UNSUPPORTED_OPERATION"))) {
-
-                        if (error.info == null) { error.info = {}; }
-                        error.info.sendTransactionHash = hash;
-
-                        reject(error);
-                        return;
-                    }
-
-                    // Stop-gap for misbehaving backends; see #4513
-                    if (isError(error, "INVALID_ARGUMENT")) {
-                        invalids++;
-                        if (error.info == null) { error.info = {}; }
-                        error.info.sendTransactionHash = hash;
-                        if (invalids > 10) {
-                            reject(error);
-                            return;
-                        }
-                    }
-
-                    // Notify anyone that cares; but we will try again, since
-                    // it is likely an intermittent service error
-                    this.provider.emit("error", makeError("failed to fetch transation after sending (will try again)", "UNKNOWN_ERROR", { error }));
-                }
-
-                // Wait another 4 seconds
-                this.provider._setTimeout(() => { checkTx(); }, timeouts.pop() || 4000);
-            };
-            checkTx();
-        }));
-    }
-
-    async signTransaction(_tx: TransactionRequest): Promise<string> {
-        const tx = deepCopy(_tx);
-
-        // Make sure the from matches the sender
-        if (tx.from) {
-            const from = await resolveAddress(tx.from);
-            assertArgument(from != null && from.toLowerCase() === this.address.toLowerCase(),
-                "from address mismatch", "transaction", _tx);
-            tx.from = from;
-        } else {
-            tx.from = this.address;
-        }
-
-        const hexTx = this.provider.getRpcTransaction(tx);
-        return await this.provider.send("quai_signTransaction", [hexTx]);
-    }
+         const hexTx = this.provider.getRpcTransaction(tx);
+         return await this.provider.send("quai_signTransaction", [hexTx]);
+     }
 
 
-    async signMessage(_message: string | Uint8Array): Promise<string> {
-        const message = ((typeof (_message) === "string") ? toUtf8Bytes(_message) : _message);
-        return await this.provider.send("personal_sign", [
-            hexlify(message), this.address.toLowerCase()]);
-    }
+     async signMessage(_message: string | Uint8Array): Promise<string> {
+         const message = ((typeof (_message) === "string") ? toUtf8Bytes(_message) : _message);
+         return await this.provider.send("personal_sign", [
+             hexlify(message), this.address.toLowerCase()]);
+     }
 
-    async signTypedData(domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, _value: Record<string, any>): Promise<string> {
-        const value = deepCopy(_value);
-        
+     async signTypedData(domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, _value: Record<string, any>): Promise<string> {
+         const value = deepCopy(_value);
+
         return await this.provider.send("quai_signTypedData_v4", [
             this.address.toLowerCase(),
             JSON.stringify(TypedDataEncoder.getPayload(domain, types, value))
         ]);
     }
 
-    async unlock(password: string): Promise<boolean> {
-        return this.provider.send("personal_unlockAccount", [
-            this.address.toLowerCase(), password, null]);
-    }
+     async unlock(password: string): Promise<boolean> {
+         return this.provider.send("personal_unlockAccount", [
+             this.address.toLowerCase(), password, null]);
+     }
 
-    // https://github.com/ethereum/wiki/wiki/JSON-RPC#quai_sign
-    async _legacySignMessage(_message: string | Uint8Array): Promise<string> {
-        const message = ((typeof (_message) === "string") ? toUtf8Bytes(_message) : _message);
-        return await this.provider.send("quai_sign", [
-            this.address.toLowerCase(), hexlify(message)]);
-    }
-}
+     // https://github.com/ethereum/wiki/wiki/JSON-RPC#quai_sign
+     async _legacySignMessage(_message: string | Uint8Array): Promise<string> {
+         const message = ((typeof (_message) === "string") ? toUtf8Bytes(_message) : _message);
+         return await this.provider.send("quai_sign", [
+             this.address.toLowerCase(), hexlify(message)]);
+     }
+ }
 
 type ResolveFunc = (result: JsonRpcResult) => void;
 type RejectFunc = (error: Error) => void;
@@ -822,6 +847,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     getRpcTransaction(tx: TransactionRequest): JsonRpcTransactionRequest {
         const result: JsonRpcTransactionRequest = {};
 
+        if ('from' in tx){
         // JSON-RPC now requires numeric values to be "quantity" values
         ["chainId", "gasLimit", "gasPrice", "type", "maxFeePerGas", "maxPriorityFeePerGas", "nonce", "value"].forEach((key) => {
             if ((<any>tx)[key] == null) { return; }
@@ -837,11 +863,13 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         });
 
         // Normalize the access list object
-        if (tx.accessList) {
-            result["accessList"] = accessListify(tx.accessList);
+        if ("accessList" in tx && tx.accessList) {
+            (result as QuaiJsonRpcTransactionRequest)["accessList"] = accessListify(tx.accessList);
         }
-
-        return result;
+        } else {
+            throw new Error('No Qi getRPCTransaction implementation yet')
+        }
+        return result
     }
 
     /**
@@ -865,34 +893,37 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             case "getMaxPriorityFeePerGas":
                 return { method: "quai_maxPriorityFeePerGas", args: [] };
 
+            case "getPendingHeader":
+                return { method: "quai_getPendingHeader", args: [] };
+
             case "getBalance":
                 return {
                     method: "quai_getBalance",
-                    args: [getLowerCase(req.address), req.blockTag]
+                    args: [req.address, req.blockTag]
                 };
 
             case "getOutpointsByAddress":
                 return {
                     method: "quai_getOutpointsByAddress",
-                    args: [getLowerCase(req.address)]
+                    args: [req.address]
                 };
             case "getTransactionCount":
                 return {
                     method: "quai_getTransactionCount",
-                    args: [getLowerCase(req.address), req.blockTag]
+                    args: [req.address, req.blockTag]
                 };
 
             case "getCode":
                 return {
                     method: "quai_getCode",
-                    args: [getLowerCase(req.address), req.blockTag]
+                    args: [req.address, req.blockTag]
                 };
 
             case "getStorage":
                 return {
                     method: "quai_getStorageAt",
                     args: [
-                        getLowerCase(req.address),
+                        req.address,
                         ("0x" + req.position.toString(16)),
                         req.blockTag
                     ]
@@ -979,13 +1010,6 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             }
 
             case "getLogs":
-                if (req.filter && req.filter.address != null) {
-                    if (Array.isArray(req.filter.address)) {
-                        req.filter.address = req.filter.address.map(getLowerCase);
-                    } else {
-                        req.filter.address = getLowerCase(req.filter.address);
-                    }
-                }
                 return { method: "quai_getLogs", args: [req.filter] };
         }
 
@@ -1048,7 +1072,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         }
 
         if (method === "quai_sendRawTransaction" || method === "quai_sendTransaction") {
-            const transaction = <TransactionLike<string>>((<any>payload).params[0]);
+            const transaction = <TransactionLike>((<any>payload).params[0]);
 
             if (message.match(/insufficient funds|base fee exceeds gas limit/i)) {
                 return makeError("insufficient funds for intrinsic transaction cost", "INSUFFICIENT_FUNDS", {

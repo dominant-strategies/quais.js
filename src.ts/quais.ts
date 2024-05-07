@@ -84,7 +84,7 @@ export {
 export {
     accessListify,
     computeAddress, recoverAddress,
-    Transaction, FewestCoinSelector
+    AbstractTransaction, FewestCoinSelector
 } from "./transaction/index.js";
 
 export {

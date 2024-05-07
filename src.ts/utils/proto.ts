@@ -1,2 +1,3 @@
-export { encodeProto } from "./proto-encode.js";
-export { decodeProto } from "./proto-decode.js";
+export { encodeProtoTransaction, encodeProtoWorkObject } from "./proto-encode.js";
+export { decodeProtoTransaction, decodeProtoWorkObject } from "./proto-decode.js";
+

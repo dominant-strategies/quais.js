@@ -1,7 +1,7 @@
 // import from provider.ts instead of index.ts to prevent circular dep
 // from quaiscanProvider
 import {
-    Block, Log, TransactionReceipt, TransactionResponse
+    Block, Log, QuaiTransactionResponse, TransactionReceipt, TransactionResponse
 } from "../providers/provider.js";
 import { defineProperties, EventPayload } from "../utils/index.js";
 
@@ -112,13 +112,13 @@ export class ContractTransactionReceipt extends TransactionReceipt {
  *  A **ContractTransactionResponse** will return a
  *  [[ContractTransactionReceipt]] when waited on.
  */
-export class ContractTransactionResponse extends TransactionResponse {
+export class ContractTransactionResponse extends QuaiTransactionResponse {
     readonly #iface: Interface;
 
     /**
      *  @_ignore:
      */
-    constructor(iface: Interface, provider: Provider, tx: TransactionResponse) {
+    constructor(iface: Interface, provider: Provider, tx: QuaiTransactionResponse) {
         super(tx, provider);
         this.#iface = iface;
     }

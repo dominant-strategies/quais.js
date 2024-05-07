@@ -5,7 +5,6 @@
  *  @_subsection: api/providers:Networks  [networks]
  */
 
-import { accessListify } from "../transaction/index.js";
 import { getBigInt, assert, assertArgument } from "../utils/index.js";
 
 import {
@@ -13,7 +12,6 @@ import {
 } from "./plugins-network.js";
 
 import type { BigNumberish } from "../utils/index.js";
-import type { TransactionLike } from "../transaction/index.js";
 
 import type { NetworkPlugin } from "./plugins-network.js";
 
@@ -192,30 +190,30 @@ export class Network {
      *  A GasCostPlugin can be attached to override the default
      *  values.
      */
-    computeIntrinsicGas(tx: TransactionLike): number {
-        const costs = this.getPlugin<GasCostPlugin>("org.quais.plugins.network.GasCost") || (new GasCostPlugin());
-
-        let gas = costs.txBase;
-        if (tx.to == null) { gas += costs.txCreate; }
-        if (tx.data) {
-            for (let i = 2; i < tx.data.length; i += 2) {
-                if (tx.data.substring(i, i + 2) === "00") {
-                    gas += costs.txDataZero;
-                } else {
-                    gas += costs.txDataNonzero;
-                }
-            }
-        }
-
-        if (tx.accessList) {
-            const accessList = accessListify(tx.accessList);
-            for (const addr in accessList) {
-                gas += costs.txAccessListAddress + costs.txAccessListStorageKey * accessList[addr].storageKeys.length;
-            }
-        }
-
-        return gas;
-    }
+//    computeIntrinsicGas(tx: TransactionLike): number {
+//        const costs = this.getPlugin<GasCostPlugin>("org.quais.plugins.network.GasCost") || (new GasCostPlugin());
+//
+//        let gas = costs.txBase;
+//        if (tx.to == null) { gas += costs.txCreate; }
+//        if (tx.data) {
+//            for (let i = 2; i < tx.data.length; i += 2) {
+//                if (tx.data.substring(i, i + 2) === "00") {
+//                    gas += costs.txDataZero;
+//                } else {
+//                    gas += costs.txDataNonzero;
+//                }
+//            }
+//        }
+//
+//        if (tx.accessList) {
+//            const accessList = accessListify(tx.accessList);
+//            for (const addr in accessList) {
+//                gas += costs.txAccessListAddress + costs.txAccessListStorageKey * accessList[addr].storageKeys.length;
+//            }
+//        }
+//
+//        return gas;
+//    }
 
     /**
      *  Returns a new Network for the %%network%% name or chainId.

@@ -1,12 +1,13 @@
+import { ProtoTransaction } from "../transaction/abstract-transaction";
+import { ProtoWorkObject } from "../transaction/work-object";
 import * as Proto from "./ProtoBuf/proto_block"
 
-function _decode(object: any): any {
-    const tx = Proto.block.ProtoTransaction.deserialize(object);
-    const result = tx.toObject();
-    return result;
+export function decodeProtoTransaction(bytes: Uint8Array): ProtoTransaction {
+    const tx = Proto.block.ProtoTransaction.deserialize(bytes);
+    return tx.toObject() as ProtoTransaction;
 }
 
-export function decodeProto(object: Uint8Array): string{
-    // console.log('Test decode')
-    return _decode(object);
+export function decodeProtoWorkObject(bytes: Uint8Array): ProtoWorkObject {
+    const wo = Proto.block.ProtoWorkObject.deserialize(bytes);
+    return wo.toObject() as ProtoWorkObject;
 }

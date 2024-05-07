@@ -4,9 +4,11 @@ import { AbstractSigner } from "./abstract-signer.js";
 import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
 
 import type {
-    BlockTag, Provider, TransactionRequest, TransactionResponse
+    BlockTag, Provider, QuaiTransactionRequest, TransactionRequest
 } from "./provider.js";
 import type { Signer } from "./signer.js";
+import {QuaiTransactionResponse} from "./provider.js";
+import {QuaiTransactionLike} from "../transaction/quai-transaction";
 
 
 /**
@@ -72,16 +74,16 @@ export class NonceManager extends AbstractSigner {
         this.#noncePromise = null;
     }
 
-    async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
+    async sendTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionResponse> {
         const noncePromise = this.getNonce("pending");
         this.increment();
 
-        tx = await this.signer.populateTransaction(tx);
+        tx = await this.signer.populateQuaiTransaction(tx) as QuaiTransactionLike;
         tx.nonce = await noncePromise;
 
         // @TODO: Maybe handle interesting/recoverable errors?
         // Like don't increment if the tx was certainly not sent
-        return await this.signer.sendTransaction(tx);
+        return await this.signer.sendTransaction(tx) as QuaiTransactionResponse;
     }
 
     signTransaction(tx: TransactionRequest): Promise<string> {

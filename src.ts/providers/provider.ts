@@ -3,12 +3,14 @@ import {
     defineProperties, getBigInt, getNumber, hexlify, resolveProperties,
     assert, assertArgument, isError, makeError
 } from "../utils/index.js";
+import { getAddress } from "../address/index.js";
 import { accessListify } from "../transaction/index.js";
+import {keccak256, SigningKey} from "../crypto";
 
 import type { AddressLike } from "../address/index.js";
 import type { BigNumberish, EventEmitterable } from "../utils/index.js";
 import type { Signature } from "../crypto/index.js";
-import type { AccessList, AccessListish, TransactionLike } from "../transaction/index.js";
+import type { AccessList, AccessListish } from "../transaction/index.js";
 
 import type { ContractRunner } from "./contracts.js";
 import type { Network } from "./network.js";
@@ -33,9 +35,11 @@ const BN_0 = BigInt(0);
 export type BlockTag = BigNumberish | string;
 
 import {
-    BlockParams, LogParams, TransactionReceiptParams,
-    TransactionResponseParams
+    BlockParams, LogParams, QiTransactionResponseParams, QuaiTransactionResponseParams, TransactionReceiptParams
 } from "./formatting.js";
+import { WorkObjectLike } from "../transaction/work-object.js";
+import {QiTransactionLike} from "../transaction/qi-transaction";
+import {QuaiTransactionLike} from "../transaction/quai-transaction";
 
 // -----------------------
 
@@ -114,6 +118,16 @@ export class FeeData {
     }
 }
 
+export function addressFromTransactionRequest(tx: TransactionRequest): AddressLike {
+    //return 'from' in tx ? tx.from : tx.inputs[0].address;
+    if ('from' in tx) {
+      return tx.from;
+    }
+    if (tx.inputs) {
+      return getAddress(keccak256("0x" + SigningKey.computePublicKey(tx.inputs[0].pubKey).substring(4)).substring(26));
+    }
+    throw new Error("Unable to determine sender from transaction inputs or from field");
+}
 /**
  *  A **TransactionRequest** is a transactions with potentially various
  *  properties not defined, or with less strict types for its values.
@@ -121,7 +135,9 @@ export class FeeData {
  *  This is used to pass to various operations, which will internally
  *  coerce any types and populate any necessary values.
  */
-export interface TransactionRequest {
+export type TransactionRequest  = QuaiTransactionRequest | QiTransactionRequest;
+
+export interface QuaiTransactionRequest {
     /**
      *  The transaction type.
      */
@@ -199,9 +215,21 @@ export interface TransactionRequest {
     /**
      *  When using ``call`` or ``estimateGas``, this allows a specific
      *  block to be queried. Many backends do not support this and when
-     *  unsupported errors are silently squelched and ``"latest"`` is used. 
+     *  unsupported errors are silently squelched and ``"latest"`` is used.
      */
     blockTag?: BlockTag;
+};
+
+export interface QiTransactionRequest {
+    /**
+     *  The transaction type.
+     */
+    type?: null | number;
+
+    /**
+     *  The chain ID for the network this transaction is valid on.
+     */
+    chainId?: null | BigNumberish;
 
     inputs?: null | Array<TxInput>;
 
@@ -212,7 +240,9 @@ export interface TransactionRequest {
  *  A **PreparedTransactionRequest** is identical to a [[TransactionRequest]]
  *  except all the property types are strictly enforced.
  */
-export interface PreparedTransactionRequest {
+export type PreparedTransactionRequest = QuaiPreparedTransactionRequest | QiPreparedTransactionRequest;
+
+export interface QuaiPreparedTransactionRequest {
     /**
      *  The transaction type.
      */
@@ -293,9 +323,21 @@ export interface PreparedTransactionRequest {
     /**
      *  When using ``call`` or ``estimateGas``, this allows a specific
      *  block to be queried. Many backends do not support this and when
-     *  unsupported errors are silently squelched and ``"latest"`` is used. 
+     *  unsupported errors are silently squelched and ``"latest"`` is used.
      */
     blockTag?: BlockTag;
+}
+
+export interface QiPreparedTransactionRequest {
+    /**
+     *  The transaction type.
+     */
+    type?: number;
+
+    /**
+     *  The chain ID for the network this transaction is valid on.
+     */
+    chainId?: bigint;
 
     inputs?: null | Array<TxInput>;
 
@@ -310,10 +352,10 @@ export function copyRequest(req: TransactionRequest): PreparedTransactionRequest
     const result: any = {};
 
     // These could be addresses, ENS names or Addressables
-    if (req.to) { result.to = req.to; }
-    if (req.from) { result.from = req.from; }
+    if ("to" in req && req.to) { result.to = req.to; }
+    if ("from" in req && req.from) { result.from = req.from; }
 
-    if (req.data) { result.data = hexlify(req.data); }
+    if ("data" in req && req.data) { result.data = hexlify(req.data); }
 
     const bigIntKeys = "chainId,gasLimit,gasPrice,maxFeePerGas,maxPriorityFeePerGas,value".split(/,/);
     for (const key of bigIntKeys) {
@@ -327,19 +369,25 @@ export function copyRequest(req: TransactionRequest): PreparedTransactionRequest
         result[key] = getNumber((<any>req)[key], `request.${key}`);
     }
 
-    if (req.accessList) {
+    if ("accessList" in req && req.accessList) {
         result.accessList = accessListify(req.accessList);
     }
 
     if ("blockTag" in req) { result.blockTag = req.blockTag; }
 
-    if ("enableCcipRead" in req) {
-        result.enableCcipRead = !!req.enableCcipRead
-    }
-
     if ("customData" in req) {
         result.customData = req.customData;
     }
+
+    if ("inputs" in req && req.inputs) {
+        result.inputs = req.inputs.map(entry => ({...entry}));
+    }
+
+    if ("outputs" in req && req.outputs) {
+        result.outputs = req.outputs.map(entry => ({...entry}));
+    }
+
+
 
     return result;
 }
@@ -381,6 +429,9 @@ export interface MinedBlock extends Block {
      */
     readonly miner: string;
 }
+
+
+
 
 /**
  *  A **Block** represents the data associated with a full block on
@@ -484,10 +535,10 @@ export class Block implements BlockParams, Iterable<string> {
     readonly utxoRoot!: string;
     readonly uncles!: Array<string> | null;
 
-    readonly #transactions: Array<string | TransactionResponse>;
+    readonly #transactions: Array<string | QuaiTransactionResponse>;
     readonly transactionsRoot: string;
     readonly extRollupRoot: string;
-    readonly #extTransactions: Array<string | TransactionResponse>;
+    readonly #extTransactions: Array<string | QuaiTransactionResponse>;
     readonly extTransactionsRoot: string;
 
     /**
@@ -501,14 +552,14 @@ export class Block implements BlockParams, Iterable<string> {
 
         this.#transactions = block.transactions.map((tx) => {
             if (typeof (tx) !== "string") {
-                return new TransactionResponse(tx, provider);
+                return new QuaiTransactionResponse(tx, provider);
             }
             return tx;
         });
 
         this.#extTransactions = block.extTransactions.map((tx) => {
             if (typeof (tx) !== "string") {
-                return new TransactionResponse(tx, provider);
+                return new QuaiTransactionResponse(tx, provider);
             }
             return tx;
         });
@@ -525,7 +576,6 @@ export class Block implements BlockParams, Iterable<string> {
             hash: getValue(block.hash),
 
             number: block.number,
-            timestamp: block.timestamp,
 
             parentHash: block.parentHash,
 
@@ -1213,7 +1263,9 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
  *  transaction which has been mined and allows for a type guard for its
  *  property values being defined.
  */
-export interface MinedTransactionResponse extends TransactionResponse {
+export type MinedTransactionResponse = QuaiMinedTransactionResponse | QiMinedTransactionResponse;
+
+export interface QuaiMinedTransactionResponse extends QuaiTransactionResponse {
     /**
      *  The block number this transaction occurred in.
      */
@@ -1230,6 +1282,24 @@ export interface MinedTransactionResponse extends TransactionResponse {
     date: Date;
 }
 
+export interface QiMinedTransactionResponse extends QiTransactionResponse {
+    /**
+     *  The block number this transaction occurred in.
+     */
+    blockNumber: number;
+
+    /**
+     *  The block hash this transaction occurred in.
+     */
+    blockHash: string;
+
+    /**
+     *  The date this transaction occurred on.
+     */
+    date: Date;
+}
+
+export type TransactionResponse  = QuaiTransactionResponse | QiTransactionResponse
 
 /**
  *  A **TransactionResponse** includes all properties about a transaction
@@ -1240,7 +1310,7 @@ export interface MinedTransactionResponse extends TransactionResponse {
  *  transaction has been mined as well as type guard that the otherwise
  *  possibly ``null`` properties are defined.
  */
-export class TransactionResponse implements TransactionLike<string>, TransactionResponseParams {
+export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransactionResponseParams {
     /**
      *  The provider this is connected to, which will influence how its
      *  methods will resolve its async inspection methods.
@@ -1351,16 +1421,12 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      */
     readonly accessList!: null | AccessList;
 
-    readonly inputs?: Array<TxInput>;
-
-    readonly outputs?: Array<TxOutput>;
-
     #startBlock: number;
 
     /**
      *  @_ignore:
      */
-    constructor(tx: TransactionResponseParams, provider: Provider) {
+    constructor(tx: QuaiTransactionResponseParams, provider: Provider) {
         this.provider = provider;
 
         this.blockNumber = (tx.blockNumber != null) ? tx.blockNumber : null;
@@ -1436,8 +1502,13 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      *  provider. This can be used if you have an unmined transaction
      *  and wish to get an up-to-date populated instance.
      */
-    async getTransaction(): Promise<null | TransactionResponse> {
-        return this.provider.getTransaction(this.hash);
+    async getTransaction(): Promise<null | QuaiTransactionResponse> {
+        const transaction =  this.provider.getTransaction(this.hash);
+        if (transaction instanceof QuaiTransactionResponse) {
+            return transaction as QuaiTransactionResponse;
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -1523,7 +1594,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
                 for (let i = 0; i < block.length; i++) {
                     const tx: TransactionResponse = await block.getTransaction(i);
 
-                    if (tx.from === this.from && tx.nonce === this.nonce) {
+                    if ('from' in tx && tx.from === this.from && tx.nonce === this.nonce) {
                         // Get the receipt
                         if (stopScanning) { return null; }
                         const receipt = await this.provider.getTransactionReceipt(tx.hash);
@@ -1655,7 +1726,7 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      *  non-null property values for properties that are null for
      *  unmined transactions.
      */
-    isMined(): this is MinedTransactionResponse {
+    isMined(): this is QuaiMinedTransactionResponse {
         return (this.blockHash != null);
     }
 
@@ -1692,9 +1763,399 @@ export class TransactionResponse implements TransactionLike<string>, Transaction
      *  primarily for internal use. Setting an incorrect %%startBlock%% can
      *  have devastating performance consequences if used incorrectly.
      */
-    replaceableTransaction(startBlock: number): TransactionResponse {
+    replaceableTransaction(startBlock: number): QuaiTransactionResponse {
         assertArgument(Number.isInteger(startBlock) && startBlock >= 0, "invalid startBlock", "startBlock", startBlock);
-        const tx = new TransactionResponse(this, this.provider);
+        const tx = new QuaiTransactionResponse(this, this.provider);
+        tx.#startBlock = startBlock;
+        return tx;
+    }
+}
+
+export class QiTransactionResponse implements QiTransactionLike, QiTransactionResponseParams {
+    /**
+     *  The provider this is connected to, which will influence how its
+     *  methods will resolve its async inspection methods.
+     */
+    readonly provider: Provider;
+
+    /**
+     *  The block number of the block that this transaction was included in.
+     *
+     *  This is ``null`` for pending transactions.
+     */
+    readonly blockNumber: null | number;
+
+    /**
+     *  The blockHash of the block that this transaction was included in.
+     *
+     *  This is ``null`` for pending transactions.
+     */
+    readonly blockHash: null | string;
+
+    /**
+     *  The index within the block that this transaction resides at.
+     */
+    readonly index!: bigint;
+
+    /**
+     *  The transaction hash.
+     */
+    readonly hash!: string;
+
+    /**
+     *  The [[link-eip-2718]] transaction envelope type. This is
+     *  ``0`` for legacy transactions types.
+     */
+    readonly type!: number;
+
+    /**
+     *  The chain ID.
+     */
+    readonly chainId!: bigint;
+
+    /**
+     *  The signature.
+     */
+    readonly signature!: string;
+
+    readonly txInputs?: Array<TxInput>;
+
+    readonly txOutputs?: Array<TxOutput>;
+
+    // @ts-ignore
+    #startBlock: number;
+    /**
+     *  @_ignore:
+     */
+    constructor(tx: QiTransactionResponseParams, provider: Provider) {
+        this.provider = provider;
+
+        this.blockNumber = (tx.blockNumber != null) ? tx.blockNumber : null;
+        this.blockHash = (tx.blockHash != null) ? tx.blockHash : null;
+
+        this.hash = tx.hash;
+        this.index = tx.index;
+
+        this.type = tx.type;
+
+        this.chainId = tx.chainId;
+        this.signature = tx.signature;
+
+        this.#startBlock = -1;
+
+        this.txInputs = tx.txInputs;
+        this.txOutputs = tx.txOutputs;
+    }
+
+    /**
+     *  Returns a JSON-compatible representation of this transaction.
+     */
+    toJSON(): any {
+        const {
+            blockNumber, blockHash, index, hash, type,
+            signature, txInputs, txOutputs
+        } = this;
+        let result = {
+            _type: "TransactionReceipt",
+            blockNumber, blockHash,
+            chainId: toJson(this.chainId),
+            hash,
+            signature, index, type,
+            txInputs: JSON.parse(JSON.stringify(txInputs)),
+            txOutputs: JSON.parse(JSON.stringify(txOutputs)),
+
+        }
+
+        return result;
+    }
+
+
+    /**
+     *  Resolves to the Block that this transaction was included in.
+     *
+     *  This will return null if the transaction has not been included yet.
+     */
+    async getBlock(shard: string): Promise<null | Block> {
+        let blockNumber = this.blockNumber;
+        if (blockNumber == null) {
+            const tx = await this.getTransaction();
+            if (tx) { blockNumber = tx.blockNumber; }
+        }
+        if (blockNumber == null) { return null; }
+        const block = this.provider.getBlock(shard, blockNumber);
+        if (block == null) { throw new Error("TODO"); }
+        return block;
+    }
+
+    /**
+     *  Resolves to this transaction being re-requested from the
+     *  provider. This can be used if you have an unmined transaction
+     *  and wish to get an up-to-date populated instance.
+     */
+    async getTransaction(): Promise<null | QiTransactionResponse> {
+        const transaction =  this.provider.getTransaction(this.hash);
+        if (transaction instanceof QiTransactionResponse) {
+            return transaction as QiTransactionResponse;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     *  Resolve to the number of confirmations this transaction has.
+     */
+    async confirmations(): Promise<number> {
+        const shard = shardFromHash(this.hash);
+        if (this.blockNumber == null) {
+            const { tx, blockNumber } = await resolveProperties({
+                tx: this.getTransaction(),
+                blockNumber: this.provider.getBlockNumber(shard)
+            });
+
+            // Not mined yet...
+            if (tx == null || tx.blockNumber == null) { return 0; }
+
+            return blockNumber - tx.blockNumber + 1;
+        }
+
+        const blockNumber = await this.provider.getBlockNumber(shard);
+        return blockNumber - this.blockNumber + 1;
+    }
+
+    /**
+     *  Resolves once this transaction has been mined and has
+     *  %%confirms%% blocks including it (default: ``1``) with an
+     *  optional %%timeout%%.
+     *
+     *  This can resolve to ``null`` only if %%confirms%% is ``0``
+     *  and the transaction has not been mined, otherwise this will
+     *  wait until enough confirmations have completed.
+     */
+//    async wait(_confirms?: number, _timeout?: number): Promise<null | TransactionReceipt> {
+//        const confirms = (_confirms == null) ? 1 : _confirms;
+//        const timeout = (_timeout == null) ? 0 : _timeout;
+//
+//        let startBlock = this.#startBlock
+//        let nextScan = -1;
+//        let stopScanning = (startBlock === -1) ? true : false;
+//        const shard = shardFromHash(this.hash);
+//        const checkReplacement = async () => {
+//            // Get the current transaction count for this sender
+//            if (stopScanning) { return null; }
+//            const { blockNumber, nonce } = await resolveProperties({
+//                blockNumber: this.provider.getBlockNumber(shard),
+//                nonce: this.provider.getTransactionCount(this.from)
+//            });
+//
+//            // No transaction or our nonce has not been mined yet; but we
+//            // can start scanning later when we do start
+//            if (nonce < this.nonce) {
+//                startBlock = blockNumber;
+//                return;
+//            }
+//
+//            // We were mined; no replacement
+//            if (stopScanning) { return null; }
+//            const mined = await this.getTransaction();
+//            if (mined && mined.blockNumber != null) { return; }
+//
+//            // We were replaced; start scanning for that transaction
+//
+//            // Starting to scan; look back a few extra blocks for safety
+//            if (nextScan === -1) {
+//                nextScan = startBlock - 3;
+//                if (nextScan < this.#startBlock) { nextScan = this.#startBlock; }
+//            }
+//
+//            while (nextScan <= blockNumber) {
+//                // Get the next block to scan
+//                if (stopScanning) { return null; }
+//                const block = await this.provider.getBlock(shard, nextScan, true);
+//
+//                // This should not happen; but we'll try again shortly
+//                if (block == null) { return; }
+//
+//                // We were mined; no replacement
+//                for (const hash of block) {
+//                    if (hash === this.hash) { return; }
+//                }
+//
+//                // Search for the transaction that replaced us
+//                for (let i = 0; i < block.length; i++) {
+//                    const tx: TransactionResponse = await block.getTransaction(i);
+//
+//                    if (tx.from === this.from && tx.nonce === this.nonce) {
+//                        // Get the receipt
+//                        if (stopScanning) { return null; }
+//                        const receipt = await this.provider.getTransactionReceipt(tx.hash);
+//
+//                        // This should not happen; but we'll try again shortly
+//                        if (receipt == null) { return; }
+//
+//                        // We will retry this on the next block (this case could be optimized)
+//                        if ((blockNumber - receipt.blockNumber + 1) < confirms) { return; }
+//
+//                        // The reason we were replaced
+//                        let reason: "replaced" | "repriced" | "cancelled" = "replaced";
+//                        if (tx.data === this.data && tx.to === this.to && tx.value === this.value) {
+//                            reason = "repriced";
+//                        } else if (tx.data === "0x" && tx.from === tx.to && tx.value === BN_0) {
+//                            reason = "cancelled"
+//                        }
+//
+//                        assert(false, "transaction was replaced", "TRANSACTION_REPLACED", {
+//                            cancelled: (reason === "replaced" || reason === "cancelled"),
+//                            reason,
+//                            replacement: tx.replaceableTransaction(startBlock),
+//                            hash: tx.hash,
+//                            receipt
+//                        });
+//                    }
+//                }
+//
+//                nextScan++;
+//            }
+//            return;
+//        };
+//
+//        const checkReceipt = (receipt: null | TransactionReceipt) => {
+//            if (receipt == null || receipt.status !== 0) { return receipt; }
+//            assert(false, "transaction execution reverted", "CALL_EXCEPTION", {
+//                action: "sendTransaction",
+//                data: null, reason: null, invocation: null, revert: null,
+//                transaction: {
+//                    to: receipt.to,
+//                    from: receipt.from,
+//                    data: "" // @TODO: in v7, split out sendTransaction properties
+//                }, receipt
+//            });
+//        };
+//
+//        const receipt = await this.provider.getTransactionReceipt(this.hash);
+//
+//        if (confirms === 0) { return checkReceipt(receipt); }
+//
+//        if (receipt) {
+//            if ((await receipt.confirmations()) >= confirms) {
+//                return checkReceipt(receipt);
+//            }
+//
+//        } else {
+//            // Check for a replacement; throws if a replacement was found
+//            await checkReplacement();
+//
+//            // Allow null only when the confirms is 0
+//            if (confirms === 0) { return null; }
+//        }
+//
+//        const waiter = new Promise((resolve, reject) => {
+//            // List of things to cancel when we have a result (one way or the other)
+//            const cancellers: Array<() => void> = [];
+//            const cancel = () => { cancellers.forEach((c) => c()); };
+//
+//            // On cancel, stop scanning for replacements
+//            cancellers.push(() => { stopScanning = true; });
+//
+//            // Set up any timeout requested
+//            if (timeout > 0) {
+//                const timer = setTimeout(() => {
+//                    cancel();
+//                    reject(makeError("wait for transaction timeout", "TIMEOUT"));
+//                }, timeout);
+//                cancellers.push(() => { clearTimeout(timer); });
+//            }
+//
+//            const txListener = async (receipt: TransactionReceipt) => {
+//                // Done; return it!
+//                if ((await receipt.confirmations()) >= confirms) {
+//                    cancel();
+//                    try {
+//                        resolve(checkReceipt(receipt));
+//                    } catch (error) { reject(error); }
+//                }
+//            };
+//            cancellers.push(() => { this.provider.off(this.hash, txListener); });
+//            this.provider.on(this.hash, txListener);
+//            // We support replacement detection; start checking
+//            if (startBlock >= 0) {
+//                const replaceListener = async () => {
+//                    try {
+//                        // Check for a replacement; this throws only if one is found
+//                        await checkReplacement();
+//
+//                    } catch (error) {
+//                        // We were replaced (with enough confirms); re-throw the error
+//                        if (isError(error, "TRANSACTION_REPLACED")) {
+//                            cancel();
+//                            reject(error);
+//                            return;
+//                        }
+//                    }
+//
+//                    // Rescheudle a check on the next block
+//                    if (!stopScanning) {
+//                        this.provider.once("block", replaceListener);
+//                    }
+//                };
+//                cancellers.push(() => { this.provider.off("block", replaceListener); });
+//                this.provider.once("block", replaceListener);
+//            }
+//        });
+//
+//        return await <Promise<TransactionReceipt>>waiter;
+//    }
+
+    /**
+     *  Returns ``true`` if this transaction has been included.
+     *
+     *  This is effective only as of the time the TransactionResponse
+     *  was instantiated. To get up-to-date information, use
+     *  [[getTransaction]].
+     *
+     *  This provides a Type Guard that this transaction will have
+     *  non-null property values for properties that are null for
+     *  unmined transactions.
+     */
+    isMined(): this is QiMinedTransactionResponse {
+        return (this.blockHash != null);
+    }
+
+    /**
+     *  Returns a filter which can be used to listen for orphan events
+     *  that evict this transaction.
+     */
+    removedEvent(): OrphanFilter {
+        assert(this.isMined(), "unmined transaction canot be orphaned",
+            "UNSUPPORTED_OPERATION", { operation: "removeEvent()" });
+        return createRemovedTransactionFilter(this);
+    }
+
+    /**
+     *  Returns a filter which can be used to listen for orphan events
+     *  that re-order this event against %%other%%.
+     */
+    reorderedEvent(other?: TransactionResponse): OrphanFilter {
+        assert(this.isMined(), "unmined transaction canot be orphaned",
+            "UNSUPPORTED_OPERATION", { operation: "removeEvent()" });
+
+        assert(!other || other.isMined(), "unmined 'other' transaction canot be orphaned",
+            "UNSUPPORTED_OPERATION", { operation: "removeEvent()" });
+
+        return createReorderedTransactionFilter(this, other);
+    }
+
+    /**
+     *  Returns a new TransactionResponse instance which has the ability to
+     *  detect (and throw an error) if the transaction is replaced, which
+     *  will begin scanning at %%startBlock%%.
+     *
+     *  This should generally not be used by developers and is intended
+     *  primarily for internal use. Setting an incorrect %%startBlock%% can
+     *  have devastating performance consequences if used incorrectly.
+     */
+    replaceableTransaction(startBlock: number): QiTransactionResponse {
+        assertArgument(Number.isInteger(startBlock) && startBlock >= 0, "invalid startBlock", "startBlock", startBlock);
+        const tx = new QiTransactionResponse(this, this.provider);
         tx.#startBlock = startBlock;
         return tx;
     }
@@ -1908,6 +2369,11 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      */
     getFeeData(shard: string): Promise<FeeData>;
 
+    /**
+     * Get a work object to package a transaction in.
+     */
+    getPendingHeader(): Promise<WorkObjectLike>;
+
 
     ////////////////////
     // Account
@@ -1923,7 +2389,7 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
     getBalance(address: AddressLike, blockTag?: BlockTag): Promise<bigint>;
 
     /**
-     *  Get the UTXO entries for %%address%%. 
+     *  Get the UTXO entries for %%address%%.
      *
      *  @note On nodes without archive access enabled, the %%blockTag%% may be
      *        **silently ignored** by the node, which may cause issues if relied on.
@@ -1978,7 +2444,7 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *  memory pool of any node for which the transaction meets the
      *  rebroadcast requirements.
      */
-    broadcastTransaction(shard: string, signedTx: string): Promise<TransactionResponse>;
+    broadcastTransaction(shard: string, signedTx: string, from?: AddressLike): Promise<TransactionResponse>;
 
 
     ////////////////////

@@ -14,10 +14,17 @@ export type UTXOTransactionInput = {
     pubKey: Uint8Array;
 };
 
-export interface UTXOEntry {
+export interface UTXOEntry extends UTXOEntryLike{
     denomination: null | bigint;
-    address: null | string;
+    address: string;
 };
+
+export interface UTXOEntryLike {
+    denomination: null | BigNumberish;
+    address: null | string;
+}
+
+export type UTXOTransactionOutputLike = UTXOEntryLike;
 
 export type UTXOTransactionOutput = UTXOEntry;
 
@@ -34,7 +41,7 @@ export type TxInput = {
 
 export interface UTXOEntry {
     denomination: null | bigint;
-    address: null | string;
+    address: string;
 };
 
 
@@ -132,9 +139,9 @@ export class UTXO implements UTXOLike {
         this.#index = value;
     }
 
-    get address(): null | string { return this.#address; }
-    set address(value: null | string) {
-        this.#address = (value == null) ? null : getAddress(value);
+    get address(): string { return this.#address || ""; }
+    set address(value: string) {
+        this.#address = getAddress(value);
     }
 
     get denomination(): null | bigint { return this.#denomination; }

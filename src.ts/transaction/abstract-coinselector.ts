@@ -29,7 +29,7 @@ export abstract class AbstractCoinSelector {
 
     get availableUXTOs(): UTXO[] { return this.#availableUXTOs; }
     set availableUXTOs(value: UTXOLike[]) {
-        this.#availableUXTOs = value.map((val: UTXOLike) => {
+        this.#availableUXTOs = value.map((val) => {
             const utxo = UTXO.from(val);
             this._validateUTXO(utxo);
             return utxo;
@@ -38,12 +38,12 @@ export abstract class AbstractCoinSelector {
 
     get spendOutputs(): UTXO[] { return this.#spendOutputs; }
     set spendOutputs(value: UTXOLike[]) {
-        this.#spendOutputs = value.map((utxo: UTXOLike) => UTXO.from(utxo));
+        this.#spendOutputs = value.map((utxo) => UTXO.from(utxo));
     }
 
     get changeOutputs(): UTXO[] { return this.#changeOutputs; }
     set changeOutputs(value: UTXOLike[]) {
-        this.#changeOutputs = value.map((utxo: UTXOLike) => UTXO.from(utxo));
+        this.#changeOutputs = value.map((utxo) => UTXO.from(utxo));
     }
 
     /**

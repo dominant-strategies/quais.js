@@ -35,8 +35,8 @@ export {
 
 export { resolveProperties, defineProperties } from "./properties.js";
 
-export { encodeProto } from "./proto-encode.js";
-export { decodeProto } from "./proto-decode.js";
+export { encodeProtoTransaction, encodeProtoWorkObject } from "./proto-encode.js";
+export { decodeProtoTransaction, decodeProtoWorkObject } from "./proto-decode.js";
 
 export { formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits } from "./units.js";
 

@@ -1,12 +1,15 @@
+import { ProtoTransaction } from "../transaction/abstract-transaction";
+import { ProtoWorkObject } from "../transaction/work-object";
 import { hexlify } from "./data";
 import * as Proto from "./ProtoBuf/proto_block"
 
-function _encode(object: any): Uint8Array {
-    const tx = Proto.block.ProtoTransaction.fromObject(object);
-    const result = tx.serialize();
-    return result;
+export function encodeProtoTransaction(protoTx: ProtoTransaction): string {
+    const tx = Proto.block.ProtoTransaction.fromObject(protoTx as any);
+    return hexlify(tx.serialize());
 }
 
-export function encodeProto(object: any): string{
-    return hexlify(_encode(object));
+export function encodeProtoWorkObject(protoWo: ProtoWorkObject): string {
+    const wo = Proto.block.ProtoWorkObject.fromObject(protoWo as any);
+    return hexlify(wo.serialize());
 }
+

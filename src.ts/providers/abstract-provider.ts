@@ -14,24 +14,36 @@
 //   migrate the listener to the static event. We also need to maintain a map
 //   of Signer/ENS name to address so we can sync respond to listenerCount.
 
-import { resolveAddress } from "../address/index.js";
+import { getAddress, resolveAddress } from "../address/index.js";
 import { ShardData } from "../constants/index.js";
-import { Transaction } from "../transaction/index.js";
+import { TxInput, TxOutput} from "../transaction/index.js";
 import { Outpoint } from "../transaction/utxo.js";
 import {
     hexlify, isHexString,
-    getBigInt, getNumber,
-    makeError, assert, assertArgument,
+    getBigInt, getBytes, getNumber,
+     makeError, assert, assertArgument,
     FetchRequest,
     toQuantity,
-    defineProperties, EventPayload, resolveProperties,
+    defineProperties, EventPayload, resolveProperties, decodeProtoTransaction,
 } from "../utils/index.js";
 
 import {
     formatBlock, formatLog, formatTransactionReceipt, formatTransactionResponse
 } from "./format.js";
 import { Network } from "./network.js";
-import { copyRequest, Block, FeeData, Log, TransactionReceipt, TransactionResponse } from "./provider.js";
+import {
+    copyRequest,
+    Block,
+    FeeData,
+    Log,
+    TransactionReceipt,
+    TransactionResponse,
+    addressFromTransactionRequest,
+    QiPreparedTransactionRequest,
+    QuaiPreparedTransactionRequest,
+    QuaiTransactionResponse,
+    QiTransactionResponse, QuaiTransactionRequest
+} from "./provider.js";
 
 import type { Addressable, AddressLike } from "../address/index.js";
 import type { BigNumberish } from "../utils/index.js";
@@ -39,17 +51,21 @@ import type { Listener } from "../utils/index.js";
 
 import type { Networkish } from "./network.js";
 import type { FetchUrlFeeDataNetworkPlugin } from "./plugins-network.js";
-//import type { MaxPriorityFeePlugin } from "./plugins-network.js";
 import type {
-    BlockParams, LogParams, TransactionReceiptParams,
+    BlockParams, LogParams, QiTransactionResponseParams, TransactionReceiptParams,
     TransactionResponseParams
 } from "./formatting.js";
 
 import type {
     BlockTag, EventFilter, Filter, FilterByBlockHash, OrphanFilter,
-    PreparedTransactionRequest, Provider, ProviderEvent,
-    TransactionRequest
+    Provider, ProviderEvent,
+    TransactionRequest,
 } from "./provider.js";
+import { WorkObjectLike } from "../transaction/work-object.js";
+import {QiTransaction} from "../transaction/qi-transaction";
+import {QuaiTransaction} from "../transaction/quai-transaction";
+import {QuaiTransactionResponseParams} from "./formatting.js";
+import {keccak256, SigningKey} from "../crypto";
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -330,7 +346,9 @@ export type PerformActionFilter = {
 /**
  *  A normalized transactions used for [[PerformActionRequest]] objects.
  */
-export interface PerformActionTransaction extends PreparedTransactionRequest {
+export type PerformActionTransaction = QuaiPerformActionTransaction | QiPerformActionTransaction;
+
+export interface QuaiPerformActionTransaction extends QuaiPreparedTransactionRequest {
     /**
      *  The ``to`` address of the transaction.
      */
@@ -340,7 +358,18 @@ export interface PerformActionTransaction extends PreparedTransactionRequest {
      *  The sender of the transaction.
      */
     from: string;
+
+    [key: string]: any;
 }
+
+export interface QiPerformActionTransaction extends QiPreparedTransactionRequest {
+    inputs?: Array<TxInput>;
+    outputs?: Array<TxOutput>;
+
+    [key: string]: any;
+}
+
+
 
 /**
  *  The [[AbstractProvider]] methods will normalize all values and pass this
@@ -427,6 +456,8 @@ export type PerformActionRequest = {
     shard: string
 } | {
     method: "getProtocolExpansionNumber",
+} | {
+    method: "getPendingHeader",
 };
 
 
@@ -455,15 +486,6 @@ const defaultOptions = {
     cacheTimeout: 250,
     pollingInterval: 4000
 };
-
-// type CcipArgs = {
-//     sender: string;
-//     urls: Array<string>;
-//     calldata: string;
-//     selector: string;
-//     extraData: string;
-//     errorArgs: Array<any>
-// };
 
 /**
  *  An **AbstractProvider** provides a base class for other sub-classes to
@@ -545,7 +567,7 @@ export class AbstractProvider implements Provider {
             this.#connect.push(urls);
             const shards = await this.getRunningLocations();
             shards.forEach((shard) => {
-                const port = 9100 + 20 * shard[0] + shard[1];
+                const port = 9200 + 20 * shard[0] + shard[1];
                 this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":" + port);
             });
             return;
@@ -556,7 +578,7 @@ export class AbstractProvider implements Provider {
             this.#connect.push(new FetchRequest(primeUrl));
             const shards = await this.getRunningLocations(); // Now waits for the previous to complete
             shards.forEach((shard) => {
-                const port = 9100 + 20 * shard[0] + shard[1];
+                const port = 9200 + 20 * shard[0] + shard[1];
                 this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, url.split(":")[0] + ":" + url.split(":")[1] + ":" + port);
             });
         }
@@ -698,6 +720,8 @@ export class AbstractProvider implements Provider {
      *  sub-class of [[Block]].
      */
     _wrapBlock(value: BlockParams, network: Network): Block {
+        // Handle known node by -> remove null values from the number array
+        value.number = Array.isArray(value.number) ? value.number.filter((n: any) => n != null) : value.number;
         return new Block(formatBlock(value), this);
     }
 
@@ -725,7 +749,12 @@ export class AbstractProvider implements Provider {
      *  alternate sub-class of [[TransactionResponse]].
      */
     _wrapTransactionResponse(tx: TransactionResponseParams, network: Network): TransactionResponse {
-        return new TransactionResponse(formatTransactionResponse(tx), this);
+        if ("from" in tx) {
+            return new QuaiTransactionResponse(formatTransactionResponse(tx) as QuaiTransactionResponseParams, this);
+
+        } else {
+            return new QiTransactionResponse(formatTransactionResponse(tx) as QiTransactionResponseParams, this);
+        }
     }
 
     /**
@@ -892,12 +921,23 @@ export class AbstractProvider implements Provider {
         const request = <PerformActionTransaction>copyRequest(_request);
 
         const promises: Array<Promise<void>> = [];
-        ["to", "from"].forEach((key) => {
+        ["to", "from", "inputs", "outputs"].forEach((key) => {
             if ((<any>request)[key] == null) { return; }
 
-            const addr = resolveAddress((<any>request)[key]);
+            const addr = Array.isArray((<any>request)[key])
+                ? (
+                "address" in <any>request[key][0]
+                    ? (<TxOutput[]>(<any>request)[key]).map(it => resolveAddress(it.Address))
+                    : (<TxInput[]>(<any>request)[key]).map(it => resolveAddress(getAddress(keccak256("0x" + SigningKey.computePublicKey(it.pubKey).substring(4)).substring(26))))
+                ) : resolveAddress((<any>request)[key]);
             if (isPromise(addr)) {
-                promises.push((async function () { (<any>request)[key] = await addr; })());
+                if (Array.isArray(addr)) {
+                    for (let i = 0; i < addr.length; i++) {
+                        promises.push((async function () { (<any>request)[key][i].address = await addr[i]; })());
+                    }
+                } else {
+                    promises.push((async function () { (<any>request)[key] = await addr; })());
+                }
             } else {
                 (<any>request)[key] = addr;
             }
@@ -990,7 +1030,9 @@ export class AbstractProvider implements Provider {
                     try {
                         const value = await this.#perform({ method: "getGasPrice", txType, shard: shard });
                         return getBigInt(value, "%response");
-                    } catch (error) { }
+                    } catch (error) {
+                        console.log(error)
+                    }
                     return null
                 })()),
                 priorityFee: ((async () => {
@@ -1030,14 +1072,13 @@ export class AbstractProvider implements Provider {
     async estimateGas(_tx: TransactionRequest): Promise<bigint> {
         let tx = this._getTransactionRequest(_tx);
         if (isPromise(tx)) { tx = await tx; }
-        const shard = await this.shardFromAddress(tx.from)
+        const shard = await this.shardFromAddress(addressFromTransactionRequest(tx))
         return getBigInt(await this.#perform({
             method: "estimateGas", transaction: tx, shard: shard
         }), "%response");
     }
 
     async #call(tx: PerformActionTransaction, blockTag: string, attempt: number): Promise<string> {
-
         // This came in as a PerformActionTransaction, so to/from are safe; we can cast
         const transaction = <PerformActionTransaction>copyRequest(tx);
 
@@ -1045,55 +1086,6 @@ export class AbstractProvider implements Provider {
             return hexlify(await this._perform({ method: "call", transaction, blockTag }));
 
         } catch (error: any) {
-            // CCIP Read OffchainLookup
-            // if (!this.disableCcipRead && isCallException(error) && error.data && attempt >= 0 && blockTag === "latest" && transaction.to != null && dataSlice(error.data, 0, 4) === "0x556f1830") {
-            //     const data = error.data;
-
-            //     const txSender = await resolveAddress(transaction.to, this);
-
-            //     // Parse the CCIP Read Arguments
-            //     let ccipArgs: CcipArgs;
-            //     try {
-            //         ccipArgs = parseOffchainLookup(dataSlice(error.data, 4));
-            //     } catch (error: any) {
-            //         assert(false, error.message, "OFFCHAIN_FAULT", {
-            //             reason: "BAD_DATA", transaction, info: { data } });
-            //     }
-
-            //     // Check the sender of the OffchainLookup matches the transaction
-            //     assert(ccipArgs.sender.toLowerCase() === txSender.toLowerCase(),
-            //         "CCIP Read sender mismatch", "CALL_EXCEPTION", {
-            //             action: "call",
-            //             data,
-            //             reason: "OffchainLookup",
-            //             transaction: <any>transaction, // @TODO: populate data?
-            //             invocation: null,
-            //             revert: {
-            //                 signature: "OffchainLookup(address,string[],bytes,bytes4,bytes)",
-            //                 name: "OffchainLookup",
-            //                 args: ccipArgs.errorArgs
-            //             }
-            //         });
-
-            //     const ccipResult = await this.ccipReadFetch(transaction, ccipArgs.calldata, ccipArgs.urls);
-            //     assert(ccipResult != null, "CCIP Read failed to fetch data", "OFFCHAIN_FAULT", {
-            //         reason: "FETCH_FAILED", transaction, info: { data: error.data, errorArgs: ccipArgs.errorArgs } });
-
-            //     const tx = {
-            //         to: txSender,
-            //         data: concat([ ccipArgs.selector, encodeBytes([ ccipResult, ccipArgs.extraData ]) ])
-            //     };
-
-            //     this.emit("debug", { action: "sendCcipReadCall", transaction: tx });
-            //     try {
-            //         const result = await this.#call(tx, blockTag, attempt + 1);
-            //         this.emit("debug", { action: "receiveCcipReadCallResult", transaction: Object.assign({ }, tx), result });
-            //         return result;
-            //     } catch (error) {
-            //         this.emit("debug", { action: "receiveCcipReadCallError", transaction: Object.assign({ }, tx), error });
-            //         throw error;
-            //     }
-            // }
 
             throw error;
         }
@@ -1107,8 +1099,8 @@ export class AbstractProvider implements Provider {
         return value;
     }
 
-    async call(_tx: TransactionRequest): Promise<string> {
-        const shard = await this.shardFromAddress(_tx.from);
+    async call(_tx: QuaiTransactionRequest): Promise<string> {
+        const shard = await this.shardFromAddress(addressFromTransactionRequest(_tx));
         const { tx, blockTag } = await resolveProperties({
             tx: this._getTransactionRequest(_tx),
             blockTag: this._getBlockTag(shard, _tx.blockTag)
@@ -1152,11 +1144,13 @@ export class AbstractProvider implements Provider {
         return hexlify(await this.#getAccountValue({ method: "getStorage", position }, address, blockTag));
     }
 
-
-    //TODO: Provider method which gets unspent utxos for an address
+    async getPendingHeader(): Promise<WorkObjectLike> {
+        return await this.#perform({ method: "getPendingHeader" });
+    }
 
     // Write
     async broadcastTransaction(shard: string, signedTx: string): Promise<TransactionResponse> {
+        const type = decodeProtoTransaction(getBytes(signedTx)).type;
         const { blockNumber, hash, network } = await resolveProperties({
             blockNumber: this.getBlockNumber(shard),
             hash: this._perform({
@@ -1167,13 +1161,14 @@ export class AbstractProvider implements Provider {
             network: this.getNetwork()
         });
 
-        const tx = Transaction.from(signedTx);
+        let tx = type == 2 ? QiTransaction.from(signedTx) : QuaiTransaction.from(signedTx);
+
         this.#validateTransactionHash(tx.hash || '', hash)
         tx.hash = hash;
         return this._wrapTransactionResponse(<any>tx, network).replaceableTransaction(blockNumber);
     }
 
-    async #validateTransactionHash(computedHash: string, nodehash: string) {
+    #validateTransactionHash(computedHash: string, nodehash: string) {
         if (computedHash.substring(0, 4) !== nodehash.substring(0, 4))
             throw new Error("Transaction hash mismatch in origin Zone");
         if (computedHash.substring(6, 8) !== nodehash.substring(6, 8))
@@ -1293,7 +1288,7 @@ export class AbstractProvider implements Provider {
                         }
                     }
                 } catch (error) {
-                    console.log("EEE", error);
+                    console.log("Error occured while waiting for transaction:", error);
                 }
                 this.once("block", listener);
             });
@@ -1639,136 +1634,3 @@ export class AbstractProvider implements Provider {
         }
     }
 }
-
-
-// function _parseString(result: string, start: number): null | string {
-//     try {
-//         const bytes = _parseBytes(result, start);
-//         if (bytes) { return toUtf8String(bytes); }
-//     } catch(error) { }
-//     return null;
-// }
-
-// function _parseBytes(result: string, start: number): null | string {
-//     if (result === "0x") { return null; }
-//     try {
-//         const offset = getNumber(dataSlice(result, start, start + 32));
-//         const length = getNumber(dataSlice(result, offset, offset + 32));
-//
-//         return dataSlice(result, offset + 32, offset + 32 + length);
-//     } catch (error) { }
-//     return null;
-// }
-
-// function numPad(value: number): Uint8Array {
-//     const result = toBeArray(value);
-//     if (result.length > 32) { throw new Error("internal; should not happen"); }
-//
-//     const padded = new Uint8Array(32);
-//     padded.set(result, 32 - result.length);
-//     return padded;
-// }
-
-// function bytesPad(value: Uint8Array): Uint8Array {
-//     if ((value.length % 32) === 0) { return value; }
-//
-//     const result = new Uint8Array(Math.ceil(value.length / 32) * 32);
-//     result.set(value);
-//     return result;
-// }
-
-// const empty: Uint8Array = new Uint8Array([ ]);
-
-// ABI Encodes a series of (bytes, bytes, ...)
-// function encodeBytes(datas: Array<BytesLike>): string {
-//     const result: Array<Uint8Array> = [ ];
-//
-//     let byteCount = 0;
-//
-//     // Add place-holders for pointers as we add items
-//     for (let i = 0; i < datas.length; i++) {
-//         result.push(empty);
-//         byteCount += 32;
-//     }
-//
-//     for (let i = 0; i < datas.length; i++) {
-//         const data = getBytes(datas[i]);
-//
-//         // Update the bytes offset
-//         result[i] = numPad(byteCount);
-//
-//         // The length and padded value of data
-//         result.push(numPad(data.length));
-//         result.push(bytesPad(data));
-//         byteCount += 32 + Math.ceil(data.length / 32) * 32;
-//     }
-//
-//     return concat(result);
-// }
-
-// const zeros = "0x0000000000000000000000000000000000000000000000000000000000000000"
-// function parseOffchainLookup(data: string): CcipArgs {
-//     const result: CcipArgs = {
-//         sender: "", urls: [ ], calldata: "", selector: "", extraData: "", errorArgs: [ ]
-//     };
-//
-//     assert(dataLength(data) >= 5 * 32, "insufficient OffchainLookup data", "OFFCHAIN_FAULT", {
-//         reason: "insufficient OffchainLookup data"
-//     });
-//
-//     const sender = dataSlice(data, 0, 32);
-//     assert(dataSlice(sender, 0, 12) === dataSlice(zeros, 0, 12), "corrupt OffchainLookup sender", "OFFCHAIN_FAULT", {
-//         reason: "corrupt OffchainLookup sender"
-//     });
-//     result.sender = dataSlice(sender, 12);
-//
-//     // Read the URLs from the response
-//     try {
-//         const urls: Array<string> = [];
-//         const urlsOffset = getNumber(dataSlice(data, 32, 64));
-//         const urlsLength = getNumber(dataSlice(data, urlsOffset, urlsOffset + 32));
-//         const urlsData = dataSlice(data, urlsOffset + 32);
-//         for (let u = 0; u < urlsLength; u++) {
-//             const url = _parseString(urlsData, u * 32);
-//             if (url == null) { throw new Error("abort"); }
-//             urls.push(url);
-//         }
-//         result.urls = urls;
-//     } catch (error) {
-//         assert(false, "corrupt OffchainLookup urls", "OFFCHAIN_FAULT", {
-//             reason: "corrupt OffchainLookup urls"
-//         });
-//     }
-//
-//     // Get the CCIP calldata to forward
-//     try {
-//         const calldata = _parseBytes(data, 64);
-//         if (calldata == null) { throw new Error("abort"); }
-//         result.calldata = calldata;
-//     } catch (error) {
-//         assert(false, "corrupt OffchainLookup calldata", "OFFCHAIN_FAULT", {
-//             reason: "corrupt OffchainLookup calldata"
-//         });
-//     }
-//
-//     // Get the callbackSelector (bytes4)
-//     assert(dataSlice(data, 100, 128) === dataSlice(zeros, 0, 28), "corrupt OffchainLookup callbaackSelector", "OFFCHAIN_FAULT", {
-//         reason: "corrupt OffchainLookup callbaackSelector"
-//     });
-//     result.selector = dataSlice(data, 96, 100);
-//
-//     // Get the extra data to send back to the contract as context
-//     try {
-//         const extraData = _parseBytes(data, 128);
-//         if (extraData == null) { throw new Error("abort"); }
-//         result.extraData = extraData;
-//     } catch (error) {
-//         assert(false, "corrupt OffchainLookup extraData", "OFFCHAIN_FAULT", {
-//             reason: "corrupt OffchainLookup extraData"
-//         });
-//     }
-//
-//     result.errorArgs = "sender,urls,calldata,selector,extraData".split(/,/).map((k) => (<any>result)[k])
-//
-//     return result;
-// }

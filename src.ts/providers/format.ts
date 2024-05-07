@@ -6,7 +6,9 @@ import { Signature } from "../crypto/index.js"
 import { accessListify } from "../transaction/index.js";
 import {
     getBigInt, getNumber, isHexString, zeroPadValue,
-    assert, assertArgument
+    assert, assertArgument,
+    BigNumberish,
+    toBeArray
 } from "../utils/index.js";
 
 import type {
@@ -20,7 +22,7 @@ const BN_0 = BigInt(0);
 export type FormatFunc = (value: any) => any;
 
 export function allowNull(format: FormatFunc, nullValue?: any): FormatFunc {
-    return (function(value: any) {
+    return (function (value: any) {
         if (value == null) { return nullValue; }
         return format(value);
     });
@@ -38,7 +40,7 @@ export function arrayOf(format: FormatFunc): FormatFunc {
 // from the result object. Calls preserve `this`.
 export function object(format: Record<string, FormatFunc>, altNames?: Record<string, Array<string>>): FormatFunc {
     return ((value: any) => {
-        const result: any = { };
+        const result: any = {};
         for (const key in format) {
             let srcKey = key;
             if (altNames && key in altNames && !(srcKey in value)) {
@@ -54,8 +56,8 @@ export function object(format: Record<string, FormatFunc>, altNames?: Record<str
                 const nv = format[key](value[srcKey]);
                 if (nv !== undefined) { result[key] = nv; }
             } catch (error) {
-                const message = (error instanceof Error) ? error.message: "not-an-error";
-                assert(false, `invalid value for value.${ key } (${ message })`, "BAD_DATA", { value })
+                const message = (error instanceof Error) ? error.message : "not-an-error";
+                assert(false, `invalid value for value.${key} (${message})`, "BAD_DATA", { value })
             }
         }
         return result;
@@ -69,7 +71,7 @@ export function formatBoolean(value: any): boolean {
         case false: case "false":
             return false;
     }
-    assertArgument(false, `invalid boolean; ${ JSON.stringify(value) }`, "value", value);
+    assertArgument(false, `invalid boolean; ${JSON.stringify(value)}`, "value", value);
 }
 
 export function formatData(value: string): string {
@@ -89,6 +91,18 @@ export function formatUint256(value: any): string {
     return zeroPadValue(value, 32);
 }
 
+export function handleNumber(_value: string, param: string): number {
+    if (_value === "0x") { return 0; }
+    return getNumber(_value, param);
+}
+
+export function formatNumber(_value: BigNumberish, name: string): Uint8Array {
+    const value = getBigInt(_value, "value");
+    const result = toBeArray(value);
+    assertArgument(result.length <= 32, `value too large`, `tx.${name}`, value);
+    return result;
+}
+
 const _formatLog = object({
     address: getAddress,
     blockHash: formatHash,
@@ -100,7 +114,7 @@ const _formatLog = object({
     transactionHash: formatHash,
     transactionIndex: getNumber,
 }, {
-    index: [ "logIndex" ]
+    index: ["logIndex"]
 });
 
 export function formatLog(value: any): LogParams {
@@ -112,9 +126,7 @@ const _formatBlock = object({
     parentHash: arrayOf(formatHash),
     number: arrayOf(getNumber),
 
-    timestamp: getNumber,
     nonce: allowNull(formatData),
-    difficulty: getBigInt,
 
     gasLimit: getBigInt,
     gasUsed: getBigInt,
@@ -125,34 +137,27 @@ const _formatBlock = object({
     baseFeePerGas: allowNull(getBigInt),
 
     extRollupRoot: formatHash,
-    // extTransactions: arrayOf(formatTransaction), 
     extTransactionsRoot: formatHash,
-    // transactions:
     transactionsRoot: formatHash,
-    manifestHash: arrayOf(formatHash), 
-    location: formatData, 
-    parentDeltaS: arrayOf(getBigInt), 
-    parentEntropy: arrayOf(getBigInt), 
-    order: getNumber, 
-    subManifest: arrayOf(formatData), 
-    totalEntropy: getBigInt, 
-    mixHash: formatHash,
+    manifestHash: arrayOf(formatHash),
+    parentDeltaS: arrayOf(getBigInt),
+    parentEntropy: arrayOf(getBigInt),
+    subManifest: arrayOf(formatData),
     receiptsRoot: formatHash,
     sha3Uncles: formatHash,
     size: getBigInt,
     evmRoot: formatHash,
     utxoRoot: formatHash,
-    uncles: arrayOf(formatHash),
 });
 
 export function formatBlock(value: any): BlockParams {
     const result = _formatBlock(value);
     result.transactions = value.transactions.map((tx: string | TransactionResponseParams) => {
-        if (typeof(tx) === "string") { return tx; }
+        if (typeof (tx) === "string") { return tx; }
         return formatTransactionResponse(tx);
     });
     result.extTransactions = value.extTransactions.map((tx: string | TransactionResponseParams) => {
-        if (typeof(tx) === "string") { return tx; }
+        if (typeof (tx) === "string") { return tx; }
         return formatTransactionResponse(tx);
     });
     return result;
@@ -168,7 +173,7 @@ const _formatReceiptLog = object({
     index: getNumber,
     blockHash: formatHash,
 }, {
-    index: [ "logIndex" ]
+    index: ["logIndex"]
 });
 
 export function formatReceiptLog(value: any): LogParams {
@@ -190,7 +195,7 @@ const _formatEtx = object({
     from: allowNull(getAddress, null),
     hash: formatHash,
 }, {
-    from: [ "sender" ],
+    from: ["sender"],
 });
 
 export function formatEtx(value: any): EtxParams {
@@ -216,8 +221,8 @@ const _formatTransactionReceipt = object({
     type: allowNull(getNumber, 0),
     etxs: arrayOf(formatEtx),
 }, {
-    hash: [ "transactionHash" ],
-    index: [ "transactionIndex" ],
+    hash: ["transactionHash"],
+    index: ["transactionIndex"],
 });
 
 export function formatTransactionReceipt(value: any): TransactionReceiptParams {
@@ -257,15 +262,15 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
         gasLimit: getBigInt,
         to: allowNull(getAddress, null),
         value: getBigInt,
-        nonce: getNumber, 
+        nonce: getNumber,
 
         creates: allowNull(getAddress, null),
 
         chainId: allowNull(getBigInt, null),
     }, {
-        data: [ "input" ],
-        gasLimit: [ "gas" ],
-        index: [ "transactionIndex" ],
+        data: ["input"],
+        gasLimit: ["gas"],
+        index: ["transactionIndex"],
     })(value);
 
     // If to and creates are empty, populate the creates from the value
@@ -275,7 +280,7 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
 
     // Add an access list to supported transaction types
     if ((value.type === 1 || value.type === 2) && value.accessList == null) {
-        result.accessList = [ ];
+        result.accessList = [];
     }
 
     // Compute the signature

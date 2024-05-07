@@ -1,7 +1,30 @@
 
 import { N, ShardData } from '../constants';
 import { SigningKey, keccak256 as addressKeccak256 } from "../crypto/index.js";
-import { BytesLike, Numeric, Provider, Transaction, TransactionLike, TransactionRequest, Wordlist, assertArgument, assertPrivate, computeAddress, computeHmac, dataSlice, defineProperties, getBytes, getNumber, getShardForAddress, hexlify, isBytesLike, isUTXOAddress, randomBytes, ripemd160, sha256, toBeHex, toBigInt } from '../quais.js';
+import {
+    BytesLike,
+    Numeric,
+    Provider,
+    TransactionLike,
+    Wordlist,
+    assertArgument,
+    assertPrivate,
+    computeHmac,
+    dataSlice,
+    defineProperties,
+    getBytes,
+    getNumber,
+    getShardForAddress,
+    hexlify,
+    isBytesLike,
+    isUTXOAddress,
+    randomBytes,
+    ripemd160,
+    sha256,
+    toBeHex,
+    toBigInt,
+    computeAddress
+} from '../quais.js';
 import { Mnemonic } from './mnemonic.js';
 import { HardenedBit, derivePath, ser_I } from './utils.js';
 import { BaseWallet } from "./base-wallet.js";
@@ -9,6 +32,8 @@ import { MuSigFactory } from "@brandonblack/musig"
 import { nobleCrypto } from "./musig-crypto.js";
 import { schnorr } from "@noble/curves/secp256k1";
 import { keccak_256 } from "@noble/hashes/sha3";
+import { QiTransaction } from '../transaction/qi-transaction.js';
+import { QiTransactionRequest } from '../providers/provider.js';
 import { TxInput } from "../transaction/utxo.js";
 import { getAddress } from "../address/index.js";
 
@@ -109,7 +134,7 @@ export class UTXOHDWallet extends BaseWallet {
     }
 
     // contains the last BIP44 index derived by the wallet (-1 if none have been derived yet)
-    #lastDerivedAddressIndex: number = -1;    
+    #lastDerivedAddressIndex: number = -1;
 
     /**
      * Gets the current publicKey
@@ -264,7 +289,7 @@ export class UTXOHDWallet extends BaseWallet {
                 currentUtxoAddresses.push({ address, privKey });
                 this.#lastDerivedAddressIndex = currentIndex;
 
-                
+
                 // Check if the address has any UTXOs
                 try {
                     // if provider is not set, throw error
@@ -320,20 +345,20 @@ export class UTXOHDWallet extends BaseWallet {
 
         return newWallet;   
     }
-
     /**
      *  Signs a UTXO transaction and returns the serialized transaction
      */
-    async signTransaction(tx: TransactionRequest): Promise<string> {
-        const txobj = Transaction.from((<TransactionLike<string>>tx))
-        if (!txobj.inputsUTXO || !txobj.outputsUTXO) throw new Error('Invalid UTXO transaction, missing inputs or outputs')
+
+    async signTransaction(tx: QiTransactionRequest): Promise<string> {
+        const txobj = QiTransaction.from((<TransactionLike>tx))
+        if (!txobj.txInputs || !txobj.txOutputs) throw new Error('Invalid UTXO transaction, missing inputs or outputs')
         
         const hash = keccak_256(txobj.unsignedSerialized)
 
         let signature: string;
 
-        if (txobj.inputsUTXO.length == 1){
-            signature = this.createSchnorrSignature(txobj.inputsUTXO[0], hash);
+        if (txobj.txInputs.length == 1){
+            signature = this.createSchnorrSignature(txobj.txInputs[0], hash);
         } else {
             signature = this.createMuSigSignature(txobj, hash);
 
@@ -354,14 +379,14 @@ export class UTXOHDWallet extends BaseWallet {
         // create the schnorr signature
         const signature = schnorr.sign(hash, getBytes(privKey) );
         return hexlify(signature);
-    }    
-    
-    // createMuSigSignature returns a MuSig signature for the given message 
+    }
+
+    // createMuSigSignature returns a MuSig signature for the given message
     // and private keys corresponding to the input addresses
-    private createMuSigSignature(tx: Transaction, hash: Uint8Array): string {
+    private createMuSigSignature(tx: QiTransaction, hash: Uint8Array): string {
         const musig = MuSigFactory(nobleCrypto);
 
-        const privKeys = tx.inputsUTXO!.map(input => {
+        const privKeys = tx.txInputs!.map(input => {
             const address = computeAddress(hexlify(input.pubKey));
             const utxoAddrObj = this.utxoAddresses.find(utxoAddr => utxoAddr.address === address);
             return utxoAddrObj ? utxoAddrObj.privKey : null;
@@ -390,7 +415,7 @@ export class UTXOHDWallet extends BaseWallet {
 
         // Aggregate the partial signatures into a final aggregated signature
         const finalSignature = musig.signAgg(partialSignatures, signingSession);
-        
+
         // const isValid = schnorr.verify(finalSignature, hash, aggPublicKey);
         return hexlify(finalSignature);
     }
