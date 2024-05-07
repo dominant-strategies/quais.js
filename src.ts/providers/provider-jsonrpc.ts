@@ -298,7 +298,7 @@ export interface QuaiJsonRpcTransactionRequest extends AbstractJsonRpcTransactio
      }
 
      // JSON-RPC will automatially fill in nonce, etc. so we just check from
-     async populateTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionLike<string>> {
+     async populateQuaiTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionLike> {
          return await this.populateCall(tx) as QuaiTransactionLike;
      }
 
@@ -869,7 +869,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         } else {
             throw new Error('No Qi getRPCTransaction implementation yet')
         }
-        return result;
+        return result
     }
 
     /**
@@ -1072,7 +1072,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
         }
 
         if (method === "quai_sendRawTransaction" || method === "quai_sendTransaction") {
-            const transaction = <TransactionLike<string>>((<any>payload).params[0]);
+            const transaction = <TransactionLike>((<any>payload).params[0]);
 
             if (message.match(/insufficient funds|base fee exceeds gas limit/i)) {
                 return makeError("insufficient funds for intrinsic transaction cost", "INSUFFICIENT_FUNDS", {

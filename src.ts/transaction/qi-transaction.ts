@@ -8,9 +8,9 @@ import {
     toBigInt
 } from "../utils";
 import {formatNumber} from "../providers/format";
-import {_parseSignature, ProtoTransaction} from "./abstract-transaction";
+import { ProtoTransaction} from "./abstract-transaction";
 
-export interface QiTransactionLike<A = string> extends TransactionLike<A>{
+export interface QiTransactionLike<A = string> extends TransactionLike{
 
     txInputs?: null | TxInput[];
     txOutputs?: null | TxOutput[];
@@ -49,25 +49,34 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         return keccak256(this.unsignedSerialized);
     }
 
+    get originShard(): string | undefined {
+        const pubKey = this.fromPublicKey
+        const senderAddr = computeAddress(pubKey || "")
+
+        return getShardForAddress(senderAddr)?.byte.slice(2);
+    }
+
+    get destShard(): string | undefined {
+        return getShardForAddress(this.txOutputs[0].Address || "")?.byte.slice(2);
+    }
+
     getTransactionHash (data: Uint8Array): string {
-        const destShardbyte = getShardForAddress(this.txOutputs[0].Address || "")?.byte.slice(2);
         const destUtxo = isUTXOAddress(this.txOutputs[0].Address || "");
 
         const pubKey = this.fromPublicKey
         const senderAddr = computeAddress(pubKey || "")
 
-        const originShardByte = getShardForAddress(senderAddr)?.byte.slice(2);
         const originUtxo = isUTXOAddress(senderAddr);
 
-        if (!destShardbyte || !originShardByte) {
+        if (!this.destShard|| !this.originShard) {
             throw new Error("Invalid Shard for from or to address");
         }
-        if(destShardbyte !== originShardByte && destUtxo !== originUtxo) {
+        if(this.isExternal && destUtxo !== originUtxo) {
             throw new Error("Cross-shard & cross-ledger transactions are not supported");
         }
 
         let hash = keccak256(data)
-        hash = '0x' + originShardByte + (originUtxo ? 'F' : '1') + hash.charAt(5) + originShardByte + (destUtxo ? 'F' : '1') + hash.slice(9)
+        hash = '0x' + this.originShard+ (originUtxo ? 'F' : '1') + hash.charAt(5) + this.originShard+ (destUtxo ? 'F' : '1') + hash.slice(9)
 
         //TODO alter comparison
         return hash;

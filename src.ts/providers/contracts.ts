@@ -1,5 +1,5 @@
 import type {
-    Provider, TransactionRequest, TransactionResponse
+    Provider, QuaiTransactionRequest, TransactionRequest, TransactionResponse
 } from "./provider.js";
 
 /**
@@ -28,7 +28,7 @@ export interface ContractRunner {
     /**
      * Required for pure, view or static calls to contracts.
      */
-    call?: (tx: TransactionRequest) => Promise<string>;
+    call?: (tx: QuaiTransactionRequest) => Promise<string>;
 
     /**
      *  Required for state mutating calls

@@ -88,7 +88,7 @@ export class BaseWallet extends AbstractSigner {
 //            delete tx.from;
         }
 
-        const btx = QuaiTransaction.from(<QuaiTransactionLike<string>>tx);
+        const btx = QuaiTransaction.from(<QuaiTransactionLike>tx);
 
         btx.signature = this.signingKey.sign(btx.unsignedHash);
 

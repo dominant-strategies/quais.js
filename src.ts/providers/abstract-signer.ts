@@ -28,7 +28,7 @@ function checkProvider(signer: AbstractSigner, operation: string): Provider {
     assert(false, "missing provider", "UNSUPPORTED_OPERATION", { operation });
 }
 
-async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise<TransactionLike<string>> {
+async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise<TransactionLike> {
     let pop: any = copyRequest(tx);
 
     if (pop.to != null) { pop.to = resolveAddress(pop.to); }
@@ -96,16 +96,12 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         return checkProvider(this, "getTransactionCount").getTransactionCount(await this.getAddress(), blockTag);
     }
 
-    async populateCall(tx: TransactionRequest): Promise<TransactionLike<string>> {
+    async populateCall(tx: TransactionRequest): Promise<TransactionLike> {
         const pop = await populate(this, tx);
         return pop;
     }
 
-    // async populateQiTransaction(tx: TransactionRequest): Promise<TransactionLike<string>> {
-
-    // }
-
-    async populateTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionLike<string>> {
+    async populateQuaiTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionLike> {
         const provider = checkProvider(this, "populateTransaction");
         const shard = await this.shardFromAddress(tx.from);
 
@@ -158,7 +154,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         return await resolveProperties(pop);
     }
 
-    async populateUTXOTransaction(tx: QiTransactionRequest): Promise<QiTransactionLike<string>> {
+    async populateQiTransaction(tx: QiTransactionRequest): Promise<QiTransactionLike<string>> {
 
         const pop = {
             inputsUTXO: tx.inputs,
@@ -189,17 +185,14 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         let pop;
         let txObj;
         if (isUTXOAddress(sender)) {
-            pop = await this.populateUTXOTransaction(tx);
+            pop = await this.populateQiTransaction(tx);
             txObj = QiTransaction.from(pop);
         } else {
-            pop = await this.populateTransaction(tx as QuaiTransactionRequest);
+            pop = await this.populateQuaiTransaction(tx as QuaiTransactionRequest);
             txObj = QuaiTransaction.from(pop);
         }
 
-        //        delete pop.from;
-
         const signedTx = await this.signTransaction(txObj);
-        // console.log("signedTX: ", JSON.stringify(txObj))
         return await provider.broadcastTransaction(shard, signedTx, "from" in tx ? tx.from : undefined);
     }
 

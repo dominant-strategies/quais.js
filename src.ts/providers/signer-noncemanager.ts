@@ -78,7 +78,7 @@ export class NonceManager extends AbstractSigner {
         const noncePromise = this.getNonce("pending");
         this.increment();
 
-        tx = await this.signer.populateTransaction(tx) as QuaiTransactionLike;
+        tx = await this.signer.populateQuaiTransaction(tx) as QuaiTransactionLike;
         tx.nonce = await noncePromise;
 
         // @TODO: Maybe handle interesting/recoverable errors?

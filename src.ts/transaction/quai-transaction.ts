@@ -11,23 +11,23 @@ import {
     getNumber,
     getShardForAddress,
     hexlify, isUTXOAddress,
-    toBeArray, toBigInt
+    toBeArray, toBigInt, zeroPadValue
 } from "../utils";
 import {getAddress} from "../address";
-import {formatNumber} from "../providers/format";
-import {_parseSignature, ProtoTransaction} from "./abstract-transaction";
+import {formatNumber, handleNumber} from "../providers/format";
+import { ProtoTransaction} from "./abstract-transaction";
 
-export interface QuaiTransactionLike<A = string> extends TransactionLike<A>{
+export interface QuaiTransactionLike extends TransactionLike{
 
     /**
      *  The recipient address or ``null`` for an ``init`` transaction.
      */
-    to?: null | A;
+    to?: null | string;
 
     /**
      *  The sender.
      */
-    from: A;
+    from: string;
     /**
      *  The nonce.
      */
@@ -70,7 +70,22 @@ export interface QuaiTransactionLike<A = string> extends TransactionLike<A>{
 
 }
 
-export class QuaiTransaction extends AbstractTransaction<null | Signature> implements QuaiTransactionLike {
+export function _parseSignature(fields: Array<string>): Signature {
+    let yParity: number;
+    try {
+        yParity = handleNumber(fields[0], "yParity");
+        if (yParity !== 0 && yParity !== 1) { throw new Error("bad yParity"); }
+    } catch (error) {
+        assertArgument(false, "invalid yParity", "yParity", fields[0]);
+    }
+
+    const r = zeroPadValue(fields[1], 32);
+    const s = zeroPadValue(fields[2], 32);
+
+    return Signature.from({ r, s, yParity });
+}
+
+export class QuaiTransaction extends AbstractTransaction<Signature> implements QuaiTransactionLike {
     #to: null | string;
     #data: string;
     #nonce: number;
@@ -105,24 +120,30 @@ export class QuaiTransaction extends AbstractTransaction<null | Signature> imple
         return keccak256(this.unsignedSerialized);
     }
 
-    getTransactionHash (data: Uint8Array): string {
-        const destShardbyte = getShardForAddress(this.to || "")?.byte.slice(2);
-        const destUtxo = isUTXOAddress(this.to || "");
-
+    get originShard(): string | undefined {
         const senderAddr = this.from
 
-        const originShardByte = getShardForAddress(senderAddr)?.byte.slice(2);
-        const originUtxo = isUTXOAddress(senderAddr);
+        return getShardForAddress(senderAddr)?.byte.slice(2);
+    }
 
-        if (!destShardbyte || !originShardByte) {
+    get destShard(): string | undefined {
+        return getShardForAddress(this.to || "")?.byte.slice(2);
+    }
+
+    getTransactionHash (data: Uint8Array): string {
+        const destUtxo = isUTXOAddress(this.to || "");
+
+        const originUtxo = isUTXOAddress(this.from);
+
+        if (!this.destShard|| !this.originShard) {
             throw new Error("Invalid Shard for from or to address");
         }
-        if(destShardbyte !== originShardByte && destUtxo !== originUtxo) {
+        if(this.isExternal && destUtxo !== originUtxo) {
             throw new Error("Cross-shard & cross-ledger transactions are not supported");
         }
 
         let hash = keccak256(data)
-        hash = '0x' + originShardByte + (originUtxo ? 'F' : '1') + hash.charAt(5) + originShardByte + (destUtxo ? 'F' : '1') + hash.slice(9)
+        hash = '0x' + this.originShard+ (originUtxo ? 'F' : '1') + hash.charAt(5) + this.originShard+ (destUtxo ? 'F' : '1') + hash.slice(9)
 
         //TODO alter comparison
         return hash;
@@ -247,10 +268,6 @@ export class QuaiTransaction extends AbstractTransaction<null | Signature> imple
             assert(this.maxFeePerGas >= this.maxPriorityFeePerGas, "priorityFee cannot be more than maxFee", "BAD_DATA", { value: this });
         }
 
-        //if (this.type === 2 && hasGasPrice) {
-        //    throw new Error("eip-1559 transaction cannot have gasPrice");
-        //}
-
         assert((this.type !== 0 && this.type !== 1), "transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList", "BAD_DATA", { value: this });
 
         const types: Array<number> = [];
@@ -301,8 +318,6 @@ export class QuaiTransaction extends AbstractTransaction<null | Signature> imple
             signature: this.signature ? this.signature.toJSON() : null,
             hash: this.hash,
             accessList: this.accessList,
-//            inputsUTXO: processArrayWithBigInt(this.inputsUTXO || []),
-//            outputsUTXO: processArrayWithBigInt(this.outputsUTXO || []),
         } as QuaiTransactionLike;
     }
 
@@ -323,16 +338,10 @@ export class QuaiTransaction extends AbstractTransaction<null | Signature> imple
             access_list: { access_tuples: [] },
         }
 
-//        if (tx.type == 2) {
-//            protoTx.tx_ins = tx.inputsUTXO
-//            protoTx.tx_outs = tx.outputsUTXO
-//        }
-
         if (this.signature) {
             protoTx.v = formatNumber(this.signature.yParity, "yParity")
             protoTx.r = toBeArray(this.signature.r)
             protoTx.s = toBeArray(this.signature.s)
-//            protoTx.signature = getBytes(this.signature.serialized)
         }
         return protoTx;
     }
@@ -341,7 +350,7 @@ export class QuaiTransaction extends AbstractTransaction<null | Signature> imple
      *  Create a **Transaction** from a serialized transaction or a
      *  Transaction-like object.
      */
-    static from(tx: string | QuaiTransactionLike, from?: string): QuaiTransaction {
+    static from(tx: string | QuaiTransactionLike): QuaiTransaction {
         if (typeof (tx) === "string") {
             const decodedProtoTx: ProtoTransaction = decodeProtoTransaction(getBytes(tx));
             const payload = getBytes(tx);
@@ -368,7 +377,6 @@ export class QuaiTransaction extends AbstractTransaction<null | Signature> imple
         }
 
         if (tx.from != null) {
-            //             assertArgument(result.isSigned(), "unsigned transaction cannot define from", "tx", tx);
             assertArgument(result.from.toLowerCase() === (tx.from || "").toLowerCase(), "from mismatch", "tx", tx);
             result.from = tx.from;
         }
@@ -381,7 +389,6 @@ export class QuaiTransaction extends AbstractTransaction<null | Signature> imple
     static fromProto(protoTx: ProtoTransaction, payload?: Uint8Array): QuaiTransaction {
 
         //  TODO: Fix this because new tx instance requires a 'from' address
-        // if (this.signature == null) { return null; }
         let signature: null | Signature = null
         let address
         if (protoTx.v && protoTx.r && protoTx.s) {
@@ -427,32 +434,6 @@ export class QuaiTransaction extends AbstractTransaction<null | Signature> imple
         if (payload) {
             tx.hash = tx.getTransactionHash(payload);
         }
-
-//        if (protoTx.signature) {
-//            const signatureFields = [
-//                hexlify(protoTx.v!),
-//                hexlify(protoTx.r!),
-//                hexlify(protoTx.s!),
-//            ];
-//            tx.signature = _parseSignature(tx, signatureFields);
-//        }
-
-
-//        if (protoTx.type == 2) {
-//            tx.inputsUTXO = protoTx.tx_ins
-//            tx.outputsUTXO = protoTx.tx_outs
-//        }
-
-//        if (protoTx.signature) {
-//            const signatureFields = [
-//                hexlify(protoTx.v!),
-//                hexlify(protoTx.r!),
-//                hexlify(protoTx.s!),
-//            ];
-//            tx.signature = _parseSignature(tx, signatureFields);
-//        }
-
-
         return tx;
     }
 
@@ -461,7 +442,4 @@ export class QuaiTransaction extends AbstractTransaction<null | Signature> imple
      *
      *  @returns The serialized string representation of the WorkObject.
      */
-//    #serialize(): string {
-//        return encodeProtoTransaction(this.toProtobuf());
-//    }
 }

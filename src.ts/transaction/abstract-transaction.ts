@@ -2,16 +2,15 @@
 import { Signature, SigningKey } from "../crypto/index.js";
 import {
     getBigInt,
-    assert, assertArgument, zeroPadValue
+    assert, assertArgument
 } from "../utils/index.js";
 
 import type { BigNumberish } from "../utils/index.js";
 import type { SignatureLike } from "../crypto/index.js";
 import { encodeProtoTransaction } from "../utils/proto-encode.js";
-import { handleNumber } from "../providers/format.js";
 import type {TxInput, TxOutput} from "./utxo.js";
 
-export interface TransactionLike<A = string> {
+export interface TransactionLike {
     /**
      *  The type.
      */
@@ -68,21 +67,6 @@ export interface ProtoAccessTuple {
 }
 
 
-export function _parseSignature(fields: Array<string>): Signature {
-    let yParity: number;
-    try {
-        yParity = handleNumber(fields[0], "yParity");
-        if (yParity !== 0 && yParity !== 1) { throw new Error("bad yParity"); }
-    } catch (error) {
-        assertArgument(false, "invalid yParity", "yParity", fields[0]);
-    }
-
-    const r = zeroPadValue(fields[1], 32);
-    const s = zeroPadValue(fields[2], 32);
-
-    return Signature.from({ r, s, yParity });
-}
-
 /**
  *  A **Transaction** describes an operation to be executed on
  *  Ethereum by an Externally Owned Account (EOA). It includes
@@ -96,11 +80,10 @@ export function _parseSignature(fields: Array<string>): Signature {
  *    tx.data = "0x1234";
  *    //_result:
  */
-type allowedSignatureTypes = Signature | string | null
-export abstract class AbstractTransaction<S extends allowedSignatureTypes> implements TransactionLike<string> {
+type allowedSignatureTypes = Signature | string
+export abstract class AbstractTransaction<S extends allowedSignatureTypes> implements TransactionLike {
     protected _type: number | null;
-    protected _hash: null | string;
-    protected _signature: S;
+    protected _signature: null | S;
     protected _chainId: bigint;
 
     /**
@@ -155,7 +138,7 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
     get signature(): S { return (this._signature || null) as S; }
     set signature(value: S) {
         if (typeof value === 'string') {
-
+            this._signature = value as S
         } else {
             this._signature = ((value == null) ? null : Signature.from(value)) as S;
         }
@@ -165,20 +148,8 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
      */
     constructor() {
         this._type = null;
-        this._hash = null;
         this._chainId = BigInt(0);
-        this._signature = null as S;
-    }
-
-    /**
-     *  The transaction hash, if signed. Otherwise, ``null``.
-     */
-    get hash(): null | string {
-        throw new Error("Method not implemented.");
-    }
-
-    set hash(value: null | string) {
-        this._hash = value;
+        this._signature = null;
     }
 
     /**
@@ -259,6 +230,14 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
      *  Return a protobuf-friendly JSON object.
      */
     abstract toProtobuf(): ProtoTransaction
+
+    abstract get originShard(): string | undefined
+
+    abstract get destShard(): string | undefined
+
+    get isExternal(): boolean {
+        return this.originShard !== this.destShard
+    }
 
     /**
      *  Serializes the WorkObject to a string.

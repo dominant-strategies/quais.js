@@ -395,7 +395,7 @@ export class WorkObject {
         // Convert ProtoTransaction to TransactionLike using Transaction.fromProto
 
         if (protoWo.tx) {
-            const tx: QuaiTransactionLike<string> = QuaiTransaction.fromProto(protoWo.tx).toJSON()
+            const tx: QuaiTransactionLike = QuaiTransaction.fromProto(protoWo.tx).toJSON()
             return new WorkObject(woHeader, woBody, tx);
         } else {
             throw new Error("Invalid ProtoWorkObject: missing transaction");

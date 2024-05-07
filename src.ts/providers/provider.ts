@@ -230,12 +230,6 @@ export interface QiTransactionRequest {
      *  The chain ID for the network this transaction is valid on.
      */
     chainId?: null | BigNumberish;
-    /**
-     *  When using ``call`` or ``estimateGas``, this allows a specific
-     *  block to be queried. Many backends do not support this and when
-     *  unsupported errors are silently squelched and ``"latest"`` is used.
-     */
-    blockTag?: BlockTag;
 
     inputs?: null | Array<TxInput>;
 
@@ -1323,7 +1317,7 @@ export type TransactionResponse  = QuaiTransactionResponse | QiTransactionRespon
  *  transaction has been mined as well as type guard that the otherwise
  *  possibly ``null`` properties are defined.
  */
-export class QuaiTransactionResponse implements QuaiTransactionLike<string>, QuaiTransactionResponseParams {
+export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransactionResponseParams {
     /**
      *  The provider this is connected to, which will influence how its
      *  methods will resolve its async inspection methods.
@@ -1829,7 +1823,7 @@ export class QiTransactionResponse implements QiTransactionLike<string>, QiTrans
     /**
      *  The signature.
      */
-    readonly signature!: Signature;
+    readonly signature!: string;
 
     readonly txInputs?: Array<TxInput>;
 

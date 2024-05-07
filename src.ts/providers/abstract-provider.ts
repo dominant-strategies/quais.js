@@ -42,7 +42,7 @@ import {
     QiPreparedTransactionRequest,
     QuaiPreparedTransactionRequest,
     QuaiTransactionResponse,
-    QiTransactionResponse
+    QiTransactionResponse, QuaiTransactionRequest
 } from "./provider.js";
 
 import type { Addressable, AddressLike } from "../address/index.js";
@@ -487,15 +487,6 @@ const defaultOptions = {
     pollingInterval: 4000
 };
 
-// type CcipArgs = {
-//     sender: string;
-//     urls: Array<string>;
-//     calldata: string;
-//     selector: string;
-//     extraData: string;
-//     errorArgs: Array<any>
-// };
-
 /**
  *  An **AbstractProvider** provides a base class for other sub-classes to
  *  implement the [[Provider]] API by normalizing input arguments and
@@ -935,7 +926,7 @@ export class AbstractProvider implements Provider {
 
             const addr = Array.isArray((<any>request)[key])
                 ? (
-                "address" in it
+                "address" in <any>request[key][0]
                     ? (<TxOutput[]>(<any>request)[key]).map(it => resolveAddress(it.Address))
                     : (<TxInput[]>(<any>request)[key]).map(it => resolveAddress(getAddress(keccak256("0x" + SigningKey.computePublicKey(it.pubKey).substring(4)).substring(26))))
                 ) : resolveAddress((<any>request)[key]);
@@ -1108,7 +1099,7 @@ export class AbstractProvider implements Provider {
         return value;
     }
 
-    async call(_tx: TransactionRequest): Promise<string> {
+    async call(_tx: QuaiTransactionRequest): Promise<string> {
         const shard = await this.shardFromAddress(addressFromTransactionRequest(_tx));
         const { tx, blockTag } = await resolveProperties({
             tx: this._getTransactionRequest(_tx),
@@ -1158,7 +1149,7 @@ export class AbstractProvider implements Provider {
     }
 
     // Write
-    async broadcastTransaction(shard: string, signedTx: string, from?: AddressLike): Promise<TransactionResponse> {
+    async broadcastTransaction(shard: string, signedTx: string): Promise<TransactionResponse> {
         const type = decodeProtoTransaction(getBytes(signedTx)).type;
         const { blockNumber, hash, network } = await resolveProperties({
             blockNumber: this.getBlockNumber(shard),
@@ -1170,7 +1161,7 @@ export class AbstractProvider implements Provider {
             network: this.getNetwork()
         });
 
-        let tx = type == 2 ? QiTransaction.from(signedTx) : QuaiTransaction.from(signedTx, from ? await resolveAddress(from) : "");
+        let tx = type == 2 ? QiTransaction.from(signedTx) : QuaiTransaction.from(signedTx);
 
         this.#validateTransactionHash(tx.hash || '', hash)
         tx.hash = hash;
@@ -1643,136 +1634,3 @@ export class AbstractProvider implements Provider {
         }
     }
 }
-
-
-// function _parseString(result: string, start: number): null | string {
-//     try {
-//         const bytes = _parseBytes(result, start);
-//         if (bytes) { return toUtf8String(bytes); }
-//     } catch(error) { }
-//     return null;
-// }
-
-// function _parseBytes(result: string, start: number): null | string {
-//     if (result === "0x") { return null; }
-//     try {
-//         const offset = getNumber(dataSlice(result, start, start + 32));
-//         const length = getNumber(dataSlice(result, offset, offset + 32));
-//
-//         return dataSlice(result, offset + 32, offset + 32 + length);
-//     } catch (error) { }
-//     return null;
-// }
-
-// function numPad(value: number): Uint8Array {
-//     const result = toBeArray(value);
-//     if (result.length > 32) { throw new Error("internal; should not happen"); }
-//
-//     const padded = new Uint8Array(32);
-//     padded.set(result, 32 - result.length);
-//     return padded;
-// }
-
-// function bytesPad(value: Uint8Array): Uint8Array {
-//     if ((value.length % 32) === 0) { return value; }
-//
-//     const result = new Uint8Array(Math.ceil(value.length / 32) * 32);
-//     result.set(value);
-//     return result;
-// }
-
-// const empty: Uint8Array = new Uint8Array([ ]);
-
-// ABI Encodes a series of (bytes, bytes, ...)
-// function encodeBytes(datas: Array<BytesLike>): string {
-//     const result: Array<Uint8Array> = [ ];
-//
-//     let byteCount = 0;
-//
-//     // Add place-holders for pointers as we add items
-//     for (let i = 0; i < datas.length; i++) {
-//         result.push(empty);
-//         byteCount += 32;
-//     }
-//
-//     for (let i = 0; i < datas.length; i++) {
-//         const data = getBytes(datas[i]);
-//
-//         // Update the bytes offset
-//         result[i] = numPad(byteCount);
-//
-//         // The length and padded value of data
-//         result.push(numPad(data.length));
-//         result.push(bytesPad(data));
-//         byteCount += 32 + Math.ceil(data.length / 32) * 32;
-//     }
-//
-//     return concat(result);
-// }
-
-// const zeros = "0x0000000000000000000000000000000000000000000000000000000000000000"
-// function parseOffchainLookup(data: string): CcipArgs {
-//     const result: CcipArgs = {
-//         sender: "", urls: [ ], calldata: "", selector: "", extraData: "", errorArgs: [ ]
-//     };
-//
-//     assert(dataLength(data) >= 5 * 32, "insufficient OffchainLookup data", "OFFCHAIN_FAULT", {
-//         reason: "insufficient OffchainLookup data"
-//     });
-//
-//     const sender = dataSlice(data, 0, 32);
-//     assert(dataSlice(sender, 0, 12) === dataSlice(zeros, 0, 12), "corrupt OffchainLookup sender", "OFFCHAIN_FAULT", {
-//         reason: "corrupt OffchainLookup sender"
-//     });
-//     result.sender = dataSlice(sender, 12);
-//
-//     // Read the URLs from the response
-//     try {
-//         const urls: Array<string> = [];
-//         const urlsOffset = getNumber(dataSlice(data, 32, 64));
-//         const urlsLength = getNumber(dataSlice(data, urlsOffset, urlsOffset + 32));
-//         const urlsData = dataSlice(data, urlsOffset + 32);
-//         for (let u = 0; u < urlsLength; u++) {
-//             const url = _parseString(urlsData, u * 32);
-//             if (url == null) { throw new Error("abort"); }
-//             urls.push(url);
-//         }
-//         result.urls = urls;
-//     } catch (error) {
-//         assert(false, "corrupt OffchainLookup urls", "OFFCHAIN_FAULT", {
-//             reason: "corrupt OffchainLookup urls"
-//         });
-//     }
-//
-//     // Get the CCIP calldata to forward
-//     try {
-//         const calldata = _parseBytes(data, 64);
-//         if (calldata == null) { throw new Error("abort"); }
-//         result.calldata = calldata;
-//     } catch (error) {
-//         assert(false, "corrupt OffchainLookup calldata", "OFFCHAIN_FAULT", {
-//             reason: "corrupt OffchainLookup calldata"
-//         });
-//     }
-//
-//     // Get the callbackSelector (bytes4)
-//     assert(dataSlice(data, 100, 128) === dataSlice(zeros, 0, 28), "corrupt OffchainLookup callbaackSelector", "OFFCHAIN_FAULT", {
-//         reason: "corrupt OffchainLookup callbaackSelector"
-//     });
-//     result.selector = dataSlice(data, 96, 100);
-//
-//     // Get the extra data to send back to the contract as context
-//     try {
-//         const extraData = _parseBytes(data, 128);
-//         if (extraData == null) { throw new Error("abort"); }
-//         result.extraData = extraData;
-//     } catch (error) {
-//         assert(false, "corrupt OffchainLookup extraData", "OFFCHAIN_FAULT", {
-//             reason: "corrupt OffchainLookup extraData"
-//         });
-//     }
-//
-//     result.errorArgs = "sender,urls,calldata,selector,extraData".split(/,/).map((k) => (<any>result)[k])
-//
-//     return result;
-// }

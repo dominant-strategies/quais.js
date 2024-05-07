@@ -409,7 +409,7 @@ export interface QiTransactionResponseParams {
     /**
      *  The signature of the transaction.
      */
-    signature: Signature;
+    signature: string;
 
     txOutputs ?: TxOutput[];
 

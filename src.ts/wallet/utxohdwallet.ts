@@ -350,7 +350,7 @@ export class UTXOHDWallet extends BaseWallet {
      */
 
     async signTransaction(tx: QiTransactionRequest): Promise<string> {
-        const txobj = QiTransaction.from((<TransactionLike<string>>tx))
+        const txobj = QiTransaction.from((<TransactionLike>tx))
         if (!txobj.txInputs || !txobj.txOutputs) throw new Error('Invalid UTXO transaction, missing inputs or outputs')
         
         const hash = keccak_256(txobj.unsignedSerialized)

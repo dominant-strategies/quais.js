@@ -13,6 +13,7 @@ import { Network } from "./network.js"
 
 import type { PerformActionRequest } from "./abstract-provider.js";
 import type { Networkish } from "./network.js"
+import {QuaiTransactionRequest} from "./provider";
 
 const BN_1 = BigInt("1");
 const BN_2 = BigInt("2");
@@ -441,7 +442,7 @@ export class FallbackProvider extends AbstractProvider {
             case "broadcastTransaction":
                 return await provider.broadcastTransaction(req.shard, req.signedTransaction);
             case "call":
-                return await provider.call(Object.assign({}, req.transaction, { blockTag: req.blockTag }));
+                return await provider.call(Object.assign({}, req.transaction as QuaiTransactionRequest, { blockTag: req.blockTag }));
             case "chainId":
                 return (await provider.getNetwork()).chainId;
             case "estimateGas":
