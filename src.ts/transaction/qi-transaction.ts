@@ -61,6 +61,9 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     }
 
     getTransactionHash (data: Uint8Array): string {
+        if (this.txInputs.length < 1 || this.txOutputs.length < 1) {
+            throw new Error("Transaction must have at least one input and one output");
+        }
         const destUtxo = isUTXOAddress(this.txOutputs[0].Address || "");
 
         const pubKey = hexlify(this.txInputs[0].pubKey);

@@ -436,10 +436,4 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         }
         return tx;
     }
-
-    /**
-     *  Serializes the WorkObject to a string.
-     *
-     *  @returns The serialized string representation of the WorkObject.
-     */
 }

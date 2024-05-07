@@ -163,14 +163,6 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
     }
 
     /**
-     *  The public key of the sender, if signed. Otherwise, ``null``.
-     */
-//    get fromPublicKey(): null | string {
-//        if (this.signature == null) { return null; }
-//        return SigningKey.recoverPublicKey(this.unsignedHash, this.signature);
-//    }
-
-    /**
      *  Returns true if signed.
      *
      *  This provides a Type Guard that properties requiring a signed

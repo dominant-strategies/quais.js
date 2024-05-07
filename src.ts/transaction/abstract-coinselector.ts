@@ -38,7 +38,7 @@ export abstract class AbstractCoinSelector {
 
     get spendOutputs(): UTXO[] { return this.#spendOutputs; }
     set spendOutputs(value: UTXOLike[]) {
-        this.#spendOutputs = value.map((utxo) => UTXO.from(utxo as UTXOLike));
+        this.#spendOutputs = value.map((utxo) => UTXO.from(utxo));
     }
 
     get changeOutputs(): UTXO[] { return this.#changeOutputs; }
