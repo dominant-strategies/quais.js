@@ -339,13 +339,6 @@ export interface QiPreparedTransactionRequest {
      */
     chainId?: bigint;
 
-    /**
-     *  When using ``call`` or ``estimateGas``, this allows a specific
-     *  block to be queried. Many backends do not support this and when
-     *  unsupported errors are silently squelched and ``"latest"`` is used.
-     */
-    blockTag?: BlockTag;
-
     inputs?: null | Array<TxInput>;
 
     outputs?: null | Array<TxOutput>;
