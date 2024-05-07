@@ -1,5 +1,5 @@
 
-import { Signature, SigningKey } from "../crypto/index.js";
+import { Signature } from "../crypto/index.js";
 import {
     getBigInt,
     assert, assertArgument
@@ -165,10 +165,10 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
     /**
      *  The public key of the sender, if signed. Otherwise, ``null``.
      */
-    get fromPublicKey(): null | string {
-        if (this.signature == null) { return null; }
-        return SigningKey.recoverPublicKey(this.unsignedHash, this.signature);
-    }
+//    get fromPublicKey(): null | string {
+//        if (this.signature == null) { return null; }
+//        return SigningKey.recoverPublicKey(this.unsignedHash, this.signature);
+//    }
 
     /**
      *  Returns true if signed.

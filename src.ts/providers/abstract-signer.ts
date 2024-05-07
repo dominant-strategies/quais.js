@@ -154,7 +154,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         return await resolveProperties(pop);
     }
 
-    async populateQiTransaction(tx: QiTransactionRequest): Promise<QiTransactionLike<string>> {
+    async populateQiTransaction(tx: QiTransactionRequest): Promise<QiTransactionLike> {
 
         const pop = {
             inputsUTXO: tx.inputs,

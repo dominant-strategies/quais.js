@@ -10,14 +10,14 @@ import {
 import {formatNumber} from "../providers/format";
 import { ProtoTransaction} from "./abstract-transaction";
 
-export interface QiTransactionLike<A = string> extends TransactionLike{
+export interface QiTransactionLike extends TransactionLike{
 
     txInputs?: null | TxInput[];
     txOutputs?: null | TxOutput[];
 
 }
 
-export class QiTransaction extends AbstractTransaction<string> implements QiTransactionLike<string> {
+export class QiTransaction extends AbstractTransaction<string> implements QiTransactionLike {
 
     #txInputs?: null | TxInput[];
     #txOutputs?: null | TxOutput[];
@@ -50,7 +50,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     }
 
     get originShard(): string | undefined {
-        const pubKey = this.fromPublicKey
+        const pubKey = hexlify(this.txInputs[0].pubKey);
         const senderAddr = computeAddress(pubKey || "")
 
         return getShardForAddress(senderAddr)?.byte.slice(2);
@@ -63,7 +63,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     getTransactionHash (data: Uint8Array): string {
         const destUtxo = isUTXOAddress(this.txOutputs[0].Address || "");
 
-        const pubKey = this.fromPublicKey
+        const pubKey = hexlify(this.txInputs[0].pubKey);
         const senderAddr = computeAddress(pubKey || "")
 
         const originUtxo = isUTXOAddress(senderAddr);

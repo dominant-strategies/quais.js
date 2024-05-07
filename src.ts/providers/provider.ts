@@ -1778,7 +1778,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
     }
 }
 
-export class QiTransactionResponse implements QiTransactionLike<string>, QiTransactionResponseParams {
+export class QiTransactionResponse implements QiTransactionLike, QiTransactionResponseParams {
     /**
      *  The provider this is connected to, which will influence how its
      *  methods will resolve its async inspection methods.
