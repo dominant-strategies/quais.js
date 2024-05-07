@@ -37,10 +37,11 @@ import { QiTransactionRequest } from '../providers/provider.js';
 import { TxInput } from "../transaction/utxo.js";
 import { getAddress } from "../address/index.js";
 
-type UTXOAddress = {
+type AddressInfo = {
     address: string;
     privKey: string;
-}
+    index: number;
+};
 
 type Outpoint = {
     Txhash: string;
@@ -48,12 +49,15 @@ type Outpoint = {
     Denomination: number;
 };
 
+// keeps track of the addresses and outpoints for a given shard (zone)
 type ShardWalletData = {
-    addresses: UTXOAddress[];
+    addressesInfo: AddressInfo[];
     outpoints: Map<string, Outpoint[]>;
 }
 
 const MasterSecret = new Uint8Array([ 66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100 ]);
+const COIN_TYPE = 969;
+const GAP = 20;
 const _guard = { };
 
 export class UTXOHDWallet extends BaseWallet {
@@ -114,21 +118,19 @@ export class UTXOHDWallet extends BaseWallet {
      coinType?: number;
 
     /**
-     * Map of shard names to shardWalletData
+     * Map of shard name (zone) to shardWalletData
      * shardWalletData contains the addresses and outpoints for the shard
+     * that are known to the wallet
      */
-    #shardWallets: Map<string, ShardWalletData> = new Map();
+    #shardWalletsMap: Map<string, ShardWalletData> = new Map();
 
-    get shardWallets(): Map<string, ShardWalletData> {
-        return this.#shardWallets;
+    get shardWalletsMap(): Map<string, ShardWalletData> {
+        return this.#shardWalletsMap;
     }
 
     set shardWallets(shardWallets: Map<string, ShardWalletData>) {
-        this.#shardWallets = shardWallets;
+        this.#shardWalletsMap = shardWallets;
     }
-    
-    // contains the last BIP44 index derived by the wallet (-1 if none have been derived yet)
-    #lastDerivedAddressIndex: number = -1;
 
     /**
      * Gets the current publicKey
@@ -250,104 +252,100 @@ export class UTXOHDWallet extends BaseWallet {
 
     }
 
-        
     /**
-     *  Generates a list of addresses and private keys with UTXOs in the specified zone
-     *  It also updates the map of addresses to unspent outputs
+     * Derives an address that is valid for a specified zone on the Qi ledger.
      */
-    async syncUTXOs(zone: string, gap: number = 20  ){
-        zone = zone.toLowerCase();
-        // Check if zone is valid
-        const shard = ShardData.find(shard => shard.name.toLowerCase() === zone || shard.nickname.toLowerCase() === zone || shard.byte.toLowerCase() === zone);
-        if (!shard) {
-            throw new Error("Invalid zone");
-        }
-        /* 
-        generate addresses by incrementing address index in bip44 
-        check each address for utxos and add to utxoAddresses
-        until we have had gap limit number of addresses with no utxos
-        */
-        const currentUtxoAddresses: UTXOAddress[] = [];
-        const currentAddressOutpoints: { [address: string]: Outpoint[] } = {};
-        let empty = 0
-        // let accIndex = 0
-        let currentIndex = this.#lastDerivedAddressIndex + 1;
-
-        while (empty < gap) {
-            // start from the last derived address index
-            if (currentIndex > this.#lastDerivedAddressIndex) {
-                const wallet = this.deriveAddress(currentIndex, zone);
-                const address = wallet.address;
-                const privKey = wallet.privateKey;
-
-                // save the derived address
-                currentUtxoAddresses.push({ address, privKey });
-                this.#lastDerivedAddressIndex = currentIndex;
-
-
-                // Check if the address has any UTXOs
-                try {
-                    // if provider is not set, throw error
-                    if (!this.provider) throw new Error("Provider not set");
-                    const outpointsMap = await this.provider?.getOutpointsByAddress(address)
-                    if (!outpointsMap) {
-                        empty++;
-                    } else {
-                        // add the outpoints to the addressOutpoints map
-                        const outpoints = Object.values(outpointsMap);
-                        currentAddressOutpoints[address]= outpoints;
-                        empty = 0; // Reset the gap counter
-                    }
-
-                } catch (error) {
-                    throw new Error(`Error getting utxos for address ${address}: ${error}`)
-                }
-            }
-            //increment addrIndex in bip44 always
-            currentIndex++;
-        }
-        // add the addresses and outpoints to the shardWalletData
-        const shardWalletData: ShardWalletData = {
-            addresses: currentUtxoAddresses,
-            outpoints: new Map(Object.entries(currentAddressOutpoints))
-        };
-        this.#shardWallets.set(shard.nickname, shardWalletData);
-    }
-        
-    /**
-     * Derives address by incrementing address_index according to BIP44
-     */
-    deriveAddress(index: number, zone?: string): UTXOHDWallet {
-        if (!this.path) throw new Error("Missing Path");
-
-        //Case for a non quai/qi wallet where zone is not needed
-        if (!zone){
-            return this.derivePath(this.path + "/" + index.toString());
-        }
-        zone = zone.toLowerCase();
-        // Check if zone is valid
-        const shard = ShardData.find(shard => shard.name.toLowerCase() === zone || shard.nickname.toLowerCase() === zone || shard.byte.toLowerCase() === zone);
-        if (!shard) {
-            throw new Error("Invalid zone");
-        }
-
+    private deriveAddress(startingIndex: number, zone: string): AddressInfo{
+        if (!this.path) throw new Error("Missing wallet's address derivation path");
 
         let newWallet: UTXOHDWallet;
-        let addrIndex: number = 0;
-        let zoneIndex: number = index + 1;
+
+        // helper function to check if the generated address is valid for the specified zone
+        const isValidAddressForZone = (address: string) => {
+            return (getShardForAddress(address)?.nickname.toLowerCase() === zone &&
+                newWallet.coinType == COIN_TYPE &&
+                isUTXOAddress(address) == true);
+        }
+
+        let addrIndex: number = startingIndex;
         do {
             newWallet = this.derivePath(addrIndex.toString());
-            if (getShardForAddress(newWallet.address) == shard && ((newWallet.coinType == 969) == isUTXOAddress(newWallet.address)))
-            zoneIndex--;
             addrIndex++;
-        } while ( zoneIndex > 0);
+            // put a hard limit on the number of addresses to derive
+            if (addrIndex - startingIndex > 1000) {
+                throw new Error(`Failed to derive a valid address for the zone ${zone} after 1000 attempts.`);
+            }
+        } while (!isValidAddressForZone(newWallet.address));
 
-        return newWallet;   
+        const addresInfo = { address: newWallet.address, privKey: newWallet.privateKey, index: addrIndex - 1};
+        
+        return addresInfo;
     }
-    /**
-     *  Signs a UTXO transaction and returns the serialized transaction
-     */
 
+
+    // helper function to validate the zone
+    private validateZone(zone: string): boolean {
+        zone = zone.toLowerCase()
+        const shard = ShardData.find(shard => shard.name.toLowerCase() === zone ||
+            shard.nickname.toLowerCase() === zone ||
+            shard.byte.toLowerCase() === zone);
+        return shard !== undefined;
+    }
+
+    // getOutpointsByAddress queries the network node for the outpoints of the specified address
+    private async getOutpointsByAddress(address: string): Promise<Outpoint[]> {
+        try { 
+            const outpointsMap = await this.provider!.getOutpointsByAddress(address);
+            if (!outpointsMap) {
+                return [];
+            }
+            return Object.values(outpointsMap) as Outpoint[];
+        } catch (error) {
+            throw new Error(`Failed to get outpoints for address: ${address}`);
+        }
+    }
+
+    /**
+     * Initializes the wallet by generating addresses and private keys for the specified zone.
+     * The wallet will generate addresses until it has `GAP` number of naked addresses.
+     * A provider must be set before calling this method.
+     * @param zone - Required. Zone identifier used to validate the derived address.
+     * @returns {Promise<void>}
+     */
+    public async init(zone: string): Promise<void> {
+        if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
+        if (!this.provider) throw new Error("Provider not set");
+
+        let shardWalletData = this.#shardWalletsMap.get(zone);
+        if (!shardWalletData) {
+            shardWalletData = { addressesInfo: [], outpoints: new Map() };
+            this.#shardWalletsMap.set(zone, shardWalletData);  
+        }
+        
+        let nakedCount = 0;
+        let derivationIndex = 0;  
+    
+        while (nakedCount < GAP) {
+            const addressInfo = this.deriveAddress(derivationIndex, zone);
+            // store the address, private key and index
+            shardWalletData.addressesInfo.push(addressInfo);
+            // query the network node for the outpoints of the address and update the balance
+            const outpoints = await this.getOutpointsByAddress(addressInfo.address);
+            shardWalletData!.outpoints.set(addressInfo.address, outpoints);
+
+            // check if the address is naked (i.e. has no UTXOs)
+            if (outpoints.length == 0) {
+                nakedCount++;
+            } else {
+                nakedCount = 0;
+            }
+            derivationIndex = addressInfo.index + 1;
+        }
+    }
+
+    /**
+     *  Signs a Qi transaction and returns the serialized transaction
+     */
     async signTransaction(tx: QiTransactionRequest): Promise<string> {
         const txobj = QiTransaction.from((<TransactionLike>tx))
         if (!txobj.txInputs || txobj.txInputs.length == 0 || !txobj.txOutputs) throw new Error('Invalid UTXO transaction, missing inputs or outputs')
@@ -375,12 +373,12 @@ export class UTXOHDWallet extends BaseWallet {
         const address = this.getAddressFromPubKey(hexlify(pubKey));
         // get shard from address
         const shard = getShardForAddress(address);
-        if (!shard) throw new Error(`Invalid address: ${address}`);
+        if (!shard) throw new Error(`Invalid shard location for address: ${address}`);
         // get the wallet data corresponding to the shard
-        const shardWalletData = this.#shardWallets.get(shard.nickname);
+        const shardWalletData = this.#shardWalletsMap.get(shard.nickname);
         if (!shardWalletData) throw new Error(`Missing wallet data for shard: ${shard.name}`);
         // get the private key corresponding to the address
-        const privKey = shardWalletData.addresses.find(utxoAddr => utxoAddr.address === address)?.privKey;
+        const privKey = shardWalletData.addressesInfo.find(utxoAddr => utxoAddr.address === address)?.privKey;
         if (!privKey) throw new Error(`Missing private key for ${hexlify(pubKey)}`);
         // create the schnorr signature
         const signature = schnorr.sign(hash, getBytes(privKey) );
@@ -402,10 +400,10 @@ export class UTXOHDWallet extends BaseWallet {
             const shard = getShardForAddress(address);
             if (!shard) throw new Error(`Invalid address: ${address}`);
             // get the wallet data corresponding to the shard
-            const shardWalletData = this.#shardWallets.get(shard.nickname);
+            const shardWalletData = this.#shardWalletsMap.get(shard.nickname);
             if (!shardWalletData) throw new Error(`Missing wallet data for shard: ${shard.name, shard.nickname}`);
 
-            const utxoAddrObj = shardWalletData.addresses.find(utxoAddr => utxoAddr.address === address);
+            const utxoAddrObj = shardWalletData.addressesInfo.find(utxoAddr => utxoAddr.address === address);
             if (!utxoAddrObj) {
                 throw new Error(`Private key not found for public key associated with address: ${address}`);
             }
