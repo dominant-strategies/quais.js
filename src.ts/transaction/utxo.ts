@@ -2,7 +2,6 @@ import { getAddress } from "../address/index";
 import { getBigInt } from "../utils/index";
 import type { BigNumberish } from "../utils/index";
 
-
 export type Outpoint = {
     Txhash: string;
     Index: number;
@@ -29,15 +28,19 @@ export type UTXOTransactionOutputLike = UTXOEntryLike;
 export type UTXOTransactionOutput = UTXOEntry;
 
 export type TxOutput = {
-    Address: string;
-    Denomination: number;
+    address: Uint8Array;
+    denomination: number;
 };
 
 export type TxInput = {
-    txhash: string;
-    index: number;
-    pubKey: Uint8Array;
-}
+    previous_out_point: {
+        hash: {
+            value: Uint8Array;
+        };  
+        index: number;
+    };
+    pub_key: Uint8Array;  
+};
 
 export interface UTXOEntry {
     denomination: null | bigint;
