@@ -1248,10 +1248,13 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
     }
 
     _getConnection(shard?: string): FetchRequest {
-        const connection = this.connect[this.connect.length - 1]!.clone();
+
+        let connection
         if (typeof shard === "string") {
             const shardBytes = this.shardBytes(shard);
-            connection.url = this._urlMap.get(shardBytes) ?? connection.url;
+            connection = this._urlMap.get(shardBytes) ?? this.connect[this.connect.length - 1]!.clone();
+        } else {
+            connection = this.connect[this.connect.length - 1]!.clone();
         }
         return connection
     }
