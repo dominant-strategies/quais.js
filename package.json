@@ -39,6 +39,9 @@
     "rollup": "3.21.5",
     "semver": "7.5.4",
     "ts-mocha": "^10.0.0",
+    "typedoc": "^0.25.13",
+    "typedoc-plugin-markdown": "^4.0.1",
+    "typedoc-plugin-remove-references": "^0.0.6",
     "typescript": "5.0.4",
     "uglify-js": "3.17.0"
   },

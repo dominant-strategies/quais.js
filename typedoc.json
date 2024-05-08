@@ -1,0 +1,34 @@
+{
+	// base config
+	"out": "docs",
+	"tsconfig": "tsconfig.base.json",
+	"entryPoints": [
+		"./src.ts/abi/index.ts",
+		"./src.ts/address/index.ts",
+		"./src.ts/constants/index.ts",
+		"./src.ts/contract/index.ts",
+		"./src.ts/crypto/index.ts",
+		"./src.ts/hash/index.ts",
+		"./src.ts/providers/index.ts",
+		"./src.ts/transaction/index.ts",
+		"./src.ts/utils/index.ts",
+		"./src.ts/wallet/index.ts"
+	],
+
+	// specific inclusions and exclusions
+	"excludeProtected": true,
+	"excludeNotDocumented": true,
+	"exclude": ["./src.ts/_admin/**/*", "./src.ts/_tests/**/*", "./src.ts/testcases/**/*"],
+	"includes": "./src.ts",
+
+	// plugins
+	"plugin": ["typedoc-plugin-remove-references"], // "typedoc-plugin-markdown"
+
+	"navigation": {
+		"includeCategories": true,
+		"includeGroups": false
+	}
+	// "categorizeByGroup": true
+	// "entryPointStrategy": "resolve", // default setting
+	// "excludePrivate": true, // default
+}
