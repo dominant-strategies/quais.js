@@ -52,8 +52,8 @@ export interface ProtoTransaction {
     originating_tx_hash?: string
     etx_index?: number
     etx_sender?: Uint8Array
-    tx_ins?: Array<TxInput>
-    tx_outs?: Array<TxOutput>
+    tx_ins?: { tx_ins : Array<TxInput>}
+    tx_outs?: { tx_outs: Array<TxOutput> }
     signature?: Uint8Array
 }
 

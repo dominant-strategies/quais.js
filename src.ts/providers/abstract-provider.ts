@@ -927,8 +927,8 @@ export class AbstractProvider implements Provider {
             const addr = Array.isArray((<any>request)[key])
                 ? (
                 "address" in <any>request[key][0]
-                    ? (<TxOutput[]>(<any>request)[key]).map(it => resolveAddress(it.Address))
-                    : (<TxInput[]>(<any>request)[key]).map(it => resolveAddress(getAddress(keccak256("0x" + SigningKey.computePublicKey(it.pubKey).substring(4)).substring(26))))
+                    ? (<TxOutput[]>(<any>request)[key]).map(it => resolveAddress(hexlify(it.address)))
+                    : (<TxInput[]>(<any>request)[key]).map(it => resolveAddress(getAddress(keccak256("0x" + SigningKey.computePublicKey(it.pub_key).substring(4)).substring(26))))
                 ) : resolveAddress((<any>request)[key]);
             if (isPromise(addr)) {
                 if (Array.isArray(addr)) {

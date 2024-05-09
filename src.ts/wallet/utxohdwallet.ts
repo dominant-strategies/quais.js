@@ -351,7 +351,7 @@ export class UTXOHDWallet extends BaseWallet {
 
     async signTransaction(tx: QiTransactionRequest): Promise<string> {
         const txobj = QiTransaction.from((<TransactionLike>tx))
-        if (!txobj.txInputs || !txobj.txOutputs) throw new Error('Invalid UTXO transaction, missing inputs or outputs')
+        if (!txobj.txInputs || txobj.txInputs.length == 0 || !txobj.txOutputs) throw new Error('Invalid UTXO transaction, missing inputs or outputs')
         
         const hash = keccak_256(txobj.unsignedSerialized)
 
@@ -371,8 +371,8 @@ export class UTXOHDWallet extends BaseWallet {
     // createSchnorrSignature returns a schnorr signature for the given message and private key
     private createSchnorrSignature(input: TxInput, hash: Uint8Array): string {
         // get the private key that generates the address for the first input
-        if (!input.pubKey) throw new Error('Missing public key for input');
-        const pubKey = input.pubKey;
+        if (!input.pub_key) throw new Error('Missing public key for input');
+        const pubKey = input.pub_key;
         const address = this.getAddressFromPubKey(hexlify(pubKey));
         const privKey = this.utxoAddresses.find(utxoAddr => utxoAddr.address === address)?.privKey;
         if (!privKey) throw new Error(`Missing private key for ${hexlify(pubKey)}`);
@@ -389,7 +389,7 @@ export class UTXOHDWallet extends BaseWallet {
         // Collect private keys corresponding to the addresses of the inputs
         const privKeysSet = new Set<string>();
         tx.txInputs!.forEach(input => {
-            const address = computeAddress(hexlify(input.pubKey));
+            const address = computeAddress(hexlify(input.pub_key));
             const utxoAddrObj = this.utxoAddresses.find(utxoAddr => utxoAddr.address === address);
             if (!utxoAddrObj) {
                 throw new Error(`Private key not found for public key associated with address: ${address}`);

@@ -22,7 +22,8 @@ import { accessListify } from "../transaction/index.js";
 import {
     defineProperties, getBigInt, hexlify, isHexString, toQuantity, toUtf8Bytes,
     isError, makeError, assert, assertArgument,
-    FetchRequest, resolveProperties
+    FetchRequest, resolveProperties,
+    getBytes
 } from "../utils/index.js";
 
 import { AbstractProvider, UnmanagedSubscriber } from "./abstract-provider.js";
@@ -343,9 +344,10 @@ export interface QuaiJsonRpcTransactionRequest extends AbstractJsonRpcTransactio
              // Make sure the from matches the sender
              if (tx.outputs) {
                  for (let i = 0; i < tx.outputs.length; i++) {
-                     if (tx.outputs[i].Address) {
+                     if (tx.outputs[i].address) {
                          promises.push((async () => {
-                             tx.outputs![i].Address = await resolveAddress(tx.outputs![i].Address);
+                             const address = await resolveAddress(hexlify(tx.outputs![i].address));
+                             tx.outputs![i].address = getBytes(address);
                          })());
                      }
                  }
