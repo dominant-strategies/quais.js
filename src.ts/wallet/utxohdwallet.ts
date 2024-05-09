@@ -386,14 +386,22 @@ export class UTXOHDWallet extends BaseWallet {
     private createMuSigSignature(tx: QiTransaction, hash: Uint8Array): string {
         const musig = MuSigFactory(nobleCrypto);
 
-        const privKeys = tx.txInputs!.map(input => {
+        // Collect private keys corresponding to the addresses of the inputs
+        const privKeysSet = new Set<string>();
+        tx.txInputs!.forEach(input => {
             const address = computeAddress(hexlify(input.pubKey));
             const utxoAddrObj = this.utxoAddresses.find(utxoAddr => utxoAddr.address === address);
-            return utxoAddrObj ? utxoAddrObj.privKey : null;
-        }).filter(privKey => privKey !== null);
+            if (!utxoAddrObj) {
+                throw new Error(`Private key not found for public key associated with address: ${address}`);
+            }
+            privKeysSet.add(utxoAddrObj.privKey);
+        });
+        const privKeys = Array.from(privKeysSet);
 
+        // Create an array of public keys corresponding to the private keys for musig aggregation
         const pubKeys: Uint8Array[] = privKeys.map(privKey => nobleCrypto.getPublicKey(getBytes(privKey!), true)).filter(pubKey => pubKey !== null) as Uint8Array[];
 
+        // Generate nonces for each public key
         const nonces = pubKeys.map(pk => musig.nonceGen({publicKey: getBytes(pk!)}));
         const aggNonce = musig.nonceAgg(nonces);
 
@@ -403,7 +411,7 @@ export class UTXOHDWallet extends BaseWallet {
             pubKeys
         );
 
-        //Each signer creates a partial signature
+        // Create partial signatures for each private key
         const partialSignatures = privKeys.map((sk, index) =>
             musig.partialSign({
                 secretKey: getBytes(sk || ''),
@@ -415,8 +423,7 @@ export class UTXOHDWallet extends BaseWallet {
 
         // Aggregate the partial signatures into a final aggregated signature
         const finalSignature = musig.signAgg(partialSignatures, signingSession);
-
-        // const isValid = schnorr.verify(finalSignature, hash, aggPublicKey);
+        
         return hexlify(finalSignature);
     }
 

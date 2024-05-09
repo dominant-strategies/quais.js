@@ -46,3 +46,5 @@ export type {
 } from "./json-keystore.js"
 
 export { UTXOHDWallet } from "./utxohdwallet.js";
+
+export { nobleCrypto } from "./musig-crypto.js";
