@@ -45,28 +45,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     get hash(): null | string {
         if (this.signature == null) { return null; }
         if (this.#hash) { return this.#hash; }
-        if (this.txInputs.length < 1 || this.txOutputs.length < 1) {
-            throw new Error("Transaction must have at least one input and one output");
-        }
-        const destUtxo = isUTXOAddress(hexlify(this.txOutputs[0].address) || "");
-
-        const pubKey = hexlify(this.txInputs[0].pub_key);
-        const senderAddr = computeAddress(pubKey || "")
-
-        const originUtxo = isUTXOAddress(senderAddr);
-
-        if (!this.destShard|| !this.originShard) {
-            throw new Error(`Invalid shards: origin ${this.originShard} ->  destination ${this.destShard} (address: ${senderAddr})`);
-        }
-        if(this.isExternal && destUtxo !== originUtxo) {
-            throw new Error("Cross-shard & cross-ledger transactions are not supported");
-        }
-
-        let hash = keccak256(this.serialized)
-        hash = '0x' + this.originShard+ (originUtxo ? 'F' : '1') + hash.charAt(5) + this.originShard+ (destUtxo ? 'F' : '1') + hash.slice(9)
-
-        //TODO alter comparison
-        return hash;
+        return this.unsignedHash
     }
     set hash(value: null | string) {
         this.#hash = value;
