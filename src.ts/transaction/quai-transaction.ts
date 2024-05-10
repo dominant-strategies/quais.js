@@ -110,22 +110,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     get hash(): null | string {
         if (this.signature == null) { return null; }
         if (this.#hash) { return this.#hash; }
-        const destUtxo = isUTXOAddress(this.to || "");
-
-        const originUtxo = isUTXOAddress(this.from);
-
-        if (!this.destShard|| !this.originShard) {
-            throw new Error("Invalid Shard for from or to address");
-        }
-        if(this.isExternal && destUtxo !== originUtxo) {
-            throw new Error("Cross-shard & cross-ledger transactions are not supported");
-        }
-
-        let hash = keccak256(this.serialized)
-        hash = '0x' + this.originShard+ (originUtxo ? 'F' : '1') + hash.charAt(5) + this.originShard+ (destUtxo ? 'F' : '1') + hash.slice(9)
-
-        //TODO alter comparison
-        return hash;
+        return this.unsignedHash
     }
     set hash(value: null | string) {
         this.#hash = value;
