@@ -235,7 +235,7 @@ function concisify(items: Array<string>): Array<string> {
 }
 
 
-async function getSubscription(_event: ProviderEvent, provider: AbstractProvider): Promise<Subscription> {
+async function getSubscription(_event: ProviderEvent, provider: AbstractProvider<any>): Promise<Subscription> {
     if (_event == null) { throw new Error("invalid event"); }
 
     // Normalize topic array info an EventFilter
@@ -324,7 +324,7 @@ export interface AbstractProviderPlugin {
     /**
      *  Creates a new instance of the plugin, connected to %%provider%%.
      */
-    connect(provider: AbstractProvider): AbstractProviderPlugin;
+    connect(provider: AbstractProvider<any>): AbstractProviderPlugin;
 }
 
 /**
@@ -493,9 +493,9 @@ const defaultOptions = {
  *  formatting output results as well as tracking events for consistent
  *  behaviour on an eventually-consistent network.
  */
-export class AbstractProvider implements Provider {
+export class AbstractProvider<C = FetchRequest> implements Provider {
 
-    _urlMap: Map<string, FetchRequest>;
+    _urlMap: Map<string, C>;
     #connect: FetchRequest[];
     #subs: Map<string, Sub>;
     #plugins: Map<string, AbstractProviderPlugin>;
@@ -559,56 +559,31 @@ export class AbstractProvider implements Provider {
         this._urlMap = new Map();
     }
 
-//    async initUrlMap(urls: string[] | FetchRequest): Promise<void> {
-//        if (urls instanceof FetchRequest) {
-//            const primeUrl = urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":9001";
-//            this._urlMap.set('0x', primeUrl);
-//            urls.url = primeUrl;
-//            this.#connect.push(urls);
-//            const shards = await this.getRunningLocations();
-//            shards.forEach((shard) => {
-//                const port = 9200 + 20 * shard[0] + shard[1];
-//                this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":" + port);
-//            });
-//            return;
-//        }
-//        for (const url of urls) {
-//            const primeUrl = url.split(":")[0] + ":" + url.split(":")[1] + ":9001";
-//            this._urlMap.set('0x', primeUrl);
-//            this.#connect.push(new FetchRequest(primeUrl));
-//            const shards = await this.getRunningLocations(); // Now waits for the previous to complete
-//            shards.forEach((shard) => {
-//                const port = 9200 + 20 * shard[0] + shard[1];
-//                this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, url.split(":")[0] + ":" + url.split(":")[1] + ":" + port);
-//            });
-//        }
-//
-//    }
-
-    async initUrlMap(urls: string[] | FetchRequest): Promise<void> {
+    async initUrlMap<U = string[] | FetchRequest>(urls: U): Promise<void> {
         if (urls instanceof FetchRequest) {
             urls.url = urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":9001";
-            this._urlMap.set('0x', urls);
+            this._urlMap.set('0x', urls as C);
             this.#connect.push(urls);
             const shards = await this.getRunningLocations();
             shards.forEach((shard) => {
                 const port = 9200 + 20 * shard[0] + shard[1];
-                this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, new FetchRequest(urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":" + port));
+                this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, new FetchRequest(urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":" + port) as C);
             });
             return;
         }
-        for (const url of urls) {
-            const primeUrl = url.split(":")[0] + ":" + url.split(":")[1] + ":9001";
-            const primeConnect = new FetchRequest(primeUrl);
-            this._urlMap.set('0x', primeConnect);
-            this.#connect.push(primeConnect);
-            const shards = await this.getRunningLocations();
-            shards.forEach((shard) => {
-                const port = 9200 + 20 * shard[0] + shard[1];
-                this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, new FetchRequest(url.split(":")[0] + ":" + url.split(":")[1] + ":" + port));
-            });
+        if (Array.isArray(urls)) {
+            for (const url of urls) {
+                const primeUrl = url.split(":")[0] + ":" + url.split(":")[1] + ":9001";
+                const primeConnect = new FetchRequest(primeUrl);
+                this._urlMap.set('0x', primeConnect as C);
+                this.#connect.push(primeConnect);
+                const shards = await this.getRunningLocations();
+                shards.forEach((shard) => {
+                    const port = 9200 + 20 * shard[0] + shard[1];
+                    this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, new FetchRequest(url.split(":")[0] + ":" + url.split(":")[1] + ":" + port) as C);
+                });
+            }
         }
-
     }
 
     shardBytes(shard: string): string {

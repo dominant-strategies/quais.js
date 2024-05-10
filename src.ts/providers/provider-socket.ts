@@ -10,7 +10,7 @@
  */
 
 import { UnmanagedSubscriber } from "./abstract-provider.js";
-import { assert, assertArgument, makeError } from "../utils/index.js";
+import {assert, assertArgument, makeError} from "../utils/index.js";
 import { JsonRpcApiProvider } from "./provider-jsonrpc.js";
 
 import type { Subscriber, Subscription } from "./abstract-provider.js";
@@ -19,6 +19,7 @@ import type {
     JsonRpcApiProviderOptions, JsonRpcError, JsonRpcPayload, JsonRpcResult
 } from "./provider-jsonrpc.js";
 import type { Networkish } from "./network.js";
+import type { WebSocketLike } from "./provider-websocket.js";
 
 
 type JsonRpcSubscription = {
@@ -181,7 +182,7 @@ export class SocketEventSubscriber extends SocketSubscriber {
  *  socket, which can subscribe and receive real-time messages over
  *  its communication channel.
  */
-export class SocketProvider extends JsonRpcApiProvider {
+export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     #callbacks: Map<number, { payload: JsonRpcPayload, resolve: (r: any) => void, reject: (e: Error) => void }>;
 
     // Maps each filterId to its subscriber
@@ -263,7 +264,7 @@ export class SocketProvider extends JsonRpcApiProvider {
         }
     }
 
-    async _send(payload: JsonRpcPayload | Array<JsonRpcPayload>): Promise<Array<JsonRpcResult | JsonRpcError>> {
+    async _send(payload: JsonRpcPayload | Array<JsonRpcPayload>, shard?: string): Promise<Array<JsonRpcResult | JsonRpcError>> {
         // WebSocket provider doesn't accept batches
         assertArgument(!Array.isArray(payload), "WebSocket does not support batch send", "payload", payload);
 
@@ -278,7 +279,7 @@ export class SocketProvider extends JsonRpcApiProvider {
         await this._waitUntilReady();
 
         // Write the request to the socket
-        await this._write(JSON.stringify(payload));
+        await this._write(JSON.stringify(payload), shard);
 
         return <Array<JsonRpcResult | JsonRpcError>>[ await promise ];
     }
@@ -345,7 +346,7 @@ export class SocketProvider extends JsonRpcApiProvider {
      *  Sub-classes **must** override this to send %%message%% over their
      *  transport.
      */
-    async _write(message: string): Promise<void> {
+    async _write(message: string, shard?: string): Promise<void> {
         throw new Error("sub-classes must override this");
     }
 }

@@ -1,5 +1,5 @@
 
-import { assert } from "../utils/index.js";
+import { assert, FetchRequest } from "../utils/index.js";
 
 import { FallbackProvider } from "./provider-fallback.js";
 import { JsonRpcProvider } from "./provider-jsonrpc.js";
@@ -60,7 +60,7 @@ const Testnets = "goerli kovan sepolia classicKotti optimism-goerli arbitrum-goe
  *      exclusive: [ "quaiscan", "infura" ]
  *    });
  */
-export function getDefaultProvider(network: string | string[] | Networkish | WebSocketLike, options?: any): AbstractProvider {
+export function getDefaultProvider(network: string | string[] | Networkish | WebSocketLike, options?: any): AbstractProvider<FetchRequest | WebSocketLike> {
     if (options == null) { options = { }; }
 
     const allowService = (name: string) => {
@@ -87,7 +87,7 @@ export function getDefaultProvider(network: string | string[] | Networkish | Web
     }
 
     if (Array.isArray(network) && (network[0].match(/^wss?:/) || isWebSocketLike(network[0]))) {
-        return new WebSocketProvider(network[0]);
+        return new WebSocketProvider(network);
     }
 
     if (Array.isArray(network)) {

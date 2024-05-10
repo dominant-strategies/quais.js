@@ -38,7 +38,7 @@ export class FilterIdSubscriber implements Subscriber {
      *  and [[_emitResults]] to setup the subscription and provide the event
      *  to the %%provider%%.
      */
-    constructor(provider: JsonRpcApiProvider) {
+    constructor(provider: JsonRpcApiProvider<any>) {
         this.#provider = provider;
 
         this.#filterIdPromise = null;
@@ -159,21 +159,21 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
      *  Creates a new **FilterIdEventSubscriber** attached to %%provider%%
      *  listening for %%filter%%.
      */
-    constructor(provider: JsonRpcApiProvider, filter: EventFilter) {
+    constructor(provider: JsonRpcApiProvider<any>, filter: EventFilter) {
         super(provider);
         this.#event = copy(filter);
     }
 
-    _recover(provider: AbstractProvider): Subscriber {
+    _recover(provider: AbstractProvider<any>): Subscriber {
         return new PollingEventSubscriber(provider, this.#event);
     }
 
-    async _subscribe(provider: JsonRpcApiProvider): Promise<string> {
+    async _subscribe(provider: JsonRpcApiProvider<any>): Promise<string> {
         const filterId = await provider.send("quai_newFilter", [ this.#event ]);
         return filterId;
     }
 
-    async _emitResults(provider: JsonRpcApiProvider, results: Array<any>): Promise<void> {
+    async _emitResults(provider: JsonRpcApiProvider<any>, results: Array<any>): Promise<void> {
         for (const result of results) {
             provider.emit(this.#event, provider._wrapLog(result, provider._network));
         }
@@ -186,11 +186,11 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
  *  @_docloc: api/providers/abstract-provider
  */
 export class FilterIdPendingSubscriber extends FilterIdSubscriber {
-    async _subscribe(provider: JsonRpcApiProvider): Promise<string> {
+    async _subscribe(provider: JsonRpcApiProvider<any>): Promise<string> {
         return await provider.send("quai_newPendingTransactionFilter", [ ]);
     }
 
-    async _emitResults(provider: JsonRpcApiProvider, results: Array<any>): Promise<void> {
+    async _emitResults(provider: JsonRpcApiProvider<any>, results: Array<any>): Promise<void> {
         for (const result of results) {
             provider.emit("pending", result);
         }

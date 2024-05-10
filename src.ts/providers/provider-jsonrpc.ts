@@ -282,7 +282,7 @@ export interface QuaiJsonRpcTransactionRequest extends AbstractJsonRpcTransactio
  export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      address!: string;
 
-     constructor(provider: JsonRpcApiProvider, address: string) {
+     constructor(provider: JsonRpcApiProvider<any>, address: string) {
          super(provider);
          address = getAddress(address);
          defineProperties<JsonRpcSigner>(this, { address });
@@ -489,7 +489,7 @@ type Payload = { payload: JsonRpcPayload, resolve: ResolveFunc, reject: RejectFu
  *  - a sub-class MUST override _send
  *  - a sub-class MUST call the `_start()` method once connected
  */
-export abstract class JsonRpcApiProvider extends AbstractProvider {
+export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvider<C> {
 
     #options: Required<JsonRpcApiProviderOptions>;
 
@@ -676,7 +676,9 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     async _perform(req: PerformActionRequest): Promise<any> {
         // Legacy networks do not like the type field being passed along (which
         // is fair), so we delete type if it is 0 and a non-EIP-1559 network
-        await this.initPromise;
+        if (req.method !== 'getRunningLocations') {
+            await this.initPromise;
+        }
         if (req.method === "call" || req.method === "estimateGas") {
             let tx = req.transaction;
             if (tx && tx.type != null && getBigInt(tx.type)) {
@@ -1256,7 +1258,7 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         } else {
             connection = this.connect[this.connect.length - 1]!.clone();
         }
-        return connection
+        return new FetchRequest(connection.url);
     }
 
     async send(method: string, params: Array<any> | Record<string, any>, shard?: string): Promise<any> {
