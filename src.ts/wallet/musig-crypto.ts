@@ -1,6 +1,6 @@
 import { sha256 } from '@noble/hashes/sha256';
 import { secp256k1, schnorr } from '@noble/curves/secp256k1';
-import * as baseCrypto from './base-crypto';
+import * as baseCrypto from './base-crypto.js';
 
 
 export const nobleCrypto = {

@@ -1,13 +1,13 @@
-import {keccak256} from "../crypto";
-import {AbstractTransaction, computeAddress, TransactionLike, TxInput, TxOutput} from "./index";
+import {keccak256} from "../crypto/index.js";
+import {AbstractTransaction, computeAddress, TransactionLike, TxInput, TxOutput} from "./index.js";
 import {
     assertArgument,
     decodeProtoTransaction,
     getBytes, getShardForAddress,
     hexlify, isUTXOAddress,
     toBigInt
-} from "../utils";
-import {formatNumber} from "../providers/format";
+} from "../utils/index.js";
+import {formatNumber} from "../providers/format.js";
 import { ProtoTransaction} from "./abstract-transaction";
 
 /**

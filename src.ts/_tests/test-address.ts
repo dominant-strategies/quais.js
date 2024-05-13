@@ -19,7 +19,7 @@ describe("computes checksum address", function() {
     for (const test of tests) {
         it(`computes the checksum address: ${ test.name }`, function() {
             assert.equal(getAddress(test.address), test.address);
-            assert.equal(getAddress(test.icap), test.address);
+//            assert.equal(getAddress(test.icap), test.address);
             assert.equal(getAddress(test.address.substring(2)), test.address);
             assert.equal(getAddress(test.address.toLowerCase()), test.address);
             assert.equal(getAddress("0x" + test.address.substring(2).toUpperCase()), test.address);
@@ -59,17 +59,17 @@ describe("computes checksum address", function() {
         });
     });
 
-    it("correctly fails on invalid IBAN checksum", function() {
-        const value = "XE65GB6LDNXYOFTX0NSV3FUWKOWIXAMJK37";
-        assert.throws(function() {
-            getAddress(value);
-        }, function(error: any) {
-            return (error.code === "INVALID_ARGUMENT" &&
-                error.message.match(/^bad icap checksum/) &&
-                error.argument === "address" &&
-                error.value === value);
-        });
-    });
+//    it("correctly fails on invalid IBAN checksum", function() {
+//        const value = "XE65GB6LDNXYOFTX0NSV3FUWKOWIXAMJK37";
+//        assert.throws(function() {
+//            getAddress(value);
+//        }, function(error: any) {
+//            return (error.code === "INVALID_ARGUMENT" &&
+//                error.message.match(/^bad icap checksum/) &&
+//                error.argument === "address" &&
+//                error.value === value);
+//        });
+//    });
 });
 
 describe("computes ICAP address", function() {

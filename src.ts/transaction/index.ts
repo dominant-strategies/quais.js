@@ -41,3 +41,6 @@ export type { TransactionLike } from "./abstract-transaction.js";
 export type {TxInput, TxOutput} from "./utxo.js";
 
 export { QiTransaction } from "./qi-transaction.js";
+export { QiTransactionLike } from "./qi-transaction.js";
+export { QuaiTransaction } from "./quai-transaction.js";
+export { QuaiTransactionLike } from "./quai-transaction.js";

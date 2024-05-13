@@ -1,6 +1,6 @@
-import { getAddress } from "../address/index";
-import { getBigInt } from "../utils/index";
-import type { BigNumberish } from "../utils/index";
+import { getAddress } from "../address/index.js";
+import { getBigInt } from "../utils/index.js";
+import type { BigNumberish } from "../utils/index.js";
 
 /**
  *  @TODO write documentation for this type.

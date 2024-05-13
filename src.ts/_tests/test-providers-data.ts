@@ -20,8 +20,8 @@ import { stall } from "./utils.js";
 //setupProviders();
 
 
-const providerC1 = new quais.JsonRpcProvider(process.env.RPC_URL);
-const wallet = new quais.Wallet(process.env.FAUCET_PRIVATEKEY || '', providerC1); 
+const providerC1 = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
+const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', providerC1);
 const destinationC1 = '0x0047f9CEa7662C567188D58640ffC48901cde02a'
 const destinationC2 = '0x011ae0a1Bd5B71b4F16F8FdD3AEF278C3D042449'
 
@@ -93,7 +93,7 @@ async function sendTransaction(to: string){
         console.log("Nonce: ", await providerC1.getTransactionCount(wallet.address, 'latest'),)
         do{
         typeValue = getTxType(wallet.address, to);
-        const gas = await getRPCGasPrice(process.env.RPC_URL);
+        const gas = await getRPCGasPrice(process.env.CYPRUS1URL);
         let tx: {
             from: string;
             to: string;
@@ -139,7 +139,7 @@ async function fetchRPCBlock(blockNumber: string | null) {
     try {
         let response;
         do {
-        response = await axios.post(process.env.RPC_URL || "http://localhost:8610", {
+        response = await axios.post(process.env.CYPRUS1URL || "http://localhost:8610", {
         jsonrpc: "2.0",
         method: "quai_getBlockByNumber",
         params: [
@@ -268,7 +268,7 @@ describe("Test Transaction operations", function() {
 
     it('should fetch balance after internal tx', async function () {
         this.timeout(60000)
-        const oldBal = await fetchRPCBalance(destinationC1, process.env.RPC_URL || "http://localhost:8610");
+        const oldBal = await fetchRPCBalance(destinationC1, process.env.CYPRUS1URL || "http://localhost:8610");
         internalTx = await sendTransaction(destinationC1);
         await stall(30000)
         const expectedBal = BigInt(internalTx.value);
@@ -279,7 +279,7 @@ describe("Test Transaction operations", function() {
 
     it('should get transaction receipt for internal tx', async function () {
         this.timeout(60000)
-        const receipt = await fetchRPCTxReceipt(internalTx.hash, process.env.RPC_URL || "http://localhost:8610");
+        const receipt = await fetchRPCTxReceipt(internalTx.hash, process.env.CYPRUS1URL || "http://localhost:8610");
         const expectedReceipt = {
             blockHash: receipt.blockHash,
             contractAddress: receipt.contractAddress || null,
@@ -310,7 +310,7 @@ describe("Test Transaction operations", function() {
         this.timeout(120000)
         internalToExternalTx = await sendTransaction(destinationC2);
         await stall(60000);
-        const receipt = await fetchRPCTxReceipt(internalToExternalTx.hash, process.env.RPC_URL || "http://localhost:8610");
+        const receipt = await fetchRPCTxReceipt(internalToExternalTx.hash, process.env.CYPRUS1URL || "http://localhost:8610");
         await stall(30000);
         const etx = receipt.etxs[0];
         const expectedReceipt = {
