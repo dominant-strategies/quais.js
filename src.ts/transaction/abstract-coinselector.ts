@@ -17,10 +17,10 @@ export type SelectedCoinsResult = {
  * handle spend and change outputs.
  * 
  * This class is abstract and should not be used directly. Sub-classes should
- * implement the [[performSelection]] method to provide the actual coin
+ * implement the {@link AbstractCoinSelector.performSelection | **performSelection** } method to provide the actual coin
  * selection logic.
  * 
- * @abstract
+ * @category Transaction
  */
 export abstract class AbstractCoinSelector {
     #availableUXTOs: UTXO[];
@@ -60,19 +60,22 @@ export abstract class AbstractCoinSelector {
     }
 
     /**
-     * This method should be implemented by sub-classes to provide the actual
-     * coin selection logic. It should select UTXOs from the available UTXOs
-     * that sum to the target amount and return the selected UTXOs as well as
-     * the spend and change outputs.
-     * @param target The target amount to select UTXOs for.
+     *  This method should be implemented by sub-classes to provide the actual
+     *  coin selection logic. It should select UTXOs from the available UTXOs
+     *  that sum to the target amount and return the selected UTXOs as well as
+     *  the spend and change outputs.
+     *  
+     *  @param {SpendTarget} target - The target address and value to spend.
+     *  @returns {SelectedCoinsResult} The selected UTXOs and outputs.
      */
     abstract performSelection(target: SpendTarget): SelectedCoinsResult;
 
     /**
-     * Validates the provided UTXO instance. In order to be valid for coin 
-     * selection, the UTXO must have a valid address and denomination.
-     * @param utxo The UTXO instance to validate.
-     * @throws An error if the UTXO instance is invalid.
+     *  Validates the provided UTXO instance. In order to be valid for coin 
+     *  selection, the UTXO must have a valid address and denomination.
+     * 
+     *  @param {UTXO} utxo - The UTXO to validate.
+     *  @throws {Error} If the UTXO is invalid.
      */
     protected _validateUTXO(utxo: UTXO): void {
         if (utxo.address == null) {

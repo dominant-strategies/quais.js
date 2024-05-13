@@ -10,7 +10,7 @@ import { AnonymousCoder } from "./anonymous.js";
 import type { Reader } from "./abstract-coder.js";
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export function pack(writer: Writer, coders: ReadonlyArray<Coder>, values: Array<any> | { [ name: string ]: any }): number {
     let arrayValues: Array<any> = [ ];
@@ -74,7 +74,7 @@ export function pack(writer: Writer, coders: ReadonlyArray<Coder>, values: Array
 }
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export function unpack(reader: Reader, coders: ReadonlyArray<Coder>): Result {
     let values: Array<any> = [];
@@ -131,7 +131,7 @@ export function unpack(reader: Reader, coders: ReadonlyArray<Coder>): Result {
 }
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export class ArrayCoder extends Coder {
     readonly coder!: Coder;

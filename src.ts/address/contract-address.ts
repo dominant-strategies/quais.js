@@ -17,22 +17,29 @@ import type { BigNumberish, BytesLike } from "../utils/index.js";
 // http://ethereum.stackexchange.com/questions/760/how-is-the-address-of-an-ethereum-contract-computed
 
 /**
- *  Returns the address that would result from a ``CREATE`` for %%tx%%.
+ *  Returns the address that would result from a `CREATE` for `tx`.
  *
  *  This can be used to compute the address a contract will be
  *  deployed to by an EOA when sending a deployment transaction (i.e.
- *  when the ``to`` address is ``null``).
+ *  when the `to` address is `null`).
  *
  *  This can also be used to compute the address a contract will be
  *  deployed to by a contract, by using the contract's address as the
- *  ``to`` and the contract's nonce.
- *
+ *  `to` and the contract's nonce.
+ *  
  *  @example
- *    from = "0x8ba1f109551bD432803012645Ac136ddd64DBA72";
- *    nonce = 5;
+ *  ```js
+ *  from = "0x8ba1f109551bD432803012645Ac136ddd64DBA72";
+ *  nonce = 5;
  *
- *    getCreateAddress({ from, nonce });
- *    //_result:
+ *  getCreateAddress({ from, nonce });
+ *  //_result:
+ *  ```
+ * 
+ *  @param {object} tx - The transaction object.
+ *  @param {string} tx.from - The address of the sender.
+ * 
+ *  @category Address
  */
 export function getCreateAddress(tx: { from: string, nonce: BigNumberish }): string {
     const from = getAddress(tx.from);
@@ -43,27 +50,38 @@ export function getCreateAddress(tx: { from: string, nonce: BigNumberish }): str
 }
 
 /**
- *  Returns the address that would result from a ``CREATE2`` operation
- *  with the given %%from%%, %%salt%% and %%initCodeHash%%.
+ *  Returns the address that would result from a `CREATE2` operation
+ *  with the given `from`, `salt` and `initCodeHash`.
  *
- *  To compute the %%initCodeHash%% from a contract's init code, use
- *  the [[keccak256]] function.
+ *  To compute the `initCodeHash` from a contract's init code, use
+ *  the [**keccak256**](../functions/keccak256) function.
  *
- *  For a quick overview and example of ``CREATE2``, see [[link-ricmoo-wisps]].
- *
+ *  For a quick overview and example of `CREATE2`, see [Wisps: The Magical World of Create2](https://blog.ricmoo.com/wisps-the-magical-world-of-create2-5c2177027604).
+ * 
  *  @example
- *    // The address of the contract
- *    from = "0x8ba1f109551bD432803012645Ac136ddd64DBA72"
+ *  ```js
+ *  // The address of the contract
+ *  from = "0x8ba1f109551bD432803012645Ac136ddd64DBA72"
  *
- *    // The salt
- *    salt = id("HelloWorld")
+ *  // The salt
+ *  salt = id("HelloWorld")
  *
- *    // The hash of the initCode
- *    initCode = "0x6394198df16000526103ff60206004601c335afa6040516060f3";
- *    initCodeHash = keccak256(initCode)
+ *  // The hash of the initCode
+ *  initCode = "0x6394198df16000526103ff60206004601c335afa6040516060f3";
+ *  initCodeHash = keccak256(initCode)
  *
- *    getCreate2Address(from, salt, initCodeHash)
- *    //_result:
+ *  getCreate2Address(from, salt, initCodeHash)
+ *  //_result:
+ *  ```
+ * 
+ *  @param {string} _from - The address of the sender.
+ *  @param {BytesLike} _salt - The salt value.
+ *  @param {BytesLike} _initCodeHash - The hash of the init code.
+ *  @returns {string} The computed address.
+ *  @throws {Error} If the salt is not exactly 32 bytes long.
+ *  @throws {Error} If the initCodeHash is not exactly 32 bytes long.
+ *  
+ *  @category Address
  */
 export function getCreate2Address(_from: string, _salt: BytesLike, _initCodeHash: BytesLike): string {
     const from = getAddress(_from);

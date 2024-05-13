@@ -1,8 +1,8 @@
 /**
  *  All errors in quais include properties to ensure they are both
- *  human-readable (i.e. ``.message``) and machine-readable (i.e. ``.code``).
+ *  human-readable (i.e. `.message`) and machine-readable (i.e. `.code`).
  *
- *  The [[isError]] function can be used to check the error ``code`` and
+ *  The {@link isError | **isError**} function can be used to check the error `code` and
  *  provide a type guard for the properties present on that error interface.
  *
  *  @_section: api/utils/errors:Errors  [about-errors]
@@ -21,6 +21,8 @@ import type { FetchRequest, FetchResponse } from "./fetch.js";
 /**
  *  An error may contain additional properties, but those must not
  *  conflict with any implicit properties.
+ * 
+ *  @category Utils
  */
 export type ErrorInfo<T> = Omit<T, "code" | "name" | "message" | "shortMessage"> & { shortMessage?: string };
 
@@ -69,62 +71,66 @@ function stringify(value: any): any {
  *  All errors emitted by quais have an **ErrorCode** to help
  *  identify and coalesce errors to simplify programmatic analysis.
  *
- *  Each **ErrorCode** is the %%code%% proerty of a coresponding
- *  [[quaisError]].
+ *  Each **ErrorCode** is the `code` proerty of a coresponding
+ * {@link quaisError | **quaisError**}.
  *
  *  **Generic Errors**
  *
- *  **``"UNKNOWN_ERROR"``** - see [[UnknownError]]
+ *  **`"UNKNOWN_ERROR"`** - see {@link UnknownError | **UnknownError**}
  *
- *  **``"NOT_IMPLEMENTED"``** - see [[NotImplementedError]]
+ *  **`"NOT_IMPLEMENTED"`** - see {@link NotImplementedError | **NotImplementedError**}
  *
- *  **``"UNSUPPORTED_OPERATION"``** - see [[UnsupportedOperationError]]
+ *  **`"UNSUPPORTED_OPERATION"`** - see {@link UnsupportedOperationError | **UnsupportedOperationError**}
  *
- *  **``"NETWORK_ERROR"``** - see [[NetworkError]]
+ *  **`"NETWORK_ERROR"`** - see {@link NetworkError | **NetworkError**}
  *
- *  **``"SERVER_ERROR"``** - see [[ServerError]]
+ *  **`"SERVER_ERROR"`** - see {@link ServerError | **ServerError**}
  *
- *  **``"TIMEOUT"``** - see [[TimeoutError]]
+ *  **`"TIMEOUT"`** - see {@link TimeoutError | **TimeoutError**}
  *
- *  **``"BAD_DATA"``** - see [[BadDataError]]
+ *  **`"BAD_DATA"`** - see {@link BadDataError | **BadDataError**}
  *
- *  **``"CANCELLED"``** - see [[CancelledError]]
+ *  **`"CANCELLED"`** - see {@link CancelledError | **CancelledError**}
  *
  *  **Operational Errors**
  *
- *  **``"BUFFER_OVERRUN"``** - see [[BufferOverrunError]]
+ *  **`"BUFFER_OVERRUN"`** - see {@link BufferOverrunError | **BufferOverrunError**}
  *
- *  **``"NUMERIC_FAULT"``** - see [[NumericFaultError]]
+ *  **`"NUMERIC_FAULT"`** - see {@link NumericFaultError | **NumericFaultError**}
  *
  *  **Argument Errors**
  *
- *  **``"INVALID_ARGUMENT"``** - see [[InvalidArgumentError]]
+ *  **`"INVALID_ARGUMENT"`** - see {@link InvalidArgumentError | **InvalidArgumentError**}
  *
- *  **``"MISSING_ARGUMENT"``** - see [[MissingArgumentError]]
+ *  **`"MISSING_ARGUMENT"`** - see {@link MissingArgumentError | **MissingArgumentError**}
  *
- *  **``"UNEXPECTED_ARGUMENT"``** - see [[UnexpectedArgumentError]]
+ *  **`"UNEXPECTED_ARGUMENT"`** - see {@link UnexpectedArgumentError | **UnexpectedArgumentError**}
  *
- *  **``"VALUE_MISMATCH"``** - //unused//
+ *  **`"VALUE_MISMATCH"`** - //unused//
  *
  *  **Blockchain Errors**
  *
- *  **``"CALL_EXCEPTION"``** - see [[CallExceptionError]]
+ *  **`"CALL_EXCEPTION"`** - see {@link CallExceptionError | **CallExceptionError**}
  *
- *  **``"INSUFFICIENT_FUNDS"``** - see [[InsufficientFundsError]]
+ *  **`"INSUFFICIENT_FUNDS"`** - see {@link InsufficientFundsError | **InsufficientFundsError**}
  *
- *  **``"NONCE_EXPIRED"``** - see [[NonceExpiredError]]
+ *  **`"NONCE_EXPIRED"`** - see{@link NonceExpiredError | **NonceExpiredError**}
  *
- *  **``"REPLACEMENT_UNDERPRICED"``** - see [[ReplacementUnderpricedError]]
+ *  **`"REPLACEMENT_UNDERPRICED"`** - see {@link ReplacementUnderpricedError | **ReplacementUnderpricedError**}
  *
- *  **``"TRANSACTION_REPLACED"``** - see [[TransactionReplacedError]]
+ *  **`"TRANSACTION_REPLACED"`** - see {@link TransactionReplacedError | **TransactionReplacedError**}
  *
- *  **``"UNCONFIGURED_NAME"``** - see [[UnconfiguredNameError]]
+ *  **`"UNCONFIGURED_NAME"`** - see {link UnconfiguredNameError | **UnconfiguredNameError**}
+ *  @TODO - revise as UnconfiguredNameError has been removed
  *
- *  **``"OFFCHAIN_FAULT"``** - see [[OffchainFaultError]]
+ *  **`"OFFCHAIN_FAULT"`** - see {link OffchainFaultError | **OffchainFaultError**}
+ *  @TODO - revise as OffchainFaultError has been removed
  *
  *  **User Interaction Errors**
  *
- *  **``"ACTION_REJECTED"``** - see [[ActionRejectedError]]
+ *  **`"ACTION_REJECTED"`** - see {@link ActionRejectedError | **ActionRejectedError**}
+ * 
+ *  @category Utils
  */
 export type ErrorCode =
 
@@ -152,6 +158,8 @@ export type ErrorCode =
 /**
  *  All errors in quais include properties to assist in
  *  machine-readable errors.
+ * 
+ *  @category Utils
  */
 export interface quaisError<T extends ErrorCode = ErrorCode> extends Error {
     /**
@@ -183,6 +191,8 @@ export interface quaisError<T extends ErrorCode = ErrorCode> extends Error {
 /**
  *  This Error is a catch-all for when there is no way for quais to
  *  know what the underlying problem is.
+ * 
+ *  @category Utils
  */
 export interface UnknownError extends quaisError<"UNKNOWN_ERROR"> {
     [ key: string ]: any;
@@ -191,6 +201,8 @@ export interface UnknownError extends quaisError<"UNKNOWN_ERROR"> {
 /**
  *  This Error is mostly used as a stub for functionality that is
  *  intended for the future, but is currently not implemented.
+ * 
+ *  @category Utils
  */
 export interface NotImplementedError extends quaisError<"NOT_IMPLEMENTED"> {
     /**
@@ -206,8 +218,10 @@ export interface NotImplementedError extends quaisError<"NOT_IMPLEMENTED"> {
  *  a feature to a specific configuration of an object prohibiting the
  *  operation.
  *
- *  For example, a [[Wallet]] with no connected [[Provider]] is unable
+ *  For example, a [Wallet](../classes/Wallet) with no connected [Provider](../interfaces/Provider) is unable
  *  to send a transaction.
+ * 
+ *  @category Utils
  */
 export interface UnsupportedOperationError extends quaisError<"UNSUPPORTED_OPERATION"> {
     /**
@@ -218,6 +232,8 @@ export interface UnsupportedOperationError extends quaisError<"UNSUPPORTED_OPERA
 
 /**
  *  This Error indicates a problem connecting to a network.
+ * 
+ *  @category Utils
  */
 export interface NetworkError extends quaisError<"NETWORK_ERROR"> {
     /**
@@ -229,6 +245,8 @@ export interface NetworkError extends quaisError<"NETWORK_ERROR"> {
 /**
  *  This Error indicates there was a problem fetching a resource from
  *  a server.
+ * 
+ *  @category Utils
  */
 export interface ServerError extends quaisError<"SERVER_ERROR"> {
     /**
@@ -249,6 +267,8 @@ export interface ServerError extends quaisError<"SERVER_ERROR"> {
  *  The side-effect of the operation may still occur, as this
  *  generally means a request has been sent and there has simply
  *  been no response to indicate whether it was processed or not.
+ * 
+ *  @category Utils
  */
 export interface TimeoutError extends quaisError<"TIMEOUT"> {
     /**
@@ -270,6 +290,8 @@ export interface TimeoutError extends quaisError<"TIMEOUT"> {
 /**
  *  This Error indicates that a provided set of data cannot
  *  be correctly interpreted.
+ * 
+ *  @category Utils
  */
 export interface BadDataError extends quaisError<"BAD_DATA"> {
     /**
@@ -280,7 +302,9 @@ export interface BadDataError extends quaisError<"BAD_DATA"> {
 
 /**
  *  This Error indicates that the operation was cancelled by a
- *  programmatic call, for example to ``cancel()``.
+ *  programmatic call, for example to `cancel()`.
+ * 
+ *  @category Utils
  */
 export interface CancelledError extends quaisError<"CANCELLED"> {
 }
@@ -294,6 +318,8 @@ export interface CancelledError extends quaisError<"CANCELLED"> {
  *
  *  Most operations in quais are protected by bounds checks, to mitigate
  *  exploits when parsing data.
+ * 
+ *  @category Utils
  */
 export interface BufferOverrunError extends quaisError<"BUFFER_OVERRUN"> {
     /**
@@ -316,8 +342,10 @@ export interface BufferOverrunError extends quaisError<"BUFFER_OVERRUN"> {
  *  This Error indicates an operation which would result in incorrect
  *  arithmetic output has occurred.
  *
- *  For example, trying to divide by zero or using a ``uint8`` to store
+ *  For example, trying to divide by zero or using a `uint8` to store
  *  a negative value.
+ * 
+ *  @category Utils
  */
 export interface NumericFaultError extends quaisError<"NUMERIC_FAULT"> {
     /**
@@ -342,6 +370,8 @@ export interface NumericFaultError extends quaisError<"NUMERIC_FAULT"> {
 /**
  *  This Error indicates an incorrect type or value was passed to
  *  a function or method.
+ * 
+ *  @category Utils
  */
 export interface InvalidArgumentError extends quaisError<"INVALID_ARGUMENT"> {
     /**
@@ -359,6 +389,8 @@ export interface InvalidArgumentError extends quaisError<"INVALID_ARGUMENT"> {
 
 /**
  *  This Error indicates there were too few arguments were provided.
+ * 
+ *  @category Utils
  */
 export interface MissingArgumentError extends quaisError<"MISSING_ARGUMENT"> {
     /**
@@ -374,6 +406,8 @@ export interface MissingArgumentError extends quaisError<"MISSING_ARGUMENT"> {
 
 /**
  *  This Error indicates too many arguments were provided.
+ * 
+ *  @category Utils
  */
 export interface UnexpectedArgumentError extends quaisError<"UNEXPECTED_ARGUMENT"> {
     /**
@@ -392,11 +426,15 @@ export interface UnexpectedArgumentError extends quaisError<"UNEXPECTED_ARGUMENT
 
 /**
  *  The action that resulted in the call exception.
+ * 
+ *   @category Utils
  */
 export type CallExceptionAction = "call" | "estimateGas" | "getTransactionResult" | "sendTransaction" | "unknown";
 
 /**
  *  The related transaction that caused the error.
+ * 
+ *  @category Utils
  */
 export type CallExceptionTransaction = {
     to: null | string;
@@ -406,6 +444,8 @@ export type CallExceptionTransaction = {
 
 /**
  *  This **Error** indicates a transaction reverted.
+ * 
+ *  @category Utils
  */
 export interface CallExceptionError extends quaisError<"CALL_EXCEPTION"> {
 
@@ -449,7 +489,7 @@ export interface CallExceptionError extends quaisError<"CALL_EXCEPTION"> {
 
     /**
      *  If the error occurred in a transaction that was mined
-     *  (with a status of ``0``), this is the receipt.
+     *  (with a status of `0`), this is the receipt.
      */
     receipt?: TransactionReceipt;   // @TODO: in v7, make this `null | TransactionReceipt`
 }
@@ -458,6 +498,8 @@ export interface CallExceptionError extends quaisError<"CALL_EXCEPTION"> {
 /**
  *  The sending account has insufficient funds to cover the
  *  entire transaction cost.
+ * 
+ *  @category Utils
  */
 export interface InsufficientFundsError extends quaisError<"INSUFFICIENT_FUNDS"> {
     /**
@@ -469,6 +511,8 @@ export interface InsufficientFundsError extends quaisError<"INSUFFICIENT_FUNDS">
 /**
  *  The sending account has already used this nonce in a
  *  transaction that has been included.
+ * 
+ *  @category Utils
  */
 export interface NonceExpiredError extends quaisError<"NONCE_EXPIRED"> {
     /**
@@ -481,6 +525,8 @@ export interface NonceExpiredError extends quaisError<"NONCE_EXPIRED"> {
  *  An attempt was made to replace a transaction, but with an
  *  insufficient additional fee to afford evicting the old
  *  transaction from the memory pool.
+ * 
+ *  @category Utils
  */
 export interface ReplacementUnderpricedError extends quaisError<"REPLACEMENT_UNDERPRICED"> {
     /**
@@ -491,6 +537,8 @@ export interface ReplacementUnderpricedError extends quaisError<"REPLACEMENT_UND
 
 /**
  *  A pending transaction was replaced by another.
+ * 
+ *  @category Utils
  */
 export interface TransactionReplacedError extends quaisError<"TRANSACTION_REPLACED"> {
     /**
@@ -524,9 +572,11 @@ export interface TransactionReplacedError extends quaisError<"TRANSACTION_REPLAC
  *  This Error indicates a request was rejected by the user.
  *
  *  In most clients (such as MetaMask), when an operation requires user
- *  authorization (such as ``signer.sendTransaction``), the client
+ *  authorization (such as `signer.sendTransaction`), the client
  *  presents a dialog box to the user. If the user denies the request
  *  this error is thrown.
+ * 
+ *  @category Utils
  */
 export interface ActionRejectedError extends quaisError<"ACTION_REJECTED"> {
     /**
@@ -538,7 +588,7 @@ export interface ActionRejectedError extends quaisError<"ACTION_REJECTED"> {
      *  The reason the action was rejected.
      *
      *  If there is already a pending request, some clients may indicate
-     *  there is already a ``"pending"`` action. This prevents an app
+     *  there is already a `"pending"` action. This prevents an app
      *  from spamming the user.
      */
     reason: "expired" | "rejected" | "pending"
@@ -547,10 +597,10 @@ export interface ActionRejectedError extends quaisError<"ACTION_REJECTED"> {
 // Coding; converts an ErrorCode its Typed Error
 
 /**
- *  A conditional type that transforms the [[ErrorCode]] T into
+ *  A conditional type that transforms the {@link ErrorCode | **ErrorCode**} T into
  *  its quaisError type.
  *
- *  @flatworm-skip-docs
+ *  @category Utils
  */
 export type CodedquaisError<T> =
     T extends "UNKNOWN_ERROR" ? UnknownError:
@@ -582,15 +632,16 @@ export type CodedquaisError<T> =
 
 
 /**
- *  Returns true if the %%error%% matches an error thrown by quais
- *  that matches the error %%code%%.
+ *  Returns true if the `error` matches an error thrown by quais
+ *  that matches the error `code`.
  *
- *  In TypeScript environments, this can be used to check that %%error%%
+ *  In TypeScript environments, this can be used to check that `error`
  *  matches an quaisError type, which means the expected properties will
  *  be set.
  *
- *  @See [ErrorCodes](api:ErrorCode)
+ *  @see [ErrorCodes](api:ErrorCode)
  *  @example
+ *  ```ts
  *    try {
  *      // code....
  *    } catch (e) {
@@ -599,13 +650,18 @@ export type CodedquaisError<T> =
  *          console.log(e.data);
  *      }
  *    }
+ *  ```
+ * 
+ *  @category Utils
  */
 export function isError<K extends ErrorCode, T extends CodedquaisError<K>>(error: any, code: K): error is T {
     return (error && (<quaisError>error).code === code);
 }
 
 /**
- *  Returns true if %%error%% is a [[CallExceptionError].
+ *  Returns true if `error` is a {@link CallExceptionError | **CallExceptionError**}.
+ * 
+ *  @category Utils
  */
 export function isCallException(error: any): error is CallExceptionError {
     return isError(error, "CALL_EXCEPTION");
@@ -613,13 +669,20 @@ export function isCallException(error: any): error is CallExceptionError {
 
 /**
  *  Returns a new Error configured to the format quais emits errors, with
- *  the %%message%%, [[api:ErrorCode]] %%code%% and additional properties
+ *  the `message`, {@link ErrorCode | **ErrorCode**} `code` and additional properties
  *  for the corresponding quaisError.
  *
  *  Each error in quais includes the version of quais, a
- *  machine-readable [[ErrorCode]], and depending on %%code%%, additional
- *  required properties. The error message will also include the %%message%%,
- *  quais version, %%code%% and all additional properties, serialized.
+ *  machine-readable {@link ErrorCode | **ErrorCode**}, and depending on `code`, additional
+ *  required properties. The error message will also include the `message`,
+ *  quais version, `code` and all additional properties, serialized.
+ * 
+ *  @param {string} message - The error message.
+ *  @param {ErrorCode} code - The error code.
+ *  @param {ErrorInfo<T>} [info] - Additional properties for the error.
+ *  @returns {T} The new error.
+ * 
+ *  @category Utils
  */
 export function makeError<K extends ErrorCode, T extends CodedquaisError<K>>(message: string, code: K, info?: ErrorInfo<T>): T {
     let shortMessage = message;
@@ -674,10 +737,16 @@ export function makeError<K extends ErrorCode, T extends CodedquaisError<K>>(mes
 }
 
 /**
- *  Throws an quaisError with %%message%%, %%code%% and additional error
- *  %%info%% when %%check%% is falsish..
+ *  Throws an quaisError with `message`, `code` and additional error
+ *  `info` when `check` is falsish..
+ * 
+ *  @param {unknown} check - The value to check.
+ *  @param {string} message - The error message.
+ *  @param {ErrorCode} code - The error code.
+ *  @param {ErrorInfo<T>} [info] - Additional properties for the error.
+ *  @throws {T} Throws the error if `check` is falsish.
  *
- *  @see [[api:makeError]]
+ *  @category Utils
  */
 export function assert<K extends ErrorCode, T extends CodedquaisError<K>>(check: unknown, message: string, code: K, info?: ErrorInfo<T>): asserts check {
     if (!check) { throw makeError(message, code, info); }
@@ -688,8 +757,16 @@ export function assert<K extends ErrorCode, T extends CodedquaisError<K>>(check:
  *  A simple helper to simply ensuring provided arguments match expected
  *  constraints, throwing if not.
  *
- *  In TypeScript environments, the %%check%% has been asserted true, so
+ *  In TypeScript environments, the `check` has been asserted true, so
  *  any further code does not need additional compile-time checks.
+ * 
+ *  @param {unknown} check - The value to check.
+ *  @param {string} message - The error message.
+ *  @param {string} name - The name of the argument.
+ *  @param {unknown} value - The value of the argument.
+ *  @throws {InvalidArgumentError} Throws if `check` is falsish.
+ * 
+ *  @category Utils
  */
 export function assertArgument(check: unknown, message: string, name: string, value: unknown): asserts check {
     assert(check, message, "INVALID_ARGUMENT", { argument: name, value: value });
@@ -732,7 +809,12 @@ const _normalizeForms = ["NFD", "NFC", "NFKD", "NFKC"].reduce((accum, form) => {
 }, <Array<string>>[]);
 
 /**
- *  Throws if the normalization %%form%% is not supported.
+ *  Throws if the normalization `form` is not supported.
+ * 
+ *  @param {string} form - The normalization form.
+ *  @throws {UnsupportedOperationError} Throws if the form is not supported.
+ * 
+ *  @category Utils
  */
 export function assertNormalize(form: string): void {
     assert(_normalizeForms.indexOf(form) >= 0, "platform missing String.prototype.normalize", "UNSUPPORTED_OPERATION", {
@@ -743,8 +825,15 @@ export function assertNormalize(form: string): void {
 /**
  *  Many classes use file-scoped values to guard the constructor,
  *  making it effectively private. This facilitates that pattern
- *  by ensuring the %%givenGaurd%% matches the file-scoped %%guard%%,
- *  throwing if not, indicating the %%className%% if provided.
+ *  by ensuring the `givenGaurd` matches the file-scoped `guard`,
+ *  throwing if not, indicating the `className%% if provided.
+ * 
+ *  @param {any} givenGuard - The guard provided to the constructor.
+ *  @param {any} guard - The file-scoped guard.
+ *  @param {string} [className] - The class name.
+ *  @throws {UnsupportedOperationError} Throws if the guards do not match.
+ * 
+ *  @category Utils
  */
 export function assertPrivate(givenGuard: any, guard: any, className?: string): void {
     if (className == null) { className = ""; }

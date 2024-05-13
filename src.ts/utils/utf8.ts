@@ -4,7 +4,7 @@
  *  safety issues as well as provide the ability to recover and analyse
  *  strings.
  *
- *  @_subsection api/utils:Strings and UTF-8  [about-strings]
+ *  @subsection api/utils:Strings and UTF-8  [about-strings]
  */
 import { getBytes } from "./data.js";
 import { assertArgument, assertNormalize } from "./errors.js";
@@ -16,64 +16,67 @@ import type { BytesLike } from "./index.js";
 
 /**
  *  The stanard normalization forms.
+ * 
+ *  @category Utils
  */
 export type UnicodeNormalizationForm = "NFC" | "NFD" | "NFKC" | "NFKD";
 
 /**
  *  When using the UTF-8 error API the following errors can be intercepted
- *  and processed as the %%reason%% passed to the [[Utf8ErrorFunc]].
+ *  and processed as the `reason` passed to the {@link Utf8ErrorFunc | **Utf8ErrorFunc**}.
  *
- *  **``"UNEXPECTED_CONTINUE"``** - a continuation byte was present where there
+ *  **`"UNEXPECTED_CONTINUE"`** - a continuation byte was present where there
  *  was nothing to continue.
  *
- *  **``"BAD_PREFIX"``** - an invalid (non-continuation) byte to start a
+ *  **`"BAD_PREFIX"`** - an invalid (non-continuation) byte to start a
  *  UTF-8 codepoint was found.
  *
- *  **``"OVERRUN"``** - the string is too short to process the expected
+ *  **`"OVERRUN"`** - the string is too short to process the expected
  *  codepoint length.
  *
- *  **``"MISSING_CONTINUE"``** - a missing continuation byte was expected but
- *  not found. The %%offset%% indicates the index the continuation byte
+ *  **`"MISSING_CONTINUE"`** - a missing continuation byte was expected but
+ *  not found. The `offset` indicates the index the continuation byte
  *  was expected at.
  *
- *  **``"OUT_OF_RANGE"``** - the computed code point is outside the range
- *  for UTF-8. The %%badCodepoint%% indicates the computed codepoint, which was
+ *  **`"OUT_OF_RANGE"`** - the computed code point is outside the range
+ *  for UTF-8. The `badCodepoint` indicates the computed codepoint, which was
  *  outside the valid UTF-8 range.
  *
- *  **``"UTF16_SURROGATE"``** - the UTF-8 strings contained a UTF-16 surrogate
- *  pair. The %%badCodepoint%% is the computed codepoint, which was inside the
+ *  **`"UTF16_SURROGATE"`** - the UTF-8 strings contained a UTF-16 surrogate
+ *  pair. The `badCodepoint` is the computed codepoint, which was inside the
  *  UTF-16 surrogate range.
  *
- *  **``"OVERLONG"``** - the string is an overlong representation. The
- *  %%badCodepoint%% indicates the computed codepoint, which has already
+ *  **`"OVERLONG"`** - the string is an overlong representation. The
+ *  `badCodepoint` indicates the computed codepoint, which has already
  *  been bounds checked.
  *
- *
- *  @returns string
+ *  @category Utils
  */
 export type Utf8ErrorReason = "UNEXPECTED_CONTINUE" | "BAD_PREFIX" | "OVERRUN" |
     "MISSING_CONTINUE" | "OUT_OF_RANGE" | "UTF16_SURROGATE" | "OVERLONG";
 
 
 /**
- *  A callback that can be used with [[toUtf8String]] to analysis or
+ *  A callback that can be used with {@link toUtf8String | **toUtf8String**} to analysis or
  *  recovery from invalid UTF-8 data.
  *
  *  Parsing UTF-8 data is done through a simple Finite-State Machine (FSM)
- *  which calls the ``Utf8ErrorFunc`` if a fault is detected.
+ *  which calls the `Utf8ErrorFunc` if a fault is detected.
  *
- *  The %%reason%% indicates where in the FSM execution the fault
- *  occurred and the %%offset%% indicates where the input failed.
+ *  The `reason` indicates where in the FSM execution the fault
+ *  occurred and the `offset` indicates where the input failed.
  *
- *  The %%bytes%% represents the raw UTF-8 data that was provided and
- *  %%output%% is the current array of UTF-8 code-points, which may
- *  be updated by the ``Utf8ErrorFunc``.
+ *  The `bytes` represents the raw UTF-8 data that was provided and
+ *  `output` is the current array of UTF-8 code-points, which may
+ *  be updated by the `Utf8ErrorFunc`.
  *
- *  The value of the %%badCodepoint%% depends on the %%reason%%. See
- *  [[Utf8ErrorReason]] for details.
+ *  The value of the `badCodepoint` depends on the `reason`. See
+ *  {@link Utf8ErrorReason | **Utf8ErrorReason**} for details.
  *
  *  The function should return the number of bytes that should be skipped
  *  when control resumes to the FSM.
+ * 
+ *  @category Utils
  */
 export type Utf8ErrorFunc = (reason: Utf8ErrorReason, offset: number, bytes: Uint8Array, output: Array<number>, badCodepoint?: number) => number;
 
@@ -123,17 +126,18 @@ function replaceFunc(reason: Utf8ErrorReason, offset: number, bytes: Uint8Array,
 /**
  *  A handful of popular, built-in UTF-8 error handling strategies.
  *
- *  **``"error"``** - throws on ANY illegal UTF-8 sequence or
+ *  **`"error"`** - throws on ANY illegal UTF-8 sequence or
  *  non-canonical (overlong) codepoints (this is the default)
  *
- *  **``"ignore"``** - silently drops any illegal UTF-8 sequence
+ *  **`"ignore"`** - silently drops any illegal UTF-8 sequence
  *  and accepts non-canonical (overlong) codepoints
  *
- *  **``"replace"``** - replace any illegal UTF-8 sequence with the
- *  UTF-8 replacement character (i.e. ``"\\ufffd"``) and accepts
+ *  **`"replace"`** - replace any illegal UTF-8 sequence with the
+ *  UTF-8 replacement character (i.e. `"\\ufffd"`) and accepts
  *  non-canonical (overlong) codepoints
  *
- *  @returns: Record<"error" | "ignore" | "replace", Utf8ErrorFunc>
+ *  @returns Record<"error" | "ignore" | "replace", Utf8ErrorFunc>
+ *  @category Utils
  */
 export const Utf8ErrorFuncs: Readonly<Record<"error" | "ignore" | "replace", Utf8ErrorFunc>> = Object.freeze({
     error: errorFunc,
@@ -242,9 +246,16 @@ function getUtf8CodePoints(_bytes: BytesLike, onError?: Utf8ErrorFunc): Array<nu
 // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
 
 /**
- *  Returns the UTF-8 byte representation of %%str%%.
+ *  Returns the UTF-8 byte representation of `str`.
  *
- *  If %%form%% is specified, the string is normalized.
+ *  If `form` is specified, the string is normalized.
+ * 
+ *  @param {string} str - The string to convert.
+ *  @param {UnicodeNormalizationForm} [form] - The normalization form to use.
+ *  @returns {Uint8Array} The UTF-8 byte representation.
+ *  @throws {Error} If the UTF-8 conversion fails.
+ * 
+ *  @category Utils
  */
 export function toUtf8Bytes(str: string, form?: UnicodeNormalizationForm): Uint8Array {
 
@@ -303,20 +314,32 @@ function _toUtf8String(codePoints: Array<number>): string {
 }
 
 /**
- *  Returns the string represented by the UTF-8 data %%bytes%%.
+ *  Returns the string represented by the UTF-8 data `bytes`.
  *
- *  When %%onError%% function is specified, it is called on UTF-8
- *  errors allowing recovery using the [[Utf8ErrorFunc]] API.
+ *  When `onError` function is specified, it is called on UTF-8
+ *  errors allowing recovery using the {@link Utf8ErrorFunc | **Utf8ErrorFunc**} API.
  *  (default: [error](Utf8ErrorFuncs))
+ * 
+ *  @param {BytesLike} bytes - The UTF-8 data to convert.
+ *  @param {Utf8ErrorFunc} [onError] - The error handling function.
+ *  @returns {string} The string.
+ *  
+ *  @category Utils
  */
 export function toUtf8String(bytes: BytesLike, onError?: Utf8ErrorFunc): string {
     return _toUtf8String(getUtf8CodePoints(bytes, onError));
 }
 
 /**
- *  Returns the UTF-8 code-points for %%str%%.
+ *  Returns the UTF-8 code-points for `str`.
  *
- *  If %%form%% is specified, the string is normalized.
+ *  If `form` is specified, the string is normalized.
+ * 
+ *  @param {string} str - The string to convert.
+ *  @param {UnicodeNormalizationForm} [form] - The normalization form to use.
+ *  @returns {Array<number>} The UTF-8 code-points.
+ *  
+ *  @category Utils
  */
 export function toUtf8CodePoints(str: string, form?: UnicodeNormalizationForm): Array<number> {
     return getUtf8CodePoints(toUtf8Bytes(str, form));

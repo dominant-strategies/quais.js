@@ -17,16 +17,18 @@ import { Wordlist } from "./wordlist.js";
  *  it is used mainly internally to keep Wordlists for languages
  *  based on ASCII-7 small.
  *
- *  If necessary, there are tools within the ``generation/`` folder
+ *  If necessary, there are tools within the `generation/` folder
  *  to create the necessary data.
+ * 
+ *  @category Wordlists
  */
 export class WordlistOwl extends Wordlist {
     #data: string;
     #checksum: string;
 
     /**
-     *  Creates a new Wordlist for %%locale%% using the OWL %%data%%
-     *  and validated against the %%checksum%%.
+     *  Creates a new Wordlist for `locale` using the OWL `data`
+     *  and validated against the `checksum`.
      */
     constructor(locale: string, data: string, checksum: string) {
         super(locale);

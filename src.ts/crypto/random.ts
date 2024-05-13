@@ -17,11 +17,18 @@ const _randomBytes = function(length: number): Uint8Array {
 let __randomBytes = _randomBytes;
 
 /**
- *  Return %%length%% bytes of cryptographically secure random data.
+ *  Return `length` bytes of cryptographically secure random data.
  *
- *  @example:
+ *  @example
+ *  ```ts
  *    randomBytes(8)
  *    //_result:
+ *  ```
+ * 
+ *  @param {number} length - The number of bytes to generate.
+ *  @returns {Uint8Array} The random bytes.
+ * 
+ *  @category Crypto
  */
 export function randomBytes(length: number): Uint8Array {
     return __randomBytes(length);

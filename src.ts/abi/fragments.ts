@@ -1,13 +1,12 @@
 /**
  *  A fragment is a single item from an ABI, which may represent any of:
  *
- *  - [Functions](FunctionFragment)
- *  - [Events](EventFragment)
- *  - [Constructors](ConstructorFragment)
- *  - Custom [Errors](ErrorFragment)
- *  - [Fallback or Receive](FallbackFragment) functions
- *
- *  @_subsection api/abi/abi-coder:Fragments  [about-fragments]
+ *  - {@link FunctionFragment | Functions}
+ *  - {@link EventFragment | Events}
+ *  - {@link ConstructorFragment | Constructors}
+ *  - Custom {@link ErrorFragment | Errors}
+ *  - {@link FallbackFragment | Fallback or Recieve} functions
+ *  @category Application Binary Interface
  */
 
 import {
@@ -17,7 +16,9 @@ import {
 import { id } from "../hash/index.js";
 
 /**
- *  A Type description in a [JSON ABI format](link-solc-jsonabi).
+ *  A Type description in a [JSON ABI format](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#json).
+ * 
+ *  @category Application Binary Interface
  */
 export interface JsonFragmentType {
     /**
@@ -47,7 +48,9 @@ export interface JsonFragmentType {
 }
 
 /**
- *  A fragment for a method, event or error in a [JSON ABI format](link-solc-jsonabi).
+ *  A fragment for a method, event or error in a [JSON ABI format](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#json)
+ * 
+ *  @category Application Binary Interface
  */
 export interface JsonFragment {
     /**
@@ -56,7 +59,7 @@ export interface JsonFragment {
     readonly name?: string;
 
     /**
-     *  The type of the fragment (e.g. ``event``, ``"function"``, etc.)
+     *  The type of the fragment (e.g. `event`, `"function"`, etc.)
      */
     readonly type?: string;
 
@@ -99,18 +102,20 @@ export interface JsonFragment {
 /**
  *  The format to serialize the output as.
  *
- *  **``"sighash"``** - the bare formatting, used to compute the selector
- *  or topic hash; this format cannot be reversed (as it discards ``indexed``)
- *  so cannot by used to export an [[Interface]].
+ *  **`sighash`** - the bare formatting, used to compute the selector
+ *  or topic hash; this format cannot be reversed (as it discards `indexed`)
+ *  so cannot by used to export an [Interface](../classes/Interface).
  *
- *  **``"minimal"``** - Human-Readable ABI with minimal spacing and without
+ *  **`minimal`** - Human-Readable ABI with minimal spacing and without
  *  names, so it is compact, but will result in Result objects that cannot
  *  be accessed by name.
  *
- *  **``"full"``** - Full Human-Readable ABI, with readable spacing and names
+ *  **`full`** - Full Human-Readable ABI, with readable spacing and names
  *  intact; this is generally the recommended format.
  *
- *  **``"json"``** - The [JSON ABI format](link-solc-jsonabi).
+ *  **`json`** - The [ABI JSON Specification](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#json).
+ * 
+ *  @category Application Binary Interface
  */
 export type FormatType = "sighash" | "minimal" | "full" | "json";
 
@@ -157,7 +162,9 @@ const regexId = new RegExp("^([a-zA-Z$_][a-zA-Z0-9$_]*)$");
 const regexType = new RegExp("^(address|bool|bytes([0-9]*)|string|u?int([0-9]*))$");
 
 /**
- *  @ignore:
+ * Represents the tokens for parsing.
+ * 
+ * @ignore
  */
 type Token = Readonly<{
     // Type of token (e.g. TYPE, KEYWORD, NUMBER, etc)
@@ -184,6 +191,11 @@ type Token = Readonly<{
     value: number;
 }>;
 
+/**
+ *  Represents a parsed list of tokens.
+ * 
+ *  @category Application Binary Interface
+ */
 class TokenString {
     #offset: number;
     #tokens: ReadonlyArray<Token>;
@@ -191,11 +203,17 @@ class TokenString {
     get offset(): number { return this.#offset; }
     get length(): number { return this.#tokens.length - this.#offset; }
 
+    
     constructor(tokens: ReadonlyArray<Token>) {
         this.#offset = 0;
         this.#tokens = tokens.slice();
     }
 
+    /**
+     * Returns a clone of the current token string.
+     * 
+     * @returns {TokenString} A cloned TokenString object.
+     */
     clone(): TokenString { return new TokenString(this.#tokens); }
     reset(): void { this.#offset = 0; }
 
@@ -502,14 +520,18 @@ const _guard = { };
 
 
 /**
- *  When [walking](ParamType-walk) a [[ParamType]], this is called
+ *  When {@link ParamType.walk | **walking**} a {@link ParamType | **ParamType**}, this is called 
  *  on each component.
+ *  
+ *  @category Application Binary Interface
  */
 export type ParamTypeWalkFunc = (type: string, value: any) => any;
 
 /**
- *  When [walking asynchronously](ParamType-walkAsync) a [[ParamType]],
- *  this is called on each component.
+ *  When {@link ParamType.walkAsync | **walking asynchronously**}
+ *  a {@link ParamType | **ParamType**}, this is called on each component.
+ *  
+ *  @category Application Binary Interface
  */
 export type ParamTypeWalkAsyncFunc = (type: string, value: any) => any | Promise<any>;
 
@@ -524,51 +546,54 @@ const FunctionFragmentInternal = "_FunctionInternal";
 const StructFragmentInternal = "_StructInternal";
 
 /**
- *  Each input and output of a [[Fragment]] is an Array of **ParamType**.
+ *  Each input and output of a {@link Fragment | **Fragment**} is 
+ *  an Array of {@link ParamType | **ParamType**}.
+ *  
+ *  @category Application Binary Interface
  */
 export class ParamType {
 
     /**
-     *  The local name of the parameter (or ``""`` if unbound)
+     *  The local name of the parameter (or `""` if unbound)
      */
     readonly name!: string;
 
     /**
-     *  The fully qualified type (e.g. ``"address"``, ``"tuple(address)"``,
-     *  ``"uint256[3][]"``)
+     *  The fully qualified type (e.g. `"address"`, `"tuple(address)"`,
+     *  `"uint256[3][]"`)
      */
     readonly type!: string;
 
     /**
-     *  The base type (e.g. ``"address"``, ``"tuple"``, ``"array"``)
+     *  The base type (e.g. `"address"`, `"tuple"`, `"array"`)
      */
     readonly baseType!: string;
 
     /**
      *  True if the parameters is indexed.
      *
-     *  For non-indexable types this is ``null``.
+     *  For non-indexable types this is `null`.
      */
     readonly indexed!: null | boolean;
 
     /**
      *  The components for the tuple.
      *
-     *  For non-tuple types this is ``null``.
+     *  For non-tuple types this is `null`.
      */
     readonly components!: null | ReadonlyArray<ParamType>;
 
     /**
-     *  The array length, or ``-1`` for dynamic-lengthed arrays.
+     *  The array length, or `-1` for dynamic-lengthed arrays.
      *
-     *  For non-array types this is ``null``.
+     *  For non-array types this is `null`.
      */
     readonly arrayLength!: null | number;
 
     /**
      *  The type of each child in the array.
      *
-     *  For non-array types this is ``null``.
+     *  For non-array types this is `null`.
      */
     readonly arrayChildren!: null | ParamType;
 
@@ -606,11 +631,13 @@ export class ParamType {
      *
      *  For example,
      *
-     *  ``sighash" => "(uint256,address)"``
+     *  `sighash" => "(uint256,address)"`
      *
-     *  ``"minimal" => "tuple(uint256,address) indexed"``
+     *  `"minimal" => "tuple(uint256,address) indexed"`
      *
-     *  ``"full" => "tuple(uint256 foo, address bar) indexed baz"``
+     *  `"full" => "tuple(uint256 foo, address bar) indexed baz"`
+     * 
+     *  @returns {string} The formatted type.
      */
     format(format?: FormatType): string {
         if (format == null) { format = "sighash"; }
@@ -664,38 +691,38 @@ export class ParamType {
     }
 
     /**
-     *  Returns true if %%this%% is an Array type.
-     *
-     *  This provides a type gaurd ensuring that [[arrayChildren]]
-     *  and [[arrayLength]] are non-null.
+     *  This provides a type gaurd ensuring that {@link arrayChildren | **arrayChildren**}
+     *  and {@link arrayLength | **arrayLength**} are non-null.
+     * 
+     *  @returns {boolean} True if this is an Array type.
      */
     isArray(): this is (ParamType & { arrayChildren: ParamType, arrayLength: number }) {
         return (this.baseType === "array")
     }
 
     /**
-     *  Returns true if %%this%% is a Tuple type.
-     *
-     *  This provides a type gaurd ensuring that [[components]]
-     *  is non-null.
+     *  This provides a type gaurd ensuring that 
+     *  {@link components | **components**} is non-null.
+     * 
+     *  @returns {boolean} True if this is a Tuple type.
      */
     isTuple(): this is (ParamType & { components: ReadonlyArray<ParamType> }) {
         return (this.baseType === "tuple");
     }
 
     /**
-     *  Returns true if %%this%% is an Indexable type.
-     *
-     *  This provides a type gaurd ensuring that [[indexed]]
-     *  is non-null.
+     *  This provides a type gaurd ensuring that 
+     *  {@link indexed | **indexed**} is non-null.
+     * 
+     *  @returns {boolean} True if this is an Indexable type.
      */
     isIndexable(): this is (ParamType & { indexed: boolean }) {
         return (this.indexed != null);
     }
 
     /**
-     *  Walks the **ParamType** with %%value%%, calling %%process%%
-     *  on each type, destructing the %%value%% recursively.
+     *  Walks the **ParamType** with `value`, calling `process`
+     *  on each type, destructing the `value` recursively.
      */
     walk(value: any, process: ParamTypeWalkFunc): any {
         if (this.isArray()) {
@@ -782,11 +809,11 @@ export class ParamType {
     }
 
     /**
-     *  Walks the **ParamType** with %%value%%, asynchronously calling
-     *  %%process%% on each type, destructing the %%value%% recursively.
+     *  Walks the **ParamType** with `value`, asynchronously calling
+     *  `process` on each type, destructing the `value` recursively.
      *
      *  This can be used to resolve ENS naes by walking and resolving each
-     *  ``"address"`` type.
+     *  `"address"` type.
      */
     async walkAsync(value: any, process: ParamTypeWalkAsyncFunc): Promise<any> {
         const promises: Array<Promise<void>> = [ ];
@@ -799,10 +826,10 @@ export class ParamType {
     }
 
     /**
-     *  Creates a new **ParamType** for %%obj%%.
+     *  Creates a new **ParamType** for `obj`.
      *
-     *  If %%allowIndexed%% then the ``indexed`` keyword is permitted,
-     *  otherwise the ``indexed`` keyword will throw an error.
+     *  If `allowIndexed` then the `indexed` keyword is permitted,
+     *  otherwise the `indexed` keyword will throw an error.
      */
     static from(obj: any, allowIndexed?: boolean): ParamType {
         if (ParamType.isParamType(obj)) { return obj; }
@@ -892,7 +919,7 @@ export class ParamType {
     }
 
     /**
-     *  Returns true if %%value%% is a **ParamType**.
+     *  Returns true if `value` is a **ParamType**.
      */
     static isParamType(value: any): value is ParamType {
         return (value && value[internal] === ParamTypeInternal);
@@ -900,12 +927,15 @@ export class ParamType {
 }
 
 /**
- *  The type of a [[Fragment]].
+ *  The type of a {@link Fragment | **Fragment**}.
+ *  
+ *  @category Application Binary Interface
  */
 export type FragmentType = "constructor" | "error" | "event" | "fallback" | "function" | "struct";
 
 /**
  *  An abstract class to represent An individual fragment from a parse ABI.
+ *  @category Application Binary Interface
  */
 export abstract class Fragment {
     /**
@@ -928,12 +958,12 @@ export abstract class Fragment {
     }
 
     /**
-     *  Returns a string representation of this fragment as %%format%%.
+     *  Returns a string representation of this fragment as `format`.
      */
     abstract format(format?: FormatType): string;
 
     /**
-     *  Creates a new **Fragment** for %%obj%%, wich can be any supported
+     *  Creates a new **Fragment** for `obj`, wich can be any supported
      *  ABI frgament type.
      */
     static from(obj: any): Fragment {
@@ -985,35 +1015,35 @@ export abstract class Fragment {
     }
 
     /**
-     *  Returns true if %%value%% is a [[ConstructorFragment]].
+     *  Returns true if `value` is a {@link ConstructorFragment | **ConstructorFragment**}.
      */
     static isConstructor(value: any): value is ConstructorFragment {
         return ConstructorFragment.isFragment(value);
     }
 
     /**
-     *  Returns true if %%value%% is an [[ErrorFragment]].
+     *  Returns true if `value` is an {@link ErrorFragment | **ErrorFragment**}.
      */
     static isError(value: any): value is ErrorFragment {
         return ErrorFragment.isFragment(value);
     }
 
     /**
-     *  Returns true if %%value%% is an [[EventFragment]].
+     *  Returns true if `value` is an {@link EventFragment | **EventFragment**}.
      */
     static isEvent(value: any): value is EventFragment {
         return EventFragment.isFragment(value);
     }
 
     /**
-     *  Returns true if %%value%% is a [[FunctionFragment]].
+     *  Returns true if `value` is a {@link FunctionFragment | **FunctionFragment**}.
      */
     static isFunction(value: any): value is FunctionFragment {
         return FunctionFragment.isFragment(value);
     }
 
     /**
-     *  Returns true if %%value%% is a [[StructFragment]].
+     *  Returns true if `value` is a {@link StructFragment | **StructFragment**}.
      */
     static isStruct(value: any): value is StructFragment {
         return StructFragment.isFragment(value);
@@ -1023,6 +1053,8 @@ export abstract class Fragment {
 /**
  *  An abstract class to represent An individual fragment
  *  which has a name from a parse ABI.
+ * 
+ *  @category Application Binary Interface
  */
 export abstract class NamedFragment extends Fragment {
     /**
@@ -1047,7 +1079,9 @@ function joinParams(format: FormatType, params: ReadonlyArray<ParamType>): strin
 }
 
 /**
- *  A Fragment which represents a //Custom Error//.
+ *  A Fragment which represents a *Custom Error*.
+ * 
+ *  @category Application Binary Interface
  */
 export class ErrorFragment extends NamedFragment {
     /**
@@ -1066,7 +1100,7 @@ export class ErrorFragment extends NamedFragment {
     }
 
     /**
-     *  Returns a string representation of this fragment as %%format%%.
+     *  Returns a string representation of this fragment as `format`.
      */
     format(format?: FormatType): string {
         if (format == null) { format = "sighash"; }
@@ -1085,7 +1119,7 @@ export class ErrorFragment extends NamedFragment {
     }
 
     /**
-     *  Returns a new **ErrorFragment** for %%obj%%.
+     *  Returns a new **ErrorFragment** for `obj`.
      */
     static from(obj: any): ErrorFragment {
         if (ErrorFragment.isFragment(obj)) { return obj; }
@@ -1106,7 +1140,7 @@ export class ErrorFragment extends NamedFragment {
     }
 
     /**
-     *  Returns ``true`` and provides a type guard if %%value%% is an
+     *  Returns `true` and provides a type guard if `value` is an
      *  **ErrorFragment**.
      */
     static isFragment(value: any): value is ErrorFragment {
@@ -1116,6 +1150,8 @@ export class ErrorFragment extends NamedFragment {
 
 /**
  *  A Fragment which represents an Event.
+ * 
+ *  @category Application Binary Interface
  */
 export class EventFragment extends NamedFragment {
     /**
@@ -1140,7 +1176,7 @@ export class EventFragment extends NamedFragment {
     }
 
     /**
-     *  Returns a string representation of this event as %%format%%.
+     *  Returns a string representation of this event as `format`.
      */
     format(format?: FormatType): string {
         if (format == null) { format = "sighash"; }
@@ -1161,7 +1197,7 @@ export class EventFragment extends NamedFragment {
     }
 
     /**
-     *  Return the topic hash for an event with %%name%% and %%params%%.
+     *  Return the topic hash for an event with `name` and `params`.
      */
     static getTopicHash(name: string, params?: Array<any>): string {
         params = (params || []).map((p) => ParamType.from(p));
@@ -1170,7 +1206,7 @@ export class EventFragment extends NamedFragment {
     }
 
     /**
-     *  Returns a new **EventFragment** for %%obj%%.
+     *  Returns a new **EventFragment** for `obj`.
      */
     static from(obj: any): EventFragment {
         if (EventFragment.isFragment(obj)) { return obj; }
@@ -1196,7 +1232,7 @@ export class EventFragment extends NamedFragment {
     }
 
     /**
-     *  Returns ``true`` and provides a type guard if %%value%% is an
+     *  Returns `true` and provides a type guard if `value` is an
      *  **EventFragment**.
      */
     static isFragment(value: any): value is EventFragment {
@@ -1206,6 +1242,8 @@ export class EventFragment extends NamedFragment {
 
 /**
  *  A Fragment which represents a constructor.
+ * 
+ *  @category Application Binary Interface
  */
 export class ConstructorFragment extends Fragment {
 
@@ -1215,7 +1253,7 @@ export class ConstructorFragment extends Fragment {
     readonly payable!: boolean;
 
     /**
-     *  The recommended gas limit for deployment or ``null``.
+     *  The recommended gas limit for deployment or `null`.
      */
     readonly gas!: null | bigint;
 
@@ -1229,7 +1267,7 @@ export class ConstructorFragment extends Fragment {
     }
 
     /**
-     *  Returns a string representation of this constructor as %%format%%.
+     *  Returns a string representation of this constructor as `format`.
      */
     format(format?: FormatType): string {
         assert(format != null && format !== "sighash", "cannot format a constructor for sighash",
@@ -1252,7 +1290,7 @@ export class ConstructorFragment extends Fragment {
     }
 
     /**
-     *  Returns a new **ConstructorFragment** for %%obj%%.
+     *  Returns a new **ConstructorFragment** for `obj`.
      */
     static from(obj: any): ConstructorFragment {
         if (ConstructorFragment.isFragment(obj)) { return obj; }
@@ -1280,7 +1318,7 @@ export class ConstructorFragment extends Fragment {
     }
 
     /**
-     *  Returns ``true`` and provides a type guard if %%value%% is a
+     *  Returns `true` and provides a type guard if `value` is a
      *  **ConstructorFragment**.
      */
     static isFragment(value: any): value is ConstructorFragment {
@@ -1290,6 +1328,7 @@ export class ConstructorFragment extends Fragment {
 
 /**
  *  A Fragment which represents a method.
+ *  @category Application Binary Interface
  */
 export class FallbackFragment extends Fragment {
 
@@ -1305,7 +1344,7 @@ export class FallbackFragment extends Fragment {
     }
 
     /**
-     *  Returns a string representation of this fallback as %%format%%.
+     *  Returns a string representation of this fallback as `format`.
      */
     format(format?: FormatType): string {
         const type = ((this.inputs.length === 0) ? "receive": "fallback");
@@ -1319,7 +1358,7 @@ export class FallbackFragment extends Fragment {
     }
 
     /**
-     *  Returns a new **FallbackFragment** for %%obj%%.
+     *  Returns a new **FallbackFragment** for `obj`.
      */
     static from(obj: any): FallbackFragment {
         if (FallbackFragment.isFragment(obj)) { return obj; }
@@ -1388,7 +1427,7 @@ export class FallbackFragment extends Fragment {
     }
 
     /**
-     *  Returns ``true`` and provides a type guard if %%value%% is a
+     *  Returns `true` and provides a type guard if `value` is a
      *  **FallbackFragment**.
      */
     static isFragment(value: any): value is FallbackFragment {
@@ -1399,10 +1438,12 @@ export class FallbackFragment extends Fragment {
 
 /**
  *  A Fragment which represents a method.
+ * 
+ *  @category Application Binary Interface
  */
 export class FunctionFragment extends NamedFragment {
     /**
-     *  If the function is constant (e.g. ``pure`` or ``view`` functions).
+     *  If the function is constant (e.g. `pure` or `view` functions).
      */
     readonly constant!: boolean;
 
@@ -1412,8 +1453,8 @@ export class FunctionFragment extends NamedFragment {
     readonly outputs!: ReadonlyArray<ParamType>;
 
     /**
-     *  The state mutability (e.g. ``payable``, ``nonpayable``, ``view``
-     *  or ``pure``)
+     *  The state mutability (e.g. `payable`, `nonpayable`, `view`
+     *  or `pure`)
      */
     readonly stateMutability!: "payable" | "nonpayable" | "view" | "pure";
 
@@ -1447,7 +1488,7 @@ export class FunctionFragment extends NamedFragment {
     }
 
     /**
-     *  Returns a string representation of this function as %%format%%.
+     *  Returns a string representation of this function as `format`.
      */
     format(format?: FormatType): string {
         if (format == null) { format = "sighash"; }
@@ -1486,7 +1527,7 @@ export class FunctionFragment extends NamedFragment {
     }
 
     /**
-     *  Return the selector for a function with %%name%% and %%params%%.
+     *  Return the selector for a function with `name` and `params`.
      */
     static getSelector(name: string, params?: Array<any>): string {
         params = (params || []).map((p) => ParamType.from(p));
@@ -1495,7 +1536,7 @@ export class FunctionFragment extends NamedFragment {
     }
 
     /**
-     *  Returns a new **FunctionFragment** for %%obj%%.
+     *  Returns a new **FunctionFragment** for `obj`.
      */
     static from(obj: any): FunctionFragment {
         if (FunctionFragment.isFragment(obj)) { return obj; }
@@ -1553,7 +1594,7 @@ export class FunctionFragment extends NamedFragment {
     }
 
     /**
-     *  Returns ``true`` and provides a type guard if %%value%% is a
+     *  Returns `true` and provides a type guard if `value` is a
      *  **FunctionFragment**.
      */
     static isFragment(value: any): value is FunctionFragment {
@@ -1563,6 +1604,8 @@ export class FunctionFragment extends NamedFragment {
 
 /**
  *  A Fragment which represents a structure.
+ * 
+ *  @category Application Binary Interface
  */
 export class StructFragment extends NamedFragment {
 
@@ -1575,14 +1618,14 @@ export class StructFragment extends NamedFragment {
     }
 
     /**
-     *  Returns a string representation of this struct as %%format%%.
+     *  Returns a string representation of this struct as `format`.
      */
     format(): string {
         throw new Error("@TODO");
     }
 
     /**
-     *  Returns a new **StructFragment** for %%obj%%.
+     *  Returns a new **StructFragment** for `obj`.
      */
     static from(obj: any): StructFragment {
         if (typeof(obj) === "string") {
@@ -1604,7 +1647,7 @@ export class StructFragment extends NamedFragment {
 
 // @TODO: fix this return type
     /**
-     *  Returns ``true`` and provides a type guard if %%value%% is a
+     *  Returns `true` and provides a type guard if `value` is a
      *  **StructFragment**.
      */
     static isFragment(value: any): value is FunctionFragment {

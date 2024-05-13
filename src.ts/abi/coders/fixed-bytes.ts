@@ -10,7 +10,7 @@ import type { Reader, Writer } from "./abstract-coder.js";
 
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export class FixedBytesCoder extends Coder {
     readonly size!: number;

@@ -51,6 +51,11 @@ type Outpoint = {
 const MasterSecret = new Uint8Array([ 66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100 ]);
 const _guard = { };
 
+/**
+ *  @TODO write documentation for this class.
+ * 
+ *  @category Wallet
+ */
 export class UTXOHDWallet extends BaseWallet {
      /**
      *  The compressed public key.
@@ -75,7 +80,7 @@ export class UTXOHDWallet extends BaseWallet {
       *  The mnemonic used to create this HD Node, if available.
       *
       *  Sources such as extended keys do not encode the mnemonic, in
-      *  which case this will be ``null``.
+      *  which case this will be `null`.
       */
      readonly mnemonic!: null | Mnemonic;
  
@@ -89,13 +94,13 @@ export class UTXOHDWallet extends BaseWallet {
       *  The derivation path of this wallet.
       *
       *  Since extended keys do not provider full path details, this
-      *  may be ``null``, if instantiated from a source that does not
+      *  may be `null`, if instantiated from a source that does not
       *  enocde it.
       */
      readonly path!: null | string;
  
      /**
-      *  The child index of this wallet. Values over ``2 *\* 31`` indicate
+      *  The child index of this wallet. Values over `2 *\* 31` indicate
       *  the node is hardened.
       */
      readonly index!: number;
@@ -188,6 +193,11 @@ export class UTXOHDWallet extends BaseWallet {
 
     /**
      *  Creates a new random HDNode.
+     * 
+     *  @param {string} path - The BIP44 path to derive.
+     *  @param {string} [password] - The password to use for the mnemonic.
+     *  @param {Wordlist} [wordlist] - The wordlist to use for the mnemonic.
+     *  @returns {UTXOHDWallet} The new HDNode.
      */
     static createRandom( path: string, password?: string, wordlist?: Wordlist): UTXOHDWallet {
         if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
@@ -196,7 +206,11 @@ export class UTXOHDWallet extends BaseWallet {
     }
 
     /**
-     *  Create an HD Node from %%mnemonic%%.
+     *  Create an HD Node from `mnemonic`.
+     * 
+     *  @param {Mnemonic} mnemonic - The mnemonic to create the HDNode from.
+     *  @param {string} path - The BIP44 path to derive.
+     *  @returns {UTXOHDWallet} The new HDNode.
      */
     static fromMnemonic(mnemonic: Mnemonic, path: string): UTXOHDWallet {
         if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
@@ -204,7 +218,13 @@ export class UTXOHDWallet extends BaseWallet {
     }
 
     /**
-     *  Creates an HD Node from a mnemonic %%phrase%%.
+     *  Creates an HD Node from a mnemonic `phrase`.
+     * 
+     *  @param {string} phrase - The mnemonic phrase to create the HDNode from.
+     *  @param {string} path - The BIP44 path to derive.
+     *  @param {string} [password] - The password to use for the mnemonic.
+     *  @param {Wordlist} [wordlist] - The wordlist to use for the mnemonic.
+     *  @returns {UTXOHDWallet} The new HDNode.
      */
     static fromPhrase(phrase: string, path: string, password?: string, wordlist?: Wordlist): UTXOHDWallet {
         if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
@@ -214,8 +234,8 @@ export class UTXOHDWallet extends BaseWallet {
 
     /**
      * Checks if the provided BIP44 path is valid and limited to the change level.
-     * @param path The BIP44 path to check.
-     * @returns true if the path is valid and does not include the address_index; false otherwise.
+     * @param {string} path - The BIP44 path to validate.
+     * @returns {boolean} true if the path is valid and does not include the address_index; false otherwise.
      */
     static isValidPath(path: string): boolean {
         // BIP44 path regex pattern for up to the 'change' level, excluding 'address_index'
@@ -225,7 +245,10 @@ export class UTXOHDWallet extends BaseWallet {
     }
 
     /**
-     *  Return the child for %%index%%.
+     *  Return the child for `index`.
+     * 
+     *  @param {number} _index - The index to derive.
+     *  @returns {UTXOHDWallet} The derived child.
      */
     deriveChild(_index: Numeric): UTXOHDWallet {
         const index = getNumber(_index, "index");
@@ -259,8 +282,12 @@ export class UTXOHDWallet extends BaseWallet {
     /**
      *  Generates a list of addresses and private keys with UTXOs in the specified zone
      *  It also updates the map of addresses to unspent outputs
+     * 
+     *  @param {string} zone - The zone to sync UTXOs for
+     *  @param {number} gap - The number of addresses to generate before stopping
+     *  @returns {Promise<void>} A promise that resolves when the UTXOs have been synced
      */
-    async syncUTXOs(zone: string, gap: number = 20  ){
+    async syncUTXOs(zone: string, gap: number = 20  ): Promise<void>{
         zone = zone.toLowerCase();
         // Check if zone is valid
         const shard = ShardData.find(shard => shard.name.toLowerCase() === zone || shard.nickname.toLowerCase() === zone || shard.byte.toLowerCase() === zone);
@@ -316,7 +343,12 @@ export class UTXOHDWallet extends BaseWallet {
     }
 
     /**
-     * Derives address by incrementing address_index according to BIP44
+     *  Derives address by incrementing address_index according to BIP44
+     * 
+     *  @param {number} index - The index to derive.
+     *  @param {string} zone - The zone to derive the address for
+     *  @returns {UTXOHDWallet} The derived child.
+     *  @throws {Error} If the zone is invalid
      */
     deriveAddress(index: number, zone?: string): UTXOHDWallet {
         if (!this.path) throw new Error("Missing Path");
@@ -345,10 +377,14 @@ export class UTXOHDWallet extends BaseWallet {
 
         return newWallet;   
     }
+
     /**
      *  Signs a UTXO transaction and returns the serialized transaction
+     *  
+     *  @param {QiTransactionRequest} tx - The transaction to sign.
+     *  @returns {Promise<string>} The serialized transaction.
+     *  @throws {Error} If the UTXO transaction is invalid.
      */
-
     async signTransaction(tx: QiTransactionRequest): Promise<string> {
         const txobj = QiTransaction.from((<TransactionLike>tx))
         if (!txobj.txInputs || !txobj.txOutputs) throw new Error('Invalid UTXO transaction, missing inputs or outputs')

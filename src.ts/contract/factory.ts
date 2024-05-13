@@ -27,6 +27,8 @@ import {QuaiTransactionRequest} from "../providers/provider";
 
 /**
  *  A **ContractFactory** is used to deploy a Contract to the blockchain.
+ * 
+ *  @category Contract
  */
 export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract> {
 
@@ -46,10 +48,10 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
     readonly runner!: null | ContractRunner;
 
     /**
-     *  Create a new **ContractFactory** with %%abi%% and %%bytecode%%,
-     *  optionally connected to %%runner%%.
+     *  Create a new **ContractFactory** with `abi` and `bytecode`,
+     *  optionally connected to `runner`.
      *
-     *  The %%bytecode%% may be the ``bytecode`` property within the
+     *  The `bytecode` may be the `bytecode` property within the
      *  standard Solidity JSON output.
      */
     constructor(abi: Interface | InterfaceAbi, bytecode: BytesLike | { object: string }, runner?: null | ContractRunner) {
@@ -75,8 +77,11 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
     }
 
     /**
-     *  Resolves to the transaction to deploy the contract, passing %%args%%
+     *  Resolves to the transaction to deploy the contract, passing `args`
      *  into the constructor.
+     * 
+     *  @param {ContractMethods<A>} args - The arguments to the constructor.
+     *  @returns {Promise<ContractDeployTransaction>} A promise resolving to the deployment transaction.
      */
     async getDeployTransaction(...args: ContractMethodArgs<A>): Promise<ContractDeployTransaction> {
         let overrides: Omit<ContractDeployTransaction, "data">;
@@ -154,12 +159,15 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
 
 
     /**
-     *  Resolves to the Contract deployed by passing %%args%% into the
+     *  Resolves to the Contract deployed by passing `args` into the
      *  constructor.
      *
      *  This will resovle to the Contract before it has been deployed to the
-     *  network, so the [[BaseContract-waitForDeployment]] should be used before
+     *  network, so the [baseContract.waitForDeployment](../classes/BaseContract#waitForDeployment) should be used before
      *  sending any transactions to it.
+     * 
+     *  @param {ContractMethods<A>} args - The arguments to the constructor.
+     *  @returns {Promise<BaseContract & { deploymentTransaction(): ContractTransactionResponse } & Omit<I, keyof BaseContract>>} A promise resolving to the Contract.
      */
     async deploy(...args: ContractMethodArgs<A>): Promise<BaseContract & { deploymentTransaction(): ContractTransactionResponse } & Omit<I, keyof BaseContract>> {
         const tx = await this.getDeployTransaction(...args);
@@ -223,7 +231,10 @@ static getContractAddress(transaction: {
 
     /**
      *  Return a new **ContractFactory** with the same ABI and bytecode,
-     *  but connected to %%runner%%.
+     *  but connected to `runner`.
+     * 
+     *  @param {ContractRunner} runner - The runner to connect to.
+     *  @returns {ContractFactory<A, I>} A new ContractFactory.
      */
     connect(runner: null | ContractRunner): ContractFactory<A, I> {
         return new ContractFactory(this.interface, this.bytecode, runner);
@@ -231,6 +242,10 @@ static getContractAddress(transaction: {
 
     /**
      *  Create a new **ContractFactory** from the standard Solidity JSON output.
+     * 
+     *  @param {any} output - The Solidity JSON output.
+     *  @param {ContractRunner} runner - The runner to connect to.
+     *  @returns {ContractFactory<A, I>} A new ContractFactory.
      */
     static fromSolidity<A extends Array<any> = Array<any>, I = ContractInterface>(output: any, runner?: ContractRunner): ContractFactory<A, I> {
         assertArgument(output != null, "bad compiler output", "output", output);

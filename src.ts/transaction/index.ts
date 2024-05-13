@@ -7,17 +7,23 @@
 null;
 
 /**
- *  A single [[AccessList]] entry of storage keys (slots) for an address.
+ *  A single {@link AccessList | **AccessList** } entry of storage keys (slots) for an address.
+ * 
+ *  @category Transaction
  */
 export type AccessListEntry = { address: string, storageKeys: Array<string> };
 
 /**
- *  An ordered collection of [[AccessList]] entries.
+ *  An ordered collection of {@link AccessList | **AccessList** } entries.
+ * 
+ *  @category Transaction
  */
 export type AccessList = Array<AccessListEntry>;
 
 /**
  *  Any quais-supported access list structure.
+ * 
+ *  @category Transaction
  */
 export type AccessListish = AccessList |
                             Array<[ string, Array<string> ]> |

@@ -20,13 +20,14 @@ const _keccak256 = function(data: Uint8Array): Uint8Array {
 let __keccak256: (data: Uint8Array) => BytesLike = _keccak256;
 
 /**
- *  Compute the cryptographic KECCAK256 hash of %%data%%.
+ *  Compute the cryptographic KECCAK256 hash of `data`.
  *
- *  The %%data%% **must** be a data representation, to compute the
- *  hash of UTF-8 data use the [[id]] function.
+ *  The `data` **must** be a data representation, to compute the
+ *  hash of UTF-8 data use the [**id**}(../functions/id) function.
  *
  *  @returns DataHexstring
- *  @example:
+ *  @example
+ *  ```ts
  *    keccak256("0x")
  *    //_result:
  *
@@ -40,6 +41,12 @@ let __keccak256: (data: Uint8Array) => BytesLike = _keccak256;
  *    // throw. To hash UTF-8 data, see the note above.
  *    keccak256("Hello World")
  *    //_error:
+ *  ```
+ * 
+ *  @param {BytesLike} _data - The data to hash.
+ *  @returns {string} The hash of the data.
+ * 
+ *  @category Crypto
  */
 export function keccak256(_data: BytesLike): string {
     const data = getBytes(_data, "data");

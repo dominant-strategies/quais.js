@@ -20,12 +20,10 @@ let locked256 = false, locked512 = false;
 
 
 /**
- *  Compute the cryptographic SHA2-256 hash of %%data%%.
+ *  Compute the cryptographic SHA2-256 hash of `data`.
  *
- *  @_docloc: api/crypto:Hash Functions
- *  @returns DataHexstring
- *
- *  @example:
+ *  @example
+ *  ```ts
  *    sha256("0x")
  *    //_result:
  *
@@ -34,7 +32,12 @@ let locked256 = false, locked512 = false;
  *
  *    sha256(new Uint8Array([ 0x13, 0x37 ]))
  *    //_result:
- *
+ *  ```
+ * 
+ *  @param {BytesLike} _data - The data to hash.
+ *  @returns {string} The hash of the data.
+ * 
+ *  @category Crypto
  */
 export function sha256(_data: BytesLike): string {
     const data = getBytes(_data, "data");
@@ -50,12 +53,10 @@ Object.freeze(sha256);
 
 
 /**
- *  Compute the cryptographic SHA2-512 hash of %%data%%.
+ *  Compute the cryptographic SHA2-512 hash of `data`.
  *
- *  @_docloc: api/crypto:Hash Functions
- *  @returns DataHexstring
- *
- *  @example:
+ *  @example
+ *  ```ts
  *    sha512("0x")
  *    //_result:
  *
@@ -64,6 +65,12 @@ Object.freeze(sha256);
  *
  *    sha512(new Uint8Array([ 0x13, 0x37 ]))
  *    //_result:
+ *  ```
+ * 
+ *  @param {BytesLike} _data - The data to hash.
+ *  @returns {string} The hash of the data.
+ * 
+ *  @category Crypto
  */
 export function sha512(_data: BytesLike): string {
     const data = getBytes(_data, "data");

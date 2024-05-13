@@ -1,17 +1,14 @@
 /**
- *  When sending values to or receiving values from a [[Contract]], the
- *  data is generally encoded using the [ABI standard](link-solc-abi).
+ *  When sending values to or receiving values from a [Contract](../classes/Contract), the
+ *  data is generally encoded using the [ABI Specification](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#formal-specification-of-the-encoding).
  *
- *  The AbiCoder provides a utility to encode values to ABI data and
- *  decode values from ABI data.
+ *  The AbiCoder provides a utility to encode values to ABI data and decode values from ABI data.
  *
- *  Most of the time, developers should favour the [[Contract]] class,
- *  which further abstracts a lot of the finer details of ABI data.
+ *  Most of the time, developers should favor the [Contract](../classes/Contract) class, which further abstracts
+ *  the finer details of ABI data.
  *
- *  @_section api/abi/abi-coder:ABI Encoding
+ * @category Application Binary Interface
  */
-
-// See: https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI
 
 import { assertArgumentCount, assertArgument } from "../utils/index.js";
 
@@ -123,6 +120,8 @@ function getBuiltinCallException(action: CallExceptionAction, tx: { to?: null | 
 /**
  *  The **AbiCoder** is a low-level class responsible for encoding JavaScript
  *  values into binary data and decoding binary data into JavaScript values.
+ * 
+ *  @category Application Binary Interface
  */
 export class AbiCoder {
 
@@ -169,10 +168,12 @@ export class AbiCoder {
     }
 
     /**
-     *  Get the default values for the given %%types%%.
+     *  Get the default values for the given types.
+     *  For example, a `uint` is by default `0` and `bool`
+     *  is by default `false`.
      *
-     *  For example, a ``uint`` is by default ``0`` and ``bool``
-     *  is by default ``false``.
+     *  @param {Array<string | ParamType>} types - Array of parameter types to get default values for.
+     *  @returns {Result} The default values corresponding to the given types.
      */
     getDefaultValue(types: ReadonlyArray<string | ParamType>): Result {
         const coders: Array<Coder> = types.map((type) => this.#getCoder(ParamType.from(type)));
@@ -181,9 +182,11 @@ export class AbiCoder {
     }
 
     /**
-     *  Encode the %%values%% as the %%types%% into ABI data.
+     *  Encode the values as the specified types into ABI data.
      *
-     *  @returns DataHexstring
+     *  @param {Array<string | ParamType>} types - Array of parameter types.
+     *  @param {Array<any>} values - Array of values to encode.
+     *  @returns {string} The encoded data in hexadecimal format.
      */
     encode(types: ReadonlyArray<string | ParamType>, values: ReadonlyArray<any>): string {
         assertArgumentCount(values.length, types.length, "types/values length mismatch");
@@ -197,11 +200,16 @@ export class AbiCoder {
     }
 
     /**
-     *  Decode the ABI %%data%% as the %%types%% into values.
+     *  Decode the ABI data as the types into values.
      *
-     *  If %%loose%% decoding is enabled, then strict padding is
+     *  If loose decoding is enabled, then strict padding is
      *  not enforced. Some older versions of Solidity incorrectly
-     *  padded event data emitted from ``external`` functions.
+     *  padded event data emitted from `external` functions.
+     * 
+     *  @param {Array<string | ParamType>} types - Array of parameter types.
+     *  @param {BytesLike} data - The ABI data to decode.
+     *  @param {boolean} [loose=false] - Enable loose decoding.
+     *  @returns {Result} The decoded values.
      */
     decode(types: ReadonlyArray<string | ParamType>, data: BytesLike, loose?: boolean): Result {
         const coders: Array<Coder> = types.map((type) => this.#getCoder(ParamType.from(type)));
@@ -209,15 +217,22 @@ export class AbiCoder {
         return coder.decode(new Reader(data, loose, defaultMaxInflation));
     }
 
+    /**
+     *  Set the default maximum inflation factor.
+     *
+     *  @param {number} value - The new inflation factor.
+     */
     static _setDefaultMaxInflation(value: number): void {
         assertArgument(typeof(value) === "number" && Number.isInteger(value), "invalid defaultMaxInflation factor", "value", value);
         defaultMaxInflation = value;
     }
 
     /**
-     *  Returns the shared singleton instance of a default [[AbiCoder]].
+     *  Returns the shared singleton instance of a default {@link AbiCoder | **AbiCoder**}.
      *
      *  On the first call, the instance is created internally.
+     *
+     *  @returns {AbiCoder} The default ABI coder instance.
      */
     static defaultAbiCoder(): AbiCoder {
         if (defaultCoder == null) {
@@ -227,9 +242,12 @@ export class AbiCoder {
     }
 
     /**
-     *  Returns an quais-compatible [[CallExceptionError]] Error for the given
-     *  result %%data%% for the [[CallExceptionAction]] %%action%% against
-     *  the Transaction %%tx%%.
+     *  Returns a quais-compatible {@link CallExceptionError | **CallExceptionError**} for the given result data.
+     *
+     *  @param {CallExceptionAction} action - The action that triggered the exception.
+     *  @param {Object} tx - The transaction information.
+     *  @param {BytesLike | null} data - The data associated with the call exception.
+     *  @returns {CallExceptionError} The corresponding call exception error.
      */
     static getBuiltinCallException(action: CallExceptionAction, tx: { to?: null | string, from?: null | string, data?: string }, data: null | BytesLike): CallExceptionError {
         return getBuiltinCallException(action, tx, data, AbiCoder.defaultAbiCoder());

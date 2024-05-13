@@ -28,6 +28,8 @@ function splitBuffer(data: Buffer): { messages: Array<string>, remaining: Buffer
  *  An **IpcSocketProvider** connects over an IPC socket on the host
  *  which provides fast access to the node, but requires the node and
  *  the script run on the same machine.
+ * 
+ *  @category Providers
  */
 export class IpcSocketProvider extends SocketProvider {
     #socket: Socket;

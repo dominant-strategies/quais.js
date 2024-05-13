@@ -10,11 +10,15 @@ import type { BytesLike } from "./data.js";
 
 /**
  *  Any type that can be used where a numeric value is needed.
+ * 
+ *  @category Utils
  */
 export type Numeric = number | bigint;
 
 /**
  *  Any type that can be used where a big number is needed.
+ * 
+ *  @category Utils
  */
 export type BigNumberish = string | Numeric;
 
@@ -29,10 +33,17 @@ const BN_1 = BigInt(1);
 const maxValue = 0x1fffffffffffff;
 
 /**
- *  Convert %%value%% from a twos-compliment representation of %%width%%
+ *  Convert `value` from a twos-compliment representation of `width`
  *  bits to its value.
  *
- *  If the highest bit is ``1``, the result will be negative.
+ *  If the highest bit is `1`, the result will be negative.
+ * 
+ *  @param {BigNumberish} _value - The value to convert.
+ *  @param {Numeric} _width - The width of the value in bits.
+ *  @returns {bigint} The value.
+ *  @throws {Error} If the value is too large for the width.
+ * 
+ *  @category Utils
  */
 export function fromTwos(_value: BigNumberish, _width: Numeric): bigint {
     const value = getUint(_value, "value");
@@ -52,10 +63,17 @@ export function fromTwos(_value: BigNumberish, _width: Numeric): bigint {
 }
 
 /**
- *  Convert %%value%% to a twos-compliment representation of
- *  %%width%% bits.
+ *  Convert `value` to a twos-compliment representation of
+ *  `width` bits.
  *
  *  The result will always be positive.
+ *  
+ *  @param {BigNumberish} _value - The value to convert.
+ *  @param {Numeric} _width - The width of the value in bits.
+ *  @returns {bigint} The value.
+ *  @throws {Error} If the value is too large for the width.
+ * 
+ *  @category Utils
  */
 export function toTwos(_value: BigNumberish, _width: Numeric): bigint {
     let value = getBigInt(_value, "value");
@@ -80,7 +98,13 @@ export function toTwos(_value: BigNumberish, _width: Numeric): bigint {
 }
 
 /**
- *  Mask %%value%% with a bitmask of %%bits%% ones.
+ *  Mask `value` with a bitmask of `bits` ones.
+ * 
+ *  @param {BigNumberish} _value - The value to mask.
+ *  @param {Numeric} _bits - The number of bits to mask.
+ *  @returns {bigint} The masked value.
+ * 
+ *  @category Utils
  */
 export function mask(_value: BigNumberish, _bits: Numeric): bigint {
     const value = getUint(_value, "value");
@@ -89,8 +113,14 @@ export function mask(_value: BigNumberish, _bits: Numeric): bigint {
 }
 
 /**
- *  Gets a BigInt from %%value%%. If it is an invalid value for
- *  a BigInt, then an ArgumentError will be thrown for %%name%%.
+ *  Gets a BigInt from `value`. If it is an invalid value for
+ *  a BigInt, then an ArgumentError will be thrown for `name`.
+ * 
+ *  @param {BigNumberish} value - The value to convert.
+ *  @param {string} name - The name of the value.
+ *  @returns {bigint} The value.
+ * 
+ *  @category Utils
  */
 export function getBigInt(value: BigNumberish, name?: string): bigint {
     switch (typeof (value)) {
@@ -114,7 +144,12 @@ export function getBigInt(value: BigNumberish, name?: string): bigint {
 }
 
 /**
- * Returns absolute value of bigint %%value%%. 
+ *  Returns absolute value of bigint `value`. 
+ * 
+ *  @param {BigNumberish} value - The value to convert.
+ *  @returns {bigint} The absolute value.
+ * 
+ *  @category Utils
  */
 export function bigIntAbs(value: BigNumberish): bigint {
     value = getBigInt(value);
@@ -127,8 +162,15 @@ export function bigIntAbs(value: BigNumberish): bigint {
 }
 
 /**
- *  Returns %%value%% as a bigint, validating it is valid as a bigint
+ *  Returns `value` as a bigint, validating it is valid as a bigint
  *  value and that it is positive.
+ * 
+ *  @param {BigNumberish} value - The value to convert.
+ *  @param {string} name - The name of the value.
+ *  @returns {bigint} The value.
+ *  @throws {Error} If the value is negative.
+ * 
+ *  @category Utils
  */
 export function getUint(value: BigNumberish, name?: string): bigint {
     const result = getBigInt(value, name);
@@ -140,9 +182,14 @@ export function getUint(value: BigNumberish, name?: string): bigint {
 
 const Nibbles = "0123456789abcdef";
 
-/*
- * Converts %%value%% to a BigInt. If %%value%% is a Uint8Array, it
- * is treated as Big Endian data.
+/** 
+ *  Converts `value` to a BigInt. If `value` is a Uint8Array, it
+ *  is treated as Big Endian data.
+ * 
+ *  @param {BigNumberish | Uint8Array} value - The value to convert.
+ *  @returns {bigint} The value.
+ * 
+ *  @category Utils
  */
 export function toBigInt(value: BigNumberish | Uint8Array): bigint {
     if (value instanceof Uint8Array) {
@@ -158,8 +205,16 @@ export function toBigInt(value: BigNumberish | Uint8Array): bigint {
 }
 
 /**
- *  Gets a //number// from %%value%%. If it is an invalid value for
- *  a //number//, then an ArgumentError will be thrown for %%name%%.
+ *  Gets a //number// from `value`. If it is an invalid value for
+ *  a //number//, then an ArgumentError will be thrown for `name`.
+ * 
+ *  @param {BigNumberish} value - The value to convert.
+ *  @param {string} name - The name of the value.
+ *  @returns {number} The value.
+ *  @throws {Error} If the value is invalid.
+ *  @throws {Error} If the value is too large.
+ * 
+ *  @category Utils
  */
 export function getNumber(value: BigNumberish, name?: string): number {
     switch (typeof (value)) {
@@ -183,16 +238,29 @@ export function getNumber(value: BigNumberish, name?: string): number {
 
 
 /**
- *  Converts %%value%% to a number. If %%value%% is a Uint8Array, it
+ *  Converts `value` to a number. If `value` is a Uint8Array, it
  *  is treated as Big Endian data. Throws if the value is not safe.
+ * 
+ *  @param {BigNumberish | Uint8Array} value - The value to convert.
+ *  @returns {number} The value.
+ *  @throws {Error} If the value is not safe to convert to a number.
+ * 
+ *  @category Utils
  */
 export function toNumber(value: BigNumberish | Uint8Array): number {
     return getNumber(toBigInt(value));
 }
 
 /**
- *  Converts %%value%% to a Big Endian hexstring, optionally padded to
- *  %%width%% bytes.
+ *  Converts `value` to a Big Endian hexstring, optionally padded to
+ *  `width` bytes.
+ * 
+ *  @param {BigNumberish} _value - The value to convert.
+ *  @param {Numeric} _width - The width of the value in bytes.
+ *  @returns {string} The hexstring.
+ *  @throws {Error} If the value exceeds the width.
+ * 
+ *  @category Utils 
  */
 export function toBeHex(_value: BigNumberish, _width?: Numeric): string {
     const value = getUint(_value, "value");
@@ -219,7 +287,12 @@ export function toBeHex(_value: BigNumberish, _width?: Numeric): string {
 }
 
 /**
- *  Converts %%value%% to a Big Endian Uint8Array.
+ *  Converts `value` to a Big Endian Uint8Array.
+ * 
+ *  @param {BigNumberish} _value - The value to convert.
+ *  @returns {Uint8Array} The value.
+ * 
+ *  @category Utils
  */
 export function toBeArray(_value: BigNumberish): Uint8Array {
     const value = getUint(_value, "value");
@@ -239,11 +312,16 @@ export function toBeArray(_value: BigNumberish): Uint8Array {
 }
 
 /**
- *  Returns a [[HexString]] for %%value%% safe to use as a //Quantity//.
+ *  Returns a `HexString` for `value` safe to use as a //Quantity//.
  *
  *  A //Quantity// does not have and leading 0 values unless the value is
  *  the literal value `0x0`. This is most commonly used for JSSON-RPC
  *  numeric values.
+ * 
+ *  @param {BigNumberish | Uint8Array} value - The value to convert.
+ *  @returns {string} The quantity.
+ * 
+ *  @category Utils
  */
 export function toQuantity(value: BytesLike | BigNumberish): string {
     let result = hexlify(isBytesLike(value) ? value : toBeArray(value)).substring(2);

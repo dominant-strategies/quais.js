@@ -19,7 +19,7 @@ function copy(obj: any): any {
  *  the filter, so that periodic calls to follow up on the //Filter ID//
  *  will receive any events since the last call.
  *
- *  @_docloc: api/providers/abstract-provider
+ *  @category Providers
  */
 export class FilterIdSubscriber implements Subscriber {
     #provider: JsonRpcApiProvider;
@@ -34,9 +34,11 @@ export class FilterIdSubscriber implements Subscriber {
     #hault: boolean;
 
     /**
-     *  Creates a new **FilterIdSubscriber** which will used [[_subscribe]]
-     *  and [[_emitResults]] to setup the subscription and provide the event
-     *  to the %%provider%%.
+     *  Creates a new **FilterIdSubscriber** which will used 
+     *  {@link FilterIdSubscriber._subscribe | **_subscribe**} and 
+     *  {@link FilterIdSubscriber._emitResults | **_emitResults**} to 
+     *  setup the subscription and provide the event
+     *  to the `provider`.
      */
     constructor(provider: JsonRpcApiProvider) {
         this.#provider = provider;
@@ -150,14 +152,14 @@ export class FilterIdSubscriber implements Subscriber {
 /**
  *  A **FilterIdSubscriber** for receiving contract events.
  *
- *  @_docloc: api/providers/abstract-provider
+ *  @category Providers
  */
 export class FilterIdEventSubscriber extends FilterIdSubscriber {
     #event: EventFilter;
 
     /**
-     *  Creates a new **FilterIdEventSubscriber** attached to %%provider%%
-     *  listening for %%filter%%.
+     *  Creates a new **FilterIdEventSubscriber** attached to `provider`
+     *  listening for `filter%%.
      */
     constructor(provider: JsonRpcApiProvider, filter: EventFilter) {
         super(provider);
@@ -183,7 +185,7 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
 /**
  *  A **FilterIdSubscriber** for receiving pending transactions events.
  *
- *  @_docloc: api/providers/abstract-provider
+ *  @category Providers
  */
 export class FilterIdPendingSubscriber extends FilterIdSubscriber {
     async _subscribe(provider: JsonRpcApiProvider): Promise<string> {

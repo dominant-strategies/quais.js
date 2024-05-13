@@ -4,13 +4,9 @@
  *  decode events and errors.
  *
  *  See [About ABIs](docs-abi) for more details how they are used.
- *
- *  @_section api/abi:Application Binary Interface  [about-abi]
- *  @_navTitle: ABI
+ *  @TODO LINK TO: [[docs-abi]] (abi.wrm file)
  */
 
-
-//////
 export { AbiCoder } from "./abi-coder.js";
 
 export { decodeBytes32String, encodeBytes32String } from "./bytes32.js";

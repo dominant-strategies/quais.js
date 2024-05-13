@@ -1,3 +1,9 @@
+/**
+ *  Constant data that defines each shard within the network.
+ * 
+ *  @category Constants
+ */
+
 export const ShardData = [
   {
       name: "Cyprus One",

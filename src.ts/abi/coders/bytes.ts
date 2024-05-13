@@ -6,7 +6,7 @@ import type { Reader, Writer } from "./abstract-coder.js";
 
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export class DynamicBytesCoder extends Coder {
     constructor(type: string, localName: string) {
@@ -30,7 +30,7 @@ export class DynamicBytesCoder extends Coder {
 }
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export class BytesCoder extends DynamicBytesCoder {
     constructor(localName: string) {

@@ -6,24 +6,23 @@ const checksum = "0x25f44555f4af25b51a711136e1c7d6e50ce9f8917d39d6b1f076b2bb4d2f
 let wordlist: null | LangCz = null;
 
 /**
- *  The [[link-bip39-cz]] for [mnemonic phrases](link-bip-39).
+ *  The [Czech wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/czech.txt) for [mnemonic phrases](https://en.bitcoin.it/wiki/BIP_0039).
  *
  *  @_docloc: api/wordlists
  */
 export class LangCz extends WordlistOwl {
-
     /**
      *  Creates a new instance of the Czech language Wordlist.
      *
      *  Using the constructor should be unnecessary, instead use the
-     *  [[wordlist]] singleton method.
+     *  {@link wordlist | **wordlist**} singleton method.
      *
-     *  @_ignore:
+     *  @ignore
      */
     constructor() { super("cz", words, checksum); }
 
     /**
-     *  Returns a singleton instance of a ``LangCz``, creating it
+     *  Returns a singleton instance of a `LangCz`, creating it
      *  if this is the first time being called.
      */
     static wordlist(): LangCz {

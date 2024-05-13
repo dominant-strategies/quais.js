@@ -4,7 +4,7 @@ import { Coder } from "./abstract-coder.js";
 import type { Reader, Writer } from "./abstract-coder.js";
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export class BooleanCoder extends Coder {
 

@@ -64,19 +64,18 @@ function loadWords(): Array<string> {
 let wordlist: null | LangKo = null;
 
 /**
- *  The [[link-bip39-ko]] for [mnemonic phrases](link-bip-39).
+ *  The [Korean wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/korean.txt) for [mnemonic phrases](https://en.bitcoin.it/wiki/BIP_0039).
  *
  *  @_docloc: api/wordlists
  */
 export class LangKo extends Wordlist {
-
     /**
      *  Creates a new instance of the Korean language Wordlist.
      *
      *  This should be unnecessary most of the time as the exported
-     *  [[langKo]] should suffice.
+     *  {@link langKo} should suffice.
      *
-     *  @_ignore:
+     *  @ignore
      */
     constructor() {
         super("ko");
@@ -94,7 +93,7 @@ export class LangKo extends Wordlist {
     }
 
     /**
-     *  Returns a singleton instance of a ``LangKo``, creating it
+     *  Returns a singleton instance of a `LangKo`, creating it
      *  if this is the first time being called.
      */
     static wordlist(): LangKo {

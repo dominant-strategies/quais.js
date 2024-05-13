@@ -38,46 +38,52 @@ function getTens(decimals: number): bigint {
 
 
 
-    /*
-     *  Returns a new FixedFormat for %%value%%.
-     *
-     *  If %%value%% is specified as a ``number``, the bit-width is
-     *  128 bits and %%value%% is used for the ``decimals``.
-     *
-     *  A string %%value%% may begin with ``fixed`` or ``ufixed``
-     *  for signed and unsigned respectfully. If no other properties
-     *  are specified, the bit-width is 128-bits with 18 decimals.
-     *
-     *  To specify the bit-width and demicals, append them separated
-     *  by an ``"x"`` to the %%value%%.
-     *
-     *  For example, ``ufixed128x18`` describes an unsigned, 128-bit
-     *  wide format with 18 decimals.
-     *
-     *  If %%value%% is an other object, its properties for ``signed``,
-     *  ``width`` and ``decimals`` are checked.
-     */
+
 
 /**
  *  A description of a fixed-point arithmetic field.
  *
  *  When specifying the fixed format, the values override the default of
- *  a ``fixed128x18``, which implies a signed 128-bit value with 18
+ *  a `fixed128x18`, which implies a signed 128-bit value with 18
  *  decimals of precision.
  *
- *  The alias ``fixed`` and ``ufixed`` can be used for ``fixed128x18`` and
- *  ``ufixed128x18`` respectively.
+ *  The alias `fixed` and `ufixed` can be used for `fixed128x18` and
+ *  `ufixed128x18` respectively.
  *
- *  When a fixed format string begins with a ``u``, it indicates the field
+ *  When a fixed format string begins with a `u`, it indicates the field
  *  is unsigned, so any negative values will overflow. The first number
  *  indicates the bit-width and the second number indicates the decimal
  *  precision.
  *
- *  When a ``number`` is used for a fixed format, it indicates the number
+ *  When a `number` is used for a fixed format, it indicates the number
  *  of decimal places, and the default width and signed-ness will be used.
  *
  *  The bit-width must be byte aligned and the decimals can be at most 80.
+ * 
+ *  @TODO this comment is seemingly unused, remove if not needed 
  */
+
+/**
+  *  Returns a new FixedFormat for `value`.
+  *
+  *  If `value` is specified as a `number`, the bit-width is
+  *  128 bits and `value` is used for the `decimals`.
+  *
+  *  A string `value` may begin with `fixed` or `ufixed`
+  *  for signed and unsigned respectfully. If no other properties
+  *  are specified, the bit-width is 128-bits with 18 decimals.
+  *
+  *  To specify the bit-width and demicals, append them separated
+  *  by an `"x"` to the `value`.
+  *
+  *  For example, `ufixed128x18` describes an unsigned, 128-bit
+  *  wide format with 18 decimals.
+  *
+  *  If `value` is an other object, its properties for `signed`,
+  *  `width` and `decimals` are checked.
+  * 
+  *  @category Utils
+  */
 export type FixedFormat = number | string | {
     signed?: boolean,
     width?: number,
@@ -187,7 +193,7 @@ function toString(val: bigint, decimals: number) {
 
 
 /**
- *  A FixedNumber represents a value over its [[FixedFormat]]
+ *  A FixedNumber represents a value over its {@link FixedFormat | **FixedFormat**}
  *  arithmetic field.
  *
  *  A FixedNumber can be used to perform math, losslessly, on
@@ -195,31 +201,33 @@ function toString(val: bigint, decimals: number) {
  *
  *  A FixedNumber has a fixed bit-width to store values in, and stores all
  *  values internally by multiplying the value by 10 raised to the power of
- *  %%decimals%%.
+ *  `decimals`.
  *
  *  If operations are performed that cause a value to grow too high (close to
  *  positive infinity) or too low (close to negative infinity), the value
  *  is said to //overflow//.
  *
  *  For example, an 8-bit signed value, with 0 decimals may only be within
- *  the range ``-128`` to ``127``; so ``-128 - 1`` will overflow and become
- *  ``127``. Likewise, ``127 + 1`` will overflow and become ``-127``.
+ *  the range `-128` to `127`; so `-128 - 1` will overflow and become
+ *  `127`. Likewise, `127 + 1` will overflow and become `-127`.
  *
  *  Many operation have a normal and //unsafe// variant. The normal variant
- *  will throw a [[NumericFaultError]] on any overflow, while the //unsafe//
+ *  will throw a [NumericFaultError](../interfaces/NumericFaultError) on any overflow, while the //unsafe//
  *  variant will silently allow overflow, corrupting its value value.
  *
  *  If operations are performed that cause a value to become too small
  *  (close to zero), the value loses precison and is said to //underflow//.
  *
  *  For example, an value with 1 decimal place may store a number as small
- *  as ``0.1``, but the value of ``0.1 / 2`` is ``0.05``, which cannot fit
+ *  as `0.1`, but the value of `0.1 / 2` is `0.05`, which cannot fit
  *  into 1 decimal place, so underflow occurs which means precision is lost
- *  and the value becomes ``0``.
+ *  and the value becomes `0`.
  *
  *  Some operations have a normal and //signalling// variant. The normal
  *  variant will silently ignore underflow, while the //signalling// variant
- *  will thow a [[NumericFaultError]] on underflow.
+ *  will thow a [NumericFaultError](../interfaces/NumericFaultError) on underflow.
+ * 
+ *  @category Utils
  */
 export class FixedNumber {
 
@@ -282,7 +290,7 @@ export class FixedNumber {
 
     /**
      *  The value as an integer, based on the smallest unit the
-     *  [[decimals]] allow.
+     *  {@link FixedNumber.decimals | **decimals**} allow.
      */
     get value(): bigint { return this.#val; }
 
@@ -324,15 +332,21 @@ export class FixedNumber {
     }
 
     /**
-     *  Returns a new [[FixedNumber]] with the result of %%this%% added
-     *  to %%other%%, ignoring overflow.
+     *  Returns a new {@link FixedNumber | **FixedNumber**} with the result of `this` added
+     *  to `other`, ignoring overflow.
+     * 
+     *  @param {FixedNumber} other - The value to add to `this`.
+     *  @returns {FixedNumber} The result of the addition.
      */
     addUnsafe(other: FixedNumber): FixedNumber { return this.#add(other); }
 
     /**
-     *  Returns a new [[FixedNumber]] with the result of %%this%% added
-     *  to %%other%%. A [[NumericFaultError]] is thrown if overflow
+     *  Returns a new {@link FixedNumber | **FixedNumber**} with the result of `this` added
+     *  to `other`. A [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow
      *  occurs.
+     * 
+     *  @param {FixedNumber} other - The value to add to `this`.
+     *  @returns {FixedNumber} The result of the addition.
      */
     add(other: FixedNumber): FixedNumber { return this.#add(other, "add"); }
 
@@ -342,15 +356,21 @@ export class FixedNumber {
     }
 
     /**
-     *  Returns a new [[FixedNumber]] with the result of %%other%% subtracted
-     *  from %%this%%, ignoring overflow.
+     *  Returns a new {@link FixedNumber | **FixedNumber**} with the result of `other` subtracted
+     *  from `this`, ignoring overflow.
+     * 
+     *  @param {FixedNumber} other - The value to subtract from `this`.
+     *  @returns {FixedNumber} The result of the subtraction.
      */
     subUnsafe(other: FixedNumber): FixedNumber { return this.#sub(other); }
 
     /**
-     *  Returns a new [[FixedNumber]] with the result of %%other%% subtracted
-     *  from %%this%%. A [[NumericFaultError]] is thrown if overflow
+     *  Returns a new {@link FixedNumber | **FixedNumber**} with the result of `other` subtracted
+     *  from `this`. A [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow
      *  occurs.
+     * 
+     *  @param {FixedNumber} other - The value to subtract from `this`.
+     *  @returns {FixedNumber} The result of the subtraction.
      */
     sub(other: FixedNumber): FixedNumber { return this.#sub(other, "sub"); }
 
@@ -360,22 +380,33 @@ export class FixedNumber {
     }
 
     /**
-     *  Returns a new [[FixedNumber]] with the result of %%this%% multiplied
-     *  by %%other%%, ignoring overflow and underflow (precision loss).
+     *  Returns a new {@link FixedNumber | **FixedNumber**} with the result of `this` multiplied
+     *  by `other`, ignoring overflow and underflow (precision loss).
+     * 
+     *  @param {FixedNumber} other - The value to multiply `this` by.
+     *  @returns {FixedNumber} The result of the multiplication.
      */
     mulUnsafe(other: FixedNumber): FixedNumber { return this.#mul(other); }
 
     /**
-     *  Returns a new [[FixedNumber]] with the result of %%this%% multiplied
-     *  by %%other%%. A [[NumericFaultError]] is thrown if overflow
+     *  Returns a new {@link FixedNumber | **FixedNumber**} with the result of `this` multiplied
+     *  by `other`. A [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow
      *  occurs.
+     * 
+     *  @param {FixedNumber} other - The value to multiply `this` by.
+     *  @returns {FixedNumber} The result of the multiplication.
      */
     mul(other: FixedNumber): FixedNumber { return this.#mul(other, "mul"); }
 
     /**
-     *  Returns a new [[FixedNumber]] with the result of %%this%% multiplied
-     *  by %%other%%. A [[NumericFaultError]] is thrown if overflow
+     *  Returns a new {@link FixedNumber | **FixedNumber**} with the result of `this` multiplied
+     *  by `other`. A [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow
      *  occurs or if underflow (precision loss) occurs.
+     * 
+     *  @param {FixedNumber} other - The value to multiply `this` by.
+     *  @returns {FixedNumber} The result of the multiplication.
+     *  @throws {NumericFaultError} Thrown if overflow or underflow occurs.
+     *  @throws {NumericFaultError} Thrown if division by 0 occurs.
      */
     mulSignal(other: FixedNumber): FixedNumber {
         this.#checkFormat(other);
@@ -395,24 +426,34 @@ export class FixedNumber {
     }
 
     /**
-     *  Returns a new [[FixedNumber]] with the result of %%this%% divided
-     *  by %%other%%, ignoring underflow (precision loss). A
-     *  [[NumericFaultError]] is thrown if overflow occurs.
+     *  Returns a new {@link FixedNumber | **FixedNumber**} with the result of `this` divided
+     *  by `other`, ignoring underflow (precision loss). A
+     *  [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs.
+     * 
+     *  @param {FixedNumber} other - The value to divide `this` by.
+     *  @returns {FixedNumber} The result of the division.
      */
     divUnsafe(other: FixedNumber): FixedNumber { return this.#div(other); }
 
     /**
-     *  Returns a new [[FixedNumber]] with the result of %%this%% divided
-     *  by %%other%%, ignoring underflow (precision loss). A
-     *  [[NumericFaultError]] is thrown if overflow occurs.
+     *  Returns a new {@link FixedNumber | **FixedNumber**} with the result of `this` divided
+     *  by `other`, ignoring underflow (precision loss). A
+     *  [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs.
+     * 
+     *  @param {FixedNumber} other - The value to divide `this` by.
+     *  @returns {FixedNumber} The result of the division.
      */
     div(other: FixedNumber): FixedNumber { return this.#div(other, "div"); }
 
 
     /**
-     *  Returns a new [[FixedNumber]] with the result of %%this%% divided
-     *  by %%other%%. A [[NumericFaultError]] is thrown if underflow
+     *  Returns a new {@link FixedNumber | **FixedNumber**} with the result of `this` divided
+     *  by `other`. A [NumericFaultError](../interfaces/NumericFaultError) is thrown if underflow
      *  (precision loss) occurs.
+     * 
+     *  @param {FixedNumber} other - The value to divide `this` by.
+     *  @returns {FixedNumber} The result of the division.
+     *  @throws {NumericFaultError} Thrown if underflow occurs.
      */
     divSignal(other: FixedNumber): FixedNumber {
         assert(other.#val !== BN_0, "division by zero", "NUMERIC_FAULT", {
@@ -427,11 +468,14 @@ export class FixedNumber {
     }
 
     /**
-     *  Returns a comparison result between %%this%% and %%other%%.
+     *  Returns a comparison result between `this` and `other`.
      *
-     *  This is suitable for use in sorting, where ``-1`` implies %%this%%
-     *  is smaller, ``1`` implies %%this%% is larger and ``0`` implies
+     *  This is suitable for use in sorting, where `-1` implies `this`
+     *  is smaller, `1` implies `this` is larger and `0` implies
      *  both are equal.
+     * 
+     *  @param {FixedNumber} other - The value to compare to `this`.
+     *  @returns {number} The comparison result.
      */
      cmp(other: FixedNumber): number {
          let a = this.value, b = other.value;
@@ -451,35 +495,52 @@ export class FixedNumber {
      }
 
     /**
-     *  Returns true if %%other%% is equal to %%this%%.
+     *  Returns true if `other` is equal to `this`.
+     * 
+     *  @param {FixedNumber} other - The value to compare to `this`.
+     *  @returns {boolean} True if `other` is equal to `this`.
      */
      eq(other: FixedNumber): boolean { return this.cmp(other) === 0; }
 
     /**
-     *  Returns true if %%other%% is less than to %%this%%.
+     *  Returns true if `other` is less than to `this`.
+     * 
+     *  @param {FixedNumber} other - The value to compare to `this`.
+     *  @returns {boolean} True if `other` is less than to `this`.
      */
      lt(other: FixedNumber): boolean { return this.cmp(other) < 0; }
 
     /**
-     *  Returns true if %%other%% is less than or equal to %%this%%.
+     *  Returns true if `other` is less than or equal to `this`.
+     * 
+     *  @param {FixedNumber} other - The value to compare to `this`.
+     *  @returns {boolean} True if `other` is less than or equal to `this`.
      */
      lte(other: FixedNumber): boolean { return this.cmp(other) <= 0; }
 
     /**
-     *  Returns true if %%other%% is greater than to %%this%%.
+     *  Returns true if `other` is greater than to `this`.
+     * 
+     *  @param {FixedNumber} other - The value to compare to `this`.
+     *  @returns {boolean} True if `other` is greater than to `this`.
      */
      gt(other: FixedNumber): boolean { return this.cmp(other) > 0; }
 
     /**
-     *  Returns true if %%other%% is greater than or equal to %%this%%.
+     *  Returns true if `other` is greater than or equal to `this`.
+     * 
+     *  @param {FixedNumber} other - The value to compare to `this`.
+     *  @returns {boolean} True if `other` is greater than or equal to `this`.
      */
      gte(other: FixedNumber): boolean { return this.cmp(other) >= 0; }
 
     /**
-     *  Returns a new [[FixedNumber]] which is the largest **integer**
-     *  that is less than or equal to %%this%%.
+     *  Returns a new {@link FixedNumber | **FixedNumber**} which is the largest **integer**
+     *  that is less than or equal to `this`.
      *
-     *  The decimal component of the result will always be ``0``.
+     *  The decimal component of the result will always be `0`.
+     * 
+     *  @returns {FixedNumber} The floored value.
      */
     floor(): FixedNumber {
         let val = this.#val;
@@ -489,10 +550,12 @@ export class FixedNumber {
     }
 
     /**
-     *  Returns a new [[FixedNumber]] which is the smallest **integer**
-     *  that is greater than or equal to %%this%%.
+     *  Returns a new {@link FixedNumber | **FixedNumber**} which is the smallest **integer**
+     *  that is greater than or equal to `this`.
      *
-     *  The decimal component of the result will always be ``0``.
+     *  The decimal component of the result will always be `0`.
+     * 
+     *  @returns {FixedNumber} The ceiling value.
      */
     ceiling(): FixedNumber {
         let val = this.#val;
@@ -502,8 +565,11 @@ export class FixedNumber {
     }
 
     /**
-     *  Returns a new [[FixedNumber]] with the decimal component
-     *  rounded up on ties at %%decimals%% places.
+     *  Returns a new {@link FixedNumber | **FixedNumber**} with the decimal component
+     *  rounded up on ties at `decimals` places.
+     * 
+     *  @param {number} [decimals] - The number of decimal places to round to.
+     *  @returns {FixedNumber} The rounded value.
      */
     round(decimals?: number): FixedNumber {
         if (decimals == null) { decimals = 0; }
@@ -524,17 +590,23 @@ export class FixedNumber {
     }
 
     /**
-     *  Returns true if %%this%% is equal to ``0``.
+     *  Returns true if `this` is equal to `0`.
+     * 
+     *  @returns {boolean} True if `this` is equal to `0`.
      */
     isZero(): boolean { return (this.#val === BN_0); }
 
     /**
-     *  Returns true if %%this%% is less than ``0``.
+     *  Returns true if `this` is less than `0`.
+     * 
+     *  @returns {boolean} True if `this` is less than `0`.
      */
     isNegative(): boolean { return (this.#val < BN_0); }
 
     /**
-     *  Returns the string representation of %%this%%.
+     *  Returns the string representation of `this`.
+     * 
+     *  @returns {string} The string representation.
      */
     toString(): string { return this._value; }
 
@@ -544,26 +616,35 @@ export class FixedNumber {
      *  Due to IEEE 754 precission (or lack thereof), this function
      *  can only return an approximation and most values will contain
      *  rounding errors.
+     * 
+     *  @returns {number} The float approximation.
      */
     toUnsafeFloat(): number { return parseFloat(this.toString()); }
 
     /**
-     *  Return a new [[FixedNumber]] with the same value but has had
-     *  its field set to %%format%%.
+     *  Return a new {@link FixedNumber | **FixedNumber**} with the same value but has had
+     *  its field set to `format`.
      *
-     *  This will throw if the value cannot fit into %%format%%.
+     *  This will throw if the value cannot fit into `format`.
+     * 
+     *  @param {FixedFormat} format - The new format for the value.
      */
     toFormat(format: FixedFormat): FixedNumber {
         return FixedNumber.fromString(this.toString(), format);
     }
 
     /**
-     *  Creates a new [[FixedNumber]] for %%value%% divided by
-     *  %%decimal%% places with %%format%%.
+     *  Creates a new {@link FixedNumber | **FixedNumber**} for `value` divided by
+     *  `decimal` places with `format`.
      *
-     *  This will throw a [[NumericFaultError]] if %%value%% (once adjusted
-     *  for %%decimals%%) cannot fit in %%format%%, either due to overflow
+     *  This will throw a [NumericFaultError](../interfaces/NumericFaultError) if `value` (once adjusted
+     *  for `decimals`) cannot fit in `format`, either due to overflow
      *  or underflow (precision loss).
+     * 
+     *  @param {BigNumberish} _value - The value to create a FixedNumber for.
+     *  @param {Numeric} [_decimals] - The number of decimal places in `value`.
+     *  @param {FixedFormat} [_format] - The format for the FixedNumber.
+     *  @returns {FixedNumber} The FixedNumber for `value`.
      */
     static fromValue(_value: BigNumberish, _decimals?: Numeric, _format?: FixedFormat): FixedNumber {
         const decimals = (_decimals == null) ? 0: getNumber(_decimals);
@@ -587,10 +668,14 @@ export class FixedNumber {
     }
 
     /**
-     *  Creates a new [[FixedNumber]] for %%value%% with %%format%%.
+     *  Creates a new {@link FixedNumber | **FixedNumber**} for `value` with `format`.
      *
-     *  This will throw a [[NumericFaultError]] if %%value%% cannot fit
-     *  in %%format%%, either due to overflow or underflow (precision loss).
+     *  This will throw a [NumericFaultError](../interfaces/NumericFaultError) if `value` cannot fit
+     *  in `format`, either due to overflow or underflow (precision loss).
+     * 
+     *  @param {BigNumberish} _value - The value to create a FixedNumber for.
+     *  @param {FixedFormat} [_format] - The format for the FixedNumber.
+     *  @returns {FixedNumber} The FixedNumber for `value`.
      */
     static fromString(_value: string, _format?: FixedFormat): FixedNumber {
         const match = _value.match(/^(-?)([0-9]*)\.?([0-9]*)$/);
@@ -619,11 +704,15 @@ export class FixedNumber {
     }
 
     /**
-     *  Creates a new [[FixedNumber]] with the big-endian representation
-     *  %%value%% with %%format%%.
+     *  Creates a new {@link FixedNumber | **FixedNumber**} with the big-endian representation
+     *  `value` with `format`.
      *
-     *  This will throw a [[NumericFaultError]] if %%value%% cannot fit
-     *  in %%format%% due to overflow.
+     *  This will throw a [NumericFaultError](../interfaces/NumericFaultError) if `value` cannot fit
+     *  in `format` due to overflow.
+     * 
+     *  @param {BytesLike} _value - The big-endian representation of the value.
+     *  @param {FixedFormat} [_format] - The format for the FixedNumber.
+     *  @returns {FixedNumber} The FixedNumber for `value`.
      */
     static fromBytes(_value: BytesLike, _format?: FixedFormat): FixedNumber {
         let value = toBigInt(getBytes(_value, "value"));

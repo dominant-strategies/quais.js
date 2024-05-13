@@ -8,139 +8,229 @@ import { QuaiTransaction, QuaiTransactionLike } from "./quai-transaction"
 /**
  *  Interface representing a WorkObject, which includes
  *  header, body, and transaction information.
+ * 
+ *  @category Transaction
  */
 export interface WorkObjectLike {
-    /** Header information of the WorkObject. */
+    /** 
+     *  Header information of the WorkObject. 
+     */
     woHeader: WorkObjectHeaderLike
 
-    /** Body information of the WorkObject. */
+    /** 
+     *  Body information of the WorkObject.
+     */
     woBody: WorkObjectBodyLike
 
-    /** Transaction information associated with the WorkObject. */
+    /** 
+     *  Transaction information associated with the WorkObject. 
+     */
     tx: QuaiTransactionLike
 }
 
 /**
  *  Interface representing the header information of a WorkObject.
+ * 
+ *  @category Transaction
  */
 export interface WorkObjectHeaderLike {
-    /** The difficulty of the WorkObject. */
+    /** 
+     *  The difficulty of the WorkObject. 
+     */
     difficulty: string
 
-    /** Hash of the WorkObject header. */
+    /** 
+     *  Hash of the WorkObject header. 
+     */
     headerHash: string
 
-    /** Location information of the WorkObject. */
+    /** 
+     * Location information of the WorkObject. 
+     */
     location: number[]
 
-    /** Hash of the parent WorkObject. */
+    /** 
+     *  Hash of the parent WorkObject. 
+     */
     parentHash: string
 
-    /** Nonce of the WorkObject. */
+    /** 
+     * Nonce of the WorkObject. 
+     */
     nonce: string
 
-    /** Number of the WorkObject. */
+    /** 
+     *  Number of the WorkObject. 
+     */
     number: string
 
-    /** Transaction hash associated with the WorkObject. */
+    /** 
+     * Transaction hash associated with the WorkObject. 
+     */
     txHash: string
 }
 
 /**
  *  Interface representing the body information of a WorkObject.
+ * 
+ *  @category Transaction
  */
 export interface WorkObjectBodyLike {
-    /** External transactions included in the WorkObject. */
+    /** 
+     *  External transactions included in the WorkObject. 
+     */
     extTransactions: WorkObjectLike[]
 
-    /** Header information of the WorkObject. */
+    /** 
+     *  Header information of the WorkObject. 
+     */
     header: HeaderLike
 
-    /** Manifest of the block. */
+    /** 
+     *  Manifest of the block. 
+     */
     manifest: BlockManifest
 
-    /** Transactions included in the WorkObject. */
+    /** 
+     *  Transactions included in the WorkObject. 
+     */
     transactions: WorkObjectLike[]
 
-    /** Uncles (or ommer blocks) of the WorkObject. */
+    /** 
+     *  Uncles (or ommer blocks) of the WorkObject. 
+     */
     uncles: WorkObjectLike[]
 }
 
 /**
  *  Interface representing the header information within the body of a WorkObject.
+ *  
+ *  @category Transaction
  */
 export interface HeaderLike {
-    /** Base fee per gas. */
+    /** 
+     *  Base fee per gas. 
+     */
     baseFeePerGas: string
 
-    /** EVM root hash. */
+    /** 
+     *  EVM root hash. 
+     */
     evmRoot: string
 
-    /** External rollup root hash. */
+    /** 
+     *  External rollup root hash. 
+     */
     extRollupRoot: string
 
-    /** Root hash of external transactions. */
+    /** 
+     *  Root hash of external transactions. 
+     */
     extTransactionsRoot: string
 
-    /** Hash of the external transaction set. */
+    /** 
+     *  Hash of the external transaction set. 
+     */
     etxSetHash: string
 
-    /** Extra data included in the block. */
+    /**
+     *  Extra data included in the block. 
+     */
     extraData: string
 
-    /** Gas limit for the block. */
+    /**
+     *  Gas limit for the block. 
+     */
     gasLimit: string
 
-    /** Gas used by the block. */
+    /**
+     *  Gas used by the block. 
+     */
     gasUsed: string
 
-    /** Hashes of the block manifest. */
+    /** 
+     *  Hashes of the block manifest. 
+     */
     manifestHash: string[]
 
-    /** Miner address. */
+    /**
+     *  Miner address. 
+     */
     miner: string
 
-    /** Block number. */
+    /**
+     *  Block number. 
+     */
     number: string[]
 
-    /** Parent delta S values. */
+    /** 
+     *  Parent delta S values. 
+     */
     parentDeltaS: string[]
 
-    /** Parent entropy values. */
+    /** 
+     *  Parent entropy values. 
+     */
     parentEntropy: string[]
 
-    /** Parent hash values. */
+    /** 
+     *  Parent hash values. 
+     */
     parentHash: string[]
 
-    /** Receipts root hash. */
+    /** 
+     *  Receipts root hash. 
+     */
     receiptsRoot: string
 
-    /** SHA3 uncles hash. */
+    /** 
+     *  SHA3 uncles hash. 
+     */
     sha3Uncles: string
 
-    /** Transactions root hash. */
+    /** 
+     *  Transactions root hash. 
+     */
     transactionsRoot: string
 
-    /** UTXO root hash. */
+    /** 
+     *  UTXO root hash. 
+     */
     utxoRoot: string
 
-    /** Hash of the block. */
+    /** 
+     *  Hash of the block. 
+     */
     hash?: string
 
-    /** Seal hash of the block. */
+    /** 
+     *  Seal hash of the block. 
+     */
     sealHash?: string
 
-    /** Proof-of-Work hash. */
+    /**  
+     *  Proof-of-Work hash. 
+     */
     PowHash?: string
 
-    /** Proof-of-Work digest. */
+    /** 
+     *  Proof-of-Work digest. 
+     */
     PowDigest?: string
 }
 
-/** Type representing a block manifest as an array of strings. */
+/** 
+ *  Type representing a block manifest as an array of strings. 
+ *  
+ *  @category Transaction
+ */
 export type BlockManifest = string[]
 
-/** Interface representing the header within the body of a WorkObject in protobuf format. */
+/** 
+ *  Interface representing the header within the body of a WorkObject in protobuf format.
+ * 
+ *  @category Transaction 
+ */
 export interface ProtoHeader {
     base_fee?: Uint8Array | null;
     coinbase?: Uint8Array | null;
@@ -163,7 +253,11 @@ export interface ProtoHeader {
     utxo_root?: ProtoHash | null;
 }
 
-/** Interface representing the header of a WorkObject in protobuf format. */
+/** 
+ *  Interface representing the header of a WorkObject in protobuf format. 
+ * 
+ *  @category Transaction 
+*/
 export interface ProtoWorkObjectHeader {
     difficulty?: Uint8Array | null;
     header_hash?: ProtoHash | null;
@@ -175,7 +269,11 @@ export interface ProtoWorkObjectHeader {
     mix_hash?: ProtoHash | null;
 }
 
-/** Interface representing the body of a WorkObject in protobuf format. */
+/** 
+ *  Interface representing the body of a WorkObject in protobuf format. 
+ * 
+ *  @category Transaction
+ */
 export interface ProtoWorkObjectBody {
     ext_transactions?: ProtoWorkObjects | null;
     header?: ProtoHeader | null;
@@ -184,33 +282,51 @@ export interface ProtoWorkObjectBody {
     uncles?: ProtoWorkObjects | null;
 }
 
-/** Interface representing the protobuf format of a WorkObject. */
+/** 
+ *  Interface representing the protobuf format of a WorkObject. 
+ * 
+ *  @category Transaction
+ */
 export interface ProtoWorkObject {
     wo_body?: ProtoWorkObjectBody | null;
     wo_header?: ProtoWorkObjectHeader | null;
     tx?: ProtoTransaction | null;
 }
 
-/** Interface representing an array of ProtoWorkObject. */
+/** 
+ *  Interface representing an array of ProtoWorkObject. 
+ */
 interface ProtoWorkObjects { work_objects: ProtoWorkObject[]; }
 
-/** Interface representing an array of ProtoTransaction. */
+/** 
+ *  Interface representing an array of ProtoTransaction. 
+ */
 // interface ProtoTransactions { transactions: ProtoTransaction[]; }
 
-/** Interface representing a single hash value in a protobuf format. */
+/** 
+ *  Interface representing a single hash value in a protobuf format. 
+ */
 export interface ProtoHash { value: Uint8Array }
 
-/** Interface representing multiple hash values in a protobuf format. */
+/** 
+ *  Interface representing multiple hash values in a protobuf format.
+ */
 export interface ProtoHashes { hashes: ProtoHash[] }
 
-/** Interface representing a location value in a protobuf format. */
+/** 
+ *  Interface representing a location value in a protobuf format. 
+ */
 export interface ProtoLocation { value: Uint8Array }
 
-/** Interface representing a manifest in a protobuf format. */
+/** 
+ *  Interface representing a manifest in a protobuf format. 
+ */
 export interface ProtoManifest { manifest: ProtoHash[] }
 
 /**
  *  Represents a WorkObject, which includes header, body, and transaction information.
+ * 
+ *  @category Transaction
  */
 export class WorkObject {
     #woHeader: WorkObjectHeaderLike;
@@ -220,10 +336,9 @@ export class WorkObject {
     /**
      *  Constructs a WorkObject instance.
      *  
-     *  @param woHeader The header information of the WorkObject.
-     *  @param woBody The body information of the WorkObject.
-     *  @param tx The transaction associated with the WorkObject.
-     *  @param signature The signature of the transaction (optional).
+     *  @param {WorkObjectHeaderLike} woHeader The header information of the WorkObject.
+     *  @param {WorkObjectBodyLike} woBody The body information of the WorkObject.
+     *  @param {QuaiTransactionLike} tx The transaction associated with the WorkObject.
      */
     constructor(woHeader: WorkObjectHeaderLike, woBody: WorkObjectBodyLike, tx: QuaiTransactionLike) {
         this.#woHeader = woHeader;
@@ -234,15 +349,21 @@ export class WorkObject {
         this.#validate();
     }
 
-    /** Gets the header information of the WorkObject. */
+    /** 
+     *  Gets the header information of the WorkObject. 
+     */
     get woHeader(): WorkObjectHeaderLike { return this.#woHeader; }
     set woHeader(value: WorkObjectHeaderLike) { this.#woHeader = value; }
 
-    /** Gets the body information of the WorkObject. */
+    /** 
+     *  Gets the body information of the WorkObject. 
+     */
     get woBody(): WorkObjectBodyLike { return this.#woBody; }
     set woBody(value: WorkObjectBodyLike) { this.#woBody = value; }
 
-    /** Gets the transaction associated with the WorkObject. */
+    /** 
+     *  Gets the transaction associated with the WorkObject.
+     */
     get tx(): QuaiTransaction { return this.#tx; }
     set tx(value: QuaiTransactionLike) { this.#tx = QuaiTransaction.from(value); }
 
@@ -266,7 +387,7 @@ export class WorkObject {
     /**
     *  Creates a clone of the current WorkObject.
     *  
-    *  @returns A new WorkObject instance that is a clone of the current instance.
+    *  @returns {WorkObject} A new WorkObject instance that is a clone of the current instance.
     */
     clone(): WorkObject {
         return WorkObject.from(this);
@@ -275,7 +396,7 @@ export class WorkObject {
     /**
      *  Converts the WorkObject to a JSON-like object.
      *  
-     *  @returns The WorkObject as a WorkObjectLike object.
+     *  @returns {WorkObjectLike} The WorkObject as a WorkObjectLike object.
      */
     toJSON(): WorkObjectLike {
         return {
@@ -288,7 +409,7 @@ export class WorkObject {
     /**
      *  Converts the WorkObject to its protobuf representation.
      *  
-     *  @returns The WorkObject as a ProtoWorkObject.
+     *  @returns {ProtoWorkObject} }he WorkObject as a ProtoWorkObject.
      */
     toProtobuf(): ProtoWorkObject {
         return {
@@ -335,8 +456,8 @@ export class WorkObject {
     /**
      *  Creates a WorkObject instance from a WorkObjectLike object.
      *  
-     *  @param data The WorkObjectLike object to create the WorkObject from.
-     *  @returns A new WorkObject instance.
+     *  @param {string | WorkObjectLike} wo The WorkObjectLike object to create the WorkObject from.
+     *  @returns {WorkObject} A new WorkObject instance.
      */
     static from(wo: string | WorkObjectLike): WorkObject {
         if (typeof (wo) === "string") {
@@ -350,8 +471,8 @@ export class WorkObject {
     /**
      * Creates a WorkObject instance from a ProtoWorkObject object.
      * 
-     * @param protoWo The ProtoWorkObject object to create the WorkObject from.
-     * @returns A new WorkObject instance.
+     * @param {ProtoWorkObject} protoWo The ProtoWorkObject object to create the WorkObject from.
+     * @returns {WorkObject} A new WorkObject instance.
      */
     static fromProto(protoWo: ProtoWorkObject): WorkObject {
         // Assuming methods to convert ProtoHeader and ProtoWorkObjects to their respective interfaces
@@ -405,7 +526,7 @@ export class WorkObject {
     /**
      *  Serializes the WorkObject to a string.
      *  
-     *  @returns The serialized string representation of the WorkObject.
+     *  @returns {string} The serialized WorkObject.
      */
     #serialize(): string {
         return encodeProtoWorkObject(this.toProtobuf());

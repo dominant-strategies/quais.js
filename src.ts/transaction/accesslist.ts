@@ -15,7 +15,13 @@ function accessSetify(addr: string, storageKeys: Array<string>): { address: stri
 }
 
 /**
- *  Returns a [[AccessList]] from any quais-supported access-list structure.
+ *  Returns a {@link AccessList | **AccessList** } from any quais-supported access-list structure.
+ * 
+ *  @param {AccessListish} value - The value to convert to an access list.
+ *  @returns {AccessList} The access list.
+ *  @throws {Error} If the value is not a valid access list.
+ *  
+ *  @category Transaction
  */
 export function accessListify(value: AccessListish): AccessList {
     if (Array.isArray(value)) {

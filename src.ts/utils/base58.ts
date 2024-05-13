@@ -1,8 +1,8 @@
 /**
- *  The [Base58 Encoding](link-base58) scheme allows a **numeric** value
+ *  The [Base58 Encoding](https://en.bitcoinwiki.org/wiki/Base58) scheme allows a **numeric** value
  *  to be encoded as a compact string using a radix of 58 using only
  *  alpha-numeric characters. Confusingly similar characters are omitted
- *  (i.e. ``"l0O"``).
+ *  (i.e. `"l0O"`).
  *
  *  Note that Base58 encodes a **numeric** value, not arbitrary bytes,
  *  since any zero-bytes on the left would get removed. To mitigate this
@@ -39,7 +39,12 @@ const BN_0 = BigInt(0);
 const BN_58 = BigInt(58);
 
 /**
- *  Encode %%value%% as a Base58-encoded string.
+ *  Encode `value` as a Base58-encoded string.
+ * 
+ *  @param {BytesLike} _value - The value to encode.
+ *  @returns {string} The Base58-encoded string.
+ *  
+ *  @category Utils
  */
 export function encodeBase58(_value: BytesLike): string {
     const bytes = getBytes(_value);
@@ -61,7 +66,12 @@ export function encodeBase58(_value: BytesLike): string {
 }
 
 /**
- *  Decode the Base58-encoded %%value%%.
+ *  Decode the Base58-encoded `value`.
+ * 
+ *  @param {string} value - The Base58-encoded value.
+ *  @returns {bigint} The decoded value.
+ *  
+ *  @category Utils
  */
 export function decodeBase58(value: string): bigint {
     let result = BN_0;

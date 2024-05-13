@@ -18,34 +18,36 @@ function isWebSocketLike(value: any): value is WebSocketLike {
 const Testnets = "goerli kovan sepolia classicKotti optimism-goerli arbitrum-goerli matic-mumbai bnbt".split(" ");
 
 /**
- *  Returns a default provider for %%network%%.
+ *  Returns a default provider for `network`.
  *
- *  If %%network%% is a [[WebSocketLike]] or string that begins with
- *  ``"ws:"`` or ``"wss:"``, a [[WebSocketProvider]] is returned backed
- *  by that WebSocket or URL.
+ *  If `network` is a {@link WebSocketLike | **WebSocketLike**} or string 
+ *  that begins with `"ws:"` or `"wss:"`, a {@link WebSocketProvider | **WebSocketProvider**}
+ *   is returned backed by that WebSocket or URL.
  *
- *  If %%network%% is a string that begins with ``"HTTP:"`` or ``"HTTPS:"``,
- *  a [[JsonRpcProvider]] is returned connected to that URL.
+ *  If `network` is a string that begins with `"HTTP:"` or `"HTTPS:"`,
+ *  a {@link JsonRpcProvider | **JsonRpcProvider**} is returned 
+ *  connected to that URL.
  *
  *  Otherwise, a default provider is created backed by well-known public
- *  Web3 backends (such as [[link-infura]]) using community-provided API
- *  keys.
+ *  Web3 backends (such as [Infura](https://infura.io)) using community-provided 
+ *  API keys.
  *
- *  The %%options%% allows specifying custom API keys per backend (setting
- *  an API key to ``"-"`` will omit that provider) and ``options.exclusive``
+ *  The `options` allows specifying custom API keys per backend (setting
+ *  an API key to `"-"` will omit that provider) and `options.exclusive`
  *  can be set to either a backend name or and array of backend names, which
  *  will whitelist **only** those backends.
  *
  *  Current backend strings supported are:
- *  - ``"alchemy"``
- *  - ``"ankr"``
- *  - ``"cloudflare"``
- *  - ``"quaiscan"``
- *  - ``"infura"``
- *  - ``"publicPolygon"``
- *  - ``"quicknode"``
+ *  - `"alchemy"`
+ *  - `"ankr"`
+ *  - `"cloudflare"`
+ *  - `"quaiscan"`
+ *  - `"infura"`
+ *  - `"publicPolygon"`
+ *  - `"quicknode"`
  *
- *  @example:
+ *  @example
+ *  ```ts
  *    // Connect to a local Geth node
  *    provider = getDefaultProvider("http://localhost:8545/");
  *
@@ -59,6 +61,11 @@ const Testnets = "goerli kovan sepolia classicKotti optimism-goerli arbitrum-goe
  *      quaiscan: "MY_API_KEY",
  *      exclusive: [ "quaiscan", "infura" ]
  *    });
+ *  ```
+ *  
+ *  @param {string | string[] | Networkish | WebSocketLike} network - The network to connect to.
+ *  @param {any} [options] - The options to use when connecting.
+ *  @category Providers
  */
 export function getDefaultProvider(network: string | string[] | Networkish | WebSocketLike, options?: any): AbstractProvider {
     if (options == null) { options = { }; }

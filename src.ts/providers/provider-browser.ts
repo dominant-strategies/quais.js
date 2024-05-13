@@ -9,20 +9,25 @@ import type {
 import type { Networkish } from "./network.js";
 
 /**
- *  The interface to an [[link-eip-1193]] provider, which is a standard
- *  used by most injected providers, which the [[BrowserProvider]] accepts
- *  and exposes the API of.
+ *  The interface to an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193)
+ *  provider, which is a standard used by most injected providers, which the 
+ *  {@link BrowserProvider | **BrowserProvider**} accepts and exposes the API of.
+ * 
+ *  @category Providers
  */
 export interface Eip1193Provider {
     /**
-     *  See [[link-eip-1193]] for details on this method.
+     *  See [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) for details 
+     *  on this method.
      */
     request(request: { method: string, params?: Array<any> | Record<string, any> }): Promise<any>;
 };
 
 /**
- *  The possible additional events dispatched when using the ``"debug"``
- *  event on a [[BrowserProvider]].
+ *  The possible additional events dispatched when using the `"debug"`
+ *  event on a {@link BrowserProvider | **BrowserProvider**}.
+ * 
+ *  @category Providers
  */
 export type DebugEventBrowserProvider = {
     action: "sendEip1193Payload",
@@ -38,15 +43,17 @@ export type DebugEventBrowserProvider = {
 
 /**
  *  A **BrowserProvider** is intended to wrap an injected provider which
- *  adheres to the [[link-eip-1193]] standard, which most (if not all)
- *  currently do.
+ *  adheres to the [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) 
+ *  standard, which most (if not all) currently do.
+ * 
+ *  @category Providers
  */
 export class BrowserProvider extends JsonRpcApiProvider {
     #request: (method: string, params: Array<any> | Record<string, any>) => Promise<any>;
 
     /**
-     *  Connnect to the %%ethereum%% provider, optionally forcing the
-     *  %%network%%.
+     *  Connnect to the `ethereum` provider, optionally forcing the
+     *  `network`.
      */
     constructor(ethereum: Eip1193Provider, network?: Networkish) {
         super(network, { batchMaxCount: 1 });
@@ -108,7 +115,10 @@ export class BrowserProvider extends JsonRpcApiProvider {
     }
 
     /**
-     *  Resolves to ``true`` if the provider manages the %%address%%.
+     *  Resolves to `true` if the provider manages the `address`.
+     * 
+     *  @param {number | string} address - The address to check.
+     *  @returns {Promise<boolean>} Resolves to `true` if the provider manages the `address`.
      */
     async hasSigner(address: number | string): Promise<boolean> {
         if (address == null) { address = 0; }

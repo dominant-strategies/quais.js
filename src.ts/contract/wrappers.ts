@@ -15,7 +15,9 @@ import type { BaseContract } from "./contract.js";
 import type { ContractEventName } from "./types.js";
 
 /**
- *  An **EventLog** contains additional properties parsed from the [[Log]].
+ *  An **EventLog** contains additional properties parsed from the {@link Log | **Log**}.
+ * 
+ *  @category Contract
  */
 export class EventLog extends Log {
     /**
@@ -29,12 +31,12 @@ export class EventLog extends Log {
     readonly fragment!: EventFragment;
 
     /**
-     *  The parsed arguments passed to the event by ``emit``.
+     *  The parsed arguments passed to the event by `emit`.
      */
     readonly args!: Result;
 
     /**
-     * @_ignore:
+     * @ignore
      */
     constructor(log: Log, iface: Interface, fragment: EventFragment) {
         super(log, log.provider);
@@ -54,7 +56,9 @@ export class EventLog extends Log {
 }
 
 /**
- *  An **EventLog** contains additional properties parsed from the [[Log]].
+ *  An **EventLog** contains additional properties parsed from the {@link Log | **Log**}.
+ * 
+ *  @category Contract
  */
 export class UndecodedEventLog extends Log {
 
@@ -64,7 +68,7 @@ export class UndecodedEventLog extends Log {
     readonly error!: Error;
 
     /**
-     * @_ignore:
+     * @ignore
      */
     constructor(log: Log, error: Error) {
         super(log, log.provider);
@@ -74,13 +78,15 @@ export class UndecodedEventLog extends Log {
 
 /**
  *  A **ContractTransactionReceipt** includes the parsed logs from a
- *  [[TransactionReceipt]].
+ *  {@link TransactionReceipt | **TransactionReceipt**}.
+ * 
+ *  @category Contract
  */
 export class ContractTransactionReceipt extends TransactionReceipt {
     readonly #iface: Interface;
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     constructor(iface: Interface, provider: Provider, tx: TransactionReceipt) {
         super(tx, provider);
@@ -88,7 +94,7 @@ export class ContractTransactionReceipt extends TransactionReceipt {
     }
 
     /**
-     *  The parsed logs for any [[Log]] which has a matching event in the
+     *  The parsed logs for any {@link Log | **Log**} which has a matching event in the
      *  Contract ABI.
      */
     get logs(): Array<EventLog | Log> {
@@ -110,13 +116,15 @@ export class ContractTransactionReceipt extends TransactionReceipt {
 
 /**
  *  A **ContractTransactionResponse** will return a
- *  [[ContractTransactionReceipt]] when waited on.
+ *  {@link ContractTransactionReceipt | **ContractTransactionReceipt**} when waited on.
+ * 
+ *  @category Contract
  */
 export class ContractTransactionResponse extends QuaiTransactionResponse {
     readonly #iface: Interface;
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     constructor(iface: Interface, provider: Provider, tx: QuaiTransactionResponse) {
         super(tx, provider);
@@ -125,12 +133,15 @@ export class ContractTransactionResponse extends QuaiTransactionResponse {
 
     /**
      *  Resolves once this transaction has been mined and has
-     *  %%confirms%% blocks including it (default: ``1``) with an
-     *  optional %%timeout%%.
+     *  `confirms` blocks including it (default: `1`) with an
+     *  optional `timeout`.
      *
-     *  This can resolve to ``null`` only if %%confirms%% is ``0``
+     *  This can resolve to `null` only if `confirms` is `0`
      *  and the transaction has not been mined, otherwise this will
      *  wait until enough confirmations have completed.
+     * 
+     *  @param {number} confirms - The number of confirmations to wait for.
+     *  @returns {Promise<ContractTransactionReceipt | null>} The transaction receipt, or `null` if `confirms` is `0`.
      */
     async wait(confirms?: number): Promise<null | ContractTransactionReceipt> {
         const receipt = await super.wait(confirms);
@@ -142,6 +153,8 @@ export class ContractTransactionResponse extends QuaiTransactionResponse {
 /**
  *  A **ContractUnknownEventPayload** is included as the last parameter to
  *  Contract Events when the event does not match any events in the ABI.
+ * 
+ *  @category Contract
  */
 export  class ContractUnknownEventPayload extends EventPayload<ContractEventName> {
     /**
@@ -159,6 +172,9 @@ export  class ContractUnknownEventPayload extends EventPayload<ContractEventName
 
     /**
      *  Resolves to the block the event occured in.
+     * 
+     *  @param {string} shard - The shard to get the block from.
+     *  @returns {Promise<Block>} A promise resolving to the block the event occured in.
      */
     async getBlock(shard: string): Promise<Block> {
         return await this.log.getBlock(shard);
@@ -166,6 +182,8 @@ export  class ContractUnknownEventPayload extends EventPayload<ContractEventName
 
     /**
      *  Resolves to the transaction the event occured in.
+     * 
+     *  @returns {Promise<TransactionResponse>} A promise resolving to the transaction the event occured in.
      */
     async getTransaction(): Promise<TransactionResponse> {
         return await this.log.getTransaction();
@@ -173,6 +191,8 @@ export  class ContractUnknownEventPayload extends EventPayload<ContractEventName
 
     /**
      *  Resolves to the transaction receipt the event occured in.
+     * 
+     *  @returns {Promise<TransactionReceipt>} A promise resolving to the transaction receipt the event occured in.
      */
     async getTransactionReceipt(): Promise<TransactionReceipt> {
         return await this.log.getTransactionReceipt();
@@ -182,6 +202,8 @@ export  class ContractUnknownEventPayload extends EventPayload<ContractEventName
 /**
  *  A **ContractEventPayload** is included as the last parameter to
  *  Contract Events when the event is known.
+ * 
+ *  @category Contract
  */
 export class ContractEventPayload extends ContractUnknownEventPayload {
 
@@ -196,12 +218,12 @@ export class ContractEventPayload extends ContractUnknownEventPayload {
     declare readonly log: EventLog;
 
     /**
-     *  The parsed arguments passed to the event by ``emit``.
+     *  The parsed arguments passed to the event by `emit`.
      */
     declare readonly args: Result;
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     constructor(contract: BaseContract, listener: null | Listener, filter: ContractEventName, fragment: EventFragment, _log: Log) {
         super(contract, listener, filter, new EventLog(_log, contract.interface, fragment));

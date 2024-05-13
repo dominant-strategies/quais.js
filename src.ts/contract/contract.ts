@@ -124,7 +124,7 @@ function getProvider(value: null | ContractRunner): null | Provider {
 }
 
 /**
- *  @_ignore:
+ *  @ignore
  */
 export async function copyOverrides<O extends string = "data" | "to">(arg: any, allowed?: Array<string>): Promise<Omit<ContractTransaction, O>> {
 
@@ -147,7 +147,7 @@ export async function copyOverrides<O extends string = "data" | "to">(arg: any, 
 }
 
 /**
- *  @_ignore:
+ *  @ignore
  */
 export async function resolveArgs(_runner: null | ContractRunner, inputs: ReadonlyArray<ParamType>, args: Array<any>): Promise<Array<any>> {
     // Recursively descend into args and resolve any addresses
@@ -631,12 +631,19 @@ async function emit(contract: BaseContract, event: ContractEventName, args: Arra
 }
 
 const passProperties = [ "then" ];
+
+/**
+ *  Creates a new contract connected to target with the abi and optionally connected
+ *  to a runner to perform operations on behalf of.
+ * 
+ *  @category Contract
+ */
 export class BaseContract implements Addressable, EventEmitterable<ContractEventName> {
     /**
      *  The target to connect to.
      *
-     *  This can be an address, ENS name or any [[Addressable]], such as
-     *  another contract. To get the resovled address, use the ``getAddress``
+     *  This can be an address, ENS name or any [Addressable](../interfaces/Addressable), such as
+     *  another contract. To get the resovled address, use the `getAddress`
      *  method.
      */
     readonly target!: string | Addressable;
@@ -647,10 +654,10 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     readonly interface!: Interface;
 
     /**
-     *  The connected runner. This is generally a [[Provider]] or a
-     *  [[Signer]], which dictates what operations are supported.
+     *  The connected runner. This is generally a [**Provider**](../interfaces/Provider) or a
+     *  [**Signer**](../interfaces/Signer), which dictates what operations are supported.
      *
-     *  For example, a **Contract** connected to a [[Provider]] may
+     *  For example, a **Contract** connected to a [**Provider**](../interfaces/Provider) may
      *  only execute read-only operations.
      */
     readonly runner!: null | ContractRunner;
@@ -661,7 +668,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     readonly filters!: Record<string, ContractEvent>;
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     readonly [internal]: any;
 
@@ -671,8 +678,8 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     readonly fallback!: null | WrappedFallback;
 
     /**
-     *  Creates a new contract connected to %%target%% with the %%abi%% and
-     *  optionally connected to a %%runner%% to perform operations on behalf
+     *  Creates a new contract connected to `target` with the `abi` and
+     *  optionally connected to a `runner` to perform operations on behalf
      *  of.
      */
     constructor(target: string | Addressable, abi: Interface | InterfaceAbi, runner?: null | ContractRunner, _deployTx?: null | QuaiTransactionResponse) {
@@ -777,7 +784,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
     /**
      *  Return a new Contract instance with the same target and ABI, but
-     *  a different %%runner%%.
+     *  a different `runner`.
      */
     connect(runner: null | ContractRunner): BaseContract {
         return new BaseContract(this.target, this.interface, runner);
@@ -785,7 +792,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
     /**
      *  Return a new Contract instance with the same ABI and runner, but
-     *  a different %%target%%.
+     *  a different `target`.
      */
     attach(target: string | Addressable): BaseContract {
         return new BaseContract(target, this.interface, this.runner);
@@ -848,7 +855,9 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
      *  Return the transaction used to deploy this contract.
      *
      *  This is only available if this instance was returned from a
-     *  [[ContractFactory]].
+     *  [**ContractFactor**](../classes/ContractFactory).
+     * 
+     *  @returns The transaction used to deploy this contract or `null`.
      */
     deploymentTransaction(): null | ContractTransactionResponse {
         return getInternal(this).deployTx;
@@ -856,8 +865,11 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
     /**
      *  Return the function for a given name. This is useful when a contract
-     *  method name conflicts with a JavaScript name such as ``prototype`` or
+     *  method name conflicts with a JavaScript name such as `prototype` or
      *  when using a Contract programatically.
+     * 
+     *  @param {string | FunctionFragment} key - The name of the function to return.
+     *  @returns The function for the given name.
      */
     getFunction<T extends ContractMethod = ContractMethod>(key: string | FunctionFragment): T {
         if (typeof(key) !== "string") { key = key.format(); }
@@ -867,8 +879,11 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
     /**
      *  Return the event for a given name. This is useful when a contract
-     *  event name conflicts with a JavaScript name such as ``prototype`` or
+     *  event name conflicts with a JavaScript name such as `prototype` or
      *  when using a Contract programatically.
+     * 
+     *  @param {string | EventFragment} key - The name of the event to return.
+     *  @returns The event for the given name.
      */
     getEvent(key: string | EventFragment): ContractEvent {
         if (typeof(key) !== "string") { key = key.format(); }
@@ -876,7 +891,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     }
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     async queryTransaction(hash: string): Promise<Array<EventLog>> {
         throw new Error("@TODO");
@@ -899,9 +914,15 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     */
 
     /**
-     *  Provide historic access to event data for %%event%% in the range
-     *  %%fromBlock%% (default: ``0``) to %%toBlock%% (default: ``"latest"``)
+     *  Provide historic access to event data for `event` in the range
+     *  `fromBlock` (default: `0`) to `toBlock` (default: `"latest"`)
      *  inclusive.
+     * 
+     *  @param {string} shard - The shard to query.
+     *  @param {ContractEventName} event - The event to query.
+     *  @param {BlockTag} fromBlock - The block to start querying from.
+     *  @param {BlockTag} toBlock - The block to stop querying at.
+     *  @returns An array of event logs.
      */
     async queryFilter(shard: string, event: ContractEventName, fromBlock?: BlockTag, toBlock?: BlockTag): Promise<Array<EventLog | Log>> {
         if (fromBlock == null) { fromBlock = 0; }
@@ -936,7 +957,11 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     }
 
     /**
-     *  Add an event %%listener%% for the %%event%%.
+     *  Add an event `listener` for the `event`.
+     * 
+     *  @param {ContractEventName} event - The event to listen for.
+     *  @param {Listener} listener - The listener to call when the event is emitted.
+     *  @returns This contract instance.
      */
     async on(event: ContractEventName, listener: Listener): Promise<this> {
         const sub = await getSub(this, "on", event);
@@ -946,8 +971,11 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     }
 
     /**
-     *  Add an event %%listener%% for the %%event%%, but remove the listener
+     *  Add an event `listener` for the `event`, but remove the listener
      *  after it is fired once.
+     * 
+     *  @param {ContractEventName} event - The event to listen for.
+     *  @param {Listener} listener - The listener to call when the event is emitted.
      */
     async once(event: ContractEventName, listener: Listener): Promise<this> {
         const sub = await getSub(this, "once", event);
@@ -957,17 +985,24 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     }
 
     /**
-     *  Emit an %%event%% calling all listeners with %%args%%.
+     *  Emit an `event` calling all listeners with `args`.
      *
-     *  Resolves to ``true`` if any listeners were called.
+     *  Resolves to `true` if any listeners were called.
+     * 
+     *  @param {ContractEventName} event - The event to emit.
+     *  @param {Array<any>} args - The arguments to pass to the listeners.
+     *  @returns `true` if any listeners were called.
      */
     async emit(event: ContractEventName, ...args: Array<any>): Promise<boolean> {
         return await emit(this, event, args, null);
     }
 
     /**
-     *  Resolves to the number of listeners of %%event%% or the total number
+     *  Resolves to the number of listeners of `event` or the total number
      *  of listeners if unspecified.
+     * 
+     *  @param {ContractEventName} event - The event to count listeners for.
+     *  @returns {number} The number of listeners.
      */
     async listenerCount(event?: ContractEventName): Promise<number> {
         if (event) {
@@ -986,8 +1021,11 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     }
 
     /**
-     *  Resolves to the listeners subscribed to %%event%% or all listeners
+     *  Resolves to the listeners subscribed to `event` or all listeners
      *  if unspecified.
+     * 
+     *  @param {ContractEventName} event - The event to get listeners for.
+     *  @returns {Array<Listener>} The listeners.
      */
     async listeners(event?: ContractEventName): Promise<Array<Listener>> {
         if (event) {
@@ -1006,8 +1044,12 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     }
 
     /**
-     *  Remove the %%listener%% from the listeners for %%event%% or remove
+     *  Remove the `listener` from the listeners for `event` or remove
      *  all listeners if unspecified.
+     * 
+     *  @param {ContractEventName} event - The event to remove the listener from.
+     *  @param {Listener} listener - The listener to remove.
+     *  @returns This contract instance.
      */
     async off(event: ContractEventName, listener?: Listener): Promise<this> {
         const sub = await hasSub(this, event);
@@ -1027,8 +1069,11 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     }
 
     /**
-     *  Remove all the listeners for %%event%% or remove all listeners if
+     *  Remove all the listeners for `event` or remove all listeners if
      *  unspecified.
+     * 
+     *  @param {ContractEventName} event - The event to remove the listeners from.
+     *  @returns This contract instance.
      */
     async removeAllListeners(event?: ContractEventName): Promise<this> {
         if (event) {
@@ -1048,21 +1093,30 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     }
 
     /**
-     *  Alias for [on].
+     *  Alias for {@link BaseContract.on | **on**}.
+     * 
+     *  @param {ContractEventName} event - The event to listen for.
+     *  @param {Listener} listener - The listener to call when the event is emitted.
      */
     async addListener(event: ContractEventName, listener: Listener): Promise<this> {
         return await this.on(event, listener);
     }
 
     /**
-     *  Alias for [off].
+     *  Alias for {@link BaseContract.off | **off**}.
+     * 
+     *  @param {ContractEventName} event - The event to remove the listener from.
+     *  @param {Listener} listener - The listener to remove.
      */
     async removeListener(event: ContractEventName, listener: Listener): Promise<this> {
         return await this.off(event, listener);
     }
 
     /**
-     *  Create a new Class for the %%abi%%.
+     *  Create a new Class for the `abi`.
+     * 
+     *  @param {Interface | InterfaceAbi} abi - The ABI to create the class from.
+     *  @returns The new Class for the ABI.
      */
     static buildClass<T = ContractInterface>(abi: Interface | InterfaceAbi): new (target: string, runner?: null | ContractRunner) => BaseContract & Omit<T, keyof BaseContract> {
         class CustomContract extends BaseContract {
@@ -1075,6 +1129,11 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
     /**
      *  Create a new BaseContract with a specified Interface.
+     * 
+     *  @param {string} target - The target to connect to.
+     *  @param {Interface | InterfaceAbi} abi - The ABI to use.
+     *  @param {null | ContractRunner} runner - The runner to use.
+     *  @returns The new BaseContract.
      */
     static from<T = ContractInterface>(target: string, abi: Interface | InterfaceAbi, runner?: null | ContractRunner): BaseContract & Omit<T, keyof BaseContract> {
         if (runner == null) { runner = null; }
@@ -1088,6 +1147,8 @@ function _ContractBase(): new (target: string, abi: Interface | InterfaceAbi, ru
 }
 
 /**
- *  A [[BaseContract]] with no type guards on its methods or events.
+ *  A {@link BaseContract | **BaseContract**} with no type guards on its methods or events.
+ * 
+ *  @category Contract
  */
 export class Contract extends _ContractBase() { }

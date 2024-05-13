@@ -9,6 +9,8 @@ import type { Networkish } from "./network.js";
 
 /**
  *  A generic interface to a Websocket-like object.
+ * 
+ *  @category Providers
  */
 export interface WebSocketLike {
     onopen: null | ((...args: Array<any>) => any);
@@ -24,6 +26,8 @@ export interface WebSocketLike {
 /**
  *  A function which can be used to re-create a WebSocket connection
  *  on disconnect.
+ * 
+ *  @category Providers
  */
 export type WebSocketCreator = () => WebSocketLike;
 
@@ -36,6 +40,8 @@ export type WebSocketCreator = () => WebSocketLike;
  *  However, this incurs higher server infrasturture costs, so additional
  *  resources may be required to host your own WebSocket nodes and many
  *  third-party services charge additional fees for WebSocket endpoints.
+ * 
+ *  @category Providers
  */
 export class WebSocketProvider extends SocketProvider {
     #connect: null | WebSocketCreator;

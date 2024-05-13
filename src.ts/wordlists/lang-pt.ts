@@ -6,24 +6,23 @@ const checksum = "0x2219000926df7b50d8aa0a3d495826b988287df4657fbd100e6fe596c8f7
 let wordlist: null | LangPt = null;
 
 /**
- *  The [[link-bip39-pt]] for [mnemonic phrases](link-bip-39).
+ *  The [Portuguese wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/portuguese.txt) for [mnemonic phrases](https://en.bitcoin.it/wiki/BIP_0039).
  *
  *  @_docloc: api/wordlists
  */
 export class LangPt extends WordlistOwl {
-
     /**
      *  Creates a new instance of the Portuguese language Wordlist.
      *
      *  This should be unnecessary most of the time as the exported
-     *  [[langPt]] should suffice.
+     *  {@link langPt} should suffice.
      *
-     *  @_ignore:
+     *  @ignore
      */
     constructor() { super("pt", words, checksum); }
 
     /**
-     *  Returns a singleton instance of a ``LangPt``, creating it
+     *  Returns a singleton instance of a `LangPt`, creating it
      *  if this is the first time being called.
      */
     static wordlist(): LangPt {

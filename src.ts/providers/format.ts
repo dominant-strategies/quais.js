@@ -1,5 +1,5 @@
 /**
- *  @_ignore
+ *  @ignore
  */
 import { getAddress, getCreateAddress } from "../address/index.js";
 import { Signature } from "../crypto/index.js"

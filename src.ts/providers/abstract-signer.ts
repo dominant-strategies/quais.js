@@ -1,9 +1,9 @@
 /**
- *  Generally the [[Wallet]] and [[JsonRpcSigner]] and their sub-classes
+ *  Generally the [Wallet](../classes/Wallet) and [JsonRpcSigner](../classes/JsonRpcSigner) and their sub-classes
  *  are sufficent for most developers, but this is provided to
  *  fascilitate more complex Signers.
  *
- *  @_section: api/providers/abstract-signer: Subclassing Signer [abstract-signer]
+ *  @section api/providers/abstract-signer: Subclassing Signer [abstract-signer]
  */
 import { AddressLike, resolveAddress } from "../address/index.js";
 import {
@@ -53,9 +53,10 @@ async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise
 
 /**
  *  An **AbstractSigner** includes most of teh functionality required
- *  to get a [[Signer]] working as expected, but requires a few
+ *  to get a {@link Signer | **Signer**} working as expected, but requires a few
  *  Signer-specific methods be overridden.
  *
+ *  @category Providers
  */
 export abstract class AbstractSigner<P extends null | Provider = null | Provider> implements Signer {
     /**
@@ -64,7 +65,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
     readonly provider!: P;
 
     /**
-     *  Creates a new Signer connected to %%provider%%.
+     *  Creates a new Signer connected to `provider`.
      */
     constructor(provider?: P) {
         defineProperties<AbstractSigner>(this, { provider: (provider || null) });
@@ -85,10 +86,13 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         return (await address).slice(0, 4)
     }
     /**
-     *  Returns the signer connected to %%provider%%.
+     *  Returns the signer connected to `provider`.
      *
      *  This may throw, for example, a Signer connected over a Socket or
      *  to a specific instance of a node may not be transferrable.
+     * 
+     *  @param {Provider} provider - The provider to connect to.
+     *  @returns {Signer} The connected signer.
      */
     abstract connect(provider: null | Provider): Signer;
 
@@ -208,6 +212,8 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
  *
  *  This for example allow impersonating an account for the purpose of
  *  static calls or estimating gas, but does not allow sending transactions.
+ * 
+ *  @category Providers
  */
 export class VoidSigner extends AbstractSigner {
     /**
@@ -216,8 +222,8 @@ export class VoidSigner extends AbstractSigner {
     readonly address!: string;
 
     /**
-     *  Creates a new **VoidSigner** with %%address%% attached to
-     *  %%provider%%.
+     *  Creates a new **VoidSigner** with `address` attached to
+     *  `provider`.
      */
     constructor(address: string, provider?: null | Provider) {
         super(provider);

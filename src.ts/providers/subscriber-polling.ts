@@ -10,7 +10,7 @@ function copy(obj: any): any {
 /**
  *  Return the polling subscriber for common events.
  *
- *  @_docloc: api/providers/abstract-provider
+ *  @category Providers
  */
 export function getPollingSubscriber(provider: AbstractProvider, event: ProviderEvent): Subscriber {
     if (event === "block") { return new PollingBlockSubscriber(provider); }
@@ -27,7 +27,7 @@ export function getPollingSubscriber(provider: AbstractProvider, event: Provider
  *  A **PollingBlockSubscriber** polls at a regular interval for a change
  *  in the block number.
  *
- *  @_docloc: api/providers/abstract-provider
+ *  @category Providers
  */
 export class PollingBlockSubscriber implements Subscriber {
     #provider: AbstractProvider;
@@ -40,7 +40,7 @@ export class PollingBlockSubscriber implements Subscriber {
     #blockNumber: number;
 
     /**
-     *  Create a new **PollingBlockSubscriber** attached to %%provider%%.
+     *  Create a new **PollingBlockSubscriber** attached to `provider`.
      */
     constructor(provider: AbstractProvider) {
         this.#provider = provider;
@@ -114,10 +114,11 @@ export class PollingBlockSubscriber implements Subscriber {
 }
 
 /**
- *  An **OnBlockSubscriber** can be sub-classed, with a [[_poll]]
- *  implmentation which will be called on every new block.
+ *  An **OnBlockSubscriber** can be sub-classed, with a 
+ *  {@link OnBlockSubscriber._poll | **_poll**} implmentation 
+ *  which will be called on every new block.
  *
- *  @_docloc: api/providers/abstract-provider
+ *  @category Providers
  */
 export class OnBlockSubscriber implements Subscriber {
     #provider: AbstractProvider;
@@ -125,7 +126,7 @@ export class OnBlockSubscriber implements Subscriber {
     #running: boolean;
 
     /**
-     *  Create a new **OnBlockSubscriber** attached to %%provider%%.
+     *  Create a new **OnBlockSubscriber** attached to `provider`.
      */
     constructor(provider: AbstractProvider) {
         this.#provider = provider;
@@ -162,9 +163,7 @@ export class OnBlockSubscriber implements Subscriber {
 }
 
 /**
- *  @_ignore:
- *
- *  @_docloc: api/providers/abstract-provider
+ *  @ignore
  */
 export class PollingOrphanSubscriber extends OnBlockSubscriber {
     #filter: OrphanFilter;
@@ -184,14 +183,14 @@ export class PollingOrphanSubscriber extends OnBlockSubscriber {
  *  A **PollingTransactionSubscriber** will poll for a given transaction
  *  hash for its receipt.
  *
- *  @_docloc: api/providers/abstract-provider
+ *  @category Providers
  */
 export class PollingTransactionSubscriber extends OnBlockSubscriber {
     #hash: string;
 
     /**
      *  Create a new **PollingTransactionSubscriber** attached to
-     *  %%provider%%, listening for %%hash%%.
+     *  `provider`, listening for `hash`.
      */
     constructor(provider: AbstractProvider, hash: string) {
         super(provider);
@@ -207,7 +206,7 @@ export class PollingTransactionSubscriber extends OnBlockSubscriber {
 /**
  *  A **PollingEventSubscriber** will poll for a given filter for its logs.
  *
- *  @_docloc: api/providers/abstract-provider
+ *  @category Providers
  */
 export class PollingEventSubscriber implements Subscriber {
     #provider: AbstractProvider;
@@ -222,7 +221,7 @@ export class PollingEventSubscriber implements Subscriber {
 
     /**
      *  Create a new **PollingTransactionSubscriber** attached to
-     *  %%provider%%, listening for %%filter%%.
+     *  `provider`, listening for `filter%%.
      */
     constructor(provider: AbstractProvider, filter: EventFilter) {
         this.#provider = provider;

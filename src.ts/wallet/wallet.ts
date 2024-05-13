@@ -30,14 +30,16 @@ function stall(duration: number): Promise<void> {
  *  This class is generally the main entry point for developers
  *  that wish to use a private key directly, as it can create
  *  instances from a large variety of common sources, including
- *  raw private key, [[link-bip-39]] mnemonics and encrypte JSON
+ *  raw private key, [BIP-39](https://en.bitcoin.it/wiki/BIP_0039) mnemonics and encrypte JSON
  *  wallets.
+ * 
+ *  @category Wallet
  */
 export class Wallet extends BaseWallet {
 
     /**
-     *  Create a new wallet for the private %%key%%, optionally connected
-     *  to %%provider%%.
+     *  Create a new wallet for the private `key`, optionally connected
+     *  to `provider`.
      */
     constructor(key: string | SigningKey, provider?: null | Provider) {
         if (typeof(key) === "string" && !key.startsWith("0x")) {
@@ -54,10 +56,14 @@ export class Wallet extends BaseWallet {
 
     /**
      *  Resolves to a [JSON Keystore Wallet](json-wallets) encrypted with
-     *  %%password%%.
+     *  `password`.
      *
-     *  If %%progressCallback%% is specified, it will receive periodic
+     *  If `progressCallback` is specified, it will receive periodic
      *  updates as the encryption process progreses.
+     * 
+     *  @param {Uint8Array | string} password - The password to encrypt the wallet with.
+     *  @param {ProgressCallback} [progressCallback] - An optional callback to keep the user informed.
+     *  @returns {Promise<string>} The encrypted JSON wallet.
      */
     async encrypt(password: Uint8Array | string, progressCallback?: ProgressCallback): Promise<string> {
         const account = { address: this.address, privateKey: this.privateKey };
@@ -66,13 +72,16 @@ export class Wallet extends BaseWallet {
 
     /**
      *  Returns a [JSON Keystore Wallet](json-wallets) encryped with
-     *  %%password%%.
+     *  `password`.
      *
      *  It is preferred to use the [async version](encrypt) instead,
-     *  which allows a [[ProgressCallback]] to keep the user informed.
+     *  which allows a {@link ProgressCallback | **ProgressCallback**} to keep the user informed.
      *
      *  This method will block the event loop (freezing all UI) until
      *  it is complete, which may be a non-trivial duration.
+     * 
+     *  @param {Uint8Array | string} password - The password to encrypt the wallet with.
+     *  @returns {string} The encrypted JSON wallet.
      */
     encryptSync(password: Uint8Array | string): string {
         const account = { address: this.address, privateKey: this.privateKey };
@@ -100,11 +109,16 @@ export class Wallet extends BaseWallet {
     }
 
     /**
-     *  Creates (asynchronously) a **Wallet** by decrypting the %%json%%
-     *  with %%password%%.
+     *  Creates (asynchronously) a **Wallet** by decrypting the `json`
+     *  with `password`.
      *
-     *  If %%progress%% is provided, it is called periodically during
+     *  If `progress` is provided, it is called periodically during
      *  decryption so that any UI can be updated.
+     * 
+     *  @param {string} json - The JSON data to decrypt.
+     *  @param {Uint8Array | string} password - The password to decrypt the JSON data.
+     *  @param {ProgressCallback} [progress] - An optional callback to keep the user informed.
+     *  @returns {Promise<HDNodeWallet | Wallet>} The decrypted wallet.
      */
     static async fromEncryptedJson(json: string, password: Uint8Array | string, progress?: ProgressCallback): Promise<HDNodeWallet | Wallet> {
         let account: null | CrowdsaleAccount | KeystoreAccount = null;
@@ -122,11 +136,15 @@ export class Wallet extends BaseWallet {
     }
 
     /**
-     *  Creates a **Wallet** by decrypting the %%json%% with %%password%%.
+     *  Creates a **Wallet** by decrypting the `json` with `password`.
      *
-     *  The [[fromEncryptedJson]] method is preferred, as this method
+     *  The {@link Wallet.fromEncryptedJson | **fromEncryptedJson**} method is preferred, as this method
      *  will lock up and freeze the UI during decryption, which may take
      *  some time.
+     * 
+     *  @param {string} json - The JSON data to decrypt.
+     *  @param {Uint8Array | string} password - The password to decrypt the JSON data.
+     *  @returns {HDNodeWallet | Wallet} The decrypted wallet.
      */
     static fromEncryptedJsonSync(json: string, password: Uint8Array | string): HDNodeWallet | Wallet {
         let account: null | CrowdsaleAccount | KeystoreAccount = null;
@@ -142,10 +160,14 @@ export class Wallet extends BaseWallet {
     }
 
     /**
-     *  Creates a new random [[HDNodeWallet]] using the available
+     *  Creates a new random {@link HDNodeWallet | **HDNodeWallet**} using the available
      *  [cryptographic random source](randomBytes).
      *
      *  If there is no crytographic random source, this will throw.
+     * 
+     *  @param {string} path - The derivation path for the wallet.
+     *  @param {Provider} [provider] - An optional provider to connect the wallet to.
+     *  @returns {HDNodeWallet} The new wallet.
      */
     static createRandom(path: string, provider?: null | Provider): HDNodeWallet {
         const wallet = HDNodeWallet.createRandom(path);
@@ -154,7 +176,13 @@ export class Wallet extends BaseWallet {
     }
 
     /**"m/44'/60'/0'/0/0"
-     *  Creates a [[HDNodeWallet]] for %%phrase%%.
+     *  Creates a {@link HDNodeWallet | **HDNodeWallet**} for `phrase`.
+     * 
+     *  @param {string} phrase - The mnemonic phrase to create the wallet with.
+     *  @param {string} path - The derivation path for the wallet.
+     *  @param {Provider} [provider] - An optional provider to connect the wallet to.
+     *  @param {Wordlist} [wordlist] - An optional wordlist to use for the mnemonic phrase.
+     *  @returns {HDNodeWallet} The new wallet.
      */
     static fromPhrase(phrase: string, path: string, provider?: Provider, wordlist?: Wordlist): HDNodeWallet | UTXOHDWallet {
         const splitPath = path.split('/');

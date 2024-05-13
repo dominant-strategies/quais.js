@@ -3,9 +3,9 @@
  *  by a node running a JSON-RPC interface which can be connected to,
  *  based on the transport, using:
  *
- *  - HTTP or HTTPS - [[JsonRpcProvider]]
- *  - WebSocket - [[WebSocketProvider]]
- *  - IPC - [[IpcSocketProvider]]
+ *  - HTTP or HTTPS - [JsonRpcProvider](../classes/JsonRpcProvider)
+ *  - WebSocket - [WebSocketProvider](../classes/WebSocketProvider)
+ *  - IPC - [IpcSocketProvider](../classes/IpcSocketProvider)
  *
  * @_section: api/providers/jsonrpc:JSON-RPC Provider  [about-jsonrpcProvider]
  */
@@ -74,6 +74,8 @@ function stall(duration: number): Promise<void> {
 
 /**
  *  A JSON-RPC payload, which are sent to a JSON-RPC server.
+ * 
+ *  @category Providers
  */
 export type JsonRpcPayload = {
     /**
@@ -99,6 +101,8 @@ export type JsonRpcPayload = {
 
 /**
  *  A JSON-RPC result, which are returned on success from a JSON-RPC server.
+ * 
+ *  @category Providers
  */
 export type JsonRpcResult = {
     /**
@@ -114,6 +118,8 @@ export type JsonRpcResult = {
 
 /**
  *  A JSON-RPC error, which are returned on failure from a JSON-RPC server.
+ * 
+ *  @category Providers
  */
 export type JsonRpcError = {
     /**
@@ -132,8 +138,11 @@ export type JsonRpcError = {
 };
 
 /**
- *  When subscribing to the ``"debug"`` event, the [[Listener]] will
+ *  When subscribing to the `"debug"` event, the [[Listener]] will
  *  receive this object as the first parameter.
+ *  @TODO Listener is no longer exported, either remove the link or rework the comment
+ * 
+ *  @category Providers
  */
 export type DebugEventJsonRpcApiProvider = {
     action: "sendRpcPayload",
@@ -147,16 +156,16 @@ export type DebugEventJsonRpcApiProvider = {
 };
 
 /**
- *  Options for configuring a [[JsonRpcApiProvider]]. Much of this
- *  is targetted towards sub-classes, which often will not expose
- *  any of these options to their consumers.
+ *  Options for configuring a {@link JsonRpcApiProvider | **JsonRpcApiProvider**}. 
+ *  Much of this is targetted towards sub-classes, which often will 
+ *  not expose any of these options to their consumers.
  *
- *  **``polling``** - use the polling strategy is used immediately
+ *  **`polling`** - use the polling strategy is used immediately
  *  for events; otherwise, attempt to use filters and fall back onto
- *  polling (default: ``false``)
+ *  polling (default: `false`)
  *
- *  **``staticNetwork``** - do not request chain ID on requests to
- *  validate the underlying chain has not changed (default: ``null``)
+ *  **`staticNetwork`** - do not request chain ID on requests to
+ *  validate the underlying chain has not changed (default: `null`)
  *
  *  This should **ONLY** be used if it is **certain** that the network
  *  cannot change, such as when using INFURA (since the URL dictates the
@@ -165,17 +174,19 @@ export type DebugEventJsonRpcApiProvider = {
  *  with MetaMask, since the used can select a new network from the
  *  drop-down at any time.
  *
- *  **``batchStallTime``** - how long (ms) to aggregate requests into a
- *  single batch. ``0`` indicates batching will only encompass the current
- *  event loop. If ``batchMaxCount = 1``, this is ignored. (default: ``10``)
+ *  **`batchStallTime`** - how long (ms) to aggregate requests into a
+ *  single batch. `0` indicates batching will only encompass the current
+ *  event loop. If `batchMaxCount = 1`, this is ignored. (default: `10`)
  *
- *  **``batchMaxSize``** - target maximum size (bytes) to allow per batch
+ *  **`batchMaxSize`** - target maximum size (bytes) to allow per batch
  *  request (default: 1Mb)
  *
- *  **``batchMaxCount``** - maximum number of requests to allow in a batch.
- *  If ``batchMaxCount = 1``, then batching is disabled. (default: ``100``)
+ *  **`batchMaxCount`** - maximum number of requests to allow in a batch.
+ *  If `batchMaxCount = 1`, then batching is disabled. (default: `100`)
  *
- *  **``cacheTimeout``** - passed as [[AbstractProviderOptions]].
+ *  **`cacheTimeout`** - passed as [AbstractProviderOptions](../types/AbstractProviderOptions).
+ * 
+ *  @category Providers
  */
 export type JsonRpcApiProviderOptions = {
     staticNetwork?: null | Network | boolean;
@@ -204,7 +215,8 @@ export interface AbstractJsonRpcTransactionRequest {
         chainId?: string;
 
         /**
-         *  The [[link-eip-2718]] transaction type.
+         *  The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718)
+         *  transaction type.
          */
         type?: string;
 }
@@ -220,6 +232,8 @@ export interface QiJsonRpcTransactionRequest extends AbstractJsonRpcTransactionR
 /**
  *  A **JsonRpcTransactionRequest** is formatted as needed by the JSON-RPC
  *  Ethereum API specification.
+ * 
+ *  @category Providers
  */
 export interface QuaiJsonRpcTransactionRequest extends AbstractJsonRpcTransactionRequest {
     /**
@@ -240,23 +254,25 @@ export interface QuaiJsonRpcTransactionRequest extends AbstractJsonRpcTransactio
     /**
      *  The maximum amount of gas to allow a transaction to consume.
      *
-     *  In most other places in quais, this is called ``gasLimit`` which
+     *  In most other places in quais, this is called `gasLimit` which
      *  differs from the JSON-RPC Ethereum API specification.
      */
     gas?: string;
 
     /**
-     *  The gas price per wei for transactions prior to [[link-eip-1559]].
+     *  The gas price per wei for transactions prior to [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559).
      */
     gasPrice?: string;
 
     /**
-     *  The maximum fee per gas for [[link-eip-1559]] transactions.
+     *  The maximum fee per gas for [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559)
+     *  transactions.
      */
     maxFeePerGas?: string;
 
     /**
-     *  The maximum priority fee per gas for [[link-eip-1559]] transactions.
+     *  The maximum priority fee per gas for [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559)
+     *  transactions.
      */
     maxPriorityFeePerGas?: string;
 
@@ -486,6 +502,8 @@ type Payload = { payload: JsonRpcPayload, resolve: ResolveFunc, reject: RejectFu
  *  Sub-classing Notes:
  *  - a sub-class MUST override _send
  *  - a sub-class MUST call the `_start()` method once connected
+ * 
+ *  @category Providers
  */
 export abstract class JsonRpcApiProvider extends AbstractProvider {
 
@@ -640,7 +658,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     }
 
     /**
-     *  Returns the value associated with the option %%key%%.
+     *  Returns the value associated with the option `key`.
      *
      *  Sub-classes can use this to inquire about configuration options.
      */
@@ -649,7 +667,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     }
 
     /**
-     *  Gets the [[Network]] this provider has committed to. On each call, the network
+     *  Gets the {@link Network | **Network**} this provider has committed to. On each call, the network
      *  is detected, and if it has changed, the call will reject.
      */
     get _network(): Network {
@@ -658,7 +676,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     }
 
     /**
-     *  Sends a JSON-RPC %%payload%% (or a batch) to the underlying channel.
+     *  Sends a JSON-RPC `payload` (or a batch) to the underlying channel.
      *
      *  Sub-classes **MUST** override this.
      */
@@ -666,10 +684,10 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
 
     /**
-     *  Resolves to the non-normalized value by performing %%req%%.
+     *  Resolves to the non-normalized value by performing `req`.
      *
      *  Sub-classes may override this to modify behavior of actions,
-     *  and should generally call ``super._perform`` as a fallback.
+     *  and should generally call `super._perform` as a fallback.
      */
     async _perform(req: PerformActionRequest): Promise<any> {
         // Legacy networks do not like the type field being passed along (which
@@ -705,7 +723,8 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
      *  Sub-classes may override this; it detects the *actual* network that
      *  we are **currently** connected to.
      *
-     *  Keep in mind that [[send]] may only be used once [[ready]], otherwise the
+     *  Keep in mind that {@link JsonRpcApiProvider.send | **send**} may only 
+     *  be used once {@link JsonRpcApiProvider.ready | **ready**}, otherwise the
      *  _send primitive must be used instead.
      */
     async _detectNetwork(): Promise<Network> {
@@ -722,7 +741,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
             return await this.#pendingDetectNetwork;
         }
 
-        // If we are ready, use ``send``, which enabled requests to be batched
+        // If we are ready, use `send`, which enabled requests to be batched
         if (this.ready) {
             this.#pendingDetectNetwork = (async () => {
                 try {
@@ -768,9 +787,10 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     }
 
     /**
-     *  Sub-classes **MUST** call this. Until [[_start]] has been called, no calls
-     *  will be passed to [[_send]] from [[send]]. If it is overridden, then
-     *  ``super._start()`` **MUST** be called.
+     *  Sub-classes **MUST** call this. Until {@link JsonRpcApiProvider._start | **_start**} 
+     *  has been called, no calls  will be passed to {@link JsonRpcApiProvider._send | **_send**} 
+     *  from {@link JsonRpcApiProvider.send | **send**} . If it is overridden, then
+     *  `super._start()` **MUST** be called.
      *
      *  Calling it multiple times is safe and has no effect.
      */
@@ -800,9 +820,9 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     }
 
     /**
-     *  Resolves once the [[_start]] has been called. This can be used in
-     *  sub-classes to defer sending data until the connection has been
-     *  established.
+     *  Resolves once the {@link JsonRpcApiProvider._start | **_start**}
+     *  has been called. This can be used in sub-classes to defer sending 
+     *  data until the connection has been established.
      */
     async _waitUntilReady(): Promise<void> {
         if (this.#notReady == null) { return; }
@@ -811,10 +831,13 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
 
     /**
-     *  Return a Subscriber that will manage the %%sub%%.
+     *  Return a Subscriber that will manage the `sub`.
      *
      *  Sub-classes may override this to modify the behavior of
      *  subscription management.
+     * 
+     *  @param {Subscription} sub - The subscription to manage.
+     *  @returns {Subscriber} The subscriber that will manage the subscription.
      */
     _getSubscriber(sub: Subscription): Subscriber {
 
@@ -835,14 +858,18 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     }
 
     /**
-     *  Returns true only if the [[_start]] has been called.
+     *  Returns true only if the {@link JsonRpcApiProvider._start | **_start**} 
+     *  has been called.
      */
     get ready(): boolean { return this.#notReady == null; }
 
     /**
-     *  Returns %%tx%% as a normalized JSON-RPC transaction request,
+     *  Returns `tx` as a normalized JSON-RPC transaction request,
      *  which has all values hexlified and any numeric values converted
      *  to Quantity values.
+     * 
+     *  @param {TransactionRequest} tx - The transaction to normalize.
+     *  @returns {JsonRpcTransactionRequest} The normalized transaction.
      */
     getRpcTransaction(tx: TransactionRequest): JsonRpcTransactionRequest {
         const result: JsonRpcTransactionRequest = {};
@@ -874,7 +901,12 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
     /**
      *  Returns the request method and arguments required to perform
-     *  %%req%%.
+     *  `req`.
+     * 
+     *  @param {PerformActionRequest} req - The request to perform.
+     *  @returns {null | { method: string, args: Array<any> }} The method and arguments to use.
+     *  @throws {Error} If the request is not supported.
+     *  @throws {Error} If the request is invalid.
      */
     getRpcRequest(req: PerformActionRequest): null | { method: string, args: Array<any> } {
         switch (req.method) {
@@ -1018,9 +1050,13 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
     /**
      *  Returns an quais-style Error for the given JSON-RPC error
-     *  %%payload%%, coalescing the various strings and error shapes
+     *  `payload`, coalescing the various strings and error shapes
      *  that different nodes return, coercing them into a machine-readable
      *  standardized error.
+     * 
+     *  @param {JsonRpcPayload} payload - The payload that was sent.
+     *  @param {JsonRpcError} _error - The error that was received.
+     *  @returns {Error} The coalesced error.
      */
     getRpcError(payload: JsonRpcPayload, _error: JsonRpcError): Error {
         const { method } = payload;
@@ -1114,7 +1150,7 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
 
 
     /**
-     *  Requests the %%method%% with %%params%% via the JSON-RPC protocol
+     *  Requests the `method` with `params` via the JSON-RPC protocol
      *  over the underlying channel. This can be used to call methods
      *  on the backend that do not have a high-level API within the Provider
      *  API.
@@ -1123,8 +1159,14 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
      *  in the options, assigns the request a unique ID.
      *
      *  **Do NOT override** this method in sub-classes; instead
-     *  override [[_send]] or force the options values in the
-     *  call to the constructor to modify this method's behavior.
+     *  override {@link JsonRpcApiProvider._send | **_send**}  or 
+     *  force the options values in the call to the constructor to 
+     *  modify this method's behavior.
+     * 
+     *  @param {string} method - The method to call.
+     *  @param {Array<any> | Record<string, any>} params - The parameters to pass to the method.
+     *  @param {string} shard - The shard to send the request to.
+     *  @returns {Promise<any>} A promise that resolves to the result of the method call.
      */
     send(method: string, params: Array<any> | Record<string, any>, shard?: string): Promise<any> {
         // @TODO: cache chainId?? purge on switch_networks
@@ -1149,20 +1191,20 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
     }
 
     /**
-     *  Resolves to the [[Signer]] account for  %%address%% managed by
-     *  the client.
+     *  Resolves to the {@link Signer | **Signer**}  account for  
+     *  `address` managed by the client.
      *
-     *  If the %%address%% is a number, it is used as an index in the
-     *  the accounts from [[listAccounts]].
+     *  If the `address` is a number, it is used as an index in the
+     *  the accounts from {@link JsonRpcApiProvider.listAccounts | **listAccount**}.
      *
      *  This can only be used on clients which manage accounts (such as
-     *  Geth with imported account or MetaMask).
-     *
-     *  Throws if the account doesn't exist.
+     *  Geth with imported account or MetaMask). go-quai clients do not support
+     *  internal key management, so this method will always throw.
+     * 
+     *  @param {number | string} address - The address or index of the account to get.
+     *  @returns {Promise<JsonRpcSigner>} The signer for the account.
+     *  @throws {Error} If the account doesn't exist.
      */
-
-    // Works only if using a local node or browser wallet for this, otherwise cannot get accounts
-
     async getSigner(address?: number | string): Promise<JsonRpcSigner> {
         if (address == null) { address = 0; }
 
@@ -1224,6 +1266,8 @@ export abstract class JsonRpcApiProvider extends AbstractProvider {
  *  Events are processed by polling the backend for the current block
  *  number; when it advances, all block-base events are then checked
  *  for updates.
+ * 
+ *  @category Providers
  */
 export class JsonRpcProvider extends JsonRpcApiProvider {
 

@@ -55,7 +55,7 @@ export { getTxType, getShardForAddress, getAddressDetails, isUTXOAddress } from 
 /////////////////////////////
 // Types
 
-export type { BytesLike } from "./data.js";
+export type { BytesLike, DataHexString, HexString } from "./data.js";
 
 export type {
 

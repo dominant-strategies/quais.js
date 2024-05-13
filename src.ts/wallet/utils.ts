@@ -1,5 +1,5 @@
 /**
- *  @_ignore
+ *  @ignore
  */
 
 import { assert, computeHmac, sha256 } from "../quais.js";

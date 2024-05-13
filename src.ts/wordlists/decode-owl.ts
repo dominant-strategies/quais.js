@@ -20,7 +20,7 @@ function unfold(words: Array<string>, sep: string): Array<string> {
 }
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export function decode(data: string, subs: string): Array<string> {
 
@@ -47,7 +47,7 @@ export function decode(data: string, subs: string): Array<string> {
 }
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export function decodeOwl(data: string): Array<string> {
     assertArgument(data[0] === "0", "unsupported auwl data", "data", data);
