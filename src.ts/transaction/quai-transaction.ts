@@ -1,12 +1,5 @@
-import { keccak256, Signature } from '../crypto/index.js';
-import {
-    AccessList,
-    accessListify,
-    AccessListish,
-    AbstractTransaction,
-    TransactionLike,
-    recoverAddress,
-} from './index.js';
+import {keccak256, Signature,} from "../crypto/index.js";
+import {AccessList, accessListify, AccessListish, AbstractTransaction, TransactionLike, recoverAddress} from "./index.js";
 import {
     assert,
     assertArgument,
@@ -18,15 +11,12 @@ import {
     getBytes,
     getNumber,
     getShardForAddress,
-    hexlify,
-    isUTXOAddress,
-    toBeArray,
-    toBigInt,
-    zeroPadValue,
-} from '../utils/index.js';
-import { getAddress } from '../address/index.js';
-import { formatNumber, handleNumber } from '../providers/format.js';
-import { ProtoTransaction } from './abstract-transaction.js';
+    hexlify, isUTXOAddress,
+    toBeArray, toBigInt, zeroPadValue
+} from "../utils/index.js";
+import {getAddress} from "../address/index.js";
+import {formatNumber, handleNumber} from "../providers/format.js";
+import { ProtoTransaction} from "./abstract-transaction.js";
 
 /**
  * @category Transaction
@@ -137,7 +127,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         const originUtxo = isUTXOAddress(this.from);
 
         if (!this.originShard) {
-            throw new Error('Invalid Shard for from or to address');
+            throw new Error("Invalid Shard for from or to address");
         }
         if (this.isExternal && destUtxo !== originUtxo) {
             throw new Error('Cross-shard & cross-ledger transactions are not supported');
@@ -165,7 +155,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     }
 
     get destShard(): string | undefined {
-        return this.to !== null ? getShardForAddress(this.to || '')?.byte.slice(2) : undefined;
+        return this.to !== null ? getShardForAddress(this.to || "")?.byte.slice(2) : undefined;
     }
 
     /**
@@ -373,8 +363,8 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             gas_fee_cap: formatNumber(this.maxFeePerGas || 0, 'maxFeePerGas'),
             gas: Number(this.gasLimit || 0),
             to: this.to != null ? getBytes(this.to as string) : null,
-            value: formatNumber(this.value || 0, 'value'),
-            data: getBytes(this.data || '0x'),
+            value: formatNumber(this.value || 0, "value"),
+            data: getBytes(this.data || "0x"),
             access_list: { access_tuples: [] },
         };
 
@@ -459,7 +449,15 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         let signature: null | Signature = null;
         let address;
         if (protoTx.v && protoTx.r && protoTx.s) {
-            const signatureFields = [hexlify(protoTx.v!), hexlify(protoTx.r!), hexlify(protoTx.s!)];
+            // check if protoTx.r is zero
+            if (protoTx.r.reduce((acc, val) => acc += val, 0) == 0) {
+                throw new Error("Proto decoding only supported for signed transactions")
+            }
+            const signatureFields = [
+                hexlify(protoTx.v!),
+                hexlify(protoTx.r!),
+                hexlify(protoTx.s!),
+            ];
             signature = _parseSignature(signatureFields);
 
             const protoTxCopy = structuredClone(protoTx);

@@ -14,72 +14,28 @@
 
 // https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/eth1.0-apis/assembled-spec/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=true&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false
 
-import { AbiCoder } from '../abi/index.js';
-import { getAddress, resolveAddress } from '../address/index.js';
-import { TypedDataEncoder } from '../hash/index.js';
-import { accessListify } from '../transaction/index.js';
+import { AbiCoder } from "../abi/index.js";
+import { accessListify } from "../transaction/index.js";
 import {
-    defineProperties,
-    getBigInt,
-    hexlify,
-    isHexString,
-    toQuantity,
-    toUtf8Bytes,
-    isError,
-    makeError,
-    assert,
-    assertArgument,
-    FetchRequest,
-    resolveProperties,
-    getBytes,
-} from '../utils/index.js';
+    getBigInt, hexlify, isHexString, toQuantity,
+    makeError, assert, assertArgument,
+    FetchRequest
+} from "../utils/index.js";
 
-import { AbstractProvider, UnmanagedSubscriber } from './abstract-provider.js';
-import { AbstractSigner } from './abstract-signer.js';
-import { Network } from './network.js';
-import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from './subscriber-filterid.js';
+import { AbstractProvider, UnmanagedSubscriber } from "./abstract-provider.js";
+import { Network } from "./network.js";
+import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from "./subscriber-filterid.js";
 
-import type { TypedDataDomain, TypedDataField } from '../hash/index.js';
-import type { TransactionLike } from '../transaction/index.js';
+import type { TransactionLike } from "../transaction/index.js";
 
-import type { PerformActionRequest, Subscriber, Subscription } from './abstract-provider.js';
-import type { Networkish } from './network.js';
-import type { Provider, QuaiTransactionRequest, TransactionRequest } from './provider.js';
-import type { Signer } from './signer.js';
-import { QuaiTransactionLike } from '../transaction/quai-transaction';
-import { TransactionResponse, addressFromTransactionRequest } from './provider.js';
-import { UTXOEntry, UTXOTransactionOutput } from '../transaction/utxo.js';
+import type { PerformActionRequest, Subscriber, Subscription } from "./abstract-provider.js";
+import type { Networkish } from "./network.js";
+import type {TransactionRequest} from "./provider.js";
+import type { Signer } from "./signer.js";
+import { UTXOEntry, UTXOTransactionOutput } from "../transaction/utxo.js";
+
 
 type Timer = ReturnType<typeof setTimeout>;
-
-const Primitive = 'bigint,boolean,function,number,string,symbol'.split(/,/g);
-//const Methods = "getAddress,then".split(/,/g);
-function deepCopy<T = any>(value: T): T {
-    if (value == null || Primitive.indexOf(typeof value) >= 0) {
-        return value;
-    }
-
-    // Keep any Addressable
-    if (typeof (<any>value).getAddress === 'function') {
-        return value;
-    }
-
-    if (Array.isArray(value)) {
-        return <any>value.map(deepCopy);
-    }
-
-    if (typeof value === 'object') {
-        return Object.keys(value).reduce(
-            (accum, key) => {
-                accum[key] = (<any>value)[key];
-                return accum;
-            },
-            <any>{},
-        );
-    }
-
-    throw new Error(`should not happen: ${value} (${typeof value})`);
-}
 
 function stall(duration: number): Promise<void> {
     return new Promise((resolve) => {
@@ -296,233 +252,6 @@ export interface QuaiJsonRpcTransactionRequest extends AbstractJsonRpcTransactio
      * The transaction access list.
      */
     accessList?: Array<{ address: string; storageKeys: Array<string> }>;
-}
-
-// @TODO: Unchecked Signers
-
-export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
-    address!: string;
-
-    constructor(provider: JsonRpcApiProvider<any>, address: string) {
-        super(provider);
-        address = getAddress(address);
-        defineProperties<JsonRpcSigner>(this, { address });
-    }
-
-    // TODO: `provider` is passed in, but not used, remove?
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    connect(provider: null | Provider): Signer {
-        assert(false, 'cannot reconnect JsonRpcSigner', 'UNSUPPORTED_OPERATION', {
-            operation: 'signer.connect',
-        });
-    }
-
-    async getAddress(): Promise<string> {
-        return this.address;
-    }
-
-    // JSON-RPC will automatially fill in nonce, etc. so we just check from
-    async populateQuaiTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionLike> {
-        return (await this.populateCall(tx)) as QuaiTransactionLike;
-    }
-
-    // Returns just the hash of the transaction after sent, which is what
-    // the bare JSON-RPC API does;
-    async sendUncheckedTransaction(_tx: TransactionRequest): Promise<string> {
-        const tx = deepCopy(_tx);
-
-        const promises: Array<Promise<void>> = [];
-
-        if ('from' in tx) {
-            // Make sure the from matches the sender
-            if (tx.from) {
-                const _from = tx.from;
-                promises.push(
-                    (async () => {
-                        const from = await resolveAddress(_from);
-                        assertArgument(
-                            from != null && from.toLowerCase() === this.address.toLowerCase(),
-                            'from address mismatch',
-                            'transaction',
-                            _tx,
-                        );
-                        tx.from = from;
-                    })(),
-                );
-            } else {
-                tx.from = this.address;
-            }
-
-            // The JSON-RPC for quai_sendTransaction uses 90000 gas; if the user
-            // wishes to use this, it is easy to specify explicitly, otherwise
-            // we look it up for them.
-            if (tx.gasLimit == null) {
-                promises.push(
-                    (async () => {
-                        tx.gasLimit = await this.provider.estimateGas({ ...tx, from: this.address });
-                    })(),
-                );
-            }
-
-            // The address may be an ENS name or Addressable
-            if (tx.to != null) {
-                const _to = tx.to;
-                promises.push(
-                    (async () => {
-                        tx.to = await resolveAddress(_to);
-                    })(),
-                );
-            }
-        } else {
-            // Make sure the from matches the sender
-            if (tx.outputs) {
-                for (let i = 0; i < tx.outputs.length; i++) {
-                    if (tx.outputs[i].address) {
-                        promises.push(
-                            (async () => {
-                                const address = await resolveAddress(hexlify(tx.outputs![i].address));
-                                tx.outputs![i].address = getBytes(address);
-                            })(),
-                        );
-                    }
-                }
-            }
-        }
-
-        // Wait until all of our properties are filled in
-        if (promises.length) {
-            await Promise.all(promises);
-        }
-        const hexTx = this.provider.getRpcTransaction(tx);
-
-        return this.provider.send('quai_sendTransaction', [hexTx]);
-    }
-
-    async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
-        const shard = await this.shardFromAddress(addressFromTransactionRequest(tx));
-        // This cannot be mined any earlier than any recent block
-        const blockNumber = await this.provider.getBlockNumber(shard);
-        // Send the transaction
-        const hash = await this.sendUncheckedTransaction(tx);
-
-        // Unfortunately, JSON-RPC only provides and opaque transaction hash
-        // for a response, and we need the actual transaction, so we poll
-        // for it; it should show up very quickly
-        return await new Promise((resolve, reject) => {
-            const timeouts = [1000, 100];
-            let invalids = 0;
-
-            const checkTx = async () => {
-                try {
-                    // Try getting the transaction
-                    const tx = await this.provider.getTransaction(hash);
-
-                    if (tx != null) {
-                        resolve(tx.replaceableTransaction(blockNumber));
-                        return;
-                    }
-                } catch (error) {
-                    // If we were cancelled: stop polling.
-                    // If the data is bad: the node returns bad transactions
-                    // If the network changed: calling again will also fail
-                    // If unsupported: likely destroyed
-                    if (
-                        isError(error, 'CANCELLED') ||
-                        isError(error, 'BAD_DATA') ||
-                        isError(error, 'NETWORK_ERROR' || isError(error, 'UNSUPPORTED_OPERATION'))
-                    ) {
-                        if (error.info == null) {
-                            error.info = {};
-                        }
-                        error.info.sendTransactionHash = hash;
-
-                        reject(error);
-                        return;
-                    }
-
-                    // Stop-gap for misbehaving backends; see #4513
-                    if (isError(error, 'INVALID_ARGUMENT')) {
-                        invalids++;
-                        if (error.info == null) {
-                            error.info = {};
-                        }
-                        error.info.sendTransactionHash = hash;
-                        if (invalids > 10) {
-                            reject(error);
-                            return;
-                        }
-                    }
-
-                    // Notify anyone that cares; but we will try again, since
-                    // it is likely an intermittent service error
-                    this.provider.emit(
-                        'error',
-                        makeError('failed to fetch transation after sending (will try again)', 'UNKNOWN_ERROR', {
-                            error,
-                        }),
-                    );
-                }
-
-                // Wait another 4 seconds
-                this.provider._setTimeout(() => {
-                    checkTx();
-                }, timeouts.pop() || 4000);
-            };
-            checkTx();
-        });
-    }
-
-    async signTransaction(_tx: TransactionRequest): Promise<string> {
-        const tx = deepCopy(_tx);
-
-        // QuaiTransactionRequest
-        if ('from' in tx) {
-            if (tx.from) {
-                const from = await resolveAddress(tx.from);
-                assertArgument(
-                    from != null && from.toLowerCase() === this.address.toLowerCase(),
-                    'from address mismatch',
-                    'transaction',
-                    _tx,
-                );
-                tx.from = from;
-            } else {
-                tx.from = this.address;
-            }
-        } else {
-            throw new Error('No QI signing implementation in provider-jsonrpc');
-        }
-        const hexTx = this.provider.getRpcTransaction(tx);
-        return await this.provider.send('quai_signTransaction', [hexTx]);
-    }
-
-    async signMessage(_message: string | Uint8Array): Promise<string> {
-        const message = typeof _message === 'string' ? toUtf8Bytes(_message) : _message;
-        return await this.provider.send('personal_sign', [hexlify(message), this.address.toLowerCase()]);
-    }
-
-    async signTypedData(
-        domain: TypedDataDomain,
-        types: Record<string, Array<TypedDataField>>,
-        _value: Record<string, any>,
-    ): Promise<string> {
-        const value = deepCopy(_value);
-
-        return await this.provider.send('quai_signTypedData_v4', [
-            this.address.toLowerCase(),
-            JSON.stringify(TypedDataEncoder.getPayload(domain, types, value)),
-        ]);
-    }
-
-    async unlock(password: string): Promise<boolean> {
-        return this.provider.send('personal_unlockAccount', [this.address.toLowerCase(), password, null]);
-    }
-
-    // https://github.com/ethereum/wiki/wiki/JSON-RPC#quai_sign
-    async _legacySignMessage(_message: string | Uint8Array): Promise<string> {
-        const message = typeof _message === 'string' ? toUtf8Bytes(_message) : _message;
-        return await this.provider.send('quai_sign', [this.address.toLowerCase(), hexlify(message)]);
-    }
 }
 
 type ResolveFunc = (result: JsonRpcResult) => void;
@@ -1294,42 +1023,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * @returns {Promise<JsonRpcSigner>} The signer for the account.
      * @throws {Error} If the account doesn't exist.
      */
-    async getSigner(address?: number | string): Promise<JsonRpcSigner> {
-        if (address == null) {
-            address = 0;
-        }
-
-        const accountsPromise = this.send('quai_accounts', []);
-
-        // Account index
-        if (typeof address === 'number') {
-            const accounts = <Array<string>>await accountsPromise;
-            if (address >= accounts.length) {
-                throw new Error('no such account');
-            }
-            return new JsonRpcSigner(this, accounts[address]);
-        }
-
-        const { accounts } = await resolveProperties({
-            network: this.getNetwork(),
-            accounts: accountsPromise,
-        });
-
-        // Account address
-        address = getAddress(address);
-        for (const account of accounts) {
-            if (getAddress(account) === address) {
-                return new JsonRpcSigner(this, address);
-            }
-        }
-
-        throw new Error('invalid account');
-    }
-
-    async listAccounts(): Promise<Array<JsonRpcSigner>> {
-        const accounts: Array<string> = await this.send('quai_accounts', []);
-        return accounts.map((a) => new JsonRpcSigner(this, a));
-    }
 
     destroy(): void {
         // Stop processing requests

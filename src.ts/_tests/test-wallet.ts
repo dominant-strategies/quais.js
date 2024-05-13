@@ -24,10 +24,8 @@ describe('Test Transaction Signing', function () {
     const tests = loadTests<TestCaseTransaction>('transactions');
 
     for (const test of tests) {
-        if (!test.signedEip155) {
-            continue;
-        }
-        it(`tests signing an EIP-155 transaction: ${test.name}`, async function () {
+        if (!test.signed) { continue; }
+        it(`tests signing an EIP-155 transaction: ${ test.name }`, async function() {
             const wallet = new Wallet(test.privateKey);
             const txData = Object.assign({}, test.transaction, {
                 type: 0,
@@ -40,7 +38,7 @@ describe('Test Transaction Signing', function () {
             // // console.log('txData: ', JSON.stringify(parsed))
             // // console.log('EXPECTED: ', test.signedEip155)
             // // console.log("ACTUAL: ", signed)
-            assert.equal(signed, test.signedEip155, 'signedEip155');
+            assert.equal(signed, test.signed, "signed");
         });
     }
 });

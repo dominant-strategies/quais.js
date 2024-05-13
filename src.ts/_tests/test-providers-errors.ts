@@ -161,9 +161,9 @@ describe('Tests Provider Call Exception', function () {
     }
 });
 
-describe('Test Provider Blockchain Errors', function () {
-    const wallet = new Wallet(<string>process.env.CYPRUS1PK);
-    const wallet2 = new Wallet(<string>process.env.CYPRUS1PK);
+describe("Test Provider Blockchain Errors", function() {
+    const wallet = new Wallet(<string>(process.env.CYPRUS1PK));
+    const wallet2 = new Wallet(<string>(process.env.CYPRUS1PK));
 
     const networkName = 'colosseum';
     for (const providerName of providerNames) {

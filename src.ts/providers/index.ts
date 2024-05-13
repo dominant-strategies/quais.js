@@ -38,8 +38,8 @@ export {
     //resolveTransactionRequest,
 } from './provider.js';
 
-export { FallbackProvider } from './provider-fallback.js';
-export { JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner } from './provider-jsonrpc.js';
+export { FallbackProvider } from "./provider-fallback.js";
+export { JsonRpcApiProvider, JsonRpcProvider } from "./provider-jsonrpc.js"
 
 export { BrowserProvider } from './provider-browser.js';
 

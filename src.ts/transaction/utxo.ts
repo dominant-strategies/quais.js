@@ -1,6 +1,6 @@
-import { getAddress } from '../address/index.js';
-import { getBigInt } from '../utils/index.js';
-import type { BigNumberish } from '../utils/index.js';
+import { getAddress } from "../address/index.js";
+import { getBigInt } from "../utils/index.js";
+import type { BigNumberish } from "../utils/index.js";
 
 /**
  * @category Transaction
@@ -287,18 +287,10 @@ export class UTXO implements UTXOLike {
         }
 
         const result = utxo instanceof UTXO ? utxo : new UTXO();
-        if (utxo.txhash != null) {
-            result.txhash = utxo.txhash;
-        }
-        if (utxo.index != null) {
-            result.index = utxo.index;
-        }
-        if (utxo.address != null) {
-            result.address = utxo.address;
-        }
-        if (utxo.denomination != null) {
-            result.denomination = utxo.denomination;
-        }
+        if (utxo.txhash != null) { result.txhash = utxo.txhash; }
+        if (utxo.index != null) { result.index = utxo.index; }
+        if (utxo.address != null && utxo.address !== '') { result.address = utxo.address; }
+        if (utxo.denomination != null) { result.denomination = utxo.denomination; }
 
         return result;
     }

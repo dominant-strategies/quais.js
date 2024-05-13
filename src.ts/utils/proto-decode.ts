@@ -1,6 +1,6 @@
-import { ProtoTransaction } from '../transaction/abstract-transaction.js';
-import { ProtoWorkObject } from '../transaction/work-object.js';
-import * as Proto from './ProtoBuf/proto_block.js';
+import { ProtoTransaction } from "../transaction/abstract-transaction.js";
+import { ProtoWorkObject } from "../transaction/work-object.js";
+import * as Proto from "./ProtoBuf/proto_block.js"
 
 /**
  * @category Utils
@@ -15,7 +15,7 @@ export function decodeProtoTransaction(bytes: Uint8Array): ProtoTransaction {
     if (result.to?.length == 0) {
         result.to = null;
     }
-    return result;
+    return result
 }
 
 /**

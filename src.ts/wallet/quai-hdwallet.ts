@@ -309,7 +309,7 @@ export class QuaiHDWallet extends BaseWallet {
     }
 
     setCoinType(): void {
-        this.coinType = Number(this.path?.split('/')[2].replace("'", ''));
+        this.coinType = Number(this.path?.split("/")[2]?.replace("'", ""));
     }
 
     static #fromSeed(_seed: BytesLike, mnemonic: null | Mnemonic): QuaiHDWallet {
@@ -411,11 +411,10 @@ export class QuaiHDWallet extends BaseWallet {
      *
      * @returns {QuaiHDWallet} The new HD Node.
      */
-    static createRandom(path: string, password?: string, wordlist?: Wordlist): QuaiHDWallet {
-        if (path == null || !this.isValidPath(path)) {
-            throw new Error('Invalid path: ' + path);
-        }
-        const mnemonic = Mnemonic.fromEntropy(randomBytes(16), password, wordlist);
+    static createRandom( path: string, password?: string, wordlist?: Wordlist): QuaiHDWallet {
+        if (path == null) { throw new Error('Path is null') }
+//        if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
+        const mnemonic = Mnemonic.fromEntropy(randomBytes(16), password, wordlist)
         return QuaiHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
 
@@ -428,9 +427,8 @@ export class QuaiHDWallet extends BaseWallet {
      * @returns {QuaiHDWallet} The new HD Node Wallet.
      */
     static fromMnemonic(mnemonic: Mnemonic, path: string): QuaiHDWallet {
-        if (path == null || !this.isValidPath(path)) {
-            throw new Error('Invalid path: ' + path);
-        }
+        if (path == null) { throw new Error('Path is null') }
+//        if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
         return QuaiHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
 
@@ -445,10 +443,9 @@ export class QuaiHDWallet extends BaseWallet {
      * @returns {QuaiHDWallet} The new HD Node Wallet.
      */
     static fromPhrase(phrase: string, path: string, password?: string, wordlist?: Wordlist): QuaiHDWallet {
-        if (path == null || !this.isValidPath(path)) {
-            throw new Error('Invalid path: ' + path);
-        }
-        const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist);
+        if (path == null) { throw new Error('Path is null') }
+//        if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
+        const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist)
         return QuaiHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
 

@@ -75,11 +75,11 @@ import type {
     Provider,
     ProviderEvent,
     TransactionRequest,
-} from './provider.js';
-import { WorkObjectLike } from '../transaction/work-object.js';
-import { QiTransaction, QuaiTransaction } from '../transaction/index.js';
-import { QuaiTransactionResponseParams } from './formatting.js';
-import { keccak256, SigningKey } from '../crypto/index.js';
+} from "./provider.js";
+import { WorkObjectLike } from "../transaction/work-object.js";
+import {QiTransaction, QuaiTransaction} from "../transaction/index.js";
+import {QuaiTransactionResponseParams} from "./formatting.js";
+import {keccak256, SigningKey} from "../crypto/index.js";
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -1339,10 +1339,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     // TODO: `attempt` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async #call(tx: PerformActionTransaction, blockTag: string, attempt: number): Promise<string> {
+    async #call(tx: PerformActionTransaction, blockTag: string, attempt: number, shard?: string): Promise<string> {
         // This came in as a PerformActionTransaction, so to/from are safe; we can cast
         const transaction = <PerformActionTransaction>copyRequest(tx);
-        return hexlify(await this._perform({ method: 'call', transaction, blockTag }));
+        return hexlify(await this._perform({ method: "call", transaction, blockTag, shard }));
     }
 
     // TODO: `shard` is not used, remove or re-write
@@ -1362,7 +1362,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             blockTag: this._getBlockTag(shard, _tx.blockTag),
         });
 
-        return await this.#checkNetwork(this.#call(tx, blockTag, -1), shard);
+        return await this.#checkNetwork(this.#call(tx, blockTag, -1, shard), shard);
     }
 
     // Account

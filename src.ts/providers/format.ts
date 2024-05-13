@@ -231,31 +231,28 @@ export function formatEtx(value: any): EtxParams {
     return _formatEtx(value);
 }
 
-const _formatTransactionReceipt = object(
-    {
-        to: allowNull(getAddress, null),
-        from: allowNull(getAddress, null),
-        contractAddress: allowNull(getAddress, null),
-        // should be allowNull(hash), but broken-EIP-658 support is handled in receipt
-        index: getNumber,
-        gasUsed: getBigInt,
-        logsBloom: allowNull(formatData),
-        blockHash: formatHash,
-        hash: formatHash,
-        logs: arrayOf(formatReceiptLog),
-        blockNumber: getNumber,
-        //confirmations: allowNull(getNumber, null),
-        cumulativeGasUsed: getBigInt,
-        effectiveGasPrice: allowNull(getBigInt),
-        status: allowNull(getNumber),
-        type: allowNull(getNumber, 0),
-        etxs: arrayOf(formatEtx),
-    },
-    {
-        hash: ['transactionHash'],
-        index: ['transactionIndex'],
-    },
-);
+const _formatTransactionReceipt = object({
+    to: allowNull(getAddress, null),
+    from: allowNull(getAddress, null),
+    contractAddress: allowNull(getAddress, null),
+    // should be allowNull(hash), but broken-EIP-658 support is handled in receipt
+    index: getNumber,
+    gasUsed: getBigInt,
+    logsBloom: allowNull(formatData),
+    blockHash: formatHash,
+    hash: formatHash,
+    logs: arrayOf(formatReceiptLog),
+    blockNumber: getNumber,
+    //confirmations: allowNull(getNumber, null),
+    cumulativeGasUsed: getBigInt,
+    effectiveGasPrice: allowNull(getBigInt),
+    status: allowNull(getNumber),
+    type: allowNull(getNumber, 0),
+    etxs: (value) => (value === null ? [] : arrayOf(formatEtx)(value)),
+}, {
+    hash: ["transactionHash"],
+    index: ["transactionIndex"],
+});
 
 export function formatTransactionReceipt(value: any): TransactionReceiptParams {
     const result = _formatTransactionReceipt(value);

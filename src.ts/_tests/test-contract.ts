@@ -10,8 +10,8 @@ import { stall } from './utils.js';
 
 setupProviders();
 
-describe('Test Contract', function () {
-    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
+describe("Test Contract", function() {
+    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL)
     const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', provider);
     const abi = TestContract.abi;
     const bytecode = TestContract.bytecode;
@@ -359,8 +359,8 @@ describe('Test Typed Contract Interaction', function () {
         },
     ];
 
-    const abi = TypedContract.abi;
-    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
+    const abi = TypedContract.abi
+    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL)
     const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', provider);
     const bytecode = TypedContract.bytecode;
     let contract: Contract;

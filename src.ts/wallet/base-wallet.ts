@@ -98,17 +98,14 @@ export class BaseWallet extends AbstractSigner {
         }
 
         if (tx.from != null) {
-            assertArgument(
-                getAddress(<string>tx.from) === this.#address,
-                'transaction from address mismatch',
-                'tx.from',
-                tx.from,
-            );
+            assertArgument(getAddress(<string>(tx.from)) === this.#address,
+                "transaction from address mismatch", "tx.from", tx.from);
         }
 
         const btx = QuaiTransaction.from(<QuaiTransactionLike>tx);
-        const digest = keccak256(btx.unsignedSerialized);
-        btx.signature = this.signingKey.sign(digest);
+        console.log('unsigned', btx.unsignedSerialized)
+        const digest= keccak256(btx.unsignedSerialized)
+        btx.signature = this.signingKey.sign(digest)
 
         return btx.serialized;
     }

@@ -68,7 +68,7 @@ export {
     AbstractProvider,
 
     FallbackProvider,
-    JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner,
+    JsonRpcApiProvider, JsonRpcProvider,
 
     BrowserProvider,
 
