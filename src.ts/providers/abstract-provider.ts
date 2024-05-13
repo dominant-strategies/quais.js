@@ -62,10 +62,9 @@ import type {
     TransactionRequest,
 } from "./provider.js";
 import { WorkObjectLike } from "../transaction/work-object.js";
-import {QiTransaction} from "../transaction/qi-transaction";
-import {QuaiTransaction} from "../transaction/quai-transaction";
+import {QiTransaction, QuaiTransaction} from "../transaction/index.js";
 import {QuaiTransactionResponseParams} from "./formatting.js";
-import {keccak256, SigningKey} from "../crypto";
+import {keccak256, SigningKey} from "../crypto/index.js";
 
 type Timer = ReturnType<typeof setTimeout>;
 

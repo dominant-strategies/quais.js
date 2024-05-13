@@ -3,7 +3,7 @@ import { loadTests } from "./utils.js";
 import type { TestCaseTransaction, TestCaseTransactionTx } from "./types.js";
 
 import {isError} from "../index.js";
-import {QuaiTransaction} from "../transaction/quai-transaction";
+import {QuaiTransaction} from "../transaction/quai-transaction.js";
 
 
 const BN_0 = BigInt(0);

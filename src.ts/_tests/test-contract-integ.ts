@@ -14,8 +14,8 @@ interface ContractAbi {
 }
 
 describe("Tests contract integration", function() {
-    const provider = new quais.JsonRpcProvider(process.env.RPC_URL);
-    const wallet = new quais.Wallet(process.env.FAUCET_PRIVATEKEY || '', provider); 
+    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
+    const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', provider);
     const abi = QRC20.abi;
     const bytecode = QRC20.bytecode;
     const constructorArgs = {

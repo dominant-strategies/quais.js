@@ -1,6 +1,6 @@
 import assert from "assert";
-import { FewestCoinSelector } from "../transaction/coinselector-fewest";
-import { UTXOLike, denominations } from "../transaction/utxo";
+import { FewestCoinSelector } from "../transaction/coinselector-fewest.js";
+import { UTXOLike, denominations } from "../transaction/utxo.js";
 
 const TEST_SPEND_ADDRESS = "0x00539bc2CE3eD0FD039c582CB700EF5398bB0491";
 const TEST_RECEIVE_ADDRESS = "0x02b9B1D30B6cCdc7d908B82739ce891463c3FA19";

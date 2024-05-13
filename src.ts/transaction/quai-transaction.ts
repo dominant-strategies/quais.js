@@ -1,5 +1,5 @@
-import {keccak256, Signature,} from "../crypto";
-import {AccessList, accessListify, AccessListish, AbstractTransaction, TransactionLike, recoverAddress} from "./index";
+import {keccak256, Signature,} from "../crypto/index.js";
+import {AccessList, accessListify, AccessListish, AbstractTransaction, TransactionLike, recoverAddress} from "./index.js";
 import {
     assert,
     assertArgument,
@@ -12,10 +12,10 @@ import {
     getShardForAddress,
     hexlify, isUTXOAddress,
     toBeArray, toBigInt, zeroPadValue
-} from "../utils";
-import {getAddress} from "../address";
-import {formatNumber, handleNumber} from "../providers/format";
-import { ProtoTransaction} from "./abstract-transaction";
+} from "../utils/index.js";
+import {getAddress} from "../address/index.js";
+import {formatNumber, handleNumber} from "../providers/format.js";
+import { ProtoTransaction} from "./abstract-transaction.js";
 
 /**
  *  @TODO write documentation for this interface.
@@ -123,7 +123,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         const destUtxo = isUTXOAddress(this.to || "");
         const originUtxo = isUTXOAddress(this.from);
 
-        if (!this.destShard || !this.originShard) {
+        if (!this.originShard) {
             throw new Error("Invalid Shard for from or to address");
         }
         if (this.isExternal && destUtxo !== originUtxo) {
@@ -153,7 +153,7 @@ get originShard(): string | undefined {
     }
 
     get destShard(): string | undefined {
-        return getShardForAddress(this.to || "")?.byte.slice(2);
+        return this.to !== null ? getShardForAddress(this.to || "")?.byte.slice(2) : undefined;
     }
 
     /**
@@ -345,7 +345,7 @@ get originShard(): string | undefined {
             gas_tip_cap: formatNumber(this.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
             gas_fee_cap: formatNumber(this.maxFeePerGas || 0, "maxFeePerGas"),
             gas: Number(this.gasLimit || 0),
-            to: this.to != null ? getBytes(this.to as string) : new Uint8Array(0),
+            to: this.to != null ? getBytes(this.to as string) : null,
             value: formatNumber(this.value || 0, "value"),
             data: getBytes(this.data || "0x"),
             access_list: { access_tuples: [] },
@@ -356,6 +356,7 @@ get originShard(): string | undefined {
             protoTx.r = toBeArray(this.signature.r)
             protoTx.s = toBeArray(this.signature.s)
         }
+
         return protoTx;
     }
 
@@ -442,8 +443,8 @@ get originShard(): string | undefined {
         tx.maxPriorityFeePerGas = toBigInt(protoTx.gas_tip_cap!);
         tx.maxFeePerGas = toBigInt(protoTx.gas_fee_cap!);
         tx.gasLimit = toBigInt(protoTx.gas!);
-        tx.to = hexlify(protoTx.to!);
-        tx.value = toBigInt(protoTx.value!);
+        tx.to = protoTx.to !== null ? hexlify(protoTx.to!) : null;
+        tx.value = protoTx.value !== null ? toBigInt(protoTx.value!) : BigInt(0);
         tx.data = hexlify(protoTx.data!);
         tx.accessList = protoTx.access_list!.access_tuples.map(tuple => ({
             address: hexlify(tuple.address),
