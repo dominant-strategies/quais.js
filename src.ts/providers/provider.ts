@@ -1,17 +1,10 @@
 import {
-    defineProperties,
-    getBigInt,
-    getNumber,
-    hexlify,
-    resolveProperties,
-    assert,
-    assertArgument,
-    isError,
-    makeError,
-} from '../utils/index.js';
-import { getAddress } from '../address/index.js';
-import { accessListify } from '../transaction/index.js';
-import { keccak256, SigningKey } from '../crypto/index.js';
+    defineProperties, getBigInt, getNumber, hexlify, resolveProperties,
+    assert, assertArgument, isError, makeError
+} from "../utils/index.js";
+import { getAddress } from "../address/index.js";
+import { accessListify } from "../transaction/index.js";
+import {keccak256, SigningKey} from "../crypto/index.js";
 
 import type { AddressLike } from '../address/index.js';
 import type { BigNumberish, EventEmitterable } from '../utils/index.js';

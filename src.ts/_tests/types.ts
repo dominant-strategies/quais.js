@@ -210,19 +210,10 @@ export interface TestCaseTransaction {
     transaction: TestCaseTransactionTx;
     privateKey: string;
 
-    unsignedLegacy: string;
-    signedLegacy: string;
-    unsignedEip155: string;
-    signedEip155: string;
-    unsignedBerlin: string;
-    signedBerlin: string;
-    unsignedLondon: string;
-    signedLondon: string;
+    unsigned: string;
+    signed: string;
 
-    signatureLegacy: TestCaseTransactionSig;
-    signatureEip155: TestCaseTransactionSig;
-    signatureBerlin: TestCaseTransactionSig;
-    signatureLondon: TestCaseTransactionSig;
+    signature: TestCaseTransactionSig;
 }
 
 /////////////////////////////
