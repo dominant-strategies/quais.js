@@ -13,7 +13,7 @@ interface ContractAbi {
     transfer: quais.BaseContractMethod<[quais.AddressLike, bigint], [boolean], quais.ContractTransactionResponse>;
 }
 
-describe('Tests contract integration', function () {
+describe("Tests contract integration", function() {
     const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
     const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', provider);
     const abi = QRC20.abi;

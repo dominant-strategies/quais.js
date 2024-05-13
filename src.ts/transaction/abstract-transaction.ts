@@ -32,6 +32,8 @@ export interface TransactionLike {
 }
 
 /**
+ * @TODO write documentation for this interface.
+ *
  * @category Transaction
  * @todo Write documentation for this interface.
  */
@@ -44,7 +46,7 @@ export interface ProtoTransaction {
     /**
      * @todo Write documentation for this property.
      */
-    to?: Uint8Array | null;
+    to?: Uint8Array | null
 
     /**
      * @todo Write documentation for this property.
@@ -158,6 +160,8 @@ export interface ProtoTransaction {
 }
 
 /**
+ * @TODO write documentation for this interface.
+ *
  * @category Transaction
  * @todo Write documentation for this interface.
  */
@@ -166,6 +170,8 @@ export interface ProtoAccessList {
 }
 
 /**
+ * @TODO write documentation for this interface.
+ *
  * @category Transaction
  * @todo Write documentation for this interface.
  */
@@ -188,9 +194,11 @@ type allowedSignatureTypes = Signature | string;
  * tx = new Transaction();
  * //_result:
  *
- * tx.data = '0x1234';
- * //_result:
- * ```
+ *    tx.data = "0x1234";
+ *    //_result:
+ *  ```
+ *
+ *  @category Transaction
  */
 export abstract class AbstractTransaction<S extends allowedSignatureTypes> implements TransactionLike {
     protected _type: number | null;
@@ -286,9 +294,10 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
     /**
      * Returns true if signed.
      *
-     * This provides a Type Guard that properties requiring a signed transaction are non-null.
+     *  This provides a Type Guard that properties requiring a signed
+     *  transaction are non-null.
      *
-     * @returns {boolean} Indicates if the transaction is signed.
+     *  @returns {boolean} Indicates if the transaction is signed.
      */
     isSigned(): this is AbstractTransaction<S> & {
         type: number;
@@ -326,39 +335,41 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
     }
 
     /**
-     * Return the most "likely" type; currently the highest supported transaction type.
+     *  Return the most "likely" type; currently the highest
+     *  supported transaction type.
      *
-     * @returns {number} The inferred transaction type.
+     *  @returns {number} The inferred transaction type.
      */
     inferType(): number {
         return <number>this.inferTypes().pop();
     }
 
     /**
-     * Validates the explicit properties and returns a list of compatible transaction types.
+     *  Validates the explicit properties and returns a list of compatible
+     *  transaction types.
      *
-     * @returns {number[]} The compatible transaction types.
+     *  @returns {Array<number>} The compatible transaction types.
      */
     abstract inferTypes(): Array<number>;
 
     /**
-     * Create a copy of this transaciton.
+     *  Create a copy of this transaciton.
      *
-     * @returns {AbstractTransaction} The cloned transaction.
+     *  @returns {AbstractTransaction} The cloned transaction.
      */
     abstract clone(): AbstractTransaction<S>;
 
     /**
-     * Return a JSON-friendly object.
+     *  Return a JSON-friendly object.
      *
-     * @returns {TransactionLike} The JSON-friendly object.
+     *  @returns {TransactionLike} The JSON-friendly object.
      */
     abstract toJSON(): TransactionLike;
 
     /**
-     * Return a protobuf-friendly JSON object.
+     *  Return a protobuf-friendly JSON object.
      *
-     * @returns {ProtoTransaction} The protobuf-friendly JSON object.
+     *  @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
     abstract toProtobuf(): ProtoTransaction;
 
@@ -367,7 +378,7 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
     abstract get destShard(): string | undefined;
 
     get isExternal(): boolean {
-        return this.destShard !== undefined && this.originShard !== this.destShard;
+        return this.destShard !== undefined && this.originShard !== this.destShard
     }
 
     /**

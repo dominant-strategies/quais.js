@@ -2,8 +2,10 @@ import { assertArgument } from '../utils/index.js';
 
 import { JsonRpcApiProvider } from './provider-jsonrpc.js';
 
-import type { JsonRpcError, JsonRpcPayload, JsonRpcResult, JsonRpcSigner } from './provider-jsonrpc.js';
-import type { Networkish } from './network.js';
+import type {
+    JsonRpcError, JsonRpcPayload, JsonRpcResult
+} from "./provider-jsonrpc.js";
+import type { Networkish } from "./network.js";
 
 /**
  * The interface to an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) provider, which is a standard used by most
@@ -117,36 +119,4 @@ export class BrowserProvider extends JsonRpcApiProvider {
      *
      * @returns {Promise<boolean>} Resolves to `true` if the provider manages the `address`.
      */
-    async hasSigner(address: number | string): Promise<boolean> {
-        if (address == null) {
-            address = 0;
-        }
-
-        const accounts = await this.send('quai_accounts', []);
-        if (typeof address === 'number') {
-            return accounts.length > address;
-        }
-
-        address = address.toLowerCase();
-        return accounts.filter((a: string) => a.toLowerCase() === address).length !== 0;
-    }
-
-    async getSigner(address?: number | string): Promise<JsonRpcSigner> {
-        if (address == null) {
-            address = 0;
-        }
-
-        if (!(await this.hasSigner(address))) {
-            try {
-                //const resp =
-                await this.#request('quai_requestAccounts', []);
-                //console.log("RESP", resp);
-            } catch (error: any) {
-                const payload = error.payload;
-                throw this.getRpcError(payload, { id: payload.id, error });
-            }
-        }
-
-        return await super.getSigner(address);
-    }
 }
