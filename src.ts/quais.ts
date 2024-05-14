@@ -90,7 +90,8 @@ export {
 export {
     accessListify,
     computeAddress, recoverAddress,
-    AbstractTransaction, FewestCoinSelector
+    AbstractTransaction, FewestCoinSelector,
+    QiTransaction
 } from "./transaction/index.js";
 
 // UTILS
@@ -128,6 +129,8 @@ export {
     encryptKeystoreJson, encryptKeystoreJsonSync,
 
     quaiHDAccountPath, qiHDAccountPath,
+
+    nobleCrypto,
 } from "./wallet/index.js";
 
 // WORDLIST

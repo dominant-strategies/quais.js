@@ -70,8 +70,8 @@ export type UTXOTransactionOutput = UTXOEntry;
  *  @category Transaction
  */
 export type TxOutput = {
-    Address: string;
-    Denomination: number;
+    address: Uint8Array;
+    denomination: number;
 };
 
 /**
@@ -81,10 +81,14 @@ export type TxOutput = {
  *  @category Transaction
  */
 export type TxInput = {
-    txhash: string;
-    index: number;
-    pubKey: Uint8Array;
-}
+    previous_out_point: {
+        hash: {
+            value: Uint8Array;
+        };  
+        index: number;
+    };
+    pub_key: Uint8Array;  
+};
 
 /**
  *  @TODO write documentation for this type.

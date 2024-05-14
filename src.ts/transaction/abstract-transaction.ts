@@ -149,12 +149,12 @@ export interface ProtoTransaction {
     /**
      *  @TODO write documentation for this property.
      */
-    tx_ins?: Array<TxInput>
+    tx_ins?: { tx_ins : Array<TxInput>}
 
     /**
      *  @TODO write documentation for this property.
      */
-    tx_outs?: Array<TxOutput>
+    tx_outs?: { tx_outs: Array<TxOutput> }
 
     /**
      *  @TODO write documentation for this property.

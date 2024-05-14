@@ -128,7 +128,7 @@ export function addressFromTransactionRequest(tx: TransactionRequest): AddressLi
       return tx.from;
     }
     if (tx.inputs) {
-      return getAddress(keccak256("0x" + SigningKey.computePublicKey(tx.inputs[0].pubKey).substring(4)).substring(26));
+      return getAddress(keccak256("0x" + SigningKey.computePublicKey(tx.inputs[0].pub_key).substring(4)).substring(26));
     }
     throw new Error("Unable to determine sender from transaction inputs or from field");
 }

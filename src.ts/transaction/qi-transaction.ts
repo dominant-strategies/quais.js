@@ -41,13 +41,19 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     get txInputs(): TxInput[] {
         return (this.#txInputs ?? []).map(entry => ({...entry}));
     }
-    set txInputs(value: TxInput[]) {
+    set txInputs(value: TxInput[] | null) {
+        if (!Array.isArray(value)) {
+            throw new Error("txInputs must be an array");
+        }
         this.#txInputs = value.map(entry => ({...entry}));
     }
     get txOutputs(): TxOutput[] {
         return (this.#txOutputs ?? []).map(output => ({...output}));
     }
-    set txOutputs(value: TxOutput[]) {
+    set txOutputs(value: TxOutput[] | null) {
+        if (!Array.isArray(value)) {
+            throw new Error("txOutputs must be an array");
+        }
         this.#txOutputs = value.map(output => ({...output}));
     }
 
@@ -65,29 +71,29 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     }
 
     get originShard(): string | undefined {
-        const pubKey = hexlify(this.txInputs[0].pubKey);
+        const pubKey = hexlify(this.txInputs[0].pub_key);
         const senderAddr = computeAddress(pubKey || "")
 
         return getShardForAddress(senderAddr)?.byte.slice(2);
     }
 
-    get destShard(): string | undefined {
-        return getShardForAddress(this.txOutputs[0].Address || "")?.byte.slice(2);
+    get destShard(): string | undefined { 
+        return getShardForAddress(hexlify(this.txOutputs[0].address) || "")?.byte.slice(2);
     }
 
     getTransactionHash (data: Uint8Array): string {
         if (this.txInputs.length < 1 || this.txOutputs.length < 1) {
             throw new Error("Transaction must have at least one input and one output");
         }
-        const destUtxo = isUTXOAddress(this.txOutputs[0].Address || "");
+        const destUtxo = isUTXOAddress(hexlify(this.txOutputs[0].address) || "");
 
-        const pubKey = hexlify(this.txInputs[0].pubKey);
+        const pubKey = hexlify(this.txInputs[0].pub_key);
         const senderAddr = computeAddress(pubKey || "")
 
         const originUtxo = isUTXOAddress(senderAddr);
 
         if (!this.destShard|| !this.originShard) {
-            throw new Error("Invalid Shard for from or to address");
+            throw new Error(`Invalid shards: origin ${this.originShard} ->  destination ${this.destShard} (address: ${senderAddr})`);
         }
         if(this.isExternal && destUtxo !== originUtxo) {
             throw new Error("Cross-shard & cross-ledger transactions are not supported");
@@ -173,16 +179,18 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
      *  @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
     toProtobuf(): ProtoTransaction {
+        // console.log(`--> (toProtobuf) txInputs: ${JSON.stringify(this.txInputs)}`);
         const protoTx: ProtoTransaction = {
             type: (this.type || 2),
             chain_id: formatNumber(this.chainId || 0, "chainId"),
-            tx_ins: this.txInputs,
-            tx_outs: this.txOutputs,
+            tx_ins: { tx_ins : this.txInputs },
+            tx_outs: { tx_outs: this.txOutputs },
         }
 
         if (this.signature) {
             protoTx.signature = getBytes(this.signature)
         }
+
         return protoTx;
     }
 
@@ -231,20 +239,20 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         tx.type = protoTx.type;
         tx.chainId = toBigInt(protoTx.chain_id);
 
+        
         if (protoTx.type == 2) {
-            tx.txInputs = protoTx.tx_ins ?? []
-            tx.txOutputs = protoTx.tx_outs ?? []
+            tx.txInputs = protoTx.tx_ins?.tx_ins ?? []
+            tx.txOutputs = protoTx.tx_outs?.tx_outs ?? []
         }
-
+        
         if (protoTx.signature) {
             tx.signature = hexlify(protoTx.signature);
         }
-
+        
         if (payload) {
             tx.hash = tx.getTransactionHash(payload);
         }
-
-
+        
         return tx;
     }
 }
