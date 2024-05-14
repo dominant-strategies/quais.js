@@ -1,5 +1,5 @@
 Documentation Source
 ====================
 
-This folder contains all the Flatworm source for the documentation.
+This folder contains all the documentation for the @quais project.
 

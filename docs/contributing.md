@@ -29,51 +29,13 @@ Contributing to the documentation is welcome, but when making
 changes to documentation, please ensure that all changes are
 made **only** to:
 
-- Updating `/docs.wrm/*\*.wrm`
-- Adding links: `/docs.wrm/links/*.txt`
+- Updating `/docs/*\*.md`
 - Updating API jsdocs: `/*\* ... */` comment blocks within `/src.ts/`
 
-Generally changes to `/docs.wrm/config.wrm` should not be
-made, and if you feel it is necessary, please consider opening
-a [[link-discussion]] first.
-
-Similarly, when adding a new sections, a [[link-discussion]] is
+When adding a new sections, a [[link-discussion]] is
 preferred.
 
-All changes should be in the Flatworm Markdown Dialect.
-
-### Building the Documentation
-
-Currently, the documentation is built using an experimental v2 of the
-Flatworm documentation system, a system originally specifically made
-to maintain the quais documentation.
-
-The new `tsdocs` branch has the ability to parse `jsdocs` from
-from TypeScript source files to create an API reference.
-
-```bash title=Building with the v2 Flatworm @lang<shell>
-
-  # Clone the repo
-  /home/ricmoo> git clone https://github.com/ricmoo/flatworm.git
-  /home/ricmoo> cd flatworm
-
-  # Check out the tsdocs branch
-  /home/ricmoo/flatworm> git checkout tsdocs
-
-  # Install the necessary dependencies
-  /home/ricmoo/flatworm> npm install
-
-  # Ready to build the docs; output to a folder ./output/
-  /home/ricmoo/flatworm> node lib/cli-test PATH_TO_WRM_ROOT
-```
-
-Eventually the code for the v2 branch will be cleaned up, and it
-will be much easier to include as a `devDependency` for quais.
-
-In the meantime, expect new changes to be made frequently to the
-`tsdocs` branch, so for stability you may wish to checkout a
-specific hash.
-
+All changes should be in the JSdoc format.
 
 ### Fixing Bugs
 
@@ -106,14 +68,3 @@ When making any of the following changes, you must first open a
 
 Changes of this sort should not be made without serious consideration
 and discussion.
-
-
-### Building
-
-```bash
-  /home/ricmoo> git clone @TODO
-  /home/ricmoo> cd quais
-  /home/ricmoo/quais> npm install
-  /home/ricmoo/quais> npm run auto-build
-```
-
