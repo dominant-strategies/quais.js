@@ -154,7 +154,7 @@ export interface Signer extends Addressable, ContractRunner {
      *  Signs an [EIP-191](https://eips.ethereum.org/EIPS/eip-191) prefixed personal message.
      *
      *  If the `message` is a string, it is signed as UTF-8 encoded bytes. It is **not**
-     *  interpretted as a [BytesLike](../types/BytesLike); so the string `"0x1234"` is signed as six
+     *  interpretted as a [BytesLike](../type-aliases/BytesLike); so the string `"0x1234"` is signed as six
      *  characters, **not** two bytes.
      *
      *  To sign that example as two bytes, the Uint8Array should be used

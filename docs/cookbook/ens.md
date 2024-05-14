@@ -1,10 +1,9 @@
-_section: Cookbook: ENS Recipes  @<cookbook-ens>
+# ENS Recipes
 
 Here is a collection of short, but useful examples of working with
 ENS entries.
 
-
-_subsection: Get all Text records  @<cookbook-ens-allText>
+## Get all Text Records
 
 Here is a short recipe to get all the text records set for an ENS
 name.
@@ -16,9 +15,7 @@ to install:
 
 ``/home/ricmoo> npm install @quais-ext/provider-multicall``
 
-
-_code: Fetching all ENS text records.  @lang<script>
-
+```javascript
 import { quais } from "quais";
 import { MulticallProvider } from "@quais-ext/provider-multicall";
 
@@ -64,3 +61,4 @@ async function getTextRecords(_provider, name) {
   const provider = new quais.InfuraProvider();
   console.log(await getTextRecords(provider, "ricmoo.eth"));
 })();
+```

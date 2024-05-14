@@ -1,4 +1,4 @@
-_section: Contributions and Hacking @<about-contrib> @priority<-90>
+# Contributions and Hacking
 
 Pull requests are welcome, but please keep the following in mind:
 
@@ -7,8 +7,8 @@ Pull requests are welcome, but please keep the following in mind:
 - Security is important; adding dependencies require fairly
   convincing arguments as to why
 - The library aims to be lean, so keep an eye on the
-  ``dist/quais.min.js`` file size before and after your
-  changes (the ``build-clean`` target includes these stats)
+  `dist/quais.min.js` file size before and after your
+  changes (the `build-clean` target includes these stats)
 - Keep the PR simple, readable and confined to the relevant
   files; see below for which files to change
 - Add test cases for both expected and unexpected input
@@ -17,11 +17,10 @@ Pull requests are welcome, but please keep the following in mind:
   overly complicated or specific may not be accepted
 - Everyone is working hard; **be kind and respectful**
 
-It is always //highly recommended// that you open a [[link-discussion]]
+It is always *highly recommended* that you open a [[link-discussion]]
 **before** beginning a PR.
 
-
-_subsection: Documentation  @<about-contrib-docs>
+## Documentation
 
 The documentation is an area which can always benefit from extra
 eyes, extra knowledge and extra examples.
@@ -30,11 +29,11 @@ Contributing to the documentation is welcome, but when making
 changes to documentation, please ensure that all changes are
 made **only** to:
 
-- Updating ``/docs.wrm/*\*.wrm``
-- Adding links: ``/docs.wrm/links/*.txt``
-- Updating API jsdocs: ``/*\* ... */`` comment blocks within ``/src.ts/``
+- Updating `/docs.wrm/*\*.wrm`
+- Adding links: `/docs.wrm/links/*.txt`
+- Updating API jsdocs: `/*\* ... */` comment blocks within `/src.ts/`
 
-Generally changes to ``/docs.wrm/config.wrm`` should not be
+Generally changes to `/docs.wrm/config.wrm` should not be
 made, and if you feel it is necessary, please consider opening
 a [[link-discussion]] first.
 
@@ -43,16 +42,16 @@ preferred.
 
 All changes should be in the Flatworm Markdown Dialect.
 
-_heading: Building the Documentation
+### Building the Documentation
 
 Currently, the documentation is built using an experimental v2 of the
 Flatworm documentation system, a system originally specifically made
 to maintain the quais documentation.
 
-The new ``tsdocs`` branch has the ability to parse ``jsdocs`` from
+The new `tsdocs` branch has the ability to parse `jsdocs` from
 from TypeScript source files to create an API reference.
 
-_code: Building with the v2 Flatworm @lang<shell>
+```bash title=Building with the v2 Flatworm @lang<shell>
 
   # Clone the repo
   /home/ricmoo> git clone https://github.com/ricmoo/flatworm.git
@@ -66,30 +65,31 @@ _code: Building with the v2 Flatworm @lang<shell>
 
   # Ready to build the docs; output to a folder ./output/
   /home/ricmoo/flatworm> node lib/cli-test PATH_TO_WRM_ROOT
+```
 
 Eventually the code for the v2 branch will be cleaned up, and it
-will be much easier to include as a ``devDependency`` for quais.
+will be much easier to include as a `devDependency` for quais.
 
 In the meantime, expect new changes to be made frequently to the
-``tsdocs`` branch, so for stability you may wish to checkout a
+`tsdocs` branch, so for stability you may wish to checkout a
 specific hash.
 
 
-_subsection: Fixing Bugs  @<about-contrib-bugs>
+### Fixing Bugs
 
 In general the **only** files you should ever include in a PR are:
 
-- TypeScript source: ``/src.ts/*\*.ts``
+- TypeScript source: `/src.ts/*\*.ts`
 
-Do not include a ``package.json`` with the updated ``tarballHash``
-or ``version``, and do not include any generated files in your PR.
+Do not include a `package.json` with the updated `tarballHash`
+or `version`, and do not include any generated files in your PR.
 
 A bug fix **must not** modify anything requiring a minor version
 bump (see [[about-contrib-feature]]), such as changing a method
 signature or altering the exports.
 
 
-_subsection: Adding Features  @<about-contrib-feature>
+### Adding Features
 
 Contributing new features usually require a deeper understanding
 of the internal interactions with quais and its components, and
@@ -102,22 +102,18 @@ When making any of the following changes, you must first open a
   parameter type, changing the return type)
 - adding any new export; such as a class, function or constants
 - adding any method to any class
-- changing any ``exports`` property within the ``package.json``
+- changing any `exports` property within the `package.json`
 
 Changes of this sort should not be made without serious consideration
 and discussion.
 
 
-_subsection: Building  @<building>
+### Building
 
-_code: @lang<shell>
+```bash
   /home/ricmoo> git clone @TODO
   /home/ricmoo> cd quais
   /home/ricmoo/quais> npm install
   /home/ricmoo/quais> npm run auto-build
-
-_null:
-
-
-_subsection: Previewing Documentation
+```
 

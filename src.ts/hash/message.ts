@@ -12,7 +12,7 @@ import type { SignatureLike } from "../crypto/index.js";
  *  of `message` and computes the {@link keccak256 | **keccak256**} digest.
  *
  *  If `message` is a string, it is converted to its UTF-8 bytes
- *  first. To compute the digest of a [**DataHexString**](../types/DataHex), it must be converted
+ *  first. To compute the digest of a [**DataHexString**](../types-aliases/DataHex), it must be converted
  *  to [**bytes**](../functions/getBytes).
  *
  *  @example

@@ -1,4 +1,4 @@
-_section: Signing  @<cookbook-signing>
+# Signing
 
 Signing content and providing the content and signature to a
 Contract allows on-chain validation that a signer has access
@@ -20,14 +20,14 @@ raw digest, and instead require a separate API for each format
 type and require the related data be specified, protecting the
 user from accidentally authorizing an action they didn't intend.
 
-_subsection: Messages  @<cookbook-signing-messages>
+## Messages
 
 A signed message can be any data, but it is generally recommended
 to use human-readable text, as this is easier for a user to
 verify visually.
 
 This technique could be used, for example, to sign into a service
-by using the text ``"I am signing into quais.org on 2023-06-04 12:57pm"``.
+by using the text `"I am signing into quais.org on 2023-06-04 12:57pm"`.
 The user can then see the message in MetaMask or on a Ledger
 Hardware Wallet and accept that they wish to sign the message which
 the site can then authenticate them with. By providing a timestamp
@@ -35,21 +35,21 @@ the site can ensure that an older signed message cannot be used again
 in the future.
 
 The format that is signed uses [[link-eip-191]] with the
-**personal sign** version code (``0x45``, or ``"E"``).
+**personal sign** version code (`0x45`, or `"E"`).
 
 For those interested in the choice of this prefix, signed messages
-began as a Bitcoin feature, which used ``"\\x18Bitcoin Signed Message:\\n"``,
-which was a Bitcoin var-int length-prefixed string (as ``0x18`` is 24,
-the length of ``"Bitcoin Signed Message:\\n"``.). When Ethereum adopted
-the similar feature, the relevant string was ``"\\x19Ethereum Signed Message:\\n"``.
+began as a Bitcoin feature, which used `"\\x18Bitcoin Signed Message:\\n"`,
+which was a Bitcoin var-int length-prefixed string (as `0x18` is 24,
+the length of `"Bitcoin Signed Message:\\n"`.). When Ethereum adopted
+the similar feature, the relevant string was `"\\x19Ethereum Signed Message:\\n"`.
 
 In one of the most brilliant instances of technical retcon-ing,
 since 0x19 is invalid as the first byte of a transaction (in [[link-rlp]] it
-indicates a single byte of value 25), the initial byte ``\\x19`` has
+indicates a single byte of value 25), the initial byte `\\x19` has
 now been adopted as a prefix for //some sort of signed data//,
 where the second byte determines how to interpret that data. If the
-second byte is 69 (the letter ``"E"``, as in
-``"Ethereum Signed Message:\\n"``), then the format is a
+second byte is 69 (the letter `"E"`, as in
+`"Ethereum Signed Message:\\n"`), then the format is a
 the above prefixed message format.
 
 So, all existing messages, tools and instances using the signed
@@ -59,8 +59,8 @@ format for future formats (of which there now a few).
 
 Anyways, the necessary JavaScript and Solidity are provided below.
 
-_code: JavaScript  @lang<javascript>
 
+```js
 // The contract below is deployed to Sepolia at this address
 contractAddress = "0xf554DA5e35b2e40C09DDB481545A395da1736513";
 contract = new Contract(contractAddress, [
@@ -110,8 +110,7 @@ await contract.recoverStringFromRaw(message, rawSig);
 //_result:
 
 // Note: The above recovered addresses matches the signer address
-
-_null:
+```
 
 The Solidity Contract has been deployed and verified on
 the Sepolia testnet at the address
@@ -121,8 +120,8 @@ It provides a variety of examples using various Signature
 encodings and formats, to recover the address for an [[link-eip-191]]
 signed message.
 
-_code: Solidity @lang<solidity>
 
+```solidity
 // SPDX-License-Identifier: MIT
 
 // For more info, see: https://docs.quais.org
@@ -266,8 +265,4 @@ contract RecoverMessage {
     return ecrecover(digest, v, sig.r, s);
   }
 }
-
-
-_subsection: EIP-712 Typed Data  @<cookbook-signing-eip712>
-
-//Coming soon...//
+```

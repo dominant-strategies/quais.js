@@ -1,29 +1,28 @@
-_section: Getting Started @<getting-started> @priority<100>
+# Getting Started @<getting-started> @priority<100>
 
 This is a very short introduction to quais, but covers many of the
 most common operations that developers require and provides a
-starting point for those newer to Ethereum.
+starting point for those newer to Quai Network.
 
 
-_heading: Getting quais
+## Getting quais
 
 If using NPM, you must first install quais.
 
-_code: installing via NPM @lang<shell>
+```bash
   # Install quais
-  /home/ricmoo/test-quais> npm install quais
+  /home/test-quais> npm install quais
+```
 
-_null:
-
-Everything in quais is exported from its root as well as on the ``quais``
-object. There are also ``exports`` in the ``package.json`` to facilitate
+Everything in quais is exported from its root as well as on the `quais`
+object. There are also `exports` in the `package.json` to facilitate
 more fine-grained importing.
 
 Generally this documentation will presume all exports from quais
 have been imported in the code examples, but you may import the
 necessary objects in any way you wish.
 
-_code: importing in Node.js  @lang<script>
+```js title=Importing In NodeJS
   // Import everything
   import { quais } from "quais";
 
@@ -32,20 +31,22 @@ _code: importing in Node.js  @lang<script>
 
   // Import from a specific export
   import { HDNodeWallet } from "quais/wallet";
+```
 
-_code: importing ESM in a browser  @lang<script>
+```js title=Importing In a Browser
   <script type="module">
     import { quais } from "https://cdnjs.cloudflare.com/ajax/libs/quais/6.7.0/quais.min.js";
     // Your code here...
   </script>
+```
 
 
-_subsection: Some Common Terminology  @<starting-glossary>
+## Some Common Terminology
 
 To begin, it is useful to have a basic understanding of the types of
 objects available and what they are responsible for, at a high level.
 
-_heading: Provider
+### Provider
 
 A [[Provider]] is a read-only connection to the blockchain, which allows
 querying the blockchain state, such as account, block or transaction details,
@@ -55,10 +56,10 @@ If you are coming from Web3.js, you are used to a **Provider** offering
 both read and write access. In quais, all write operations are further
 abstracted into another Object, the **Signer**.
 
-_heading: Signer
+### Signer
 
 A [[Signer]] wraps all operations that interact with an account. An
-account generally has a private key located //somewhere//, which can be
+account generally has a private key located //somewhere*, which can be
 used to sign a variety of types of payloads.
 
 The private key may be located in memory (using a [[Wallet]]) or
@@ -67,7 +68,7 @@ from a website to a browser plug-in, which keeps the private key out of
 the reach of the website and only permits interaction after requesting
 permission from the user and receiving authorization.
 
-_heading: Transaction
+### Transaction
 
 To make any state changes to the blockchain, a transaction is required,
 which requires a fee to be paid, where the fee covers the associated costs
@@ -82,7 +83,7 @@ Transactions include sending ether from one user to another, deploying
 a **Contract** or executing a state-changing operation against a
 **Contract**.
 
-_heading: Contract
+### Contract
 
 A [[Contract]] is a program that has been deployed to the blockchain,
 which includes some code and has allocated storage which it can read
@@ -91,7 +92,7 @@ from and write to.
 It may be read from when it is connected to a [[Provider]] or
 state-changing operations can be called when connected to a [[Signer]].
 
-_heading: Receipt
+### Receipt
 
 Once a **Transaction** has been submitted to the blockchain, it is placed
 in the memory pool (mempool) until a validator decides to include it.
@@ -103,16 +104,16 @@ fee paid, gas used, all the events that it emitted and whether it was
 successful or reverted.
 
 
-_subsection: Connecting to Ethereum  @<starting-connecting>
+## Connecting to Ethereum  @<starting-connecting>
 
 This very first thing needed to begin interacting with the blockchain is
 connecting to it using a [[Provider]].
 
-_heading: MetaMask (and other injected providers)
+### MetaMask (and other injected providers)
 
 The quickest and easiest way to experiment and begin developing
 on Ethereum is to use [[link-metamask]], which is a browser
-extension that injects objects into the ``window``, providing:
+extension that injects objects into the `window`, providing:
 
 - read-only access to the Ethereum network (a [[Provider]])
 - authenticated write access backed by a private key (a [[Signer]])
@@ -121,34 +122,35 @@ When requesting access to the authenticated methods, such as
 sending a transaction or even requesting the private key address,
 MetaMask will show a pop-up to the user asking for permission.
 
-_code:  @lang<script>
-  let signer = null;
+```js
+let signer = null;
 
-  let provider;
-  if (window.ethereum == null) {
+let provider;
+if (window.ethereum == null) {
 
-      // If MetaMask is not installed, we use the default provider,
-      // which is backed by a variety of third-party services (such
-      // as INFURA). They do not have private keys installed,
-      // so they only have read-only access
-      console.log("MetaMask not installed; using read-only defaults")
-      provider = quais.getDefaultProvider()
+    // If MetaMask is not installed, we use the default provider,
+    // which is backed by a variety of third-party services (such
+    // as INFURA). They do not have private keys installed,
+    // so they only have read-only access
+    console.log("MetaMask not installed; using read-only defaults")
+    provider = quais.getDefaultProvider()
 
-  } else {
+} else {
 
-      // Connect to the MetaMask EIP-1193 object. This is a standard
-      // protocol that allows quais access to make all read-only
-      // requests through MetaMask.
-      provider = new quais.BrowserProvider(window.ethereum)
+    // Connect to the MetaMask EIP-1193 object. This is a standard
+    // protocol that allows quais access to make all read-only
+    // requests through MetaMask.
+    provider = new quais.BrowserProvider(window.ethereum)
 
-      // It also provides an opportunity to request access to write
-      // operations, which will be performed by the private key
-      // that MetaMask manages for the user.
-      signer = await provider.getSigner();
-  }
+    // It also provides an opportunity to request access to write
+    // operations, which will be performed by the private key
+    // that MetaMask manages for the user.
+    signer = await provider.getSigner();
+}
+```
 
 
-_heading: Custom RPC Backend
+### Custom RPC Backend
 
 If you are running your own Ethereum node (e.g. [[link-geth]])
 or using a custom third-party service (e.g. [[link-infura]]),
@@ -159,17 +161,16 @@ When using your own Ethereum node or a developer-base blockchain,
 such as Hardhat or Ganache, you can get access to the accounts with
 [[JsonRpcProvider-getSigner]].
 
-_code: connecting to a JSON-RPC URL  @lang<script>
+```js
+// If no url is provided, it connects to the default
+// http://localhost:8545, which most nodes use.
+provider = new quais.JsonRpcProvider(url)
 
-  // If no %%url%% is provided, it connects to the default
-  // http://localhost:8545, which most nodes use.
-  provider = new quais.JsonRpcProvider(url)
+// Get write access as an account by getting the signer
+signer = await provider.getSigner()
+```
 
-  // Get write access as an account by getting the signer
-  signer = await provider.getSigner()
-
-
-_subsection: User Interaction  @<starting-display>
+## User Interaction  
 
 All units in Ethereum tend to be integer values, since dealing with
 decimals and floating points can lead to imprecise and non-obvious
@@ -180,20 +181,20 @@ machine-readable purposes and maths are often very large and not
 easily human-readable.
 
 For example, imagine dealing with dollars and cents; you would show
-values like ``"$2.56"``. In the blockchain world, we would keep all
-values as cents, so that would be ``256`` cents, internally.
+values like `"$2.56"`. In the blockchain world, we would keep all
+values as cents, so that would be `256` cents, internally.
 
 So, when accepting data that a user types, it must be converted from
-its decimal string representation (e.g. ``"2.56"``) to its lowest-unit
-integer representation (e.g. ``256``). And when displaying a value to
+its decimal string representation (e.g. `"2.56"`) to its lowest-unit
+integer representation (e.g. `256`). And when displaying a value to
 a user the opposite operation is necessary.
 
-In Ethereum, //one ether// is equal to ``10 *\* 18`` wei and //one gwei//
-is equal to ``10 *\* 9`` wei, so the values get very large very quickly,
+In Ethereum, *one ether* is equal to `10 *\* 18` wei and *one gwei*
+is equal to `10 *\* 9` wei, so the values get very large very quickly,
 so some convenience functions are provided to help convert between
 representations.
 
-_code:  @lang<javascript>
+```js
   // Convert user-provided strings in ether to wei for a value
   eth = parseEther("1.0")
   //_result:
@@ -209,17 +210,18 @@ _code:  @lang<javascript>
   // Convert a value in wei to a string in gwei to display in a UI
   formatUnits(feePerGas, "gwei")
   //_result:
+```
 
 
-_subsection: Interacting with the Blockchain  @<starting-blockchain>
+## Interacting with the Blockchain 
 
-_heading: Querying State
+### Querying State
 
 Once you have a [[Provider]], you have a read-only connection to
 the data on the blockchain. This can be used to query the current
 account state, fetch historic logs, look up contract code and so on.
 
-_code:  @lang<javascript>
+```js
   //_hide: provider = new InfuraProvider();
 
   // Look up the current block number (i.e. height)
@@ -238,8 +240,9 @@ _code:  @lang<javascript>
   // Get the next nonce required to send a transaction
   await provider.getTransactionCount("quais.eth")
   //_result:
+```
 
-_heading: Sending Transactions
+### Sending Transactions
 
 To write to the blockchain you require access to a private key
 which controls some account. In most cases, those private keys
@@ -249,32 +252,28 @@ service (such as [[link-metamask]]) which provides strictly
 gated access and requires feedback to the user to approve or
 reject operations.
 
-_code:  @lang<script>
+```js
+// When sending a transaction, the value is in wei, so parseEther
+// converts ether to wei.
+tx = await signer.sendTransaction({
+  to: "quais.eth",
+  value: parseEther("1.0")
+});
+//_result:
 
-  //_hide: provider = new JsonRpcProvider("http:/\/localhost:8545")
-  //_hide: provider.resolveName = () => "0x643aA0A61eADCC9Cc202D1915D942d35D005400C";
-  //_hide: signer = new Wallet(id("test"), provider);
-
-  // When sending a transaction, the value is in wei, so parseEther
-  // converts ether to wei.
-  tx = await signer.sendTransaction({
-    to: "quais.eth",
-    value: parseEther("1.0")
-  });
-  //_result:
-
-  // Often you may wish to wait until the transaction is mined
-  receipt = await tx.wait();
-  //_result:
+// Often you may wish to wait until the transaction is mined
+receipt = await tx.wait();
+//_result:
+```
 
 
-_subsection: Contracts  @<starting-contracts>
+## Contracts
 
 A **Contract** is a meta-class, which means that its definition
 its derived at run-time, based on the ABI it is passed, which then
 determined what methods and properties are available on it.
 
-_heading: Application Binary Interface (ABI)
+### Application Binary Interface (ABI)
 
 Since all operations that occur on the blockchain must be encoded
 as binary data, we need a concise way to define how to convert
@@ -293,7 +292,7 @@ Solidity compiler usually dumps a JSON representation but when typing
 an ABI by hand it is often easier (and more readable) to use the
 human-readable ABI, which is just the Solidity signature.
 
-_code: simplified ERC-20 ABI @lang<script>
+```js
   abi = [
     "function decimals() view returns (string)",
     "function symbol() view returns (string)",
@@ -302,14 +301,15 @@ _code: simplified ERC-20 ABI @lang<script>
 
   // Create a contract
   contract = new Contract("dai.tokens.quais.eth", abi, provider)
+```
 
-_heading: Read-only methods (i.e. ``view`` and ``pure``)
+### Read-only methods (i.e. `view` and `pure`)
 
 A read-only method is one which cannot change the state of the
 blockchain, but often provide a simple interface to get important
 data about a Contract.
 
-_code: reading the DAI ERC-20 contract @lang<javascript>
+```js
   // The contract ABI (fragments we care about)
   abi = [
     "function decimals() view returns (uint8)",
@@ -336,10 +336,11 @@ _code: reading the DAI ERC-20 contract @lang<javascript>
   // Format the balance for humans, such as in a UI
   formatUnits(balance, decimals)
   //_result:
+```
 
-_heading: State-changing Methods
+### State-changing Methods
 
-_code: change state on an ERC-20 contract  @lang<script>
+```js title=Change state on an ERC-20 contract
 
   abi = [
     "function transfer(address to, uint amount)"
@@ -384,8 +385,9 @@ _code: forcing a call (simulation) of a state-changing method @lang<javascript>
   contractAsOther = contract.connect(other.connect(provider))
   await contractAsOther.transfer.staticCall("quais.eth", amount)
   //_result:
+```
 
-_heading: Listening to Events
+### Listening to Events
 
 When adding event listeners for a named event, the event parameters
 are destructed for the listener.
@@ -394,7 +396,7 @@ There is always one additional parameter passed to a listener, which
 is an [[EventPayload]], which includes more information about the event
 including the filter and a method to remove that listener.
 
-_code: listen for ERC-20 events  @lang<script>
+```js title=listen for ERC-20 events
   abi = [
     "event Transfer(address indexed from, address indexed to, uint amount)"
   ]
@@ -431,17 +433,16 @@ _code: listen for ERC-20 events  @lang<script>
   contract.on("*", (event) => {
     // The `event.log` has the entire EventLog
   });
+```
 
-
-
-_heading: Query Historic Events
+### Query Historic Events
 
 When querying within a large range of blocks, some backends may
 be prohibitively slow, may return an error or may truncate the
 results without any indication. This is at the discretion of each
 backend.
 
-_code: query historic ERC-20 events  @lang<javascript>
+```js  title=Query historic ERC-20 events
   abi = [
     "event Transfer(address indexed from, address indexed to, uint amount)"
   ]
@@ -469,9 +470,10 @@ _code: query historic ERC-20 events  @lang<javascript>
   // The first matching event
   events[0]
   //_result:
+```
 
 
-_subsection: Signing Messages  @<starting-signing>
+### Signing Messages
 
 A private key can do a lot more than just sign a transaction to authorize
 it. It can also be used to sign other forms of data, which are then able
@@ -480,8 +482,7 @@ to be validated for other purposes.
 For example, signing **a message** can be used to prove ownership of an
 account which a website could use to authenticate a user and log them in.
 
-_code:  @lang<javascript>
-
+```js
   // Our signer; Signing messages does not require a Provider
   signer = new Wallet(id("test"))
   //_result:
@@ -496,7 +497,7 @@ _code:  @lang<javascript>
   verifyMessage(message, sig)
   //_result:
 
-_null:
+```
 
 Many other more advanced protocols built on top of signed messages are
 used to allow a private key to authorize other users to transfer their

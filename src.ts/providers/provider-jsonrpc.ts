@@ -184,7 +184,7 @@ export type DebugEventJsonRpcApiProvider = {
  *  **`batchMaxCount`** - maximum number of requests to allow in a batch.
  *  If `batchMaxCount = 1`, then batching is disabled. (default: `100`)
  *
- *  **`cacheTimeout`** - passed as [AbstractProviderOptions](../types/AbstractProviderOptions).
+ *  **`cacheTimeout`** - passed as [AbstractProviderOptions](../types-aliases/AbstractProviderOptions).
  * 
  *  @category Providers
  */
