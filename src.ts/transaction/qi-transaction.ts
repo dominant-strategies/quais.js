@@ -55,26 +55,34 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         if (this.txInputs.length < 1 || this.txOutputs.length < 1) {
             throw new Error("Transaction must have at least one input and one output");
         }
+
         const destUtxo = isUTXOAddress(hexlify(this.txOutputs[0].address) || "");
-
         const pubKey = hexlify(this.txInputs[0].pub_key);
-        const senderAddr = computeAddress(pubKey || "")
-
+        const senderAddr = computeAddress(pubKey || "");
         const originUtxo = isUTXOAddress(senderAddr);
 
-        if (!this.destShard|| !this.originShard) {
+        if (!this.destShard || !this.originShard) {
             throw new Error(`Invalid shards: origin ${this.originShard} ->  destination ${this.destShard} (address: ${senderAddr})`);
         }
-        if(this.isExternal && destUtxo !== originUtxo) {
+        if (this.isExternal && destUtxo !== originUtxo) {
             throw new Error("Cross-shard & cross-ledger transactions are not supported");
         }
 
-        let hash = keccak256(this.serialized)
-        hash = '0x' + this.originShard+ (originUtxo ? 'F' : '1') + hash.charAt(5) + this.originShard+ (destUtxo ? 'F' : '1') + hash.slice(9)
+        const hexString = this.serialized.startsWith('0x') ? this.serialized.substring(2) : this.serialized;
+        const dataBuffer = Buffer.from(hexString, 'hex');
 
-        //TODO alter comparison
-        return hash;
+        const hashHex = keccak256(dataBuffer);
+        const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
+
+        let origin = this.originShard ? parseInt(this.originShard, 16) : 0;
+        hashBuffer[0] = origin;
+        hashBuffer[1] |= 0x80;
+        hashBuffer[2] = origin;
+        hashBuffer[3] |= 0x80;
+
+        return '0x' + hashBuffer.toString('hex');
     }
+
 
     get originShard(): string | undefined {
         const pubKey = hexlify(this.txInputs[0].pub_key);

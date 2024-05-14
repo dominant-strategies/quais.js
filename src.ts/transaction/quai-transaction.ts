@@ -118,24 +118,32 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     get unsignedHash(): string {
         const destUtxo = isUTXOAddress(this.to || "");
-
         const originUtxo = isUTXOAddress(this.from);
 
-        if (!this.destShard|| !this.originShard) {
+        if (!this.destShard || !this.originShard) {
             throw new Error("Invalid Shard for from or to address");
         }
-        if(this.isExternal && destUtxo !== originUtxo) {
+        if (this.isExternal && destUtxo !== originUtxo) {
             throw new Error("Cross-shard & cross-ledger transactions are not supported");
         }
 
-        let hash = keccak256(this.serialized)
-        hash = '0x' + this.originShard+ (originUtxo ? 'F' : '1') + hash.charAt(5) + this.originShard+ (destUtxo ? 'F' : '1') + hash.slice(9)
+        const hexString = this.serialized.startsWith('0x') ? this.serialized.substring(2) : this.serialized;
+        const dataBuffer = Buffer.from(hexString, 'hex');
 
-        //TODO alter comparison
-        return hash;
+        const hashHex = keccak256(dataBuffer);
+        const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
+
+        let origin = this.originShard ? parseInt(this.originShard, 16) : 0;
+        hashBuffer[0] = origin;
+        hashBuffer[1] &= 0x7F;
+        hashBuffer[2] = origin;
+        hashBuffer[3] &= 0x7F;
+
+        return '0x' + hashBuffer.toString('hex');
     }
 
-    get originShard(): string | undefined {
+
+get originShard(): string | undefined {
         const senderAddr = this.from
 
         return getShardForAddress(senderAddr)?.byte.slice(2);
