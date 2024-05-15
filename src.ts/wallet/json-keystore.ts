@@ -6,7 +6,7 @@
  *  These utilities facilitate decrypting and encrypting the most common
  *  JSON Wallet formats.
  *
- *  @_subsection: api/wallet:JSON Wallets  [json-wallets]
+ *  @section api/wallet:JSON Wallets  [json-wallets]
  */
 
 import { CTR } from "aes-js";
@@ -30,6 +30,8 @@ const defaultPath = "m/44'/994'/0'/0/0";
 
 /**
  *  The contents of a JSON Keystore Wallet.
+ *  
+ *  @category Wallet
  */
 export type KeystoreAccount = {
     address: string;
@@ -43,6 +45,8 @@ export type KeystoreAccount = {
 
 /**
  *  The parameters to use when encrypting a JSON Keystore Wallet.
+ *  
+ *  @category Wallet
  */
 export type EncryptOptions = {
    progressCallback?: ProgressCallback;
@@ -59,7 +63,12 @@ export type EncryptOptions = {
 }
 
 /**
- *  Returns true if %%json%% is a valid JSON Keystore Wallet.
+ *  Returns true if `json` is a valid JSON Keystore Wallet.
+ * 
+ *  @param {string} json - The JSON data to check.
+ *  @returns {boolean} True if the JSON data is a valid Keystore Wallet.
+ * 
+ *  @category Wallet
  */
 export function isKeystoreJson(json: string): boolean {
     try {
@@ -180,16 +189,22 @@ function getDecryptKdfParams<T>(data: any): KdfParams {
 
 
 /**
- *  Returns the account details for the JSON Keystore Wallet %%json%%
- *  using %%password%%.
+ *  Returns the account details for the JSON Keystore Wallet `json`
+ *  using `password`.
  *
- *  It is preferred to use the [async version](decryptKeystoreJson)
- *  instead, which allows a [[ProgressCallback]] to keep the user informed
+ *  It is preferred to use the {@link decryptKeystoreJson | **async version**}
+ *  instead, which allows a {@link ProgressCallback | **ProgressCallback} to keep the user informed
  *  as to the decryption status.
  *
  *  This method will block the event loop (freezing all UI) until decryption
  *  is complete, which can take quite some time, depending on the wallet
  *  paramters and platform.
+ * 
+ *  @param {string} json - The JSON data to decrypt.
+ *  @param {string | Uint8Array} _password - The password to decrypt the JSON data.
+ *  @returns {KeystoreAccount} The decrypted account.
+ * 
+ *  @category Wallet
  */
 export function decryptKeystoreJsonSync(json: string, _password: string | Uint8Array): KeystoreAccount {
     const data = JSON.parse(json);
@@ -215,15 +230,22 @@ function stall(duration: number): Promise<void> {
 }
 
 /**
- *  Resolves to the decrypted JSON Keystore Wallet %%json%% using the
- *  %%password%%.
+ *  Resolves to the decrypted JSON Keystore Wallet `json` using the
+ *  `password`.
  *
- *  If provided, %%progress%% will be called periodically during the
+ *  If provided, `progress` will be called periodically during the
  *  decrpytion to provide feedback, and if the function returns
- *  ``false`` will halt decryption.
+ *  `false` will halt decryption.
  *
- *  The %%progressCallback%% will **always** receive ``0`` before
- *  decryption begins and ``1`` when complete.
+ *  The `progressCallback` will **always** receive `0` before
+ *  decryption begins and `1` when complete.
+ * 
+ *  @param {string} json - The JSON data to decrypt.
+ *  @param {string | Uint8Array} _password - The password to decrypt the JSON data.
+ *  @param {ProgressCallback} [progress] - The callback to receive progress updates.
+ *  @returns {Promise<KeystoreAccount>} The decrypted account.
+ * 
+ *  @category Wallet
  */
 export async function decryptKeystoreJson(json: string, _password: string | Uint8Array, progress?: ProgressCallback): Promise<KeystoreAccount> {
     const data = JSON.parse(json);
@@ -353,12 +375,19 @@ function _encryptKeystore(key: Uint8Array, kdf: ScryptParams, account: KeystoreA
 }
 
 /**
- *  Return the JSON Keystore Wallet for %%account%% encrypted with
- *  %%password%%.
+ *  Return the JSON Keystore Wallet for `account` encrypted with
+ *  `password`.
  *
- *  The %%options%% can be used to tune the password-based key
+ *  The `options` can be used to tune the password-based key
  *  derivation function parameters, explicitly set the random values
- *  used. Any provided [[ProgressCallback]] is ignord.
+ *  used. Any provided {@link ProgressCallback | **ProgressCallback**} is ignored.
+ * 
+ *  @param {KeystoreAccount} account - The account to encrypt.
+ *  @param {string | Uint8Array} password - The password to encrypt the JSON data.
+ *  @param {EncryptOptions} [options] - The options to use when encrypting the JSON data.
+ *  @returns {string} The encrypted JSON data.
+ * 
+ *  @category Wallet
  */
 export function encryptKeystoreJsonSync(account: KeystoreAccount, password: string | Uint8Array, options?: EncryptOptions): string {
     if (options == null) { options = { }; }
@@ -370,13 +399,20 @@ export function encryptKeystoreJsonSync(account: KeystoreAccount, password: stri
 }
 
 /**
- *  Resolved to the JSON Keystore Wallet for %%account%% encrypted
- *  with %%password%%.
+ *  Resolved to the JSON Keystore Wallet for `account` encrypted
+ *  with `password`.
  *
- *  The %%options%% can be used to tune the password-based key
+ *  The `options` can be used to tune the password-based key
  *  derivation function parameters, explicitly set the random values
- *  used and provide a [[ProgressCallback]] to receive periodic updates
+ *  used and provide a {@link ProgressCallback | **ProgressCallback**} to receive periodic updates
  *  on the completion status..
+ * 
+ *  @param {KeystoreAccount} account - The account to encrypt.
+ *  @param {string | Uint8Array} password - The password to encrypt the JSON data.
+ *  @param {EncryptOptions} [options] - The options to use when encrypting the JSON data.
+ *  @returns {Promise<string>} The encrypted JSON data.
+ * 
+ *  @category Wallet
  */
 export async function encryptKeystoreJson(account: KeystoreAccount, password: string | Uint8Array, options?: EncryptOptions): Promise<string> {
     if (options == null) { options = { }; }

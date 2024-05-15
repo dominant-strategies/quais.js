@@ -14,12 +14,11 @@ const _ripemd160 = function(data: Uint8Array): Uint8Array {
 let __ripemd160: (data: Uint8Array) => BytesLike = _ripemd160;
 
 /**
- *  Compute the cryptographic RIPEMD-160 hash of %%data%%.
+ *  Compute the cryptographic RIPEMD-160 hash of `data`.
  *
- *  @_docloc: api/crypto:Hash Functions
  *  @returns DataHexstring
- *
- *  @example:
+ *  @example
+ *  ```ts
  *    ripemd160("0x")
  *    //_result:
  *
@@ -28,7 +27,12 @@ let __ripemd160: (data: Uint8Array) => BytesLike = _ripemd160;
  *
  *    ripemd160(new Uint8Array([ 0x13, 0x37 ]))
  *    //_result:
- *
+ *  ```
+ * 
+ *  @param {BytesLike} _data - The data to hash.
+ *  @returns {string} The hash of the data.
+ *  
+ *  @category Crypto
  */
 export function ripemd160(_data: BytesLike): string {
     const data = getBytes(_data, "data");

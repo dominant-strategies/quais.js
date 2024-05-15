@@ -7,14 +7,14 @@
  *  and supports high-level methods to sign common types of interaction
  *  and send transactions.
  *
- *  The class most developers will want to use is [[Wallet]], which
+ *  The class most developers will want to use is [Wallet](../classes/Wallet), which
  *  can load a private key directly or from any common wallet format.
  *
- *  The [[HDNodeWallet]] can be used when it is necessary to access
+ *  The [HDNodeWallet](../classes/HDNodeWallet) can be used when it is necessary to access
  *  low-level details of how an HD wallets are derived, exported
  *  or imported.
  *
- *  @_section: api/wallet:Wallets  [about-wallets]
+ *  @section api/wallet:Wallets  [about-wallets]
  */
 
 export { BaseWallet } from "./base-wallet.js";

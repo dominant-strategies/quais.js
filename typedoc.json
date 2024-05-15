@@ -1,0 +1,21 @@
+{
+	// base config
+	"out": "docs/content",
+	"tsconfig": "tsconfig.base.json",
+	"entryPoints": [
+		"./src.ts/quais.ts",
+	],
+
+	// specific inclusions and exclusions
+	"excludeProtected": true,
+	"excludeNotDocumented": true,
+	"exclude": ["./src.ts/_admin/**/*", "./src.ts/_tests/**/*", "./src.ts/testcases/**/*"],
+
+	// plugins
+	"plugin": ["typedoc-plugin-remove-references", "typedoc-plugin-markdown"],
+
+	"navigation": {
+		"includeCategories": true,
+		"includeGroups": false
+	}
+}

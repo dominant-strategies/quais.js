@@ -1,5 +1,5 @@
 /**
- *  @_subsection: api/wallet:JSON Wallets  [json-wallets]
+ *  @section api/wallet:JSON Wallets  [json-wallets]
  */
 
 import { CBC, pkcs7Strip } from "aes-js";
@@ -15,6 +15,8 @@ import { getPassword, looseArrayify, spelunk } from "./utils.js";
 /**
  *  The data stored within a JSON Crowdsale wallet is fairly
  *  minimal.
+ * 
+ *  @category Wallet
  */
 export type CrowdsaleAccount = {
     privateKey: string;
@@ -22,7 +24,12 @@ export type CrowdsaleAccount = {
 }
 
 /**
- *  Returns true if %%json%% is a valid JSON Crowdsale wallet.
+ *  Returns true if `json` is a valid JSON Crowdsale wallet.
+ * 
+ *  @param {string} json - The JSON data to check.
+ *  @returns {boolean} True if the JSON data is a valid Crowdsale wallet.
+ *  
+ *  @category Wallet
  */
 export function isCrowdsaleJson(json: string): boolean {
     try {
@@ -39,10 +46,16 @@ export function isCrowdsaleJson(json: string): boolean {
  *  format for backers to use, which would be used to receive ether
  *  as a reward for contributing to the project.
  *
- *  The [[link-crowdsale]] format is now obsolete, but it is still
+ *  The [Crowdsale Wallet](https://github.com/ethereum/pyethsaletool) format is now obsolete, but it is still
  *  useful to support and the additional code is fairly trivial as
  *  all the primitives required are used through core portions of
  *  the library.
+ * 
+ *  @param {string} json - The JSON data to decrypt.
+ *  @param {string | Uint8Array} _password - The password to decrypt the JSON data.
+ *  @returns {CrowdsaleAccount} The decrypted account.
+ *  
+ *  @category Wallet
  */
 export function decryptCrowdsaleJson(json: string, _password: string | Uint8Array): CrowdsaleAccount {
     const data = JSON.parse(json);

@@ -1,4 +1,5 @@
-_section: Cookbook @<cookbook>
+# Cookbook
+
 
 A growing collection of code snippets for common problems and use cases
 when developing dapps and other blockchain tools.

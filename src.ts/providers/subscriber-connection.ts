@@ -8,9 +8,9 @@ import type { Subscriber } from "./abstract-provider.js";
 import type { Provider } from "./provider.js";
 
 /**
- *  @TODO
+ *  @TODO write documentation for this interface.
  *
- *  @_docloc: api/providers/abstract-provider
+ *  @category Providers
  */
 export interface ConnectionRpcProvider extends Provider {
     //send(method: string, params: Array<any>): Promise<any>;
@@ -19,9 +19,9 @@ export interface ConnectionRpcProvider extends Provider {
 }
 
 /**
- *  @TODO
+ *  @TODO write documentation for this class.
  *
- *  @_docloc: api/providers/abstract-provider
+ *  @category Providers
  */
 export class BlockConnectionSubscriber implements Subscriber {
     #provider: ConnectionRpcProvider;

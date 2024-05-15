@@ -27,8 +27,13 @@ function checkType(value: any, type: string, name: string): void {
 }
 
 /**
- *  Resolves to a new object that is a copy of %%value%%, but with all
+ *  Resolves to a new object that is a copy of `value`, but with all
  *  values resolved.
+ * 
+ *  @param {Object} value - The object to resolve.
+ *  @returns {Promise<Object>} The resolved object.
+ * 
+ *  @category Utils
  */
 export async function resolveProperties<T>(value: { [ P in keyof T ]: T[P] | Promise<T[P]>}): Promise<T> {
     const keys = Object.keys(value);
@@ -50,9 +55,15 @@ export function getStatic<T>(ctor: any, key: string): T | null {
 }
 
 /**
- *  Assigns the %%values%% to %%target%% as read-only values.
+ *  Assigns the `values` to `target` as read-only values.
  *
- *  It %%types%% is specified, the values are checked.
+ *  It `types` is specified, the values are checked.
+ * 
+ *  @param {Object} target - The target object to assign to.
+ *  @param {Object} values - The values to assign.
+ *  @param {Object} types - The types to check.
+ * 
+ *  @category Utils
  */
 export function defineProperties<T>(
  target: T,

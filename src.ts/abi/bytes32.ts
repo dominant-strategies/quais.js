@@ -1,7 +1,6 @@
 /**
- *  About bytes32 strings...
- *
- *  @_docloc: api/utils:Bytes32 Strings
+ *  Provides utility functions for encoding and decoding strings in the Bytes32 format.
+ *  @category Application Binary Interface
  */
 
 import {
@@ -11,7 +10,12 @@ import {
 import type { BytesLike } from "../utils/index.js";
 
 /**
- *  Encodes %%text%% as a Bytes32 string.
+ *  Encodes a string as a Bytes32 string.
+ *
+ *  @param {string} text - The string to encode.
+ *  @returns {string} The Bytes32-encoded string.
+ *  @throws {Error} If the string is too long to fit in a Bytes32 format.
+ *  @category Application Binary Interface
  */
 export function encodeBytes32String(text: string): string {
 
@@ -26,7 +30,12 @@ export function encodeBytes32String(text: string): string {
 }
 
 /**
- *  Encodes the Bytes32-encoded %%bytes%% into a string.
+ *  Decodes a Bytes32-encoded string into a regular string.
+ *
+ *  @param {BytesLike} _bytes - The Bytes32-encoded data.
+ *  @returns {string} The decoded string.
+ *  @throws {Error} If the input is not exactly 32 bytes long or lacks a null terminator.
+ *  @category Application Binary Interface
  */
 export function decodeBytes32String(_bytes: BytesLike): string {
     const data = getBytes(_bytes, "bytes");

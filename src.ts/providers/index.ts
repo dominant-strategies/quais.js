@@ -5,7 +5,7 @@
  *
  *  It is one of the most fundamental components of interacting with a
  *  blockchain application, and there are many ways to connect, such as over
- *  HTTP, WebSockets or injected providers such as [MetaMask](link-metamask).
+ *  HTTP, WebSockets or injected providers such as [MetaMask](https://metamask.io/).
  *
  *  @_section: api/providers:Providers  [about-providers]
  */

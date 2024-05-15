@@ -102,20 +102,22 @@ function entropyToMnemonic(entropy: Uint8Array, wordlist?: null | Wordlist): str
 const _guard = { };
 
 /**
- *  A **Mnemonic** wraps all properties required to compute [[link-bip-39]]
+ *  A **Mnemonic** wraps all properties required to compute [BIP-39](https://en.bitcoin.it/wiki/BIP_0039)
  *  seeds and convert between phrases and entropy.
+ * 
+ *  @category Wallet
  */
 export class Mnemonic {
     /**
      *  The mnemonic phrase of 12, 15, 18, 21 or 24 words.
      *
-     *  Use the [[wordlist]] ``split`` method to get the individual words.
+     *  Use the {@link wordlist | **wordlist**} `split` method to get the individual words.
      */
     readonly phrase!: string;
 
     /**
      *  The password used for this mnemonic. If no password is used this
-     *  is the empty string (i.e. ``""``) as per the specification.
+     *  is the empty string (i.e. `""`) as per the specification.
      */
     readonly password!: string;
 
@@ -148,10 +150,15 @@ export class Mnemonic {
     }
 
     /**
-     *  Creates a new Mnemonic for the %%phrase%%.
+     *  Creates a new Mnemonic for the `phrase`.
      *
-     *  The default %%password%% is the empty string and the default
-     *  wordlist is the [English wordlists](LangEn).
+     *  The default `password` is the empty string and the default
+     *  wordlist is the {@link LangEn | **English wordlist**}.
+     * 
+     *  @param {string} phrase - The mnemonic phrase.
+     *  @param {string} [password] - The password for the mnemonic.
+     *  @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
+     *  @returns {Mnemonic} The new Mnemonic object.
      */
     static fromPhrase(phrase: string, password?: null | string, wordlist?: null | Wordlist): Mnemonic {
         // Normalize the case and space; throws if invalid
@@ -163,10 +170,15 @@ export class Mnemonic {
     }
 
     /**
-     *  Create a new **Mnemonic** from the %%entropy%%.
+     *  Create a new **Mnemonic** from the `entropy`.
      *
-     *  The default %%password%% is the empty string and the default
-     *  wordlist is the [English wordlists](LangEn).
+     *  The default `password` is the empty string and the default
+     *  wordlist is the [{@link LangEn | **English wordlist**}.
+     * 
+     *  @param {BytesLike} _entropy - The entropy for the mnemonic.
+     *  @param {string} [password] - The password for the mnemonic.
+     *  @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
+     *  @returns {Mnemonic} The new Mnemonic object.
      */
     static fromEntropy(_entropy: BytesLike, password?: null | string, wordlist?: null | Wordlist): Mnemonic {
         if (wordlist == null) { wordlist = LangEn.wordlist(); }
@@ -177,7 +189,11 @@ export class Mnemonic {
     }
 
     /**
-     *  Returns the phrase for %%mnemonic%%.
+     *  Returns the phrase for `mnemonic`.
+     * 
+     *  @param {BytesLike} _entropy - The entropy for the mnemonic.
+     *  @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
+     *  @returns {string} The mnemonic phrase.
      */
     static entropyToPhrase(_entropy: BytesLike, wordlist?: null | Wordlist): string {
         const entropy = getBytes(_entropy, "entropy");
@@ -185,17 +201,26 @@ export class Mnemonic {
     }
 
     /**
-     *  Returns the entropy for %%phrase%%.
+     *  Returns the entropy for `phrase`.
+     * 
+     *  @param {string} phrase - The mnemonic phrase.
+     *  @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
+     *  @returns {string} The entropy.
      */
     static phraseToEntropy(phrase: string, wordlist?: null | Wordlist): string {
         return mnemonicToEntropy(phrase, wordlist);
     }
 
     /**
-     *  Returns true if %%phrase%% is a valid [[link-bip-39]] phrase.
+     *  Returns true if `phrase` is a valid [BIP-39](https://en.bitcoin.it/wiki/BIP_0039) phrase.
      *
-     *  This checks all the provided words belong to the %%wordlist%%,
+     *  This checks all the provided words belong to the `wordlist`,
      *  that the length is valid and the checksum is correct.
+     * 
+     *  @param {string} phrase - The mnemonic phrase.
+     *  @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
+     *  @returns {boolean} True if the phrase is valid.
+     *  @throws {Error} If the phrase is invalid.
      */
     static isValidMnemonic(phrase: string, wordlist?: null | Wordlist): boolean {
         try {

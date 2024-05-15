@@ -5,7 +5,7 @@ import type { Reader, Writer } from "./abstract-coder.js";
 /**
  *  Clones the functionality of an existing Coder, but without a localName
  *
- *  @_ignore
+ *  @ignore
  */
 export class AnonymousCoder extends Coder {
     private coder: Coder;

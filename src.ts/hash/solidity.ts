@@ -72,13 +72,21 @@ function _pack(type: string, value: any, isArray?: boolean): Uint8Array {
 // @TODO: Array Enum
 
 /**
- *   Computes the [[link-solc-packed]] representation of %%values%%
- *   respectively to their %%types%%.
+ *   Computes the [Non-Standard Packed Mode](https://docs.soliditylang.org/en/v0.8.14/abi-spec.html#non-standard-packed-mode)
+ *   representation of `values` respectively to their `types`.
  *
- *   @example:
- *       addr = "0x8ba1f109551bd432803012645ac136ddd64dba72"
- *       solidityPacked([ "address", "uint" ], [ addr, 45 ]);
- *       //_result:
+ *   @example
+ *   ```ts
+ *      addr = "0x8ba1f109551bd432803012645ac136ddd64dba72"
+ *      solidityPacked([ "address", "uint" ], [ addr, 45 ]);
+ *      //_result:
+ *   ```
+ * 
+ *  @param {Array<string>} types - The types of the values.
+ *  @param {ReadonlyArray<any>} values - The values to pack.
+ *  @returns {string} The packed values.
+ * 
+ *  @category Hash
  */
 export function solidityPacked(types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
     assertArgument(types.length === values.length, "wrong number of values; expected ${ types.length }", "values", values);
@@ -91,26 +99,42 @@ export function solidityPacked(types: ReadonlyArray<string>, values: ReadonlyArr
 }
 
 /**
- *   Computes the [[link-solc-packed]] [[keccak256]] hash of %%values%%
- *   respectively to their %%types%%.
+ *   Computes the [Non-Standard Packed Mode](https://docs.soliditylang.org/en/v0.8.14/abi-spec.html#non-standard-packed-mode)
+ *   [**keccak256**](../functions/keccak256) hash of `values` respectively to their `types`.
  *
- *   @example:
- *       addr = "0x8ba1f109551bd432803012645ac136ddd64dba72"
- *       solidityPackedKeccak256([ "address", "uint" ], [ addr, 45 ]);
- *       //_result:
+ *   @example
+ *   ```ts
+ *      addr = "0x8ba1f109551bd432803012645ac136ddd64dba72"
+ *      solidityPackedKeccak256([ "address", "uint" ], [ addr, 45 ]);
+ *      //_result:
+ *   ```
+ * 
+ *  @param {ReadonlyArray<string>} types - The types of the values.
+ *  @param {ReadonlyArray<any>} values - The values to hash.
+ *  @returns {string} The hash of the packed values.
+ * 
+ *  @category Hash
  */
 export function solidityPackedKeccak256(types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
     return _keccak256(solidityPacked(types, values));
 }
 
 /**
- *   Computes the [[link-solc-packed]] [[sha256]] hash of %%values%%
- *   respectively to their %%types%%.
+ *   Computes the [Non-Standard Packed Mode](https://docs.soliditylang.org/en/v0.8.14/abi-spec.html#non-standard-packed-mode)
+ *   [sha256](../functions/sha256) hash of `values` respectively to their `types`.
  *
- *   @example:
- *       addr = "0x8ba1f109551bd432803012645ac136ddd64dba72"
- *       solidityPackedSha256([ "address", "uint" ], [ addr, 45 ]);
- *       //_result:
+ *   @example
+ *   ```ts
+ *      addr = "0x8ba1f109551bd432803012645ac136ddd64dba72"
+ *      solidityPackedSha256([ "address", "uint" ], [ addr, 45 ]);
+ *      //_result:
+ *   ```
+ * 
+ *  @param {ReadonlyArray<string>} types - The types of the values.
+ *  @param {ReadonlyArray<any>} values - The values to hash.
+ *  @returns {string} The hash of the packed values.
+ * 
+ *  @category Hash
  */
 export function solidityPackedSha256(types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
     return _sha256(solidityPacked(types, values));

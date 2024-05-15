@@ -21,12 +21,14 @@ import type { SignatureLike } from "./index.js";
 /**
  *  A **SigningKey** provides high-level access to the elliptic curve
  *  cryptography (ECC) operations and key management.
+ * 
+ *  @category Crypto
  */
 export class SigningKey {
     #privateKey: string;
 
     /**
-     *  Creates a new **SigningKey** for %%privateKey%%.
+     *  Creates a new **SigningKey** for `privateKey`.
      */
     constructor(privateKey: BytesLike) {
         assertArgument(dataLength(privateKey) === 32, "invalid private key", "privateKey", "[REDACTED]");
@@ -41,22 +43,26 @@ export class SigningKey {
     /**
      *  The uncompressed public key.
      *
-     * This will always begin with the prefix ``0x04`` and be 132
-     * characters long (the ``0x`` prefix and 130 hexadecimal nibbles).
+     * This will always begin with the prefix `0x04` and be 132
+     * characters long (the `0x` prefix and 130 hexadecimal nibbles).
      */
     get publicKey(): string { return SigningKey.computePublicKey(this.#privateKey); }
 
     /**
      *  The compressed public key.
      *
-     *  This will always begin with either the prefix ``0x02`` or ``0x03``
-     *  and be 68 characters long (the ``0x`` prefix and 33 hexadecimal
+     *  This will always begin with either the prefix `0x02` or `0x03`
+     *  and be 68 characters long (the `0x` prefix and 33 hexadecimal
      *  nibbles)
      */
     get compressedPublicKey(): string { return SigningKey.computePublicKey(this.#privateKey, true); }
 
     /**
-     *  Return the signature of the signed %%digest%%.
+     *  Return the signature of the signed `digest`.
+     * 
+     *  @param {BytesLike} digest - The data to sign.
+     *  @returns {Signature} The signature of the data.
+     *  @throws {Error} If the digest is not 32 bytes long.
      */
     sign(digest: BytesLike): Signature {
         assertArgument(dataLength(digest) === 32, "invalid digest length", "digest", digest);
@@ -73,16 +79,17 @@ export class SigningKey {
     }
 
     /**
-     *  Returns the [[link-wiki-ecdh]] shared secret between this
-     *  private key and the %%other%% key.
+     *  Returns the [ECDH](https://en.wikipedia.org/wiki/Elliptic-curve_Diffie-Hellman) 
+     *  shared secret between this private key and the `other` key.
      *
-     *  The %%other%% key may be any type of key, a raw public key,
+     *  The `other` key may be any type of key, a raw public key,
      *  a compressed/uncompressed pubic key or aprivate key.
      *
      *  Best practice is usually to use a cryptographic hash on the
      *  returned value before using it as a symetric secret.
      *
-     *  @example:
+     *  @example
+     *  ```ts
      *    sign1 = new SigningKey(id("some-secret-1"))
      *    sign2 = new SigningKey(id("some-secret-2"))
      *
@@ -93,6 +100,10 @@ export class SigningKey {
      *    // ...is equal to privB.computeSharedSecret(pubA).
      *    sign2.computeSharedSecret(sign1.publicKey)
      *    //_result:
+     *  ```
+     * 
+     *  @param {BytesLike} other - The other key to compute the shared secret with.
+     *  @returns {string} The shared secret.
      */
     computeSharedSecret(other: BytesLike): string {
         const pubKey = SigningKey.computePublicKey(other);
@@ -100,12 +111,13 @@ export class SigningKey {
     }
 
     /**
-     *  Compute the public key for %%key%%, optionally %%compressed%%.
+     *  Compute the public key for `key`, optionally `compressed`.
      *
-     *  The %%key%% may be any type of key, a raw public key, a
+     *  The `key` may be any type of key, a raw public key, a
      *  compressed/uncompressed public key or private key.
      *
-     *  @example:
+     *  @example
+     *  ```ts
      *    sign = new SigningKey(id("some-secret"));
      *
      *    // Compute the uncompressed public key for a private key
@@ -123,6 +135,11 @@ export class SigningKey {
      *    // Compute the Compressed a public key
      *    SigningKey.computePublicKey(sign.publicKey, true);
      *    //_result:
+     *  ```
+     * 
+     *  @param {BytesLike} key - The key to compute the public key for.
+     *  @param {boolean} [compressed] - Whether to return the compressed public key.
+     *  @returns {string} The public key.
      */
     static computePublicKey(key: BytesLike, compressed?: boolean): string {
         let bytes = getBytes(key, "key");
@@ -147,9 +164,10 @@ export class SigningKey {
 
     /**
      *  Returns the public key for the private key which produced the
-     *  %%signature%% for the given %%digest%%.
+     *  `signature` for the given `digest`.
      *
-     *  @example:
+     *  @example
+     *  ```ts
      *    key = new SigningKey(id("some-secret"))
      *    digest = id("hello world")
      *    sig = key.sign(digest)
@@ -161,7 +179,11 @@ export class SigningKey {
      *    // ...is equal to the recovered public key
      *    SigningKey.recoverPublicKey(digest, sig)
      *    //_result:
-     *
+     *  ```
+     * 
+     *  @param {BytesLike} digest - The data that was signed.
+     *  @param {SignatureLike} signature - The signature of the data.
+     *  @returns {string} The public key.
      */
     static recoverPublicKey(digest: BytesLike, signature: SignatureLike): string {
         assertArgument(dataLength(digest) === 32, "invalid digest length", "digest", digest);
@@ -179,13 +201,18 @@ export class SigningKey {
 
     /**
      *  Returns the point resulting from adding the ellipic curve points
-     *  %%p0%% and %%p1%%.
+     *  `p0` and `p1`.
      *
      *  This is not a common function most developers should require, but
      *  can be useful for certain privacy-specific techniques.
      *
-     *  For example, it is used by [[HDNodeWallet]] to compute child
+     *  For example, it is used by [**HDNodeWallet**](../classes/HDNodeWallet) to compute child
      *  addresses from parent public keys and chain codes.
+     * 
+     *  @param {BytesLike} p0 - The first point to add.
+     *  @param {BytesLike} p1 - The second point to add.
+     *  @param {boolean} [compressed] - Whether to return the compressed public key.
+     *  @returns {string} The sum of the points.
      */
     static addPoints(p0: BytesLike, p1: BytesLike, compressed?: boolean): string {
         const pub0 = secp256k1.ProjectivePoint.fromHex(SigningKey.computePublicKey(p0).substring(2));

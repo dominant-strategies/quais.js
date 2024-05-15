@@ -11,16 +11,18 @@ import { decodeOwlA } from "./decode-owla.js";
  *  it is used mainly internally to keep Wordlists for languages
  *  based on latin-1 small.
  *
- *  If necessary, there are tools within the ``generation/`` folder
+ *  If necessary, there are tools within the `generation/` folder
  *  to create the necessary data.
+ * 
+ *  @category Wordlists
  */
 export class WordlistOwlA extends WordlistOwl {
     #accent: string;
 
 
     /**
-     *  Creates a new Wordlist for %%locale%% using the OWLA %%data%%
-     *  and %%accent%% data and validated against the %%checksum%%.
+     *  Creates a new Wordlist for `locale` using the OWLA `data`
+     *  and `accent` data and validated against the `checksum`.
      */
     constructor(locale: string, data: string, accent: string, checksum: string) {
         super(locale, data, checksum);

@@ -10,15 +10,30 @@ import {
 import {formatNumber} from "../providers/format";
 import { ProtoTransaction} from "./abstract-transaction";
 
-export interface QiTransactionLike extends TransactionLike{
-
+/**
+ * @TODO write documentation for this interface.
+ *
+ * @category Transaction
+ */
+export interface QiTransactionLike extends TransactionLike {
+    /**
+     * @TODO write documentation for this property.
+     */
     txInputs?: null | TxInput[];
-    txOutputs?: null | TxOutput[];
 
+    /**
+     * @TODO write documentation for this property.
+     */
+    txOutputs?: null | TxOutput[];
 }
 
+/**
+ *  @TODO write documentation for this class.
+ *  @TODO write documentation for the properties of this class.
+ *
+ *  @category Transaction
+ */
 export class QiTransaction extends AbstractTransaction<string> implements QiTransactionLike {
-
     #txInputs?: null | TxInput[];
     #txOutputs?: null | TxOutput[];
 
@@ -102,6 +117,8 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     /**
      *  Validates the explicit properties and returns a list of compatible
      *  transaction types.
+     * 
+     *  @returns {Array<number>} The compatible transaction types.
      */
     inferTypes(): Array<number> {
 
@@ -123,6 +140,8 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      *  Create a copy of this transaciton.
+     * 
+     *  @returns {QiTransaction} The cloned transaction.
      */
     clone(): QiTransaction {
         return QiTransaction.from(this);
@@ -130,6 +149,8 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      *  Return a JSON-friendly object.
+     * 
+     *  @returns {QiTransactionLike} The JSON-friendly object.
      */
     toJSON(): TransactionLike {
         const s = (v: null | bigint) => {
@@ -149,6 +170,8 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      *  Return a protobuf-friendly JSON object.
+     * 
+     *  @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
     toProtobuf(): ProtoTransaction {
         // console.log(`--> (toProtobuf) txInputs: ${JSON.stringify(this.txInputs)}`);
@@ -169,6 +192,9 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     /**
      *  Create a **Transaction** from a serialized transaction or a
      *  Transaction-like object.
+     * 
+     *  @param {string | QiTransactionLike} tx - The transaction to decode.
+     *  @returns {QiTransaction} The decoded transaction.
      */
     static from(tx: string | QiTransactionLike): QiTransaction {
         if (typeof (tx) === "string") {
@@ -192,6 +218,10 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Create a **Transaction** from a ProtoTransaction object.
+     * 
+     *  @param {ProtoTransaction} protoTx - The transaction to decode.
+     *  @param {Uint8Array} [payload] - The serialized transaction.
+     *  @returns {QiTransaction} The decoded transaction.
      */
     static fromProto(protoTx: ProtoTransaction): QiTransaction {
 

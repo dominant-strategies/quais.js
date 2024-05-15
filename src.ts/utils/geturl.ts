@@ -10,7 +10,7 @@ import type {
 } from "./fetch.js";
 
 /**
- *  @_ignore:
+ *  @ignore
  */
 export function createGetUrl(options?: Record<string, any>): FetchGetUrlFunc {
 
@@ -108,7 +108,7 @@ export function createGetUrl(options?: Record<string, any>): FetchGetUrlFunc {
 const defaultGetUrl: FetchGetUrlFunc = createGetUrl({ });
 
 /**
- *  @_ignore:
+ *  @ignore
  */
 export async function getUrl(req: FetchRequest, signal?: FetchCancelSignal): Promise<GetUrlResponse> {
     return defaultGetUrl(req, signal);

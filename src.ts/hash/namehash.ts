@@ -40,7 +40,12 @@ function ensNameSplit(name: string): Array<Uint8Array> {
 }
 
 /**
- *  Returns the ENS %%name%% normalized.
+ *  Returns the ENS `name` normalized.
+ * 
+ *  @param {string} name - The ENS name to normalize.
+ *  @returns {string} The normalized ENS name.
+ * 
+ *  @category Hash
  */
 export function ensNormalize(name: string): string {
     try {
@@ -52,7 +57,12 @@ export function ensNormalize(name: string): string {
 }
 
 /**
- *  Returns ``true`` if %%name%% is a valid ENS name.
+ *  Returns `true` if `name` is a valid ENS name.
+ * 
+ *  @param {string} name - The ENS name to validate.
+ *  @returns {boolean} `true` if the name is valid.
+ * 
+ *  @category Hash
  */
 export function isValidName(name: string): name is string {
     try {
@@ -62,7 +72,12 @@ export function isValidName(name: string): name is string {
 }
 
 /**
- *  Returns the [[link-namehash]] for %%name%%.
+ *  Returns the [namehash](https://docs.ens.domains/contract-api-reference/name-processing#hashing-names) for `name`.
+ * 
+ *  @param {string} name - The ENS name to hash.
+ *  @returns {string} The namehash.
+ * 
+ *  @category Hash
  */
 export function namehash(name: string): string {
     assertArgument(typeof(name) === "string", "invalid ENS name; not a string", "name", name);
@@ -80,10 +95,15 @@ export function namehash(name: string): string {
 }
 
 /**
- *  Returns the DNS encoded %%name%%.
+ *  Returns the DNS encoded `name`.
  *
  *  This is used for various parts of ENS name resolution, such
  *  as the wildcard resolution.
+ * 
+ *  @param {string} name - The ENS name to encode.
+ *  @returns {string} The DNS encoded name.
+ * 
+ *  @category Hash
  */
 export function dnsEncode(name: string): string {
     return hexlify(concat(ensNameSplit(name).map((comp) => {

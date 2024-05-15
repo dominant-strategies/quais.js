@@ -1,4 +1,4 @@
-_section: Documentation  @<about-home> @nav<Documentation>
+# Documentation
 
 The quais.js library aims to be a complete and compact library
 for interacting with the Ethereum Blockchain and its ecosystem.

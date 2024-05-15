@@ -9,6 +9,8 @@ import { defineProperties } from "./properties.js";
 
 /**
  *  A callback function called when a an event is triggered.
+ * 
+ *  @category Utils
  */
 export type Listener = (...args: Array<any>) => void;
 
@@ -17,61 +19,66 @@ export type Listener = (...args: Array<any>) => void;
  *  except provides async access to its methods.
  *
  *  An EventEmitter implements the observer pattern.
+ * 
+ *  @category Utils
  */
 export interface EventEmitterable<T> {
     /**
-     *  Registers a %%listener%% that is called whenever the
-     *  %%event%% occurs until unregistered.
+     *  Registers a `listener` that is called whenever the
+     *  `event` occurs until unregistered.
      */
     on(event: T, listener: Listener): Promise<this>;
 
     /**
-     *  Registers a %%listener%% that is called the next time
-     *  %%event%% occurs.
+     *  Registers a `listener` that is called the next time
+     *  `event` occurs.
      */
     once(event: T, listener: Listener): Promise<this>;
 
     /**
-     *  Triggers each listener for %%event%% with the %%args%%.
+     *  Triggers each listener for `event` with the `args`.
      */
     emit(event: T, ...args: Array<any>): Promise<boolean>;
 
     /**
-     *  Resolves to the number of listeners for %%event%%.
+     *  Resolves to the number of listeners for `event`.
      */
     listenerCount(event?: T): Promise<number>;
 
     /**
-     *  Resolves to the listeners for %%event%%.
+     *  Resolves to the listeners for `event`.
      */
     listeners(event?: T): Promise<Array<Listener>>;
 
     /**
-     *  Unregister the %%listener%% for %%event%%. If %%listener%%
+     *  Unregister the `listener` for `event`. If `listener`
      *  is unspecified, all listeners are unregistered.
      */
     off(event: T, listener?: Listener): Promise<this>;
 
     /**
-     *  Unregister all listeners for %%event%%.
+     *  Unregister all listeners for `event`.
      */
     removeAllListeners(event?: T): Promise<this>;
 
     /**
-     *  Alias for [[on]].
+     *  Alias for {@link EventEmitterable.on | **on**}.
      */
     addListener(event: T, listener: Listener): Promise<this>;
 
     /**
-     *  Alias for [[off]].
+     *  Alias for {@link EventEmitterable.off | **off**}.
      */
     removeListener(event: T, listener: Listener): Promise<this>;
 }
 
 /**
- *  When an [[EventEmitterable]] triggers a [[Listener]], the
+ *  When an {@link EventEmitterable | **EventEmitterable**} triggers a [[Listener]], the
  *  callback always ahas one additional argument passed, which is
  *  an **EventPayload**.
+ *  @TODO Listener is no longer exported, need to revise comment or remove link
+ * 
+ *  @category Utils
  */
 export class EventPayload<T> {
     /**
@@ -87,8 +94,8 @@ export class EventPayload<T> {
     readonly #listener: null | Listener;
 
     /**
-     *  Create a new **EventPayload** for %%emitter%% with
-     *  the %%listener%% and for %%filter%%.
+     *  Create a new **EventPayload** for `emitter` with
+     *  the `listener` and for `filter`.
      */
     constructor(emitter: EventEmitterable<T>, listener: null | Listener, filter: T) {
         this.#listener = listener;

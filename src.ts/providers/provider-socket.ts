@@ -32,7 +32,9 @@ type JsonRpcSubscription = {
 
 /**
  *  A **SocketSubscriber** uses a socket transport to handle events and
- *  should use [[_emit]] to manage the events.
+ *  should use {@link SocketSubscriber._emit | **_emit**}  to manage the events.
+ * 
+ *  @category Providers
  */
 export class SocketSubscriber implements Subscriber {
     #provider: SocketProvider;
@@ -50,8 +52,8 @@ export class SocketSubscriber implements Subscriber {
     #emitPromise: null | Promise<void>;
 
     /**
-     *  Creates a new **SocketSubscriber** attached to %%provider%% listening
-     *  to %%filter%%.
+     *  Creates a new **SocketSubscriber** attached to `provider` listening
+     *  to `filter`.
      */
     constructor(provider: SocketProvider, filter: Array<any>) {
         this.#provider = provider;
@@ -88,7 +90,7 @@ export class SocketSubscriber implements Subscriber {
     }
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     _handleMessage(message: any): void {
         if (this.#filterId == null) { return; }
@@ -119,12 +121,14 @@ export class SocketSubscriber implements Subscriber {
 }
 
 /**
- *  A **SocketBlockSubscriber** listens for ``newHeads`` events and emits
- *  ``"block"`` events.
+ *  A **SocketBlockSubscriber** listens for `newHeads` events and emits
+ *  `"block"` events.
+ * 
+ *  @category Providers
  */
 export class SocketBlockSubscriber extends SocketSubscriber {
     /**
-     *  @_ignore:
+     *  @ignore
      */
     constructor(provider: SocketProvider) {
         super(provider, [ "newHeads" ]);
@@ -137,12 +141,14 @@ export class SocketBlockSubscriber extends SocketSubscriber {
 
 /**
  *  A **SocketPendingSubscriber** listens for pending transacitons and emits
- *  ``"pending"`` events.
+ *  `"pending"` events.
+ * 
+ *  @category Providers
  */
 export class SocketPendingSubscriber extends SocketSubscriber {
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     constructor(provider: SocketProvider) {
         super(provider, [ "newPendingTransactions" ]);
@@ -155,6 +161,8 @@ export class SocketPendingSubscriber extends SocketSubscriber {
 
 /**
  *  A **SocketEventSubscriber** listens for event logs.
+ * 
+ *  @category Providers
  */
 export class SocketEventSubscriber extends SocketSubscriber {
     #logFilter: string;
@@ -165,7 +173,7 @@ export class SocketEventSubscriber extends SocketSubscriber {
     get logFilter(): EventFilter { return JSON.parse(this.#logFilter); }
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     constructor(provider: SocketProvider, filter: EventFilter) {
         super(provider, [ "logs", filter ]);
@@ -181,6 +189,8 @@ export class SocketEventSubscriber extends SocketSubscriber {
  *  A **SocketProvider** is backed by a long-lived connection over a
  *  socket, which can subscribe and receive real-time messages over
  *  its communication channel.
+ * 
+ *  @category Providers
  */
 export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     #callbacks: Map<number, { payload: JsonRpcPayload, resolve: (r: any) => void, reject: (e: Error) => void }>;
@@ -193,7 +203,7 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     #pending: Map<number | string, Array<any>>;
 
     /**
-     *  Creates a new **SocketProvider** connected to %%network%%.
+     *  Creates a new **SocketProvider** connected to `network`.
      *
      *  If unspecified, the network will be discovered.
      */
@@ -343,7 +353,7 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     }
 
     /**
-     *  Sub-classes **must** override this to send %%message%% over their
+     *  Sub-classes **must** override this to send `message` over their
      *  transport.
      */
     async _write(message: string, shard?: string): Promise<void> {

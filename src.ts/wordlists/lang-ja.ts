@@ -134,19 +134,18 @@ function loadWords(): Array<string> {
 let wordlist: null | LangJa = null;
 
 /**
- *  The [[link-bip39-ja]] for [mnemonic phrases](link-bip-39).
+ *  The [Japanese wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/japanese.txt) for [mnemonic phrases](https://en.bitcoin.it/wiki/BIP_0039).
  *
  *  @_docloc: api/wordlists
  */
 export class LangJa extends Wordlist {
-
     /**
      *  Creates a new instance of the Japanese language Wordlist.
      *
      *  This should be unnecessary most of the time as the exported
-     *  [[langJa]] should suffice.
+     *  {@link langJa} should suffice.
      *
-     *  @_ignore:
+     *  @ignore
      */
     constructor() { super("ja"); }
 
@@ -171,7 +170,7 @@ export class LangJa extends Wordlist {
     }
 
     /**
-     *  Returns a singleton instance of a ``LangJa``, creating it
+     *  Returns a singleton instance of a `LangJa`, creating it
      *  if this is the first time being called.
      */
     static wordlist(): LangJa {

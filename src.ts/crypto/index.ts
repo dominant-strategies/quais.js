@@ -34,7 +34,9 @@ export { Signature } from "./signature.js";
 
 /**
  *  Once called, prevents any future change to the underlying cryptographic
- *  primitives using the ``.register`` feature for hooks.
+ *  primitives using the `.register` feature for hooks.
+ * 
+ *  @category Crypto
  */
 function lock(): void {
     computeHmac.lock();

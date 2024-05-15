@@ -1,8 +1,7 @@
-/////////////////////////////
-//
-
+// VERSION
 export { version } from "./_version.js";
 
+// APPLICATION BINARY INTERFACE
 export {
     decodeBytes32String, encodeBytes32String,
 
@@ -13,12 +12,14 @@ export {
     Typed,
 } from "./abi/index.js";
 
+// ADDRESS
 export {
     getAddress,
     getCreateAddress, getCreate2Address,
     isAddressable, isAddress, resolveAddress
 } from "./address/index.js";
 
+//CONSTANTS
 export {
     ZeroAddress,
     WeiPerEther, MaxUint256, MinInt256, MaxInt256, N,
@@ -26,12 +27,14 @@ export {
     quaisymbol, MessagePrefix
 } from "./constants/index.js";
 
+// CONTRACT
 export {
     BaseContract, Contract,
     ContractFactory,
     ContractEventPayload, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, EventLog, UndecodedEventLog
 } from "./contract/index.js";
 
+// CRYPTO
 export {
     computeHmac,
     randomBytes,
@@ -44,6 +47,7 @@ export {
     Signature, SigningKey
 } from "./crypto/index.js";
 
+// HASH
 export {
     id,
     ensNormalize, isValidName, namehash, dnsEncode,
@@ -53,6 +57,7 @@ export {
     verifyTypedData
 } from "./hash/index.js";
 
+// PROVIDERS
 export {
     getDefaultProvider,
 
@@ -81,6 +86,7 @@ export {
     copyRequest, showThrottleMessage
 } from "./providers/index.js";
 
+// TRANSACTION
 export {
     accessListify,
     computeAddress, recoverAddress,
@@ -88,6 +94,7 @@ export {
     QiTransaction
 } from "./transaction/index.js";
 
+// UTILS
 export {
     decodeBase58, encodeBase58,
     decodeBase64, encodeBase64,
@@ -108,6 +115,7 @@ export {
     uuidV4, getTxType, getShardForAddress, getAddressDetails, isUTXOAddress,
 } from "./utils/index.js";
 
+// WALLET
 export {
     Mnemonic,
     BaseWallet, HDNodeWallet, HDNodeVoidWallet, UTXOHDWallet,
@@ -125,6 +133,7 @@ export {
     nobleCrypto,
 } from "./wallet/index.js";
 
+// WORDLIST
 export {
     Wordlist, LangEn, LangEs, WordlistOwl, WordlistOwlA, wordlists
 } from "./wordlists/index.js";
@@ -134,6 +143,7 @@ export {
 /////////////////////////////
 // Types
 
+// APPLICATION BINARY INTERFACE
 export type {
     JsonFragment, JsonFragmentType,
     FormatType, FragmentType,
@@ -141,10 +151,12 @@ export type {
     ParamTypeWalkFunc, ParamTypeWalkAsyncFunc
 } from "./abi/index.js";
 
+// ADDRESS
 export type {
     Addressable, AddressLike
 } from "./address/index.js";
 
+// CONTRACT
 export type {
     ConstantContractMethod, ContractEvent, ContractEventArgs, ContractEventName,
     ContractInterface, ContractMethod, ContractMethodArgs, ContractTransaction,
@@ -153,10 +165,13 @@ export type {
     WrappedFallback
 } from "./contract/index.js";
 
+// CRYPTO
 export type { ProgressCallback, SignatureLike } from "./crypto/index.js";
 
+// HASH
 export type { TypedDataDomain, TypedDataField } from "./hash/index.js";
 
+// PROVIDERS
 export type {
     Provider, Signer,
 
@@ -172,11 +187,13 @@ export type {
     WebSocketCreator, WebSocketLike
 } from "./providers/index.js";
 
+// TRANSACTION
 export type {
     AccessList, AccessListish, AccessListEntry,
     TransactionLike
 } from "./transaction/index.js";
 
+// UTILS
 export type {
     BytesLike,
     BigNumberish, Numeric,
@@ -200,6 +217,7 @@ export type {
     EventEmitterable, Listener
 } from "./utils/index.js";
 
+// WALLET
 export type {
     CrowdsaleAccount, KeystoreAccount, EncryptOptions
 } from "./wallet/index.js";

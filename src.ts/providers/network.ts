@@ -18,10 +18,12 @@ import type { NetworkPlugin } from "./plugins-network.js";
 
 /**
  *  A Networkish can be used to allude to a Network, by specifing:
- *  - a [[Network]] object
+ *  - a [Network](../classes/Network) object
  *  - a well-known (or registered) network name
  *  - a well-known (or registered) chain ID
  *  - an object with sufficient details to describe a network
+ * 
+ *  @category Providers
  */
 export type Networkish = Network | number | bigint | string | {
     name?: string,
@@ -30,9 +32,6 @@ export type Networkish = Network | number | bigint | string | {
     ensAddress?: string,
     ensNetwork?: number
 };
-
-
-
 
 /* * * *
 // Networks which operation against an L2 can use this plugin to
@@ -59,6 +58,8 @@ const Networks: Map<string | bigint, () => Network> = new Map();
 /**
  *  A **Network** provides access to a chain's properties and allows
  *  for plug-ins to extend functionality.
+ * 
+ *  @category Providers
  */
 export class Network {
     #name: string;
@@ -67,7 +68,7 @@ export class Network {
     #plugins: Map<string, NetworkPlugin>;
 
     /**
-     *  Creates a new **Network** for %%name%% and %%chainId%%.
+     *  Creates a new **Network** for `name` and `chainId`.
      */
     constructor(name: string, chainId: BigNumberish) {
         this.#name = name;
@@ -98,11 +99,14 @@ export class Network {
     set chainId(value: BigNumberish) { this.#chainId = getBigInt(value, "chainId"); }
 
     /**
-     *  Returns true if %%other%% matches this network. Any chain ID
+     *  Returns true if `other` matches this network. Any chain ID
      *  must match, and if no chain ID is present, the name must match.
      *
      *  This method does not currently check for additional properties,
      *  such as ENS address or plug-in compatibility.
+     * 
+     *  @param { Networkish } other - The network to compare.
+     *  @returns { boolean } True if the networks match.
      */
     matches(other: Networkish): boolean {
         if (other == null) { return false; }
@@ -145,8 +149,11 @@ export class Network {
     }
 
     /**
-     *  Attach a new %%plugin%% to this Network. The network name
+     *  Attach a new `plugin` to this Network. The network name
      *  must be unique, excluding any fragment.
+     * 
+     *  @param {NetworkPlugin} plugin - The plugin to attach.
+     *  @returns {this} This Network instance.
      */
     attachPlugin(plugin: NetworkPlugin): this {
         if (this.#plugins.get(plugin.name)) {
@@ -157,17 +164,23 @@ export class Network {
     }
 
     /**
-     *  Return the plugin, if any, matching %%name%% exactly. Plugins
-     *  with fragments will not be returned unless %%name%% includes
+     *  Return the plugin, if any, matching `name` exactly. Plugins
+     *  with fragments will not be returned unless `name` includes
      *  a fragment.
+     * 
+     *  @param {string} name - The name of the plugin to get.
+     *  @returns {NetworkPlugin | null} The plugin, or null if not found.
      */
     getPlugin<T extends NetworkPlugin = NetworkPlugin>(name: string): null | T {
         return <T>(this.#plugins.get(name)) || null;
     }
 
     /**
-     *  Gets a list of all plugins that match %%name%%, with otr without
+     *  Gets a list of all plugins that match `name`, with otr without
      *  a fragment.
+     * 
+     *  @param {string} basename - The base name of the plugin.
+     *  @returns {Array<NetworkPlugin>} The list of plugins.
      */
     getPlugins<T extends NetworkPlugin = NetworkPlugin>(basename: string): Array<T> {
         return <Array<T>>(this.plugins.filter((p) => (p.name.split("#")[0] === basename)));
@@ -216,7 +229,10 @@ export class Network {
 //    }
 
     /**
-     *  Returns a new Network for the %%network%% name or chainId.
+     *  Returns a new Network for the `network` name or chainId.
+     * 
+     *  @param {Networkish} network - The network to get.
+     *  @returns {Network} The Network instance.
      */
     static from(network?: Networkish): Network {
         injectCommonNetworks();
@@ -266,8 +282,12 @@ export class Network {
     }
 
     /**
-     *  Register %%nameOrChainId%% with a function which returns
+     *  Register `nameOrChainId` with a function which returns
      *  an instance of a Network representing that chain.
+     * 
+     *  @param {string | number | bigint} nameOrChainId - The name or chain ID to register.
+     *  @param {() => Network} networkFunc - The function to create the Network.
+     *  @throws If a network is already registered for `nameOrChainId`.
      */
     static register(nameOrChainId: string | number | bigint, networkFunc: () => Network): void {
         if (typeof(nameOrChainId) === "number") { nameOrChainId = BigInt(nameOrChainId); }

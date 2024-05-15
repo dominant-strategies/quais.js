@@ -6,8 +6,8 @@
  *
  *  It also provides several convenience methods to automatically
  *  search and find matching transactions and events to parse them.
- *
- *  @_subsection api/abi:Interfaces  [interfaces]
+ *  
+ *  @category Application Binary Interface
  */
 
 import { keccak256 } from "../crypto/index.js"
@@ -34,12 +34,14 @@ import type { JsonFragment } from "./fragments.js";
 export { checkResultErrors, Result };
 
 /**
- *  When using the [[Interface-parseLog]] to automatically match a Log to its event
- *  for parsing, a **LogDescription** is returned.
+ *  When using the {@link Interface.parseLog | **Interface.parseLog**}
+ *  to automatically match a Log to its event for parsing, a **LogDescription** is returned.
+ * 
+ *  @category Application Binary Interface
  */
 export class LogDescription {
     /**
-     *  The matching fragment for the ``topic0``.
+     *  The matching fragment for the `topic0`.
      */
     readonly fragment!: EventFragment;
 
@@ -59,12 +61,12 @@ export class LogDescription {
     readonly topic!: string;
 
     /**
-     *  The arguments passed into the Event with ``emit``.
+     *  The arguments passed into the Event with `emit`.
      */
     readonly args!: Result
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     constructor(fragment: EventFragment, topic: string, args: Result) {
         const name = fragment.name, signature = fragment.format();
@@ -75,43 +77,45 @@ export class LogDescription {
 }
 
 /**
- *  When using the [[Interface-parseTransaction]] to automatically match
- *  a transaction data to its function for parsing,
+ *  When using the {@link Interface.parseTransaction | **Interface.parseTransaction**}
+ *  to automatically match a transaction data to its function for parsing,
  *  a **TransactionDescription** is returned.
+ * 
+ *  @category Application Binary Interface
  */
 export class TransactionDescription {
     /**
-     *  The matching fragment from the transaction ``data``.
+     *  The matching fragment from the transaction `data`.
      */
     readonly fragment!: FunctionFragment;
 
     /**
-     *  The name of the Function from the transaction ``data``.
+     *  The name of the Function from the transaction `data`.
      */
     readonly name!: string;
 
     /**
-     *  The arguments passed to the Function from the transaction ``data``.
+     *  The arguments passed to the Function from the transaction `data`.
      */
     readonly args!: Result;
 
     /**
-     *  The full Function signature from the transaction ``data``.
+     *  The full Function signature from the transaction `data`.
      */
     readonly signature!: string;
 
     /**
-     *  The selector for the Function from the transaction ``data``.
+     *  The selector for the Function from the transaction `data`.
      */
     readonly selector!: string;
 
     /**
-     *  The ``value`` (in wei) from the transaction.
+     *  The `value` (in wei) from the transaction.
      */
     readonly value!: bigint;
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     constructor(fragment: FunctionFragment, selector: string, args: Result, value: bigint) {
         const name = fragment.name, signature = fragment.format();
@@ -122,8 +126,10 @@ export class TransactionDescription {
 }
 
 /**
- *  When using the [[Interface-parseError]] to automatically match an
+ *  When using the {@link Interface.parseError | **Interface.parseError**} to automatically match an
  *  error for a call result for parsing, an **ErrorDescription** is returned.
+ * 
+ *  @category Application Binary Interface
  */
 export class ErrorDescription {
     /**
@@ -137,7 +143,7 @@ export class ErrorDescription {
     readonly name!: string;
 
     /**
-     *  The arguments passed to the Error with ``revert``.
+     *  The arguments passed to the Error with `revert`.
      */
     readonly args!: Result;
 
@@ -152,7 +158,7 @@ export class ErrorDescription {
     readonly selector!: string;
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     constructor(fragment: ErrorFragment, selector: string, args: Result) {
         const name = fragment.name, signature = fragment.format();
@@ -165,31 +171,34 @@ export class ErrorDescription {
 /**
  *  An **Indexed** is used as a value when a value that does not
  *  fit within a topic (i.e. not a fixed-length, 32-byte type). It
- *  is the ``keccak256`` of the value, and used for types such as
+ *  is the `keccak256` of the value, and used for types such as
  *  arrays, tuples, bytes and strings.
+ * 
+ *  @category Application Binary Interface
  */
 export class Indexed {
     /**
-     *  The ``keccak256`` of the value logged.
+     *  The `keccak256` of the value logged.
      */
     readonly hash!: null | string;
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     readonly _isIndexed!: boolean;
 
     /**
-     *  Returns ``true`` if %%value%% is an **Indexed**.
-     *
-     *  This provides a Type Guard for property access.
+     *  Check if a value is an **Indexed** This provides a Type Guard for property access.
+     * 
+     *  @param value - The value to check.
+     *  @returns `true` if the value is an **Indexed**.
      */
     static isIndexed(value: any): value is Indexed {
         return !!(value && value._isIndexed);
     }
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     constructor(hash: null | string) {
         defineProperties<Indexed>(this, { hash, _isIndexed: true })
@@ -265,20 +274,22 @@ function checkNames(fragment: Fragment, type: "input" | "output", params: Array<
  *  An **InterfaceAbi** may be any supported ABI format.
  *
  *  A string is expected to be a JSON string, which will be parsed
- *  using ``JSON.parse``. This means that the value **must** be a valid
+ *  using `JSON.parse`. This means that the value **must** be a valid
  *  JSON string, with no stray commas, etc.
  *
  *  An array may contain any combination of:
  *  - Human-Readable fragments
  *  - Parsed JSON fragment
- *  - [[Fragment]] instances
+ *  - [**Fragment**](../classes/Fragment)
  *
  *  A **Human-Readable Fragment** is a string which resembles a Solidity
- *  signature and is introduced in [this blog entry](link-ricmoo-humanreadableabi).
- *  For example, ``function balanceOf(address) view returns (uint)``.
+ *  signature and is introduced in [this blog entry](lhttps://blog.ricmoo.com/human-readable-contract-abis-in-quais-js-141902f4d917).
+ *  For example, `function balanceOf(address) view returns (uint)`.
  *
  *  A **Parsed JSON Fragment** is a JavaScript Object desribed in the
- *  [Solidity documentation](link-solc-jsonabi).
+ *  [Solidity documentation](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#json).
+ *  
+ *  @category Application Binary Interface
  */
 export type InterfaceAbi = string | ReadonlyArray<Fragment | JsonFragment | string>;
 
@@ -290,7 +301,9 @@ export type InterfaceAbi = string | ReadonlyArray<Fragment | JsonFragment | stri
  *  a Contract, how to decode the results and events and how to
  *  interpret revert errors.
  *
- *  The ABI can be specified by [any supported format](InterfaceAbi).
+ *  The ABI can be specified by {@link InterfaceAbi | any supported format}.
+ * 
+ *  @category Application Binary Interface
  */
 export class Interface {
 
@@ -317,12 +330,14 @@ export class Interface {
     #errors: Map<string, ErrorFragment>;
     #events: Map<string, EventFragment>;
     #functions: Map<string, FunctionFragment>;
-//    #structs: Map<string, StructFragment>;
+    // #structs: Map<string, StructFragment>;
 
     #abiCoder: AbiCoder;
 
     /**
-     *  Create a new Interface for the %%fragments%%.
+     *  Create a new Interface for the fragments.
+     * 
+     *  @param {InterfaceAbi} fragments - The ABI fragments.
      */
     constructor(fragments: InterfaceAbi) {
         let abi: ReadonlyArray<Fragment | JsonFragment | string> = [ ];
@@ -418,7 +433,7 @@ export class Interface {
 
     /**
      *  Returns the entire Human-Readable ABI, as an array of
-     *  signatures, optionally as %%minimal%% strings, which
+     *  signatures, optionally as `minimal` strings, which
      *  removes parameter names and unneceesary spaces.
      */
     format(minimal?: boolean): Array<string> {
@@ -534,7 +549,7 @@ export class Interface {
     }
 
     /**
-     *  Get the function name for %%key%%, which may be a function selector,
+     *  Get the function name for `key`, which may be a function selector,
      *  function name or function signature that belongs to the ABI.
      */
     getFunctionName(key: string): string {
@@ -544,24 +559,24 @@ export class Interface {
     }
 
     /**
-     *  Returns true if %%key%% (a function selector, function name or
+     *  Returns true if `key` (a function selector, function name or
      *  function signature) is present in the ABI.
      *
      *  In the case of a function name, the name may be ambiguous, so
-     *  accessing the [[FunctionFragment]] may require refinement.
+     *  accessing the {@link FunctionFragment | **FunctionFragment**} may require refinement.
      */
     hasFunction(key: string): boolean {
         return !!this.#getFunction(key, null, false);
     }
 
     /**
-     *  Get the [[FunctionFragment]] for %%key%%, which may be a function
+     *  Get the {@link FunctionFragment | **FunctionFragment**} for `key`, which may be a function
      *  selector, function name or function signature that belongs to the ABI.
      *
-     *  If %%values%% is provided, it will use the Typed API to handle
+     *  If `values` is provided, it will use the Typed API to handle
      *  ambiguous cases where multiple functions match by name.
      *
-     *  If the %%key%% and %%values%% do not refine to a single function in
+     *  If the `key` and `values` do not refine to a single function in
      *  the ABI, this will throw.
      */
     getFunction(key: string, values?: Array<any | Typed>): null | FunctionFragment {
@@ -569,7 +584,7 @@ export class Interface {
     }
 
     /**
-     *  Iterate over all functions, calling %%callback%%, sorted by their name.
+     *  Iterate over all functions, calling `callback`, sorted by their name.
      */
     forEachFunction(callback: (func: FunctionFragment, index: number) => void): void {
         const names = Array.from(this.#functions.keys());
@@ -642,7 +657,7 @@ export class Interface {
     }
 
     /**
-     *  Get the event name for %%key%%, which may be a topic hash,
+     *  Get the event name for `key`, which may be a topic hash,
      *  event name or event signature that belongs to the ABI.
      */
     getEventName(key: string): string {
@@ -653,24 +668,24 @@ export class Interface {
     }
 
     /**
-     *  Returns true if %%key%% (an event topic hash, event name or
+     *  Returns true if `key` (an event topic hash, event name or
      *  event signature) is present in the ABI.
      *
      *  In the case of an event name, the name may be ambiguous, so
-     *  accessing the [[EventFragment]] may require refinement.
+     *  accessing the {@link EventFragment | **EventFragment**} may require refinement.
      */
     hasEvent(key: string): boolean {
         return !!this.#getEvent(key, null, false);
     }
 
     /**
-     *  Get the [[EventFragment]] for %%key%%, which may be a topic hash,
+     *  Get the {@link EventFragment | **EventFragment**} for `key`, which may be a topic hash,
      *  event name or event signature that belongs to the ABI.
      *
-     *  If %%values%% is provided, it will use the Typed API to handle
+     *  If `values` is provided, it will use the Typed API to handle
      *  ambiguous cases where multiple events match by name.
      *
-     *  If the %%key%% and %%values%% do not refine to a single event in
+     *  If the `key` and `values` do not refine to a single event in
      *  the ABI, this will throw.
      */
     getEvent(key: string, values?: Array<any | Typed>): null | EventFragment {
@@ -678,7 +693,7 @@ export class Interface {
     }
 
     /**
-     *  Iterate over all events, calling %%callback%%, sorted by their name.
+     *  Iterate over all events, calling `callback`, sorted by their name.
      */
     forEachEvent(callback: (func: EventFragment, index: number) => void): void {
         const names = Array.from(this.#events.keys());
@@ -690,13 +705,13 @@ export class Interface {
     }
 
     /**
-     *  Get the [[ErrorFragment]] for %%key%%, which may be an error
+     *  Get the {@link ErrorFragment | **ErroFragment**} for `key`, which may be an error
      *  selector, error name or error signature that belongs to the ABI.
      *
-     *  If %%values%% is provided, it will use the Typed API to handle
+     *  If `values` is provided, it will use the Typed API to handle
      *  ambiguous cases where multiple errors match by name.
      *
-     *  If the %%key%% and %%values%% do not refine to a single error in
+     *  If the `key` and `values` do not refine to a single error in
      *  the ABI, this will throw.
      */
     getError(key: string, values?: Array<any | Typed>): null | ErrorFragment {
@@ -745,7 +760,7 @@ export class Interface {
     }
 
     /**
-     *  Iterate over all errors, calling %%callback%%, sorted by their name.
+     *  Iterate over all errors, calling `callback`, sorted by their name.
      */
     forEachError(callback: (func: ErrorFragment, index: number) => void): void {
         const names = Array.from(this.#errors.keys());
@@ -796,20 +811,20 @@ export class Interface {
     }
 
     /**
-     *  Encodes a ``tx.data`` object for deploying the Contract with
-     *  the %%values%% as the constructor arguments.
+     *  Encodes a `tx.data` object for deploying the Contract with
+     *  the `values` as the constructor arguments.
      */
     encodeDeploy(values?: ReadonlyArray<any>): string {
         return this._encodeParams(this.deploy.inputs, values || [ ]);
     }
 
     /**
-     *  Decodes the result %%data%% (e.g. from an ``quai_call``) for the
-     *  specified error (see [[getError]] for valid values for
-     *  %%key%%).
+     *  Decodes the result `data` (e.g. from an `quai_call`) for the
+     *  specified error (see {@link getError | **getError**} for valid values for
+     *  `key`).
      *
-     *  Most developers should prefer the [[parseCallResult]] method instead,
-     *  which will automatically detect a ``CALL_EXCEPTION`` and throw the
+     *  Most developers should prefer the {@link parseCallResult | **parseCallResult**} method instead,
+     *  which will automatically detect a `CALL_EXCEPTION` and throw the
      *  corresponding error.
      */
     decodeErrorResult(fragment: ErrorFragment | string, data: BytesLike): Result {
@@ -827,8 +842,8 @@ export class Interface {
 
     /**
      *  Encodes the transaction revert data for a call result that
-     *  reverted from the the Contract with the sepcified %%error%%
-     *  (see [[getError]] for valid values for %%fragment%%) with the %%values%%.
+     *  reverted from the the Contract with the sepcified `error`
+     *  (see {@link getError | **getError**} for valid values for `fragment`) with the `values`.
      *
      *  This is generally not used by most developers, unless trying to mock
      *  a result from a Contract.
@@ -847,11 +862,11 @@ export class Interface {
     }
 
     /**
-     *  Decodes the %%data%% from a transaction ``tx.data`` for
-     *  the function specified (see [[getFunction]] for valid values
-     *  for %%fragment%%).
+     *  Decodes the `data` from a transaction `tx.data` for
+     *  the function specified (see {@link getFunction | **getFunction**} for valid values
+     *  for `fragment`).
      *
-     *  Most developers should prefer the [[parseTransaction]] method
+     *  Most developers should prefer the {@link parseTransaction | **parseTransaction**} method
      *  instead, which will automatically detect the fragment.
      */
     decodeFunctionData(fragment: FunctionFragment | string, data: BytesLike): Result {
@@ -868,9 +883,9 @@ export class Interface {
     }
 
     /**
-     *  Encodes the ``tx.data`` for a transaction that calls the function
-     *  specified (see [[getFunction]] for valid values for %%fragment%%) with
-     *  the %%values%%.
+     *  Encodes the `tx.data` for a transaction that calls the function
+     *  specified (see {@link getFunction | **getFunction**} for valid values for `fragment`) with
+     *  the `values`.
      */
     encodeFunctionData(fragment: FunctionFragment | string, values?: ReadonlyArray<any>): string {
         if (typeof(fragment) === "string") {
@@ -886,12 +901,12 @@ export class Interface {
     }
 
     /**
-     *  Decodes the result %%data%% (e.g. from an ``quai_call``) for the
-     *  specified function (see [[getFunction]] for valid values for
-     *  %%key%%).
+     *  Decodes the result `data` (e.g. from an `quai_call`) for the
+     *  specified function (see {@link getFunction | **getFunction**} for valid values for
+     *  `key`).
      *
-     *  Most developers should prefer the [[parseCallResult]] method instead,
-     *  which will automatically detect a ``CALL_EXCEPTION`` and throw the
+     *  Most developers should prefer the {@link parseCallResult | **parseCallResult**} method instead,
+     *  which will automatically detect a `CALL_EXCEPTION` and throw the
      *  corresponding error.
      */
     decodeFunctionResult(fragment: FunctionFragment | string, data: BytesLike): Result {
@@ -958,9 +973,9 @@ export class Interface {
     }
 
     /**
-     *  Encodes the result data (e.g. from an ``quai_call``) for the
-     *  specified function (see [[getFunction]] for valid values
-     *  for %%fragment%%) with %%values%%.
+     *  Encodes the result data (e.g. from an `quai_call`) for the
+     *  specified function (see {@link getFunction | **getFunction**} for valid values
+     *  for `fragment`) with `values`.
      *
      *  This is generally not used by most developers, unless trying to mock
      *  a result from a Contract.
@@ -1243,9 +1258,9 @@ export class Interface {
     }
 
     /**
-     *  Creates a new [[Interface]] from the ABI %%value%%.
+     *  Creates a new {@link Interface | **Interface**} from the ABI `value`.
      *
-     *  The %%value%% may be provided as an existing [[Interface]] object,
+     *  The `value` may be provided as an existing {@link Interface | **Interface**} object,
      *  a JSON-encoded ABI or any Human-Readable ABI format.
      */
     static from(value: InterfaceAbi | Interface): Interface {

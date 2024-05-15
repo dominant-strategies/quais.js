@@ -8,9 +8,9 @@ import type { BytesLike } from "../utils/index.js";
  *  A callback during long-running operations to update any
  *  UI or provide programatic access to the progress.
  *
- *  The %%percent%% is a value between ``0`` and ``1``.
+ *  The `percent` is a value between `0` and `1`.
  *
- *  @_docloc: api/crypto:Passwords
+ *  @category Crypto
  */
 export type ProgressCallback = (percent: number) => void;
 
@@ -29,9 +29,9 @@ let __scryptSync: (passwd: Uint8Array, salt: Uint8Array, N: number, r: number, p
 
 
 /**
- *  The [[link-wiki-scrypt]] uses a memory and cpu hard method of
- *  derivation to increase the resource cost to brute-force a password
- *  for a given key.
+ *  The [scrypt PBKDF](https://en.wikipedia.org/wiki/Scrypt) uses a 
+ *  memory and cpu hard method of derivation to increase the resource 
+ *  cost to brute-force a password for a given key.
  *
  *  This means this algorithm is intentionally slow, and can be tuned to
  *  become slower. As computation and memory speed improve over time,
@@ -46,13 +46,13 @@ let __scryptSync: (passwd: Uint8Array, salt: Uint8Array, N: number, r: number, p
  *
  *  For this reason, if building a UI which involved decrypting or
  *  encrypting datsa using scrypt, it is recommended to use a
- *  [[ProgressCallback]] (as event short periods can seem lik an eternity
+ *  [**ProgressCallback**](../types-aliases/ProgressCallback) (as event short periods can seem lik an eternity
  *  if the UI freezes). Including the phrase //"decrypting"// in the UI
  *  can also help, assuring the user their waiting is for a good reason.
  *
- *  @_docloc: api/crypto:Passwords
  *
- *  @example:
+ *  @example
+ *  ```ts
  *    // The password must be converted to bytes, and it is generally
  *    // best practices to ensure the string has been normalized. Many
  *    // formats explicitly indicate the normalization form to use.
@@ -64,6 +64,18 @@ let __scryptSync: (passwd: Uint8Array, salt: Uint8Array, N: number, r: number, p
  *    // Compute the scrypt
  *    scrypt(passwordBytes, salt, 1024, 8, 1, 16)
  *    //_result:
+ *  ```
+ * 
+ *  @param {BytesLike} _passwd - The password to use.
+ *  @param {BytesLike} _salt - The salt to use.
+ *  @param {number} N - The CPU/memory cost parameter.
+ *  @param {number} r - The block size parameter.
+ *  @param {number} p - The parallelization parameter.
+ *  @param {number} dkLen - The length of the key to generate.
+ *  @param {ProgressCallback} [progress] - A callback to update the progress.
+ *  @returns {Promise<string>} The key derived from the password.
+ * 
+ *  @category Crypto
  */
 export async function scrypt(_passwd: BytesLike, _salt: BytesLike, N: number, r: number, p: number, dkLen: number, progress?: ProgressCallback): Promise<string> {
     const passwd = getBytes(_passwd, "passwd");
@@ -79,15 +91,14 @@ scrypt.register = function(func: (passwd: Uint8Array, salt: Uint8Array, N: numbe
 Object.freeze(scrypt);
 
 /**
- *  Provides a synchronous variant of [[scrypt]].
+ *  Provides a synchronous variant of {@link scrypt | **scrypt**}.
  *
  *  This will completely lock up and freeze the UI in a browser and will
  *  prevent any event loop from progressing. For this reason, it is
  *  preferred to use the [async variant](scrypt).
  *
- *  @_docloc: api/crypto:Passwords
- *
- *  @example:
+ *  @example
+ *  ```ts
  *    // The password must be converted to bytes, and it is generally
  *    // best practices to ensure the string has been normalized. Many
  *    // formats explicitly indicate the normalization form to use.
@@ -99,6 +110,17 @@ Object.freeze(scrypt);
  *    // Compute the scrypt
  *    scryptSync(passwordBytes, salt, 1024, 8, 1, 16)
  *    //_result:
+ *  ```
+ * 
+ *  @param {BytesLike} _passwd - The password to use.
+ *  @param {BytesLike} _salt - The salt to use.
+ *  @param {number} N - The CPU/memory cost parameter.
+ *  @param {number} r - The block size parameter.
+ *  @param {number} p - The parallelization parameter.
+ *  @param {number} dkLen - The length of the key to generate.
+ *  @returns {string} The key derived from the password.
+ * 
+ *  @category Crypto
  */
 export function scryptSync(_passwd: BytesLike, _salt: BytesLike, N: number, r: number, p: number, dkLen: number): string {
     const passwd = getBytes(_passwd, "passwd");

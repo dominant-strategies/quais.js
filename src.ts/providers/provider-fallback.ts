@@ -2,7 +2,7 @@
  *  A **FallbackProvider** providers resiliance, security and performatnce
  *  in a way that is customizable and configurable.
  *
- *  @_section: api/providers/fallback-provider:Fallback Provider [about-fallback-provider]
+ *  @section api/providers/fallback-provider:Fallback Provider [about-fallback-provider]
  */
 import {
     assert, assertArgument, getBigInt, getNumber, isError
@@ -13,7 +13,7 @@ import { Network } from "./network.js"
 
 import type { PerformActionRequest } from "./abstract-provider.js";
 import type { Networkish } from "./network.js"
-import {QuaiTransactionRequest} from "./provider";
+import { QuaiTransactionRequest } from "./provider";
 
 const BN_1 = BigInt("1");
 const BN_2 = BigInt("2");
@@ -43,7 +43,9 @@ function stringify(value: any): string {
 }
 
 /**
- *  A configuration entry for how to use a [[Provider]].
+ *  A configuration entry for how to use a [Provider](../classes/Provider).
+ * 
+ *  @category Providers
  */
 export interface FallbackProviderConfig {
 
@@ -76,7 +78,9 @@ const defaultConfig = { stallTimeout: 400, priority: 1, weight: 1 };
 // We track a bunch of extra stuff that might help debug problems or
 // optimize infrastructure later on.
 /**
- *  The statistics and state maintained for a [[Provider]].
+ *  The statistics and state maintained for a [Provider](../classes/Provider).
+ * 
+ *  @category Providers
  */
 export interface FallbackProviderState extends Required<FallbackProviderConfig> {
 
@@ -161,7 +165,9 @@ async function waitForSync(config: Config, blockNumber: number): Promise<void> {
 }
 
 /**
- *  Additional options to configure a [[FallbackProvider]].
+ *  Additional options to configure a {@link FallbackProvider | **FallbackProvider**}.
+ * 
+ *  @category Providers
  */
 export type FallbackProviderOptions = {
     // How many providers must agree on a value before reporting
@@ -349,11 +355,12 @@ function getFuzzyMode(quorum: number, results: Array<TallyResult>): undefined | 
 }
 
 /**
- *  A **FallbackProvider** manages several [[Providers]] providing
+ *  A **FallbackProvider** manages several [Providers](../classes/Provider) providing
  *  resiliance by switching between slow or misbehaving nodes, security
  *  by requiring multiple backends to aggree and performance by allowing
  *  faster backends to respond earlier.
- *
+ *  
+ *  @category Providers
  */
 export class FallbackProvider extends AbstractProvider {
 
@@ -364,12 +371,12 @@ export class FallbackProvider extends AbstractProvider {
     readonly quorum: number;
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     readonly eventQuorum: number;
 
     /**
-     *  @_ignore:
+     *  @ignore
      */
     readonly eventWorkers: number;
 
@@ -379,11 +386,11 @@ export class FallbackProvider extends AbstractProvider {
     #initialSyncPromise: null | Promise<void>;
 
     /**
-     *  Creates a new **FallbackProvider** with %%providers%% connected to
-     *  %%network%%.
+     *  Creates a new **FallbackProvider** with `providers` connected to
+     *  `network`.
      *
-     *  If a [[Provider]] is included in %%providers%%, defaults are used
-     *  for the configuration.
+     *  If a [Provider](../classes/Provider) is included in `providers`, 
+     *  defaults are used for the configuration.
      */
     constructor(providers: Array<AbstractProvider | FallbackProviderConfig>, network?: Networkish, options?: FallbackProviderOptions) {
         super(network, options);
@@ -435,7 +442,11 @@ export class FallbackProvider extends AbstractProvider {
     //}
 
     /**
-     *  Transforms a %%req%% into the correct method call on %%provider%%.
+     *  Transforms a `req` into the correct method call on `provider`.
+     * 
+     *  @param {AbstractProvider} provider - The provider to use.
+     *  @param {PerformActionRequest} req - The request to perform.
+     *  @returns {Promise<any>} The result of the request.
      */
     async _translatePerform(provider: AbstractProvider, req: PerformActionRequest): Promise<any> {
         switch (req.method) {

@@ -1,16 +1,20 @@
 /**
  *  Explain UUID and link to RFC here.
  *
- *  @_subsection: api/utils:UUID  [about-uuid]
+ *  @section api/utils:UUID  [about-uuid]
  */
 import { getBytes, hexlify } from "./data.js";
 
 import type { BytesLike } from "./index.js";
 
 /**
- *  Returns the version 4 [[link-uuid]] for the %%randomBytes%%.
+ *  Returns the version 4 [UUID](https://www.ietf.org/rfc/rfc4122.txt)
+ *  for the `randomBytes`.
  *
- *  @see: https://www.ietf.org/rfc/rfc4122.txt (Section 4.4)
+ *  @param {BytesLike} randomBytes - The random bytes to use.
+ *  @returns {string} The UUID.
+ * 
+ *  @category Utils
  */
 export function uuidV4(randomBytes: BytesLike): string {
     const bytes = getBytes(randomBytes, "randomBytes");

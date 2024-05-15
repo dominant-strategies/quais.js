@@ -1,17 +1,16 @@
 import { ShardData } from "../constants/shards.js";
 
 /**
- * Retrieves the shard information for a given address based on its byte prefix.
- * The function parses the address to extract its byte prefix, then filters the ShardData
- * to find a matching shard entry. If no matching shard is found, it returns null.
+ *  Retrieves the shard information for a given address based on its byte prefix.
+ *  The function parses the address to extract its byte prefix, then filters the ShardData
+ *  to find a matching shard entry. If no matching shard is found, it returns null.
  * 
- * @param {string} address - The blockchain address to be analyzed. The address should
- * start with "0x" followed by the hexadecimal representation.
+ *  @param {string} address - The blockchain address to be analyzed. The address should start with "0x" followed by the hexadecimal representation.
+ *  @returns {Object|null} An object containing the shard information, or null if no
  * 
- * @returns {Object|null} The shard data object corresponding to the address's byte prefix,
- * or null if no matching shard is found.
+ *  @category Utils
  */
-export function getShardForAddress(address: string) {
+export function getShardForAddress(address: string): { name: string; nickname: string; shard: string; context: number; byte: string; } | null{
   const addressByte = address.substring(2, 4);
   const filteredShards = ShardData.filter((obj) => {
       return parseInt(addressByte, 16) === parseInt(obj.byte, 16);
@@ -24,17 +23,16 @@ export function getShardForAddress(address: string) {
 }
 
 /**
- * Extracts both shard and UTXO information from a given blockchain address. This function
- * first determines the address's shard by its byte prefix, then checks the 9th bit of the
- * address to ascertain if it's a UTXO or non-UTXO address.
+ *  Extracts both shard and UTXO information from a given blockchain address. This function
+ *  first determines the address's shard by its byte prefix, then checks the 9th bit of the
+ *  address to ascertain if it's a UTXO or non-UTXO address.
  * 
- * @param {string} address - The blockchain address to be analyzed, expected to start with
- * "0x" followed by its hexadecimal representation.
+ *  @param {string} address - The blockchain address to be analyzed, expected to start with "0x" followed by its hexadecimal representation.
+ *  @returns {Object|null} An object containing the shard and UTXO information, or null if no address is found.
  * 
- * @returns {Object|null} An object containing the shard data and a boolean indicating
- * whether the address is a UTXO address, or null if the shard cannot be determined.
+ *  @category Utils
  */
-export function getAddressDetails(address: string) {
+export function getAddressDetails(address: string): { shard: any, isUTXO: boolean } | null {
     const addressByte = address.substring(2, 4); 
     const isUTXO = (parseInt(address.substring(4, 5), 16) & 0x1) === 1; 
   
@@ -48,42 +46,48 @@ export function getAddressDetails(address: string) {
     return { shard: filteredShards[0], isUTXO };
   }
 
-  /**
-   * @param from address
-   * @param to adress
-   * @returns txtype
-   */
-  export function getTxType(from: string | null, to: string | null): number {
-    if (from === null || to === null) return 0;
-    const fromUTXO = isUTXOAddress(from);
-    const toUTXO = isUTXOAddress(to);
-  
-    switch (true) {
-      case fromUTXO && toUTXO:
-        return 2;
-      case fromUTXO && !toUTXO:
-        return 2;
-      default:
-        return 0;
-    }
+/**
+ *  Determines the transaction type based on the sender and recipient addresses. The function
+ *  checks if both addresses are UTXO addresses, in which case it returns 2. If only the sender
+ *  address is a UTXO address, it returns 1. Otherwise, it returns 0.
+ * 
+ *  @param {string|null} from - The sender address, expected to start with "0x" followed by its hexadecimal representation. If null, the function returns 0.
+ *  @param {string|null} to - The recipient address, expected to start with "0x" followed by its hexadecimal representation. If null, the function returns 0.
+ *  @returns {number} The transaction type based on the addresses.
+ *  
+ *  @category Utils
+ */
+export function getTxType(from: string | null, to: string | null): number {
+  if (from === null || to === null) return 0;
+  const fromUTXO = isUTXOAddress(from);
+  const toUTXO = isUTXOAddress(to);
+
+  switch (true) {
+    case fromUTXO && toUTXO:
+      return 2;
+    case fromUTXO && !toUTXO:
+      return 2;
+    default:
+      return 0;
   }
+}
   
 
-  /**
- * Checks whether a given blockchain address is a UTXO address based on the 9th bit of
- * the address. This function extracts the second byte of the address and checks its
- * first bit to determine the UTXO status.
- * 
- * @param {string} address - The blockchain address to be analyzed, expected to start with
- * "0x" followed by its hexadecimal representation.
- * 
- * @returns {boolean} True if the address is a UTXO address, false otherwise.
- */
-  export function isUTXOAddress(address: string) {
-    const secondByte = address.substring(4, 6); 
-    const binaryString = parseInt(secondByte, 16).toString(2).padStart(8, '0'); 
-    const isUTXO = binaryString[0] === '1';
-    
-    return isUTXO;
+/**
+  *  Checks whether a given blockchain address is a UTXO address based on the 9th bit of
+  *  the address. This function extracts the second byte of the address and checks its
+  *  first bit to determine the UTXO status.
+  * 
+  *  @param {string} address - The blockchain address to be analyzed, expected to start with "0x" followed by its hexadecimal representation.
+  *  @returns {boolean} True if the address is a UTXO address, false otherwise.
+  * 
+  *  @category Utils
+  */
+export function isUTXOAddress(address: string): boolean {
+  const secondByte = address.substring(4, 6); 
+  const binaryString = parseInt(secondByte, 16).toString(2).padStart(8, '0'); 
+  const isUTXO = binaryString[0] === '1';
+  
+  return isUTXO;
 }
 

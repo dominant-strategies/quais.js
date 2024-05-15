@@ -60,6 +60,11 @@ const COIN_TYPE = 969;
 const GAP = 20;
 const _guard = { };
 
+/**
+ *  @TODO write documentation for this class.
+ * 
+ *  @category Wallet
+ */
 export class UTXOHDWallet extends BaseWallet {
      /**
      *  The compressed public key.
@@ -84,7 +89,7 @@ export class UTXOHDWallet extends BaseWallet {
       *  The mnemonic used to create this HD Node, if available.
       *
       *  Sources such as extended keys do not encode the mnemonic, in
-      *  which case this will be ``null``.
+      *  which case this will be `null`.
       */
      readonly mnemonic!: null | Mnemonic;
  
@@ -98,13 +103,13 @@ export class UTXOHDWallet extends BaseWallet {
       *  The derivation path of this wallet.
       *
       *  Since extended keys do not provider full path details, this
-      *  may be ``null``, if instantiated from a source that does not
+      *  may be `null`, if instantiated from a source that does not
       *  enocde it.
       */
      readonly path!: null | string;
  
      /**
-      *  The child index of this wallet. Values over ``2 *\* 31`` indicate
+      *  The child index of this wallet. Values over `2 *\* 31` indicate
       *  the node is hardened.
       */
      readonly index!: number;
@@ -184,6 +189,11 @@ export class UTXOHDWallet extends BaseWallet {
 
     /**
      *  Creates a new random HDNode.
+     * 
+     *  @param {string} path - The BIP44 path to derive.
+     *  @param {string} [password] - The password to use for the mnemonic.
+     *  @param {Wordlist} [wordlist] - The wordlist to use for the mnemonic.
+     *  @returns {UTXOHDWallet} The new HDNode.
      */
     static createRandom( path: string, password?: string, wordlist?: Wordlist): UTXOHDWallet {
         if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
@@ -192,7 +202,11 @@ export class UTXOHDWallet extends BaseWallet {
     }
 
     /**
-     *  Create an HD Node from %%mnemonic%%.
+     *  Create an HD Node from `mnemonic`.
+     * 
+     *  @param {Mnemonic} mnemonic - The mnemonic to create the HDNode from.
+     *  @param {string} path - The BIP44 path to derive.
+     *  @returns {UTXOHDWallet} The new HDNode.
      */
     static fromMnemonic(mnemonic: Mnemonic, path: string): UTXOHDWallet {
         if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
@@ -200,7 +214,13 @@ export class UTXOHDWallet extends BaseWallet {
     }
 
     /**
-     *  Creates an HD Node from a mnemonic %%phrase%%.
+     *  Creates an HD Node from a mnemonic `phrase`.
+     * 
+     *  @param {string} phrase - The mnemonic phrase to create the HDNode from.
+     *  @param {string} path - The BIP44 path to derive.
+     *  @param {string} [password] - The password to use for the mnemonic.
+     *  @param {Wordlist} [wordlist] - The wordlist to use for the mnemonic.
+     *  @returns {UTXOHDWallet} The new HDNode.
      */
     static fromPhrase(phrase: string, path: string, password?: string, wordlist?: Wordlist): UTXOHDWallet {
         if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
@@ -210,8 +230,8 @@ export class UTXOHDWallet extends BaseWallet {
 
     /**
      * Checks if the provided BIP44 path is valid and limited to the change level.
-     * @param path The BIP44 path to check.
-     * @returns true if the path is valid and does not include the address_index; false otherwise.
+     * @param {string} path - The BIP44 path to validate.
+     * @returns {boolean} true if the path is valid and does not include the address_index; false otherwise.
      */
     static isValidPath(path: string): boolean {
         // BIP44 path regex pattern for up to the 'change' level, excluding 'address_index'
@@ -221,7 +241,10 @@ export class UTXOHDWallet extends BaseWallet {
     }
 
     /**
-     *  Return the child for %%index%%.
+     *  Return the child for `index`.
+     * 
+     *  @param {number} _index - The index to derive.
+     *  @returns {UTXOHDWallet} The derived child.
      */
     deriveChild(_index: Numeric): UTXOHDWallet {
         const index = getNumber(_index, "index");
@@ -253,7 +276,13 @@ export class UTXOHDWallet extends BaseWallet {
     }
 
     /**
-     * Derives an address that is valid for a specified zone on the Qi ledger.
+     *  Derives an address that is valid for a specified zone on the Qi ledger.
+     * 
+     *  @param {number} startingIndex - The index to derive.
+     *  @param {string} zone - The zone to derive the address for
+     *  @returns {UTXOHDWallet} The derived address.
+     *  @throws {Error} If the wallet's address derivation path is missing or if 
+     *  a valid address cannot be derived for the specified zone after 1000 attempts.
      */
     private deriveAddress(startingIndex: number, zone: string): AddressInfo{
         if (!this.path) throw new Error("Missing wallet's address derivation path");
@@ -309,7 +338,8 @@ export class UTXOHDWallet extends BaseWallet {
      * Initializes the wallet by generating addresses and private keys for the specified zone.
      * The wallet will generate addresses until it has `GAP` number of naked addresses.
      * A provider must be set before calling this method.
-     * @param zone - Required. Zone identifier used to validate the derived address.
+     *
+     * @param {string} zone - Zone identifier used to validate the derived address.
      * @returns {Promise<void>}
      */
     public async init(zone: string): Promise<void> {
@@ -363,7 +393,34 @@ export class UTXOHDWallet extends BaseWallet {
     }
 
     /**
+     *  Returns the first naked address for a given zone.
+     * 
+     *  @param {string} zone - The zone identifier.
+     *  @returns {Promise<string>} The naked address.
+     *  @throws {Error} If the zone is invalid or the wallet has not been initialized.
+     */
+    async getAddress(zone: string): Promise<string> {
+      if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
+
+      const shardWalletData = this.#shardWalletsMap.get(zone);
+      if (!shardWalletData) {
+          throw new Error(`Wallet has not been initialized for zone: ${zone}`);
+      }
+      // After the wallet has been initialized, the first naked address is always 
+      // the first address within the pack of last GAP addresses
+      if (shardWalletData.addressesInfo.length < GAP) {
+          throw new Error(`No enough naked addresses available for zone: ${zone}`);
+      }
+      return shardWalletData.addressesInfo[shardWalletData.addressesInfo.length - GAP].address;
+
+    }
+
+    /**
      *  Signs a Qi transaction and returns the serialized transaction
+     *
+     *  @param {QiTransactionRequest} tx - The transaction to sign.
+     *  @returns {Promise<string>} The serialized transaction.
+     *  @throws {Error} If the UTXO transaction is invalid.
      */
     async signTransaction(tx: QiTransactionRequest): Promise<string> {
         const txobj = QiTransaction.from((<TransactionLike>tx))

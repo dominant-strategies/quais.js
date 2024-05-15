@@ -3,9 +3,9 @@
  *  the smallest magnitude unit.
  *
  *  For example, imagine dealing with dollars and cents. Since dollars
- *  are divisible, non-integer values are possible, such as ``$10.77``.
+ *  are divisible, non-integer values are possible, such as `$10.77`.
  *  By using the smallest indivisible unit (i.e. cents), the value can
- *  be kept as the integer ``1077``.
+ *  be kept as the integer `1077`.
  *
  *  When receiving decimal input from the user (as a decimal string),
  *  the value should be converted to an integer and when showing a user
@@ -37,10 +37,16 @@ const names = [
 ];
 
 /**
- *  Converts %%value%% into a //decimal string//, assuming %%unit%% decimal
- *  places. The %%unit%% may be the number of decimal places or the name of
- *  a unit (e.g. ``"gwei"`` for 9 decimal places).
- *
+ *  Converts `value` into a //decimal string//, assuming `unit` decimal
+ *  places. The `unit` may be the number of decimal places or the name of
+ *  a unit (e.g. `"gwei"` for 9 decimal places).
+ * 
+ *  @param {BigNumberish} value - The value to convert.
+ *  @param {string | Numeric} [unit=18] - The unit to convert to.
+ *  @returns {string} The converted value.
+ *  @throws {Error} If the unit is invalid.
+ * 
+ *  @category Utils
  */
 export function formatUnits(value: BigNumberish, unit?: string | Numeric): string {
     let decimals = 18;
@@ -56,9 +62,17 @@ export function formatUnits(value: BigNumberish, unit?: string | Numeric): strin
 }
 
 /**
- *  Converts the //decimal string// %%value%% to a BigInt, assuming
- *  %%unit%% decimal places. The %%unit%% may the number of decimal places
- *  or the name of a unit (e.g. ``"gwei"`` for 9 decimal places).
+ *  Converts the //decimal string// `value` to a BigInt, assuming
+ *  `unit` decimal places. The `unit` may the number of decimal places
+ *  or the name of a unit (e.g. `"gwei"` for 9 decimal places).
+ * 
+ *  @param {string} value - The value to convert.
+ *  @param {string | Numeric} [unit=18] - The unit to convert from.
+ *  @returns {bigint} The converted value.
+ *  @throws {Error} If the unit is invalid.
+ *  @throws {Error} If the value is not a string.
+ * 
+ *  @category Utils
  */
 export function parseUnits(value: string, unit?: string | Numeric): bigint {
     assertArgument(typeof (value) === "string", "value must be a string", "value", value);
@@ -76,29 +90,49 @@ export function parseUnits(value: string, unit?: string | Numeric): bigint {
 }
 
 /**
- *  Converts %%value%% into a //decimal string// using 18 decimal places.
+ *  Converts `value` into a //decimal string// using 18 decimal places.
+ * 
+ *  @param {BigNumberish} wei - The value to convert.
+ *  @returns {string} The converted value.
+ * 
+ *  @category Utils
  */
 export function formatQuai(wei: BigNumberish): string {
     return formatUnits(wei, 18);
 }
 
 /**
- *  Converts %%value%% into a //decimal string// using 3 decimal places.
+ *  Converts `value` into a //decimal string// using 3 decimal places.
+ * 
+ *  @param {BigNumberish} value - The value to convert.
+ *  @returns {string} The converted value.
+ * 
+ *  @category Utils
  */
 export function formatQi(value: BigNumberish): string {
     return formatUnits(value, 3);
 }
 
 /**
- *  Converts the //decimal string// %%quai%% to a BigInt, using 18
+ *  Converts the //decimal string// `quai` to a BigInt, using 18
  *  decimal places.
+ * 
+ *  @param {string} ether - The value to convert.
+ *  @returns {bigint} The converted value.
+ * 
+ *  @category Utils
  */
 export function parseQuai(ether: string): bigint {
     return parseUnits(ether, 18);
 }
 
 /**
- *  Converts %%value%% into a //decimal string// using 3 decimal places.
+ *  Converts `value` into a //decimal string// using 3 decimal places.
+ * 
+ *  @param {string} value - The value to convert.
+ *  @returns {bigint} The converted value.
+ * 
+ *  @category Utils
  */
 export function parseQi(value: string): bigint {
     return parseUnits(value, 3);

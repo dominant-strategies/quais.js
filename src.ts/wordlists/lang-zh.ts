@@ -61,22 +61,21 @@ function loadWords(locale: string): Array<string> {
 const wordlists: Record<string, LangZh> = { };
 
 /**
- *  The [[link-bip39-zh_cn]] and [[link-bip39-zh_tw]] for
- *  [mnemonic phrases](link-bip-39).
+ *  The [Tradional Chinese wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/chinese_traditional.txt) and [Simplified Chinese wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/chinese_simplified.txt) for
+ *  [mnemonic phrases](https://en.bitcoin.it/wiki/BIP_0039)).
  *
  *  @_docloc: api/wordlists
  */
 export class LangZh extends Wordlist {
-
     /**
      *  Creates a new instance of the Chinese language Wordlist for
-     *  the %%dialect%%, either ``"cn"`` or ``"tw"`` for simplified
+     *  the `dialect`, either `"cn"` or `"tw"` for simplified
      *  or traditional, respectively.
      *
      *  This should be unnecessary most of the time as the exported
-     *  [[langZhCn]] and [[langZhTw]] should suffice.
+     *  langZhCn and langZhTw should suffice.
      *
-     *  @_ignore:
+     *  @ignore
      */
     constructor(dialect: string) { super("zh_" + dialect); }
 
@@ -97,10 +96,10 @@ export class LangZh extends Wordlist {
     }
 
     /**
-     *  Returns a singleton instance of a ``LangZh`` for %%dialect%%,
+     *  Returns a singleton instance of a `LangZh` for `dialect`,
      *  creating it if this is the first time being called.
      *
-     *  Use the %%dialect%% ``"cn"`` or ``"tw"`` for simplified or
+     *  Use the `dialect` `"cn"` or `"tw"` for simplified or
      *  traditional, respectively.
      */
     static wordlist(dialect: string): LangZh {

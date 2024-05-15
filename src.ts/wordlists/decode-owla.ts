@@ -4,7 +4,7 @@ import { decodeBits } from "./bit-reader.js";
 import { decodeOwl } from "./decode-owl.js";
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export function decodeOwlA(data: string, accents: string): Array<string> {
     let words = decodeOwl(data).join(",");

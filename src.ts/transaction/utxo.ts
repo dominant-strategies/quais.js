@@ -2,36 +2,84 @@ import { getAddress } from "../address/index";
 import { getBigInt } from "../utils/index";
 import type { BigNumberish } from "../utils/index";
 
+/**
+ *  @TODO write documentation for this type.
+ *  @TODO if not used, replace with `ignore`
+ * 
+ *  @category Transaction
+ */
 export type Outpoint = {
     Txhash: string;
     Index: number;
     Denomination: number;
 };
 
+/**
+ *  @TODO write documentation for this type.
+ *  @TODO if not used, replace with `ignore`
+ * 
+ *  @category Transaction
+ */
 export type UTXOTransactionInput = {
     previousOutPoint: Outpoint;
     pubKey: Uint8Array;
 };
 
+/**
+ *  @TODO write documentation for this type.
+ *  @TODO if not used, replace with `ignore`
+ * 
+ *  @category Transaction
+ */
 export interface UTXOEntry extends UTXOEntryLike{
     denomination: null | bigint;
     address: string;
 };
 
+/**
+ *  @TODO write documentation for this type.
+ *  @TODO if not used, replace with `ignore`
+ * 
+ *  @category Transaction
+ */
 export interface UTXOEntryLike {
     denomination: null | BigNumberish;
     address: null | string;
 }
 
+/**
+ *  @TODO write documentation for this type.
+ *  @TODO if not used, replace with `ignore`
+ * 
+ *  @category Transaction
+ */
 export type UTXOTransactionOutputLike = UTXOEntryLike;
 
+/**
+ *  @TODO write documentation for this type.
+ *  @TODO if not used, replace with `ignore`
+ * 
+ *  @category Transaction
+ */
 export type UTXOTransactionOutput = UTXOEntry;
 
+/**
+ *  @TODO write documentation for this type.
+ *  @TODO if not used, replace with `ignore`
+ * 
+ *  @category Transaction
+ */
 export type TxOutput = {
     address: Uint8Array;
     denomination: number;
 };
 
+/**
+ *  @TODO write documentation for this type.
+ *  @TODO if not used, replace with `ignore`
+ * 
+ *  @category Transaction
+ */
 export type TxInput = {
     previous_out_point: {
         hash: {
@@ -42,17 +90,34 @@ export type TxInput = {
     pub_key: Uint8Array;  
 };
 
+/**
+ *  @TODO write documentation for this type.
+ *  @TODO if not used, replace with `ignore`
+ * 
+ *  @category Transaction
+ */
 export interface UTXOEntry {
     denomination: null | bigint;
     address: string;
 };
 
-
+/**
+ *  @TODO write documentation for this type.
+ *  @TODO if not used, replace with `ignore`
+ * 
+ *  @category Transaction
+ */
 export interface UTXOLike extends UTXOEntry {
     txhash?: null | string;
     index?: null | number;
 }
 
+/**
+ *  @TODO write documentation for this type.
+ *  @TODO if not used, replace with `ignore`
+ * 
+ *  @category Transaction
+ */
 export const denominations: bigint[] = [
     BigInt(1),           // 0.001 Qi
     BigInt(5),           // 0.005 Qi
@@ -74,19 +139,25 @@ export const denominations: bigint[] = [
 ];
 
 /**
- * Checks if the provided denomination is valid.
- * @param denomination The denomination to check.
- * @returns True if the denomination is valid, false otherwise.
+ *  Checks if the provided denomination is valid.
+ *  
+ *  @param {bigint} denomination - The denomination to check.
+ *  @returns {boolean} True if the denomination is valid, false otherwise.
+ *  
+ *  @category Transaction
  */
 function isValidDenomination(denomination: bigint): boolean {
     return denominations.includes(denomination);
 }
 
 /**
- * Handles conversion of string to bigint, specifically for transaction parameters.
- * @param value The string value to convert.
- * @param param The parameter name for error context.
- * @returns The bigint representation of the input string.
+ *  Handles conversion of string to bigint, specifically for transaction parameters.
+ * 
+ *  @param {string} value - The value to convert.
+ *  @param {string} param - The parameter name.
+ *  @returns {bigint} The converted value.
+ *  
+ *  @category Transaction
  */
 function handleBigInt(value: string, param: string): bigint {
     if (value === "0x") { return BigInt(0); }
@@ -94,9 +165,11 @@ function handleBigInt(value: string, param: string): bigint {
 }
 
 /**
- * Given a value, returns an array of supported denominations that sum to the value.
- * @param value The value to denominate.
- * @returns Array of supported denominations that sum to the value.
+ *  Given a value, returns an array of supported denominations that sum to the value.
+ *  @param {bigint} value - The value to denominate.
+ *  @returns {bigint[]} An array of denominations that sum to the value.
+ *  
+ *  @category Transaction
  */
 export function denominate(value: bigint): bigint[] {
     if (value <= BigInt(0)) {
@@ -126,6 +199,12 @@ export function denominate(value: bigint): bigint[] {
     return result;
 }
 
+/**
+ *  @TODO write documentation for this type.
+ *  @TODO if not used, replace with `ignore`
+ * 
+ *  @category Transaction
+ */ 
 export class UTXO implements UTXOLike {
     #txhash: null | string;
     #index: null | number;
@@ -163,7 +242,7 @@ export class UTXO implements UTXOLike {
     }
 
     /**
-     * Constructs a new UTXO instance with null properties.
+     *  Constructs a new UTXO instance with null properties.
      */
     constructor() {
         this.#txhash = null;
@@ -173,8 +252,9 @@ export class UTXO implements UTXOLike {
     }
 
     /**
-     * Converts the UTXO instance to a JSON object.
-     * @returns A JSON representation of the UTXO instance.
+     *  Converts the UTXO instance to a JSON object.
+     * 
+     *  @returns {any} A JSON representation of the UTXO instance.
      */
     toJSON(): any {
         return {
@@ -186,9 +266,10 @@ export class UTXO implements UTXOLike {
     }
 
     /**
-     * Creates a UTXO instance from a UTXOLike object.
-     * @param utxo The UTXOLike object to create the UTXO instance from.
-     * @returns A new UTXO instance.
+     *  Creates a UTXO instance from a UTXOLike object.
+     *  
+     *  @param {UTXOLike} utxo - The UTXOLike object to convert.
+     *  @returns {UTXO} The UTXO instance.
      */
     static from(utxo: UTXOLike): UTXO {
         if (utxo === null) { return new UTXO(); }

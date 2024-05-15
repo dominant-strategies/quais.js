@@ -15,14 +15,16 @@ import {keccak256} from "../crypto/index.js";
 
 /**
  *  The **BaseWallet** is a stream-lined implementation of a
- *  [[Signer]] that operates with a private key.
+ *  [Signer](../interfaces/Signer) that operates with a private key.
  *
- *  It is preferred to use the [[Wallet]] class, as it offers
+ *  It is preferred to use the [Wallet](../classes/Wallet) class, as it offers
  *  additional functionality and simplifies loading a variety
  *  of JSON formats, Mnemonic Phrases, etc.
  *
  *  This class may be of use for those attempting to implement
  *  a minimal Signer.
+ * 
+ *  @category Wallet
  */
 export class BaseWallet extends AbstractSigner {
     /**
@@ -33,10 +35,10 @@ export class BaseWallet extends AbstractSigner {
     readonly #signingKey: SigningKey;
 
     /**
-     *  Creates a new BaseWallet for %%privateKey%%, optionally
-     *  connected to %%provider%%.
+     *  Creates a new BaseWallet for `privateKey`, optionally
+     *  connected to `provider`.
      *
-     *  If %%provider%% is not specified, only offline methods can
+     *  If `provider` is not specified, only offline methods can
      *  be used.
      */
     constructor(privateKey: SigningKey, provider?: null | Provider) {
@@ -58,7 +60,7 @@ export class BaseWallet extends AbstractSigner {
 
 
     /**
-     *  The [[SigningKey]] used for signing payloads.
+     *  The {@link SigningKey | **SigningKey**} used for signing payloads.
      */
     get signingKey(): SigningKey { return this.#signingKey; }
 
@@ -67,7 +69,9 @@ export class BaseWallet extends AbstractSigner {
      */
     get privateKey(): string { return this.signingKey.privateKey; }
 
-    async getAddress(_zone?:string): Promise<string> { return this.#address; }
+
+    async getAddress(_zone?: string): Promise<string> { return this.#address; }
+
 
     connect(provider: null | Provider): BaseWallet {
         return new BaseWallet(this.#signingKey, provider);
@@ -105,7 +109,10 @@ export class BaseWallet extends AbstractSigner {
     // @TODO: Add a secialized signTx and signTyped sync that enforces
     // all parameters are known?
     /**
-     *  Returns the signature for %%message%% signed with this wallet.
+     *  Returns the signature for `message` signed with this wallet.
+     * 
+     *  @param {string | Uint8Array} message - The message to sign.
+     *  @returns {string} The serialized signature.
      */
     signMessageSync(message: string | Uint8Array): string {
         return this.signingKey.sign(hashMessage(message)).serialized;

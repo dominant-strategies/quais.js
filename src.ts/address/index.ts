@@ -9,8 +9,7 @@
  *
  *  These functions help convert between various formats, validate
  *  addresses and safely resolve ENS names.
- *
- *  @_section: api/address:Addresses  [about-addresses]
+ *  @category Address
  */
 
 null;
@@ -19,9 +18,11 @@ null;
  *  An interface for objects which have an address, and can
  *  resolve it asyncronously.
  *
- *  This allows objects such as [[Signer]] or [[Contract]] to
+ *  This allows objects such as [Signer](Signer) or [Contract](../classes/Contract) to
  *  be used most places an address can be, for example getting
- *  the [balance](Provider-getBalance).
+ *  the [balance](../interfaces/Provider#getBalance).
+ * 
+ *  @category Address
  */
 export interface Addressable {
     /**
@@ -32,6 +33,8 @@ export interface Addressable {
 
 /**
  *  Anything that can be used to return or resolve an address.
+ * 
+ *  @category Address
  */
 export type AddressLike = string | Promise<string> | Addressable;
 

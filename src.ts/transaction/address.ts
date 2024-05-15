@@ -5,9 +5,14 @@ import type { SignatureLike } from "../crypto/index.js";
 import type { BytesLike } from "../utils/index.js";
 
 /**
- *  Returns the address for the %%key%%.
+ *  Returns the address for the `key`.
  *
  *  The key may be any standard form of public key or a private key.
+ * 
+ *  @param {string | SigningKey} key - The key to compute the address for.
+ *  @returns {string} The address.
+ *  
+ *  @category Transaction
  */
 export function computeAddress(key: string | SigningKey): string {
     let pubkey: string;
@@ -21,7 +26,13 @@ export function computeAddress(key: string | SigningKey): string {
 
 /**
  *  Returns the recovered address for the private key that was
- *  used to sign %%digest%% that resulted in %%signature%%.
+ *  used to sign `digest` that resulted in `signature`.
+ * 
+ *  @param {BytesLike} digest - The digest of the message.
+ *  @param {SignatureLike} signature - The signature.
+ *  @returns {string} The address.
+ *  
+ *  @category Transaction
  */
 export function recoverAddress(digest: BytesLike, signature: SignatureLike): string {
     return computeAddress(SigningKey.recoverPublicKey(digest, signature));

@@ -1,9 +1,9 @@
 /**
  *  The available providers should suffice for most developers purposes,
- *  but the [[AbstractProvider]] class has many features which enable
+ *  but the {@link AbstractProvider | **AbstractProvider**} class has many features which enable
  *  sub-classing it for specific purposes.
  *
- *  @_section: api/providers/abstract-provider: Subclassing Provider  [abstract-provider]
+ *  @section api/providers/abstract-provider: Subclassing Provider  [abstract-provider]
  */
 
 // @TODO
@@ -99,7 +99,9 @@ function getTag(prefix: string, value: any): string {
 
 /**
  *  The types of additional event values that can be emitted for the
- *  ``"debug"`` event.
+ *  `"debug"` event.
+ * 
+ *  @category Providers
  */
 export type DebugEventAbstractProvider = {
     action: "sendCcipReadFetchRequest",
@@ -129,10 +131,12 @@ export type DebugEventAbstractProvider = {
 
 
 /**
- *  The value passed to the [[AbstractProvider-_getSubscriber]] method.
+ *  The value passed to the {@link AbstractProvider._getSubscriber | **AbstractProvider._getSubscriber} method.
  *
- *  Only developers sub-classing [[AbstractProvider[[ will care about this,
+ *  Only developers sub-classing {@link AbstractProvider | **AbstractProvider**} will care about this,
  *  if they are modifying a low-level feature of how subscriptions operate.
+ * 
+ *  @category Providers
  */
 export type Subscription = {
     type: "block" | "close" | "debug" | "error" | "finalized" | "network" | "pending" | "safe",
@@ -154,8 +158,10 @@ export type Subscription = {
 /**
  *  A **Subscriber** manages a subscription.
  *
- *  Only developers sub-classing [[AbstractProvider[[ will care about this,
+ *  Only developers sub-classing {@link AbstractProvider | **AbstractProvider**} will care about this,
  *  if they are modifying a low-level feature of how subscriptions operate.
+ * 
+ *  @category Providers
  */
 export interface Subscriber {
     /**
@@ -171,8 +177,10 @@ export interface Subscriber {
     /**
      *  Called when the subscription should pause.
      *
-     *  If %%dropWhilePaused%%, events that occur while paused should not
-     *  be emitted [[resume]].
+     *  If `dropWhilePaused`, events that occur while paused should not
+     *  be emitted {@link Subscriber.resume | **Subscriber.resume**}.
+     * 
+     *  @param {boolean} [dropWhilePaused] - If `true`, events that occur while paused
      */
     pause(dropWhilePaused?: boolean): void;
 
@@ -185,15 +193,17 @@ export interface Subscriber {
      *  The frequency (in ms) to poll for events, if polling is used by
      *  the subscriber.
      *
-     *  For non-polling subscribers, this must return ``undefined``.
+     *  For non-polling subscribers, this must return `undefined`.
      */
     pollingInterval?: number;
 }
 
 /**
  *  An **UnmanagedSubscriber** is useful for events which do not require
- *  any additional management, such as ``"debug"`` which only requires
+ *  any additional management, such as `"debug"` which only requires
  *  emit in synchronous event loop triggered calls.
+ * 
+ *  @category Providers
  */
 export class UnmanagedSubscriber implements Subscriber {
     /**
@@ -202,7 +212,7 @@ export class UnmanagedSubscriber implements Subscriber {
     name!: string;
 
     /**
-     *  Create a new UnmanagedSubscriber with %%name%%.
+     *  Create a new UnmanagedSubscriber with `name`.
      */
     constructor(name: string) { defineProperties<UnmanagedSubscriber>(this, { name }); }
 
@@ -312,8 +322,11 @@ function getTime(): number { return (new Date()).getTime(); }
 
 /**
  *  An **AbstractPlugin** is used to provide additional internal services
- *  to an [[AbstractProvider]] without adding backwards-incompatible changes
- *  to method signatures or other internal and complex logic.
+ *  to an {@link AbstractProvider | **AbstractProvider**} without adding 
+ *  backwards-incompatible changes to method signatures or other internal 
+ *  and complex logic.
+ * 
+ *  @category Providers
  */
 export interface AbstractProviderPlugin {
     /**
@@ -322,13 +335,17 @@ export interface AbstractProviderPlugin {
     readonly name: string;
 
     /**
-     *  Creates a new instance of the plugin, connected to %%provider%%.
+     *  Creates a new instance of the plugin, connected to `provider`.
+     * 
+     *  @param {AbstractProvider} provider - The provider to connect to.
      */
     connect(provider: AbstractProvider<any>): AbstractProviderPlugin;
 }
 
 /**
- *  A normalized filter used for [[PerformActionRequest]] objects.
+ *  A normalized filter used for {@link PerformActionRequest | **PerformActionRequest**} objects.
+ * 
+ *  @category Providers
  */
 export type PerformActionFilter = {
     address?: string | Array<string>;
@@ -344,13 +361,20 @@ export type PerformActionFilter = {
 };
 
 /**
- *  A normalized transactions used for [[PerformActionRequest]] objects.
+ *  A normalized transactions used for {@link PerformActionRequest | **PerformActionRequest**} objects.
+ * 
+ *  @category Providers
  */
 export type PerformActionTransaction = QuaiPerformActionTransaction | QiPerformActionTransaction;
 
+/**
+ *  @TODO Write documentation for this interface
+ * 
+ *  @category Providers
+ */
 export interface QuaiPerformActionTransaction extends QuaiPreparedTransactionRequest {
     /**
-     *  The ``to`` address of the transaction.
+     *  The `to` address of the transaction.
      */
     to?: string;
 
@@ -362,8 +386,20 @@ export interface QuaiPerformActionTransaction extends QuaiPreparedTransactionReq
     [key: string]: any;
 }
 
+/**
+ *  @TODO Write documentation for this interface
+ * 
+ *  @category Providers
+ */
 export interface QiPerformActionTransaction extends QiPreparedTransactionRequest {
+    /**
+     *  The `inputs` of the UTXO transaction.
+     */
     inputs?: Array<TxInput>;
+
+    /**
+     *  The `outputs` of the UTXO transaction.
+     */
     outputs?: Array<TxOutput>;
 
     [key: string]: any;
@@ -372,8 +408,10 @@ export interface QiPerformActionTransaction extends QiPreparedTransactionRequest
 
 
 /**
- *  The [[AbstractProvider]] methods will normalize all values and pass this
- *  type to [[AbstractProvider-_perform]].
+ *  The {@link AbstractProvider | **AbstractProvider**} methods will normalize all values and pass this
+ *  type to {@link AbstractProvider._perform | **AbstractProvider._perform**}.
+ * 
+ *  @category Providers
  */
 export type PerformActionRequest = {
     method: "broadcastTransaction",
@@ -468,14 +506,16 @@ type _PerformAccountRequest = {
 }
 
 /**
- *  Options for configuring some internal aspects of an [[AbstractProvider]].
+ *  Options for configuring some internal aspects of an {@link AbstractProvider | **AbstractProvider**}.
  *
- *  **``cacheTimeout``** - how long to cache a low-level ``_perform``
+ *  **`cacheTimeout`** - how long to cache a low-level `_perform`
  *  for, based on input parameters. This reduces the number of calls
  *  to getChainId and getBlockNumber, but may break test chains which
- *  can perform operations (internally) synchronously. Use ``-1`` to
- *  disable, ``0`` will only buffer within the same event loop and
- *  any other value is in ms. (default: ``250``)
+ *  can perform operations (internally) synchronously. Use `-1` to
+ *  disable, `0` will only buffer within the same event loop and
+ *  any other value is in ms. (default: `250`)
+ * 
+ *  @category Providers
  */
 export type AbstractProviderOptions = {
     cacheTimeout?: number;
@@ -489,9 +529,11 @@ const defaultOptions = {
 
 /**
  *  An **AbstractProvider** provides a base class for other sub-classes to
- *  implement the [[Provider]] API by normalizing input arguments and
- *  formatting output results as well as tracking events for consistent
- *  behaviour on an eventually-consistent network.
+ *  implement the {@link Provider | **Provider**} API by normalizing input 
+ *  arguments and formatting output results as well as tracking events for 
+ *  consistent behaviour on an eventually-consistent network.
+ * 
+ *  @category Providers
  */
 export class AbstractProvider<C = FetchRequest> implements Provider {
 
@@ -521,9 +563,12 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     #options: Required<AbstractProviderOptions>;
 
     /**
-     *  Create a new **AbstractProvider** connected to %%network%%, or
+     *  Create a new **AbstractProvider** connected to `network`, or
      *  use the various network detection capabilities to discover the
-     *  [[Network]] if necessary.
+     *  {@link Network | **Network**} if necessary.
+     * 
+     *  @param _network - The network to connect to, or `"any"` to
+     *  @param options - The options to configure the provider.
      */
     constructor(_network?: "any" | Networkish, options?: AbstractProviderOptions) {
         this.#options = Object.assign({}, defaultOptions, options || {});
@@ -653,13 +698,15 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     get pollingInterval(): number { return this.#options.pollingInterval; }
 
     /**
-     *  Returns ``this``, to allow an **AbstractProvider** to implement
-     *  the [[ContractRunner]] interface.
+     *  Returns `this`, to allow an **AbstractProvider** to implement
+     *  the [Contract Runner](../classes/ContractRunner) interface.
      */
     get provider(): this { return this; }
 
     /**
      *  Returns all the registered plug-ins.
+     *  
+     *  @returns {Array<AbstractProviderPlugin>} An array of all the registered plug-ins.
      */
     get plugins(): Array<AbstractProviderPlugin> {
         return Array.from(this.#plugins.values());
@@ -667,6 +714,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      *  Attach a new plug-in.
+     * 
+     *  @param {AbstractProviderPlugin} plugin - The plug-in to attach.
      */
     attachPlugin(plugin: AbstractProviderPlugin): this {
         if (this.#plugins.get(plugin.name)) {
@@ -678,6 +727,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      *  Get a plugin by name.
+     * 
+     *  @param {string} name - The name of the plugin to get.
+     *  @returns {AbstractProviderPlugin | null} The plugin, or `null` if not found.
      */
     getPlugin<T extends AbstractProviderPlugin = AbstractProviderPlugin>(name: string): null | T {
         return <T>(this.#plugins.get(name)) || null;
@@ -685,7 +737,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      *  Prevent any CCIP-read operation, regardless of whether requested
-     *  in a [[call]] using ``enableCcipRead``.
+     *  in a {@link AbstractProvider.call | **call**} using `enableCcipRead`.
      */
     get disableCcipRead(): boolean { return this.#disableCcipRead; }
     set disableCcipRead(value: boolean) { this.#disableCcipRead = !!value; }
@@ -718,7 +770,11 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     /**
      *  Provides the opportunity for a sub-class to wrap a block before
      *  returning it, to add additional properties or an alternate
-     *  sub-class of [[Block]].
+     *  sub-class of {@link Block | **Block**}.
+     * 
+     *  @param {BlockParams} value - The block to wrap.
+     *  @param {Network} network - The network the block was on.
+     *  @returns {Block} The wrapped block.
      */
     _wrapBlock(value: BlockParams, network: Network): Block {
         // Handle known node by -> remove null values from the number array
@@ -729,7 +785,11 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     /**
      *  Provides the opportunity for a sub-class to wrap a log before
      *  returning it, to add additional properties or an alternate
-     *  sub-class of [[Log]].
+     *  sub-class of {@link Log | **Log**}.
+     * 
+     *  @param {LogParams} value - The log to wrap.
+     *  @param {Network} network - The network the log was on.
+     *  @returns {Log} The wrapped log.
      */
     _wrapLog(value: LogParams, network: Network): Log {
         return new Log(formatLog(value), this);
@@ -738,7 +798,11 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     /**
      *  Provides the opportunity for a sub-class to wrap a transaction
      *  receipt before returning it, to add additional properties or an
-     *  alternate sub-class of [[TransactionReceipt]].
+     *  {@link TransactionReceipt | **TransactionReceipt**}.
+     * 
+     *  @param {TransactionReceiptParams} value - The transaction receipt to wrap.
+     *  @param {Network} network - The network the transaction was on.
+     *  @returns {TransactionReceipt} The wrapped transaction receipt.
      */
     _wrapTransactionReceipt(value: TransactionReceiptParams, network: Network): TransactionReceipt {
         return new TransactionReceipt(formatTransactionReceipt(value), this);
@@ -747,7 +811,11 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     /**
      *  Provides the opportunity for a sub-class to wrap a transaction
      *  response before returning it, to add additional properties or an
-     *  alternate sub-class of [[TransactionResponse]].
+     *  alternate sub-class of {@link TransactionResponse | **TransactionResponse**}.
+     * 
+     *  @param {TransactionResponseParams} tx - The transaction response to wrap.
+     *  @param {Network} network - The network the transaction was on.
+     *  @returns {TransactionResponse} The wrapped transaction response.
      */
     _wrapTransactionResponse(tx: TransactionResponseParams, network: Network): TransactionResponse {
         if ("from" in tx) {
@@ -763,6 +831,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *  technique the sub-class requires.
      *
      *  Sub-classes **must** override this.
+     * 
+     *  @param {string} [shard] - The shard to use for the network detection.
+     *  @returns {Promise<Network>} A promise resolving to the network.
      */
     _detectNetwork(shard?: string): Promise<Network> {
         assert(false, "sub-classes must implement this", "UNSUPPORTED_OPERATION", {
@@ -775,6 +846,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *  methods sanitizes and normalizes the values passed into this.
      *
      *  Sub-classes **must** override this.
+     * 
+     *  @param {PerformActionRequest} req - The request to perform.
+     *  @returns {Promise<T>} A promise resolving to the result of the operation.
      */
     async _perform<T = any>(req: PerformActionRequest): Promise<T> {
         assert(false, `unsupported method: ${req.method}`, "UNSUPPORTED_OPERATION", {
@@ -792,17 +866,24 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     *  Returns or resolves to the address for %%address%%, resolving ENS
-     *  names and [[Addressable]] objects and returning if already an
-     *  address.
+     *  Returns or resolves to the address for `address`, resolving ENS
+     *  names and {@link Addressable | **Addressable**} objects and 
+     *  returning if already an address.
+     * 
+     *  @param {AddressLike} address - The address to normalize.
+     *  @returns {string | Promise<string>} The normalized address.
      */
     _getAddress(address: AddressLike): string | Promise<string> {
         return resolveAddress(address);
     }
 
     /**
-     *  Returns or resolves to a valid block tag for %%blockTag%%, resolving
+     *  Returns or resolves to a valid block tag for `blockTag`, resolving
      *  negative values and returning if already a valid block tag.
+     * 
+     *  @param {string} [shard] - The shard to use for the block tag.
+     *  @param {BlockTag} [blockTag] - The block tag to normalize.
+     *  @returns {string | Promise<string>} A promise that resolves to a valid block tag.
      */
     _getBlockTag(shard?: string, blockTag?: BlockTag): string | Promise<string> {
         if (blockTag == null) { return "latest"; }
@@ -837,9 +918,12 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     *  Returns or resolves to a filter for %%filter%%, resolving any ENS
-     *  names or [[Addressable]] object and returning if already a valid
-     *  filter.
+     *  Returns or resolves to a filter for `filter`, resolving any ENS
+     *  names or {@link Addressable | **Addressable**} object and 
+     *  returning if already a valid filter.
+     * 
+     *  @param {Filter | FilterByBlockHash} filter - The filter to normalize.
+     *  @returns {PerformActionFilter | Promise<PerformActionFilter>} A promise that resolves to a valid filter.
      */
     _getFilter(filter: Filter | FilterByBlockHash): PerformActionFilter | Promise<PerformActionFilter> {
 
@@ -914,9 +998,12 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     *  Returns or resovles to a transaction for %%request%%, resolving
-     *  any ENS names or [[Addressable]] and returning if already a valid
-     *  transaction.
+     *  Returns or resovles to a transaction for `request`, resolving
+     *  any ENS names or {@link Addressable | **Addressable**} and 
+     *  returning if already a valid transaction.
+     * 
+     *  @param {PerformActionTransaction} _request - The transaction to normalize.
+     *  @returns {PerformActionTransaction | Promise<PerformActionTransaction>} A promise that resolves to a valid transaction.
      */
     _getTransactionRequest(_request: TransactionRequest): PerformActionTransaction | Promise<PerformActionTransaction> {
         const request = <PerformActionTransaction>copyRequest(_request);
@@ -1308,7 +1395,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     *  Clear a timer created using the [[_setTimeout]] method.
+     *  Clear a timer created using the {@link AbstractProvider._setTimeout | **_setTimeout**} method.
+     * 
+     *  @param {number} timerId - The ID of the timer to clear.
      */
     _clearTimeout(timerId: number): void {
         const timer = this.#timers.get(timerId);
@@ -1318,12 +1407,16 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     *  Create a timer that will execute %%func%% after at least %%timeout%%
-     *  (in ms). If %%timeout%% is unspecified, then %%func%% will execute
+     *  Create a timer that will execute `func` after at least `timeout`
+     *  (in ms). If `timeout` is unspecified, then `func` will execute
      *  in the next event loop.
      *
-     *  [Pausing](AbstractProvider-paused) the provider will pause any
+     *  {@link AbstractProvider.pause | **Pausing**} the provider will pause any
      *  associated timers.
+     * 
+     *  @param {() => void} _func - The function to execute.
+     *  @param {number} [timeout] - The time to wait before executing `func`.
+     *  @returns {number} The ID of the timer.
      */
     _setTimeout(_func: () => void, timeout?: number): number {
         if (timeout == null) { timeout = 0; }
@@ -1344,7 +1437,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     *  Perform %%func%% on each subscriber.
+     *  Perform `func` on each subscriber.
+     * 
+     *  @param {(s: Subscriber) => void} func - The function to perform.
      */
     _forEachSubscriber(func: (s: Subscriber) => void): void {
         for (const sub of this.#subs.values()) {
@@ -1355,6 +1450,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     /**
      *  Sub-classes may override this to customize subscription
      *  implementations.
+     *  
+     *  @param {Subscription} sub - The subscription to get the subscriber for.
      */
     _getSubscriber(sub: Subscription): Subscriber {
         switch (sub.type) {
@@ -1368,13 +1465,17 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     *  If a [[Subscriber]] fails and needs to replace itself, this
-     *  method may be used.
+     *  If a {@link Subscriber | **Subscriber**} fails and needs to replace 
+     *  itself, this method may be used.
      *
      *  For example, this is used for providers when using the
-     *  ``eth_getFilterChanges`` method, which can return null if state
+     *  `quai_getFilterChanges` method, which can return null if state
      *  filters are not supported by the backend, allowing the Subscriber
-     *  to swap in a [[PollingEventSubscriber]].
+     *  to swap in a `PollingEventSubscriber`.
+     *  @TODO PollingEventSubscriber is not longer exported, replace this link or 
+     * 
+     *  @param {Subscriber} oldSub - The subscriber to replace.
+     *  @param {Subscriber} newSub - The new subscriber.
      */
     _recoverSubscriber(oldSub: Subscriber, newSub: Subscriber): void {
         for (const sub of this.#subs.values()) {
@@ -1531,7 +1632,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     *  If this provider has been destroyed using the [[destroy]] method.
+     *  If this provider has been destroyed using the {@link AbstractProvider.destroy | **destroy**} method.
      *
      *  Once destroyed, all resources are reclaimed, internal event loops
      *  and timers are cleaned up and no further requests may be sent to
@@ -1545,7 +1646,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *  Sub-classes may use this to shutdown any sockets or release their
      *  resources and reject any pending requests.
      *
-     *  Sub-classes **must** call ``super.destroy()``.
+     *  Sub-classes **must** call `super.destroy()`.
      */
     destroy(): void {
         // Stop all listeners
@@ -1566,9 +1667,11 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *  not make any requests to the network, but that is up to sub-classes
      *  to manage.
      *
-     *  Setting ``paused = true`` is identical to calling ``.pause(false)``,
+     *  Setting `paused = true` is identical to calling `.pause(false)`,
      *  which will buffer any events that occur while paused until the
      *  provider is unpaused.
+     * 
+     *  @returns {boolean} Whether the provider is paused.
      */
     get paused(): boolean { return (this.#pausedState != null); }
     set paused(pause: boolean) {
@@ -1582,9 +1685,11 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     *  Pause the provider. If %%dropWhilePaused%%, any events that occur
+     *  Pause the provider. If `dropWhilePaused`, any events that occur
      *  while paused are dropped, otherwise all events will be emitted once
      *  the provider is unpaused.
+     * 
+     *  @param {boolean} [dropWhilePaused] - Whether to drop events while paused.
      */
     pause(dropWhilePaused?: boolean): void {
         this.#lastBlockNumber = -1;

@@ -8,7 +8,7 @@ import {
 import type { BigNumberish, BytesLike } from "../../utils/index.js";
 
 /**
- * @_ignore:
+ *  @ignore
  */
 export const WordSize: number = 32;
 const Padding = new Uint8Array(WordSize);
@@ -26,11 +26,11 @@ function throwError(name: string, error: Error): never {
 }
 
 /**
- *  A [[Result]] is a sub-class of Array, which allows accessing any
+ *  A {@link Result | **Result**} is a sub-class of Array, which allows accessing any
  *  of its values either positionally by its index or, if keys are
  *  provided by its name.
  *
- *  @_docloc: api/abi
+ *  @category Application Binary Interface
  */
 export class Result extends Array<any> {
     readonly #names: ReadonlyArray<null | string>;
@@ -166,7 +166,7 @@ export class Result extends Array<any> {
     }
 
     /**
-     *  @_ignore
+     *  @ignore
      */
     slice(start?: number | undefined, end?: number | undefined): Result {
         if (start == null) { start = 0; }
@@ -192,7 +192,7 @@ export class Result extends Array<any> {
     }
 
     /**
-     *  @_ignore
+     *  @ignore
      */
     filter(callback: (el: any, index: number, array: Result) => boolean, thisArg?: any): Result {
         const result: Array<any> = [ ], names: Array<null | string> = [ ];
@@ -212,7 +212,7 @@ export class Result extends Array<any> {
     }
 
     /**
-     *  @_ignore
+     *  @ignore
      */
     map<T extends any = any>(callback: (el: any, index: number, array: Result) => T, thisArg?: any): Array<T> {
         const result: Array<T> = [ ];
@@ -230,12 +230,15 @@ export class Result extends Array<any> {
 
 
     /**
-     *  Returns the value for %%name%%.
+     *  Returns the value for `name`.
      *
      *  Since it is possible to have a key whose name conflicts with
-     *  a method on a [[Result]] or its superclass Array, or any
+     *  a method on a {@link Result | **Result**} or its superclass Array, or any
      *  JavaScript keyword, this ensures all named values are still
      *  accessible by name.
+     * 
+     *  @param {string} name - The name of the value to retrieve.
+     *  @returns The value for `name`.
      */
     getValue(name: string): any {
         const index = this.#names.indexOf(name);
@@ -251,8 +254,12 @@ export class Result extends Array<any> {
     }
 
     /**
-     *  Creates a new [[Result]] for %%items%% with each entry
-     *  also accessible by its corresponding name in %%keys%%.
+     *  Creates a new {@link Result | **Result**} for `items` with each entry
+     *  also accessible by its corresponding name in `keys`.
+     * 
+     *  @param {Array<any>} items - The items to include in the Result.
+     *  @param {Array<null | string>} [keys] - The names for each item in `items`.
+     *  @returns The new Result.
      */
     static fromItems(items: Array<any>, keys?: Array<null | string>): Result {
         return new Result(_guard, items, keys);
@@ -260,17 +267,20 @@ export class Result extends Array<any> {
 }
 
 /**
- *  Returns all errors found in a [[Result]].
+ *  Returns all errors found in a {@link Result | **Result**}.
  *
- *  Since certain errors encountered when creating a [[Result]] do
+ *  Since certain errors encountered when creating a {@link Result | **Result**} do
  *  not impact the ability to continue parsing data, they are
  *  deferred until they are actually accessed. Hence a faulty string
  *  in an Event that is never used does not impact the program flow.
  *
  *  However, sometimes it may be useful to access, identify or
- *  validate correctness of a [[Result]].
+ *  validate correctness of a {@link Result | **Result**}.
+ * 
+ *  @param {Result} result - The Result to check for errors.
+ *  @returns An array of objects with the path to the error and the error itself.
  *
- *  @_docloc api/abi
+ *  @category Application Binary Interface
  */
 export function checkResultErrors(result: Result): Array<{ path: Array<string | number>, error: Error }> {
     // Find the first error (if any)
@@ -309,7 +319,7 @@ function getValue(value: BigNumberish): Uint8Array {
 }
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export abstract class Coder {
 
@@ -347,7 +357,7 @@ export abstract class Coder {
 }
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export class Writer {
     // An array of WordSize lengthed objects to concatenation
@@ -402,7 +412,7 @@ export class Writer {
 }
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export class Reader {
     // Allows incomplete unpadded data to be read; otherwise an error

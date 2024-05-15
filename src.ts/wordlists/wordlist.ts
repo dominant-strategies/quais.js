@@ -2,8 +2,10 @@ import { defineProperties } from "../utils/index.js";
 
 /**
  *  A Wordlist represents a collection of language-specific
- *  words used to encode and devoce [[link-bip-39]] encoded data
+ *  words used to encode and devoce [BIP-39](https://en.bitcoin.it/wiki/BIP_0039) encoded data
  *  by mapping words to 11-bit values and vice versa.
+ * 
+ *  @category Wordlists
  */
 export abstract class Wordlist {
     locale!: string;
@@ -24,10 +26,13 @@ export abstract class Wordlist {
 
     /**
      *  Sub-classes may override this to provide a language-specific
-     *  method for spliting %%phrase%% into individual words.
+     *  method for spliting `phrase` into individual words.
      *
-     *  By default, %%phrase%% is split using any sequences of
-     *  white-space as defined by regular expressions (i.e. ``/\s+/``).
+     *  By default, `phrase` is split using any sequences of
+     *  white-space as defined by regular expressions (i.e. `/\s+/`).
+     * 
+     *  @param {string} phrase - The phrase to split.
+     *  @returns {Array<string>} The split words in the phrase.
      */
     split(phrase: string): Array<string> {
         return phrase.toLowerCase().split(/\s+/g)
@@ -35,9 +40,12 @@ export abstract class Wordlist {
 
     /**
      *  Sub-classes may override this to provider a language-specific
-     *  method for joining %%words%% into a phrase.
+     *  method for joining `words` into a phrase.
      *
-     *  By default, %%words%% are joined by a single space.
+     *  By default, `words` are joined by a single space.
+     * 
+     *  @param {Array<string>} words - The words to join.
+     *  @returns {string} The joined phrase.
      */
     join(words: Array<string>): string {
         return words.join(" ");

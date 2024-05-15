@@ -12,9 +12,11 @@ import {QuaiTransactionLike} from "../transaction/quai-transaction";
 
 
 /**
- *  A **NonceManager** wraps another [[Signer]] and automatically manages
+ *  A **NonceManager** wraps another [Signer](../classes/Signer) and automatically manages
  *  the nonce, ensuring serialized and sequential nonces are used during
  *  transaction.
+ * 
+ *  @category Providers
  */
 export class NonceManager extends AbstractSigner {
     /**
@@ -26,7 +28,7 @@ export class NonceManager extends AbstractSigner {
     #delta: number;
 
     /**
-     *  Creates a new **NonceManager** to manage %%signer%%.
+     *  Creates a new **NonceManager** to manage `signer`.
      */
     constructor(signer: Signer) {
         super(signer.provider);

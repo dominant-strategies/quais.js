@@ -27,7 +27,7 @@ const _guard = { };
 /**
  *  A SignatureLike
  *
- *  @_docloc: api/crypto:Signing
+ *  @category Crypto
  */
 export type SignatureLike = Signature | string | {
     r: string;
@@ -57,7 +57,7 @@ function toUint256(value: BigNumberish): string {
  *  A Signature  @TODO
  *
  *
- *  @_docloc: api/crypto:Signing
+ *  @category Crypto
  */
 export class Signature {
     #r: string;
@@ -66,10 +66,10 @@ export class Signature {
     #networkV: null | bigint;
 
     /**
-     *  The ``r`` value for a signautre.
+     *  The `r` value for a signautre.
      *
-     *  This represents the ``x`` coordinate of a "reference" or
-     *  challenge point, from which the ``y`` can be computed.
+     *  This represents the `x` coordinate of a "reference" or
+     *  challenge point, from which the `y` can be computed.
      */
     get r(): string { return this.#r; }
     set r(value: BytesLike) {
@@ -78,7 +78,7 @@ export class Signature {
     }
 
     /**
-     *  The ``s`` value for a signature.
+     *  The `s` value for a signature.
      */
     get s(): string { return this.#s; }
     set s(_value: BytesLike) {
@@ -89,13 +89,13 @@ export class Signature {
     }
 
     /**
-     *  The ``v`` value for a signature.
+     *  The `v` value for a signature.
      *
-     *  Since a given ``x`` value for ``r`` has two possible values for
-     *  its correspondin ``y``, the ``v`` indicates which of the two ``y``
+     *  Since a given `x` value for `r` has two possible values for
+     *  its correspondin `y`, the `v` indicates which of the two `y`
      *  values to use.
      *
-     *  It is normalized to the values ``27`` or ``28`` for legacy
+     *  It is normalized to the values `27` or `28` for legacy
      *  purposes.
      */
     get v(): 27 | 28 { return this.#v; }
@@ -106,14 +106,15 @@ export class Signature {
     }
 
     /**
-     *  The EIP-155 ``v`` for legacy transactions. For non-legacy
-     *  transactions, this value is ``null``.
+     *  The EIP-155 `v` for legacy transactions. For non-legacy
+     *  transactions, this value is `null`.
+     * 
      */
     get networkV(): null | bigint { return this.#networkV; }
 
     /**
      *  The chain ID for EIP-155 legacy transactions. For non-legacy
-     *  transactions, this value is ``null``.
+     *  transactions, this value is `null`.
      */
     get legacyChainId(): null | bigint {
         const v = this.networkV;
@@ -122,17 +123,18 @@ export class Signature {
     }
 
     /**
-     *  The ``yParity`` for the signature.
+     *  The `yParity` for the signature.
      *
-     *  See ``v`` for more details on how this value is used.
+     *  See `v` for more details on how this value is used.
      */
     get yParity(): 0 | 1 {
         return (this.v === 27) ? 0: 1;
     }
 
     /**
-     *  The [[link-eip-2098]] compact representation of the ``yParity``
-     *  and ``s`` compacted into a single ``bytes32``.
+     *  The [EIP-2098](https://eips.ethereum.org/EIPS/eip-2098)
+     *  compact representation of the `yParity` and `s` compacted 
+     *  into a single `bytes32`.
      */
     get yParityAndS(): string {
         // The EIP-2098 compact representation
@@ -142,7 +144,7 @@ export class Signature {
     }
 
     /**
-     *  The [[link-eip-2098]] compact representation.
+     *  The [EIP-2098](https://eips.ethereum.org/EIPS/eip-2098) compact representation.
      */
     get compactSerialized(): string {
         return concat([ this.r, this.yParityAndS ]);
@@ -171,7 +173,7 @@ export class Signature {
     }
 
     /**
-     *  Returns a new identical [[Signature]].
+     *  Returns a new identical {@link Signature | **Signature**}.
      */
     clone(): Signature {
         const clone = new Signature(_guard, this.r, this.s, this.v);
@@ -180,7 +182,7 @@ export class Signature {
     }
 
     /**
-     *  Returns a representation that is compatible with ``JSON.stringify``.
+     *  Returns a representation that is compatible with `JSON.stringify`.
      */
     toJSON(): any {
         const networkV = this.networkV;
@@ -192,14 +194,19 @@ export class Signature {
     }
 
     /**
-     *  Compute the chain ID from the ``v`` in a legacy EIP-155 transactions.
+     *  Compute the chain ID from the `v` in a legacy EIP-155 transactions.
      *
-     *  @example:
+     *  @example
+     *  ```ts
      *    Signature.getChainId(45)
      *    //_result:
      *
      *    Signature.getChainId(46)
      *    //_result:
+     *  ```
+     * 
+     *  @param {BigNumberish} v - The `v` value from the signature.
+     *  @returns {bigint} The chain ID.
      */
     static getChainId(v: BigNumberish): bigint {
         const bv = getBigInt(v, "v");
@@ -214,28 +221,34 @@ export class Signature {
     }
 
     /**
-     *  Compute the ``v`` for a chain ID for a legacy EIP-155 transactions.
+     *  Compute the `v` for a chain ID for a legacy EIP-155 transactions.
      *
-     *  Legacy transactions which use [[link-eip-155]] hijack the ``v``
-     *  property to include the chain ID.
+     *  Legacy transactions which use [EIP-155](https://eips.ethereum.org/EIPS/eip-155) 
+     *  hijack the `v` property to include the chain ID.
      *
-     *  @example:
+     *  @example
+     *  ```ts
      *    Signature.getChainIdV(5, 27)
      *    //_result:
      *
      *    Signature.getChainIdV(5, 28)
      *    //_result:
-     *
+     *  ```
+     * 
+     *  @param {BigNumberish} chainId - The chain ID.
+     *  @param {27 | 28} v - The `v` value.
+     *  @returns {bigint} The `v` value.
      */
     static getChainIdV(chainId: BigNumberish, v: 27 | 28): bigint {
         return (getBigInt(chainId) * BN_2) + BigInt(35 + v - 27);
     }
 
     /**
-     *  Compute the normalized legacy transaction ``v`` from a ``yParirty``,
-     *  a legacy transaction ``v`` or a legacy [[link-eip-155]] transaction.
+     *  Compute the normalized legacy transaction `v` from a `yParirty`,
+     *  a legacy transaction `v` or a legacy [EIP-155](https://eips.ethereum.org/EIPS/eip-155) transaction.
      *
-     *  @example:
+     *  @example
+     *  ```ts
      *    // The values 0 and 1 imply v is actually yParity
      *    Signature.getNormalizedV(0)
      *    //_result:
@@ -251,6 +264,11 @@ export class Signature {
      *    // Invalid values throw
      *    Signature.getNormalizedV(5)
      *    //_error:
+     *  ```
+     * 
+     *  @param {BigNumberish} v - The `v` value.
+     *  @returns {27 | 28} The normalized `v` value.
+     *  @throws {Error} Thrown if the `v` is invalid.
      */
     static getNormalizedV(v: BigNumberish): 27 | 28 {
         const bv = getBigInt(v);
@@ -265,12 +283,15 @@ export class Signature {
     }
 
     /**
-     *  Creates a new [[Signature]].
+     *  Creates a new {@link Signature | **Signature**}.
      *
-     *  If no %%sig%% is provided, a new [[Signature]] is created
-     *  with default values.
+     *  If no `sig` is provided, a new {@link Signature | **Signature**} 
+     *  is created with default values.
      *
-     *  If %%sig%% is a string, it is parsed.
+     *  If `sig` is a string, it is parsed.
+     * 
+     *  @param {SignatureLike} [sig] - The signature to create.
+     *  @returns {Signature} The new signature.
      */
     static from(sig?: SignatureLike): Signature {
         function assertError(check: unknown, message: string): asserts check {

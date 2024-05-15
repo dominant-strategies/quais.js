@@ -1,7 +1,7 @@
 /**
  *  About provider formatting?
  *
- *  @_section: api/providers/formatting:Formatting  [provider-formatting]
+ *  @section api/providers/formatting:Formatting  [provider-formatting]
  */
 
 import type { Signature } from "../crypto/index.js";
@@ -13,6 +13,8 @@ import type {AccessList, TxInput, TxOutput} from "../transaction/index.js";
 /**
  *  a **BlockParams** encodes the minimal required properties for a
  *  formatted block.
+ * 
+ *  @category Providers
  */
 export interface BlockParams {
     /**
@@ -27,7 +29,7 @@ export interface BlockParams {
 
     /**
      *  The hash of the previous block in the blockchain. The genesis block
-     *  has the parentHash of the [[ZeroHash]].
+     *  has the parentHash of the [ZeroHash](../variables/ZeroHash).
      */
     parentHash: Array<string> | string;
 
@@ -64,7 +66,7 @@ export interface BlockParams {
     extraData: string;
 
     /**
-     *  The protocol-defined base fee per gas in an [[link-eip-1559]]
+     *  The protocol-defined base fee per gas in an [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559)
      *  block.
      */
     baseFeePerGas: null | bigint;
@@ -118,6 +120,8 @@ export interface BlockParams {
 /**
  *  a **LogParams** encodes the minimal required properties for a
  *  formatted log.
+ * 
+ *  @category Providers
  */
 export interface LogParams {
     /**
@@ -173,31 +177,89 @@ export interface LogParams {
 //////////////////////
 //Etx within a transaction receipt for and internal to external transaction
 
+/**
+ *  @TODO Write documentation for this interface.
+ * 
+ *  @category Providers
+ */
 export interface EtxParams {
+    /**
+     *  @TODO Write documentation for this property.
+     */
     type: number;
+    
+    /**
+     * @TODO Write documentation for this property.
+     */
     nonce: number;
+    
+    /**
+     * @TODO Write documentation for this property.
+     */
     gasPrice: null | bigint;
+    
+    /**
+     * @TODO Write documentation for this property.
+     */
     maxPriorityFeePerGas: bigint;
+    
+    /**
+     * @TODO Write documentation for this property.
+     */
     maxFeePerGas: bigint;
+    
+    /**
+     * @TODO Write documentation for this property.
+     */
     gas: bigint;
+    
+    /**
+     * @TODO Write documentation for this property.
+     */
     value: bigint;
+    
+    /**
+     * @TODO Write documentation for this property.
+     */
     input: string;
+    
+    /**
+     * @TODO Write documentation for this property.
+     */
     to: null | string;
+    
+    /**
+     * @TODO Write documentation for this property.
+     */
     accessList: null | AccessList;
+    
+    /**
+     * @TODO Write documentation for this property.
+     */
     chainId: null | bigint;
+    
+    /**
+     * @TODO Write documentation for this property.
+     */
     from: null | string;
+    
+    /**
+     * @TODO Write documentation for this property.
+     */
     hash: string;
 }
-// Transaction Receipt
 
+// Transaction Receipt
 /**
  *  a **TransactionReceiptParams** encodes the minimal required properties
  *  for a formatted transaction receipt.
+ * 
+ *  @category Providers
  */
 export interface TransactionReceiptParams {
     /**
      *  The target of the transaction. If null, the transaction was trying
-     *  to deploy a transaction with the ``data`` as the initi=code.
+     *  to deploy a transaction with the `data` as the initi=code.
      */
     to: null | string;
 
@@ -207,9 +269,10 @@ export interface TransactionReceiptParams {
     from: string;
 
     /**
-     *  If the transaction was directly deploying a contract, the [[to]]
-     *  will be null, the ``data`` will be initcode and if successful, this
-     *  will be the address of the contract deployed.
+     *  If the transaction was directly deploying a contract, the
+     *  {@link TransactionReceiptParams.to | **to**} will be null, 
+     *  the `data` will be initcode and if successful, this will 
+     *  be the address of the contract deployed.
      */
     contractAddress: null | string;
 
@@ -266,14 +329,14 @@ export interface TransactionReceiptParams {
     effectiveGasPrice?: null | bigint;
 
     /**
-     *  The [[link-eip-2718]] envelope type.
+     *  The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) envelope type.
      */
     type: number;
     //byzantium: boolean;
 
     /**
-     *  The status of the transaction execution. If ``1`` then the
-     *  the transaction returned success, if ``0`` then the transaction
+     *  The status of the transaction execution. If `1` then the
+     *  the transaction returned success, if `0` then the transaction
      *  was reverted. For pre-byzantium blocks, this is usually null, but
      *  some nodes may have backfilled this data.
      */
@@ -284,7 +347,11 @@ export interface TransactionReceiptParams {
 }
 
 
-
+/**
+ *  @TODO Write documentation for this type.
+ * 
+ *  @category Providers
+ */
 export type TransactionResponseParams = QuaiTransactionResponseParams | QiTransactionResponseParams;
 
 //////////////////////
@@ -293,6 +360,8 @@ export type TransactionResponseParams = QuaiTransactionResponseParams | QiTransa
 /**
  *  a **TransactionResponseParams** encodes the minimal required properties
  *  for a formatted transaction response.
+ * 
+ *  @category Providers
  */
 export interface QuaiTransactionResponseParams {
     /**
@@ -319,7 +388,7 @@ export interface QuaiTransactionResponseParams {
     type: number;
 
     /**
-     *  The target of the transaction. If ``null``, the ``data`` is initcode
+     *  The target of the transaction. If `null`, the `data` is initcode
      *  and this transaction is a deployment transaction.
      */
     to: null | string;
@@ -340,14 +409,14 @@ export interface QuaiTransactionResponseParams {
     gasLimit: bigint;
 
     /**
-     *  For [[link-eip-1559]] transactions, this is the maximum priority
-     *  fee to allow a producer to claim.
+     *  For [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) transactions,
+     *  this is the maximum priority fee to allow a producer to claim.
      */
     maxPriorityFeePerGas: null | bigint;
 
     /**
-     *  For [[link-eip-1559]] transactions, this is the maximum fee that
-     *  will be paid.
+     *  For [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) transactions, 
+     *  this is the maximum fee that will be paid.
      */
     maxFeePerGas: null | bigint;
 
@@ -377,6 +446,12 @@ export interface QuaiTransactionResponseParams {
     accessList: null | AccessList;
 };
 
+
+/**
+ *  @TODO Write documentation for this interface.
+ * 
+ *  @category Providers
+ */
 export interface QiTransactionResponseParams {
     /**
      *  The block number of the block that included this transaction.
@@ -398,7 +473,9 @@ export interface QiTransactionResponseParams {
      */
     index: bigint;
 
-
+    /**
+     *  @TODO Write documentation for this property.
+     */
     type: number;
 
     /**

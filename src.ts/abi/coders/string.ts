@@ -7,7 +7,7 @@ import type { Reader, Writer } from "./abstract-coder.js";
 
 
 /**
- *  @_ignore
+ *  @ignore
  */
 export class StringCoder extends DynamicBytesCoder {
 

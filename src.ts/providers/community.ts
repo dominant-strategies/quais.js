@@ -10,6 +10,8 @@
  *  Providers which offer community credentials should extend this
  *  to notify any interested consumers whether community credentials
  *  are in-use.
+ * 
+ *  @category Providers
  */
 export interface CommunityResourcable {
     /**
@@ -29,6 +31,10 @@ const shown: Set<string> = new Set();
  *  credentials.
  *
  *  The notification will only occur once per service.
+ * 
+ *  @param {string} service - The name of the service.
+ * 
+ *  @category Providers
  */
 export function showThrottleMessage(service: string): void {
     if (shown.has(service)) { return; }

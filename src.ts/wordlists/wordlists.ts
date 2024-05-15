@@ -13,16 +13,19 @@ import type { Wordlist } from "./wordlist.js";
 
 /**
  *  The available Wordlists by their
- *  [ISO 639-1 Language Code](link-wiki-iso639).
+ *  [ISO 639-1 Language Code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes)
+.
  *
- *  (**i.e.** [cz](LangCz), [en](LangEn), [es](LangEs), [fr](LangFr),
- *  [ja](LangJa), [ko](LangKo), [it](LangIt), [pt](LangPt),
- *  [zh_cn](LangZh), [zh_tw](LangZh))
+ *  (**i.e.** {@link LangCz | cz}, {@link LangEn | en}, {@link LangEs | es}, {@link LangFr | fr},
+ *  {@link LangJa | ja}, {@link LangKo | ko}, {@link LangIt | it}, {@link LangPt | pt},
+ *  {@link LangZh | zh_cn}, {@link LangZh | zh_tw})
  *
- *  The dist files (in the ``/dist`` folder) have had all languages
+ *  The dist files (in the `/dist` folder) have had all languages
  *  except English stripped out, which reduces the library size by
  *  about 80kb. If required, they are available by importing the
- *  included ``wordlists-extra.min.js`` file.
+ *  included `wordlists-extra.min.js` file.
+ * 
+ *  @category Wordlists
  */
 export const wordlists: Record<string, Wordlist> = {
   cz: LangCz.wordlist(),

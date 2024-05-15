@@ -17,10 +17,14 @@ import {getAddress} from "../address";
 import {formatNumber, handleNumber} from "../providers/format";
 import { ProtoTransaction} from "./abstract-transaction";
 
+/**
+ *  @TODO write documentation for this interface.
+ * 
+ *  @category Transaction
+ */
 export interface QuaiTransactionLike extends TransactionLike{
-
     /**
-     *  The recipient address or ``null`` for an ``init`` transaction.
+     *  The recipient address or `null` for an `init` transaction.
      */
     to?: null | string;
 
@@ -85,6 +89,11 @@ export function _parseSignature(fields: Array<string>): Signature {
     return Signature.from({ r, s, yParity });
 }
 
+/**
+ *  @TODO write documentation for this class.
+ * 
+ *  @category Transaction
+ */
 export class QuaiTransaction extends AbstractTransaction<Signature> implements QuaiTransactionLike {
     #to: null | string;
     #data: string;
@@ -98,8 +107,8 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     from: string;
 
     /**
-     *  The ``to`` address for the transaction or ``null`` if the
-     *  transaction is an ``init`` transaction.
+     *  The `to` address for the transaction or `null` if the
+     *  transaction is an `init` transaction.
      */
     get to(): null | string { return this.#to; }
     set to(value: null | string) {
@@ -163,7 +172,7 @@ get originShard(): string | undefined {
      *  The gas price.
      *
      *  On legacy networks this defines the fee that will be paid. On
-     *  EIP-1559 networks, this should be ``null``.
+     *  EIP-1559 networks, this should be `null`.
      */
     get gasPrice(): null | bigint {
         const value = this.#gasPrice;
@@ -175,7 +184,7 @@ get originShard(): string | undefined {
 
     /**
      *  The maximum priority fee per unit of gas to pay. On legacy
-     *  networks this should be ``null``.
+     *  networks this should be `null`.
      */
     get maxPriorityFeePerGas(): null | bigint {
         const value = this.#maxPriorityFeePerGas;
@@ -190,7 +199,7 @@ get originShard(): string | undefined {
 
     /**
      *  The maximum total fee per unit of gas to pay. On legacy
-     *  networks this should be ``null``.
+     *  networks this should be `null`.
      */
     get maxFeePerGas(): null | bigint {
         const value = this.#maxFeePerGas;
@@ -204,7 +213,7 @@ get originShard(): string | undefined {
     }
 
     /**
-     *  The transaction data. For ``init`` transactions this is the
+     *  The transaction data. For `init` transactions this is the
      *  deployment code.
      */
     get data(): string { return this.#data; }
@@ -256,6 +265,8 @@ get originShard(): string | undefined {
     /**
      *  Validates the explicit properties and returns a list of compatible
      *  transaction types.
+     * 
+     *  @returns {Array<number>} The compatible transaction types.
      */
     inferTypes(): Array<number> {
 
@@ -284,6 +295,8 @@ get originShard(): string | undefined {
 
     /**
      *  Create a copy of this transaciton.
+     * 
+     *  @returns {QuaiTransaction} The cloned transaction.
      */
     clone(): QuaiTransaction {
         return QuaiTransaction.from(this);
@@ -291,6 +304,8 @@ get originShard(): string | undefined {
 
     /**
      *  Return a JSON-friendly object.
+     * 
+     *  @returns {QuaiTransactionLike} The JSON-friendly object.
      */
     toJSON(): QuaiTransactionLike {
         const s = (v: null | bigint) => {
@@ -319,6 +334,8 @@ get originShard(): string | undefined {
 
     /**
      *  Return a protobuf-friendly JSON object.
+     * 
+     *  @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
     toProtobuf(): ProtoTransaction {
         const protoTx: ProtoTransaction = {
@@ -345,6 +362,9 @@ get originShard(): string | undefined {
     /**
      *  Create a **Transaction** from a serialized transaction or a
      *  Transaction-like object.
+     * 
+     *  @param {string | QuaiTransactionLike} tx - The transaction to decode.
+     *  @returns {QuaiTransaction} The decoded transaction.
      */
     static from(tx: string | QuaiTransactionLike): QuaiTransaction {
         if (typeof (tx) === "string") {
@@ -379,6 +399,10 @@ get originShard(): string | undefined {
 
     /**
      * Create a **Transaction** from a ProtoTransaction object.
+     * 
+     *  @param {ProtoTransaction} protoTx - The transaction to decode.
+     *  @param {Uint8Array} [payload] - The serialized transaction.
+     *  @returns {QuaiTransaction} The decoded transaction.
      */
     static fromProto(protoTx: ProtoTransaction): QuaiTransaction {
 

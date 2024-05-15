@@ -4,22 +4,26 @@ import { UTXO, denominate } from "./utxo.js";
 
 
 /**
- * The FewestCoinSelector class provides a coin selection algorithm that selects
- * the fewest UTXOs required to meet the target amount. This algorithm is useful
- * for minimizing the size of the transaction and the fees associated with it.
+ *  The FewestCoinSelector class provides a coin selection algorithm that selects
+ *  the fewest UTXOs required to meet the target amount. This algorithm is useful
+ *  for minimizing the size of the transaction and the fees associated with it.
  * 
- * This class is a sub-class of [[AbstractCoinSelector]] and implements the
- * [[performSelection]] method to provide the actual coin selection logic.
+ *  This class is a sub-class of {@link AbstractCoinSelector | **AbstractCoinSelector** } and implements the
+ *  {@link AbstractCoinSelector.performSelection | **performSelection** } method to provide the actual coin selection logic.
+ * 
+ *  @category Transaction
  */
 export class FewestCoinSelector extends AbstractCoinSelector {
 
     /**
-     * The largest first coin selection algorithm.
+     *  The largest first coin selection algorithm.
      * 
-     * This algorithm selects the largest UTXOs first, and continues to select UTXOs until the
-     * target amount is reached. If the total value of the selected UTXOs is greater than the
-     * target amount, the remaining value is returned as a change output.
-     * @param target The target amount to select UTXOs for.
+     *  This algorithm selects the largest UTXOs first, and continues to select UTXOs until the
+     *  target amount is reached. If the total value of the selected UTXOs is greater than the
+     *  target amount, the remaining value is returned as a change output.
+     *  
+     *  @param {SpendTarget} target - The target amount to spend.
+     *  @returns {SelectedCoinsResult} The selected UTXOs and change outputs.
      */
     performSelection(target: SpendTarget): SelectedCoinsResult {
         this.validateTarget(target);
