@@ -8,7 +8,7 @@ import type {
 
 import { hexlify, randomBytes, Wallet } from "../index.js";
 
-import type { HDNodeWallet } from "../index.js";
+import type { QuaiHDWallet } from "../index.js";
 
 
 describe("Test Private Key Wallet", function() {
@@ -61,11 +61,11 @@ describe("Test Wallet Encryption", function() {
     const password = "foobar";
 
     // Loop:
-    //  1 : random wallet (uses HDNodeWallet under the hood)
+    //  1 : random wallet (uses QuaiHDWallet under the hood)
     //  2 : Wallet using private key (uses Wallet explicitly)
 
     for (let i = 0; i < 2; i++) {
-        let wallet: Wallet | HDNodeWallet = Wallet.createRandom("m/44'/994'/0'/0");
+        let wallet: Wallet | QuaiHDWallet = Wallet.createRandom("m/44'/994'/0'/0");
 
         it("encrypts a random wallet: sync", function() {
             this.timeout(30000);

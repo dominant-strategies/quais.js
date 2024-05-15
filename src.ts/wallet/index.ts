@@ -10,7 +10,7 @@
  *  The class most developers will want to use is [Wallet](../classes/Wallet), which
  *  can load a private key directly or from any common wallet format.
  *
- *  The [HDNodeWallet](../classes/HDNodeWallet) can be used when it is necessary to access
+ *  The [QuaiHDWallet](../classes/QuaiHDWallet) can be used when it is necessary to access
  *  low-level details of how an HD wallets are derived, exported
  *  or imported.
  *
@@ -23,9 +23,9 @@ export {
 
     getAccountPath, getIndexedAccountPath,
     quaiHDAccountPath, qiHDAccountPath, 
-    HDNodeWallet,
+    QuaiHDWallet,
     HDNodeVoidWallet,
-} from "./hdwallet.js";
+} from "./quai-hdwallet.js";
 
 export { isCrowdsaleJson, decryptCrowdsaleJson } from "./json-crowdsale.js";
 
@@ -45,6 +45,6 @@ export type {
     KeystoreAccount, EncryptOptions
 } from "./json-keystore.js"
 
-export { UTXOHDWallet } from "./utxohdwallet.js";
+export { QiHDWallet } from "./qi-hdwallet.js";
 
 export { nobleCrypto } from "./musig-crypto.js";

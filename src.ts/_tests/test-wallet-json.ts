@@ -11,7 +11,7 @@ import {
     decryptCrowdsaleJson, decryptKeystoreJson, decryptKeystoreJsonSync,
     encryptKeystoreJson, encryptKeystoreJsonSync,
     isCrowdsaleJson,
-    HDNodeWallet, Wallet
+    QuaiHDWallet, Wallet
 } from "../index.js";
 
 
@@ -70,14 +70,14 @@ describe("Tests JSON Wallet Formats", function() {
 
      it("tests encrypting wallet with mnemonic", function() {
          this.timeout(20000);
-         const wallet = HDNodeWallet.createRandom("m/44'/60'/0'/0/0");
+         const wallet = QuaiHDWallet.createRandom("m/44'/60'/0'/0/0");
          assert.ok(wallet.mnemonic, "mnemonic");
          const phrase = wallet.mnemonic.phrase;
          const json = wallet.encryptSync("foobar");
 
          const wallet2 = Wallet.fromEncryptedJsonSync(json, "foobar");
 
-         assert.ok(wallet2 instanceof HDNodeWallet && wallet2.mnemonic);
+         assert.ok(wallet2 instanceof QuaiHDWallet && wallet2.mnemonic);
          assert.equal(wallet2.mnemonic.phrase, phrase, "phrase");
 
          assert.equal(wallet2.address, wallet.address, "address");

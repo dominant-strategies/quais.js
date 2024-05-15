@@ -29,7 +29,7 @@ import { encodeBase58Check, zpad, HardenedBit, ser_I, derivePath, MasterSecret }
 const _guard = { };
 
 /**
- *  An **HDNodeWallet** is a [Signer](../interfaces/Signer) backed by the private key derived
+ *  An **QuaiHDWallet** is a [Signer](../interfaces/Signer) backed by the private key derived
  *  from an HD Node using the [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) stantard.
  *
  *  An HD Node forms a hierarchal structure with each HD Node having a
@@ -38,7 +38,7 @@ const _guard = { };
  * 
  *  @category Wallet
  */
-export class HDNodeWallet extends BaseWallet {
+export class QuaiHDWallet extends BaseWallet {
     /**
      *  The compressed public key.
      */
@@ -106,15 +106,15 @@ export class HDNodeWallet extends BaseWallet {
         this.#publicKey = signingKey.compressedPublicKey 
 
         const fingerprint = dataSlice(ripemd160(sha256(this.#publicKey)), 0, 4);
-        defineProperties<HDNodeWallet>(this, {
+        defineProperties<QuaiHDWallet>(this, {
             accountFingerprint, fingerprint,
             chainCode, path, index, depth
         });
-        defineProperties<HDNodeWallet>(this, { mnemonic });
+        defineProperties<QuaiHDWallet>(this, { mnemonic });
     }
 
-    connect(provider: null | Provider): HDNodeWallet {
-        return new HDNodeWallet(_guard, this.signingKey, this.accountFingerprint,
+    connect(provider: null | Provider): QuaiHDWallet {
+        return new QuaiHDWallet(_guard, this.signingKey, this.accountFingerprint,
             this.chainCode, this.path, this.index, this.depth, this.mnemonic, provider);
     }
 
@@ -221,9 +221,9 @@ export class HDNodeWallet extends BaseWallet {
      *  Return the child for `index`.
      * 
      *  @param {Numeric} _index - The index of the child to derive.
-     *  @returns {HDNodeWallet} The derived child HD Node.
+     *  @returns {QuaiHDWallet} The derived child HD Node.
      */
-    deriveChild(_index: Numeric): HDNodeWallet {
+    deriveChild(_index: Numeric): QuaiHDWallet {
         const index = getNumber(_index, "index");
         assertArgument(index <= 0xffffffff, "invalid index", "index", index);
 
@@ -248,7 +248,7 @@ export class HDNodeWallet extends BaseWallet {
         //BIP44 if we are at the account depth get that fingerprint, otherwise continue with the current one
         let newFingerprint = this.depth == 3 ? this.fingerprint : this.accountFingerprint;
 
-        return new HDNodeWallet(_guard, ki, newFingerprint, hexlify(IR),
+        return new QuaiHDWallet(_guard, ki, newFingerprint, hexlify(IR),
             path, index, newDepth, this.mnemonic, this.provider);
 
     }
@@ -257,17 +257,17 @@ export class HDNodeWallet extends BaseWallet {
      *  Return the HDNode for `path` from this node.
      * 
      *  @param {string} path - The path to derive.
-     *  @returns {HDNodeWallet} The derived HD Node.
+     *  @returns {QuaiHDWallet} The derived HD Node.
      */
-    derivePath(path: string): HDNodeWallet {
-        return derivePath<HDNodeWallet>(this, path);
+    derivePath(path: string): QuaiHDWallet {
+        return derivePath<QuaiHDWallet>(this, path);
     }
 
     setCoinType(): void {
         this.coinType = Number(this.path?.split("/")[2].replace("'", ""));
     }
 
-    static #fromSeed(_seed: BytesLike, mnemonic: null | Mnemonic): HDNodeWallet {
+    static #fromSeed(_seed: BytesLike, mnemonic: null | Mnemonic): QuaiHDWallet {
         assertArgument(isBytesLike(_seed), "invalid seed", "seed", "[REDACTED]");
 
         const seed = getBytes(_seed, "seed");
@@ -276,7 +276,7 @@ export class HDNodeWallet extends BaseWallet {
         const I = getBytes(computeHmac("sha512", MasterSecret, seed));
         const signingKey = new SigningKey(hexlify(I.slice(0, 32)));
 
-        const result = new HDNodeWallet(_guard, signingKey, "0x00000000", hexlify(I.slice(32)),
+        const result = new QuaiHDWallet(_guard, signingKey, "0x00000000", hexlify(I.slice(32)),
             "m", 0, 0, mnemonic, null);
         return result;
     }
@@ -286,12 +286,12 @@ export class HDNodeWallet extends BaseWallet {
      *
      *  If the `extendedKey` will either have a prefix or `xpub` or
      *  `xpriv`, returning a neutered HD Node ({@link HDNodeVoidWallet | **HDNodeVoidWallet**})
-     *  or full HD Node ({@link HDNodeWallet | **HDNodeWallet**}) respectively.
+     *  or full HD Node ({@link QuaiHDWallet | **QuaiHDWallet**}) respectively.
      * 
      *  @param {string} extendedKey - The extended key to create the HD Node from.
-     *  @returns {HDNodeWallet | HDNodeVoidWallet} The HD Node created from the extended key.
+     *  @returns {QuaiHDWallet | HDNodeVoidWallet} The HD Node created from the extended key.
      */
-    static fromExtendedKey(extendedKey: string): HDNodeWallet | HDNodeVoidWallet {
+    static fromExtendedKey(extendedKey: string): QuaiHDWallet | HDNodeVoidWallet {
         const bytes = toBeArray(decodeBase58(extendedKey)); // @TODO: redact
 
         assertArgument(bytes.length === 82 || encodeBase58Check(bytes.slice(0, 78)) === extendedKey,
@@ -314,7 +314,7 @@ export class HDNodeWallet extends BaseWallet {
             // Private Key
             case "0x0488ade4": case "0x04358394 ":
                 if (key[0] !== 0) { break; }
-                return new HDNodeWallet(_guard, new SigningKey(key.slice(1)),
+                return new QuaiHDWallet(_guard, new SigningKey(key.slice(1)),
                     accountFingerprint, chainCode, null, index, depth, null, null);
         }
 
@@ -328,12 +328,12 @@ export class HDNodeWallet extends BaseWallet {
      *  @param {string} path - The BIP44 path to derive the HD Node from.
      *  @param {string} [password] - The password to use for the mnemonic.
      *  @param {Wordlist} [wordlist] - The wordlist to use for the mnemonic.
-     *  @returns {HDNodeWallet} The new HD Node.
+     *  @returns {QuaiHDWallet} The new HD Node.
      */
-    static createRandom( path: string, password?: string, wordlist?: Wordlist): HDNodeWallet {
+    static createRandom( path: string, password?: string, wordlist?: Wordlist): QuaiHDWallet {
         if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
         const mnemonic = Mnemonic.fromEntropy(randomBytes(16), password, wordlist)
-        return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
+        return QuaiHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
 
     /**
@@ -341,11 +341,11 @@ export class HDNodeWallet extends BaseWallet {
      * 
      *  @param {Mnemonic} mnemonic - The mnemonic to create the HD Node from.
      *  @param {string} path - The BIP44 path to derive the HD Node from.
-     *  @returns {HDNodeWallet} The new HD Node Wallet.
+     *  @returns {QuaiHDWallet} The new HD Node Wallet.
      */
-    static fromMnemonic(mnemonic: Mnemonic, path: string): HDNodeWallet {
+    static fromMnemonic(mnemonic: Mnemonic, path: string): QuaiHDWallet {
         if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
-        return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
+        return QuaiHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
 
     /**
@@ -355,12 +355,12 @@ export class HDNodeWallet extends BaseWallet {
      *  @param {string} path - The BIP44 path to derive the HD Node from.
      *  @param {string} [password] - The password to use for the mnemonic.
      *  @param {Wordlist} [wordlist] - The wordlist to use for the mnemonic.
-     *  @returns {HDNodeWallet} The new HD Node Wallet.
+     *  @returns {QuaiHDWallet} The new HD Node Wallet.
      */
-    static fromPhrase(phrase: string, path: string, password?: string, wordlist?: Wordlist): HDNodeWallet {
+    static fromPhrase(phrase: string, path: string, password?: string, wordlist?: Wordlist): QuaiHDWallet {
         if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
         const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist)
-        return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
+        return QuaiHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
 
     /**
@@ -381,10 +381,10 @@ export class HDNodeWallet extends BaseWallet {
      *  Creates an HD Node from a `seed`.
      * 
      *  @param {BytesLike} seed - The seed to create the HD Node from.
-     *  @returns {HDNodeWallet} The new HD Node Wallet.
+     *  @returns {QuaiHDWallet} The new HD Node Wallet.
      */
-    static fromSeed(seed: BytesLike): HDNodeWallet {
-        return HDNodeWallet.#fromSeed(seed, null);
+    static fromSeed(seed: BytesLike): QuaiHDWallet {
+        return QuaiHDWallet.#fromSeed(seed, null);
     }
 
     /**
@@ -392,10 +392,10 @@ export class HDNodeWallet extends BaseWallet {
      * 
      *  @param {number} index - The index of the address to derive.
      *  @param {string} [zone] - The zone of the address to derive.
-     *  @returns {HDNodeWallet} The derived HD Node.
+     *  @returns {QuaiHDWallet} The derived HD Node.
      *  @throws {Error} If the path is missing or the zone is invalid.
      */
-    deriveAddress(index: number, zone?: string): HDNodeWallet {
+    deriveAddress(index: number, zone?: string): QuaiHDWallet {
         if (!this.path) throw new Error("Missing Path");
 
         //Case for a non quai/qi wallet where zone is not needed
@@ -414,7 +414,7 @@ export class HDNodeWallet extends BaseWallet {
             throw new Error("Invalid zone");
         }
 
-        let newWallet: HDNodeWallet;
+        let newWallet: QuaiHDWallet;
         let addrIndex: number = 0;
         let zoneIndex: number = index + 1;
         do {
@@ -444,8 +444,8 @@ export class HDNodeWallet extends BaseWallet {
  *  the children nodes of a [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) HD wallet addresses.
  *
  *  The can be created by using an extended `xpub` key to
- *  {@link HDNodeWallet.fromExtendedKey | **HDNodeWallet.fromExtendedKey**} or by 
- *  [nuetering](HDNodeWallet-neuter) a {@link HDNodeWallet | **HDNodeWallet**}.
+ *  {@link QuaiHDWallet.fromExtendedKey | **QuaiHDWallet.fromExtendedKey**} or by 
+ *  [nuetering](QuaiHDWallet-neuter) a {@link QuaiHDWallet | **QuaiHDWallet**}.
  * 
  *  @category Wallet
  */
@@ -587,17 +587,17 @@ export class HDNodeVoidWallet extends VoidSigner {
 }
 
 /*
-export class HDNodeWalletManager {
-    #root: HDNodeWallet;
+export class QuaiHDWalletManager {
+    #root: QuaiHDWallet;
 
     constructor(phrase: string, password?: null | string, path?: null | string, locale?: null | Wordlist) {
         if (password == null) { password = ""; }
         if (path == null) { path = "m/44'/60'/0'/0"; }
         if (locale == null) { locale = LangEn.wordlist(); }
-        this.#root = HDNodeWallet.fromPhrase(phrase, password, path, locale);
+        this.#root = QuaiHDWallet.fromPhrase(phrase, password, path, locale);
     }
 
-    getSigner(index?: number): HDNodeWallet {
+    getSigner(index?: number): QuaiHDWallet {
         return this.#root.deriveChild((index == null) ? 0: index);
     }
 }

@@ -118,7 +118,7 @@ export {
 // WALLET
 export {
     Mnemonic,
-    BaseWallet, HDNodeWallet, HDNodeVoidWallet, UTXOHDWallet,
+    BaseWallet, QuaiHDWallet, HDNodeVoidWallet, QiHDWallet,
     Wallet,
 
 

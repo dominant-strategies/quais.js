@@ -1,5 +1,5 @@
 
-import { N, ShardData } from '../constants';
+import { N, ShardData } from '../constants/index.js';
 import { SigningKey, keccak256 as addressKeccak256 } from "../crypto/index.js";
 import {
     BytesLike,
@@ -65,7 +65,7 @@ const _guard = { };
  * 
  *  @category Wallet
  */
-export class UTXOHDWallet extends BaseWallet {
+export class QiHDWallet extends BaseWallet {
      /**
      *  The compressed public key.
      */
@@ -153,23 +153,23 @@ export class UTXOHDWallet extends BaseWallet {
         this.#publicKey = signingKey.compressedPublicKey 
 
         const fingerprint = dataSlice(ripemd160(sha256(this.#publicKey)), 0, 4);
-        defineProperties<UTXOHDWallet>(this, {
+        defineProperties<QiHDWallet>(this, {
             accountFingerprint, fingerprint,
             chainCode, path, index, depth
         });
-        defineProperties<UTXOHDWallet>(this, { mnemonic });
+        defineProperties<QiHDWallet>(this, { mnemonic });
     }
     
-    connect(provider: null | Provider): UTXOHDWallet {
-        return new UTXOHDWallet(_guard, this.signingKey, this.accountFingerprint,
+    connect(provider: null | Provider): QiHDWallet {
+        return new QiHDWallet(_guard, this.signingKey, this.accountFingerprint,
             this.chainCode, this.path, this.index, this.depth, this.mnemonic, provider);
     }
 
-    derivePath(path: string): UTXOHDWallet {
-        return derivePath<UTXOHDWallet>(this, path);
+    derivePath(path: string): QiHDWallet {
+        return derivePath<QiHDWallet>(this, path);
     }
     
-    static #fromSeed(_seed: BytesLike, mnemonic: null | Mnemonic): UTXOHDWallet {
+    static #fromSeed(_seed: BytesLike, mnemonic: null | Mnemonic): QiHDWallet {
         assertArgument(isBytesLike(_seed), "invalid seed", "seed", "[REDACTED]");
 
         const seed = getBytes(_seed, "seed");
@@ -178,7 +178,7 @@ export class UTXOHDWallet extends BaseWallet {
         const I = getBytes(computeHmac("sha512", MasterSecret, seed));
         const signingKey = new SigningKey(hexlify(I.slice(0, 32)));
 
-        const result = new UTXOHDWallet(_guard, signingKey, "0x00000000", hexlify(I.slice(32)),
+        const result = new QiHDWallet(_guard, signingKey, "0x00000000", hexlify(I.slice(32)),
             "m", 0, 0, mnemonic, null);
         return result;
     }
@@ -193,12 +193,12 @@ export class UTXOHDWallet extends BaseWallet {
      *  @param {string} path - The BIP44 path to derive.
      *  @param {string} [password] - The password to use for the mnemonic.
      *  @param {Wordlist} [wordlist] - The wordlist to use for the mnemonic.
-     *  @returns {UTXOHDWallet} The new HDNode.
+     *  @returns {QiHDWallet} The new HDNode.
      */
-    static createRandom( path: string, password?: string, wordlist?: Wordlist): UTXOHDWallet {
+    static createRandom( path: string, password?: string, wordlist?: Wordlist): QiHDWallet {
         if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
         const mnemonic = Mnemonic.fromEntropy(randomBytes(16), password, wordlist)
-        return UTXOHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
+        return QiHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
 
     /**
@@ -206,11 +206,11 @@ export class UTXOHDWallet extends BaseWallet {
      * 
      *  @param {Mnemonic} mnemonic - The mnemonic to create the HDNode from.
      *  @param {string} path - The BIP44 path to derive.
-     *  @returns {UTXOHDWallet} The new HDNode.
+     *  @returns {QiHDWallet} The new HDNode.
      */
-    static fromMnemonic(mnemonic: Mnemonic, path: string): UTXOHDWallet {
+    static fromMnemonic(mnemonic: Mnemonic, path: string): QiHDWallet {
         if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
-        return UTXOHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
+        return QiHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
 
     /**
@@ -220,12 +220,12 @@ export class UTXOHDWallet extends BaseWallet {
      *  @param {string} path - The BIP44 path to derive.
      *  @param {string} [password] - The password to use for the mnemonic.
      *  @param {Wordlist} [wordlist] - The wordlist to use for the mnemonic.
-     *  @returns {UTXOHDWallet} The new HDNode.
+     *  @returns {QiHDWallet} The new HDNode.
      */
-    static fromPhrase(phrase: string, path: string, password?: string, wordlist?: Wordlist): UTXOHDWallet {
+    static fromPhrase(phrase: string, path: string, password?: string, wordlist?: Wordlist): QiHDWallet {
         if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
         const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist)
-        return UTXOHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
+        return QiHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
 
     /**
@@ -244,9 +244,9 @@ export class UTXOHDWallet extends BaseWallet {
      *  Return the child for `index`.
      * 
      *  @param {number} _index - The index to derive.
-     *  @returns {UTXOHDWallet} The derived child.
+     *  @returns {QiHDWallet} The derived child.
      */
-    deriveChild(_index: Numeric): UTXOHDWallet {
+    deriveChild(_index: Numeric): QiHDWallet {
         const index = getNumber(_index, "index");
         assertArgument(index <= 0xffffffff, "invalid index", "index", index);
 
@@ -270,7 +270,7 @@ export class UTXOHDWallet extends BaseWallet {
         //BIP44 if we are at the account depth get that fingerprint, otherwise continue with the current one
         let newFingerprint = this.depth == 3 ? this.fingerprint : this.accountFingerprint;
 
-        return new UTXOHDWallet(_guard, ki, newFingerprint, hexlify(IR),
+        return new QiHDWallet(_guard, ki, newFingerprint, hexlify(IR),
             path, index, newDepth, this.mnemonic, this.provider);
 
     }
@@ -280,14 +280,14 @@ export class UTXOHDWallet extends BaseWallet {
      * 
      *  @param {number} startingIndex - The index to derive.
      *  @param {string} zone - The zone to derive the address for
-     *  @returns {UTXOHDWallet} The derived address.
+     *  @returns {QiHDWallet} The derived address.
      *  @throws {Error} If the wallet's address derivation path is missing or if 
      *  a valid address cannot be derived for the specified zone after 1000 attempts.
      */
     private deriveAddress(startingIndex: number, zone: string): AddressInfo{
         if (!this.path) throw new Error("Missing wallet's address derivation path");
 
-        let newWallet: UTXOHDWallet;
+        let newWallet: QiHDWallet;
 
         // helper function to check if the generated address is valid for the specified zone
         const isValidAddressForZone = (address: string) => {
