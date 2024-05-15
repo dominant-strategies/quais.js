@@ -104,7 +104,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     #maxFeePerGas: null | bigint;
     #value: bigint;
     #accessList: null | AccessList;
-    #hash: null | string;
     from: string;
 
     /**
@@ -118,18 +117,36 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     get hash(): null | string {
         if (this.signature == null) { return null; }
-        if (this.#hash) { return this.#hash; }
-        return keccak256(this.serialized);
+        return this.unsignedHash
     }
-    set hash(value: null | string) {
-        this.#hash = value;
-    }
-
     get unsignedHash(): string {
-        return keccak256(this.unsignedSerialized);
+        const destUtxo = isUTXOAddress(this.to || "");
+        const originUtxo = isUTXOAddress(this.from);
+
+        if (!this.destShard || !this.originShard) {
+            throw new Error("Invalid Shard for from or to address");
+        }
+        if (this.isExternal && destUtxo !== originUtxo) {
+            throw new Error("Cross-shard & cross-ledger transactions are not supported");
+        }
+
+        const hexString = this.serialized.startsWith('0x') ? this.serialized.substring(2) : this.serialized;
+        const dataBuffer = Buffer.from(hexString, 'hex');
+
+        const hashHex = keccak256(dataBuffer);
+        const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
+
+        let origin = this.originShard ? parseInt(this.originShard, 16) : 0;
+        hashBuffer[0] = origin;
+        hashBuffer[1] &= 0x7F;
+        hashBuffer[2] = origin;
+        hashBuffer[3] &= 0x7F;
+
+        return '0x' + hashBuffer.toString('hex');
     }
 
-    get originShard(): string | undefined {
+
+get originShard(): string | undefined {
         const senderAddr = this.from
 
         return getShardForAddress(senderAddr)?.byte.slice(2);
@@ -137,26 +154,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     get destShard(): string | undefined {
         return getShardForAddress(this.to || "")?.byte.slice(2);
-    }
-
-    getTransactionHash (data: Uint8Array): string {
-        const destUtxo = isUTXOAddress(this.to || "");
-
-        const originUtxo = isUTXOAddress(this.from);
-
-        if (!this.destShard|| !this.originShard) {
-            throw new Error("Invalid Shard for from or to address");
-        }
-        if(this.isExternal && destUtxo !== originUtxo) {
-            throw new Error("Cross-shard & cross-ledger transactions are not supported");
-        }
-
-        let hash = keccak256(data)
-        hash = '0x' + this.originShard+ (originUtxo ? 'F' : '1') + hash.charAt(5) + this.originShard+ (destUtxo ? 'F' : '1') + hash.slice(9)
-
-        //TODO alter comparison
-        return hash;
-
     }
 
     /**
@@ -262,7 +259,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         this.#data = "0x";
         this.#value = BigInt(0);
         this.#accessList = null;
-        this.#hash = null;
         this.from = from
     }
 
@@ -373,8 +369,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     static from(tx: string | QuaiTransactionLike): QuaiTransaction {
         if (typeof (tx) === "string") {
             const decodedProtoTx: ProtoTransaction = decodeProtoTransaction(getBytes(tx));
-            const payload = getBytes(tx);
-            return QuaiTransaction.fromProto(decodedProtoTx, payload);
+            return QuaiTransaction.fromProto(decodedProtoTx);
         }
 
         const result = new QuaiTransaction(tx.from);
@@ -393,7 +388,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
         if (tx.hash != null) {
             assertArgument(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);
-            result.hash = tx.hash;
         }
 
         if (tx.from != null) {
@@ -410,7 +404,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      *  @param {Uint8Array} [payload] - The serialized transaction.
      *  @returns {QuaiTransaction} The decoded transaction.
      */
-    static fromProto(protoTx: ProtoTransaction, payload?: Uint8Array): QuaiTransaction {
+    static fromProto(protoTx: ProtoTransaction): QuaiTransaction {
 
         //  TODO: Fix this because new tx instance requires a 'from' address
         let signature: null | Signature = null
@@ -455,9 +449,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             address: hexlify(tuple.address),
             storageKeys: tuple.storage_key.map(key => hexlify(key))
         }));
-        if (payload) {
-            tx.hash = tx.getTransactionHash(payload);
-        }
         return tx;
     }
 }

@@ -36,7 +36,6 @@ export interface QiTransactionLike extends TransactionLike {
 export class QiTransaction extends AbstractTransaction<string> implements QiTransactionLike {
     #txInputs?: null | TxInput[];
     #txOutputs?: null | TxOutput[];
-    #hash: null | string;
 
     get txInputs(): TxInput[] {
         return (this.#txInputs ?? []).map(entry => ({...entry}));
@@ -59,16 +58,40 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     get hash(): null | string {
         if (this.signature == null) { return null; }
-        if (this.#hash) { return this.#hash; }
-        return keccak256(this.serialized);
+        return this.unsignedHash
     }
-    set hash(value: null | string) {
-        this.#hash = value;
+    get unsignedHash(): string {
+        if (this.txInputs.length < 1 || this.txOutputs.length < 1) {
+            throw new Error("Transaction must have at least one input and one output");
+        }
+
+        const destUtxo = isUTXOAddress(hexlify(this.txOutputs[0].address) || "");
+        const pubKey = hexlify(this.txInputs[0].pub_key);
+        const senderAddr = computeAddress(pubKey || "");
+        const originUtxo = isUTXOAddress(senderAddr);
+
+        if (!this.destShard || !this.originShard) {
+            throw new Error(`Invalid shards: origin ${this.originShard} ->  destination ${this.destShard} (address: ${senderAddr})`);
+        }
+        if (this.isExternal && destUtxo !== originUtxo) {
+            throw new Error("Cross-shard & cross-ledger transactions are not supported");
+        }
+
+        const hexString = this.serialized.startsWith('0x') ? this.serialized.substring(2) : this.serialized;
+        const dataBuffer = Buffer.from(hexString, 'hex');
+
+        const hashHex = keccak256(dataBuffer);
+        const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
+
+        let origin = this.originShard ? parseInt(this.originShard, 16) : 0;
+        hashBuffer[0] = origin;
+        hashBuffer[1] |= 0x80;
+        hashBuffer[2] = origin;
+        hashBuffer[3] |= 0x80;
+
+        return '0x' + hashBuffer.toString('hex');
     }
 
-    get unsignedHash(): string {
-        return keccak256(this.unsignedSerialized);
-    }
 
     get originShard(): string | undefined {
         const pubKey = hexlify(this.txInputs[0].pub_key);
@@ -81,33 +104,6 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         return getShardForAddress(hexlify(this.txOutputs[0].address) || "")?.byte.slice(2);
     }
 
-    getTransactionHash (data: Uint8Array): string {
-        if (this.txInputs.length < 1 || this.txOutputs.length < 1) {
-            throw new Error("Transaction must have at least one input and one output");
-        }
-        const destUtxo = isUTXOAddress(hexlify(this.txOutputs[0].address) || "");
-
-        const pubKey = hexlify(this.txInputs[0].pub_key);
-        const senderAddr = computeAddress(pubKey || "")
-
-        const originUtxo = isUTXOAddress(senderAddr);
-
-        if (!this.destShard|| !this.originShard) {
-            throw new Error(`Invalid shards: origin ${this.originShard} ->  destination ${this.destShard} (address: ${senderAddr})`);
-        }
-        if(this.isExternal && destUtxo !== originUtxo) {
-            throw new Error("Cross-shard & cross-ledger transactions are not supported");
-        }
-
-        let hash = keccak256(data)
-        hash = '0x' + this.originShard+ (originUtxo ? 'F' : '1') + hash.charAt(5) + this.originShard+ (destUtxo ? 'F' : '1') + hash.slice(9)
-
-        //TODO alter comparison
-        return hash;
-
-    }
-
-
     /**
      *  Creates a new Transaction with default values.
      */
@@ -115,7 +111,6 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         super();
         this.#txInputs = [];
         this.#txOutputs = [];
-        this.#hash = null;
     }
 
 
@@ -204,8 +199,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     static from(tx: string | QiTransactionLike): QiTransaction {
         if (typeof (tx) === "string") {
             const decodedProtoTx: ProtoTransaction = decodeProtoTransaction(getBytes(tx));
-            const payload = getBytes(tx);
-            return QiTransaction.fromProto(decodedProtoTx, payload);
+            return QiTransaction.fromProto(decodedProtoTx);
         }
 
         const result = new QiTransaction();
@@ -217,7 +211,6 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
         if (tx.hash != null) {
             assertArgument(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);
-            result.hash = tx.hash;
         }
 
         return result;
@@ -230,7 +223,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
      *  @param {Uint8Array} [payload] - The serialized transaction.
      *  @returns {QiTransaction} The decoded transaction.
      */
-    static fromProto(protoTx: ProtoTransaction, payload?: Uint8Array): QiTransaction {
+    static fromProto(protoTx: ProtoTransaction): QiTransaction {
 
         //  TODO: Fix this because new tx instance requires a 'from' address
         // if (this.signature == null) { return null; }
@@ -248,11 +241,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         if (protoTx.signature) {
             tx.signature = hexlify(protoTx.signature);
         }
-        
-        if (payload) {
-            tx.hash = tx.getTransactionHash(payload);
-        }
-        
+
         return tx;
     }
 }

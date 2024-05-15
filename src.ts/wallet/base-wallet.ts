@@ -11,6 +11,7 @@ import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
 import type { Provider } from "../providers/index.js";
 import { QuaiTransactionRequest } from "../providers/provider.js";
 import { QuaiTransaction, QuaiTransactionLike } from "../transaction/quai-transaction.js";
+import {keccak256} from "../crypto/index.js";
 
 /**
  *  The **BaseWallet** is a stream-lined implementation of a
@@ -68,7 +69,9 @@ export class BaseWallet extends AbstractSigner {
      */
     get privateKey(): string { return this.signingKey.privateKey; }
 
+
     async getAddress(_zone?: string): Promise<string> { return this.#address; }
+
 
     connect(provider: null | Provider): BaseWallet {
         return new BaseWallet(this.#signingKey, provider);
@@ -92,7 +95,8 @@ export class BaseWallet extends AbstractSigner {
 
         const btx = QuaiTransaction.from(<QuaiTransactionLike>tx);
 
-        btx.signature = this.signingKey.sign(btx.unsignedHash);
+//        btx.signature = this.signingKey.sign(btx.unsignedHash);
+        btx.signature = this.signingKey.sign(keccak256(btx.unsignedSerialized))
 
         return btx.serialized;
     }

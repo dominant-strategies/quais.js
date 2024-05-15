@@ -245,7 +245,7 @@ function concisify(items: Array<string>): Array<string> {
 }
 
 
-async function getSubscription(_event: ProviderEvent, provider: AbstractProvider): Promise<Subscription> {
+async function getSubscription(_event: ProviderEvent, provider: AbstractProvider<any>): Promise<Subscription> {
     if (_event == null) { throw new Error("invalid event"); }
 
     // Normalize topic array info an EventFilter
@@ -339,7 +339,7 @@ export interface AbstractProviderPlugin {
      * 
      *  @param {AbstractProvider} provider - The provider to connect to.
      */
-    connect(provider: AbstractProvider): AbstractProviderPlugin;
+    connect(provider: AbstractProvider<any>): AbstractProviderPlugin;
 }
 
 /**
@@ -535,9 +535,9 @@ const defaultOptions = {
  * 
  *  @category Providers
  */
-export class AbstractProvider implements Provider {
+export class AbstractProvider<C = FetchRequest> implements Provider {
 
-    _urlMap: Map<string, string>;
+    _urlMap: Map<string, C>;
     #connect: FetchRequest[];
     #subs: Map<string, Sub>;
     #plugins: Map<string, AbstractProviderPlugin>;
@@ -604,30 +604,31 @@ export class AbstractProvider implements Provider {
         this._urlMap = new Map();
     }
 
-    async initUrlMap(urls: string[] | FetchRequest): Promise<void> {
+    async initUrlMap<U = string[] | FetchRequest>(urls: U): Promise<void> {
         if (urls instanceof FetchRequest) {
-            const primeUrl = urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":9001";
-            this._urlMap.set('0x', primeUrl);
-            urls.url = primeUrl;
+            urls.url = urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":9001";
+            this._urlMap.set('0x', urls as C);
             this.#connect.push(urls);
             const shards = await this.getRunningLocations();
             shards.forEach((shard) => {
                 const port = 9200 + 20 * shard[0] + shard[1];
-                this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":" + port);
+                this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, new FetchRequest(urls.url.split(":")[0] + ":" + urls.url.split(":")[1] + ":" + port) as C);
             });
             return;
         }
-        for (const url of urls) {
-            const primeUrl = url.split(":")[0] + ":" + url.split(":")[1] + ":9001";
-            this._urlMap.set('0x', primeUrl);
-            this.#connect.push(new FetchRequest(primeUrl));
-            const shards = await this.getRunningLocations(); // Now waits for the previous to complete
-            shards.forEach((shard) => {
-                const port = 9200 + 20 * shard[0] + shard[1];
-                this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, url.split(":")[0] + ":" + url.split(":")[1] + ":" + port);
-            });
+        if (Array.isArray(urls)) {
+            for (const url of urls) {
+                const primeUrl = url.split(":")[0] + ":" + url.split(":")[1] + ":9001";
+                const primeConnect = new FetchRequest(primeUrl);
+                this._urlMap.set('0x', primeConnect as C);
+                this.#connect.push(primeConnect);
+                const shards = await this.getRunningLocations();
+                shards.forEach((shard) => {
+                    const port = 9200 + 20 * shard[0] + shard[1];
+                    this._urlMap.set(`0x${shard[0].toString(16)}${shard[1].toString(16)}`, new FetchRequest(url.split(":")[0] + ":" + url.split(":")[1] + ":" + port) as C);
+                });
+            }
         }
-
     }
 
     shardBytes(shard: string): string {
@@ -1251,19 +1252,13 @@ export class AbstractProvider implements Provider {
         let tx = type == 2 ? QiTransaction.from(signedTx) : QuaiTransaction.from(signedTx);
 
         this.#validateTransactionHash(tx.hash || '', hash)
-        tx.hash = hash;
         return this._wrapTransactionResponse(<any>tx, network).replaceableTransaction(blockNumber);
     }
 
     #validateTransactionHash(computedHash: string, nodehash: string) {
-        if (computedHash.substring(0, 4) !== nodehash.substring(0, 4))
-            throw new Error("Transaction hash mismatch in origin Zone");
-        if (computedHash.substring(6, 8) !== nodehash.substring(6, 8))
-            throw new Error("Transaction hash mismatch in destination Zone");
-        if (parseInt(computedHash[4], 16) < 8 !== parseInt(nodehash[4], 16) < 8)
-            throw new Error("Transaction ledger mismatch in origin Zone");
-        if (parseInt(computedHash[8], 16) < 8 !== parseInt(nodehash[8], 16) < 8)
-            throw new Error("Transaction ledger mismatch in destination Zone");
+        if (computedHash !== nodehash) {
+            throw new Error("Transaction hash mismatch");
+        }
     }
 
     async #getBlock(shard: string, block: BlockTag | string, includeTransactions: boolean): Promise<any> {

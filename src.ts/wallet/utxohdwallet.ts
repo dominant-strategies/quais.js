@@ -301,7 +301,7 @@ export class UTXOHDWallet extends BaseWallet {
             newWallet = this.derivePath(addrIndex.toString());
             addrIndex++;
             // put a hard limit on the number of addresses to derive
-            if (addrIndex - startingIndex > 1000) {
+            if (addrIndex - startingIndex > 10000000) {
                 throw new Error(`Failed to derive a valid address for the zone ${zone} after 1000 attempts.`);
             }
         } while (!isValidAddressForZone(newWallet.address));
@@ -370,7 +370,26 @@ export class UTXOHDWallet extends BaseWallet {
                 nakedCount = 0;
             }
             derivationIndex = addressInfo.index + 1;
+        }        
+    }
+    
+    /**
+     *  Returns the first naked address for a given zone.
+     */
+    async getAddress(zone: string): Promise<string> {
+        if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
+
+        const shardWalletData = this.#shardWalletsMap.get(zone);
+        if (!shardWalletData) {
+            throw new Error(`Wallet has not been initialized for zone: ${zone}`);
         }
+        // After the wallet has been initialized, the first naked address is always 
+        // the first address within the pack of last GAP addresses
+        if (shardWalletData.addressesInfo.length < GAP) {
+            throw new Error(`No enough naked addresses available for zone: ${zone}`);
+        }
+        return shardWalletData.addressesInfo[shardWalletData.addressesInfo.length - GAP].address;
+
     }
 
     /**
@@ -501,4 +520,6 @@ export class UTXOHDWallet extends BaseWallet {
     getAddressFromPubKey(pubkey: string): string {
         return getAddress(addressKeccak256("0x" + pubkey.substring(4)).substring(26))
     }
+
+
 }
