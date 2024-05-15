@@ -274,77 +274,15 @@ export class UTXOHDWallet extends BaseWallet {
             path, index, newDepth, this.mnemonic, this.provider);
 
     }
-        
-    /**
-     *  Generates a list of addresses and private keys with UTXOs in the specified zone
-     *  It also updates the map of addresses to unspent outputs
-     * 
-     *  @param {string} zone - The zone to sync UTXOs for
-     *  @param {number} gap - The number of addresses to generate before stopping
-     *  @returns {Promise<void>} A promise that resolves when the UTXOs have been synced
-     */
-    async syncUTXOs(zone: string, gap: number = 20  ): Promise<void>{
-        zone = zone.toLowerCase();
-        // Check if zone is valid
-        const shard = ShardData.find(shard => shard.name.toLowerCase() === zone || shard.nickname.toLowerCase() === zone || shard.byte.toLowerCase() === zone);
-        if (!shard) {
-            throw new Error("Invalid zone");
-        }
-        /* 
-        generate addresses by incrementing address index in bip44 
-        check each address for utxos and add to utxoAddresses
-        until we have had gap limit number of addresses with no utxos
-        */
-        const currentUtxoAddresses: UTXOAddress[] = [];
-        const currentAddressOutpoints: { [address: string]: Outpoint[] } = {};
-        let empty = 0
-        // let accIndex = 0
-        let currentIndex = this.#lastDerivedAddressIndex + 1;
-
-        while (empty < gap) {
-            // start from the last derived address index
-            if (currentIndex > this.#lastDerivedAddressIndex) {
-                const wallet = this.deriveAddress(currentIndex, zone);
-                const address = wallet.address;
-                const privKey = wallet.privateKey;
-
-                // save the derived address
-                currentUtxoAddresses.push({ address, privKey });
-                this.#lastDerivedAddressIndex = currentIndex;
-
-
-                // Check if the address has any UTXOs
-                try {
-                    // if provider is not set, throw error
-                    if (!this.provider) throw new Error("Provider not set");
-                    const outpointsMap = await this.provider?.getOutpointsByAddress(address)
-                    if (!outpointsMap) {
-                        empty++;
-                    } else {
-                        // add the outpoints to the addressOutpoints map
-                        const outpoints = Object.values(outpointsMap);
-                        currentAddressOutpoints[address]= outpoints;
-                        empty = 0; // Reset the gap counter
-                    }
-
-                } catch (error) {
-                    throw new Error(`Error getting utxos for address ${address}: ${error}`)
-                }
-            }
-            //increment addrIndex in bip44 always
-            currentIndex++;
-        }
-        this.utxoAddresses = currentUtxoAddresses;
-        this.addressOutpoints = currentAddressOutpoints;
-    }
 
     /**
      *  Derives an address that is valid for a specified zone on the Qi ledger.
      * 
-     *  @param {number} index - The index to derive.
+     *  @param {number} startingIndex - The index to derive.
      *  @param {string} zone - The zone to derive the address for
      *  @returns {UTXOHDWallet} The derived address.
-     *  @throws {Error} If the zone is invalid
+     *  @throws {Error} If the wallet's address derivation path is missing or if 
+     *  a valid address cannot be derived for the specified zone after 1000 attempts.
      */
     private deriveAddress(startingIndex: number, zone: string): AddressInfo{
         if (!this.path) throw new Error("Missing wallet's address derivation path");
@@ -433,6 +371,29 @@ export class UTXOHDWallet extends BaseWallet {
             }
             derivationIndex = addressInfo.index + 1;
         }
+    }
+
+    /**
+     *  Returns the first naked address for a given zone.
+     * 
+     *  @param {string} zone - The zone identifier.
+     *  @returns {Promise<string>} The naked address.
+     *  @throws {Error} If the zone is invalid or the wallet has not been initialized.
+     */
+    async getAddress(zone: string): Promise<string> {
+      if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
+
+      const shardWalletData = this.#shardWalletsMap.get(zone);
+      if (!shardWalletData) {
+          throw new Error(`Wallet has not been initialized for zone: ${zone}`);
+      }
+      // After the wallet has been initialized, the first naked address is always 
+      // the first address within the pack of last GAP addresses
+      if (shardWalletData.addressesInfo.length < GAP) {
+          throw new Error(`No enough naked addresses available for zone: ${zone}`);
+      }
+      return shardWalletData.addressesInfo[shardWalletData.addressesInfo.length - GAP].address;
+
     }
 
     /**

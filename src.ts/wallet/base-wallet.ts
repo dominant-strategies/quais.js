@@ -68,7 +68,7 @@ export class BaseWallet extends AbstractSigner {
      */
     get privateKey(): string { return this.signingKey.privateKey; }
 
-    async getAddress(): Promise<string> { return this.#address; }
+    async getAddress(_zone?: string): Promise<string> { return this.#address; }
 
     connect(provider: null | Provider): BaseWallet {
         return new BaseWallet(this.#signingKey, provider);
