@@ -95,7 +95,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     #maxFeePerGas: null | bigint;
     #value: bigint;
     #accessList: null | AccessList;
-    #hash: null | string;
     from: string;
 
     /**
@@ -109,13 +108,8 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     get hash(): null | string {
         if (this.signature == null) { return null; }
-        if (this.#hash) { return this.#hash; }
         return this.unsignedHash
     }
-    set hash(value: null | string) {
-        this.#hash = value;
-    }
-
     get unsignedHash(): string {
         const destUtxo = isUTXOAddress(this.to || "");
         const originUtxo = isUTXOAddress(this.from);
@@ -256,7 +250,6 @@ get originShard(): string | undefined {
         this.#data = "0x";
         this.#value = BigInt(0);
         this.#accessList = null;
-        this.#hash = null;
         this.from = from
     }
 
@@ -375,7 +368,6 @@ get originShard(): string | undefined {
 
         if (tx.hash != null) {
             assertArgument(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);
-            result.hash = tx.hash;
         }
 
         if (tx.from != null) {
