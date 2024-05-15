@@ -372,25 +372,6 @@ export class UTXOHDWallet extends BaseWallet {
             derivationIndex = addressInfo.index + 1;
         }        
     }
-    
-    /**
-     *  Returns the first naked address for a given zone.
-     */
-    async getAddress(zone: string): Promise<string> {
-        if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
-
-        const shardWalletData = this.#shardWalletsMap.get(zone);
-        if (!shardWalletData) {
-            throw new Error(`Wallet has not been initialized for zone: ${zone}`);
-        }
-        // After the wallet has been initialized, the first naked address is always 
-        // the first address within the pack of last GAP addresses
-        if (shardWalletData.addressesInfo.length < GAP) {
-            throw new Error(`No enough naked addresses available for zone: ${zone}`);
-        }
-        return shardWalletData.addressesInfo[shardWalletData.addressesInfo.length - GAP].address;
-
-    }
 
     /**
      *  Returns the first naked address for a given zone.
