@@ -2,7 +2,7 @@ import { SigningKey } from "../crypto/index.js";
 import { assertArgument } from "../utils/index.js";
 
 import { BaseWallet } from "./base-wallet.js";
-import { HDNodeWallet } from "./hdwallet.js";
+import { QuaiHDWallet } from "./quai-hdwallet.js";
 import { decryptCrowdsaleJson, isCrowdsaleJson  } from "./json-crowdsale.js";
 import {
     decryptKeystoreJson, decryptKeystoreJsonSync,
@@ -16,7 +16,7 @@ import type { Provider } from "../providers/index.js";
 import type { Wordlist } from "../quais.js";
 import type { CrowdsaleAccount } from "./json-crowdsale.js";
 import type { KeystoreAccount } from "./json-keystore.js";
-import { UTXOHDWallet } from "./utxohdwallet.js";
+import { QiHDWallet } from "./qi-hdwallet.js";
 
 
 function stall(duration: number): Promise<void> {
@@ -88,12 +88,12 @@ export class Wallet extends BaseWallet {
         return encryptKeystoreJsonSync(account, password);
     }
 
-    static #fromAccount(account: null | CrowdsaleAccount | KeystoreAccount): HDNodeWallet | Wallet {
+    static #fromAccount(account: null | CrowdsaleAccount | KeystoreAccount): QuaiHDWallet | Wallet {
         assertArgument(account, "invalid JSON wallet", "json", "[ REDACTED ]");
 
         if ("mnemonic" in account && account.mnemonic && account.mnemonic.locale === "en") {
             const mnemonic = Mnemonic.fromEntropy(account.mnemonic.entropy);
-            const wallet = HDNodeWallet.fromMnemonic(mnemonic, account.mnemonic.path || ''); // Add a check for undefined path
+            const wallet = QuaiHDWallet.fromMnemonic(mnemonic, account.mnemonic.path || ''); // Add a check for undefined path
             if (wallet.address === account.address && wallet.privateKey === account.privateKey) {
                 return wallet;
             }
@@ -118,9 +118,9 @@ export class Wallet extends BaseWallet {
      *  @param {string} json - The JSON data to decrypt.
      *  @param {Uint8Array | string} password - The password to decrypt the JSON data.
      *  @param {ProgressCallback} [progress] - An optional callback to keep the user informed.
-     *  @returns {Promise<HDNodeWallet | Wallet>} The decrypted wallet.
+     *  @returns {Promise<QuaiHDWallet | Wallet>} The decrypted wallet.
      */
-    static async fromEncryptedJson(json: string, password: Uint8Array | string, progress?: ProgressCallback): Promise<HDNodeWallet | Wallet> {
+    static async fromEncryptedJson(json: string, password: Uint8Array | string, progress?: ProgressCallback): Promise<QuaiHDWallet | Wallet> {
         let account: null | CrowdsaleAccount | KeystoreAccount = null;
         if (isKeystoreJson(json)) {
             account = await decryptKeystoreJson(json, password, progress);
@@ -144,9 +144,9 @@ export class Wallet extends BaseWallet {
      * 
      *  @param {string} json - The JSON data to decrypt.
      *  @param {Uint8Array | string} password - The password to decrypt the JSON data.
-     *  @returns {HDNodeWallet | Wallet} The decrypted wallet.
+     *  @returns {QuaiHDWallet | Wallet} The decrypted wallet.
      */
-    static fromEncryptedJsonSync(json: string, password: Uint8Array | string): HDNodeWallet | Wallet {
+    static fromEncryptedJsonSync(json: string, password: Uint8Array | string): QuaiHDWallet | Wallet {
         let account: null | CrowdsaleAccount | KeystoreAccount = null;
         if (isKeystoreJson(json)) {
             account = decryptKeystoreJsonSync(json, password);
@@ -160,31 +160,31 @@ export class Wallet extends BaseWallet {
     }
 
     /**
-     *  Creates a new random {@link HDNodeWallet | **HDNodeWallet**} using the available
+     *  Creates a new random {@link QuaiHDWallet | **QuaiHDWallet**} using the available
      *  [cryptographic random source](randomBytes).
      *
      *  If there is no crytographic random source, this will throw.
      * 
      *  @param {string} path - The derivation path for the wallet.
      *  @param {Provider} [provider] - An optional provider to connect the wallet to.
-     *  @returns {HDNodeWallet} The new wallet.
+     *  @returns {QuaiHDWallet} The new wallet.
      */
-    static createRandom(path: string, provider?: null | Provider): HDNodeWallet {
-        const wallet = HDNodeWallet.createRandom(path);
+    static createRandom(path: string, provider?: null | Provider): QuaiHDWallet {
+        const wallet = QuaiHDWallet.createRandom(path);
         if (provider) { return wallet.connect(provider); }
         return wallet;
     }
 
     /**"m/44'/60'/0'/0/0"
-     *  Creates a {@link HDNodeWallet | **HDNodeWallet**} for `phrase`.
+     *  Creates a {@link QuaiHDWallet | **QuaiHDWallet**} for `phrase`.
      * 
      *  @param {string} phrase - The mnemonic phrase to create the wallet with.
      *  @param {string} path - The derivation path for the wallet.
      *  @param {Provider} [provider] - An optional provider to connect the wallet to.
      *  @param {Wordlist} [wordlist] - An optional wordlist to use for the mnemonic phrase.
-     *  @returns {HDNodeWallet} The new wallet.
+     *  @returns {QuaiHDWallet} The new wallet.
      */
-    static fromPhrase(phrase: string, path: string, provider?: Provider, wordlist?: Wordlist): HDNodeWallet | UTXOHDWallet {
+    static fromPhrase(phrase: string, path: string, provider?: Provider, wordlist?: Wordlist): QuaiHDWallet | QiHDWallet {
         const splitPath = path.split('/');
         if (splitPath.length < 3) throw new Error(`Incomplete path for wallet derivation ${path}`);
         let coinTypeStr = splitPath[2];
@@ -194,11 +194,11 @@ export class Wallet extends BaseWallet {
         let wallet;
         switch (coinType) {
             case 994:
-                wallet = HDNodeWallet.fromPhrase(phrase, path, undefined, wordlist);
+                wallet = QuaiHDWallet.fromPhrase(phrase, path, undefined, wordlist);
                 if (provider) { return wallet.connect(provider); }
                 return wallet;
             case 969:
-                wallet = UTXOHDWallet.fromPhrase(phrase, path, undefined, wordlist);
+                wallet = QiHDWallet.fromPhrase(phrase, path, undefined, wordlist);
                 if (provider) { return wallet.connect(provider); }
                 return wallet;
             default:

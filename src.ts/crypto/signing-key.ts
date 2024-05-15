@@ -206,7 +206,7 @@ export class SigningKey {
      *  This is not a common function most developers should require, but
      *  can be useful for certain privacy-specific techniques.
      *
-     *  For example, it is used by [**HDNodeWallet**](../classes/HDNodeWallet) to compute child
+     *  For example, it is used by [**QuaiHDWallet**](../classes/QuaiHDWallet) to compute child
      *  addresses from parent public keys and chain codes.
      * 
      *  @param {BytesLike} p0 - The first point to add.
