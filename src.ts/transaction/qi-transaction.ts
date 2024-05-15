@@ -21,7 +21,6 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     #txInputs?: null | TxInput[];
     #txOutputs?: null | TxOutput[];
-    #hash: null | string;
 
     get txInputs(): TxInput[] {
         return (this.#txInputs ?? []).map(entry => ({...entry}));
@@ -44,13 +43,8 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     get hash(): null | string {
         if (this.signature == null) { return null; }
-        if (this.#hash) { return this.#hash; }
         return this.unsignedHash
     }
-    set hash(value: null | string) {
-        this.#hash = value;
-    }
-
     get unsignedHash(): string {
         if (this.txInputs.length < 1 || this.txOutputs.length < 1) {
             throw new Error("Transaction must have at least one input and one output");
@@ -102,7 +96,6 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         super();
         this.#txInputs = [];
         this.#txOutputs = [];
-        this.#hash = null;
     }
 
 
@@ -192,7 +185,6 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
         if (tx.hash != null) {
             assertArgument(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);
-            result.hash = tx.hash;
         }
 
         return result;
