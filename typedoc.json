@@ -2,9 +2,7 @@
 	// base config
 	"out": "docs/content",
 	"tsconfig": "tsconfig.base.json",
-	"entryPoints": [
-		"./src.ts/quais.ts",
-	],
+	"entryPoints": ["./src.ts/quais.ts"],
 
 	// specific inclusions and exclusions
 	"excludeProtected": true,
@@ -12,8 +10,26 @@
 	"exclude": ["./src.ts/_admin/**/*", "./src.ts/_tests/**/*", "./src.ts/testcases/**/*"],
 
 	// plugins
-	"plugin": ["typedoc-plugin-remove-references", "typedoc-plugin-markdown"],
+	"plugin": [
+		"typedoc-plugin-remove-references", // remove additional references that clutter documentation
+		"typedoc-plugin-markdown", // generate markdown files
+		"typedoc-plugin-frontmatter", // add frontmatter to markdown files, prereq for the below custom plugin
+		"./docs/plugins/typedoc-plugin-mintlify-frontmatter.mjs", // formats frontmatter to match mintlify
+		"./docs/plugins/typedoc-plugin-navigation-output.mjs" // formats navigation to match mintlify
+	],
 
+	// formatting + mintlify compatibility
+	"fileExtension": ".mdx", // use mdx files for mintlfiy compatibility
+	"entryFileName": "index.mdx", // rename entry from "README.md" to "index.mdx"
+	"mergeReadme": true, // merge README.md into index.mdx
+	"hidePageHeader": true, // hide page header, conflicts with mintlify
+	"hidePageTitle": true, // hide page title, conflicts with mintlify
+	"hideBreadcrumbs": true, // hide breadcrumbs, conflicts with mintlify
+	"useCodeBlocks": true, // makes API definitions more readable
+	"expandObjects": true,
+	"parametersFormat": "table", // readability
+	"propertiesFormat": "table", // readability
+	"publicPath": "/content/", // format links for mintlify
 	"navigation": {
 		"includeCategories": true,
 		"includeGroups": false
