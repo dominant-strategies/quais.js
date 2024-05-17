@@ -263,10 +263,6 @@ export class QuaiHDWallet extends BaseWallet {
         return derivePath<QuaiHDWallet>(this, path);
     }
 
-    setCoinType(): void {
-        this.coinType = Number(this.path?.split("/")[2].replace("'", ""));
-    }
-
     static #fromSeed(_seed: BytesLike, mnemonic: null | Mnemonic): QuaiHDWallet {
         assertArgument(isBytesLike(_seed), "invalid seed", "seed", "[REDACTED]");
 
@@ -429,16 +425,6 @@ export class QuaiHDWallet extends BaseWallet {
 
 }
 
-// // In crements the address_ index according to BIP-44
-// function incrementPathIndex(path: string): string {
-//     const parts = path.split('/');
-//     const lastIndex = parseInt(parts[parts.length - 1], 10);
-//     parts[parts.length - 1] = (lastIndex + 1).toString();
-//     return parts.join('/');
-// }
-
-
-
 /**
  *  A **HDNodeVoidWallet** cannot sign, but provides access to
  *  the children nodes of a [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) HD wallet addresses.
@@ -585,23 +571,6 @@ export class HDNodeVoidWallet extends VoidSigner {
         return derivePath<HDNodeVoidWallet>(this, path);
     }
 }
-
-/*
-export class QuaiHDWalletManager {
-    #root: QuaiHDWallet;
-
-    constructor(phrase: string, password?: null | string, path?: null | string, locale?: null | Wordlist) {
-        if (password == null) { password = ""; }
-        if (path == null) { path = "m/44'/60'/0'/0"; }
-        if (locale == null) { locale = LangEn.wordlist(); }
-        this.#root = QuaiHDWallet.fromPhrase(phrase, password, path, locale);
-    }
-
-    getSigner(index?: number): QuaiHDWallet {
-        return this.#root.deriveChild((index == null) ? 0: index);
-    }
-}
-*/
 
 /**
  *  Returns the [BIP-32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) path for the account at `index`.

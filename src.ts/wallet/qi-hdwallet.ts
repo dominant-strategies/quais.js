@@ -183,10 +183,6 @@ export class QiHDWallet extends BaseWallet {
         return result;
     }
     
-    setCoinType(): void {
-        this.coinType = Number(this.path?.split("/")[2].replace("'", ""));
-    }
-
     /**
      *  Creates a new random HDNode.
      * 
