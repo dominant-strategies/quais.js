@@ -1,47 +1,16 @@
 
-import { N, ShardData } from '../constants/index.js';
+import { ShardData } from '../constants/index.js';
 import { SigningKey, keccak256 as addressKeccak256 } from "../crypto/index.js";
-import {
-    BytesLike,
-    Numeric,
-    Provider,
-    TransactionLike,
-    Wordlist,
-    assertArgument,
-    assertPrivate,
-    computeHmac,
-    dataSlice,
-    defineProperties,
-    getBytes,
-    getNumber,
-    getShardForAddress,
-    hexlify,
-    isBytesLike,
-    isUTXOAddress,
-    randomBytes,
-    ripemd160,
-    sha256,
-    toBeHex,
-    toBigInt,
-    computeAddress
-} from '../quais.js';
+import { getBytes, getShardForAddress, hexlify } from '../utils/index.js';
+import { Provider, QiTransactionRequest } from '../providers/index.js';
+import { TransactionLike, computeAddress, QiTransaction, TxInput } from '../transaction/index.js';
 import { Mnemonic } from './mnemonic.js';
-import { HardenedBit, derivePath, ser_I } from './utils.js';
-import { BaseWallet } from "./base-wallet.js";
+import { HDWallet, AddressInfo } from "./hdwallet.js";
 import { MuSigFactory } from "@brandonblack/musig"
 import { nobleCrypto } from "./musig-crypto.js";
 import { schnorr } from "@noble/curves/secp256k1";
 import { keccak_256 } from "@noble/hashes/sha3";
-import { QiTransaction } from '../transaction/qi-transaction.js';
-import { QiTransactionRequest } from '../providers/provider.js';
-import { TxInput } from "../transaction/utxo.js";
 import { getAddress } from "../address/index.js";
-
-type AddressInfo = {
-    address: string;
-    privKey: string;
-    index: number;
-};
 
 type Outpoint = {
     Txhash: string;
@@ -55,72 +24,17 @@ type ShardWalletData = {
     outpoints: Map<string, Outpoint[]>;
 }
 
-const MasterSecret = new Uint8Array([ 66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100 ]);
-const COIN_TYPE = 969;
 const GAP = 20;
-const _guard = { };
+const QI_COIN_TYPE = 969;
 
 /**
  *  @TODO write documentation for this class.
  * 
  *  @category Wallet
  */
-export class QiHDWallet extends BaseWallet {
-     /**
-     *  The compressed public key.
-     */
-     readonly #publicKey!: string;
+export class QiHDWallet extends HDWallet {
 
-     /**
-      *  The fingerprint.
-      *
-      *  A fingerprint allows quick qay to detect parent and child nodes,
-      *  but developers should be prepared to deal with collisions as it
-      *  is only 4 bytes.
-      */
-     readonly fingerprint!: string;
- 
-     /**
-      *  The parent fingerprint.
-      */
-     readonly accountFingerprint!: string;
- 
-     /**
-      *  The mnemonic used to create this HD Node, if available.
-      *
-      *  Sources such as extended keys do not encode the mnemonic, in
-      *  which case this will be `null`.
-      */
-     readonly mnemonic!: null | Mnemonic;
- 
-     /**
-      *  The chaincode, which is effectively a public key used
-      *  to derive children.
-      */
-     readonly chainCode!: string;
- 
-     /**
-      *  The derivation path of this wallet.
-      *
-      *  Since extended keys do not provider full path details, this
-      *  may be `null`, if instantiated from a source that does not
-      *  enocde it.
-      */
-     readonly path!: null | string;
- 
-     /**
-      *  The child index of this wallet. Values over `2 *\* 31` indicate
-      *  the node is hardened.
-      */
-     readonly index!: number;
- 
-     /**
-      *  The depth of this wallet, which is the number of components
-      *  in its path.
-      */
-     readonly depth!: number;
-
-     coinType?: number;
+     coinType: number = QI_COIN_TYPE;
 
     /**
      * Map of shard name (zone) to shardWalletData
@@ -137,181 +51,10 @@ export class QiHDWallet extends BaseWallet {
         this.#shardWalletsMap = shardWallets;
     }
 
-    /**
-     * Gets the current publicKey
-     */
-    get publicKey(): string {
-        return this.#publicKey;
-    }
-    /**
-     *  @private
-     */
     constructor(guard: any, signingKey: SigningKey, accountFingerprint: string, chainCode: string, path: null | string, index: number, depth: number, mnemonic: null | Mnemonic, provider: null | Provider) {
-        super(signingKey, provider);
-        assertPrivate(guard, _guard);
-
-        this.#publicKey = signingKey.compressedPublicKey 
-
-        const fingerprint = dataSlice(ripemd160(sha256(this.#publicKey)), 0, 4);
-        defineProperties<QiHDWallet>(this, {
-            accountFingerprint, fingerprint,
-            chainCode, path, index, depth
-        });
-        defineProperties<QiHDWallet>(this, { mnemonic });
+        super(guard, signingKey, accountFingerprint, chainCode, path, index, depth, mnemonic, provider);
     }
     
-    connect(provider: null | Provider): QiHDWallet {
-        return new QiHDWallet(_guard, this.signingKey, this.accountFingerprint,
-            this.chainCode, this.path, this.index, this.depth, this.mnemonic, provider);
-    }
-
-    derivePath(path: string): QiHDWallet {
-        return derivePath<QiHDWallet>(this, path);
-    }
-    
-    static #fromSeed(_seed: BytesLike, mnemonic: null | Mnemonic): QiHDWallet {
-        assertArgument(isBytesLike(_seed), "invalid seed", "seed", "[REDACTED]");
-
-        const seed = getBytes(_seed, "seed");
-        assertArgument(seed.length >= 16 && seed.length <= 64 , "invalid seed", "seed", "[REDACTED]");
-
-        const I = getBytes(computeHmac("sha512", MasterSecret, seed));
-        const signingKey = new SigningKey(hexlify(I.slice(0, 32)));
-
-        const result = new QiHDWallet(_guard, signingKey, "0x00000000", hexlify(I.slice(32)),
-            "m", 0, 0, mnemonic, null);
-        return result;
-    }
-    
-    setCoinType(): void {
-        this.coinType = Number(this.path?.split("/")[2].replace("'", ""));
-    }
-
-    /**
-     *  Creates a new random HDNode.
-     * 
-     *  @param {string} path - The BIP44 path to derive.
-     *  @param {string} [password] - The password to use for the mnemonic.
-     *  @param {Wordlist} [wordlist] - The wordlist to use for the mnemonic.
-     *  @returns {QiHDWallet} The new HDNode.
-     */
-    static createRandom( path: string, password?: string, wordlist?: Wordlist): QiHDWallet {
-        if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
-        const mnemonic = Mnemonic.fromEntropy(randomBytes(16), password, wordlist)
-        return QiHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
-    }
-
-    /**
-     *  Create an HD Node from `mnemonic`.
-     * 
-     *  @param {Mnemonic} mnemonic - The mnemonic to create the HDNode from.
-     *  @param {string} path - The BIP44 path to derive.
-     *  @returns {QiHDWallet} The new HDNode.
-     */
-    static fromMnemonic(mnemonic: Mnemonic, path: string): QiHDWallet {
-        if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
-        return QiHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
-    }
-
-    /**
-     *  Creates an HD Node from a mnemonic `phrase`.
-     * 
-     *  @param {string} phrase - The mnemonic phrase to create the HDNode from.
-     *  @param {string} path - The BIP44 path to derive.
-     *  @param {string} [password] - The password to use for the mnemonic.
-     *  @param {Wordlist} [wordlist] - The wordlist to use for the mnemonic.
-     *  @returns {QiHDWallet} The new HDNode.
-     */
-    static fromPhrase(phrase: string, path: string, password?: string, wordlist?: Wordlist): QiHDWallet {
-        if (path == null || !this.isValidPath(path)) { throw new Error('Invalid path: ' + path)}
-        const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist)
-        return QiHDWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
-    }
-
-    /**
-     * Checks if the provided BIP44 path is valid and limited to the change level.
-     * @param {string} path - The BIP44 path to validate.
-     * @returns {boolean} true if the path is valid and does not include the address_index; false otherwise.
-     */
-    static isValidPath(path: string): boolean {
-        // BIP44 path regex pattern for up to the 'change' level, excluding 'address_index'
-        // This pattern matches paths like "m/44'/0'/0'/0" and "m/44'/60'/0'/1", but not "m/44'/60'/0'/0/0"
-        const pathRegex = /^m\/44'\/\d+'\/\d+'\/[01]$/;
-        return pathRegex.test(path);
-    }
-
-    /**
-     *  Return the child for `index`.
-     * 
-     *  @param {number} _index - The index to derive.
-     *  @returns {QiHDWallet} The derived child.
-     */
-    deriveChild(_index: Numeric): QiHDWallet {
-        const index = getNumber(_index, "index");
-        assertArgument(index <= 0xffffffff, "invalid index", "index", index);
-
-        // Base path
-        let newDepth = this.depth + 1;
-        let path = this.path;
-        if (path) {
-            let pathFields = path.split("/");
-            if (pathFields.length == 6){
-                pathFields.pop();
-                path = pathFields.join("/");
-                newDepth--;
-            }
-
-            path += "/" + (index & ~HardenedBit);
-            if (index & HardenedBit) { path += "'"; }
-        }
-        const { IR, IL } = ser_I(index, this.chainCode, this.#publicKey, this.privateKey);
-        const ki = new SigningKey(toBeHex((toBigInt(IL) + BigInt(this.privateKey)) % N, 32));
-        
-        //BIP44 if we are at the account depth get that fingerprint, otherwise continue with the current one
-        let newFingerprint = this.depth == 3 ? this.fingerprint : this.accountFingerprint;
-
-        return new QiHDWallet(_guard, ki, newFingerprint, hexlify(IR),
-            path, index, newDepth, this.mnemonic, this.provider);
-
-    }
-
-    /**
-     *  Derives an address that is valid for a specified zone on the Qi ledger.
-     * 
-     *  @param {number} startingIndex - The index to derive.
-     *  @param {string} zone - The zone to derive the address for
-     *  @returns {QiHDWallet} The derived address.
-     *  @throws {Error} If the wallet's address derivation path is missing or if 
-     *  a valid address cannot be derived for the specified zone after 1000 attempts.
-     */
-    private deriveAddress(startingIndex: number, zone: string): AddressInfo{
-        if (!this.path) throw new Error("Missing wallet's address derivation path");
-
-        let newWallet: QiHDWallet;
-
-        // helper function to check if the generated address is valid for the specified zone
-        const isValidAddressForZone = (address: string) => {
-            return (getShardForAddress(address)?.nickname.toLowerCase() === zone &&
-                newWallet.coinType == COIN_TYPE &&
-                isUTXOAddress(address) == true);
-        }
-
-        let addrIndex: number = startingIndex;
-        do {
-            newWallet = this.derivePath(addrIndex.toString());
-            addrIndex++;
-            // put a hard limit on the number of addresses to derive
-            if (addrIndex - startingIndex > 10000000) {
-                throw new Error(`Failed to derive a valid address for the zone ${zone} after 1000 attempts.`);
-            }
-        } while (!isValidAddressForZone(newWallet.address));
-
-        const addresInfo = { address: newWallet.address, privKey: newWallet.privateKey, index: addrIndex - 1};
-        
-        return addresInfo;
-    }
-
-
     // helper function to validate the zone
     private validateZone(zone: string): boolean {
         zone = zone.toLowerCase()
@@ -501,6 +244,4 @@ export class QiHDWallet extends BaseWallet {
     getAddressFromPubKey(pubkey: string): string {
         return getAddress(addressKeccak256("0x" + pubkey.substring(4)).substring(26))
     }
-
-
 }

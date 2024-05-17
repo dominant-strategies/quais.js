@@ -96,7 +96,8 @@ export type {
     EventFilter, Filter, FilterByBlockHash, OrphanFilter, ProviderEvent,
     TopicFilter,
     Provider,
-    MinedBlock, MinedTransactionResponse
+    MinedBlock, MinedTransactionResponse,
+    QiTransactionRequest
 } from "./provider.js";
 
 export type {

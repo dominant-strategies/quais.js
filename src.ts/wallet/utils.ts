@@ -150,8 +150,11 @@ export function ser_I(index: number, chainCode: string, publicKey: string, priva
     return { IL: I.slice(0, 32), IR: I.slice(32) };
 }
 
-type HDNodeLike<T> = {
-    coinType?: number; depth: number, deriveChild: (i: number) => T, setCoinType?: () => void 
+export type HDNodeLike<T> = {
+    coinType?: number;
+    depth: number,
+    deriveChild: (i: number) => T,
+    // setCoinType?: () => void 
 };
 
 export function derivePath<T extends HDNodeLike<T>>(node: T, path: string): T {
@@ -180,7 +183,7 @@ export function derivePath<T extends HDNodeLike<T>>(node: T, path: string): T {
         }
     }
     // Extract the coin type from the path and set it on the node
-    if (result.setCoinType) result.setCoinType();
+    // if (result.setCoinType) result.setCoinType();
     return result;
 }
 
