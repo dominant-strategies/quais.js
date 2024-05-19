@@ -15,14 +15,7 @@
 
 export { BaseWallet } from './base-wallet.js';
 
-export {
-    getAccountPath,
-    getIndexedAccountPath,
-    quaiHDAccountPath,
-    qiHDAccountPath,
-    QuaiHDWallet,
-    HDNodeVoidWallet,
-} from './quai-hdwallet.js';
+export {QuaiHDWallet} from "./quai-hdwallet.js";
 
 export { isCrowdsaleJson, decryptCrowdsaleJson } from './json-crowdsale.js';
 

@@ -159,53 +159,54 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
         return new (this.constructor as new (...args: any[]) => this)(...params);
     }
 
-    #account(): KeystoreAccount {
-        const account: KeystoreAccount = {
-            address: this.address,
-            privateKey: this.privateKey,
-        };
-        const m = this.mnemonic;
-        if (this.path && m && m.wordlist.locale === 'en' && m.password === '') {
-            account.mnemonic = {
-                path: this.path,
-                locale: 'en',
-                entropy: m.entropy,
-            };
-        }
+	protected account(): KeystoreAccount {
+		const account: KeystoreAccount = {
+			address: this.address,
+			privateKey: this.privateKey,
+		};
+		const m = this.mnemonic;
+		if (this.path && m && m.wordlist.locale === "en" && m.password === "") {
+			account.mnemonic = {
+				path: this.path,
+				locale: "en",
+				entropy: m.entropy,
+			};
+		}
 
         return account;
     }
 
-    /**
-     * Resolves to a [JSON Keystore Wallet](json-wallets) encrypted with `password`.
-     *
-     * If `progressCallback` is specified, it will receive periodic updates as the encryption process progreses.
-     *
-     * @param {Uint8Array | string} password - The password to encrypt the wallet with.
-     * @param {ProgressCallback} [progressCallback] - An optional callback to receive progress updates.
-     *
-     * @returns {Promise<string>} The encrypted JSON Keystore Wallet.
-     */
-    async encrypt(password: Uint8Array | string, progressCallback?: ProgressCallback): Promise<string> {
-        return await encryptKeystoreJson(this.#account(), password, { progressCallback });
-    }
+	/**
+	 *  Resolves to a [JSON Keystore Wallet](json-wallets) encrypted with
+	 *  `password`.
+	 *
+	 *  If `progressCallback` is specified, it will receive periodic
+	 *  updates as the encryption process progreses.
+	 *
+	 *  @param {Uint8Array | string} password - The password to encrypt the wallet with.
+	 *  @param {ProgressCallback} [progressCallback] - An optional callback to receive progress updates.
+	 *  @returns {Promise<string>} The encrypted JSON Keystore Wallet.
+	 */
+	async encrypt(password: Uint8Array | string,progressCallback?: ProgressCallback): Promise<string> {
+		return await encryptKeystoreJson(this.account(), password, {progressCallback});
+	}
 
-    /**
-     * Returns a [JSON Keystore Wallet](json-wallets) encryped with `password`.
-     *
-     * It is preferred to use the [async version](encrypt) instead, which allows a
-     * {@link ProgressCallback | **ProgressCallback**} to keep the user informed.
-     *
-     * This method will block the event loop (freezing all UI) until it is complete, which may be a non-trivial
-     * duration.
-     *
-     * @param {Uint8Array | string} password - The password to encrypt the wallet with.
-     *
-     * @returns {string} The encrypted JSON Keystore Wallet.
-     */
-    encryptSync(password: Uint8Array | string): string {
-        return encryptKeystoreJsonSync(this.#account(), password);
-    }
+	/**
+	 *  Returns a [JSON Keystore Wallet](json-wallets) encryped with
+	 *  `password`.
+	 *
+	 *  It is preferred to use the [async version](encrypt) instead,
+	 *  which allows a {@link ProgressCallback | **ProgressCallback**} to keep the user informed.
+	 *
+	 *  This method will block the event loop (freezing all UI) until
+	 *  it is complete, which may be a non-trivial duration.
+	 *
+	 *  @param {Uint8Array | string} password - The password to encrypt the wallet with.
+	 *  @returns {string} The encrypted JSON Keystore Wallet.
+	 */
+	encryptSync(password: Uint8Array | string): string {
+		return encryptKeystoreJsonSync(this.account(), password);
+	}
 
     /**
      * The extended key.
