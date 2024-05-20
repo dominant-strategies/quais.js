@@ -7,8 +7,8 @@ import { SigningKey } from "../crypto/index.js";
 import { Mnemonic } from "./mnemonic.js";
 import type { Provider } from "../providers/index.js";
 import { HDWallet, AddressInfo} from "./hdwallet.js";
+import { QUAI_COIN_TYPE } from '../constants/index.js';
 
-const QUAI_COINT_TYPE = 994;
 
 // keeps track of the addresses and outpoints for a given shard (zone)
 type ShardWalletData = {
@@ -29,7 +29,7 @@ export class QuaiHDWallet extends HDWallet {
     /**
      *  The Quai cointype.
      */
-    readonly coinType: number = QUAI_COINT_TYPE;
+    readonly coinType: number = QUAI_COIN_TYPE;
 
     /**
      * Map of shard name (zone) to shardWalletData

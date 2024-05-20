@@ -4,12 +4,13 @@ import { getBytes, getShardForAddress, hexlify } from '../utils/index.js';
 import { Provider, QiTransactionRequest } from '../providers/index.js';
 import { TransactionLike, computeAddress, QiTransaction, TxInput } from '../transaction/index.js';
 import { Mnemonic } from './mnemonic.js';
-import { HDWallet, AddressInfo } from './hdwallet.js';
-import { MuSigFactory } from '@brandonblack/musig';
-import { nobleCrypto } from './musig-crypto.js';
-import { schnorr } from '@noble/curves/secp256k1';
-import { keccak_256 } from '@noble/hashes/sha3';
-import { getAddress } from '../address/index.js';
+import { HDWallet, AddressInfo } from "./hdwallet.js";
+import { MuSigFactory } from "@brandonblack/musig"
+import { nobleCrypto } from "./musig-crypto.js";
+import { schnorr } from "@noble/curves/secp256k1";
+import { keccak_256 } from "@noble/hashes/sha3";
+import { getAddress } from "../address/index.js";
+import {QI_COIN_TYPE} from '../constants/index.js';
 
 type Outpoint = {
     Txhash: string;
@@ -24,7 +25,6 @@ type ShardWalletData = {
 };
 
 const GAP = 20;
-const QI_COIN_TYPE = 969;
 
 /**
  * @category Wallet
