@@ -157,7 +157,7 @@ export class AbiCoder {
         // u?int[0-9]*
         let match = param.type.match(paramTypeNumber);
         if (match) {
-            let size = parseInt(match[2] || '256');
+            const size = parseInt(match[2] || '256');
             assertArgument(
                 size !== 0 && size <= 256 && size % 8 === 0,
                 'invalid ' + match[1] + ' bit length',
@@ -170,7 +170,7 @@ export class AbiCoder {
         // bytes[0-9]+
         match = param.type.match(paramTypeBytes);
         if (match) {
-            let size = parseInt(match[1]);
+            const size = parseInt(match[1]);
             assertArgument(size !== 0 && size <= 32, 'invalid bytes length', 'param', param);
             return new FixedBytesCoder(size, param.name);
         }
@@ -219,7 +219,8 @@ export class AbiCoder {
      *
      * @param {(string | ParamType)[]} types - Array of parameter types.
      * @param {BytesLike} data - The ABI data to decode.
-     * @param {boolean} [loose=false] - Enable loose decoding. Default is `false` Default is `false`
+     * @param {boolean} [loose=false] - Enable loose decoding. Default is `false` Default is `false` Default is `false`
+     *   Default is `false`
      *
      * @returns {Result} The decoded values.
      */

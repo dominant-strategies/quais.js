@@ -70,7 +70,7 @@ type PresentVersion = {
     {
         const content = fs.readFileSync(resolve('CHANGELOG.md')).toString();
         for (const line of content.split('\n')) {
-            let match = line.match(/^ethers\/v(\S+)\s/);
+            const match = line.match(/^ethers\/v(\S+)\s/);
             if (match) {
                 present.push({ version: match[1], body: [line] });
             } else {
@@ -188,12 +188,14 @@ type PresentVersion = {
             let line = `  - ${change.message} (`;
             line += change.issues
                 .map((i) => {
+                    // eslint-disable-next-line no-useless-escape
                     return `[#${i}](https:/\/github.com/ethers-io/ethers.js/issues/${i})`;
                 })
                 .join(', ');
             if (change.issues.length) {
                 line += '; ';
             }
+            // eslint-disable-next-line no-useless-escape
             line += `[${change.commit.substring(0, 7)}](https:/\/github.com/ethers-io/ethers.js/commit/${change.commit})).`;
             output.push(line);
         }

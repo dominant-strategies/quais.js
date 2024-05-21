@@ -72,6 +72,7 @@ export function isKeystoreJson(json: string): boolean {
         if (version === 3) {
             return true;
         }
+        // eslint-disable-next-line no-empty
     } catch (error) {}
     return false;
 }
@@ -154,7 +155,7 @@ type KdfParams =
           algorithm: 'sha256' | 'sha512';
       };
 
-function getDecryptKdfParams<T>(data: any): KdfParams {
+function getDecryptKdfParams(data: any): KdfParams {
     const kdf = spelunk(data, 'crypto.kdf:string');
     if (kdf && typeof kdf === 'string') {
         if (kdf.toLowerCase() === 'scrypt') {

@@ -1586,7 +1586,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
      */
     toJSON(): any {
         const { blockNumber, blockHash, index, hash, type, to, from, nonce, data, signature, accessList } = this;
-        let result = {
+        const result = {
             _type: 'TransactionReceipt',
             accessList,
             blockNumber,
@@ -2025,7 +2025,6 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
 
     readonly txOutputs?: Array<TxOutput>;
 
-    // @ts-ignore
     #startBlock: number;
     /**
      * @ignore
@@ -2055,7 +2054,7 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
      */
     toJSON(): any {
         const { blockNumber, blockHash, index, hash, type, signature, txInputs, txOutputs } = this;
-        let result = {
+        const result = {
             _type: 'TransactionReceipt',
             blockNumber,
             blockHash,

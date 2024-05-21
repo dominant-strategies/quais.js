@@ -42,7 +42,7 @@ function mnemonicToEntropy(mnemonic: string, wordlist?: null | Wordlist): string
 
     let offset = 0;
     for (let i = 0; i < words.length; i++) {
-        let index = wordlist.getWordIndex(words[i].normalize('NFKD'));
+        const index = wordlist.getWordIndex(words[i].normalize('NFKD'));
         assertArgument(index >= 0, `invalid mnemonic word at index ${i}`, 'mnemonic', '[ REDACTED ]');
 
         for (let bit = 0; bit < 11; bit++) {
@@ -258,6 +258,7 @@ export class Mnemonic {
         try {
             mnemonicToEntropy(phrase, wordlist);
             return true;
+            // eslint-disable-next-line no-empty
         } catch (error) {}
         return false;
     }

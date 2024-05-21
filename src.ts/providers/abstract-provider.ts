@@ -253,6 +253,8 @@ export class UnmanagedSubscriber implements Subscriber {
     start(): void {}
     stop(): void {}
 
+    // TODO: `dropWhilePaused` is not used, remove or re-write
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     pause(dropWhilePaused?: boolean): void {}
     resume(): void {}
 }
@@ -278,6 +280,8 @@ function concisify(items: Array<string>): Array<string> {
     return items;
 }
 
+// TODO: `provider` is not used, remove or re-write
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function getSubscription(_event: ProviderEvent, provider: AbstractProvider<any>): Promise<Subscription> {
     if (_event == null) {
         throw new Error('invalid event');
@@ -728,7 +732,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     async shardFromAddress(_address: AddressLike): Promise<string> {
-        let address: string | Promise<string> = this._getAddress(_address);
+        const address: string | Promise<string> = this._getAddress(_address);
         return (await address).slice(0, 4);
     }
 
@@ -872,6 +876,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @returns {Block} The wrapped block.
      */
+    // TODO: `newtork` is not used, remove or re-write
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _wrapBlock(value: BlockParams, network: Network): Block {
         // Handle known node by -> remove null values from the number array
         value.number = Array.isArray(value.number) ? value.number.filter((n: any) => n != null) : value.number;
@@ -887,6 +893,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @returns {Log} The wrapped log.
      */
+    // TODO: `newtork` is not used, remove or re-write
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _wrapLog(value: LogParams, network: Network): Log {
         return new Log(formatLog(value), this);
     }
@@ -900,6 +908,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @returns {TransactionReceipt} The wrapped transaction receipt.
      */
+    // TODO: `newtork` is not used, remove or re-write
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _wrapTransactionReceipt(value: TransactionReceiptParams, network: Network): TransactionReceipt {
         return new TransactionReceipt(formatTransactionReceipt(value), this);
     }
@@ -913,6 +923,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @returns {TransactionResponse} The wrapped transaction response.
      */
+    // TODO: `newtork` is not used, remove or re-write
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _wrapTransactionResponse(tx: TransactionResponseParams, network: Network): TransactionResponse {
         if ('from' in tx) {
             return new QuaiTransactionResponse(formatTransactionResponse(tx) as QuaiTransactionResponseParams, this);
@@ -930,6 +942,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @returns {Promise<Network>} A promise resolving to the network.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _detectNetwork(shard?: string): Promise<Network> {
         assert(false, 'sub-classes must implement this', 'UNSUPPORTED_OPERATION', {
             operation: '_detectNetwork',
@@ -1088,7 +1101,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         };
 
         // Addresses could be async (ENS names or Addressables)
-        let address: Array<string | Promise<string>> = [];
+        const address: Array<string | Promise<string>> = [];
         if (filter.address) {
             if (Array.isArray(filter.address)) {
                 for (const addr of filter.address) {
@@ -1274,6 +1287,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                             ? await this.#perform({ method: 'getMaxPriorityFeePerGas', shard: shard })
                             : 0;
                         return getBigInt(value, '%response');
+                        // eslint-disable-next-line no-empty
                     } catch (error) {}
                     return null;
                 })(),
@@ -1323,17 +1337,16 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         );
     }
 
+    // TODO: `attempt` is not used, remove or re-write
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async #call(tx: PerformActionTransaction, blockTag: string, attempt: number): Promise<string> {
         // This came in as a PerformActionTransaction, so to/from are safe; we can cast
         const transaction = <PerformActionTransaction>copyRequest(tx);
-
-        try {
-            return hexlify(await this._perform({ method: 'call', transaction, blockTag }));
-        } catch (error: any) {
-            throw error;
-        }
+        return hexlify(await this._perform({ method: 'call', transaction, blockTag }));
     }
 
+    // TODO: `shard` is not used, remove or re-write
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async #checkNetwork<T>(promise: Promise<T>, shard?: string): Promise<T> {
         const { value } = await resolveProperties({
             network: this.getNetwork(),
@@ -1410,7 +1423,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             network: this.getNetwork(),
         });
 
-        let tx = type == 2 ? QiTransaction.from(signedTx) : QuaiTransaction.from(signedTx);
+        const tx = type == 2 ? QiTransaction.from(signedTx) : QuaiTransaction.from(signedTx);
 
         this.#validateTransactionHash(tx.hash || '', hash);
         return this._wrapTransactionResponse(<any>tx, network).replaceableTransaction(blockNumber);
@@ -1521,7 +1534,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return params.map((p) => this._wrapLog(p, network));
     }
 
-    // ENS
+    // TODO: unsupported, remove?
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _getProvider(chainId: number): AbstractProvider {
         assert(false, 'provider cannot connect to target network', 'UNSUPPORTED_OPERATION', {
             operation: '_getProvider()',
@@ -1539,6 +1553,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             return this.getTransactionReceipt(hash);
         }
 
+        // eslint-disable-next-line no-async-promise-executor
         return new Promise(async (resolve, reject) => {
             let timer: null | Timer = null;
 
@@ -1577,6 +1592,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         });
     }
 
+    // TODO: not implemented yet
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async waitForBlock(shard: string, blockTag?: BlockTag): Promise<Block> {
         assert(false, 'not implemented yet', 'NOT_IMPLEMENTED', {
             operation: 'waitForBlock',
@@ -1753,6 +1770,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             const payload = new EventPayload(this, once ? null : listener, event);
             try {
                 listener.call(this, ...args, payload);
+                // eslint-disable-next-line no-empty
             } catch (error) {}
             return !once;
         });

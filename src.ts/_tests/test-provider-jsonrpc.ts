@@ -47,6 +47,8 @@ function createProvider(testFunc: ProcessRequest): JsonRpcProvider {
     };
 
     const req = new FetchRequest('http://localhost:8082/');
+    // TODO: `signal` is not used, remove or re-write
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     req.getUrlFunc = async (_req, signal) => {
         const req = JSON.parse(_req.hasBody() ? toUtf8String(_req.body) : '');
 
@@ -161,6 +163,8 @@ describe('Ensure Catchable Errors', function () {
         // A provider which is mocked to return a "missing v"
         // in getTransaction
 
+        // TODO: `blockNumber` and `params` are not used, remove or re-write
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const provider = createProvider((method, params, blockNumber) => {
             switch (method) {
                 case 'quai_sendTransaction':

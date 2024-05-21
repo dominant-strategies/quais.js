@@ -29,7 +29,7 @@ function _pack(type: string, value: any, isArray?: boolean): Uint8Array {
         case 'bytes':
             return getBytes(value);
         case 'bool':
-            value = !!value ? '0x01' : '0x00';
+            value = value ? '0x01' : '0x00';
             if (isArray) {
                 return getBytes(zeroPadValue(value, 32));
             }
@@ -38,7 +38,7 @@ function _pack(type: string, value: any, isArray?: boolean): Uint8Array {
 
     let match = type.match(regexNumber);
     if (match) {
-        let signed = match[1] === 'int';
+        const signed = match[1] === 'int';
         let size = parseInt(match[2] || '256');
 
         assertArgument(

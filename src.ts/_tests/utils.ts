@@ -6,6 +6,7 @@ import zlib from 'zlib';
 const root = (function () {
     let root = process.cwd();
 
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         if (fs.existsSync(path.join(root, 'output'))) {
             return root;

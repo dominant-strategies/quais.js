@@ -751,8 +751,8 @@ export class FixedNumber {
 
         const format = getFormat(_format);
 
-        let whole = match[2] || '0',
-            decimal = match[3] || '';
+        const whole = match[2] || '0';
+        let decimal = match[3] || '';
 
         // Pad out the decimals
         while (decimal.length < format.decimals) {

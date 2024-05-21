@@ -96,6 +96,8 @@ const reIpfs = new RegExp('^ipfs://(ipfs/)?(.*)$', 'i');
 let locked = false;
 
 // https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URLs
+// TODO: `signal` is not used; remove?
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function dataGatewayFunc(url: string, signal?: FetchCancelSignal): Promise<FetchResponse> {
     try {
         const match = url.match(reData);
@@ -125,6 +127,8 @@ async function dataGatewayFunc(url: string, signal?: FetchCancelSignal): Promise
  * @returns {FetchGatewayFunc} The gateway function.
  */
 function getIpfsGatewayFunc(baseUrl: string): FetchGatewayFunc {
+    // TODO: `signal` is not used; remove?
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async function gatewayIpfs(url: string, signal?: FetchCancelSignal): Promise<FetchRequest | FetchResponse> {
         try {
             const match = url.match(reIpfs);
@@ -599,6 +603,7 @@ export class FetchRequest implements Iterable<[key: string, value: string]> {
             try {
                 const location = response.headers.location || '';
                 return req.redirect(location).#send(attempt + 1, expires, 0, _request, response);
+                // eslint-disable-next-line no-empty
             } catch (error) {}
 
             // Things won't get any better on another attempt; abort
@@ -1062,6 +1067,7 @@ export class FetchResponse implements Iterable<[key: string, value: string]> {
         if (this.ok()) {
             return;
         }
+        // eslint-disable-next-line prefer-const
         let { message, error } = this.#error;
         if (message === '') {
             message = `server response ${this.statusCode} ${this.statusMessage}`;

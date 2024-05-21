@@ -73,6 +73,8 @@ export class BaseWallet extends AbstractSigner {
         return this.signingKey.privateKey;
     }
 
+    // TODO: `_zone` is not used, should it be removed?
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async getAddress(_zone?: string): Promise<string> {
         return this.#address;
     }

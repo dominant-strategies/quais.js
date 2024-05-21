@@ -47,7 +47,7 @@ function equals(name: string, actual: any, expected: any): void {
             assert.ok(false, name + ' - actual object null');
         }
 
-        let keys: { [key: string]: boolean } = {};
+        const keys: { [key: string]: boolean } = {};
         Object.keys(expected).forEach((key) => {
             keys[key] = true;
         });
@@ -100,7 +100,7 @@ async function sendTransaction(to: string) {
         do {
             typeValue = getTxType(wallet.address, to);
             const gas = await getRPCGasPrice(process.env.CYPRUS1URL);
-            let tx: {
+            const tx: {
                 from: string;
                 to: string;
                 value: any;
@@ -142,6 +142,8 @@ async function sendTransaction(to: string) {
 }
 
 async function fetchRPCBlock(blockNumber: string | null) {
+    // TODO: this is supposedly an un-needed try-catch, consider revising
+    // eslint-disable-next-line no-useless-catch
     try {
         let response;
         do {
@@ -232,10 +234,11 @@ describe('Test Provider Block operations', function () {
     });
 
     it('should fetch block by number', async function () {
-        let responseBlock = (await providerC1.getBlock('0,0', '0xA')) as quais.Block;
+        const responseBlock = (await providerC1.getBlock('0,0', '0xA')) as quais.Block;
         assert.ok(responseBlock != null, 'block != null');
-
-        let { provider, ...formatBlock } = {
+        // TODO: `provider` is not used, remove?
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { provider, ...formatBlock } = {
             ...responseBlock,
             transactions: responseBlock.transactions,
             extTransactions: responseBlock.extTransactions,
@@ -245,10 +248,11 @@ describe('Test Provider Block operations', function () {
 
     it('should fetch block by hash', async function () {
         assert.ok(block.hash != null, 'block.hash != null');
-        let responseBlock = (await providerC1.getBlock('0,0', block.hash)) as quais.Block;
+        const responseBlock = (await providerC1.getBlock('0,0', block.hash)) as quais.Block;
         assert.ok(responseBlock != null, 'block != null');
-
-        let { provider, ...formatBlock } = {
+        // TODO: `provider` is not used, remove?
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { provider, ...formatBlock } = {
             ...responseBlock,
             transactions: responseBlock.transactions,
             extTransactions: responseBlock.extTransactions,
@@ -293,7 +297,9 @@ describe('Test Transaction operations', function () {
             type: receipt.type,
         };
         const receiptResponse = await providerC1.getTransactionReceipt(internalTx.hash);
-        let { provider, ...receiptResult } = {
+        // TODO: `provider` is not used, remove?
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { provider, ...receiptResult } = {
             ...receiptResponse,
             logs: receiptResponse?.logs,
         };
@@ -343,7 +349,9 @@ describe('Test Transaction operations', function () {
             type: Number(receipt.type),
         };
         const receiptResponse = await providerC1.getTransactionReceipt(internalToExternalTx.hash);
-        let { provider, ...receiptResult } = {
+        // TODO: `provider` is not used, remove?
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { provider, ...receiptResult } = {
             ...receiptResponse,
             logs: receiptResponse?.logs,
         };

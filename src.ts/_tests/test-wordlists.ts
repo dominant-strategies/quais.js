@@ -10,7 +10,7 @@ describe('Check Wordlists', function () {
     const tests = loadTests<TestCaseWordlist>('wordlists');
 
     tests.forEach((test) => {
-        let wordlist = wordlists[test.locale];
+        const wordlist = wordlists[test.locale];
         if (wordlist == null) {
             return;
         }
@@ -20,7 +20,7 @@ describe('Check Wordlists', function () {
 
             let check = '';
             for (let i = 0; i < 2048; i++) {
-                let word = wordlist.getWord(i);
+                const word = wordlist.getWord(i);
                 check += word + '\n';
                 assert.equal(word, words[i]);
                 assert.equal(wordlist.getWordIndex(word), i);
@@ -31,7 +31,7 @@ describe('Check Wordlists', function () {
     });
 
     tests.forEach((test) => {
-        let wordlist = wordlists[test.locale];
+        const wordlist = wordlists[test.locale];
         if (wordlist == null) {
             return;
         }
@@ -53,7 +53,7 @@ describe('Check Wordlists', function () {
     });
 
     tests.forEach((test) => {
-        let wordlist = wordlists[test.locale];
+        const wordlist = wordlists[test.locale];
         if (wordlist == null) {
             return;
         }

@@ -25,7 +25,8 @@ declare global {
 }
 
 // @TODO: timeout is completely ignored; start a Promise.any with a reject?
-
+// TODO: `options` is not used; remove?
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function createGetUrl(options?: Record<string, any>): FetchGetUrlFunc {
     async function getUrl(req: FetchRequest, _signal?: FetchCancelSignal): Promise<GetUrlResponse> {
         const protocol = req.url.split(':')[0].toLowerCase();

@@ -44,7 +44,7 @@ export class Wallet extends BaseWallet {
             key = '0x' + key;
         }
 
-        let signingKey = typeof key === 'string' ? new SigningKey(key) : key;
+        const signingKey = typeof key === 'string' ? new SigningKey(key) : key;
         super(signingKey, provider);
     }
 

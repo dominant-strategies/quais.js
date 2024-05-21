@@ -750,6 +750,8 @@ export class Interface {
      *
      * If the `key` and `values` do not refine to a single error in the ABI, this will throw.
      */
+    // TODO: `values` is not used, remove?
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     getError(key: string, values?: Array<any | Typed>): null | ErrorFragment {
         if (isHexString(key)) {
             const selector = key.toLowerCase();
@@ -1206,6 +1208,8 @@ export class Interface {
         const nonIndexed: Array<ParamType> = [];
         const dynamic: Array<boolean> = [];
 
+        // TODO: `index` is not used, remove?
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         fragment.inputs.forEach((param, index) => {
             if (param.indexed) {
                 if (
@@ -1283,6 +1287,8 @@ export class Interface {
         return new TransactionDescription(fragment, fragment.selector, args, value);
     }
 
+    // TODO: not implemented
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     parseCallResult(data: BytesLike): Result {
         throw new Error('@TODO');
     }

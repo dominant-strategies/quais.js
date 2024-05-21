@@ -149,7 +149,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         const hashHex = keccak256(dataBuffer);
         const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
 
-        let origin = this.originShard ? parseInt(this.originShard, 16) : 0;
+        const origin = this.originShard ? parseInt(this.originShard, 16) : 0;
         hashBuffer[0] = origin;
         hashBuffer[1] &= 0x7f;
         hashBuffer[2] = origin;

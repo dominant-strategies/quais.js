@@ -66,6 +66,7 @@ export function isAddress(value: any): value is string {
     try {
         getAddress(value);
         return true;
+        // eslint-disable-next-line no-empty
     } catch (error) {}
     return false;
 }

@@ -88,7 +88,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         const hashHex = keccak256(dataBuffer);
         const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
 
-        let origin = this.originShard ? parseInt(this.originShard, 16) : 0;
+        const origin = this.originShard ? parseInt(this.originShard, 16) : 0;
         hashBuffer[0] = origin;
         hashBuffer[1] |= 0x80;
         hashBuffer[2] = origin;

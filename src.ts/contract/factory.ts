@@ -218,17 +218,17 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
 
         const sender = String(tx.from);
         const toShard = getShardForAddress(sender);
-        var i = 0;
-        var startingData = tx.data;
+        let i = 0;
+        const startingData = tx.data;
         while (i < 10000) {
-            var contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
-            var contractShard = getShardForAddress(contractAddress);
+            const contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
+            const contractShard = getShardForAddress(contractAddress);
             console.log('contractAddress ', contractAddress);
-            var utxo = isUTXOAddress(contractAddress);
+            const utxo = isUTXOAddress(contractAddress);
             if (contractShard === toShard && !utxo) {
                 return tx;
             }
-            var salt = randomBytes(32);
+            const salt = randomBytes(32);
             tx.data = hexlify(concat([String(startingData), salt]));
             i++;
         }

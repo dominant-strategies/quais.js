@@ -35,6 +35,7 @@ export function isCrowdsaleJson(json: string): boolean {
         if (data.encseed) {
             return true;
         }
+        // eslint-disable-next-line no-empty
     } catch (error) {}
     return false;
 }
