@@ -61,7 +61,7 @@ export class QuaiHDWallet extends HDWallet {
             this.#shardWalletsMap.set(zone, shardWalletData);
         }
 
-        const addressInfo = this.deriveAddress(index, zone);
+        const addressInfo = this.deriveAddress(index, zone, "Quai");
         shardWalletData.addressesInfo.push(addressInfo);
         return addressInfo.address;
     }

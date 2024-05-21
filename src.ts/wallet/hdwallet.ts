@@ -7,7 +7,6 @@ import { computeHmac, randomBytes, SigningKey, sha256, ripemd160 } from '../cryp
 import { VoidSigner, Provider } from '../providers/index.js';
 import { computeAddress } from '../transaction/index.js';
 import {
-<<<<<<< HEAD
     concat,
     decodeBase58,
     isBytesLike,
@@ -20,7 +19,7 @@ import {
     assertArgument,
     hexlify,
     getShardForAddress,
-    isUTXOAddress,
+    isQiAddress,
     BytesLike,
     Numeric,
     defineProperties,
@@ -35,34 +34,6 @@ import type { ProgressCallback } from '../crypto/index.js';
 import type { Wordlist } from '../wordlists/index.js';
 import type { KeystoreAccount } from './json-keystore.js';
 import { encodeBase58Check, zpad, HardenedBit, ser_I, derivePath, MasterSecret, HDNodeLike } from './utils.js';
-=======
-	computeHmac, randomBytes, SigningKey,
-	sha256, ripemd160,
-} from "../crypto/index.js";
-import { VoidSigner, Provider } from "../providers/index.js";
-import {computeAddress} from '../transaction/index.js';
-import {
-	concat, decodeBase58, isBytesLike, getNumber,
-	toBeArray, toBigInt, toBeHex, assertPrivate,
-	assert, assertArgument, hexlify, getShardForAddress,
-	isQiAddress, BytesLike, Numeric, defineProperties, 
-	getBytes, dataSlice,
-} from "../utils/index.js";
-import { BaseWallet } from "./base-wallet.js";
-import { Mnemonic } from "./mnemonic.js";
-import {
-	encryptKeystoreJson,
-	encryptKeystoreJsonSync,
-} from "./json-keystore.js";
-import { N } from "../constants/index.js";
-import type { ProgressCallback } from "../crypto/index.js";
-import type { Wordlist } from "../wordlists/index.js";
-import type { KeystoreAccount } from "./json-keystore.js";
-import {
-	encodeBase58Check,zpad,	HardenedBit,
-	ser_I,derivePath,MasterSecret,HDNodeLike,
-} from "./utils.js";
->>>>>>> da8321b5 (rename 'isUTXOAddress' to 'isQiAddress')
 
 const _guard = {};
 // Constant to represent the maximum attempt to derive an address
@@ -524,6 +495,7 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
         return this._fromSeed(seed, null);
     }
 
+<<<<<<< HEAD
     /**
      * Derives address by incrementing address_index according to BIP44
      *
@@ -535,9 +507,22 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
      */
     protected deriveAddress(startingIndex: number, zone: string): AddressInfo {
         if (!this.path) throw new Error("Missing wallet's address derivation path");
+=======
+	/**
+	 * Derives address by incrementing address_index according to BIP44
+	 *
+	 *  @param {number} index - The index of the address to derive.
+	 *  @param {string} [zone] - The zone of the address to derive.
+	 *  @returns {HDWallet} The derived HD Node.
+	 *  @throws {Error} If the path is missing or the zone is invalid.
+	 */
+	protected deriveAddress(startingIndex: number, zone: string, ledgerType: 'Qi' | 'Quai'): AddressInfo {
+		if (!this.path) throw new Error("Missing wallet's address derivation path");
+>>>>>>> 78eadd47 (modify 'deriveAddress' method to support both Qi and Quai)
 
         let newWallet: this;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
         // helper function to check if the generated address is valid for the specified zone
         const isValidAddressForZone = (address: string) => {
@@ -549,11 +534,17 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
         };
 =======
 		// helper function to check if the generated address is valid for the specified zone
+=======
+>>>>>>> 78eadd47 (modify 'deriveAddress' method to support both Qi and Quai)
 		const isValidAddressForZone = (address: string) => {
-			return (getShardForAddress(address)?.nickname.toLowerCase() === zone &&
-				newWallet.coinType == this.coinType &&
-				isQiAddress(address) == true);
+			const shardNickname = getShardForAddress(address)?.nickname.toLowerCase();
+			const isCorrectShard = shardNickname === zone;
+			const isCorrectCoinType = newWallet.coinType === this.coinType;
+			const isCorrectLedger = (ledgerType === 'Qi') ? isQiAddress(address) : !isQiAddress(address);
+	
+			return isCorrectShard && isCorrectCoinType && isCorrectLedger;
 		}
+<<<<<<< HEAD
 >>>>>>> da8321b5 (rename 'isUTXOAddress' to 'isQiAddress')
 
         let addrIndex: number = startingIndex;
@@ -567,6 +558,17 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
                 );
             }
         } while (!isValidAddressForZone(newWallet.address));
+=======
+		let addrIndex: number = startingIndex;
+		do {
+			newWallet = this.derivePath(addrIndex.toString());
+			addrIndex++;
+			// put a hard limit on the number of addresses to derive
+			if (addrIndex - startingIndex > MAX_ADDRESS_DERIVATION_ATTEMPTS) {
+				throw new Error(`Failed to derive a valid address for the zone ${zone} after MAX_ADDRESS_DERIVATION_ATTEMPTS attempts.`);
+			}
+		} while (!isValidAddressForZone(newWallet.address));
+>>>>>>> 78eadd47 (modify 'deriveAddress' method to support both Qi and Quai)
 
         const addresInfo = { address: newWallet.address, privKey: newWallet.privateKey, index: addrIndex - 1 };
 

@@ -108,7 +108,7 @@ export class QiHDWallet extends HDWallet {
         let derivationIndex = 0;
 
         while (nakedCount < GAP) {
-            const addressInfo = this.deriveAddress(derivationIndex, zone);
+            const addressInfo = this.deriveAddress(derivationIndex, zone, "Qi");
             // store the address, private key and index
             shardWalletData.addressesInfo.push(addressInfo);
             // query the network node for the outpoints of the address and update the balance
