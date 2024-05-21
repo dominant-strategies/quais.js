@@ -65,7 +65,7 @@ export { toUtf8Bytes, toUtf8CodePoints, toUtf8String, Utf8ErrorFuncs } from './u
 
 export { uuidV4 } from './uuid.js';
 
-export { getTxType, getShardForAddress, getAddressDetails, isUTXOAddress } from './shards.js';
+export { getTxType, getShardForAddress, getAddressDetails, isQiAddress } from './shards.js';
 
 /////////////////////////////
 // Types

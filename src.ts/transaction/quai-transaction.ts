@@ -11,7 +11,7 @@ import {
     getBytes,
     getNumber,
     getShardForAddress,
-    hexlify, isUTXOAddress,
+    hexlify, isQiAddress,
     toBeArray, toBigInt, zeroPadValue
 } from "../utils/index.js";
 import {getAddress} from "../address/index.js";
@@ -123,8 +123,8 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         return this.unsignedHash;
     }
     get unsignedHash(): string {
-        const destUtxo = isUTXOAddress(this.to || '');
-        const originUtxo = isUTXOAddress(this.from);
+        const destUtxo = isQiAddress(this.to || "");
+        const originUtxo = isQiAddress(this.from);
 
         if (!this.originShard) {
             throw new Error("Invalid Shard for from or to address");

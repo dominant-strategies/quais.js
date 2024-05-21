@@ -7,6 +7,7 @@ import { computeHmac, randomBytes, SigningKey, sha256, ripemd160 } from '../cryp
 import { VoidSigner, Provider } from '../providers/index.js';
 import { computeAddress } from '../transaction/index.js';
 import {
+<<<<<<< HEAD
     concat,
     decodeBase58,
     isBytesLike,
@@ -34,6 +35,34 @@ import type { ProgressCallback } from '../crypto/index.js';
 import type { Wordlist } from '../wordlists/index.js';
 import type { KeystoreAccount } from './json-keystore.js';
 import { encodeBase58Check, zpad, HardenedBit, ser_I, derivePath, MasterSecret, HDNodeLike } from './utils.js';
+=======
+	computeHmac, randomBytes, SigningKey,
+	sha256, ripemd160,
+} from "../crypto/index.js";
+import { VoidSigner, Provider } from "../providers/index.js";
+import {computeAddress} from '../transaction/index.js';
+import {
+	concat, decodeBase58, isBytesLike, getNumber,
+	toBeArray, toBigInt, toBeHex, assertPrivate,
+	assert, assertArgument, hexlify, getShardForAddress,
+	isQiAddress, BytesLike, Numeric, defineProperties, 
+	getBytes, dataSlice,
+} from "../utils/index.js";
+import { BaseWallet } from "./base-wallet.js";
+import { Mnemonic } from "./mnemonic.js";
+import {
+	encryptKeystoreJson,
+	encryptKeystoreJsonSync,
+} from "./json-keystore.js";
+import { N } from "../constants/index.js";
+import type { ProgressCallback } from "../crypto/index.js";
+import type { Wordlist } from "../wordlists/index.js";
+import type { KeystoreAccount } from "./json-keystore.js";
+import {
+	encodeBase58Check,zpad,	HardenedBit,
+	ser_I,derivePath,MasterSecret,HDNodeLike,
+} from "./utils.js";
+>>>>>>> da8321b5 (rename 'isUTXOAddress' to 'isQiAddress')
 
 const _guard = {};
 // Constant to represent the maximum attempt to derive an address
@@ -509,6 +538,7 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
 
         let newWallet: this;
 
+<<<<<<< HEAD
         // helper function to check if the generated address is valid for the specified zone
         const isValidAddressForZone = (address: string) => {
             return (
@@ -517,6 +547,14 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
                 isUTXOAddress(address) == true
             );
         };
+=======
+		// helper function to check if the generated address is valid for the specified zone
+		const isValidAddressForZone = (address: string) => {
+			return (getShardForAddress(address)?.nickname.toLowerCase() === zone &&
+				newWallet.coinType == this.coinType &&
+				isQiAddress(address) == true);
+		}
+>>>>>>> da8321b5 (rename 'isUTXOAddress' to 'isQiAddress')
 
         let addrIndex: number = startingIndex;
         do {
