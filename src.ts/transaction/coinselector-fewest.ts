@@ -1,41 +1,42 @@
-import { bigIntAbs } from "../utils/maths.js";
-import { AbstractCoinSelector, SelectedCoinsResult, SpendTarget } from "./abstract-coinselector.js";
-import { UTXO, denominate } from "./utxo.js";
-
+import { bigIntAbs } from '../utils/maths.js';
+import { AbstractCoinSelector, SelectedCoinsResult, SpendTarget } from './abstract-coinselector.js';
+import { UTXO, denominate } from './utxo.js';
 
 /**
- *  The FewestCoinSelector class provides a coin selection algorithm that selects
- *  the fewest UTXOs required to meet the target amount. This algorithm is useful
- *  for minimizing the size of the transaction and the fees associated with it.
- * 
- *  This class is a sub-class of {@link AbstractCoinSelector | **AbstractCoinSelector** } and implements the
- *  {@link AbstractCoinSelector.performSelection | **performSelection** } method to provide the actual coin selection logic.
- * 
- *  @category Transaction
+ * The FewestCoinSelector class provides a coin selection algorithm that selects the fewest UTXOs required to meet the
+ * target amount. This algorithm is useful for minimizing the size of the transaction and the fees associated with it.
+ *
+ * This class is a sub-class of {@link AbstractCoinSelector | **AbstractCoinSelector** } and implements the
+ * {@link AbstractCoinSelector.performSelection | **performSelection** } method to provide the actual coin selection
+ * logic.
+ *
+ * @category Transaction
  */
 export class FewestCoinSelector extends AbstractCoinSelector {
-
     /**
-     *  The largest first coin selection algorithm.
-     * 
-     *  This algorithm selects the largest UTXOs first, and continues to select UTXOs until the
-     *  target amount is reached. If the total value of the selected UTXOs is greater than the
-     *  target amount, the remaining value is returned as a change output.
-     *  
-     *  @param {SpendTarget} target - The target amount to spend.
-     *  @returns {SelectedCoinsResult} The selected UTXOs and change outputs.
+     * The largest first coin selection algorithm.
+     *
+     * This algorithm selects the largest UTXOs first, and continues to select UTXOs until the target amount is reached.
+     * If the total value of the selected UTXOs is greater than the target amount, the remaining value is returned as a
+     * change output.
+     *
+     * @param {SpendTarget} target - The target amount to spend.
+     *
+     * @returns {SelectedCoinsResult} The selected UTXOs and change outputs.
      */
     performSelection(target: SpendTarget): SelectedCoinsResult {
         this.validateTarget(target);
         this.validateUTXOs();
 
-        const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUXTOs, "desc");
+        const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUXTOs, 'desc');
 
         let totalValue = BigInt(0);
         let selectedUTXOs: UTXO[] = [];
 
         // Get UTXOs that meets or exceeds the target value
-        const UTXOsEqualOrGreaterThanTarget = sortedUTXOs.filter(utxo => utxo.denomination && utxo.denomination >= target.value);
+        const UTXOsEqualOrGreaterThanTarget = sortedUTXOs.filter(
+            (utxo) => utxo.denomination && utxo.denomination >= target.value,
+        );
 
         if (UTXOsEqualOrGreaterThanTarget.length > 0) {
             // Find the smallest UTXO that meets or exceeds the target value
@@ -55,12 +56,12 @@ export class FewestCoinSelector extends AbstractCoinSelector {
 
                     // Prioritize UTXOs that bring totalValue closer to target.value
                     const absThisDiff = bigIntAbs(target.value - (totalValue + utxo.denomination));
-                    const currentClosestDiff = closest && closest.denomination
-                        ? bigIntAbs(target.value - (totalValue + closest.denomination))
-                        : BigInt(Infinity);
+                    const currentClosestDiff =
+                        closest && closest.denomination
+                            ? bigIntAbs(target.value - (totalValue + closest.denomination))
+                            : BigInt(Infinity);
 
                     return absThisDiff < currentClosestDiff ? utxo : closest;
-
                 }, sortedUTXOs[0]);
 
                 // Add the selected UTXO to the selection and update totalValue
@@ -68,18 +69,21 @@ export class FewestCoinSelector extends AbstractCoinSelector {
                 totalValue += nextOptimalUTXO.denomination!;
 
                 // Remove the selected UTXO from the list of available UTXOs
-                const index = sortedUTXOs.findIndex(utxo => utxo.denomination === nextOptimalUTXO.denomination && utxo.address === nextOptimalUTXO.address);
+                const index = sortedUTXOs.findIndex(
+                    (utxo) =>
+                        utxo.denomination === nextOptimalUTXO.denomination && utxo.address === nextOptimalUTXO.address,
+                );
                 sortedUTXOs.splice(index, 1);
             }
         }
 
         // Check if the selected UTXOs meet or exceed the target amount
         if (totalValue < target.value) {
-            throw new Error("Insufficient funds");
+            throw new Error('Insufficient funds');
         }
 
         // // Check if any denominations can be removed from the input set and it still remain valid
-        selectedUTXOs = this.sortUTXOsByDenomination(selectedUTXOs, "asc");
+        selectedUTXOs = this.sortUTXOsByDenomination(selectedUTXOs, 'asc');
 
         let runningTotal = totalValue;
         let lastRemovableIndex = -1; // Index of the last UTXO that can be removed
@@ -105,7 +109,7 @@ export class FewestCoinSelector extends AbstractCoinSelector {
 
         // Break down the total spend into properly denominatated UTXOs
         const spendDenominations = denominate(target.value);
-        this.spendOutputs = spendDenominations.map(denomination => {
+        this.spendOutputs = spendDenominations.map((denomination) => {
             const utxo = new UTXO();
             utxo.denomination = denomination;
             utxo.address = target.address;
@@ -118,7 +122,7 @@ export class FewestCoinSelector extends AbstractCoinSelector {
         // If there's change, break it down into properly denominatated UTXOs
         if (change > BigInt(0)) {
             const changeDenominations = denominate(change);
-            this.changeOutputs = changeDenominations.map(denomination => {
+            this.changeOutputs = changeDenominations.map((denomination) => {
                 const utxo = new UTXO();
                 utxo.denomination = denomination;
                 // We do not have access to change addresses here so leave it null
@@ -135,8 +139,8 @@ export class FewestCoinSelector extends AbstractCoinSelector {
         };
     }
 
-    private sortUTXOsByDenomination(utxos: UTXO[], direction: "asc" | "desc"): UTXO[] {
-        if (direction === "asc") {
+    private sortUTXOsByDenomination(utxos: UTXO[], direction: 'asc' | 'desc'): UTXO[] {
+        if (direction === 'asc') {
             return [...utxos].sort((a, b) => {
                 const diff = (a.denomination ?? BigInt(0)) - (b.denomination ?? BigInt(0));
                 return diff > 0 ? 1 : diff < 0 ? -1 : 0;
@@ -150,14 +154,13 @@ export class FewestCoinSelector extends AbstractCoinSelector {
 
     private validateTarget(target: SpendTarget) {
         if (target.value <= BigInt(0)) {
-            throw new Error("Target amount must be greater than 0");
+            throw new Error('Target amount must be greater than 0');
         }
     }
 
     private validateUTXOs() {
         if (this.availableUXTOs.length === 0) {
-            throw new Error("No UTXOs available");
+            throw new Error('No UTXOs available');
         }
     }
-
 }

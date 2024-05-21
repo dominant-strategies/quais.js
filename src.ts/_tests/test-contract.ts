@@ -1,44 +1,44 @@
+import assert from 'assert';
 
-import assert from "assert";
+import { getProvider, setupProviders } from './create-provider.js';
 
-import { getProvider, setupProviders } from "./create-provider.js";
-
-import {
-    Contract, ContractFactory, ContractRunner, isError, Typed,
-} from "../index.js";
-import TestContract from "./contracts/TestContract.js"
-import TypedContract from "./contracts/TypedContract.js"
-import { quais } from "../index.js";
-import { stall } from "./utils.js";
+import { Contract, ContractFactory, ContractRunner, isError, Typed } from '../index.js';
+import TestContract from './contracts/TestContract.js';
+import TypedContract from './contracts/TypedContract.js';
+import { quais } from '../index.js';
+import { stall } from './utils.js';
 
 setupProviders();
 
-describe("Test Contract", function() {
-    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL)
+describe('Test Contract', function () {
+    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
     const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', provider);
     const abi = TestContract.abi;
     const bytecode = TestContract.bytecode;
     let contract: Contract;
-    let addr: string
-    before( async function () {
+    let addr: string;
+    before(async function () {
         this.timeout(60000);
         await stall(10000);
         const factory = new ContractFactory(abi, bytecode, wallet as ContractRunner);
-        contract = await factory.deploy({gasLimit: 5000000, maxFeePerGas: quais.parseUnits('10', 'gwei'), maxPriorityFeePerGas: quais.parseUnits('3', 'gwei')}) as Contract;
+        contract = (await factory.deploy({
+            gasLimit: 5000000,
+            maxFeePerGas: quais.parseUnits('10', 'gwei'),
+            maxPriorityFeePerGas: quais.parseUnits('3', 'gwei'),
+        })) as Contract;
         addr = await contract.getAddress();
-        console.log("Contract deployed to: ", addr);
+        console.log('Contract deployed to: ', addr);
         await stall(30000);
-    })
-    
-
-    it("tests contract calls", async function() {
-        this.timeout(10000);
-
-        assert.equal(await contract.testCallAdd(4, 5), BigInt(9), "testCallAdd(4, 5)");
-        assert.equal(await contract.testCallAdd(6, 0), BigInt(6), "testCallAdd(6, 0)");
     });
 
-    //Awaiting Quai subscrigbe functionality 
+    it('tests contract calls', async function () {
+        this.timeout(10000);
+
+        assert.equal(await contract.testCallAdd(4, 5), BigInt(9), 'testCallAdd(4, 5)');
+        assert.equal(await contract.testCallAdd(6, 0), BigInt(6), 'testCallAdd(6, 0)');
+    });
+
+    //Awaiting Quai subscrigbe functionality
 
     // it("tests events", async function() {
     //     this.timeout(60000);
@@ -175,55 +175,151 @@ describe("Test Contract", function() {
     //     await allEvents;
     // });
 
-    it("tests the _in_ operator for functions", function() {
+    it('tests the _in_ operator for functions', function () {
         const contract = new Contract(addr, abi);
 
-        assert.equal("testCallAdd" in contract, true, "has(testCallAdd)");
-        assert.equal("nonExist" in contract, false, "has(nonExist)");
+        assert.equal('testCallAdd' in contract, true, 'has(testCallAdd)');
+        assert.equal('nonExist' in contract, false, 'has(nonExist)');
 
         {
-            const sig = "function testCallAdd(uint256 a, uint256 b) pure returns (uint256 result)";
-            assert.equal(sig in contract, true, `has(${ sig })`);
-            assert.equal("function nonExist()" in contract, false, "has(function nonExist())");
+            const sig = 'function testCallAdd(uint256 a, uint256 b) pure returns (uint256 result)';
+            assert.equal(sig in contract, true, `has(${sig})`);
+            assert.equal('function nonExist()' in contract, false, 'has(function nonExist())');
         }
 
-        assert.equal("0xf24684e5" in contract, true, "has(0xf24684e5)");
-        assert.equal("0xbad01234" in contract, false, "has(0xbad01234)");
+        assert.equal('0xf24684e5' in contract, true, 'has(0xf24684e5)');
+        assert.equal('0xbad01234' in contract, false, 'has(0xbad01234)');
     });
 
-    it("tests the _in_ operator for events", function() {
+    it('tests the _in_ operator for events', function () {
         const contract = new Contract(addr, abi);
 
-        assert.equal("EventUint256" in contract.filters, true, "has(EventUint256)");
-        assert.equal("NonExist" in contract.filters, false, "has(NonExist)");
+        assert.equal('EventUint256' in contract.filters, true, 'has(EventUint256)');
+        assert.equal('NonExist' in contract.filters, false, 'has(NonExist)');
 
         {
-            const sig = "event EventUint256(uint256 indexed value)";
-            assert.equal(sig in contract.filters, true, `has(${ sig })`);
-            assert.equal("event NonExist()" in contract.filters, false, "has(event NonExist())");
+            const sig = 'event EventUint256(uint256 indexed value)';
+            assert.equal(sig in contract.filters, true, `has(${sig})`);
+            assert.equal('event NonExist()' in contract.filters, false, 'has(event NonExist())');
         }
 
         {
-            const hash = "0x85c55bbb820e6d71c71f4894e57751de334b38c421f9c170b0e66d32eafea337";
-            const badHash = "0xbad01234567890ffbad01234567890ffbad01234567890ffbad01234567890ff";
-            assert.equal(hash in contract.filters, true, `has(${ hash })`);
-            assert.equal(badHash in contract.filters, false, `has(${ badHash })`);
+            const hash = '0x85c55bbb820e6d71c71f4894e57751de334b38c421f9c170b0e66d32eafea337';
+            const badHash = '0xbad01234567890ffbad01234567890ffbad01234567890ffbad01234567890ff';
+            assert.equal(hash in contract.filters, true, `has(${hash})`);
+            assert.equal(badHash in contract.filters, false, `has(${badHash})`);
         }
-
     });
-
 });
 
-describe("Test Typed Contract Interaction", function() {
-    const tests: Array<{ types: Array<string>, valueFunc: (t: string) => any }> = [
+describe('Test Typed Contract Interaction', function () {
+    const tests: Array<{ types: Array<string>; valueFunc: (t: string) => any }> = [
         {
-            types: [ "uint8", "uint16", "uint24", "uint32", "uint40", "uint48", "uint56", "uint64", "uint72", "uint80", "uint88", "uint96", "uint104", "uint112", "uint120", "uint128", "uint136", "uint144", "uint152", "uint160", "uint168", "uint176", "uint184", "uint192", "uint200", "uint208", "uint216", "uint224", "uint232", "uint240", "uint248", "uint256", "int8", "int16", "int24", "int32", "int40", "int48", "int56", "int64", "int72", "int80", "int88", "int96", "int104", "int112", "int120", "int128", "int136", "int144", "int152", "int160", "int168", "int176", "int184", "int192", "int200", "int208", "int216", "int224", "int232", "int240", "int248", "int256" ],
-            valueFunc: (type: string) => { return 42; }
+            types: [
+                'uint8',
+                'uint16',
+                'uint24',
+                'uint32',
+                'uint40',
+                'uint48',
+                'uint56',
+                'uint64',
+                'uint72',
+                'uint80',
+                'uint88',
+                'uint96',
+                'uint104',
+                'uint112',
+                'uint120',
+                'uint128',
+                'uint136',
+                'uint144',
+                'uint152',
+                'uint160',
+                'uint168',
+                'uint176',
+                'uint184',
+                'uint192',
+                'uint200',
+                'uint208',
+                'uint216',
+                'uint224',
+                'uint232',
+                'uint240',
+                'uint248',
+                'uint256',
+                'int8',
+                'int16',
+                'int24',
+                'int32',
+                'int40',
+                'int48',
+                'int56',
+                'int64',
+                'int72',
+                'int80',
+                'int88',
+                'int96',
+                'int104',
+                'int112',
+                'int120',
+                'int128',
+                'int136',
+                'int144',
+                'int152',
+                'int160',
+                'int168',
+                'int176',
+                'int184',
+                'int192',
+                'int200',
+                'int208',
+                'int216',
+                'int224',
+                'int232',
+                'int240',
+                'int248',
+                'int256',
+            ],
+            valueFunc: (type: string) => {
+                return 42;
+            },
         },
         {
             types: [
-                "bytes1", "bytes2", "bytes3", "bytes4", "bytes5", "bytes6", "bytes7", "bytes8", "bytes9", "bytes10", "bytes11", "bytes12", "bytes13", "bytes14", "bytes15", "bytes16", "bytes17", "bytes18", "bytes19", "bytes20", "bytes21", "bytes22", "bytes23", "bytes24", "bytes25", "bytes26", "bytes27", "bytes28", "bytes29", "bytes30", "bytes31", "bytes32",
-                "bytes"
+                'bytes1',
+                'bytes2',
+                'bytes3',
+                'bytes4',
+                'bytes5',
+                'bytes6',
+                'bytes7',
+                'bytes8',
+                'bytes9',
+                'bytes10',
+                'bytes11',
+                'bytes12',
+                'bytes13',
+                'bytes14',
+                'bytes15',
+                'bytes16',
+                'bytes17',
+                'bytes18',
+                'bytes19',
+                'bytes20',
+                'bytes21',
+                'bytes22',
+                'bytes23',
+                'bytes24',
+                'bytes25',
+                'bytes26',
+                'bytes27',
+                'bytes28',
+                'bytes29',
+                'bytes30',
+                'bytes31',
+                'bytes32',
+                'bytes',
             ],
             valueFunc: (type: string) => {
                 const length = type.substring(5);
@@ -232,41 +328,53 @@ describe("Test Typed Contract Interaction", function() {
                     value.fill(42);
                     return value;
                 }
-                return "0x123456";
-            }
-        }, {
-            types: [ "bool" ],
-            valueFunc: (type: string) => { return true; }
-        }, {
-            types: [ "address" ],
-            valueFunc: (type: string) => { return "0x643aA0A61eADCC9Cc202D1915D942d35D005400C"; }
-        }, {
-            types: [ "string" ],
-            valueFunc: (type: string) => { return "someString"; }
-        }
+                return '0x123456';
+            },
+        },
+        {
+            types: ['bool'],
+            valueFunc: (type: string) => {
+                return true;
+            },
+        },
+        {
+            types: ['address'],
+            valueFunc: (type: string) => {
+                return '0x643aA0A61eADCC9Cc202D1915D942d35D005400C';
+            },
+        },
+        {
+            types: ['string'],
+            valueFunc: (type: string) => {
+                return 'someString';
+            },
+        },
     ];
 
-    const abi = TypedContract.abi
-    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL)
+    const abi = TypedContract.abi;
+    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
     const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', provider);
     const bytecode = TypedContract.bytecode;
     let contract: Contract;
-    let addr: string
-    before( async function () {
+    let addr: string;
+    before(async function () {
         this.timeout(120000);
         const factory = new ContractFactory(abi, bytecode, wallet as ContractRunner);
-        contract = await factory.deploy({gasLimit: 5000000, maxFeePerGas: quais.parseUnits('10', 'gwei'), maxPriorityFeePerGas: quais.parseUnits('3', 'gwei'),}) as Contract;
+        contract = (await factory.deploy({
+            gasLimit: 5000000,
+            maxFeePerGas: quais.parseUnits('10', 'gwei'),
+            maxPriorityFeePerGas: quais.parseUnits('3', 'gwei'),
+        })) as Contract;
         addr = await contract.getAddress();
-        console.log("Contract deployed to: ", addr);
+        console.log('Contract deployed to: ', addr);
         await stall(50000);
-    })
-
+    });
 
     for (const { types, valueFunc } of tests) {
         for (const type of types) {
             const value = valueFunc(type);
 
-            it(`tests typed value: Typed.from(${ type })`, async function() {
+            it(`tests typed value: Typed.from(${type})`, async function () {
                 this.timeout(10000);
 
                 const v = Typed.from(type, value);
@@ -274,7 +382,7 @@ describe("Test Typed Contract Interaction", function() {
                 assert.equal(result, type);
             });
 
-            it(`tests typed value: Typed.${ type }()`, async function() {
+            it(`tests typed value: Typed.${type}()`, async function () {
                 this.timeout(10000);
 
                 const v = (<any>Typed)[type](value);
@@ -283,14 +391,15 @@ describe("Test Typed Contract Interaction", function() {
             });
         }
     }
-
 });
 
-type TestContractFallbackResult = {
-    data: string;
-} | {
-    error: string;
-};
+type TestContractFallbackResult =
+    | {
+          data: string;
+      }
+    | {
+          error: string;
+      };
 
 type TestContractFallback = {
     name: string;
@@ -302,94 +411,82 @@ type TestContractFallback = {
     sendDataAndValue: TestContractFallbackResult;
 };
 
-describe("Test Contract Fallback", function() {
+describe('Test Contract Fallback', function () {
     const tests: Array<TestContractFallback> = [
         {
-            name: "none",
-            address: "0x0ccdace3d8353fed9b87a2d63c40452923ccdae5",
-            abi: [ ],
-            sendNone: { error: "no fallback" },
-            sendData: { error: "no fallback" },
-            sendValue: { error: "no fallback" },
-            sendDataAndValue: { error: "no fallback" },
+            name: 'none',
+            address: '0x0ccdace3d8353fed9b87a2d63c40452923ccdae5',
+            abi: [],
+            sendNone: { error: 'no fallback' },
+            sendData: { error: 'no fallback' },
+            sendValue: { error: 'no fallback' },
+            sendDataAndValue: { error: 'no fallback' },
         },
         {
-            name: "non-payable fallback",
-            address: "0x3f10193f79a639b11ec9d2ab42a25a4a905a8870",
-            abi: [
-                "fallback()"
-            ],
-            sendNone: { data: "0x" },
-            sendData: { data: "0x1234" },
-            sendValue: { error: "overrides.value" },
-            sendDataAndValue: { error: "overrides.value" },
+            name: 'non-payable fallback',
+            address: '0x3f10193f79a639b11ec9d2ab42a25a4a905a8870',
+            abi: ['fallback()'],
+            sendNone: { data: '0x' },
+            sendData: { data: '0x1234' },
+            sendValue: { error: 'overrides.value' },
+            sendDataAndValue: { error: 'overrides.value' },
         },
         {
-            name: "payable fallback",
-            address: "0xe2de6b97c5eb9fee8a47ca6c0fa642331e0b6330",
-            abi: [
-                "fallback() payable"
-            ],
-            sendNone: { data: "0x" },
-            sendData: { data: "0x1234" },
-            sendValue: { data: "0x" },
-            sendDataAndValue: { data: "0x1234" },
+            name: 'payable fallback',
+            address: '0xe2de6b97c5eb9fee8a47ca6c0fa642331e0b6330',
+            abi: ['fallback() payable'],
+            sendNone: { data: '0x' },
+            sendData: { data: '0x1234' },
+            sendValue: { data: '0x' },
+            sendDataAndValue: { data: '0x1234' },
         },
         {
-            name: "receive-only",
-            address: "0xf8f2afbbe37f6a4520e4db7f99495655aa31229b",
-            abi: [
-                "receive()"
-            ],
-            sendNone: { data: "0x" },
-            sendData: { error: "overrides.data" },
-            sendValue: { data: "0x" },
-            sendDataAndValue: { error: "overrides.data" },
+            name: 'receive-only',
+            address: '0xf8f2afbbe37f6a4520e4db7f99495655aa31229b',
+            abi: ['receive()'],
+            sendNone: { data: '0x' },
+            sendData: { error: 'overrides.data' },
+            sendValue: { data: '0x' },
+            sendDataAndValue: { error: 'overrides.data' },
         },
         {
-            name: "receive and payable fallback",
-            address: "0x7d97ca5d9dea1cd0364f1d493252006a3c4e18a0",
-            abi: [
-                "fallback() payable",
-                "receive()"
-            ],
-            sendNone: { data: "0x" },
-            sendData: { data: "0x1234" },
-            sendValue: { data: "0x" },
-            sendDataAndValue: { data: "0x1234" },
+            name: 'receive and payable fallback',
+            address: '0x7d97ca5d9dea1cd0364f1d493252006a3c4e18a0',
+            abi: ['fallback() payable', 'receive()'],
+            sendNone: { data: '0x' },
+            sendData: { data: '0x1234' },
+            sendValue: { data: '0x' },
+            sendDataAndValue: { data: '0x1234' },
         },
         {
-            name: "receive and non-payable fallback",
-            address: "0x5b59d934f0d22b15e73b5d6b9ae83486b70df67e",
-            abi: [
-                "fallback()",
-                "receive()"
-            ],
-            sendNone: { data: "0x" },
-            sendData: { data: "0x" },
-            sendValue: { data: "0x" },
-            sendDataAndValue: { error: "overrides" },
+            name: 'receive and non-payable fallback',
+            address: '0x5b59d934f0d22b15e73b5d6b9ae83486b70df67e',
+            abi: ['fallback()', 'receive()'],
+            sendNone: { data: '0x' },
+            sendData: { data: '0x' },
+            sendValue: { data: '0x' },
+            sendDataAndValue: { error: 'overrides' },
         },
     ];
 
-    const provider = getProvider("InfuraProvider", "goerli");
+    const provider = getProvider('InfuraProvider', 'goerli');
 
-    const testGroups: Array<{ group: "sendNone" | "sendData" | "sendValue" | "sendDataAndValue", tx: any }> = [
+    const testGroups: Array<{ group: 'sendNone' | 'sendData' | 'sendValue' | 'sendDataAndValue'; tx: any }> = [
         {
-            group: "sendNone",
-            tx: { }
+            group: 'sendNone',
+            tx: {},
         },
         {
-            group: "sendData",
-            tx: { data: "0x1234" }
+            group: 'sendData',
+            tx: { data: '0x1234' },
         },
         {
-            group: "sendValue",
-            tx: { value: 123 }
+            group: 'sendValue',
+            tx: { value: 123 },
         },
         {
-            group: "sendDataAndValue",
-            tx: { data: "0x1234", value: 123 }
+            group: 'sendDataAndValue',
+            tx: { data: '0x1234', value: 123 },
         },
     ];
 
@@ -399,28 +496,30 @@ describe("Test Contract Fallback", function() {
             const send = test[group];
 
             const contract = new Contract(address, abi, provider);
-            it(`test contract fallback checks: ${ group } - ${ name }`, async function() {
-                const func = async function() {
+            it(`test contract fallback checks: ${group} - ${name}`, async function () {
+                const func = async function () {
                     if (abi.length === 0) {
-                        throw new Error("no fallback");
+                        throw new Error('no fallback');
                     }
                     assert.ok(contract.fallback);
-                    return await contract.fallback.populateTransaction(tx)
+                    return await contract.fallback.populateTransaction(tx);
                 };
 
-                if ("data" in send) {
+                if ('data' in send) {
                     await func();
                     //const result = await func();
                     //@TODO: Test for the correct populated tx
                     //console.log(result);
                     assert.ok(true);
                 } else {
-                    await assert.rejects(func, function(error: any) {
-                        if (error.message === send.error) { return true; }
-                        if (isError(error, "INVALID_ARGUMENT")) {
+                    await assert.rejects(func, function (error: any) {
+                        if (error.message === send.error) {
+                            return true;
+                        }
+                        if (isError(error, 'INVALID_ARGUMENT')) {
                             return error.argument === send.error;
                         }
-                        console.log("EE", error);
+                        console.log('EE', error);
                         return true;
                     });
                 }
@@ -428,4 +527,3 @@ describe("Test Contract Fallback", function() {
         }
     }
 });
-

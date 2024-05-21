@@ -1,4 +1,1 @@
-
-export {
-    createHash, createHmac, pbkdf2Sync, randomBytes
-} from "crypto";
+export { createHash, createHmac, pbkdf2Sync, randomBytes } from 'crypto';

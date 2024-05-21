@@ -1,26 +1,22 @@
-import { defineProperties } from "../utils/index.js";
-import { AbstractSigner } from "./abstract-signer.js";
+import { defineProperties } from '../utils/index.js';
+import { AbstractSigner } from './abstract-signer.js';
 
-import type { TypedDataDomain, TypedDataField } from "../hash/index.js";
+import type { TypedDataDomain, TypedDataField } from '../hash/index.js';
 
-import type {
-    BlockTag, Provider, QuaiTransactionRequest, TransactionRequest
-} from "./provider.js";
-import type { Signer } from "./signer.js";
-import {QuaiTransactionResponse} from "./provider.js";
-import {QuaiTransactionLike} from "../transaction/quai-transaction";
-
+import type { BlockTag, Provider, QuaiTransactionRequest, TransactionRequest } from './provider.js';
+import type { Signer } from './signer.js';
+import { QuaiTransactionResponse } from './provider.js';
+import { QuaiTransactionLike } from '../transaction/quai-transaction';
 
 /**
- *  A **NonceManager** wraps another [Signer](../classes/Signer) and automatically manages
- *  the nonce, ensuring serialized and sequential nonces are used during
- *  transaction.
- * 
- *  @category Providers
+ * A **NonceManager** wraps another [Signer](../classes/Signer) and automatically manages the nonce, ensuring serialized
+ * and sequential nonces are used during transaction.
+ *
+ * @category Providers
  */
 export class NonceManager extends AbstractSigner {
     /**
-     *  The Signer being managed.
+     * The Signer being managed.
      */
     signer!: Signer;
 
@@ -28,7 +24,7 @@ export class NonceManager extends AbstractSigner {
     #delta: number;
 
     /**
-     *  Creates a new **NonceManager** to manage `signer`.
+     * Creates a new **NonceManager** to manage `signer`.
      */
     constructor(signer: Signer) {
         super(signer.provider);
@@ -47,9 +43,9 @@ export class NonceManager extends AbstractSigner {
     }
 
     async getNonce(blockTag?: BlockTag): Promise<number> {
-        if (blockTag === "pending") {
+        if (blockTag === 'pending') {
             if (this.#noncePromise == null) {
-                this.#noncePromise = super.getNonce("pending");
+                this.#noncePromise = super.getNonce('pending');
             }
 
             const delta = this.#delta;
@@ -60,16 +56,15 @@ export class NonceManager extends AbstractSigner {
     }
 
     /**
-     *  Manually increment the nonce. This may be useful when managng
-     *  offline transactions.
+     * Manually increment the nonce. This may be useful when managng offline transactions.
      */
     increment(): void {
         this.#delta++;
     }
 
     /**
-     *  Resets the nonce, causing the **NonceManager** to reload the current
-     *  nonce from the blockchain on the next transaction.
+     * Resets the nonce, causing the **NonceManager** to reload the current nonce from the blockchain on the next
+     * transaction.
      */
     reset(): void {
         this.#delta = 0;
@@ -77,15 +72,15 @@ export class NonceManager extends AbstractSigner {
     }
 
     async sendTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionResponse> {
-        const noncePromise = this.getNonce("pending");
+        const noncePromise = this.getNonce('pending');
         this.increment();
 
-        tx = await this.signer.populateQuaiTransaction(tx) as QuaiTransactionLike;
+        tx = (await this.signer.populateQuaiTransaction(tx)) as QuaiTransactionLike;
         tx.nonce = await noncePromise;
 
         // @TODO: Maybe handle interesting/recoverable errors?
         // Like don't increment if the tx was certainly not sent
-        return await this.signer.sendTransaction(tx) as QuaiTransactionResponse;
+        return (await this.signer.sendTransaction(tx)) as QuaiTransactionResponse;
     }
 
     signTransaction(tx: TransactionRequest): Promise<string> {
@@ -96,7 +91,11 @@ export class NonceManager extends AbstractSigner {
         return this.signer.signMessage(message);
     }
 
-    signTypedData(domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, value: Record<string, any>): Promise<string> {
+    signTypedData(
+        domain: TypedDataDomain,
+        types: Record<string, Array<TypedDataField>>,
+        value: Record<string, any>,
+    ): Promise<string> {
         return this.signer.signTypedData(domain, types, value);
     }
 }

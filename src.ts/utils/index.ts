@@ -1,95 +1,120 @@
 /**
- *  There are many simple utilities required to interact with
- *  Ethereum and to simplify the library, without increasing
- *  the library dependencies for simple functions.
+ * There are many simple utilities required to interact with Ethereum and to simplify the library, without increasing
+ * the library dependencies for simple functions.
  *
- *  @_section api/utils:Utilities  [about-utils]
+ * @_section api/utils:Utilities [about-utils]
  */
 
-export { decodeBase58, encodeBase58 } from "./base58.js";
+export { decodeBase58, encodeBase58 } from './base58.js';
 
-export { decodeBase64, encodeBase64 } from "./base64.js";
-
-export {
-    getBytes, getBytesCopy, isHexString, isBytesLike, hexlify, concat, dataLength, dataSlice,
-    stripZerosLeft, zeroPadValue, zeroPadBytes
-} from "./data.js";
+export { decodeBase64, encodeBase64 } from './base64.js';
 
 export {
-    isCallException, isError,
-    assert, assertArgument, assertArgumentCount, assertPrivate, assertNormalize, makeError
-} from "./errors.js"
-
-export { EventPayload } from "./events.js";
-
-export {
-    FetchRequest, FetchResponse, FetchCancelSignal,
-} from "./fetch.js";
-
-export { FixedNumber } from "./fixednumber.js"
-
-export {
-    fromTwos, toTwos, mask,
-    getBigInt, getNumber, getUint, toBigInt, toNumber, toBeHex, toBeArray, toQuantity
-} from "./maths.js";
-
-export { resolveProperties, defineProperties } from "./properties.js";
-
-export { encodeProtoTransaction, encodeProtoWorkObject } from "./proto-encode.js";
-export { decodeProtoTransaction, decodeProtoWorkObject } from "./proto-decode.js";
-
-export { formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits } from "./units.js";
+    getBytes,
+    getBytesCopy,
+    isHexString,
+    isBytesLike,
+    hexlify,
+    concat,
+    dataLength,
+    dataSlice,
+    stripZerosLeft,
+    zeroPadValue,
+    zeroPadBytes,
+} from './data.js';
 
 export {
-    toUtf8Bytes,
-    toUtf8CodePoints,
-    toUtf8String,
+    isCallException,
+    isError,
+    assert,
+    assertArgument,
+    assertArgumentCount,
+    assertPrivate,
+    assertNormalize,
+    makeError,
+} from './errors.js';
 
-    Utf8ErrorFuncs,
-} from "./utf8.js";
+export { EventPayload } from './events.js';
 
-export { uuidV4 } from "./uuid.js";
+export { FetchRequest, FetchResponse, FetchCancelSignal } from './fetch.js';
 
-export { getTxType, getShardForAddress, getAddressDetails, isUTXOAddress } from "./shards.js";
+export { FixedNumber } from './fixednumber.js';
+
+export {
+    fromTwos,
+    toTwos,
+    mask,
+    getBigInt,
+    getNumber,
+    getUint,
+    toBigInt,
+    toNumber,
+    toBeHex,
+    toBeArray,
+    toQuantity,
+} from './maths.js';
+
+export { resolveProperties, defineProperties } from './properties.js';
+
+export { encodeProtoTransaction, encodeProtoWorkObject } from './proto-encode.js';
+export { decodeProtoTransaction, decodeProtoWorkObject } from './proto-decode.js';
+
+export { formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits } from './units.js';
+
+export { toUtf8Bytes, toUtf8CodePoints, toUtf8String, Utf8ErrorFuncs } from './utf8.js';
+
+export { uuidV4 } from './uuid.js';
+
+export { getTxType, getShardForAddress, getAddressDetails, isUTXOAddress } from './shards.js';
 
 /////////////////////////////
 // Types
 
-export type { BytesLike, DataHexString, HexString } from "./data.js";
+export type { BytesLike, DataHexString, HexString } from './data.js';
 
 export type {
-
     //ErrorFetchRequestWithBody, ErrorFetchRequest,
     //ErrorFetchResponseWithBody, ErrorFetchResponse,
 
     ErrorCode,
-
-    quaisError, UnknownError, NotImplementedError, UnsupportedOperationError, NetworkError,
-    ServerError, TimeoutError, BadDataError, CancelledError, BufferOverrunError,
-    NumericFaultError, InvalidArgumentError, MissingArgumentError, UnexpectedArgumentError,
-    CallExceptionError, InsufficientFundsError, NonceExpiredError,
-    ReplacementUnderpricedError, TransactionReplacedError,
+    quaisError,
+    UnknownError,
+    NotImplementedError,
+    UnsupportedOperationError,
+    NetworkError,
+    ServerError,
+    TimeoutError,
+    BadDataError,
+    CancelledError,
+    BufferOverrunError,
+    NumericFaultError,
+    InvalidArgumentError,
+    MissingArgumentError,
+    UnexpectedArgumentError,
+    CallExceptionError,
+    InsufficientFundsError,
+    NonceExpiredError,
+    ReplacementUnderpricedError,
+    TransactionReplacedError,
     ActionRejectedError,
+    CallExceptionAction,
+    CallExceptionTransaction,
+    CodedquaisError,
+} from './errors.js';
 
-    CallExceptionAction, CallExceptionTransaction,
-
-    CodedquaisError
-} from "./errors.js"
-
-export type { EventEmitterable, Listener } from "./events.js";
+export type { EventEmitterable, Listener } from './events.js';
 
 export type {
     GetUrlResponse,
-    FetchPreflightFunc, FetchProcessFunc, FetchRetryFunc,
-    FetchGatewayFunc, FetchGetUrlFunc
-} from "./fetch.js";
+    FetchPreflightFunc,
+    FetchProcessFunc,
+    FetchRetryFunc,
+    FetchGatewayFunc,
+    FetchGetUrlFunc,
+} from './fetch.js';
 
-export type { FixedFormat } from "./fixednumber.js"
+export type { FixedFormat } from './fixednumber.js';
 
-export type { BigNumberish, Numeric } from "./maths.js";
+export type { BigNumberish, Numeric } from './maths.js';
 
-export type {
-    Utf8ErrorFunc,
-    UnicodeNormalizationForm,
-    Utf8ErrorReason
-} from "./utf8.js";
+export type { Utf8ErrorFunc, UnicodeNormalizationForm, Utf8ErrorReason } from './utf8.js';

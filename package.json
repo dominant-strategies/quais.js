@@ -141,7 +141,8 @@
         "test-commonjs": "mocha --reporter ./reporter.cjs ./lib.commonjs/_tests/test-*.js",
         "test-coverage": "c8 -o output -r lcov -r text mocha --no-color --reporter ./reporter.cjs ./lib.esm/_tests/test-*.js | tee output/summary.txt",
         "test-esm": "mocha --trace-warnings --reporter ./reporter.cjs ./lib.esm/_tests/test-*.js",
-        "prepare": "husky"
+        "prepare": "husky",
+        "format": "prettier --write src.ts/**/*.ts"
     },
     "sideEffects": false,
     "version": "v0.1.0-pre",

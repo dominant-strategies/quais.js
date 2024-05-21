@@ -1,16 +1,13 @@
+import { getNumber } from '../utils/index.js';
 
-import { getNumber } from "../utils/index.js";
-
-import type { Subscriber } from "./abstract-provider.js";
-
+import type { Subscriber } from './abstract-provider.js';
 
 //#TODO: Temp
-import type { Provider } from "./provider.js";
+import type { Provider } from './provider.js';
 
 /**
- *  @TODO write documentation for this interface.
- *
- *  @category Providers
+ * @category Providers
+ * @todo Write documentation for this interface.
  */
 export interface ConnectionRpcProvider extends Provider {
     //send(method: string, params: Array<any>): Promise<any>;
@@ -19,9 +16,8 @@ export interface ConnectionRpcProvider extends Provider {
 }
 
 /**
- *  @TODO write documentation for this class.
- *
- *  @category Providers
+ * @category Providers
+ * @todo Write documentation for this class.
  */
 export class BlockConnectionSubscriber implements Subscriber {
     #provider: ConnectionRpcProvider;
@@ -39,21 +35,25 @@ export class BlockConnectionSubscriber implements Subscriber {
     }
 
     start(): void {
-        if (this.#running) { return; }
+        if (this.#running) {
+            return;
+        }
         this.#running = true;
 
-        this.#filterId = this.#provider._subscribe([ "newHeads" ], (result: any) => {
+        this.#filterId = this.#provider._subscribe(['newHeads'], (result: any) => {
             const blockNumber = getNumber(result.number);
-            const initial = (this.#blockNumber === -2) ? blockNumber: (this.#blockNumber + 1)
+            const initial = this.#blockNumber === -2 ? blockNumber : this.#blockNumber + 1;
             for (let b = initial; b <= blockNumber; b++) {
-                this.#provider.emit("block", b);
+                this.#provider.emit('block', b);
             }
             this.#blockNumber = blockNumber;
         });
     }
 
     stop(): void {
-        if (!this.#running) { return; }
+        if (!this.#running) {
+            return;
+        }
         this.#running = false;
 
         if (this.#filterId != null) {
@@ -63,7 +63,9 @@ export class BlockConnectionSubscriber implements Subscriber {
     }
 
     pause(dropWhilePaused?: boolean): void {
-        if (dropWhilePaused) { this.#blockNumber = -2; }
+        if (dropWhilePaused) {
+            this.#blockNumber = -2;
+        }
         this.stop();
     }
 
@@ -71,4 +73,3 @@ export class BlockConnectionSubscriber implements Subscriber {
         this.start();
     }
 }
-

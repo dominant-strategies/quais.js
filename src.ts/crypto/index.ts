@@ -1,42 +1,30 @@
 /**
- *  A fundamental building block of Ethereum is the underlying
- *  cryptographic primitives.
+ * A fundamental building block of Ethereum is the underlying cryptographic primitives.
  *
- *  @_section: api/crypto:Cryptographic Functions   [about-crypto]
+ * @_section: api/crypto:Cryptographic Functions   [about-crypto]
  */
 
-null
+null;
 
 // We import all these so we can export lock()
-import { computeHmac } from "./hmac.js";
-import { keccak256 } from "./keccak.js";
-import { ripemd160 } from "./ripemd160.js";
-import { pbkdf2 } from "./pbkdf2.js";
-import { randomBytes } from "./random.js";
-import { scrypt, scryptSync } from "./scrypt.js";
-import { sha256, sha512 } from "./sha2.js";
+import { computeHmac } from './hmac.js';
+import { keccak256 } from './keccak.js';
+import { ripemd160 } from './ripemd160.js';
+import { pbkdf2 } from './pbkdf2.js';
+import { randomBytes } from './random.js';
+import { scrypt, scryptSync } from './scrypt.js';
+import { sha256, sha512 } from './sha2.js';
 
-export {
-    computeHmac,
+export { computeHmac, randomBytes, keccak256, ripemd160, sha256, sha512, pbkdf2, scrypt, scryptSync };
 
-    randomBytes,
-
-    keccak256,
-    ripemd160,
-    sha256, sha512,
-
-    pbkdf2,
-    scrypt, scryptSync
-};
-
-export { SigningKey } from "./signing-key.js";
-export { Signature } from "./signature.js";
+export { SigningKey } from './signing-key.js';
+export { Signature } from './signature.js';
 
 /**
- *  Once called, prevents any future change to the underlying cryptographic
- *  primitives using the `.register` feature for hooks.
- * 
- *  @category Crypto
+ * Once called, prevents any future change to the underlying cryptographic primitives using the `.register` feature for
+ * hooks.
+ *
+ * @category Crypto
  */
 function lock(): void {
     computeHmac.lock();
@@ -56,6 +44,6 @@ export { lock };
 /////////////////////////////
 // Types
 
-export type { ProgressCallback } from "./scrypt.js";
+export type { ProgressCallback } from './scrypt.js';
 
-export type { SignatureLike } from "./signature.js";
+export type { SignatureLike } from './signature.js';

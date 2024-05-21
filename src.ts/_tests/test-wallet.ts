@@ -1,21 +1,18 @@
-import assert from "assert";
+import assert from 'assert';
 
-import { loadTests } from "./utils.js";
+import { loadTests } from './utils.js';
 
-import type {
-    TestCaseAccount, TestCaseTypedData, TestCaseTransaction
-} from "./types.js";
+import type { TestCaseAccount, TestCaseTypedData, TestCaseTransaction } from './types.js';
 
-import { hexlify, randomBytes, Wallet } from "../index.js";
+import { hexlify, randomBytes, Wallet } from '../index.js';
 
-import type { QuaiHDWallet } from "../index.js";
+import type { QuaiHDWallet } from '../index.js';
 
-
-describe("Test Private Key Wallet", function() {
-    const tests = loadTests<TestCaseAccount>("accounts");
+describe('Test Private Key Wallet', function () {
+    const tests = loadTests<TestCaseAccount>('accounts');
 
     tests.forEach(({ name, privateKey, address }) => {
-        it(`creates wallet: ${ name }`, function() {
+        it(`creates wallet: ${name}`, function () {
             const wallet = new Wallet(privateKey);
             assert.equal(wallet.privateKey, privateKey);
             assert.equal(wallet.address, address);
@@ -23,42 +20,50 @@ describe("Test Private Key Wallet", function() {
     });
 });
 
-describe("Test Transaction Signing", function() {
-    const tests = loadTests<TestCaseTransaction>("transactions");
+describe('Test Transaction Signing', function () {
+    const tests = loadTests<TestCaseTransaction>('transactions');
 
     for (const test of tests) {
-        if (!test.signedEip155) { continue; }
-        it(`tests signing an EIP-155 transaction: ${ test.name }`, async function() {
+        if (!test.signedEip155) {
+            continue;
+        }
+        it(`tests signing an EIP-155 transaction: ${test.name}`, async function () {
             const wallet = new Wallet(test.privateKey);
-            const txData = Object.assign({ }, test.transaction, { type: 0, accessList: [], maxFeePerGas: 0, maxPriorityFeePerGas: 0 });
+            const txData = Object.assign({}, test.transaction, {
+                type: 0,
+                accessList: [],
+                maxFeePerGas: 0,
+                maxPriorityFeePerGas: 0,
+            });
             const signed = await wallet.signTransaction(txData);
             // let parsed = Transaction.from(signed);
             // // console.log('txData: ', JSON.stringify(parsed))
             // // console.log('EXPECTED: ', test.signedEip155)
             // // console.log("ACTUAL: ", signed)
-            assert.equal(signed, test.signedEip155, "signedEip155");
+            assert.equal(signed, test.signedEip155, 'signedEip155');
         });
     }
 });
 
-describe("Test Message Signing (EIP-191)", function() {
-});
+describe('Test Message Signing (EIP-191)', function () {});
 
-describe("Test Typed-Data Signing (EIP-712)", function() {
-    const tests = loadTests<TestCaseTypedData>("typed-data");
+describe('Test Typed-Data Signing (EIP-712)', function () {
+    const tests = loadTests<TestCaseTypedData>('typed-data');
     for (const test of tests) {
         const { privateKey, signature } = test;
-        if (privateKey == null || signature == null) { continue; }
-        it(`tests signing typed-data: ${ test.name }`, async function() {
+        if (privateKey == null || signature == null) {
+            continue;
+        }
+        it(`tests signing typed-data: ${test.name}`, async function () {
             const wallet = new Wallet(privateKey);
             const sig = await wallet.signTypedData(test.domain, test.types, test.data);
-            assert.equal(sig, signature, "signature");
+            assert.equal(sig, signature, 'signature');
         });
     }
 });
 
-describe("Test Wallet Encryption", function() {
-    const password = "foobar";
+describe('Test Wallet Encryption', function () {
+    const password = 'foobar';
 
     // Loop:
     //  1 : random wallet (uses QuaiHDWallet under the hood)
@@ -67,18 +72,18 @@ describe("Test Wallet Encryption", function() {
     for (let i = 0; i < 2; i++) {
         let wallet: Wallet | QuaiHDWallet = Wallet.createRandom("m/44'/994'/0'/0");
 
-        it("encrypts a random wallet: sync", function() {
+        it('encrypts a random wallet: sync', function () {
             this.timeout(30000);
             const json = wallet.encryptSync(password);
             const decrypted = Wallet.fromEncryptedJsonSync(json, password);
-            assert.equal(decrypted.address, wallet.address, "address");
+            assert.equal(decrypted.address, wallet.address, 'address');
         });
 
-        it("encrypts a random wallet: async", async function() {
+        it('encrypts a random wallet: async', async function () {
             this.timeout(30000);
             const json = await wallet.encrypt(password);
             const decrypted = await Wallet.fromEncryptedJson(json, password);
-            assert.equal(decrypted.address, wallet.address, "address");
+            assert.equal(decrypted.address, wallet.address, 'address');
         });
 
         wallet = new Wallet(hexlify(randomBytes(32)));

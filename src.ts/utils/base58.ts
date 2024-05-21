@@ -1,56 +1,52 @@
 /**
- *  The [Base58 Encoding](https://en.bitcoinwiki.org/wiki/Base58) scheme allows a **numeric** value
- *  to be encoded as a compact string using a radix of 58 using only
- *  alpha-numeric characters. Confusingly similar characters are omitted
- *  (i.e. `"l0O"`).
+ * The [Base58 Encoding](https://en.bitcoinwiki.org/wiki/Base58) scheme allows a **numeric** value to be encoded as a
+ * compact string using a radix of 58 using only alpha-numeric characters. Confusingly similar characters are omitted
+ * (i.e. `"l0O"`).
  *
- *  Note that Base58 encodes a **numeric** value, not arbitrary bytes,
- *  since any zero-bytes on the left would get removed. To mitigate this
- *  issue most schemes that use Base58 choose specific high-order values
- *  to ensure non-zero prefixes.
+ * Note that Base58 encodes a **numeric** value, not arbitrary bytes, since any zero-bytes on the left would get
+ * removed. To mitigate this issue most schemes that use Base58 choose specific high-order values to ensure non-zero
+ * prefixes.
  *
- *  @_subsection: api/utils:Base58 Encoding [about-base58]
+ * @_subsection: api/utils:Base58 Encoding [about-base58]
  */
 
-import { getBytes } from "./data.js";
-import { assertArgument } from "./errors.js";
-import { toBigInt } from "./maths.js";
+import { getBytes } from './data.js';
+import { assertArgument } from './errors.js';
+import { toBigInt } from './maths.js';
 
-import type { BytesLike } from "./index.js";
+import type { BytesLike } from './index.js';
 
-
-const Alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+const Alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 let Lookup: null | Record<string, bigint> = null;
 
 function getAlpha(letter: string): bigint {
     if (Lookup == null) {
-        Lookup = { };
+        Lookup = {};
         for (let i = 0; i < Alphabet.length; i++) {
             Lookup[Alphabet[i]] = BigInt(i);
         }
     }
     const result = Lookup[letter];
-    assertArgument(result != null, `invalid base58 value`, "letter", letter);
+    assertArgument(result != null, `invalid base58 value`, 'letter', letter);
     return result;
 }
-
 
 const BN_0 = BigInt(0);
 const BN_58 = BigInt(58);
 
 /**
- *  Encode `value` as a Base58-encoded string.
- * 
- *  @param {BytesLike} _value - The value to encode.
- *  @returns {string} The Base58-encoded string.
- *  
- *  @category Utils
+ * Encode `value` as a Base58-encoded string.
+ *
+ * @category Utils
+ * @param {BytesLike} _value - The value to encode.
+ *
+ * @returns {string} The Base58-encoded string.
  */
 export function encodeBase58(_value: BytesLike): string {
     const bytes = getBytes(_value);
 
     let value = toBigInt(bytes);
-    let result = "";
+    let result = '';
     while (value) {
         result = Alphabet[Number(value % BN_58)] + result;
         value /= BN_58;
@@ -58,7 +54,9 @@ export function encodeBase58(_value: BytesLike): string {
 
     // Account for leading padding zeros
     for (let i = 0; i < bytes.length; i++) {
-        if (bytes[i]) { break; }
+        if (bytes[i]) {
+            break;
+        }
         result = Alphabet[0] + result;
     }
 
@@ -66,12 +64,12 @@ export function encodeBase58(_value: BytesLike): string {
 }
 
 /**
- *  Decode the Base58-encoded `value`.
- * 
- *  @param {string} value - The Base58-encoded value.
- *  @returns {bigint} The decoded value.
- *  
- *  @category Utils
+ * Decode the Base58-encoded `value`.
+ *
+ * @category Utils
+ * @param {string} value - The Base58-encoded value.
+ *
+ * @returns {bigint} The decoded value.
  */
 export function decodeBase58(value: string): bigint {
     let result = BN_0;

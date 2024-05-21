@@ -1,85 +1,98 @@
 /**
- *  @ignore
+ * @ignore
  */
 
-import { assert, computeHmac, sha256 } from "../quais.js";
+import { assert, computeHmac, sha256 } from '../quais.js';
 import {
-    getBytesCopy, assertArgument, toUtf8Bytes, BytesLike, concat, dataSlice, encodeBase58, getBytes
-} from "../utils/index.js";
+    getBytesCopy,
+    assertArgument,
+    toUtf8Bytes,
+    BytesLike,
+    concat,
+    dataSlice,
+    encodeBase58,
+    getBytes,
+} from '../utils/index.js';
 
 export function looseArrayify(hexString: string): Uint8Array {
-    if (typeof(hexString) === "string" && !hexString.startsWith("0x")) {
-        hexString = "0x" + hexString;
+    if (typeof hexString === 'string' && !hexString.startsWith('0x')) {
+        hexString = '0x' + hexString;
     }
     return getBytesCopy(hexString);
 }
 
 export function getPassword(password: string | Uint8Array): Uint8Array {
-    if (typeof(password) === 'string') {
-        return toUtf8Bytes(password, "NFKC");
+    if (typeof password === 'string') {
+        return toUtf8Bytes(password, 'NFKC');
     }
     return getBytesCopy(password);
 }
 
 export function spelunk<T>(object: any, _path: string): T {
-
     const match = _path.match(/^([a-z0-9$_.-]*)(:([a-z]+))?(!)?$/i);
-    assertArgument(match != null, "invalid path", "path", _path);
+    assertArgument(match != null, 'invalid path', 'path', _path);
 
     const path = match[1];
     const type = match[3];
-    const reqd = (match[4] === "!");
+    const reqd = match[4] === '!';
 
     let cur = object;
     for (const comp of path.toLowerCase().split('.')) {
-
         // Search for a child object with a case-insensitive matching key
         if (Array.isArray(cur)) {
-            if (!comp.match(/^[0-9]+$/)) { break; }
+            if (!comp.match(/^[0-9]+$/)) {
+                break;
+            }
             cur = cur[parseInt(comp)];
-
-        } else if (typeof(cur) === "object") {
+        } else if (typeof cur === 'object') {
             let found: any = null;
             for (const key in cur) {
-                 if (key.toLowerCase() === comp) {
-                     found = cur[key];
-                     break;
-                 }
+                if (key.toLowerCase() === comp) {
+                    found = cur[key];
+                    break;
+                }
             }
             cur = found;
-
         } else {
             cur = null;
         }
 
-        if (cur == null) { break; }
+        if (cur == null) {
+            break;
+        }
     }
 
-    assertArgument(!reqd || cur != null, "missing required value", "path", path);
+    assertArgument(!reqd || cur != null, 'missing required value', 'path', path);
 
     if (type && cur != null) {
-        if (type === "int") {
-            if (typeof(cur) === "string" && cur.match(/^-?[0-9]+$/)) {
-                return <T><unknown>parseInt(cur);
+        if (type === 'int') {
+            if (typeof cur === 'string' && cur.match(/^-?[0-9]+$/)) {
+                return <T>(<unknown>parseInt(cur));
             } else if (Number.isSafeInteger(cur)) {
                 return cur;
             }
         }
 
-        if (type === "number") {
-            if (typeof(cur) === "string" && cur.match(/^-?[0-9.]*$/)) {
-                return <T><unknown>parseFloat(cur);
+        if (type === 'number') {
+            if (typeof cur === 'string' && cur.match(/^-?[0-9.]*$/)) {
+                return <T>(<unknown>parseFloat(cur));
             }
         }
 
-        if (type === "data") {
-            if (typeof(cur) === "string") { return <T><unknown>looseArrayify(cur); }
+        if (type === 'data') {
+            if (typeof cur === 'string') {
+                return <T>(<unknown>looseArrayify(cur));
+            }
         }
 
-        if (type === "array" && Array.isArray(cur)) { return <T><unknown>cur; }
-        if (type === typeof(cur)) { return cur; }
+        if (type === 'array' && Array.isArray(cur)) {
+            return <T>(<unknown>cur);
+        }
+        if (type === typeof cur) {
+            return cur;
+        }
 
-        assertArgument(false, `wrong type found for ${ type } `, "path", path);
+        assertArgument(false, `wrong type found for ${type} `, 'path', path);
     }
 
     return cur;
@@ -87,29 +100,29 @@ export function spelunk<T>(object: any, _path: string): T {
 
 // HDNODEWallet and UTXO Wallet util methods
 
-
 // "Bitcoin seed"
-export const MasterSecret = new Uint8Array([ 66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100 ]);
+export const MasterSecret = new Uint8Array([66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100]);
 
 export const HardenedBit = 0x80000000;
 
-export const N = BigInt("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141");
+export const N = BigInt('0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
 
-export const Nibbles = "0123456789abcdef";
+export const Nibbles = '0123456789abcdef';
 
 export function zpad(value: string | number, length: number): string {
     // Determine if the value is hexadecimal
-    const isHex = typeof value === "string" && value.startsWith("0x");
-    
+    const isHex = typeof value === 'string' && value.startsWith('0x');
+
     // Handle hexadecimal values
     if (isHex) {
         let hexValue = value.substring(2); // Remove the "0x" prefix
-        while (hexValue.length < length * 2) { // Hexadecimal characters count double
-            hexValue = "0" + hexValue;
+        while (hexValue.length < length * 2) {
+            // Hexadecimal characters count double
+            hexValue = '0' + hexValue;
         }
-        return "0x" + hexValue;
+        return '0x' + hexValue;
     }
-    
+
     // Handle numbers or non-hexadecimal strings
     let result = String(value);
     while (result.length < length) {
@@ -118,51 +131,57 @@ export function zpad(value: string | number, length: number): string {
     return result;
 }
 
-
-
 export function encodeBase58Check(_value: BytesLike): string {
     const value = getBytes(_value);
     const check = dataSlice(sha256(sha256(value)), 0, 4);
-    const bytes = concat([ value, check ]);
+    const bytes = concat([value, check]);
     return encodeBase58(bytes);
 }
 
-export function ser_I(index: number, chainCode: string, publicKey: string, privateKey: null | string): { IL: Uint8Array, IR: Uint8Array } {
+export function ser_I(
+    index: number,
+    chainCode: string,
+    publicKey: string,
+    privateKey: null | string,
+): { IL: Uint8Array; IR: Uint8Array } {
     const data = new Uint8Array(37);
 
     if (index & HardenedBit) {
-        assert(privateKey != null, "cannot derive child of neutered node", "UNSUPPORTED_OPERATION", {
-            operation: "deriveChild"
+        assert(privateKey != null, 'cannot derive child of neutered node', 'UNSUPPORTED_OPERATION', {
+            operation: 'deriveChild',
         });
 
         // Data = 0x00 || ser_256(k_par)
         data.set(getBytes(privateKey), 1);
-
     } else {
         // Data = ser_p(point(k_par))
         data.set(getBytes(publicKey));
     }
 
     // Data += ser_32(i)
-    for (let i = 24; i >= 0; i -= 8) { data[33 + (i >> 3)] = ((index >> (24 - i)) & 0xff); }
-    const I = getBytes(computeHmac("sha512", chainCode, data));
+    for (let i = 24; i >= 0; i -= 8) {
+        data[33 + (i >> 3)] = (index >> (24 - i)) & 0xff;
+    }
+    const I = getBytes(computeHmac('sha512', chainCode, data));
 
     return { IL: I.slice(0, 32), IR: I.slice(32) };
 }
 
 export type HDNodeLike<T> = {
     coinType?: number;
-    depth: number,
-    deriveChild: (i: number) => T,
-    // setCoinType?: () => void 
+    depth: number;
+    deriveChild: (i: number) => T;
+    // setCoinType?: () => void
 };
 
 export function derivePath<T extends HDNodeLike<T>>(node: T, path: string): T {
-    const components = path.split("/");
+    const components = path.split('/');
 
-    assertArgument(components.length > 0 && (components[0] === "m" || node.depth > 0), "invalid path", "path", path);
+    assertArgument(components.length > 0 && (components[0] === 'm' || node.depth > 0), 'invalid path', 'path', path);
 
-    if (components[0] === "m") { components.shift(); }
+    if (components[0] === 'm') {
+        components.shift();
+    }
 
     let result: T = node;
     for (let i = 0; i < components.length; i++) {
@@ -170,16 +189,14 @@ export function derivePath<T extends HDNodeLike<T>>(node: T, path: string): T {
 
         if (component.match(/^[0-9]+'$/)) {
             const index = parseInt(component.substring(0, component.length - 1));
-            assertArgument(index < HardenedBit, "invalid path index", `path[${ i }]`, component);
+            assertArgument(index < HardenedBit, 'invalid path index', `path[${i}]`, component);
             result = result.deriveChild(HardenedBit + index);
-
         } else if (component.match(/^[0-9]+$/)) {
             const index = parseInt(component);
-            assertArgument(index < HardenedBit, "invalid path index", `path[${ i }]`, component);
+            assertArgument(index < HardenedBit, 'invalid path index', `path[${i}]`, component);
             result = result.deriveChild(index);
-
         } else {
-            assertArgument(false, "invalid path component", `path[${ i }]`, component);
+            assertArgument(false, 'invalid path component', `path[${i}]`, component);
         }
     }
     // Extract the coin type from the path and set it on the node

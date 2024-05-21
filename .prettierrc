@@ -1,13 +1,13 @@
 {
-  "printWidth": 120,
-  "useTabs": false,
-  "tabWidth": 4,
-  "singleQuote": true,
-  "plugins": ["prettier-plugin-jsdoc"],
+    "printWidth": 120,
+    "useTabs": false,
+    "tabWidth": 4,
+    "singleQuote": true,
+    "plugins": ["prettier-plugin-jsdoc"],
 
-  "jsdocCommentLineStragegy": "multiline",
-  "jsdocSeparateReturnsFromParam": true,
-  "jsdocPreferCodeFences": true,
-  "tsdoc": true,
-  "jsdocPrintWidth": 120
+    "jsdocCommentLineStrategy": "multiline",
+    "jsdocSeparateReturnsFromParam": true,
+    "jsdocPreferCodeFences": true,
+    "tsdoc": true,
+    "jsdocPrintWidth": 120
 }

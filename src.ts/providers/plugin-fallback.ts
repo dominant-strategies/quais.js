@@ -1,11 +1,9 @@
+import { AbstractProviderPlugin } from './abstract-provider.js';
+import { defineProperties } from '../utils/index.js';
 
-import { AbstractProviderPlugin } from "./abstract-provider.js";
-import { defineProperties } from "../utils/index.js";
+import type { AbstractProvider, PerformActionRequest } from './abstract-provider.js';
 
-import type { AbstractProvider, PerformActionRequest } from "./abstract-provider.js";
-
-
-export const PluginIdFallbackProvider = "org.quais.plugins.provider.QualifiedPlugin";
+export const PluginIdFallbackProvider = 'org.quais.plugins.provider.QualifiedPlugin';
 
 export class CheckQualifiedPlugin implements AbstractProviderPlugin {
     declare name: string;
@@ -27,8 +25,10 @@ export class CheckQualifiedPlugin implements AbstractProviderPlugin {
 
 export class PossiblyPrunedTransactionPlugin extends CheckQualifiedPlugin {
     isQualified(action: PerformActionRequest, result: any): boolean {
-        if (action.method === "getTransaction" || action.method === "getTransactionReceipt") {
-            if (result == null) { return false; }
+        if (action.method === 'getTransaction' || action.method === 'getTransactionReceipt') {
+            if (result == null) {
+                return false;
+            }
         }
         return super.isQualified(action, result);
     }
