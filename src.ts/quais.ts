@@ -120,15 +120,10 @@ export {
     Mnemonic,
     BaseWallet, QuaiHDWallet, HDNodeVoidWallet, QiHDWallet,
     Wallet,
-
-
-    getAccountPath, getIndexedAccountPath,
     isCrowdsaleJson, isKeystoreJson,
-
     decryptCrowdsaleJson, decryptKeystoreJsonSync, decryptKeystoreJson,
     encryptKeystoreJson, encryptKeystoreJsonSync,
 
-    quaiHDAccountPath, qiHDAccountPath,
 
     nobleCrypto,
 } from "./wallet/index.js";
