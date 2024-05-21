@@ -1,5 +1,4 @@
-import { ShardData } from '../constants/shards.js';
-
+import { ShardData } from "../constants/shards.js";
 /**
  * Retrieves the shard information for a given address based on its byte prefix. The function parses the address to
  * extract its byte prefix, then filters the ShardData to find a matching shard entry. If no matching shard is found, it
@@ -64,9 +63,9 @@ export function getAddressDetails(address: string): { shard: any; isUTXO: boolea
  * @returns {number} The transaction type based on the addresses.
  */
 export function getTxType(from: string | null, to: string | null): number {
-    if (from === null || to === null) return 0;
-    const fromUTXO = isUTXOAddress(from);
-    const toUTXO = isUTXOAddress(to);
+  if (from === null || to === null) return 0;
+  const fromUTXO = isQiAddress(from);
+  const toUTXO = isQiAddress(to);
 
     switch (true) {
         case fromUTXO && toUTXO:
@@ -79,19 +78,19 @@ export function getTxType(from: string | null, to: string | null): number {
 }
 
 /**
- * Checks whether a given blockchain address is a UTXO address based on the 9th bit of the address. This function
- * extracts the second byte of the address and checks its first bit to determine the UTXO status.
- *
- * @category Utils
- * @param {string} address - The blockchain address to be analyzed, expected to start with "0x" followed by its
- *   hexadecimal representation.
- *
- * @returns {boolean} True if the address is a UTXO address, false otherwise.
- */
-export function isUTXOAddress(address: string): boolean {
-    const secondByte = address.substring(4, 6);
-    const binaryString = parseInt(secondByte, 16).toString(2).padStart(8, '0');
-    const isUTXO = binaryString[0] === '1';
+  *  Checks whether a given blockchain address is a UTXO address based on the 9th bit of
+  *  the address. This function extracts the second byte of the address and checks its
+  *  first bit to determine the UTXO status.
+  * 
+  *  @param {string} address - The blockchain address to be analyzed, expected to start with "0x" followed by its hexadecimal representation.
+  *  @returns {boolean} True if the address is a UTXO address, false otherwise.
+  * 
+  *  @category Utils
+  */
+export function isQiAddress(address: string): boolean {
+  const secondByte = address.substring(4, 6); 
+  const binaryString = parseInt(secondByte, 16).toString(2).padStart(8, '0'); 
+  const isUTXO = binaryString[0] === '1';
 
-    return isUTXO;
+  return isUTXO;
 }

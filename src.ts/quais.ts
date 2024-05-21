@@ -112,7 +112,7 @@ export {
     formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits,
     toUtf8Bytes, toUtf8CodePoints, toUtf8String,
     Utf8ErrorFuncs,
-    uuidV4, getTxType, getShardForAddress, getAddressDetails, isUTXOAddress,
+    uuidV4, getTxType, getShardForAddress, getAddressDetails, isQiAddress,
 } from "./utils/index.js";
 
 // WALLET
