@@ -5,26 +5,15 @@ import { BaseWallet } from './base-wallet.js';
 import { QuaiHDWallet } from './quai-hdwallet.js';
 import { decryptCrowdsaleJson, isCrowdsaleJson } from './json-crowdsale.js';
 import {
-    decryptKeystoreJson,
-    decryptKeystoreJsonSync,
-    encryptKeystoreJson,
-    encryptKeystoreJsonSync,
-    isKeystoreJson,
-} from './json-keystore.js';
-import { Mnemonic } from './mnemonic.js';
+    decryptKeystoreJson, decryptKeystoreJsonSync,
+    encryptKeystoreJson, encryptKeystoreJsonSync,
+    isKeystoreJson
+} from "./json-keystore.js";
 
-import type { ProgressCallback } from '../crypto/index.js';
-import type { Provider } from '../providers/index.js';
-import type { CrowdsaleAccount } from './json-crowdsale.js';
-import type { KeystoreAccount } from './json-keystore.js';
-
-function stall(duration: number): Promise<void> {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve();
-        }, duration);
-    });
-}
+import type { ProgressCallback } from "../crypto/index.js";
+import type { Provider } from "../providers/index.js";
+import type { CrowdsaleAccount } from "./json-crowdsale.js";
+import type { KeystoreAccount } from "./json-keystore.js";
 
 /**
  * A **Wallet** manages a single private key which is used to sign transactions, messages and other common payloads.
@@ -85,17 +74,8 @@ export class Wallet extends BaseWallet {
         return encryptKeystoreJsonSync(account, password);
     }
 
-    static #fromAccount(account: null | CrowdsaleAccount | KeystoreAccount): QuaiHDWallet | Wallet {
-        assertArgument(account, 'invalid JSON wallet', 'json', '[ REDACTED ]');
-
-        if ('mnemonic' in account && account.mnemonic && account.mnemonic.locale === 'en') {
-            const mnemonic = Mnemonic.fromEntropy(account.mnemonic.entropy);
-            const wallet = QuaiHDWallet.fromMnemonic(mnemonic, account.mnemonic.path || ''); // Add a check for undefined path
-            if (wallet.address === account.address && wallet.privateKey === account.privateKey) {
-                return wallet;
-            }
-            console.log('WARNING: JSON mismatch address/privateKey != mnemonic; fallback onto private key');
-        }
+    static #fromAccount(account: KeystoreAccount): Wallet {
+        assertArgument(account, "invalid JSON wallet", "json", "[ REDACTED ]");
 
         const wallet = new Wallet(account.privateKey);
 
@@ -115,27 +95,14 @@ export class Wallet extends BaseWallet {
      *
      * @returns {Promise<QuaiHDWallet | Wallet>} The decrypted wallet.
      */
-    static async fromEncryptedJson(
-        json: string,
-        password: Uint8Array | string,
-        progress?: ProgressCallback,
-    ): Promise<QuaiHDWallet | Wallet> {
-        let account: null | CrowdsaleAccount | KeystoreAccount = null;
+    static async fromEncryptedJson(json: string, password: Uint8Array | string, progress?: ProgressCallback): Promise<Wallet> {
+        let account: KeystoreAccount;
         if (isKeystoreJson(json)) {
             account = await decryptKeystoreJson(json, password, progress);
-        } else if (isCrowdsaleJson(json)) {
-            if (progress) {
-                progress(0);
-                await stall(0);
-            }
-            account = decryptCrowdsaleJson(json, password);
-            if (progress) {
-                progress(1);
-                await stall(0);
-            }
-        }
+            return Wallet.#fromAccount(account);
+        } 
+        throw new Error("invalid JSON wallet");
 
-        return Wallet.#fromAccount(account);
     }
 
     /**
@@ -160,24 +127,5 @@ export class Wallet extends BaseWallet {
         }
 
         return Wallet.#fromAccount(account);
-    }
-
-    /**
-     * Creates a new random {@link QuaiHDWallet | **QuaiHDWallet**} using the available [cryptographic random
-     * source](randomBytes).
-     *
-     * If there is no crytographic random source, this will throw.
-     *
-     * @param {string} path - The derivation path for the wallet.
-     * @param {Provider} [provider] - An optional provider to connect the wallet to.
-     *
-     * @returns {QuaiHDWallet} The new wallet.
-     */
-    static createRandom(path: string, provider?: null | Provider): QuaiHDWallet {
-        const wallet = QuaiHDWallet.createRandom(path);
-        if (provider) {
-            return wallet.connect(provider);
-        }
-        return wallet;
     }
 }
