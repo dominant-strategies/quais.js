@@ -1,0 +1,17 @@
+# node modules
+node_modules/
+
+# tests
+testcases/
+
+# pre-commit
+.husky/
+
+# output dirs
+dist/
+output/
+misc/
+docs/
+
+# js
+lib.commonjs/
