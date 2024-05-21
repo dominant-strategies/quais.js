@@ -4,7 +4,7 @@ import {
     assertArgument,
     decodeProtoTransaction,
     getBytes, getShardForAddress,
-    hexlify, isUTXOAddress,
+    hexlify, isQiAddress,
     toBigInt
 } from "../utils/index.js";
 import {formatNumber} from "../providers/format.js";
@@ -66,10 +66,10 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
             throw new Error('Transaction must have at least one input and one output');
         }
 
-        const destUtxo = isUTXOAddress(hexlify(this.txOutputs[0].address) || '');
+        const destUtxo = isQiAddress(hexlify(this.txOutputs[0].address) || "");
         const pubKey = hexlify(this.txInputs[0].pub_key);
-        const senderAddr = computeAddress(pubKey || '');
-        const originUtxo = isUTXOAddress(senderAddr);
+        const senderAddr = computeAddress(pubKey || "");
+        const originUtxo = isQiAddress(senderAddr);
 
         if (!this.destShard || !this.originShard) {
             throw new Error(

@@ -6,19 +6,10 @@
  */
 import { AddressLike, resolveAddress } from '../address/index.js';
 import {
-    defineProperties,
-    getBigInt,
-    resolveProperties,
-    assert,
-    assertArgument,
-    isUTXOAddress,
-} from '../utils/index.js';
-import {
-    addressFromTransactionRequest,
-    copyRequest,
-    QiTransactionRequest,
-    QuaiTransactionRequest,
-} from './provider.js';
+    defineProperties, getBigInt, resolveProperties,
+    assert, assertArgument, isQiAddress
+} from "../utils/index.js";
+import {addressFromTransactionRequest, copyRequest, QiTransactionRequest, QuaiTransactionRequest} from "./provider.js";
 
 import type { TypedDataDomain, TypedDataField } from '../hash/index.js';
 import type { TransactionLike } from '../transaction/index.js';
@@ -191,7 +182,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
         let pop;
         let txObj;
-        if (isUTXOAddress(sender)) {
+        if (isQiAddress(sender)) {
             pop = await this.populateQiTransaction(tx);
             txObj = QiTransaction.from(pop);
         } else {
