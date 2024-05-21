@@ -1,46 +1,43 @@
 /**
- *  Each state-changing operation on Ethereum requires a transaction.
+ * Each state-changing operation on Ethereum requires a transaction.
  *
- *  @_section api/transaction:Transactions  [about-transactions]
+ * @_section api/transaction:Transactions [about-transactions]
  */
 
 null;
 
 /**
- *  A single {@link AccessList | **AccessList** } entry of storage keys (slots) for an address.
- * 
- *  @category Transaction
+ * A single {@link AccessList | **AccessList** } entry of storage keys (slots) for an address.
+ *
+ * @category Transaction
  */
-export type AccessListEntry = { address: string, storageKeys: Array<string> };
+export type AccessListEntry = { address: string; storageKeys: Array<string> };
 
 /**
- *  An ordered collection of {@link AccessList | **AccessList** } entries.
- * 
- *  @category Transaction
+ * An ordered collection of {@link AccessList | **AccessList** } entries.
+ *
+ * @category Transaction
  */
 export type AccessList = Array<AccessListEntry>;
 
 /**
- *  Any quais-supported access list structure.
- * 
- *  @category Transaction
+ * Any quais-supported access list structure.
+ *
+ * @category Transaction
  */
-export type AccessListish = AccessList |
-                            Array<[ string, Array<string> ]> |
-                            Record<string, Array<string>>;
+export type AccessListish = AccessList | Array<[string, Array<string>]> | Record<string, Array<string>>;
 
+export { accessListify } from './accesslist.js';
+export { computeAddress, recoverAddress } from './address.js';
+export { AbstractTransaction } from './abstract-transaction.js';
 
-export { accessListify } from "./accesslist.js";
-export { computeAddress, recoverAddress } from "./address.js";
-export { AbstractTransaction } from "./abstract-transaction.js";
+export { FewestCoinSelector } from './coinselector-fewest.js';
 
-export { FewestCoinSelector } from "./coinselector-fewest.js";
+export type { TransactionLike } from './abstract-transaction.js';
 
-export type { TransactionLike } from "./abstract-transaction.js";
+export type { TxInput, TxOutput } from './utxo.js';
 
-export type {TxInput, TxOutput} from "./utxo.js";
-
-export { QiTransaction } from "./qi-transaction.js";
-export { QiTransactionLike } from "./qi-transaction.js";
-export { QuaiTransaction } from "./quai-transaction.js";
-export { QuaiTransactionLike } from "./quai-transaction.js";
+export { QiTransaction } from './qi-transaction.js';
+export { QiTransactionLike } from './qi-transaction.js';
+export { QuaiTransaction } from './quai-transaction.js';
+export { QuaiTransactionLike } from './quai-transaction.js';

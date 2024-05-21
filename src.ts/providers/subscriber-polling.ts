@@ -1,33 +1,37 @@
-import { assert, isHexString } from "../utils/index.js";
+import { assert, isHexString } from '../utils/index.js';
 
-import type { AbstractProvider, Subscriber } from "./abstract-provider.js";
-import type { EventFilter, OrphanFilter, ProviderEvent } from "./provider.js";
+import type { AbstractProvider, Subscriber } from './abstract-provider.js';
+import type { EventFilter, OrphanFilter, ProviderEvent } from './provider.js';
 
 function copy(obj: any): any {
     return JSON.parse(JSON.stringify(obj));
 }
 
 /**
- *  Return the polling subscriber for common events.
+ * Return the polling subscriber for common events.
  *
- *  @category Providers
+ * @category Providers
  */
 export function getPollingSubscriber(provider: AbstractProvider, event: ProviderEvent): Subscriber {
-    if (event === "block") { return new PollingBlockSubscriber(provider); }
-    if (isHexString(event, 32)) { return new PollingTransactionSubscriber(provider, event); }
+    if (event === 'block') {
+        return new PollingBlockSubscriber(provider);
+    }
+    if (isHexString(event, 32)) {
+        return new PollingTransactionSubscriber(provider, event);
+    }
 
-    assert(false, "unsupported polling event", "UNSUPPORTED_OPERATION", {
-        operation: "getPollingSubscriber", info: { event }
+    assert(false, 'unsupported polling event', 'UNSUPPORTED_OPERATION', {
+        operation: 'getPollingSubscriber',
+        info: { event },
     });
 }
 
 // @TODO: refactor this
 
 /**
- *  A **PollingBlockSubscriber** polls at a regular interval for a change
- *  in the block number.
+ * A **PollingBlockSubscriber** polls at a regular interval for a change in the block number.
  *
- *  @category Providers
+ * @category Providers
  */
 export class PollingBlockSubscriber implements Subscriber {
     #provider: AbstractProvider;
@@ -40,7 +44,7 @@ export class PollingBlockSubscriber implements Subscriber {
     #blockNumber: number;
 
     /**
-     *  Create a new **PollingBlockSubscriber** attached to `provider`.
+     * Create a new **PollingBlockSubscriber** attached to `provider`.
      */
     constructor(provider: AbstractProvider) {
         this.#provider = provider;
@@ -51,10 +55,14 @@ export class PollingBlockSubscriber implements Subscriber {
     }
 
     /**
-     *  The polling interval.
+     * The polling interval.
      */
-    get pollingInterval(): number { return this.#interval; }
-    set pollingInterval(value: number) { this.#interval = value; }
+    get pollingInterval(): number {
+        return this.#interval;
+    }
+    set pollingInterval(value: number) {
+        this.#interval = value;
+    }
 
     async #poll(): Promise<void> {
         try {
@@ -71,14 +79,15 @@ export class PollingBlockSubscriber implements Subscriber {
             if (blockNumber !== this.#blockNumber) {
                 for (let b = this.#blockNumber + 1; b <= blockNumber; b++) {
                     // We have been stopped
-                    if (this.#poller == null) { return; }
+                    if (this.#poller == null) {
+                        return;
+                    }
 
-                    await this.#provider.emit("block", b);
+                    await this.#provider.emit('block', b);
                 }
 
                 this.#blockNumber = blockNumber;
             }
-
         } catch (error) {
             // @TODO: Minor bump, add an "error" event to let subscribers
             //        know things went awry.
@@ -86,26 +95,34 @@ export class PollingBlockSubscriber implements Subscriber {
         }
 
         // We have been stopped
-        if (this.#poller == null) { return; }
+        if (this.#poller == null) {
+            return;
+        }
 
         this.#poller = this.#provider._setTimeout(this.#poll.bind(this), this.#interval);
     }
 
     start(): void {
-        if (this.#poller) { return; }
+        if (this.#poller) {
+            return;
+        }
         this.#poller = this.#provider._setTimeout(this.#poll.bind(this), this.#interval);
         this.#poll();
     }
 
     stop(): void {
-        if (!this.#poller) { return; }
+        if (!this.#poller) {
+            return;
+        }
         this.#provider._clearTimeout(this.#poller);
         this.#poller = null;
     }
 
     pause(dropWhilePaused?: boolean): void {
         this.stop();
-        if (dropWhilePaused) { this.#blockNumber = -2; }
+        if (dropWhilePaused) {
+            this.#blockNumber = -2;
+        }
     }
 
     resume(): void {
@@ -114,11 +131,10 @@ export class PollingBlockSubscriber implements Subscriber {
 }
 
 /**
- *  An **OnBlockSubscriber** can be sub-classed, with a 
- *  {@link OnBlockSubscriber._poll | **_poll**} implmentation 
- *  which will be called on every new block.
+ * An **OnBlockSubscriber** can be sub-classed, with a {@link OnBlockSubscriber._poll | **_poll**} implmentation which
+ * will be called on every new block.
  *
- *  @category Providers
+ * @category Providers
  */
 export class OnBlockSubscriber implements Subscriber {
     #provider: AbstractProvider;
@@ -126,44 +142,52 @@ export class OnBlockSubscriber implements Subscriber {
     #running: boolean;
 
     /**
-     *  Create a new **OnBlockSubscriber** attached to `provider`.
+     * Create a new **OnBlockSubscriber** attached to `provider`.
      */
     constructor(provider: AbstractProvider) {
         this.#provider = provider;
         this.#running = false;
         this.#poll = (blockNumber: number) => {
             this._poll(blockNumber, this.#provider);
-        }
+        };
     }
 
     /**
-     *  Called on every new block.
+     * Called on every new block.
      */
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
-        throw new Error("sub-classes must override this");
+        throw new Error('sub-classes must override this');
     }
 
     start(): void {
-        if (this.#running) { return; }
+        if (this.#running) {
+            return;
+        }
         this.#running = true;
 
         this.#poll(-2);
-        this.#provider.on("block", this.#poll);
+        this.#provider.on('block', this.#poll);
     }
 
     stop(): void {
-        if (!this.#running) { return; }
+        if (!this.#running) {
+            return;
+        }
         this.#running = false;
 
-        this.#provider.off("block", this.#poll);
+        this.#provider.off('block', this.#poll);
     }
 
-    pause(dropWhilePaused?: boolean): void { this.stop(); }
-    resume(): void { this.start(); }
+    pause(dropWhilePaused?: boolean): void {
+        this.stop();
+    }
+    resume(): void {
+        this.start();
+    }
 }
 
 /**
- *  @ignore
+ * @ignore
  */
 export class PollingOrphanSubscriber extends OnBlockSubscriber {
     #filter: OrphanFilter;
@@ -174,23 +198,21 @@ export class PollingOrphanSubscriber extends OnBlockSubscriber {
     }
 
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
-        throw new Error("@TODO");
+        throw new Error('@TODO');
         console.log(this.#filter);
     }
 }
 
 /**
- *  A **PollingTransactionSubscriber** will poll for a given transaction
- *  hash for its receipt.
+ * A **PollingTransactionSubscriber** will poll for a given transaction hash for its receipt.
  *
- *  @category Providers
+ * @category Providers
  */
 export class PollingTransactionSubscriber extends OnBlockSubscriber {
     #hash: string;
 
     /**
-     *  Create a new **PollingTransactionSubscriber** attached to
-     *  `provider`, listening for `hash`.
+     * Create a new **PollingTransactionSubscriber** attached to `provider`, listening for `hash`.
      */
     constructor(provider: AbstractProvider, hash: string) {
         super(provider);
@@ -199,14 +221,16 @@ export class PollingTransactionSubscriber extends OnBlockSubscriber {
 
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
         const tx = await provider.getTransactionReceipt(this.#hash);
-        if (tx) { provider.emit(this.#hash, tx); }
+        if (tx) {
+            provider.emit(this.#hash, tx);
+        }
     }
 }
 
 /**
- *  A **PollingEventSubscriber** will poll for a given filter for its logs.
+ * A **PollingEventSubscriber** will poll for a given filter for its logs.
  *
- *  @category Providers
+ * @category Providers
  */
 export class PollingEventSubscriber implements Subscriber {
     #provider: AbstractProvider;
@@ -220,8 +244,7 @@ export class PollingEventSubscriber implements Subscriber {
     #blockNumber: number;
 
     /**
-     *  Create a new **PollingTransactionSubscriber** attached to
-     *  `provider`, listening for `filter%%.
+     * Create a new **PollingTransactionSubscriber** attached to `provider`, listening for `filter%%.
      */
     constructor(provider: AbstractProvider, filter: EventFilter) {
         this.#provider = provider;
@@ -233,7 +256,9 @@ export class PollingEventSubscriber implements Subscriber {
 
     async #poll(blockNumber: number): Promise<void> {
         // The initial block hasn't been determined yet
-        if (this.#blockNumber === -2) { return; }
+        if (this.#blockNumber === -2) {
+            return;
+        }
 
         const filter = copy(this.#filter);
         filter.fromBlock = this.#blockNumber + 1;
@@ -261,7 +286,9 @@ export class PollingEventSubscriber implements Subscriber {
     }
 
     start(): void {
-        if (this.#running) { return; }
+        if (this.#running) {
+            return;
+        }
         this.#running = true;
 
         if (this.#blockNumber === -2) {
@@ -269,19 +296,23 @@ export class PollingEventSubscriber implements Subscriber {
                 this.#blockNumber = blockNumber;
             });
         }
-        this.#provider.on("block", this.#poller);
+        this.#provider.on('block', this.#poller);
     }
 
     stop(): void {
-        if (!this.#running) { return; }
+        if (!this.#running) {
+            return;
+        }
         this.#running = false;
 
-        this.#provider.off("block", this.#poller);
+        this.#provider.off('block', this.#poller);
     }
 
     pause(dropWhilePaused?: boolean): void {
         this.stop();
-        if (dropWhilePaused) { this.#blockNumber = -2; }
+        if (dropWhilePaused) {
+            this.#blockNumber = -2;
+        }
     }
 
     resume(): void {

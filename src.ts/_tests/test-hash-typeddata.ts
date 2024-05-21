@@ -1,20 +1,19 @@
-import assert from "assert";
-import { loadTests } from "./utils.js";
-import type { TestCaseTypedData } from "./types.js";
+import assert from 'assert';
+import { loadTests } from './utils.js';
+import type { TestCaseTypedData } from './types.js';
 
-import { TypedDataEncoder } from "../index.js";
+import { TypedDataEncoder } from '../index.js';
 
-
-describe("Tests Typed Data (EIP-712)", function() {
-    const tests = loadTests<TestCaseTypedData>("typed-data");
+describe('Tests Typed Data (EIP-712)', function () {
+    const tests = loadTests<TestCaseTypedData>('typed-data');
     for (const test of tests) {
-        it(`tests encoding typed-data: ${ test.name }`, function() {
+        it(`tests encoding typed-data: ${test.name}`, function () {
             const encoder = TypedDataEncoder.from(test.types);
-            assert.equal(encoder.primaryType, test.primaryType, "primaryType");
-            assert.equal(encoder.encode(test.data), test.encoded, "encoded");
+            assert.equal(encoder.primaryType, test.primaryType, 'primaryType');
+            assert.equal(encoder.encode(test.data), test.encoded, 'encoded');
 
-            assert.equal(TypedDataEncoder.getPrimaryType(test.types), test.primaryType, "primaryType");
-            assert.equal(TypedDataEncoder.hash(test.domain, test.types, test.data), test.digest, "digest");
+            assert.equal(TypedDataEncoder.getPrimaryType(test.types), test.primaryType, 'primaryType');
+            assert.equal(TypedDataEncoder.hash(test.domain, test.types, test.data), test.digest, 'digest');
         });
     }
 });

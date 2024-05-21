@@ -1,23 +1,22 @@
 /**
- *  Explain UUID and link to RFC here.
+ * Explain UUID and link to RFC here.
  *
- *  @section api/utils:UUID  [about-uuid]
+ * @section api/utils:UUID [about-uuid]
  */
-import { getBytes, hexlify } from "./data.js";
+import { getBytes, hexlify } from './data.js';
 
-import type { BytesLike } from "./index.js";
+import type { BytesLike } from './index.js';
 
 /**
- *  Returns the version 4 [UUID](https://www.ietf.org/rfc/rfc4122.txt)
- *  for the `randomBytes`.
+ * Returns the version 4 [UUID](https://www.ietf.org/rfc/rfc4122.txt) for the `randomBytes`.
  *
- *  @param {BytesLike} randomBytes - The random bytes to use.
- *  @returns {string} The UUID.
- * 
- *  @category Utils
+ * @category Utils
+ * @param {BytesLike} randomBytes - The random bytes to use.
+ *
+ * @returns {string} The UUID.
  */
 export function uuidV4(randomBytes: BytesLike): string {
-    const bytes = getBytes(randomBytes, "randomBytes");
+    const bytes = getBytes(randomBytes, 'randomBytes');
 
     // Section: 4.1.3:
     // - time_hi_and_version[12:16] = 0b0100
@@ -31,10 +30,10 @@ export function uuidV4(randomBytes: BytesLike): string {
     const value = hexlify(bytes);
 
     return [
-       value.substring(2, 10),
-       value.substring(10, 14),
-       value.substring(14, 18),
-       value.substring(18, 22),
-       value.substring(22, 34),
-    ].join("-");
+        value.substring(2, 10),
+        value.substring(10, 14),
+        value.substring(14, 18),
+        value.substring(18, 22),
+        value.substring(22, 34),
+    ].join('-');
 }

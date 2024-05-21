@@ -1,59 +1,57 @@
-import assert from "assert";
+import assert from 'assert';
 
-import {
-    id, isError, makeError, toUtf8Bytes, toUtf8String,
-    FetchRequest,
-    JsonRpcProvider, Wallet
-} from "../index.js";
-import { QuaiTransaction } from "../transaction/quai-transaction.js";
+import { id, isError, makeError, toUtf8Bytes, toUtf8String, FetchRequest, JsonRpcProvider, Wallet } from '../index.js';
+import { QuaiTransaction } from '../transaction/quai-transaction.js';
 
 const StatusMessages: Record<number, string> = {
-  200: "OK",
-  400: "BAD REQUEST",
-  500: "SERVER ERROR",
+    200: 'OK',
+    400: 'BAD REQUEST',
+    500: 'SERVER ERROR',
 };
 
 //Requires running a local node and working quai_accounts api call
 
 type ProcessRequest = (method: string, params: Array<string>, blockNumber: number) => any;
 
-const wallet = new Wallet(id("test"));
+const wallet = new Wallet(id('test'));
 
 function createProvider(testFunc: ProcessRequest): JsonRpcProvider {
-
     let blockNumber = 1;
-    const ticker = setInterval(() => { blockNumber++ }, 100);
-    if (ticker.unref) { ticker.unref(); }
+    const ticker = setInterval(() => {
+        blockNumber++;
+    }, 100);
+    if (ticker.unref) {
+        ticker.unref();
+    }
 
-    const processReq = (req: { method: string, params: Array<string>, id: any }) => {
-
+    const processReq = (req: { method: string; params: Array<string>; id: any }) => {
         let result = testFunc(req.method, req.params, blockNumber);
         if (result === undefined) {
             switch (req.method) {
-                case "quai_blockNumber":
+                case 'quai_blockNumber':
                     result = blockNumber;
                     break;
-                case "quai_chainId":
-                    result = "0x1337";
+                case 'quai_chainId':
+                    result = '0x1337';
                     break;
-                case "quai_accounts":
-                    result = [ wallet.address ];
+                case 'quai_accounts':
+                    result = [wallet.address];
                     break;
                 default:
-                    console.log("****", req);
-                    return { id, error: "unsupported", jsonrpc: "2.0" };
+                    console.log('****', req);
+                    return { id, error: 'unsupported', jsonrpc: '2.0' };
             }
         }
 
-        return { id: req.id, result, jsonrpc: "2.0" };
+        return { id: req.id, result, jsonrpc: '2.0' };
     };
 
-    const req = new FetchRequest("http:/\/localhost:8082/");
+    const req = new FetchRequest('http://localhost:8082/');
     req.getUrlFunc = async (_req, signal) => {
-        const req = JSON.parse(_req.hasBody() ? toUtf8String(_req.body): "");
+        const req = JSON.parse(_req.hasBody() ? toUtf8String(_req.body) : '');
 
         let statusCode = 200;
-        const headers = { };
+        const headers = {};
 
         let resp: any;
         try {
@@ -62,8 +60,7 @@ function createProvider(testFunc: ProcessRequest): JsonRpcProvider {
             } else {
                 resp = processReq(req);
             }
-
-        } catch(error: any) {
+        } catch (error: any) {
             statusCode = 500;
             resp = error.message;
         }
@@ -73,25 +70,26 @@ function createProvider(testFunc: ProcessRequest): JsonRpcProvider {
         return {
             statusCode,
             statusMessage: StatusMessages[statusCode],
-            headers, body
+            headers,
+            body,
         };
     };
 
     return new JsonRpcProvider(req, undefined, { cacheTimeout: -1 });
 }
 
-describe("Ensure Catchable Errors", function() {
-    it("Can catch bad broadcast replies", async function() {
+describe('Ensure Catchable Errors', function () {
+    it('Can catch bad broadcast replies', async function () {
         this.timeout(15000);
 
         const txInfo = {
-          chainId: 1337,
-          gasLimit: 100000,
-          maxFeePerGas: 2000000000,
-          maxPriorityFeePerGas: 1000000000,
-          to: wallet.address,
-          from: wallet.address,
-          value: 1,
+            chainId: 1337,
+            gasLimit: 100000,
+            maxFeePerGas: 2000000000,
+            maxPriorityFeePerGas: 1000000000,
+            to: wallet.address,
+            from: wallet.address,
+            value: 1,
         };
         const txSign = await wallet.signTransaction(txInfo);
         const txObj = QuaiTransaction.from(txSign);
@@ -99,34 +97,35 @@ describe("Ensure Catchable Errors", function() {
         let count = 0;
 
         const provider = createProvider((method, params, blockNumber) => {
-
             switch (method) {
-                case "quai_sendTransaction":
+                case 'quai_sendTransaction':
                     return txObj.hash;
 
-                case "quai_getTransactionByHash": {
+                case 'quai_getTransactionByHash': {
                     count++;
 
                     // First time; fail!
                     if (count === 1) {
-                        throw makeError("Faux Error", "SERVER_ERROR", {
-                            request: <any>({ })
+                        throw makeError('Faux Error', 'SERVER_ERROR', {
+                            request: <any>{},
                         });
                     }
 
                     // Second time; return null
-                    if (count === 2) { return null; }
+                    if (count === 2) {
+                        return null;
+                    }
 
                     // Return a valid tx...
-                    const result = Object.assign({ },
-                        txObj.toJSON(),
-                        txObj.signature!.toJSON(),
-                        { hash: txObj.hash, from: wallet.address });
+                    const result = Object.assign({}, txObj.toJSON(), txObj.signature!.toJSON(), {
+                        hash: txObj.hash,
+                        from: wallet.address,
+                    });
 
                     // ...eventually mined
                     if (count > 4) {
                         result.blockNumber = blockNumber;
-                        result.blockHash = id("test");
+                        result.blockHash = id('test');
                     }
 
                     return result;
@@ -142,18 +141,17 @@ describe("Ensure Catchable Errors", function() {
         assert(tx);
     });
 
-
-    it("Missing v is recovered", async function() {
+    it('Missing v is recovered', async function () {
         this.timeout(15000);
 
         const txInfo = {
-          chainId: 1337,
-          gasLimit: 100000,
-          maxFeePerGas: 2000000000,
-          maxPriorityFeePerGas: 1000000000,
-          to: wallet.address,
-          from: wallet.address,
-          value: 1,
+            chainId: 1337,
+            gasLimit: 100000,
+            maxFeePerGas: 2000000000,
+            maxPriorityFeePerGas: 1000000000,
+            to: wallet.address,
+            from: wallet.address,
+            value: 1,
         };
         const txSign = await wallet.signTransaction(txInfo);
         const txObj = QuaiTransaction.from(txSign);
@@ -164,22 +162,24 @@ describe("Ensure Catchable Errors", function() {
         // in getTransaction
 
         const provider = createProvider((method, params, blockNumber) => {
-
             switch (method) {
-                case "quai_sendTransaction":
+                case 'quai_sendTransaction':
                     return txObj.hash;
 
-                case "quai_getTransactionByHash": {
+                case 'quai_getTransactionByHash': {
                     count++;
 
                     // The fully valid tx response
-                    const result = Object.assign({ },
-                        txObj.toJSON(),
-                        txObj.signature!.toJSON(),
-                        { hash: txObj.hash, from: wallet.address, sig: null });
+                    const result = Object.assign({}, txObj.toJSON(), txObj.signature!.toJSON(), {
+                        hash: txObj.hash,
+                        from: wallet.address,
+                        sig: null,
+                    });
 
                     // First time; fail with a missing v!
-                    if (count < 2) { delete result.v; }
+                    if (count < 2) {
+                        delete result.v;
+                    }
 
                     // Debug
                     result._count = count;
@@ -193,9 +193,9 @@ describe("Ensure Catchable Errors", function() {
 
         // Track any "missing v" error
         let missingV: Error | null = null;
-        provider.on("error", (e) => {
-            if (isError(e, "UNKNOWN_ERROR") && isError(e.error, "INVALID_ARGUMENT")) {
-                if (e.error.argument === "signature" && e.error.shortMessage === "missing v") {
+        provider.on('error', (e) => {
+            if (isError(e, 'UNKNOWN_ERROR') && isError(e.error, 'INVALID_ARGUMENT')) {
+                if (e.error.argument === 'signature' && e.error.shortMessage === 'missing v') {
                     missingV = e.error;
                 }
             }
@@ -204,8 +204,7 @@ describe("Ensure Catchable Errors", function() {
         const signer = await provider.getSigner();
 
         const tx = await signer.sendTransaction(txInfo);
-        assert.ok(!!tx, "we got a transaction");
-        assert.ok(!!missingV, "missing v error present");
+        assert.ok(!!tx, 'we got a transaction');
+        assert.ok(!!missingV, 'missing v error present');
     });
 });
-

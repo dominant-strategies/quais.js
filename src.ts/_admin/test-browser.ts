@@ -1,52 +1,47 @@
 /**
+ * Paths /index.js => dist/quais.js /tests/utils.js => in-memory hijack /static/* => output/*
  *
- *
- *  Paths
- *  /index.js => dist/quais.js
- *  /tests/utils.js => in-memory hijack
- *  /static/* => output/*
- *    - index.html
- *    - assert.js
- *  /tests/* => lib.esm/_tests/*
+ * - Index.html
+ * - Assert.js /tests/* => lib.esm/_tests/*
  */
 
 // See: https://vanilla.aslushnikov.com/?Console
 
-import fs from "fs";
-import child_process from "child_process";
-import zlib from "zlib";
+import fs from 'fs';
+import child_process from 'child_process';
+import zlib from 'zlib';
 
-import { WebSocket } from "ws";
+import { WebSocket } from 'ws';
 
-import { createServer, Server } from "http";
-import { join, resolve } from "path";
+import { createServer, Server } from 'http';
+import { join, resolve } from 'path';
 
 const mimes: Record<string, string> = {
-  css: "text/css",
-  doctree: "application/x-doctree",
-  eot: "application/vnd.ms-fontobject",
-  gif: "image/gif",
-  html: "text/html",
-  ico: "image/x-icon",
-  js: "application/javascript",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  json: "application/json",
-  map: "application/json",
-  md: "text/markdown",
-  png: "image/png",
-  svg: "image/svg+xml",
-  ttf: "application/x-font-ttf",
-  txt: "text/plain",
-  woff: "application/font-woff"
+    css: 'text/css',
+    doctree: 'application/x-doctree',
+    eot: 'application/vnd.ms-fontobject',
+    gif: 'image/gif',
+    html: 'text/html',
+    ico: 'image/x-icon',
+    js: 'application/javascript',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    json: 'application/json',
+    map: 'application/json',
+    md: 'text/markdown',
+    png: 'image/png',
+    svg: 'image/svg+xml',
+    ttf: 'application/x-font-ttf',
+    txt: 'text/plain',
+    woff: 'application/font-woff',
 };
 
 export function getMime(filename: string): string {
-    const mime = mimes[(filename.split('.').pop() || "").toLowerCase()];
+    const mime = mimes[(filename.split('.').pop() || '').toLowerCase()];
 
     if (mime == null) {
-      console.log(`WARN: NO MIME for ${ filename }`);
-      return "application/octet-stream";
+        console.log(`WARN: NO MIME for ${filename}`);
+        return 'application/octet-stream';
     }
 
     return mime;
@@ -77,32 +72,34 @@ export class CDPSession {
         this.#id = 1;
         this.#resp = new Map();
 
-        this.#exit = (status: number) => { };
+        this.#exit = (status: number) => {};
         this.#done = new Promise((resolve) => {
             this.#exit = resolve;
         });
 
-        this.#target = "";
-        this.#session = "";
+        this.#target = '';
+        this.#session = '';
 
         const readyOpen: Promise<void> = new Promise((resolve, reject) => {
-            this.websocket.onopen = async () => { resolve(); };
+            this.websocket.onopen = async () => {
+                resolve();
+            };
         });
 
         const readyPage = (async () => {
             await readyOpen;
 
-            const target = await this._send("Target.getTargets", { });
+            const target = await this._send('Target.getTargets', {});
             if (target.targetInfos.length) {
                 this.#target = target.targetInfos[0].targetId;
             } else {
-                const target = await this._send("Target.createTarget", { url: "" });
+                const target = await this._send('Target.createTarget', { url: '' });
                 this.#target = target.targetId;
             }
 
-            const attached = await this._send("Target.attachToTarget", {
+            const attached = await this._send('Target.attachToTarget', {
                 targetId: this.#target,
-                flatten: true
+                flatten: true,
             });
 
             this.#session = attached.sessionId;
@@ -119,7 +116,7 @@ export class CDPSession {
                 this.#resp.delete(msg.id);
 
                 if (responder == null) {
-                    console.log("WARN: unknown request ${ msg.id }");
+                    console.log('WARN: unknown request ${ msg.id }');
                     return;
                 }
 
@@ -129,22 +126,22 @@ export class CDPSession {
                     responder.resolve(msg.result);
                 }
             } else {
-                if (msg.method === "Console.messageAdded") {
+                if (msg.method === 'Console.messageAdded') {
                     const text = msg.params.message.text;
-                    if (text.startsWith("#status")) {
-                        this.#exit(parseInt(text.split("=").pop()));
+                    if (text.startsWith('#status')) {
+                        this.#exit(parseInt(text.split('=').pop()));
                     }
                     console.log(text);
                     //console.log(msg.params.message.text, `${ msg.params.message.url }:${ msg.params.message.line }`);
-                } else if (msg.method === "Target.attachedToTarget") {
+                } else if (msg.method === 'Target.attachedToTarget') {
                 } else {
-                    console.log(`WARN: Unhandled event - ${ JSON.stringify(msg) }`);
+                    console.log(`WARN: Unhandled event - ${JSON.stringify(msg)}`);
                 }
             }
         };
 
         this.websocket.onerror = (error) => {
-            console.log(`WARN: WebSocket error - ${ JSON.stringify(error) }`);
+            console.log(`WARN: WebSocket error - ${JSON.stringify(error)}`);
         };
     }
 
@@ -174,7 +171,9 @@ export class CDPSession {
         const id = this.#id++;
 
         const payload: any = { id, method, params };
-        if (this.#session) { payload.sessionId = this.#session; }
+        if (this.#session) {
+            payload.sessionId = this.#session;
+        }
 
         this.websocket.send(JSON.stringify(payload));
 
@@ -184,7 +183,7 @@ export class CDPSession {
     }
 
     async navigate(url: string): Promise<void> {
-        await this.send("Page.navigate", { url });
+        await this.send('Page.navigate', { url });
     }
 }
 
@@ -193,76 +192,76 @@ export type Options = {
     redirects?: Record<string, string>;
 };
 
+const TestData = (function () {
+    function load(tag: string): any {
+        const filename = resolve('testcases', tag + '.json.gz');
+        const data = zlib.gunzipSync(fs.readFileSync(filename));
+        return [String(data.length), zlib.deflateRawSync(data).toString('base64')].join(',');
+    }
 
-const TestData = (function() {
-  function load(tag: string): any {
-    const filename = resolve("testcases", tag + ".json.gz");
-    const data = zlib.gunzipSync(fs.readFileSync(filename));
-    return [ String(data.length), zlib.deflateRawSync(data).toString("base64") ].join(",");
-  }
+    let data: Array<string> = [];
+    data.push(`import { quais } from "/index.js";`);
+    data.push(`import { inflate } from "/static/tiny-inflate.js";`);
+    data.push(`const fs = new Map();`);
+    for (const filename of fs.readdirSync('testcases')) {
+        if (!filename.endsWith('.json.gz')) {
+            continue;
+        }
+        const tag = filename.split('.')[0];
+        data.push(`fs.set(${JSON.stringify(tag)}, ${JSON.stringify(load(tag))});`);
+    }
+    data.push(`export function loadTests(tag) {`);
+    data.push(`  const data = fs.get(tag);`);
+    data.push(`  if (data == null) { throw new Error("missing tag: " + tag); }`);
+    data.push(`  const comps = data.split(",");`);
+    data.push(`  const result = new Uint8Array(parseInt(comps[0]));`);
+    data.push(`  inflate(quais.decodeBase64(comps[1]), result);`);
+    data.push(`  return JSON.parse(quais.toUtf8String(result))`);
+    data.push(`}`);
 
-  let data: Array<string> = [ ];
-  data.push(`import { quais } from "/index.js";`);
-  data.push(`import { inflate } from "/static/tiny-inflate.js";`);
-  data.push(`const fs = new Map();`);
-  for (const filename of fs.readdirSync("testcases")) {
-    if (!filename.endsWith(".json.gz")) { continue; }
-    const tag = filename.split(".")[0];
-    data.push(`fs.set(${ JSON.stringify(tag) }, ${ JSON.stringify(load(tag)) });`);
-  }
-  data.push(`export function loadTests(tag) {`);
-  data.push(`  const data = fs.get(tag);`);
-  data.push(`  if (data == null) { throw new Error("missing tag: " + tag); }`);
-  data.push(`  const comps = data.split(",");`);
-  data.push(`  const result = new Uint8Array(parseInt(comps[0]));`);
-  data.push(`  inflate(quais.decodeBase64(comps[1]), result);`);
-  data.push(`  return JSON.parse(quais.toUtf8String(result))`);
-  data.push(`}`);
-
-  return data.join("\n");
+    return data.join('\n');
 })();
 
-
 export function start(_root: string, options: Options): Promise<Server> {
-
-    if (options == null) { options = { }; }
-    if (options.port == null) { options.port = 8000; }
+    if (options == null) {
+        options = {};
+    }
+    if (options.port == null) {
+        options.port = 8000;
+    }
 
     const server = createServer((req, resp) => {
-        const url = (req.url || "").split("?")[0];
+        const url = (req.url || '').split('?')[0];
 
         let transform = false;
 
         let filename: string;
-        if (url === "/") {
-            filename = "./misc/test-browser/index.html";
-        } else if (url === "/quais.js" || url === "/index.js") {
-            filename = "./dist/quais.js";
-        } else if (url === "/quais.js.map") {
-            filename = "./dist/quais.js.map";
-
-        } else if (url.startsWith("/static/")) {
-            filename = "./misc/test-browser/" + url.substring(8);
-
-        } else if (url === "/tests/utils.js") {
+        if (url === '/') {
+            filename = './misc/test-browser/index.html';
+        } else if (url === '/quais.js' || url === '/index.js') {
+            filename = './dist/quais.js';
+        } else if (url === '/quais.js.map') {
+            filename = './dist/quais.js.map';
+        } else if (url.startsWith('/static/')) {
+            filename = './misc/test-browser/' + url.substring(8);
+        } else if (url === '/tests/utils.js') {
             //console.log({ status: 200, content: `<<in-memory ${ TestData.length } bytes>>` });
             resp.writeHead(200, {
-                "Content-Length": TestData.length,
-                "Content-Type": getMime("testdata.js")
+                'Content-Length': TestData.length,
+                'Content-Type': getMime('testdata.js'),
             });
             resp.end(TestData);
             return;
-
-        } else if (url.startsWith("/tests/")) {
+        } else if (url.startsWith('/tests/')) {
             transform = true;
-            filename = join("./lib.esm/_tests", url.substring(7));
+            filename = join('./lib.esm/_tests', url.substring(7));
         } else {
             //console.log("FALLBACK");
             filename = url.substring(1);
         }
 
         // Make sure we aren't crawling out of our sandbox
-        if (url[0] !== "/" || filename.substring(0, filename.length) !== filename) {
+        if (url[0] !== '/' || filename.substring(0, filename.length) !== filename) {
             //console.log({ status: 403, reason: "escaping" });
             resp.writeHead(403);
             resp.end();
@@ -273,50 +272,51 @@ export function start(_root: string, options: Options): Promise<Server> {
             const stat = fs.statSync(filename);
             if (stat.isDirectory()) {
                 // Redirect bare directory to its path (i.e. "/foo" => "/foo/")
-                if (url[url.length - 1] !== "/") {
+                if (url[url.length - 1] !== '/') {
                     //console.log({ status: 301, location: (url + "/") });
-                    resp.writeHead(301, { Location: url + "/" });
+                    resp.writeHead(301, { Location: url + '/' });
                     resp.end();
                     return;
                 }
 
-                filename += "/index.html";
+                filename += '/index.html';
             }
 
             let content = fs.readFileSync(filename);
             if (transform) {
-                content = Buffer.from(content.toString().replace(/import ([^;]*) from "([^"]*)";/g, (all, names, filename) => {
-                    switch (filename) {
-                        case "assert":
-                        //case "path":
-                        //case "fs":
-                        //case "zlib":
-                            return `import ${ names} from "/static/${ filename }.js"`;
-                    }
-                    return all;
-                }));
+                content = Buffer.from(
+                    content.toString().replace(/import ([^;]*) from "([^"]*)";/g, (all, names, filename) => {
+                        switch (filename) {
+                            case 'assert':
+                                //case "path":
+                                //case "fs":
+                                //case "zlib":
+                                return `import ${names} from "/static/${filename}.js"`;
+                        }
+                        return all;
+                    }),
+                );
             }
 
             //console.log({ status: 200, filename });
             resp.writeHead(200, {
-                "Content-Length": content.length,
-                "Content-Type": getMime(filename)
+                'Content-Length': content.length,
+                'Content-Type': getMime(filename),
             });
             resp.end(content);
             return;
-
         } catch (error: any) {
-            if (error.code === "ENOENT") {
+            if (error.code === 'ENOENT') {
                 //console.log({ status: 404, filename });
-                console.log(`WARN: Not found - ${ filename }`)
-                resp.writeHead(404, { });
+                console.log(`WARN: Not found - ${filename}`);
+                resp.writeHead(404, {});
                 resp.end();
                 return;
             }
 
             //console.log({ status: 500, error: error.toString() });
-            console.log(`WARN: Server error - ${ error.toString() }`);
-            resp.writeHead(500, { });
+            console.log(`WARN: Server error - ${error.toString()}`);
+            resp.writeHead(500, {});
             resp.end();
             return;
         }
@@ -324,37 +324,42 @@ export function start(_root: string, options: Options): Promise<Server> {
 
     return new Promise((resolve, reject) => {
         server.listen(options.port, () => {
-            console.log(`Server running on: http://localhost:${ options.port }`);
+            console.log(`Server running on: http://localhost:${options.port}`);
             resolve(server);
         });
     });
 }
 
+(async function () {
+    await start(resolve('.'), { port: 8000 });
 
-(async function() {
-    await start(resolve("."), { port: 8000 });
+    const cmds = ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/chromium'].filter((f) => {
+        try {
+            fs.accessSync(f);
+            return true;
+        } catch (error) {
+            return false;
+        }
+    });
 
-    const cmds = [
-        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        "/usr/bin/chromium"
-    ].filter((f) => { try { fs.accessSync(f); return true; } catch (error) { return false; } });
-
-    if (cmds.length === 0) { throw new Error("no installed browser found"); }
+    if (cmds.length === 0) {
+        throw new Error('no installed browser found');
+    }
 
     const cmd = cmds[0];
 
-    const args = [ "--headless", "--disable-gpu", "--remote-debugging-port=8022" ];
+    const args = ['--headless', '--disable-gpu', '--remote-debugging-port=8022'];
     const browser = child_process.spawn(cmd, args);
 
     let url: string = await new Promise((resolve, reject) => {
-        browser.stdout.on("data", (data) => {
-            console.log("OUT", data.toString());
+        browser.stdout.on('data', (data) => {
+            console.log('OUT', data.toString());
         });
 
-        browser.stderr.on("data", (data) => {
+        browser.stderr.on('data', (data) => {
             const text = data.toString();
-            for (const line of text.split("\n")) {
-                const match = line.match(/^DevTools listening on (.*)$/)
+            for (const line of text.split('\n')) {
+                const match = line.match(/^DevTools listening on (.*)$/);
                 if (match) {
                     resolve(match[1]);
                     return;
@@ -362,15 +367,14 @@ export function start(_root: string, options: Options): Promise<Server> {
             }
         });
     });
-    console.log("URL:", url);
+    console.log('URL:', url);
 
     const session = new CDPSession(url);
     await session.ready;
-    await session.send("Console.enable", { });
-    await session.navigate("http:/\/localhost:8000");
+    await session.send('Console.enable', {});
+    await session.navigate('http://localhost:8000');
 
     const status = await session.done;
-    console.log("STATUS:", status);
+    console.log('STATUS:', status);
     process.exit(status);
 })();
-

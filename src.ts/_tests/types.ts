@@ -1,18 +1,20 @@
-
-
-export type TestCaseAbiVerbose = {
-    type: "address" | "hexstring" | "number" | "string",
-    value: string
-} | {
-    type: "boolean",
-    value: boolean
-} | {
-    type: "array",
-    value: Array<TestCaseAbiVerbose>
-} | {
-    type: "object",
-    value: Array<TestCaseAbiVerbose>
-}
+export type TestCaseAbiVerbose =
+    | {
+          type: 'address' | 'hexstring' | 'number' | 'string';
+          value: string;
+      }
+    | {
+          type: 'boolean';
+          value: boolean;
+      }
+    | {
+          type: 'array';
+          value: Array<TestCaseAbiVerbose>;
+      }
+    | {
+          type: 'object';
+          value: Array<TestCaseAbiVerbose>;
+      };
 
 export interface TestCaseAbi {
     name: string;
@@ -36,23 +38,22 @@ export interface TestCaseAccount {
 export type TestCaseCreate = {
     sender: string;
     creates: Array<{
-        name: string,
-        nonce: number,
-        address: string
+        name: string;
+        nonce: number;
+        address: string;
     }>;
 };
 
 export type TestCaseCreate2 = {
     sender: string;
     creates: Array<{
-        name: string,
+        name: string;
         salt: string;
-        initCode: string
-        initCodeHash: string
+        initCode: string;
+        initCodeHash: string;
         address: string;
     }>;
 };
-
 
 /////////////////////////////
 // crypto
@@ -73,22 +74,22 @@ export interface TestCasePbkdf {
     dkLen: number;
     pbkdf2: {
         iterations: number;
-        algorithm: "sha256" | "sha512";
+        algorithm: 'sha256' | 'sha512';
         key: string;
-    },
+    };
     scrypt: {
         N: number;
         r: number;
         p: number;
         key: string;
-    }
+    };
 }
 
 export interface TestCaseHmac {
     name: string;
     data: string;
     key: string;
-    algorithm: "sha256" | "sha512";
+    algorithm: 'sha256' | 'sha512';
     hmac: string;
 }
 
@@ -129,7 +130,7 @@ export interface TestCaseTypedData {
 
     domain: TestCaseTypedDataDomain;
     primaryType: string;
-    types: Record<string, Array<TestCaseTypedDataType>>
+    types: Record<string, Array<TestCaseTypedDataType>>;
     data: any;
 
     encoded: string;
@@ -145,7 +146,7 @@ export interface TestCaseSolidityHash {
     keccak256: string;
     ripemd160: string;
     sha256: string;
-    values: Array<any>
+    values: Array<any>;
 }
 
 /////////////////////////////
@@ -177,7 +178,6 @@ export interface TestCaseRlp {
     decoded: NestedHexString;
 }
 
-
 /////////////////////////////
 // transaction
 
@@ -194,7 +194,7 @@ export interface TestCaseTransactionTx {
     data?: string;
     value?: string;
 
-    accessList?: Array<{ address: string, storageKeys: Array<string> }>;
+    accessList?: Array<{ address: string; storageKeys: Array<string> }>;
 
     chainId?: string;
 }
@@ -225,12 +225,11 @@ export interface TestCaseTransaction {
     signatureLondon: TestCaseTransactionSig;
 }
 
-
 /////////////////////////////
 // wallet
 
 export interface TestCaseMnemonicNode {
-    path: string,
+    path: string;
     chainCode: string;
     depth: number;
     index: number;
@@ -251,11 +250,11 @@ export interface TestCaseMnemonic {
     entropy: string;
     seed: string;
     nodes: Array<TestCaseMnemonicNode>;
-};
+}
 
 export interface TestCaseWallet {
     name: string;
-    filename: string,
+    filename: string;
     type: string;
     address: string;
     password: string;
@@ -267,7 +266,7 @@ export interface TestCaseWallet {
 
 export interface TestCaseWordlist {
     name: string;
-    filename: string,
+    filename: string;
     locale: string;
     content: string;
 }

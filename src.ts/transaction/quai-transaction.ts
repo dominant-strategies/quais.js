@@ -1,86 +1,97 @@
-import {keccak256, Signature,} from "../crypto/index.js";
-import {AccessList, accessListify, AccessListish, AbstractTransaction, TransactionLike, recoverAddress} from "./index.js";
+import { keccak256, Signature } from '../crypto/index.js';
+import {
+    AccessList,
+    accessListify,
+    AccessListish,
+    AbstractTransaction,
+    TransactionLike,
+    recoverAddress,
+} from './index.js';
 import {
     assert,
     assertArgument,
     BigNumberish,
-    BytesLike, decodeProtoTransaction,
+    BytesLike,
+    decodeProtoTransaction,
     encodeProtoTransaction,
     getBigInt,
     getBytes,
     getNumber,
     getShardForAddress,
-    hexlify, isUTXOAddress,
-    toBeArray, toBigInt, zeroPadValue
-} from "../utils/index.js";
-import {getAddress} from "../address/index.js";
-import {formatNumber, handleNumber} from "../providers/format.js";
-import { ProtoTransaction} from "./abstract-transaction.js";
+    hexlify,
+    isUTXOAddress,
+    toBeArray,
+    toBigInt,
+    zeroPadValue,
+} from '../utils/index.js';
+import { getAddress } from '../address/index.js';
+import { formatNumber, handleNumber } from '../providers/format.js';
+import { ProtoTransaction } from './abstract-transaction.js';
 
 /**
- *  @TODO write documentation for this interface.
- * 
- *  @category Transaction
+ * @category Transaction
+ * @todo Write documentation for this interface.
  */
-export interface QuaiTransactionLike extends TransactionLike{
+export interface QuaiTransactionLike extends TransactionLike {
     /**
-     *  The recipient address or `null` for an `init` transaction.
+     * The recipient address or `null` for an `init` transaction.
      */
     to?: null | string;
 
     /**
-     *  The sender.
+     * The sender.
      */
     from: string;
     /**
-     *  The nonce.
+     * The nonce.
      */
     nonce?: null | number;
 
     /**
-     *  The maximum amount of gas that can be used.
+     * The maximum amount of gas that can be used.
      */
     gasLimit?: null | BigNumberish;
 
     /**
-     *  The gas price for legacy and berlin transactions.
+     * The gas price for legacy and berlin transactions.
      */
     gasPrice?: null | BigNumberish;
 
     /**
-     *  The maximum priority fee per gas for london transactions.
+     * The maximum priority fee per gas for london transactions.
      */
     maxPriorityFeePerGas?: null | BigNumberish;
 
     /**
-     *  The maximum total fee per gas for london transactions.
+     * The maximum total fee per gas for london transactions.
      */
     maxFeePerGas?: null | BigNumberish;
 
     /**
-     *  The data.
+     * The data.
      */
     data?: null | string;
 
     /**
-     *  The value (in wei) to send.
+     * The value (in wei) to send.
      */
     value?: null | BigNumberish;
 
     /**
-     *  The access list for berlin and london transactions.
+     * The access list for berlin and london transactions.
      */
     accessList?: null | AccessListish;
-
 }
 
 export function _parseSignature(fields: Array<string>): Signature {
     let yParity: number;
     try {
-        yParity = handleNumber(fields[0], "yParity");
-        if (yParity !== 0 && yParity !== 1) { throw new Error("bad yParity"); }
+        yParity = handleNumber(fields[0], 'yParity');
+        if (yParity !== 0 && yParity !== 1) {
+            throw new Error('bad yParity');
+        }
     } catch (error) {
-        assertArgument(false, "invalid yParity", "yParity", fields[0]);
+        assertArgument(false, 'invalid yParity', 'yParity', fields[0]);
     }
 
     const r = zeroPadValue(fields[1], 32);
@@ -90,9 +101,8 @@ export function _parseSignature(fields: Array<string>): Signature {
 }
 
 /**
- *  @TODO write documentation for this class.
- * 
- *  @category Transaction
+ * @category Transaction
+ * @todo Write documentation for this class.
  */
 export class QuaiTransaction extends AbstractTransaction<Signature> implements QuaiTransactionLike {
     #to: null | string;
@@ -107,27 +117,30 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     from: string;
 
     /**
-     *  The `to` address for the transaction or `null` if the
-     *  transaction is an `init` transaction.
+     * The `to` address for the transaction or `null` if the transaction is an `init` transaction.
      */
-    get to(): null | string { return this.#to; }
+    get to(): null | string {
+        return this.#to;
+    }
     set to(value: null | string) {
-        this.#to = (value == null) ? null : getAddress(value);
+        this.#to = value == null ? null : getAddress(value);
     }
 
     get hash(): null | string {
-        if (this.signature == null) { return null; }
-        return this.unsignedHash
+        if (this.signature == null) {
+            return null;
+        }
+        return this.unsignedHash;
     }
     get unsignedHash(): string {
-        const destUtxo = isUTXOAddress(this.to || "");
+        const destUtxo = isUTXOAddress(this.to || '');
         const originUtxo = isUTXOAddress(this.from);
 
         if (!this.originShard) {
-            throw new Error("Invalid Shard for from or to address");
+            throw new Error('Invalid Shard for from or to address');
         }
         if (this.isExternal && destUtxo !== originUtxo) {
-            throw new Error("Cross-shard & cross-ledger transactions are not supported");
+            throw new Error('Cross-shard & cross-ledger transactions are not supported');
         }
 
         const hexString = this.serialized.startsWith('0x') ? this.serialized.substring(2) : this.serialized;
@@ -138,53 +151,58 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
         let origin = this.originShard ? parseInt(this.originShard, 16) : 0;
         hashBuffer[0] = origin;
-        hashBuffer[1] &= 0x7F;
+        hashBuffer[1] &= 0x7f;
         hashBuffer[2] = origin;
-        hashBuffer[3] &= 0x7F;
+        hashBuffer[3] &= 0x7f;
 
         return '0x' + hashBuffer.toString('hex');
     }
 
-
-get originShard(): string | undefined {
-        const senderAddr = this.from
+    get originShard(): string | undefined {
+        const senderAddr = this.from;
 
         return getShardForAddress(senderAddr)?.byte.slice(2);
     }
 
     get destShard(): string | undefined {
-        return this.to !== null ? getShardForAddress(this.to || "")?.byte.slice(2) : undefined;
+        return this.to !== null ? getShardForAddress(this.to || '')?.byte.slice(2) : undefined;
     }
 
     /**
-     *  The transaction nonce.
+     * The transaction nonce.
      */
-    get nonce(): number { return this.#nonce; }
-    set nonce(value: BigNumberish) { this.#nonce = getNumber(value, "value"); }
+    get nonce(): number {
+        return this.#nonce;
+    }
+    set nonce(value: BigNumberish) {
+        this.#nonce = getNumber(value, 'value');
+    }
 
     /**
-     *  The gas limit.
+     * The gas limit.
      */
-    get gasLimit(): bigint { return this.#gasLimit; }
-    set gasLimit(value: BigNumberish) { this.#gasLimit = getBigInt(value); }
+    get gasLimit(): bigint {
+        return this.#gasLimit;
+    }
+    set gasLimit(value: BigNumberish) {
+        this.#gasLimit = getBigInt(value);
+    }
 
     /**
-     *  The gas price.
+     * The gas price.
      *
-     *  On legacy networks this defines the fee that will be paid. On
-     *  EIP-1559 networks, this should be `null`.
+     * On legacy networks this defines the fee that will be paid. On EIP-1559 networks, this should be `null`.
      */
     get gasPrice(): null | bigint {
         const value = this.#gasPrice;
         return value;
     }
     set gasPrice(value: null | BigNumberish) {
-        this.#gasPrice = (value == null) ? null : getBigInt(value, "gasPrice");
+        this.#gasPrice = value == null ? null : getBigInt(value, 'gasPrice');
     }
 
     /**
-     *  The maximum priority fee per unit of gas to pay. On legacy
-     *  networks this should be `null`.
+     * The maximum priority fee per unit of gas to pay. On legacy networks this should be `null`.
      */
     get maxPriorityFeePerGas(): null | bigint {
         const value = this.#maxPriorityFeePerGas;
@@ -194,12 +212,11 @@ get originShard(): string | undefined {
         return value;
     }
     set maxPriorityFeePerGas(value: null | BigNumberish) {
-        this.#maxPriorityFeePerGas = (value == null) ? null : getBigInt(value, "maxPriorityFeePerGas");
+        this.#maxPriorityFeePerGas = value == null ? null : getBigInt(value, 'maxPriorityFeePerGas');
     }
 
     /**
-     *  The maximum total fee per unit of gas to pay. On legacy
-     *  networks this should be `null`.
+     * The maximum total fee per unit of gas to pay. On legacy networks this should be `null`.
      */
     get maxFeePerGas(): null | bigint {
         const value = this.#maxFeePerGas;
@@ -209,29 +226,34 @@ get originShard(): string | undefined {
         return value;
     }
     set maxFeePerGas(value: null | BigNumberish) {
-        this.#maxFeePerGas = (value == null) ? null : getBigInt(value, "maxFeePerGas");
+        this.#maxFeePerGas = value == null ? null : getBigInt(value, 'maxFeePerGas');
     }
 
     /**
-     *  The transaction data. For `init` transactions this is the
-     *  deployment code.
+     * The transaction data. For `init` transactions this is the deployment code.
      */
-    get data(): string { return this.#data; }
-    set data(value: BytesLike) { this.#data = hexlify(value); }
+    get data(): string {
+        return this.#data;
+    }
+    set data(value: BytesLike) {
+        this.#data = hexlify(value);
+    }
 
     /**
-     *  The amount of ether to send in this transactions.
+     * The amount of ether to send in this transactions.
      */
-    get value(): bigint { return this.#value; }
+    get value(): bigint {
+        return this.#value;
+    }
     set value(value: BigNumberish) {
-        this.#value = getBigInt(value, "value");
+        this.#value = getBigInt(value, 'value');
     }
 
     /**
-     *  The access list.
+     * The access list.
      *
-     *  An access list permits discounted (but pre-paid) access to
-     *  bytecode and state variable access within contract execution.
+     * An access list permits discounted (but pre-paid) access to bytecode and state variable access within contract
+     * execution.
      */
     get accessList(): null | AccessList {
         const value = this.#accessList || null;
@@ -241,12 +263,11 @@ get originShard(): string | undefined {
         return value;
     }
     set accessList(value: null | AccessListish) {
-        this.#accessList = (value == null) ? null : accessListify(value);
+        this.#accessList = value == null ? null : accessListify(value);
     }
 
-
     /**
-     *  Creates a new Transaction with default values.
+     * Creates a new Transaction with default values.
      */
     constructor(from: string) {
         super();
@@ -256,36 +277,41 @@ get originShard(): string | undefined {
         this.#gasPrice = null;
         this.#maxPriorityFeePerGas = null;
         this.#maxFeePerGas = null;
-        this.#data = "0x";
+        this.#data = '0x';
         this.#value = BigInt(0);
         this.#accessList = null;
-        this.from = from
+        this.from = from;
     }
 
     /**
-     *  Validates the explicit properties and returns a list of compatible
-     *  transaction types.
-     * 
-     *  @returns {Array<number>} The compatible transaction types.
+     * Validates the explicit properties and returns a list of compatible transaction types.
+     *
+     * @returns {number[]} The compatible transaction types.
      */
     inferTypes(): Array<number> {
-
-
         if (this.maxFeePerGas != null && this.maxPriorityFeePerGas != null) {
-            assert(this.maxFeePerGas >= this.maxPriorityFeePerGas, "priorityFee cannot be more than maxFee", "BAD_DATA", { value: this });
+            assert(
+                this.maxFeePerGas >= this.maxPriorityFeePerGas,
+                'priorityFee cannot be more than maxFee',
+                'BAD_DATA',
+                { value: this },
+            );
         }
 
-        assert((this.type !== 0 && this.type !== 1), "transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList", "BAD_DATA", { value: this });
+        assert(
+            this.type !== 0 && this.type !== 1,
+            'transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList',
+            'BAD_DATA',
+            { value: this },
+        );
 
         const types: Array<number> = [];
 
         // Explicit type
         if (this.type != null) {
             types.push(this.type);
-
         } else {
             types.push(0);
-
         }
 
         types.sort();
@@ -294,25 +320,26 @@ get originShard(): string | undefined {
     }
 
     /**
-     *  Create a copy of this transaciton.
-     * 
-     *  @returns {QuaiTransaction} The cloned transaction.
+     * Create a copy of this transaciton.
+     *
+     * @returns {QuaiTransaction} The cloned transaction.
      */
     clone(): QuaiTransaction {
         return QuaiTransaction.from(this);
     }
 
     /**
-     *  Return a JSON-friendly object.
-     * 
-     *  @returns {QuaiTransactionLike} The JSON-friendly object.
+     * Return a JSON-friendly object.
+     *
+     * @returns {QuaiTransactionLike} The JSON-friendly object.
      */
     toJSON(): QuaiTransactionLike {
         const s = (v: null | bigint) => {
-            if (v == null) { return null; }
+            if (v == null) {
+                return null;
+            }
             return v.toString();
         };
-
 
         return {
             type: this.type,
@@ -333,66 +360,87 @@ get originShard(): string | undefined {
     }
 
     /**
-     *  Return a protobuf-friendly JSON object.
-     * 
-     *  @returns {ProtoTransaction} The protobuf-friendly JSON object.
+     * Return a protobuf-friendly JSON object.
+     *
+     * @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
     toProtobuf(): ProtoTransaction {
         const protoTx: ProtoTransaction = {
-            type: (this.type || 0),
-            chain_id: formatNumber(this.chainId || 0, "chainId"),
-            nonce: (this.nonce || 0),
-            gas_tip_cap: formatNumber(this.maxPriorityFeePerGas || 0, "maxPriorityFeePerGas"),
-            gas_fee_cap: formatNumber(this.maxFeePerGas || 0, "maxFeePerGas"),
+            type: this.type || 0,
+            chain_id: formatNumber(this.chainId || 0, 'chainId'),
+            nonce: this.nonce || 0,
+            gas_tip_cap: formatNumber(this.maxPriorityFeePerGas || 0, 'maxPriorityFeePerGas'),
+            gas_fee_cap: formatNumber(this.maxFeePerGas || 0, 'maxFeePerGas'),
             gas: Number(this.gasLimit || 0),
             to: this.to != null ? getBytes(this.to as string) : null,
-            value: formatNumber(this.value || 0, "value"),
-            data: getBytes(this.data || "0x"),
+            value: formatNumber(this.value || 0, 'value'),
+            data: getBytes(this.data || '0x'),
             access_list: { access_tuples: [] },
-        }
+        };
 
         if (this.signature) {
-            protoTx.v = formatNumber(this.signature.yParity, "yParity")
-            protoTx.r = toBeArray(this.signature.r)
-            protoTx.s = toBeArray(this.signature.s)
+            protoTx.v = formatNumber(this.signature.yParity, 'yParity');
+            protoTx.r = toBeArray(this.signature.r);
+            protoTx.s = toBeArray(this.signature.s);
         }
 
         return protoTx;
     }
 
     /**
-     *  Create a **Transaction** from a serialized transaction or a
-     *  Transaction-like object.
-     * 
-     *  @param {string | QuaiTransactionLike} tx - The transaction to decode.
-     *  @returns {QuaiTransaction} The decoded transaction.
+     * Create a **Transaction** from a serialized transaction or a Transaction-like object.
+     *
+     * @param {string | QuaiTransactionLike} tx - The transaction to decode.
+     *
+     * @returns {QuaiTransaction} The decoded transaction.
      */
     static from(tx: string | QuaiTransactionLike): QuaiTransaction {
-        if (typeof (tx) === "string") {
+        if (typeof tx === 'string') {
             const decodedProtoTx: ProtoTransaction = decodeProtoTransaction(getBytes(tx));
             return QuaiTransaction.fromProto(decodedProtoTx);
         }
 
         const result = new QuaiTransaction(tx.from);
-        if (tx.type != null) { result.type = tx.type; }
-        if (tx.to != null) { result.to = tx.to; }
-        if (tx.nonce != null) { result.nonce = tx.nonce; }
-        if (tx.gasLimit != null) { result.gasLimit = tx.gasLimit; }
-        if (tx.maxPriorityFeePerGas != null) { result.maxPriorityFeePerGas = tx.maxPriorityFeePerGas; }
-        if (tx.maxFeePerGas != null) { result.maxFeePerGas = tx.maxFeePerGas; }
-        if (tx.data != null) { result.data = tx.data; }
-        if (tx.value != null) { result.value = tx.value; }
-        if (tx.chainId != null) { result.chainId = tx.chainId; }
-        if (tx.signature != null) { result.signature = Signature.from(tx.signature); }
-        if (tx.accessList != null) { result.accessList = tx.accessList; }
-
+        if (tx.type != null) {
+            result.type = tx.type;
+        }
+        if (tx.to != null) {
+            result.to = tx.to;
+        }
+        if (tx.nonce != null) {
+            result.nonce = tx.nonce;
+        }
+        if (tx.gasLimit != null) {
+            result.gasLimit = tx.gasLimit;
+        }
+        if (tx.maxPriorityFeePerGas != null) {
+            result.maxPriorityFeePerGas = tx.maxPriorityFeePerGas;
+        }
+        if (tx.maxFeePerGas != null) {
+            result.maxFeePerGas = tx.maxFeePerGas;
+        }
+        if (tx.data != null) {
+            result.data = tx.data;
+        }
+        if (tx.value != null) {
+            result.value = tx.value;
+        }
+        if (tx.chainId != null) {
+            result.chainId = tx.chainId;
+        }
+        if (tx.signature != null) {
+            result.signature = Signature.from(tx.signature);
+        }
+        if (tx.accessList != null) {
+            result.accessList = tx.accessList;
+        }
 
         if (tx.hash != null) {
-            assertArgument(result.isSigned(), "unsigned transaction cannot define hash", "tx", tx);
+            assertArgument(result.isSigned(), 'unsigned transaction cannot define hash', 'tx', tx);
         }
 
         if (tx.from != null) {
-            assertArgument(result.from.toLowerCase() === (tx.from || "").toLowerCase(), "from mismatch", "tx", tx);
+            assertArgument(result.from.toLowerCase() === (tx.from || '').toLowerCase(), 'from mismatch', 'tx', tx);
             result.from = tx.from;
         }
         return result;
@@ -400,36 +448,32 @@ get originShard(): string | undefined {
 
     /**
      * Create a **Transaction** from a ProtoTransaction object.
-     * 
-     *  @param {ProtoTransaction} protoTx - The transaction to decode.
-     *  @param {Uint8Array} [payload] - The serialized transaction.
-     *  @returns {QuaiTransaction} The decoded transaction.
+     *
+     * @param {ProtoTransaction} protoTx - The transaction to decode.
+     * @param {Uint8Array} [payload] - The serialized transaction.
+     *
+     * @returns {QuaiTransaction} The decoded transaction.
      */
     static fromProto(protoTx: ProtoTransaction): QuaiTransaction {
-
         //  TODO: Fix this because new tx instance requires a 'from' address
-        let signature: null | Signature = null
-        let address
+        let signature: null | Signature = null;
+        let address;
         if (protoTx.v && protoTx.r && protoTx.s) {
-            const signatureFields = [
-                hexlify(protoTx.v!),
-                hexlify(protoTx.r!),
-                hexlify(protoTx.s!),
-            ];
+            const signatureFields = [hexlify(protoTx.v!), hexlify(protoTx.r!), hexlify(protoTx.s!)];
             signature = _parseSignature(signatureFields);
 
-            const protoTxCopy = structuredClone(protoTx)
+            const protoTxCopy = structuredClone(protoTx);
 
-            delete protoTxCopy.v
-            delete protoTxCopy.r
-            delete protoTxCopy.s
-            delete protoTxCopy.signature
-            delete protoTxCopy.etx_sender
-            delete protoTxCopy.etx_index
+            delete protoTxCopy.v;
+            delete protoTxCopy.r;
+            delete protoTxCopy.s;
+            delete protoTxCopy.signature;
+            delete protoTxCopy.etx_sender;
+            delete protoTxCopy.etx_index;
 
-            address =  recoverAddress(keccak256(encodeProtoTransaction(protoTxCopy)), signature);
+            address = recoverAddress(keccak256(encodeProtoTransaction(protoTxCopy)), signature);
         } else {
-            address = ""
+            address = '';
         }
 
         const tx = new QuaiTransaction(address);
@@ -446,9 +490,9 @@ get originShard(): string | undefined {
         tx.to = protoTx.to !== null ? hexlify(protoTx.to!) : null;
         tx.value = protoTx.value !== null ? toBigInt(protoTx.value!) : BigInt(0);
         tx.data = hexlify(protoTx.data!);
-        tx.accessList = protoTx.access_list!.access_tuples.map(tuple => ({
+        tx.accessList = protoTx.access_list!.access_tuples.map((tuple) => ({
             address: hexlify(tuple.address),
-            storageKeys: tuple.storage_key.map(key => hexlify(key))
+            storageKeys: tuple.storage_key.map((key) => hexlify(key)),
         }));
         return tx;
     }

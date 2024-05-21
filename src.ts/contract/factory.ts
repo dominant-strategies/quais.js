@@ -1,74 +1,73 @@
+import { Interface } from '../abi/index.js';
+import { concat, defineProperties, getBytes, hexlify, assert, assertArgument } from '../utils/index.js';
 
-import { Interface } from "../abi/index.js";
-import {
-    concat, defineProperties, getBytes, hexlify,
-    assert, assertArgument
-} from "../utils/index.js";
+import { BaseContract, copyOverrides, resolveArgs } from './contract.js';
 
-import { BaseContract, copyOverrides, resolveArgs } from "./contract.js";
-
-import type { InterfaceAbi } from "../abi/index.js";
-import type { Addressable } from "../address/index.js";
-import type { ContractRunner } from "../providers/index.js";
-import type { BytesLike } from "../utils/index.js";
-import { getShardForAddress, isUTXOAddress } from "../utils/index.js";
-import type {
-    ContractInterface, ContractMethodArgs, ContractDeployTransaction,
-} from "./types.js";
-import type { ContractTransactionResponse } from "./wrappers.js";
-import { Wallet, randomBytes } from "../quais.js";
-import { getContractAddress } from "../address/address.js";
-import { getStatic } from "../utils/properties.js";
-import {QuaiTransactionRequest} from "../providers/provider";
-
+import type { InterfaceAbi } from '../abi/index.js';
+import type { Addressable } from '../address/index.js';
+import type { ContractRunner } from '../providers/index.js';
+import type { BytesLike } from '../utils/index.js';
+import { getShardForAddress, isUTXOAddress } from '../utils/index.js';
+import type { ContractInterface, ContractMethodArgs, ContractDeployTransaction } from './types.js';
+import type { ContractTransactionResponse } from './wrappers.js';
+import { Wallet, randomBytes } from '../quais.js';
+import { getContractAddress } from '../address/address.js';
+import { getStatic } from '../utils/properties.js';
+import { QuaiTransactionRequest } from '../providers/provider';
 
 // A = Arguments to the constructor
 // I = Interface of deployed contracts
 
 /**
- *  A **ContractFactory** is used to deploy a Contract to the blockchain.
- * 
- *  @category Contract
+ * A **ContractFactory** is used to deploy a Contract to the blockchain.
+ *
+ * @category Contract
  */
 export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract> {
-
     /**
-     *  The Contract Interface.
+     * The Contract Interface.
      */
     readonly interface!: Interface;
 
     /**
-     *  The Contract deployment bytecode. Often called the initcode.
+     * The Contract deployment bytecode. Often called the initcode.
      */
     readonly bytecode!: string;
 
     /**
-     *  The ContractRunner to deploy the Contract as.
+     * The ContractRunner to deploy the Contract as.
      */
     readonly runner!: null | ContractRunner;
 
     /**
-     *  Create a new **ContractFactory** with `abi` and `bytecode`,
-     *  optionally connected to `runner`.
+     * Create a new **ContractFactory** with `abi` and `bytecode`, optionally connected to `runner`.
      *
-     *  The `bytecode` may be the `bytecode` property within the
-     *  standard Solidity JSON output.
+     * The `bytecode` may be the `bytecode` property within the standard Solidity JSON output.
      */
-    constructor(abi: Interface | InterfaceAbi, bytecode: BytesLike | { object: string }, runner?: null | ContractRunner) {
+    constructor(
+        abi: Interface | InterfaceAbi,
+        bytecode: BytesLike | { object: string },
+        runner?: null | ContractRunner,
+    ) {
         const iface = Interface.from(abi);
 
-        
         // Dereference Solidity bytecode objects and allow a missing `0x`-prefix
         if (bytecode instanceof Uint8Array) {
             bytecode = hexlify(getBytes(bytecode));
         } else {
-            if (typeof(bytecode) === "object") { bytecode = bytecode.object; }
-            if (!bytecode.startsWith("0x")) { bytecode = "0x" + bytecode; }
+            if (typeof bytecode === 'object') {
+                bytecode = bytecode.object;
+            }
+            if (!bytecode.startsWith('0x')) {
+                bytecode = '0x' + bytecode;
+            }
             bytecode = hexlify(getBytes(bytecode));
         }
 
         defineProperties<ContractFactory>(this, {
-            bytecode, interface: iface, runner: (runner || null)
+            bytecode,
+            interface: iface,
+            runner: runner || null,
         });
     }
 
@@ -77,14 +76,14 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
     }
 
     /**
-     *  Resolves to the transaction to deploy the contract, passing `args`
-     *  into the constructor.
-     * 
-     *  @param {ContractMethods<A>} args - The arguments to the constructor.
-     *  @returns {Promise<ContractDeployTransaction>} A promise resolving to the deployment transaction.
+     * Resolves to the transaction to deploy the contract, passing `args` into the constructor.
+     *
+     * @param {ContractMethods<A>} args - The arguments to the constructor.
+     *
+     * @returns {Promise<ContractDeployTransaction>} A promise resolving to the deployment transaction.
      */
     async getDeployTransaction(...args: ContractMethodArgs<A>): Promise<ContractDeployTransaction> {
-        let overrides: Omit<ContractDeployTransaction, "data">;
+        let overrides: Omit<ContractDeployTransaction, 'data'>;
 
         const fragment = this.interface.deploy;
 
@@ -92,23 +91,23 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
             overrides = await copyOverrides(args.pop());
 
             const resolvedArgs = await resolveArgs(this.runner, fragment.inputs, args);
-            const data = concat([ this.bytecode, this.interface.encodeDeploy(resolvedArgs) ]);
-            return Object.assign({ }, overrides, { data });
+            const data = concat([this.bytecode, this.interface.encodeDeploy(resolvedArgs)]);
+            return Object.assign({}, overrides, { data });
         }
 
         if (fragment.inputs.length !== args.length) {
-            throw new Error("incorrect number of arguments to constructor");
+            throw new Error('incorrect number of arguments to constructor');
         }
 
         const resolvedArgs = await resolveArgs(this.runner, fragment.inputs, args);
 
-        const data = concat([ this.bytecode, this.interface.encodeDeploy(resolvedArgs) ]);
-        return Object.assign({ }, args.pop().from, { data });
+        const data = concat([this.bytecode, this.interface.encodeDeploy(resolvedArgs)]);
+        return Object.assign({}, args.pop().from, { data });
     }
 
     // getDeployTransaction3(...args: Array<any>): TransactionRequest {
     //     let tx: TransactionRequest = {};
-    
+
     //     // If we have 1 additional argument, we allow transaction overrides
     //     if (
     //       args.length === this.interface.deploy.inputs.length + 1 &&
@@ -122,7 +121,7 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
     //         }
     //       }
     //     }
-    
+
     //     // Do not allow these to be overridden in a deployment transaction
     //     ["data", "from", "to"].forEach((key) => {
     //       if ((<any>tx)[key] == null) {
@@ -130,7 +129,7 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
     //       }
     //       assertArgument(false, "cannot override " + key, key, (<any>tx)[key]);
     //     });
-    
+
     //     if (tx.value) {
     //         const value = Number(tx.value)
     //         if ( value != 0 && !this.interface.deploy.payable) {
@@ -141,73 +140,80 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
     //             );
     //         }
     //     }
-    
+
     //     // // Make sure the call matches the constructor signature
     //     // logger.checkArgumentCount(
     //     //   args.length,
     //     //   this.interface.deploy.inputs.length,
     //     //   " in Contract constructor"
     //     // );
-    
+
     //     // Set the data to the bytecode + the encoded constructor arguments
     //     tx.data = hexlify(
     //       concat([this.bytecode, this.interface.encodeDeploy(args)])
     //     );
-    
+
     //     return tx;
     //   }
 
-
     /**
-     *  Resolves to the Contract deployed by passing `args` into the
-     *  constructor.
+     * Resolves to the Contract deployed by passing `args` into the constructor.
      *
-     *  This will resovle to the Contract before it has been deployed to the
-     *  network, so the [baseContract.waitForDeployment](../classes/BaseContract#waitForDeployment) should be used before
-     *  sending any transactions to it.
-     * 
-     *  @param {ContractMethods<A>} args - The arguments to the constructor.
-     *  @returns {Promise<BaseContract & { deploymentTransaction(): ContractTransactionResponse } & Omit<I, keyof BaseContract>>} A promise resolving to the Contract.
+     * This will resovle to the Contract before it has been deployed to the network, so the
+     * [baseContract.waitForDeployment](../classes/BaseContract#waitForDeployment) should be used before sending any
+     * transactions to it.
+     *
+     * @param {ContractMethods<A>} args - The arguments to the constructor.
+     *
+     * @returns {Promise<
+     *     BaseContract & { deploymentTransaction(): ContractTransactionResponse } & Omit<I, keyof BaseContract>
+     * >}
+     *   A promise resolving to the Contract.
      */
-    async deploy(...args: ContractMethodArgs<A>): Promise<BaseContract & { deploymentTransaction(): ContractTransactionResponse } & Omit<I, keyof BaseContract>> {
+    async deploy(
+        ...args: ContractMethodArgs<A>
+    ): Promise<BaseContract & { deploymentTransaction(): ContractTransactionResponse } & Omit<I, keyof BaseContract>> {
         const tx = await this.getDeployTransaction(...args);
 
-        assert(this.runner && typeof(this.runner.sendTransaction) === "function" ,
-            "factory runner does not support sending transactions", "UNSUPPORTED_OPERATION", {
-            operation: "sendTransaction" });
-        
-        if (this.runner instanceof Wallet) {  
-           tx.from = this.runner.address;
+        assert(
+            this.runner && typeof this.runner.sendTransaction === 'function',
+            'factory runner does not support sending transactions',
+            'UNSUPPORTED_OPERATION',
+            {
+                operation: 'sendTransaction',
+            },
+        );
+
+        if (this.runner instanceof Wallet) {
+            tx.from = this.runner.address;
         }
-        const grindedTx = await this.grindContractAddress(tx); 
-        console.log("grindedTx", grindedTx);
+        const grindedTx = await this.grindContractAddress(tx);
+        console.log('grindedTx', grindedTx);
         const sentTx = await this.runner.sendTransaction(grindedTx);
         const address = getStatic<(tx: ContractDeployTransaction) => string>(
             this.constructor,
-            "getContractAddress"
-          )?.(tx);
+            'getContractAddress',
+        )?.(tx);
 
         //const address = getCreateAddress(sentTx);
         return new (<any>BaseContract)(address, this.interface, this.runner, sentTx);
     }
 
-static getContractAddress(transaction: {
-    from: string;
-    nonce: bigint; // Fix: Convert BigInt to bigint
-    data: BytesLike;
-}): string {
-    return getContractAddress(
-        transaction.from,
-        BigInt(transaction.nonce), // Fix: Convert BigInt to bigint
-        transaction.data
-    );
-}
+    static getContractAddress(transaction: {
+        from: string;
+        nonce: bigint; // Fix: Convert BigInt to bigint
+        data: BytesLike;
+    }): string {
+        return getContractAddress(
+            transaction.from,
+            BigInt(transaction.nonce), // Fix: Convert BigInt to bigint
+            transaction.data,
+        );
+    }
 
-    async grindContractAddress(
-        tx: QuaiTransactionRequest
-      ): Promise<QuaiTransactionRequest> {
+    async grindContractAddress(tx: QuaiTransactionRequest): Promise<QuaiTransactionRequest> {
         if (tx.nonce == null && tx.from) {
-          tx.nonce = await this.runner?.provider?.getTransactionCount(tx.from);
+            tx.nonce = await this.runner?.provider?.getTransactionCount(tx.from);
         }
 
         const sender = String(tx.from);
@@ -217,7 +223,7 @@ static getContractAddress(transaction: {
         while (i < 10000) {
             var contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
             var contractShard = getShardForAddress(contractAddress);
-            console.log("contractAddress ", contractAddress);
+            console.log('contractAddress ', contractAddress);
             var utxo = isUTXOAddress(contractAddress);
             if (contractShard === toShard && !utxo) {
                 return tx;
@@ -227,34 +233,40 @@ static getContractAddress(transaction: {
             i++;
         }
         return tx;
-      }
+    }
 
     /**
-     *  Return a new **ContractFactory** with the same ABI and bytecode,
-     *  but connected to `runner`.
-     * 
-     *  @param {ContractRunner} runner - The runner to connect to.
-     *  @returns {ContractFactory<A, I>} A new ContractFactory.
+     * Return a new **ContractFactory** with the same ABI and bytecode, but connected to `runner`.
+     *
+     * @param {ContractRunner} runner - The runner to connect to.
+     *
+     * @returns {ContractFactory<A, I>} A new ContractFactory.
      */
     connect(runner: null | ContractRunner): ContractFactory<A, I> {
         return new ContractFactory(this.interface, this.bytecode, runner);
     }
 
     /**
-     *  Create a new **ContractFactory** from the standard Solidity JSON output.
-     * 
-     *  @param {any} output - The Solidity JSON output.
-     *  @param {ContractRunner} runner - The runner to connect to.
-     *  @returns {ContractFactory<A, I>} A new ContractFactory.
+     * Create a new **ContractFactory** from the standard Solidity JSON output.
+     *
+     * @param {any} output - The Solidity JSON output.
+     * @param {ContractRunner} runner - The runner to connect to.
+     *
+     * @returns {ContractFactory<A, I>} A new ContractFactory.
      */
-    static fromSolidity<A extends Array<any> = Array<any>, I = ContractInterface>(output: any, runner?: ContractRunner): ContractFactory<A, I> {
-        assertArgument(output != null, "bad compiler output", "output", output);
+    static fromSolidity<A extends Array<any> = Array<any>, I = ContractInterface>(
+        output: any,
+        runner?: ContractRunner,
+    ): ContractFactory<A, I> {
+        assertArgument(output != null, 'bad compiler output', 'output', output);
 
-        if (typeof(output) === "string") { output = JSON.parse(output); }
+        if (typeof output === 'string') {
+            output = JSON.parse(output);
+        }
 
         const abi = output.abi;
 
-        let bytecode = "";
+        let bytecode = '';
         if (output.bytecode) {
             bytecode = output.bytecode;
         } else if (output.evm && output.evm.bytecode) {

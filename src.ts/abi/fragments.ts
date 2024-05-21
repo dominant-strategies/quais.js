@@ -1,123 +1,120 @@
 /**
- *  A fragment is a single item from an ABI, which may represent any of:
+ * A fragment is a single item from an ABI, which may represent any of:
  *
- *  - {@link FunctionFragment | Functions}
- *  - {@link EventFragment | Events}
- *  - {@link ConstructorFragment | Constructors}
- *  - Custom {@link ErrorFragment | Errors}
- *  - {@link FallbackFragment | Fallback or Recieve} functions
- *  @category Application Binary Interface
+ * - {@link FunctionFragment | Functions}
+ * - {@link EventFragment | Events}
+ * - {@link ConstructorFragment | Constructors}
+ * - Custom {@link ErrorFragment | Errors}
+ * - {@link FallbackFragment | Fallback or Recieve} functions
+ *
+ * @category Application Binary Interface
  */
 
-import {
-    defineProperties, getBigInt, getNumber,
-    assert, assertPrivate, assertArgument
-} from "../utils/index.js";
-import { id } from "../hash/index.js";
+import { defineProperties, getBigInt, getNumber, assert, assertPrivate, assertArgument } from '../utils/index.js';
+import { id } from '../hash/index.js';
 
 /**
- *  A Type description in a [JSON ABI format](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#json).
- * 
- *  @category Application Binary Interface
+ * A Type description in a [JSON ABI format](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#json).
+ *
+ * @category Application Binary Interface
  */
 export interface JsonFragmentType {
     /**
-     *  The parameter name.
+     * The parameter name.
      */
     readonly name?: string;
 
     /**
-     *  If the parameter is indexed.
+     * If the parameter is indexed.
      */
     readonly indexed?: boolean;
 
     /**
-     *  The type of the parameter.
+     * The type of the parameter.
      */
     readonly type?: string;
 
     /**
-     *  The internal Solidity type.
+     * The internal Solidity type.
      */
     readonly internalType?: string;
 
     /**
-     *  The components for a tuple.
+     * The components for a tuple.
      */
     readonly components?: ReadonlyArray<JsonFragmentType>;
 }
 
 /**
- *  A fragment for a method, event or error in a [JSON ABI format](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#json)
- * 
- *  @category Application Binary Interface
+ * A fragment for a method, event or error in a [JSON ABI
+ * format](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#json)
+ *
+ * @category Application Binary Interface
  */
 export interface JsonFragment {
     /**
-     *  The name of the error, event, function, etc.
+     * The name of the error, event, function, etc.
      */
     readonly name?: string;
 
     /**
-     *  The type of the fragment (e.g. `event`, `"function"`, etc.)
+     * The type of the fragment (e.g. `event`, `"function"`, etc.)
      */
     readonly type?: string;
 
     /**
-     *  If the event is anonymous.
+     * If the event is anonymous.
      */
     readonly anonymous?: boolean;
 
     /**
-     *  If the function is payable.
+     * If the function is payable.
      */
     readonly payable?: boolean;
 
     /**
-     *  If the function is constant.
+     * If the function is constant.
      */
     readonly constant?: boolean;
 
     /**
-     *  The mutability state of the function.
+     * The mutability state of the function.
      */
     readonly stateMutability?: string;
 
     /**
-     *  The input parameters.
+     * The input parameters.
      */
     readonly inputs?: ReadonlyArray<JsonFragmentType>;
 
     /**
-     *  The output parameters.
+     * The output parameters.
      */
     readonly outputs?: ReadonlyArray<JsonFragmentType>;
 
     /**
-     *  The gas limit to use when sending a transaction for this function.
+     * The gas limit to use when sending a transaction for this function.
      */
     readonly gas?: string;
-};
+}
 
 /**
- *  The format to serialize the output as.
+ * The format to serialize the output as.
  *
- *  **`sighash`** - the bare formatting, used to compute the selector
- *  or topic hash; this format cannot be reversed (as it discards `indexed`)
- *  so cannot by used to export an [Interface](../classes/Interface).
+ * **`sighash`** - the bare formatting, used to compute the selector or topic hash; this format cannot be reversed (as
+ * it discards `indexed`) so cannot by used to export an [Interface](../classes/Interface).
  *
- *  **`minimal`** - Human-Readable ABI with minimal spacing and without
- *  names, so it is compact, but will result in Result objects that cannot
- *  be accessed by name.
+ * **`minimal`** - Human-Readable ABI with minimal spacing and without names, so it is compact, but will result in
+ * Result objects that cannot be accessed by name.
  *
- *  **`full`** - Full Human-Readable ABI, with readable spacing and names
- *  intact; this is generally the recommended format.
+ * **`full`** - Full Human-Readable ABI, with readable spacing and names intact; this is generally the recommended
+ * format.
  *
- *  **`json`** - The [ABI JSON Specification](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#json).
- * 
- *  @category Application Binary Interface
+ * **`json`** - The [ABI JSON Specification](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#json).
+ *
+ * @category Application Binary Interface
  */
-export type FormatType = "sighash" | "minimal" | "full" | "json";
+export type FormatType = 'sighash' | 'minimal' | 'full' | 'json';
 
 // [ "a", "b" ] => { "a": 1, "b": 1 }
 function setify(items: Array<string>): ReadonlySet<string> {
@@ -126,44 +123,47 @@ function setify(items: Array<string>): ReadonlySet<string> {
     return Object.freeze(result);
 }
 
-const _kwVisibDeploy = "external public payable";
-const KwVisibDeploy = setify(_kwVisibDeploy.split(" "));
+const _kwVisibDeploy = 'external public payable';
+const KwVisibDeploy = setify(_kwVisibDeploy.split(' '));
 
 // Visibility Keywords
-const _kwVisib = "constant external internal payable private public pure view";
-const KwVisib = setify(_kwVisib.split(" "));
+const _kwVisib = 'constant external internal payable private public pure view';
+const KwVisib = setify(_kwVisib.split(' '));
 
-const _kwTypes = "constructor error event fallback function receive struct";
-const KwTypes = setify(_kwTypes.split(" "));
+const _kwTypes = 'constructor error event fallback function receive struct';
+const KwTypes = setify(_kwTypes.split(' '));
 
-const _kwModifiers = "calldata memory storage payable indexed";
-const KwModifiers = setify(_kwModifiers.split(" "));
+const _kwModifiers = 'calldata memory storage payable indexed';
+const KwModifiers = setify(_kwModifiers.split(' '));
 
-const _kwOther = "tuple returns";
+const _kwOther = 'tuple returns';
 
 // All Keywords
-const _keywords = [ _kwTypes, _kwModifiers, _kwOther, _kwVisib ].join(" ");
-const Keywords = setify(_keywords.split(" "));
+const _keywords = [_kwTypes, _kwModifiers, _kwOther, _kwVisib].join(' ');
+const Keywords = setify(_keywords.split(' '));
 
 // Single character tokens
 const SimpleTokens: Record<string, string> = {
-  "(": "OPEN_PAREN", ")": "CLOSE_PAREN",
-  "[": "OPEN_BRACKET", "]": "CLOSE_BRACKET",
-  ",": "COMMA", "@": "AT"
+    '(': 'OPEN_PAREN',
+    ')': 'CLOSE_PAREN',
+    '[': 'OPEN_BRACKET',
+    ']': 'CLOSE_BRACKET',
+    ',': 'COMMA',
+    '@': 'AT',
 };
 
 // Parser regexes to consume the next token
-const regexWhitespacePrefix = new RegExp("^(\\s*)");
-const regexNumberPrefix = new RegExp("^([0-9]+)");
-const regexIdPrefix = new RegExp("^([a-zA-Z$_][a-zA-Z0-9$_]*)");
+const regexWhitespacePrefix = new RegExp('^(\\s*)');
+const regexNumberPrefix = new RegExp('^([0-9]+)');
+const regexIdPrefix = new RegExp('^([a-zA-Z$_][a-zA-Z0-9$_]*)');
 
 // Parser regexs to check validity
-const regexId = new RegExp("^([a-zA-Z$_][a-zA-Z0-9$_]*)$");
-const regexType = new RegExp("^(address|bool|bytes([0-9]*)|string|u?int([0-9]*))$");
+const regexId = new RegExp('^([a-zA-Z$_][a-zA-Z0-9$_]*)$');
+const regexType = new RegExp('^(address|bool|bytes([0-9]*)|string|u?int([0-9]*))$');
 
 /**
  * Represents the tokens for parsing.
- * 
+ *
  * @ignore
  */
 type Token = Readonly<{
@@ -192,18 +192,21 @@ type Token = Readonly<{
 }>;
 
 /**
- *  Represents a parsed list of tokens.
- * 
- *  @category Application Binary Interface
+ * Represents a parsed list of tokens.
+ *
+ * @category Application Binary Interface
  */
 class TokenString {
     #offset: number;
     #tokens: ReadonlyArray<Token>;
 
-    get offset(): number { return this.#offset; }
-    get length(): number { return this.#tokens.length - this.#offset; }
+    get offset(): number {
+        return this.#offset;
+    }
+    get length(): number {
+        return this.#tokens.length - this.#offset;
+    }
 
-    
     constructor(tokens: ReadonlyArray<Token>) {
         this.#offset = 0;
         this.#tokens = tokens.slice();
@@ -211,39 +214,53 @@ class TokenString {
 
     /**
      * Returns a clone of the current token string.
-     * 
+     *
      * @returns {TokenString} A cloned TokenString object.
      */
-    clone(): TokenString { return new TokenString(this.#tokens); }
-    reset(): void { this.#offset = 0; }
+    clone(): TokenString {
+        return new TokenString(this.#tokens);
+    }
+    reset(): void {
+        this.#offset = 0;
+    }
 
     #subTokenString(from: number = 0, to: number = 0): TokenString {
-        return new TokenString(this.#tokens.slice(from, to).map((t) => {
-            return Object.freeze(Object.assign({ }, t, {
-                match: (t.match - from),
-                linkBack: (t.linkBack - from),
-                linkNext: (t.linkNext - from),
-            }));
-        }));
+        return new TokenString(
+            this.#tokens.slice(from, to).map((t) => {
+                return Object.freeze(
+                    Object.assign({}, t, {
+                        match: t.match - from,
+                        linkBack: t.linkBack - from,
+                        linkNext: t.linkNext - from,
+                    }),
+                );
+            }),
+        );
     }
 
     // Pops and returns the value of the next token, if it is a keyword in allowed; throws if out of tokens
     popKeyword(allowed: ReadonlySet<string>): string {
         const top = this.peek();
-        if (top.type !== "KEYWORD" || !allowed.has(top.text)) { throw new Error(`expected keyword ${ top.text }`); }
+        if (top.type !== 'KEYWORD' || !allowed.has(top.text)) {
+            throw new Error(`expected keyword ${top.text}`);
+        }
         return this.pop().text;
     }
 
     // Pops and returns the value of the next token if it is `type`; throws if out of tokens
     popType(type: string): string {
-        if (this.peek().type !== type) { throw new Error(`expected ${ type }; got ${ JSON.stringify(this.peek()) }`); }
+        if (this.peek().type !== type) {
+            throw new Error(`expected ${type}; got ${JSON.stringify(this.peek())}`);
+        }
         return this.pop().text;
     }
 
     // Pops and returns a "(" TOKENS ")"
     popParen(): TokenString {
         const top = this.peek();
-        if (top.type !== "OPEN_PAREN") { throw new Error("bad start"); }
+        if (top.type !== 'OPEN_PAREN') {
+            throw new Error('bad start');
+        }
         const result = this.#subTokenString(this.#offset + 1, top.match + 1);
         this.#offset = top.match + 1;
         return result;
@@ -253,11 +270,13 @@ class TokenString {
     popParams(): Array<TokenString> {
         const top = this.peek();
 
-        if (top.type !== "OPEN_PAREN") { throw new Error("bad start"); }
+        if (top.type !== 'OPEN_PAREN') {
+            throw new Error('bad start');
+        }
 
-        const result: Array<TokenString> = [ ];
+        const result: Array<TokenString> = [];
 
-        while(this.#offset < top.match - 1) {
+        while (this.#offset < top.match - 1) {
             const link = this.peek().linkNext;
             result.push(this.#subTokenString(this.#offset + 1, link));
             this.#offset = link;
@@ -271,22 +290,24 @@ class TokenString {
     // Returns the top Token, throwing if out of tokens
     peek(): Token {
         if (this.#offset >= this.#tokens.length) {
-            throw new Error("out-of-bounds");
+            throw new Error('out-of-bounds');
         }
         return this.#tokens[this.#offset];
     }
 
     // Returns the next value, if it is a keyword in `allowed`
     peekKeyword(allowed: ReadonlySet<string>): null | string {
-        const top = this.peekType("KEYWORD");
-        return (top != null && allowed.has(top)) ? top: null;
+        const top = this.peekType('KEYWORD');
+        return top != null && allowed.has(top) ? top : null;
     }
 
     // Returns the value of the next token if it is `type`
     peekType(type: string): null | string {
-        if (this.length === 0) { return null; }
+        if (this.length === 0) {
+            return null;
+        }
         const top = this.peek();
-        return (top.type === type) ? top.text: null;
+        return top.type === type ? top.text : null;
     }
 
     // Returns the next token; throws if out of tokens
@@ -297,31 +318,30 @@ class TokenString {
     }
 
     toString(): string {
-        const tokens: Array<string> = [ ];
+        const tokens: Array<string> = [];
         for (let i = this.#offset; i < this.#tokens.length; i++) {
             const token = this.#tokens[i];
-            tokens.push(`${ token.type }:${ token.text }`);
+            tokens.push(`${token.type}:${token.text}`);
         }
-        return `<TokenString ${ tokens.join(" ") }>`
+        return `<TokenString ${tokens.join(' ')}>`;
     }
 }
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
 function lex(text: string): TokenString {
-    const tokens: Array<Token> = [ ];
+    const tokens: Array<Token> = [];
 
     const throwError = (message: string) => {
-        const token = (offset < text.length) ? JSON.stringify(text[offset]): "$EOI";
-        throw new Error(`invalid token ${ token } at ${ offset }: ${ message }`);
+        const token = offset < text.length ? JSON.stringify(text[offset]) : '$EOI';
+        throw new Error(`invalid token ${token} at ${offset}: ${message}`);
     };
 
-    let brackets: Array<number> = [ ];
-    let commas: Array<number> = [ ];
+    let brackets: Array<number> = [];
+    let commas: Array<number> = [];
 
     let offset = 0;
     while (offset < text.length) {
-
         // Strip off any leading whitespace
         let cur = text.substring(offset);
         let match = cur.match(regexWhitespacePrefix);
@@ -330,49 +350,56 @@ function lex(text: string): TokenString {
             cur = text.substring(offset);
         }
 
-        const token = { depth: brackets.length, linkBack: -1, linkNext: -1, match: -1, type: "", text: "", offset, value: -1 };
+        const token = {
+            depth: brackets.length,
+            linkBack: -1,
+            linkNext: -1,
+            match: -1,
+            type: '',
+            text: '',
+            offset,
+            value: -1,
+        };
         tokens.push(token);
 
-        let type = (SimpleTokens[cur[0]] || "");
+        let type = SimpleTokens[cur[0]] || '';
         if (type) {
             token.type = type;
             token.text = cur[0];
             offset++;
 
-            if (type === "OPEN_PAREN") {
+            if (type === 'OPEN_PAREN') {
                 brackets.push(tokens.length - 1);
                 commas.push(tokens.length - 1);
-
-            } else if (type == "CLOSE_PAREN") {
-                if (brackets.length === 0) { throwError("no matching open bracket"); }
+            } else if (type == 'CLOSE_PAREN') {
+                if (brackets.length === 0) {
+                    throwError('no matching open bracket');
+                }
 
                 token.match = brackets.pop() as number;
-                (<Writeable<Token>>(tokens[token.match])).match = tokens.length - 1;
+                (<Writeable<Token>>tokens[token.match]).match = tokens.length - 1;
                 token.depth--;
 
                 token.linkBack = commas.pop() as number;
-                (<Writeable<Token>>(tokens[token.linkBack])).linkNext = tokens.length - 1;
-
-            } else if (type === "COMMA") {
+                (<Writeable<Token>>tokens[token.linkBack]).linkNext = tokens.length - 1;
+            } else if (type === 'COMMA') {
                 token.linkBack = commas.pop() as number;
-                (<Writeable<Token>>(tokens[token.linkBack])).linkNext = tokens.length - 1;
+                (<Writeable<Token>>tokens[token.linkBack]).linkNext = tokens.length - 1;
                 commas.push(tokens.length - 1);
-
-            } else if (type === "OPEN_BRACKET") {
-                token.type = "BRACKET";
-
-            } else if (type === "CLOSE_BRACKET") {
+            } else if (type === 'OPEN_BRACKET') {
+                token.type = 'BRACKET';
+            } else if (type === 'CLOSE_BRACKET') {
                 // Remove the CLOSE_BRACKET
                 let suffix = (tokens.pop() as Token).text;
-                if (tokens.length > 0 && tokens[tokens.length - 1].type === "NUMBER") {
+                if (tokens.length > 0 && tokens[tokens.length - 1].type === 'NUMBER') {
                     const value = (tokens.pop() as Token).text;
                     suffix = value + suffix;
-                    (<Writeable<Token>>(tokens[tokens.length - 1])).value = getNumber(value);
+                    (<Writeable<Token>>tokens[tokens.length - 1]).value = getNumber(value);
                 }
-                if (tokens.length === 0 || tokens[tokens.length - 1].type !== "BRACKET") {
-                    throw new Error("missing opening bracket");
+                if (tokens.length === 0 || tokens[tokens.length - 1].type !== 'BRACKET') {
+                    throw new Error('missing opening bracket');
                 }
-                (<Writeable<Token>>(tokens[tokens.length - 1])).text += suffix;
+                (<Writeable<Token>>tokens[tokens.length - 1]).text += suffix;
             }
 
             continue;
@@ -384,28 +411,28 @@ function lex(text: string): TokenString {
             offset += token.text.length;
 
             if (Keywords.has(token.text)) {
-                token.type = "KEYWORD";
+                token.type = 'KEYWORD';
                 continue;
             }
 
             if (token.text.match(regexType)) {
-                token.type = "TYPE";
+                token.type = 'TYPE';
                 continue;
             }
 
-            token.type = "ID";
+            token.type = 'ID';
             continue;
         }
 
         match = cur.match(regexNumberPrefix);
         if (match) {
             token.text = match[1];
-            token.type = "NUMBER";
+            token.type = 'NUMBER';
             offset += token.text.length;
             continue;
         }
 
-        throw new Error(`unexpected token ${ JSON.stringify(cur[0]) } at position ${ offset }`);
+        throw new Error(`unexpected token ${JSON.stringify(cur[0])} at position ${offset}`);
     }
 
     return new TokenString(tokens.map((t) => Object.freeze(t)));
@@ -413,11 +440,15 @@ function lex(text: string): TokenString {
 
 // Check only one of `allowed` is in `set`
 function allowSingle(set: ReadonlySet<string>, allowed: ReadonlySet<string>): void {
-    let included: Array<string> = [ ];
+    let included: Array<string> = [];
     for (const key in allowed.keys()) {
-        if (set.has(key)) { included.push(key); }
+        if (set.has(key)) {
+            included.push(key);
+        }
     }
-    if (included.length > 1) { throw new Error(`conflicting types: ${ included.join(", ") }`); }
+    if (included.length > 1) {
+        throw new Error(`conflicting types: ${included.join(', ')}`);
+    }
 }
 
 // Functions to process a Solidity Signature TokenString from left-to-right for...
@@ -427,23 +458,27 @@ function consumeName(type: string, tokens: TokenString): string {
     if (tokens.peekKeyword(KwTypes)) {
         const keyword = tokens.pop().text;
         if (keyword !== type) {
-            throw new Error(`expected ${ type }, got ${ keyword }`);
+            throw new Error(`expected ${type}, got ${keyword}`);
         }
     }
 
-    return tokens.popType("ID");
+    return tokens.popType('ID');
 }
 
 // ...all keywords matching allowed, returning the keywords
 function consumeKeywords(tokens: TokenString, allowed?: ReadonlySet<string>): ReadonlySet<string> {
     const keywords: Set<string> = new Set();
     while (true) {
-        const keyword = tokens.peekType("KEYWORD");
+        const keyword = tokens.peekType('KEYWORD');
 
-        if (keyword == null || (allowed && !allowed.has(keyword))) { break; }
+        if (keyword == null || (allowed && !allowed.has(keyword))) {
+            break;
+        }
         tokens.pop();
 
-        if (keywords.has(keyword)) { throw new Error(`duplicate keywords: ${ JSON.stringify(keyword) }`); }
+        if (keywords.has(keyword)) {
+            throw new Error(`duplicate keywords: ${JSON.stringify(keyword)}`);
+        }
         keywords.add(keyword);
     }
 
@@ -451,23 +486,33 @@ function consumeKeywords(tokens: TokenString, allowed?: ReadonlySet<string>): Re
 }
 
 // ...all visibility keywords, returning the coalesced mutability
-function consumeMutability(tokens: TokenString): "payable" | "nonpayable" | "view" | "pure" {
+function consumeMutability(tokens: TokenString): 'payable' | 'nonpayable' | 'view' | 'pure' {
     let modifiers = consumeKeywords(tokens, KwVisib);
 
     // Detect conflicting modifiers
-    allowSingle(modifiers, setify("constant payable nonpayable".split(" ")));
-    allowSingle(modifiers, setify("pure view payable nonpayable".split(" ")));
+    allowSingle(modifiers, setify('constant payable nonpayable'.split(' ')));
+    allowSingle(modifiers, setify('pure view payable nonpayable'.split(' ')));
 
     // Process mutability states
-    if (modifiers.has("view")) { return "view"; }
-    if (modifiers.has("pure")) { return "pure"; }
-    if (modifiers.has("payable")) { return "payable"; }
-    if (modifiers.has("nonpayable")) { return "nonpayable"; }
+    if (modifiers.has('view')) {
+        return 'view';
+    }
+    if (modifiers.has('pure')) {
+        return 'pure';
+    }
+    if (modifiers.has('payable')) {
+        return 'payable';
+    }
+    if (modifiers.has('nonpayable')) {
+        return 'nonpayable';
+    }
 
     // Process legacy `constant` last
-    if (modifiers.has("constant")) { return "view"; }
+    if (modifiers.has('constant')) {
+        return 'view';
+    }
 
-    return "nonpayable";
+    return 'nonpayable';
 }
 
 // ...a parameter list, returning the ParamType list
@@ -477,19 +522,19 @@ function consumeParams(tokens: TokenString, allowIndexed?: boolean): Array<Param
 
 // ...a gas limit, returning a BigNumber or null if none
 function consumeGas(tokens: TokenString): null | bigint {
-    if (tokens.peekType("AT")) {
+    if (tokens.peekType('AT')) {
         tokens.pop();
-        if (tokens.peekType("NUMBER")) {
+        if (tokens.peekType('NUMBER')) {
             return getBigInt(tokens.pop().text);
         }
-        throw new Error("invalid gas");
+        throw new Error('invalid gas');
     }
     return null;
 }
 
 function consumeEoi(tokens: TokenString): void {
     if (tokens.length) {
-        throw new Error(`unexpected tokens: ${ tokens.toString() }`);
+        throw new Error(`unexpected tokens: ${tokens.toString()}`);
     }
 }
 
@@ -497,193 +542,213 @@ const regexArrayType = new RegExp(/^(.*)\[([0-9]*)\]$/);
 
 function verifyBasicType(type: string): string {
     const match = type.match(regexType);
-    assertArgument(match, "invalid type", "type", type);
-    if (type === "uint") { return "uint256"; }
-    if (type === "int") { return "int256"; }
+    assertArgument(match, 'invalid type', 'type', type);
+    if (type === 'uint') {
+        return 'uint256';
+    }
+    if (type === 'int') {
+        return 'int256';
+    }
 
     if (match[2]) {
         // bytesXX
         const length = parseInt(match[2]);
-        assertArgument(length !== 0 && length <= 32, "invalid bytes length", "type", type);
-
+        assertArgument(length !== 0 && length <= 32, 'invalid bytes length', 'type', type);
     } else if (match[3]) {
         // intXX or uintXX
         const size = parseInt(match[3] as string);
-        assertArgument(size !== 0 && size <= 256 && (size % 8) === 0, "invalid numeric width", "type", type);
+        assertArgument(size !== 0 && size <= 256 && size % 8 === 0, 'invalid numeric width', 'type', type);
     }
 
     return type;
 }
 
 // Make the Fragment constructors effectively private
-const _guard = { };
-
+const _guard = {};
 
 /**
- *  When {@link ParamType.walk | **walking**} a {@link ParamType | **ParamType**}, this is called 
- *  on each component.
- *  
- *  @category Application Binary Interface
+ * When {@link ParamType.walk | **walking**} a {@link ParamType | **ParamType**}, this is called on each component.
+ *
+ * @category Application Binary Interface
  */
 export type ParamTypeWalkFunc = (type: string, value: any) => any;
 
 /**
- *  When {@link ParamType.walkAsync | **walking asynchronously**}
- *  a {@link ParamType | **ParamType**}, this is called on each component.
- *  
- *  @category Application Binary Interface
+ * When {@link ParamType.walkAsync | **walking asynchronously**} a {@link ParamType | **ParamType**}, this is called on
+ * each component.
+ *
+ * @category Application Binary Interface
  */
 export type ParamTypeWalkAsyncFunc = (type: string, value: any) => any | Promise<any>;
 
-const internal = Symbol.for("_quais_internal");
+const internal = Symbol.for('_quais_internal');
 
-const ParamTypeInternal = "_ParamTypeInternal";
-const ErrorFragmentInternal = "_ErrorInternal";
-const EventFragmentInternal = "_EventInternal";
-const ConstructorFragmentInternal = "_ConstructorInternal";
-const FallbackFragmentInternal = "_FallbackInternal";
-const FunctionFragmentInternal = "_FunctionInternal";
-const StructFragmentInternal = "_StructInternal";
+const ParamTypeInternal = '_ParamTypeInternal';
+const ErrorFragmentInternal = '_ErrorInternal';
+const EventFragmentInternal = '_EventInternal';
+const ConstructorFragmentInternal = '_ConstructorInternal';
+const FallbackFragmentInternal = '_FallbackInternal';
+const FunctionFragmentInternal = '_FunctionInternal';
+const StructFragmentInternal = '_StructInternal';
 
 /**
- *  Each input and output of a {@link Fragment | **Fragment**} is 
- *  an Array of {@link ParamType | **ParamType**}.
- *  
- *  @category Application Binary Interface
+ * Each input and output of a {@link Fragment | **Fragment**} is an Array of {@link ParamType | **ParamType**}.
+ *
+ * @category Application Binary Interface
  */
 export class ParamType {
-
     /**
-     *  The local name of the parameter (or `""` if unbound)
+     * The local name of the parameter (or `""` if unbound)
      */
     readonly name!: string;
 
     /**
-     *  The fully qualified type (e.g. `"address"`, `"tuple(address)"`,
-     *  `"uint256[3][]"`)
+     * The fully qualified type (e.g. `"address"`, `"tuple(address)"`, `"uint256[3][]"`)
      */
     readonly type!: string;
 
     /**
-     *  The base type (e.g. `"address"`, `"tuple"`, `"array"`)
+     * The base type (e.g. `"address"`, `"tuple"`, `"array"`)
      */
     readonly baseType!: string;
 
     /**
-     *  True if the parameters is indexed.
+     * True if the parameters is indexed.
      *
-     *  For non-indexable types this is `null`.
+     * For non-indexable types this is `null`.
      */
     readonly indexed!: null | boolean;
 
     /**
-     *  The components for the tuple.
+     * The components for the tuple.
      *
-     *  For non-tuple types this is `null`.
+     * For non-tuple types this is `null`.
      */
     readonly components!: null | ReadonlyArray<ParamType>;
 
     /**
-     *  The array length, or `-1` for dynamic-lengthed arrays.
+     * The array length, or `-1` for dynamic-lengthed arrays.
      *
-     *  For non-array types this is `null`.
+     * For non-array types this is `null`.
      */
     readonly arrayLength!: null | number;
 
     /**
-     *  The type of each child in the array.
+     * The type of each child in the array.
      *
-     *  For non-array types this is `null`.
+     * For non-array types this is `null`.
      */
     readonly arrayChildren!: null | ParamType;
 
-
     /**
-     *  @private
+     * @private
      */
-    constructor(guard: any, name: string, type: string, baseType: string, indexed: null | boolean, components: null | ReadonlyArray<ParamType>, arrayLength: null | number, arrayChildren: null | ParamType) {
-        assertPrivate(guard, _guard, "ParamType");
+    constructor(
+        guard: any,
+        name: string,
+        type: string,
+        baseType: string,
+        indexed: null | boolean,
+        components: null | ReadonlyArray<ParamType>,
+        arrayLength: null | number,
+        arrayChildren: null | ParamType,
+    ) {
+        assertPrivate(guard, _guard, 'ParamType');
         Object.defineProperty(this, internal, { value: ParamTypeInternal });
 
-        if (components) { components = Object.freeze(components.slice()); }
-
-        if (baseType === "array") {
-            if (arrayLength == null || arrayChildren == null) {
-                throw new Error("");
-            }
-        } else if (arrayLength != null || arrayChildren != null) {
-            throw new Error("");
+        if (components) {
+            components = Object.freeze(components.slice());
         }
 
-        if (baseType === "tuple") {
-            if (components == null) { throw new Error(""); }
+        if (baseType === 'array') {
+            if (arrayLength == null || arrayChildren == null) {
+                throw new Error('');
+            }
+        } else if (arrayLength != null || arrayChildren != null) {
+            throw new Error('');
+        }
+
+        if (baseType === 'tuple') {
+            if (components == null) {
+                throw new Error('');
+            }
         } else if (components != null) {
-            throw new Error("");
+            throw new Error('');
         }
 
         defineProperties<ParamType>(this, {
-            name, type, baseType, indexed, components, arrayLength, arrayChildren
+            name,
+            type,
+            baseType,
+            indexed,
+            components,
+            arrayLength,
+            arrayChildren,
         });
     }
 
     /**
-     *  Return a string representation of this type.
+     * Return a string representation of this type.
      *
-     *  For example,
+     * For example,
      *
-     *  `sighash" => "(uint256,address)"`
+     * `sighash" => "(uint256,address)"`
      *
-     *  `"minimal" => "tuple(uint256,address) indexed"`
+     * `"minimal" => "tuple(uint256,address) indexed"`
      *
-     *  `"full" => "tuple(uint256 foo, address bar) indexed baz"`
-     * 
-     *  @returns {string} The formatted type.
+     * `"full" => "tuple(uint256 foo, address bar) indexed baz"`
+     *
+     * @returns {string} The formatted type.
      */
     format(format?: FormatType): string {
-        if (format == null) { format = "sighash"; }
-        if (format === "json") {
-            const name = this.name || "";
+        if (format == null) {
+            format = 'sighash';
+        }
+        if (format === 'json') {
+            const name = this.name || '';
 
             if (this.isArray()) {
-                const result = JSON.parse(this.arrayChildren.format("json"));
+                const result = JSON.parse(this.arrayChildren.format('json'));
                 result.name = name;
-                result.type += `[${ (this.arrayLength < 0 ? "": String(this.arrayLength)) }]`;
+                result.type += `[${this.arrayLength < 0 ? '' : String(this.arrayLength)}]`;
                 return JSON.stringify(result);
             }
 
             const result: any = {
-                type: ((this.baseType === "tuple") ? "tuple": this.type),
-                name
+                type: this.baseType === 'tuple' ? 'tuple' : this.type,
+                name,
             };
 
-
-            if (typeof(this.indexed) === "boolean") { result.indexed = this.indexed; }
+            if (typeof this.indexed === 'boolean') {
+                result.indexed = this.indexed;
+            }
             if (this.isTuple()) {
                 result.components = this.components.map((c) => JSON.parse(c.format(format)));
             }
             return JSON.stringify(result);
         }
 
-        let result = "";
+        let result = '';
 
         // Array
         if (this.isArray()) {
             result += this.arrayChildren.format(format);
-            result += `[${ (this.arrayLength < 0 ? "": String(this.arrayLength)) }]`;
+            result += `[${this.arrayLength < 0 ? '' : String(this.arrayLength)}]`;
         } else {
             if (this.isTuple()) {
-                result += "(" + this.components.map(
-                    (comp) => comp.format(format)
-                ).join((format === "full") ? ", ": ",") + ")";
+                result +=
+                    '(' + this.components.map((comp) => comp.format(format)).join(format === 'full' ? ', ' : ',') + ')';
             } else {
                 result += this.type;
             }
         }
 
-        if (format !== "sighash") {
-            if (this.indexed === true) { result += " indexed"; }
-            if (format === "full" && this.name) {
-                result += " " + this.name;
+        if (format !== 'sighash') {
+            if (this.indexed === true) {
+                result += ' indexed';
+            }
+            if (format === 'full' && this.name) {
+                result += ' ' + this.name;
             }
         }
 
@@ -691,67 +756,74 @@ export class ParamType {
     }
 
     /**
-     *  This provides a type gaurd ensuring that {@link arrayChildren | **arrayChildren**}
-     *  and {@link arrayLength | **arrayLength**} are non-null.
-     * 
-     *  @returns {boolean} True if this is an Array type.
+     * This provides a type gaurd ensuring that {@link arrayChildren | **arrayChildren**} and
+     * {@link arrayLength | **arrayLength**} are non-null.
+     *
+     * @returns {boolean} True if this is an Array type.
      */
-    isArray(): this is (ParamType & { arrayChildren: ParamType, arrayLength: number }) {
-        return (this.baseType === "array")
+    isArray(): this is ParamType & { arrayChildren: ParamType; arrayLength: number } {
+        return this.baseType === 'array';
     }
 
     /**
-     *  This provides a type gaurd ensuring that 
-     *  {@link components | **components**} is non-null.
-     * 
-     *  @returns {boolean} True if this is a Tuple type.
+     * This provides a type gaurd ensuring that {@link components | **components**} is non-null.
+     *
+     * @returns {boolean} True if this is a Tuple type.
      */
-    isTuple(): this is (ParamType & { components: ReadonlyArray<ParamType> }) {
-        return (this.baseType === "tuple");
+    isTuple(): this is ParamType & { components: ReadonlyArray<ParamType> } {
+        return this.baseType === 'tuple';
     }
 
     /**
-     *  This provides a type gaurd ensuring that 
-     *  {@link indexed | **indexed**} is non-null.
-     * 
-     *  @returns {boolean} True if this is an Indexable type.
+     * This provides a type gaurd ensuring that {@link indexed | **indexed**} is non-null.
+     *
+     * @returns {boolean} True if this is an Indexable type.
      */
-    isIndexable(): this is (ParamType & { indexed: boolean }) {
-        return (this.indexed != null);
+    isIndexable(): this is ParamType & { indexed: boolean } {
+        return this.indexed != null;
     }
 
     /**
-     *  Walks the **ParamType** with `value`, calling `process`
-     *  on each type, destructing the `value` recursively.
+     * Walks the **ParamType** with `value`, calling `process` on each type, destructing the `value` recursively.
      */
     walk(value: any, process: ParamTypeWalkFunc): any {
         if (this.isArray()) {
-            if (!Array.isArray(value)) { throw new Error("invalid array value"); }
+            if (!Array.isArray(value)) {
+                throw new Error('invalid array value');
+            }
             if (this.arrayLength !== -1 && value.length !== this.arrayLength) {
-                throw new Error("array is wrong length");
+                throw new Error('array is wrong length');
             }
             const _this = this;
-            return value.map((v) => (_this.arrayChildren.walk(v, process)));
+            return value.map((v) => _this.arrayChildren.walk(v, process));
         }
 
         if (this.isTuple()) {
-            if (!Array.isArray(value)) { throw new Error("invalid tuple value"); }
+            if (!Array.isArray(value)) {
+                throw new Error('invalid tuple value');
+            }
             if (value.length !== this.components.length) {
-                throw new Error("array is wrong length");
+                throw new Error('array is wrong length');
             }
             const _this = this;
-            return value.map((v, i) => (_this.components[i].walk(v, process)));
+            return value.map((v, i) => _this.components[i].walk(v, process));
         }
 
         return process(this.type, value);
     }
 
-    #walkAsync(promises: Array<Promise<void>>, value: any, process: ParamTypeWalkAsyncFunc, setValue: (value: any) => void): void {
-
+    #walkAsync(
+        promises: Array<Promise<void>>,
+        value: any,
+        process: ParamTypeWalkAsyncFunc,
+        setValue: (value: any) => void,
+    ): void {
         if (this.isArray()) {
-            if (!Array.isArray(value)) { throw new Error("invalid array value"); }
+            if (!Array.isArray(value)) {
+                throw new Error('invalid array value');
+            }
             if (this.arrayLength !== -1 && value.length !== this.arrayLength) {
-                throw new Error("array is wrong length");
+                throw new Error('array is wrong length');
             }
             const childType = this.arrayChildren;
 
@@ -772,23 +844,24 @@ export class ParamType {
             let result: Array<any>;
             if (Array.isArray(value)) {
                 result = value.slice();
-
             } else {
-                if (value == null || typeof(value) !== "object") {
-                    throw new Error("invalid tuple value");
+                if (value == null || typeof value !== 'object') {
+                    throw new Error('invalid tuple value');
                 }
 
                 result = components.map((param) => {
-                    if (!param.name) { throw new Error("cannot use object value with unnamed components"); }
+                    if (!param.name) {
+                        throw new Error('cannot use object value with unnamed components');
+                    }
                     if (!(param.name in value)) {
-                        throw new Error(`missing value for component ${ param.name }`);
+                        throw new Error(`missing value for component ${param.name}`);
                     }
                     return value[param.name];
                 });
             }
 
             if (result.length !== this.components.length) {
-                throw new Error("array is wrong length");
+                throw new Error('array is wrong length');
             }
 
             result.forEach((value, index) => {
@@ -802,94 +875,103 @@ export class ParamType {
 
         const result = process(this.type, value);
         if (result.then) {
-            promises.push((async function() { setValue(await result); })());
+            promises.push(
+                (async function () {
+                    setValue(await result);
+                })(),
+            );
         } else {
             setValue(result);
         }
     }
 
     /**
-     *  Walks the **ParamType** with `value`, asynchronously calling
-     *  `process` on each type, destructing the `value` recursively.
+     * Walks the **ParamType** with `value`, asynchronously calling `process` on each type, destructing the `value`
+     * recursively.
      *
-     *  This can be used to resolve ENS naes by walking and resolving each
-     *  `"address"` type.
+     * This can be used to resolve ENS naes by walking and resolving each `"address"` type.
      */
     async walkAsync(value: any, process: ParamTypeWalkAsyncFunc): Promise<any> {
-        const promises: Array<Promise<void>> = [ ];
-        const result: [ any ] = [ value ];
+        const promises: Array<Promise<void>> = [];
+        const result: [any] = [value];
         this.#walkAsync(promises, value, process, (value: any) => {
             result[0] = value;
         });
-        if (promises.length) { await Promise.all(promises); }
+        if (promises.length) {
+            await Promise.all(promises);
+        }
         return result[0];
     }
 
     /**
-     *  Creates a new **ParamType** for `obj`.
+     * Creates a new **ParamType** for `obj`.
      *
-     *  If `allowIndexed` then the `indexed` keyword is permitted,
-     *  otherwise the `indexed` keyword will throw an error.
+     * If `allowIndexed` then the `indexed` keyword is permitted, otherwise the `indexed` keyword will throw an error.
      */
     static from(obj: any, allowIndexed?: boolean): ParamType {
-        if (ParamType.isParamType(obj)) { return obj; }
+        if (ParamType.isParamType(obj)) {
+            return obj;
+        }
 
-        if (typeof(obj) === "string") {
+        if (typeof obj === 'string') {
             try {
                 return ParamType.from(lex(obj), allowIndexed);
             } catch (error) {
-                assertArgument(false, "invalid param type", "obj", obj);
+                assertArgument(false, 'invalid param type', 'obj', obj);
             }
-
         } else if (obj instanceof TokenString) {
-            let type = "", baseType = "";
+            let type = '',
+                baseType = '';
             let comps: null | Array<ParamType> = null;
 
-            if (consumeKeywords(obj, setify([ "tuple" ])).has("tuple") || obj.peekType("OPEN_PAREN")) {
+            if (consumeKeywords(obj, setify(['tuple'])).has('tuple') || obj.peekType('OPEN_PAREN')) {
                 // Tuple
-                baseType = "tuple";
+                baseType = 'tuple';
                 comps = obj.popParams().map((t) => ParamType.from(t));
-                type = `tuple(${ comps.map((c) => c.format()).join(",") })`;
+                type = `tuple(${comps.map((c) => c.format()).join(',')})`;
             } else {
                 // Normal
-                type = verifyBasicType(obj.popType("TYPE"));
+                type = verifyBasicType(obj.popType('TYPE'));
                 baseType = type;
             }
 
             // Check for Array
-            let arrayChildren: null | ParamType  = null;
+            let arrayChildren: null | ParamType = null;
             let arrayLength: null | number = null;
 
-            while (obj.length && obj.peekType("BRACKET")) {
+            while (obj.length && obj.peekType('BRACKET')) {
                 const bracket = obj.pop(); //arrays[i];
-                arrayChildren = new ParamType(_guard, "", type, baseType, null, comps, arrayLength, arrayChildren);
+                arrayChildren = new ParamType(_guard, '', type, baseType, null, comps, arrayLength, arrayChildren);
                 arrayLength = bracket.value;
                 type += bracket.text;
-                baseType = "array";
+                baseType = 'array';
                 comps = null;
             }
 
             let indexed: null | boolean = null;
             const keywords = consumeKeywords(obj, KwModifiers);
-            if (keywords.has("indexed")) {
-                if (!allowIndexed) { throw new Error(""); }
+            if (keywords.has('indexed')) {
+                if (!allowIndexed) {
+                    throw new Error('');
+                }
                 indexed = true;
             }
 
-            const name = (obj.peekType("ID") ? obj.pop().text: "");
+            const name = obj.peekType('ID') ? obj.pop().text : '';
 
-            if (obj.length) { throw new Error("leftover tokens"); }
+            if (obj.length) {
+                throw new Error('leftover tokens');
+            }
 
             return new ParamType(_guard, name, type, baseType, indexed, comps, arrayLength, arrayChildren);
         }
 
         const name = obj.name;
-        assertArgument(!name || (typeof(name) === "string" && name.match(regexId)),
-            "invalid name", "obj.name", name);
+        assertArgument(!name || (typeof name === 'string' && name.match(regexId)), 'invalid name', 'obj.name', name);
 
         let indexed = obj.indexed;
         if (indexed != null) {
-            assertArgument(allowIndexed, "parameter cannot be indexed", "obj.indexed", obj.indexed);
+            assertArgument(allowIndexed, 'parameter cannot be indexed', 'obj.indexed', obj.indexed);
             indexed = !!indexed;
         }
 
@@ -897,82 +979,81 @@ export class ParamType {
 
         let arrayMatch = type.match(regexArrayType);
         if (arrayMatch) {
-            const arrayLength = parseInt(arrayMatch[2] || "-1");
+            const arrayLength = parseInt(arrayMatch[2] || '-1');
             const arrayChildren = ParamType.from({
                 type: arrayMatch[1],
-                components: obj.components
+                components: obj.components,
             });
 
-            return new ParamType(_guard, name || "", type, "array", indexed, null, arrayLength, arrayChildren);
+            return new ParamType(_guard, name || '', type, 'array', indexed, null, arrayLength, arrayChildren);
         }
 
-        if (type === "tuple" || type.startsWith("tuple("/* fix: ) */) || type.startsWith("(" /* fix: ) */)) {
-            const comps = (obj.components != null) ? obj.components.map((c: any) => ParamType.from(c)): null;
-            const tuple = new ParamType(_guard, name || "", type, "tuple", indexed, comps, null, null);
+        if (type === 'tuple' || type.startsWith('tuple(' /* fix: ) */) || type.startsWith('(' /* fix: ) */)) {
+            const comps = obj.components != null ? obj.components.map((c: any) => ParamType.from(c)) : null;
+            const tuple = new ParamType(_guard, name || '', type, 'tuple', indexed, comps, null, null);
             // @TODO: use lexer to validate and normalize type
             return tuple;
         }
 
         type = verifyBasicType(obj.type);
 
-        return new ParamType(_guard, name || "", type, type, indexed, null, null, null);
+        return new ParamType(_guard, name || '', type, type, indexed, null, null, null);
     }
 
     /**
-     *  Returns true if `value` is a **ParamType**.
+     * Returns true if `value` is a **ParamType**.
      */
     static isParamType(value: any): value is ParamType {
-        return (value && value[internal] === ParamTypeInternal);
+        return value && value[internal] === ParamTypeInternal;
     }
 }
 
 /**
- *  The type of a {@link Fragment | **Fragment**}.
- *  
- *  @category Application Binary Interface
+ * The type of a {@link Fragment | **Fragment**}.
+ *
+ * @category Application Binary Interface
  */
-export type FragmentType = "constructor" | "error" | "event" | "fallback" | "function" | "struct";
+export type FragmentType = 'constructor' | 'error' | 'event' | 'fallback' | 'function' | 'struct';
 
 /**
- *  An abstract class to represent An individual fragment from a parse ABI.
- *  @category Application Binary Interface
+ * An abstract class to represent An individual fragment from a parse ABI.
+ *
+ * @category Application Binary Interface
  */
 export abstract class Fragment {
     /**
-     *  The type of the fragment.
+     * The type of the fragment.
      */
     readonly type!: FragmentType;
 
     /**
-     *  The inputs for the fragment.
+     * The inputs for the fragment.
      */
     readonly inputs!: ReadonlyArray<ParamType>;
 
     /**
-     *  @private
+     * @private
      */
     constructor(guard: any, type: FragmentType, inputs: ReadonlyArray<ParamType>) {
-        assertPrivate(guard, _guard, "Fragment");
+        assertPrivate(guard, _guard, 'Fragment');
         inputs = Object.freeze(inputs.slice());
         defineProperties<Fragment>(this, { type, inputs });
     }
 
     /**
-     *  Returns a string representation of this fragment as `format`.
+     * Returns a string representation of this fragment as `format`.
      */
     abstract format(format?: FormatType): string;
 
     /**
-     *  Creates a new **Fragment** for `obj`, wich can be any supported
-     *  ABI frgament type.
+     * Creates a new **Fragment** for `obj`, wich can be any supported ABI frgament type.
      */
     static from(obj: any): Fragment {
-        if (typeof(obj) === "string") {
-
+        if (typeof obj === 'string') {
             // Try parsing JSON...
             try {
                 Fragment.from(JSON.parse(obj));
-            } catch (e) { }
+            } catch (e) {}
 
             // ...otherwise, use the human-readable lexer
             return Fragment.from(lex(obj));
@@ -984,66 +1065,77 @@ export abstract class Fragment {
             const type = obj.peekKeyword(KwTypes);
 
             switch (type) {
-                case "constructor": return ConstructorFragment.from(obj);
-                case "error": return ErrorFragment.from(obj);
-                case "event": return EventFragment.from(obj);
-                case "fallback": case "receive":
+                case 'constructor':
+                    return ConstructorFragment.from(obj);
+                case 'error':
+                    return ErrorFragment.from(obj);
+                case 'event':
+                    return EventFragment.from(obj);
+                case 'fallback':
+                case 'receive':
                     return FallbackFragment.from(obj);
-                case "function": return FunctionFragment.from(obj);
-                case "struct": return StructFragment.from(obj);
+                case 'function':
+                    return FunctionFragment.from(obj);
+                case 'struct':
+                    return StructFragment.from(obj);
             }
-
-        } else if (typeof(obj) === "object") {
+        } else if (typeof obj === 'object') {
             // JSON ABI
 
             switch (obj.type) {
-                case "constructor": return ConstructorFragment.from(obj);
-                case "error": return ErrorFragment.from(obj);
-                case "event": return EventFragment.from(obj);
-                case "fallback": case "receive":
+                case 'constructor':
+                    return ConstructorFragment.from(obj);
+                case 'error':
+                    return ErrorFragment.from(obj);
+                case 'event':
+                    return EventFragment.from(obj);
+                case 'fallback':
+                case 'receive':
                     return FallbackFragment.from(obj);
-                case "function": return FunctionFragment.from(obj);
-                case "struct": return StructFragment.from(obj);
+                case 'function':
+                    return FunctionFragment.from(obj);
+                case 'struct':
+                    return StructFragment.from(obj);
             }
 
-            assert(false, `unsupported type: ${ obj.type }`, "UNSUPPORTED_OPERATION", {
-                operation: "Fragment.from"
+            assert(false, `unsupported type: ${obj.type}`, 'UNSUPPORTED_OPERATION', {
+                operation: 'Fragment.from',
             });
         }
 
-        assertArgument(false, "unsupported frgament object", "obj", obj);
+        assertArgument(false, 'unsupported frgament object', 'obj', obj);
     }
 
     /**
-     *  Returns true if `value` is a {@link ConstructorFragment | **ConstructorFragment**}.
+     * Returns true if `value` is a {@link ConstructorFragment | **ConstructorFragment**}.
      */
     static isConstructor(value: any): value is ConstructorFragment {
         return ConstructorFragment.isFragment(value);
     }
 
     /**
-     *  Returns true if `value` is an {@link ErrorFragment | **ErrorFragment**}.
+     * Returns true if `value` is an {@link ErrorFragment | **ErrorFragment**}.
      */
     static isError(value: any): value is ErrorFragment {
         return ErrorFragment.isFragment(value);
     }
 
     /**
-     *  Returns true if `value` is an {@link EventFragment | **EventFragment**}.
+     * Returns true if `value` is an {@link EventFragment | **EventFragment**}.
      */
     static isEvent(value: any): value is EventFragment {
         return EventFragment.isFragment(value);
     }
 
     /**
-     *  Returns true if `value` is a {@link FunctionFragment | **FunctionFragment**}.
+     * Returns true if `value` is a {@link FunctionFragment | **FunctionFragment**}.
      */
     static isFunction(value: any): value is FunctionFragment {
         return FunctionFragment.isFragment(value);
     }
 
     /**
-     *  Returns true if `value` is a {@link StructFragment | **StructFragment**}.
+     * Returns true if `value` is a {@link StructFragment | **StructFragment**}.
      */
     static isStruct(value: any): value is StructFragment {
         return StructFragment.isFragment(value);
@@ -1051,153 +1143,160 @@ export abstract class Fragment {
 }
 
 /**
- *  An abstract class to represent An individual fragment
- *  which has a name from a parse ABI.
- * 
- *  @category Application Binary Interface
+ * An abstract class to represent An individual fragment which has a name from a parse ABI.
+ *
+ * @category Application Binary Interface
  */
 export abstract class NamedFragment extends Fragment {
     /**
-     *  The name of the fragment.
+     * The name of the fragment.
      */
     readonly name!: string;
 
     /**
-     *  @private
+     * @private
      */
     constructor(guard: any, type: FragmentType, name: string, inputs: ReadonlyArray<ParamType>) {
         super(guard, type, inputs);
-        assertArgument(typeof(name) === "string" && name.match(regexId),
-            "invalid identifier", "name", name);
+        assertArgument(typeof name === 'string' && name.match(regexId), 'invalid identifier', 'name', name);
         inputs = Object.freeze(inputs.slice());
         defineProperties<NamedFragment>(this, { name });
     }
 }
 
-function joinParams(format: FormatType, params: ReadonlyArray<ParamType>): string { 
-    return "(" + params.map((p) => p.format(format)).join((format === "full") ? ", ": ",") + ")";
+function joinParams(format: FormatType, params: ReadonlyArray<ParamType>): string {
+    return '(' + params.map((p) => p.format(format)).join(format === 'full' ? ', ' : ',') + ')';
 }
 
 /**
- *  A Fragment which represents a *Custom Error*.
- * 
- *  @category Application Binary Interface
+ * A Fragment which represents a _Custom Error_.
+ *
+ * @category Application Binary Interface
  */
 export class ErrorFragment extends NamedFragment {
     /**
-     *  @private
+     * @private
      */
     constructor(guard: any, name: string, inputs: ReadonlyArray<ParamType>) {
-        super(guard, "error", name, inputs);
+        super(guard, 'error', name, inputs);
         Object.defineProperty(this, internal, { value: ErrorFragmentInternal });
     }
 
     /**
-     *  The Custom Error selector.
+     * The Custom Error selector.
      */
     get selector(): string {
-        return id(this.format("sighash")).substring(0, 10);
+        return id(this.format('sighash')).substring(0, 10);
     }
 
     /**
-     *  Returns a string representation of this fragment as `format`.
+     * Returns a string representation of this fragment as `format`.
      */
     format(format?: FormatType): string {
-        if (format == null) { format = "sighash"; }
-        if (format === "json") {
+        if (format == null) {
+            format = 'sighash';
+        }
+        if (format === 'json') {
             return JSON.stringify({
-                type: "error",
+                type: 'error',
                 name: this.name,
                 inputs: this.inputs.map((input) => JSON.parse(input.format(format))),
             });
         }
 
-        const result: Array<string> = [ ];
-        if (format !== "sighash") { result.push("error"); }
+        const result: Array<string> = [];
+        if (format !== 'sighash') {
+            result.push('error');
+        }
         result.push(this.name + joinParams(format, this.inputs));
-        return result.join(" ");
+        return result.join(' ');
     }
 
     /**
-     *  Returns a new **ErrorFragment** for `obj`.
+     * Returns a new **ErrorFragment** for `obj`.
      */
     static from(obj: any): ErrorFragment {
-        if (ErrorFragment.isFragment(obj)) { return obj; }
+        if (ErrorFragment.isFragment(obj)) {
+            return obj;
+        }
 
-        if (typeof(obj) === "string") {
+        if (typeof obj === 'string') {
             return ErrorFragment.from(lex(obj));
-
         } else if (obj instanceof TokenString) {
-            const name = consumeName("error", obj);
+            const name = consumeName('error', obj);
             const inputs = consumeParams(obj);
             consumeEoi(obj);
 
             return new ErrorFragment(_guard, name, inputs);
         }
 
-        return new ErrorFragment(_guard, obj.name,
-            obj.inputs ? obj.inputs.map(ParamType.from): [ ]);
+        return new ErrorFragment(_guard, obj.name, obj.inputs ? obj.inputs.map(ParamType.from) : []);
     }
 
     /**
-     *  Returns `true` and provides a type guard if `value` is an
-     *  **ErrorFragment**.
+     * Returns `true` and provides a type guard if `value` is an **ErrorFragment**.
      */
     static isFragment(value: any): value is ErrorFragment {
-        return (value && value[internal] === ErrorFragmentInternal);
+        return value && value[internal] === ErrorFragmentInternal;
     }
 }
 
 /**
- *  A Fragment which represents an Event.
- * 
- *  @category Application Binary Interface
+ * A Fragment which represents an Event.
+ *
+ * @category Application Binary Interface
  */
 export class EventFragment extends NamedFragment {
     /**
-     *  Whether this event is anonymous.
+     * Whether this event is anonymous.
      */
     readonly anonymous!: boolean;
 
     /**
-     *  @private
+     * @private
      */
     constructor(guard: any, name: string, inputs: ReadonlyArray<ParamType>, anonymous: boolean) {
-        super(guard, "event", name, inputs);
+        super(guard, 'event', name, inputs);
         Object.defineProperty(this, internal, { value: EventFragmentInternal });
         defineProperties<EventFragment>(this, { anonymous });
     }
 
     /**
-     *  The Event topic hash.
+     * The Event topic hash.
      */
     get topicHash(): string {
-        return id(this.format("sighash"));
+        return id(this.format('sighash'));
     }
 
     /**
-     *  Returns a string representation of this event as `format`.
+     * Returns a string representation of this event as `format`.
      */
     format(format?: FormatType): string {
-        if (format == null) { format = "sighash"; }
-        if (format === "json") {
+        if (format == null) {
+            format = 'sighash';
+        }
+        if (format === 'json') {
             return JSON.stringify({
-                type: "event",
+                type: 'event',
                 anonymous: this.anonymous,
                 name: this.name,
-                inputs: this.inputs.map((i) => JSON.parse(i.format(format)))
+                inputs: this.inputs.map((i) => JSON.parse(i.format(format))),
             });
         }
 
-        const result: Array<string> = [ ];
-        if (format !== "sighash") { result.push("event"); }
+        const result: Array<string> = [];
+        if (format !== 'sighash') {
+            result.push('event');
+        }
         result.push(this.name + joinParams(format, this.inputs));
-        if (format !== "sighash" && this.anonymous) { result.push("anonymous"); }
-        return result.join(" ");
+        if (format !== 'sighash' && this.anonymous) {
+            result.push('anonymous');
+        }
+        return result.join(' ');
     }
 
     /**
-     *  Return the topic hash for an event with `name` and `params`.
+     * Return the topic hash for an event with `name` and `params`.
      */
     static getTopicHash(name: string, params?: Array<any>): string {
         params = (params || []).map((p) => ParamType.from(p));
@@ -1206,300 +1305,339 @@ export class EventFragment extends NamedFragment {
     }
 
     /**
-     *  Returns a new **EventFragment** for `obj`.
+     * Returns a new **EventFragment** for `obj`.
      */
     static from(obj: any): EventFragment {
-        if (EventFragment.isFragment(obj)) { return obj; }
+        if (EventFragment.isFragment(obj)) {
+            return obj;
+        }
 
-        if (typeof(obj) === "string") {
+        if (typeof obj === 'string') {
             try {
                 return EventFragment.from(lex(obj));
             } catch (error) {
-                assertArgument(false, "invalid event fragment", "obj", obj);
+                assertArgument(false, 'invalid event fragment', 'obj', obj);
             }
-
         } else if (obj instanceof TokenString) {
-            const name = consumeName("event", obj);
+            const name = consumeName('event', obj);
             const inputs = consumeParams(obj, true);
-            const anonymous = !!consumeKeywords(obj, setify([ "anonymous" ])).has("anonymous");
+            const anonymous = !!consumeKeywords(obj, setify(['anonymous'])).has('anonymous');
             consumeEoi(obj);
 
             return new EventFragment(_guard, name, inputs, anonymous);
         }
 
-        return new EventFragment(_guard, obj.name,
-            obj.inputs ? obj.inputs.map((p: any) => ParamType.from(p, true)): [ ], !!obj.anonymous);
+        return new EventFragment(
+            _guard,
+            obj.name,
+            obj.inputs ? obj.inputs.map((p: any) => ParamType.from(p, true)) : [],
+            !!obj.anonymous,
+        );
     }
 
     /**
-     *  Returns `true` and provides a type guard if `value` is an
-     *  **EventFragment**.
+     * Returns `true` and provides a type guard if `value` is an **EventFragment**.
      */
     static isFragment(value: any): value is EventFragment {
-        return (value && value[internal] === EventFragmentInternal);
+        return value && value[internal] === EventFragmentInternal;
     }
 }
 
 /**
- *  A Fragment which represents a constructor.
- * 
- *  @category Application Binary Interface
+ * A Fragment which represents a constructor.
+ *
+ * @category Application Binary Interface
  */
 export class ConstructorFragment extends Fragment {
-
     /**
-     *  Whether the constructor can receive an endowment.
+     * Whether the constructor can receive an endowment.
      */
     readonly payable!: boolean;
 
     /**
-     *  The recommended gas limit for deployment or `null`.
+     * The recommended gas limit for deployment or `null`.
      */
     readonly gas!: null | bigint;
 
     /**
-     *  @private
+     * @private
      */
-    constructor(guard: any, type: FragmentType, inputs: ReadonlyArray<ParamType>, payable: boolean, gas: null | bigint) {
+    constructor(
+        guard: any,
+        type: FragmentType,
+        inputs: ReadonlyArray<ParamType>,
+        payable: boolean,
+        gas: null | bigint,
+    ) {
         super(guard, type, inputs);
         Object.defineProperty(this, internal, { value: ConstructorFragmentInternal });
         defineProperties<ConstructorFragment>(this, { payable, gas });
     }
 
     /**
-     *  Returns a string representation of this constructor as `format`.
+     * Returns a string representation of this constructor as `format`.
      */
     format(format?: FormatType): string {
-        assert(format != null && format !== "sighash", "cannot format a constructor for sighash",
-            "UNSUPPORTED_OPERATION", { operation: "format(sighash)" });
+        assert(
+            format != null && format !== 'sighash',
+            'cannot format a constructor for sighash',
+            'UNSUPPORTED_OPERATION',
+            { operation: 'format(sighash)' },
+        );
 
-        if (format === "json") {
+        if (format === 'json') {
             return JSON.stringify({
-                type: "constructor",
-                stateMutability: (this.payable ? "payable": "undefined"),
+                type: 'constructor',
+                stateMutability: this.payable ? 'payable' : 'undefined',
                 payable: this.payable,
-                gas: ((this.gas != null) ? this.gas: undefined),
-                inputs: this.inputs.map((i) => JSON.parse(i.format(format)))
+                gas: this.gas != null ? this.gas : undefined,
+                inputs: this.inputs.map((i) => JSON.parse(i.format(format))),
             });
         }
 
-        const result = [ `constructor${ joinParams(format, this.inputs) }` ];
-        if (this.payable) { result.push("payable"); }
-        if (this.gas != null) { result.push(`@${ this.gas.toString() }`); }
-        return result.join(" ");
+        const result = [`constructor${joinParams(format, this.inputs)}`];
+        if (this.payable) {
+            result.push('payable');
+        }
+        if (this.gas != null) {
+            result.push(`@${this.gas.toString()}`);
+        }
+        return result.join(' ');
     }
 
     /**
-     *  Returns a new **ConstructorFragment** for `obj`.
+     * Returns a new **ConstructorFragment** for `obj`.
      */
     static from(obj: any): ConstructorFragment {
-        if (ConstructorFragment.isFragment(obj)) { return obj; }
+        if (ConstructorFragment.isFragment(obj)) {
+            return obj;
+        }
 
-        if (typeof(obj) === "string") {
+        if (typeof obj === 'string') {
             try {
                 return ConstructorFragment.from(lex(obj));
             } catch (error) {
-                assertArgument(false, "invalid constuctor fragment", "obj", obj);
+                assertArgument(false, 'invalid constuctor fragment', 'obj', obj);
             }
-
         } else if (obj instanceof TokenString) {
-            consumeKeywords(obj, setify([ "constructor" ]));
+            consumeKeywords(obj, setify(['constructor']));
             const inputs = consumeParams(obj);
-            const payable = !!consumeKeywords(obj, KwVisibDeploy).has("payable");
+            const payable = !!consumeKeywords(obj, KwVisibDeploy).has('payable');
             const gas = consumeGas(obj);
             consumeEoi(obj);
 
-            return new ConstructorFragment(_guard, "constructor", inputs, payable, gas);
+            return new ConstructorFragment(_guard, 'constructor', inputs, payable, gas);
         }
 
-        return new ConstructorFragment(_guard, "constructor",
-            obj.inputs ? obj.inputs.map(ParamType.from): [ ],
-            !!obj.payable, (obj.gas != null) ? obj.gas: null);
+        return new ConstructorFragment(
+            _guard,
+            'constructor',
+            obj.inputs ? obj.inputs.map(ParamType.from) : [],
+            !!obj.payable,
+            obj.gas != null ? obj.gas : null,
+        );
     }
 
     /**
-     *  Returns `true` and provides a type guard if `value` is a
-     *  **ConstructorFragment**.
+     * Returns `true` and provides a type guard if `value` is a **ConstructorFragment**.
      */
     static isFragment(value: any): value is ConstructorFragment {
-        return (value && value[internal] === ConstructorFragmentInternal);
+        return value && value[internal] === ConstructorFragmentInternal;
     }
 }
 
 /**
- *  A Fragment which represents a method.
- *  @category Application Binary Interface
+ * A Fragment which represents a method.
+ *
+ * @category Application Binary Interface
  */
 export class FallbackFragment extends Fragment {
-
     /**
-     *  If the function can be sent value during invocation.
+     * If the function can be sent value during invocation.
      */
     readonly payable!: boolean;
 
     constructor(guard: any, inputs: ReadonlyArray<ParamType>, payable: boolean) {
-        super(guard, "fallback", inputs);
+        super(guard, 'fallback', inputs);
         Object.defineProperty(this, internal, { value: FallbackFragmentInternal });
         defineProperties<FallbackFragment>(this, { payable });
     }
 
     /**
-     *  Returns a string representation of this fallback as `format`.
+     * Returns a string representation of this fallback as `format`.
      */
     format(format?: FormatType): string {
-        const type = ((this.inputs.length === 0) ? "receive": "fallback");
+        const type = this.inputs.length === 0 ? 'receive' : 'fallback';
 
-        if (format === "json") {
-            const stateMutability = (this.payable ? "payable": "nonpayable");
+        if (format === 'json') {
+            const stateMutability = this.payable ? 'payable' : 'nonpayable';
             return JSON.stringify({ type, stateMutability });
         }
 
-        return `${ type }()${ this.payable ? " payable": "" }`;
+        return `${type}()${this.payable ? ' payable' : ''}`;
     }
 
     /**
-     *  Returns a new **FallbackFragment** for `obj`.
+     * Returns a new **FallbackFragment** for `obj`.
      */
     static from(obj: any): FallbackFragment {
-        if (FallbackFragment.isFragment(obj)) { return obj; }
+        if (FallbackFragment.isFragment(obj)) {
+            return obj;
+        }
 
-        if (typeof(obj) === "string") {
+        if (typeof obj === 'string') {
             try {
                 return FallbackFragment.from(lex(obj));
             } catch (error) {
-                assertArgument(false, "invalid fallback fragment", "obj", obj);
+                assertArgument(false, 'invalid fallback fragment', 'obj', obj);
             }
-
         } else if (obj instanceof TokenString) {
             const errorObj = obj.toString();
 
-            const topIsValid = obj.peekKeyword(setify([ "fallback", "receive" ]));
-            assertArgument(topIsValid, "type must be fallback or receive", "obj", errorObj);
+            const topIsValid = obj.peekKeyword(setify(['fallback', 'receive']));
+            assertArgument(topIsValid, 'type must be fallback or receive', 'obj', errorObj);
 
-            const type = obj.popKeyword(setify([ "fallback", "receive" ]));
+            const type = obj.popKeyword(setify(['fallback', 'receive']));
 
             // receive()
-            if (type === "receive") {
+            if (type === 'receive') {
                 const inputs = consumeParams(obj);
-                assertArgument(inputs.length === 0, `receive cannot have arguments`, "obj.inputs", inputs);
-                consumeKeywords(obj, setify([ "payable" ]));
+                assertArgument(inputs.length === 0, `receive cannot have arguments`, 'obj.inputs', inputs);
+                consumeKeywords(obj, setify(['payable']));
                 consumeEoi(obj);
-                return new FallbackFragment(_guard, [ ], true);
+                return new FallbackFragment(_guard, [], true);
             }
 
             // fallback() [payable]
             // fallback(bytes) [payable] returns (bytes)
             let inputs = consumeParams(obj);
             if (inputs.length) {
-                assertArgument(inputs.length === 1 && inputs[0].type === "bytes",
-                    "invalid fallback inputs", "obj.inputs",
-                    inputs.map((i) => i.format("minimal")).join(", "));
+                assertArgument(
+                    inputs.length === 1 && inputs[0].type === 'bytes',
+                    'invalid fallback inputs',
+                    'obj.inputs',
+                    inputs.map((i) => i.format('minimal')).join(', '),
+                );
             } else {
-                inputs = [ ParamType.from("bytes") ];
+                inputs = [ParamType.from('bytes')];
             }
 
             const mutability = consumeMutability(obj);
-            assertArgument(mutability === "nonpayable" || mutability === "payable", "fallback cannot be constants", "obj.stateMutability", mutability);
+            assertArgument(
+                mutability === 'nonpayable' || mutability === 'payable',
+                'fallback cannot be constants',
+                'obj.stateMutability',
+                mutability,
+            );
 
-            if (consumeKeywords(obj, setify([ "returns" ])).has("returns")) {
+            if (consumeKeywords(obj, setify(['returns'])).has('returns')) {
                 const outputs = consumeParams(obj);
-                assertArgument(outputs.length === 1 && outputs[0].type === "bytes",
-                    "invalid fallback outputs", "obj.outputs",
-                    outputs.map((i) => i.format("minimal")).join(", "));
+                assertArgument(
+                    outputs.length === 1 && outputs[0].type === 'bytes',
+                    'invalid fallback outputs',
+                    'obj.outputs',
+                    outputs.map((i) => i.format('minimal')).join(', '),
+                );
             }
 
             consumeEoi(obj);
 
-            return new FallbackFragment(_guard, inputs, mutability === "payable");
+            return new FallbackFragment(_guard, inputs, mutability === 'payable');
         }
 
-        if (obj.type === "receive") {
-            return new FallbackFragment(_guard, [ ], true);
+        if (obj.type === 'receive') {
+            return new FallbackFragment(_guard, [], true);
         }
 
-        if (obj.type === "fallback") {
-            const inputs = [ ParamType.from("bytes") ];
-            const payable = (obj.stateMutability === "payable");
+        if (obj.type === 'fallback') {
+            const inputs = [ParamType.from('bytes')];
+            const payable = obj.stateMutability === 'payable';
             return new FallbackFragment(_guard, inputs, payable);
         }
 
-        assertArgument(false, "invalid fallback description", "obj", obj);
+        assertArgument(false, 'invalid fallback description', 'obj', obj);
     }
 
     /**
-     *  Returns `true` and provides a type guard if `value` is a
-     *  **FallbackFragment**.
+     * Returns `true` and provides a type guard if `value` is a **FallbackFragment**.
      */
     static isFragment(value: any): value is FallbackFragment {
-        return (value && value[internal] === FallbackFragmentInternal);
+        return value && value[internal] === FallbackFragmentInternal;
     }
 }
 
-
 /**
- *  A Fragment which represents a method.
- * 
- *  @category Application Binary Interface
+ * A Fragment which represents a method.
+ *
+ * @category Application Binary Interface
  */
 export class FunctionFragment extends NamedFragment {
     /**
-     *  If the function is constant (e.g. `pure` or `view` functions).
+     * If the function is constant (e.g. `pure` or `view` functions).
      */
     readonly constant!: boolean;
 
     /**
-     *  The returned types for the result of calling this function.
+     * The returned types for the result of calling this function.
      */
     readonly outputs!: ReadonlyArray<ParamType>;
 
     /**
-     *  The state mutability (e.g. `payable`, `nonpayable`, `view`
-     *  or `pure`)
+     * The state mutability (e.g. `payable`, `nonpayable`, `view` or `pure`)
      */
-    readonly stateMutability!: "payable" | "nonpayable" | "view" | "pure";
+    readonly stateMutability!: 'payable' | 'nonpayable' | 'view' | 'pure';
 
     /**
-     *  If the function can be sent value during invocation.
+     * If the function can be sent value during invocation.
      */
     readonly payable!: boolean;
 
     /**
-     *  The recommended gas limit to send when calling this function.
+     * The recommended gas limit to send when calling this function.
      */
     readonly gas!: null | bigint;
 
     /**
-     *  @private
+     * @private
      */
-    constructor(guard: any, name: string, stateMutability: "payable" | "nonpayable" | "view" | "pure", inputs: ReadonlyArray<ParamType>, outputs: ReadonlyArray<ParamType>, gas: null | bigint) {
-        super(guard, "function", name, inputs);
+    constructor(
+        guard: any,
+        name: string,
+        stateMutability: 'payable' | 'nonpayable' | 'view' | 'pure',
+        inputs: ReadonlyArray<ParamType>,
+        outputs: ReadonlyArray<ParamType>,
+        gas: null | bigint,
+    ) {
+        super(guard, 'function', name, inputs);
         Object.defineProperty(this, internal, { value: FunctionFragmentInternal });
         outputs = Object.freeze(outputs.slice());
-        const constant = (stateMutability === "view" || stateMutability === "pure");
-        const payable = (stateMutability === "payable");
+        const constant = stateMutability === 'view' || stateMutability === 'pure';
+        const payable = stateMutability === 'payable';
         defineProperties<FunctionFragment>(this, { constant, gas, outputs, payable, stateMutability });
     }
 
     /**
-     *  The Function selector.
+     * The Function selector.
      */
     get selector(): string {
-        return id(this.format("sighash")).substring(0, 10);
+        return id(this.format('sighash')).substring(0, 10);
     }
 
     /**
-     *  Returns a string representation of this function as `format`.
+     * Returns a string representation of this function as `format`.
      */
     format(format?: FormatType): string {
-        if (format == null) { format = "sighash"; }
-        if (format === "json") {
+        if (format == null) {
+            format = 'sighash';
+        }
+        if (format === 'json') {
             return JSON.stringify({
-                type: "function",
+                type: 'function',
                 name: this.name,
                 constant: this.constant,
-                stateMutability: ((this.stateMutability !== "nonpayable") ? this.stateMutability: undefined),
+                stateMutability: this.stateMutability !== 'nonpayable' ? this.stateMutability : undefined,
                 payable: this.payable,
-                gas: ((this.gas != null) ? this.gas: undefined),
+                gas: this.gas != null ? this.gas : undefined,
                 inputs: this.inputs.map((i) => JSON.parse(i.format(format))),
                 outputs: this.outputs.map((o) => JSON.parse(o.format(format))),
             });
@@ -1507,54 +1645,59 @@ export class FunctionFragment extends NamedFragment {
 
         const result: Array<string> = [];
 
-        if (format !== "sighash") { result.push("function"); }
+        if (format !== 'sighash') {
+            result.push('function');
+        }
 
         result.push(this.name + joinParams(format, this.inputs));
 
-        if (format !== "sighash") {
-            if (this.stateMutability !== "nonpayable") {
+        if (format !== 'sighash') {
+            if (this.stateMutability !== 'nonpayable') {
                 result.push(this.stateMutability);
             }
 
             if (this.outputs && this.outputs.length) {
-                result.push("returns");
+                result.push('returns');
                 result.push(joinParams(format, this.outputs));
             }
 
-            if (this.gas != null) { result.push(`@${ this.gas.toString() }`); }
+            if (this.gas != null) {
+                result.push(`@${this.gas.toString()}`);
+            }
         }
-        return result.join(" ");
+        return result.join(' ');
     }
 
     /**
-     *  Return the selector for a function with `name` and `params`.
+     * Return the selector for a function with `name` and `params`.
      */
     static getSelector(name: string, params?: Array<any>): string {
         params = (params || []).map((p) => ParamType.from(p));
-        const fragment = new FunctionFragment(_guard, name, "view", params, [ ], null);
+        const fragment = new FunctionFragment(_guard, name, 'view', params, [], null);
         return fragment.selector;
     }
 
     /**
-     *  Returns a new **FunctionFragment** for `obj`.
+     * Returns a new **FunctionFragment** for `obj`.
      */
     static from(obj: any): FunctionFragment {
-        if (FunctionFragment.isFragment(obj)) { return obj; }
+        if (FunctionFragment.isFragment(obj)) {
+            return obj;
+        }
 
-        if (typeof(obj) === "string") {
+        if (typeof obj === 'string') {
             try {
                 return FunctionFragment.from(lex(obj));
             } catch (error) {
-                assertArgument(false, "invalid function fragment", "obj", obj);
+                assertArgument(false, 'invalid function fragment', 'obj', obj);
             }
-
         } else if (obj instanceof TokenString) {
-            const name = consumeName("function", obj);
+            const name = consumeName('function', obj);
             const inputs = consumeParams(obj);
             const mutability = consumeMutability(obj);
 
-            let outputs: Array<ParamType> = [ ];
-            if (consumeKeywords(obj, setify([ "returns" ])).has("returns")) {
+            let outputs: Array<ParamType> = [];
+            if (consumeKeywords(obj, setify(['returns'])).has('returns')) {
                 outputs = consumeParams(obj);
             }
 
@@ -1569,89 +1712,88 @@ export class FunctionFragment extends NamedFragment {
 
         // Use legacy Solidity ABI logic if stateMutability is missing
         if (stateMutability == null) {
-            stateMutability = "payable";
+            stateMutability = 'payable';
 
-            if (typeof(obj.constant) === "boolean") {
-                stateMutability = "view";
+            if (typeof obj.constant === 'boolean') {
+                stateMutability = 'view';
                 if (!obj.constant) {
-                    stateMutability = "payable"
-                    if (typeof(obj.payable) === "boolean" && !obj.payable) {
-                        stateMutability = "nonpayable";
+                    stateMutability = 'payable';
+                    if (typeof obj.payable === 'boolean' && !obj.payable) {
+                        stateMutability = 'nonpayable';
                     }
                 }
-            } else if (typeof(obj.payable) === "boolean" && !obj.payable) {
-                stateMutability = "nonpayable";
+            } else if (typeof obj.payable === 'boolean' && !obj.payable) {
+                stateMutability = 'nonpayable';
             }
         }
 
         // @TODO: verifyState for stateMutability (e.g. throw if
         //        payable: false but stateMutability is "nonpayable")
 
-        return new FunctionFragment(_guard, obj.name, stateMutability,
-             obj.inputs ? obj.inputs.map(ParamType.from): [ ],
-             obj.outputs ? obj.outputs.map(ParamType.from): [ ],
-             (obj.gas != null) ? obj.gas: null);
+        return new FunctionFragment(
+            _guard,
+            obj.name,
+            stateMutability,
+            obj.inputs ? obj.inputs.map(ParamType.from) : [],
+            obj.outputs ? obj.outputs.map(ParamType.from) : [],
+            obj.gas != null ? obj.gas : null,
+        );
     }
 
     /**
-     *  Returns `true` and provides a type guard if `value` is a
-     *  **FunctionFragment**.
+     * Returns `true` and provides a type guard if `value` is a **FunctionFragment**.
      */
     static isFragment(value: any): value is FunctionFragment {
-        return (value && value[internal] === FunctionFragmentInternal);
+        return value && value[internal] === FunctionFragmentInternal;
     }
 }
 
 /**
- *  A Fragment which represents a structure.
- * 
- *  @category Application Binary Interface
+ * A Fragment which represents a structure.
+ *
+ * @category Application Binary Interface
  */
 export class StructFragment extends NamedFragment {
-
     /**
-     *  @private
+     * @private
      */
     constructor(guard: any, name: string, inputs: ReadonlyArray<ParamType>) {
-        super(guard, "struct", name, inputs);
+        super(guard, 'struct', name, inputs);
         Object.defineProperty(this, internal, { value: StructFragmentInternal });
     }
 
     /**
-     *  Returns a string representation of this struct as `format`.
+     * Returns a string representation of this struct as `format`.
      */
     format(): string {
-        throw new Error("@TODO");
+        throw new Error('@TODO');
     }
 
     /**
-     *  Returns a new **StructFragment** for `obj`.
+     * Returns a new **StructFragment** for `obj`.
      */
     static from(obj: any): StructFragment {
-        if (typeof(obj) === "string") {
+        if (typeof obj === 'string') {
             try {
                 return StructFragment.from(lex(obj));
             } catch (error) {
-                assertArgument(false, "invalid struct fragment", "obj", obj);
+                assertArgument(false, 'invalid struct fragment', 'obj', obj);
             }
-
         } else if (obj instanceof TokenString) {
-            const name = consumeName("struct", obj);
+            const name = consumeName('struct', obj);
             const inputs = consumeParams(obj);
             consumeEoi(obj);
             return new StructFragment(_guard, name, inputs);
         }
 
-        return new StructFragment(_guard, obj.name, obj.inputs ? obj.inputs.map(ParamType.from): [ ]);
+        return new StructFragment(_guard, obj.name, obj.inputs ? obj.inputs.map(ParamType.from) : []);
     }
 
-// @TODO: fix this return type
+    // @TODO: fix this return type
     /**
-     *  Returns `true` and provides a type guard if `value` is a
-     *  **StructFragment**.
+     * Returns `true` and provides a type guard if `value` is a **StructFragment**.
      */
     static isFragment(value: any): value is FunctionFragment {
-        return (value && value[internal] === StructFragmentInternal);
+        return value && value[internal] === StructFragmentInternal;
     }
 }
-

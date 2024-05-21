@@ -1,37 +1,47 @@
 /**
- *  The Application Binary Interface (ABI) describes how method input
- *  parameters should be encoded, their results decoded, and how to
- *  decode events and errors.
+ * The Application Binary Interface (ABI) describes how method input parameters should be encoded, their results
+ * decoded, and how to decode events and errors.
  *
- *  See [About ABIs](docs-abi) for more details how they are used.
- *  @TODO LINK TO: [[docs-abi]] (abi.wrm file)
+ * See [About ABIs](docs-abi) for more details how they are used.
+ *
+ * @todo LINK TO: [[docs-abi]] (abi.wrm file)
  */
 
-export { AbiCoder } from "./abi-coder.js";
+export { AbiCoder } from './abi-coder.js';
 
-export { decodeBytes32String, encodeBytes32String } from "./bytes32.js";
+export { decodeBytes32String, encodeBytes32String } from './bytes32.js';
 
 export {
-    ConstructorFragment, ErrorFragment, EventFragment, FallbackFragment,
-    Fragment, FunctionFragment, NamedFragment, ParamType, StructFragment,
-} from "./fragments.js";
+    ConstructorFragment,
+    ErrorFragment,
+    EventFragment,
+    FallbackFragment,
+    Fragment,
+    FunctionFragment,
+    NamedFragment,
+    ParamType,
+    StructFragment,
+} from './fragments.js';
 
-export { 
+export {
     checkResultErrors,
     Indexed,
     Interface,
-    ErrorDescription, LogDescription, TransactionDescription,
-    Result
-} from "./interface.js";
+    ErrorDescription,
+    LogDescription,
+    TransactionDescription,
+    Result,
+} from './interface.js';
 
-export { Typed } from "./typed.js";
-
-export type {
-    JsonFragment, JsonFragmentType,
-    FormatType, FragmentType, ParamTypeWalkAsyncFunc, ParamTypeWalkFunc
-} from "./fragments.js";
+export { Typed } from './typed.js';
 
 export type {
-    InterfaceAbi,
-} from "./interface.js";
+    JsonFragment,
+    JsonFragmentType,
+    FormatType,
+    FragmentType,
+    ParamTypeWalkAsyncFunc,
+    ParamTypeWalkFunc,
+} from './fragments.js';
 
+export type { InterfaceAbi } from './interface.js';

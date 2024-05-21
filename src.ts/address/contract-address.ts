@@ -1,4 +1,4 @@
-import { keccak256 } from "../crypto/index.js";
+import { keccak256 } from '../crypto/index.js';
 import {
     concat,
     dataSlice,
@@ -6,91 +6,89 @@ import {
     getBytes,
     assertArgument,
     zeroPadValue,
-    toBeHex, toBigInt
-} from "../utils/index.js";
+    toBeHex,
+    toBigInt,
+} from '../utils/index.js';
 
-import { getAddress } from "./address.js";
+import { getAddress } from './address.js';
 
-import type { BigNumberish, BytesLike } from "../utils/index.js";
-
+import type { BigNumberish, BytesLike } from '../utils/index.js';
 
 // http://ethereum.stackexchange.com/questions/760/how-is-the-address-of-an-ethereum-contract-computed
 
 /**
- *  Returns the address that would result from a `CREATE` for `tx`.
+ * Returns the address that would result from a `CREATE` for `tx`.
  *
- *  This can be used to compute the address a contract will be
- *  deployed to by an EOA when sending a deployment transaction (i.e.
- *  when the `to` address is `null`).
+ * This can be used to compute the address a contract will be deployed to by an EOA when sending a deployment
+ * transaction (i.e. when the `to` address is `null`).
  *
- *  This can also be used to compute the address a contract will be
- *  deployed to by a contract, by using the contract's address as the
- *  `to` and the contract's nonce.
- *  
- *  @example
- *  ```js
- *  from = "0x8ba1f109551bD432803012645Ac136ddd64DBA72";
- *  nonce = 5;
+ * This can also be used to compute the address a contract will be deployed to by a contract, by using the contract's
+ * address as the `to` and the contract's nonce.
  *
- *  getCreateAddress({ from, nonce });
- *  //_result:
- *  ```
- * 
- *  @param {object} tx - The transaction object.
- *  @param {string} tx.from - The address of the sender.
- * 
- *  @category Address
+ * @category Address
+ * @example
+ *
+ * ```js
+ * from = '0x8ba1f109551bD432803012645Ac136ddd64DBA72';
+ * nonce = 5;
+ *
+ * getCreateAddress({ from, nonce });
+ * //_result:
+ * ```
+ *
+ * @param {object} tx - The transaction object.
+ * @param {string} tx.from - The address of the sender.
  */
-export function getCreateAddress(tx: { from: string, nonce: BigNumberish }): string {
+export function getCreateAddress(tx: { from: string; nonce: BigNumberish }): string {
     const from = getAddress(tx.from);
-    const nonce = getBigInt(tx.nonce, "tx.nonce");
+    const nonce = getBigInt(tx.nonce, 'tx.nonce');
     const nonceBytes = zeroPadValue(toBeHex(toBigInt(nonce)), 8);
 
-    return getAddress(dataSlice(keccak256(concat([getAddress(from), nonceBytes ])), 12))
+    return getAddress(dataSlice(keccak256(concat([getAddress(from), nonceBytes])), 12));
 }
 
 /**
- *  Returns the address that would result from a `CREATE2` operation
- *  with the given `from`, `salt` and `initCodeHash`.
+ * Returns the address that would result from a `CREATE2` operation with the given `from`, `salt` and `initCodeHash`.
  *
- *  To compute the `initCodeHash` from a contract's init code, use
- *  the [**keccak256**](../functions/keccak256) function.
+ * To compute the `initCodeHash` from a contract's init code, use the [**keccak256**](../functions/keccak256) function.
  *
- *  For a quick overview and example of `CREATE2`, see [Wisps: The Magical World of Create2](https://blog.ricmoo.com/wisps-the-magical-world-of-create2-5c2177027604).
- * 
- *  @example
- *  ```js
- *  // The address of the contract
- *  from = "0x8ba1f109551bD432803012645Ac136ddd64DBA72"
+ * For a quick overview and example of `CREATE2`, see [Wisps: The Magical World of
+ * Create2](https://blog.ricmoo.com/wisps-the-magical-world-of-create2-5c2177027604).
  *
- *  // The salt
- *  salt = id("HelloWorld")
+ * @category Address
+ * @example
  *
- *  // The hash of the initCode
- *  initCode = "0x6394198df16000526103ff60206004601c335afa6040516060f3";
- *  initCodeHash = keccak256(initCode)
+ * ```js
+ * // The address of the contract
+ * from = '0x8ba1f109551bD432803012645Ac136ddd64DBA72';
  *
- *  getCreate2Address(from, salt, initCodeHash)
- *  //_result:
- *  ```
- * 
- *  @param {string} _from - The address of the sender.
- *  @param {BytesLike} _salt - The salt value.
- *  @param {BytesLike} _initCodeHash - The hash of the init code.
- *  @returns {string} The computed address.
- *  @throws {Error} If the salt is not exactly 32 bytes long.
- *  @throws {Error} If the initCodeHash is not exactly 32 bytes long.
- *  
- *  @category Address
+ * // The salt
+ * salt = id('HelloWorld');
+ *
+ * // The hash of the initCode
+ * initCode = '0x6394198df16000526103ff60206004601c335afa6040516060f3';
+ * initCodeHash = keccak256(initCode);
+ *
+ * getCreate2Address(from, salt, initCodeHash);
+ * //_result:
+ * ```
+ *
+ * @param {string} _from - The address of the sender.
+ * @param {BytesLike} _salt - The salt value.
+ * @param {BytesLike} _initCodeHash - The hash of the init code.
+ *
+ * @returns {string} The computed address.
+ * @throws {Error} If the salt is not exactly 32 bytes long.
+ * @throws {Error} If the initCodeHash is not exactly 32 bytes long.
  */
 export function getCreate2Address(_from: string, _salt: BytesLike, _initCodeHash: BytesLike): string {
     const from = getAddress(_from);
-    const salt = getBytes(_salt, "salt");
-    const initCodeHash = getBytes(_initCodeHash, "initCodeHash");
+    const salt = getBytes(_salt, 'salt');
+    const initCodeHash = getBytes(_initCodeHash, 'initCodeHash');
 
-    assertArgument(salt.length === 32, "salt must be 32 bytes", "salt", _salt);
+    assertArgument(salt.length === 32, 'salt must be 32 bytes', 'salt', _salt);
 
-    assertArgument(initCodeHash.length === 32, "initCodeHash must be 32 bytes", "initCodeHash", _initCodeHash);
+    assertArgument(initCodeHash.length === 32, 'initCodeHash must be 32 bytes', 'initCodeHash', _initCodeHash);
 
-    return getAddress(dataSlice(keccak256(concat([ "0xff", from, salt, initCodeHash ])), 12))
+    return getAddress(dataSlice(keccak256(concat(['0xff', from, salt, initCodeHash])), 12));
 }

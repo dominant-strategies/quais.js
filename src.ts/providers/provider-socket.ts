@@ -1,40 +1,38 @@
 /**
- *  Generic long-lived socket provider.
+ * Generic long-lived socket provider.
  *
- *  Sub-classing notes
- *  - a sub-class MUST call the `_start()` method once connected
- *  - a sub-class MUST override the `_write(string)` method
- *  - a sub-class MUST call `_processMessage(string)` for each message
+ * Sub-classing notes
  *
- *  @_subsection: api/providers/abstract-provider:Socket Providers  [about-socketProvider]
+ * - A sub-class MUST call the `_start()` method once connected
+ * - A sub-class MUST override the `_write(string)` method
+ * - A sub-class MUST call `_processMessage(string)` for each message
+ *
+ * @_subsection: api/providers/abstract-provider:Socket Providers  [about-socketProvider]
  */
 
-import { UnmanagedSubscriber } from "./abstract-provider.js";
-import {assert, assertArgument, makeError} from "../utils/index.js";
-import { JsonRpcApiProvider } from "./provider-jsonrpc.js";
+import { UnmanagedSubscriber } from './abstract-provider.js';
+import { assert, assertArgument, makeError } from '../utils/index.js';
+import { JsonRpcApiProvider } from './provider-jsonrpc.js';
 
-import type { Subscriber, Subscription } from "./abstract-provider.js";
-import type { EventFilter } from "./provider.js";
-import type {
-    JsonRpcApiProviderOptions, JsonRpcError, JsonRpcPayload, JsonRpcResult
-} from "./provider-jsonrpc.js";
-import type { Networkish } from "./network.js";
-import type { WebSocketLike } from "./provider-websocket.js";
-
+import type { Subscriber, Subscription } from './abstract-provider.js';
+import type { EventFilter } from './provider.js';
+import type { JsonRpcApiProviderOptions, JsonRpcError, JsonRpcPayload, JsonRpcResult } from './provider-jsonrpc.js';
+import type { Networkish } from './network.js';
+import type { WebSocketLike } from './provider-websocket.js';
 
 type JsonRpcSubscription = {
-    method: string,
+    method: string;
     params: {
-        result: any,
-        subscription: string
-    }
+        result: any;
+        subscription: string;
+    };
 };
 
 /**
- *  A **SocketSubscriber** uses a socket transport to handle events and
- *  should use {@link SocketSubscriber._emit | **_emit**}  to manage the events.
- * 
- *  @category Providers
+ * A **SocketSubscriber** uses a socket transport to handle events and should use
+ * {@link SocketSubscriber._emit | **_emit**} to manage the events.
+ *
+ * @category Providers
  */
 export class SocketSubscriber implements Subscriber {
     #provider: SocketProvider;
@@ -42,18 +40,19 @@ export class SocketSubscriber implements Subscriber {
     #filter: string;
 
     /**
-     *  The filter.
+     * The filter.
      */
-    get filter(): Array<any> { return JSON.parse(this.#filter); }
+    get filter(): Array<any> {
+        return JSON.parse(this.#filter);
+    }
 
-    #filterId: null | Promise<string |number>;
+    #filterId: null | Promise<string | number>;
     #paused: null | boolean;
 
     #emitPromise: null | Promise<void>;
 
     /**
-     *  Creates a new **SocketSubscriber** attached to `provider` listening
-     *  to `filter`.
+     * Creates a new **SocketSubscriber** attached to `provider` listening to `filter`.
      */
     constructor(provider: SocketProvider, filter: Array<any>) {
         this.#provider = provider;
@@ -64,15 +63,15 @@ export class SocketSubscriber implements Subscriber {
     }
 
     start(): void {
-        this.#filterId = this.#provider.send("quai_subscribe", this.filter).then((filterId) => {;
+        this.#filterId = this.#provider.send('quai_subscribe', this.filter).then((filterId) => {
             this.#provider._register(filterId, this);
             return filterId;
         });
     }
 
     stop(): void {
-        (<Promise<number>>(this.#filterId)).then((filterId) => {
-            this.#provider.send("quai_unsubscribe", [ filterId ]);
+        (<Promise<number>>this.#filterId).then((filterId) => {
+            this.#provider.send('quai_unsubscribe', [filterId]);
         });
         this.#filterId = null;
     }
@@ -80,8 +79,12 @@ export class SocketSubscriber implements Subscriber {
     // @TODO: pause should trap the current blockNumber, unsub, and on resume use getLogs
     //        and resume
     pause(dropWhilePaused?: boolean): void {
-        assert(dropWhilePaused, "preserve logs while paused not supported by SocketSubscriber yet",
-            "UNSUPPORTED_OPERATION", { operation: "pause(false)" });
+        assert(
+            dropWhilePaused,
+            'preserve logs while paused not supported by SocketSubscriber yet',
+            'UNSUPPORTED_OPERATION',
+            { operation: 'pause(false)' },
+        );
         this.#paused = !!dropWhilePaused;
     }
 
@@ -90,10 +93,12 @@ export class SocketSubscriber implements Subscriber {
     }
 
     /**
-     *  @ignore
+     * @ignore
      */
     _handleMessage(message: any): void {
-        if (this.#filterId == null) { return; }
+        if (this.#filterId == null) {
+            return;
+        }
         if (this.#paused === null) {
             let emitPromise: null | Promise<void> = this.#emitPromise;
             if (emitPromise == null) {
@@ -112,71 +117,69 @@ export class SocketSubscriber implements Subscriber {
     }
 
     /**
-     *  Sub-classes **must** override this to emit the events on the
-     *  provider.
+     * Sub-classes **must** override this to emit the events on the provider.
      */
     async _emit(provider: SocketProvider, message: any): Promise<void> {
-        throw new Error("sub-classes must implemente this; _emit");
+        throw new Error('sub-classes must implemente this; _emit');
     }
 }
 
 /**
- *  A **SocketBlockSubscriber** listens for `newHeads` events and emits
- *  `"block"` events.
- * 
- *  @category Providers
+ * A **SocketBlockSubscriber** listens for `newHeads` events and emits `"block"` events.
+ *
+ * @category Providers
  */
 export class SocketBlockSubscriber extends SocketSubscriber {
     /**
-     *  @ignore
+     * @ignore
      */
     constructor(provider: SocketProvider) {
-        super(provider, [ "newHeads" ]);
+        super(provider, ['newHeads']);
     }
 
     async _emit(provider: SocketProvider, message: any): Promise<void> {
-        provider.emit("block", parseInt(message.number));
+        provider.emit('block', parseInt(message.number));
     }
 }
 
 /**
- *  A **SocketPendingSubscriber** listens for pending transacitons and emits
- *  `"pending"` events.
- * 
- *  @category Providers
+ * A **SocketPendingSubscriber** listens for pending transacitons and emits `"pending"` events.
+ *
+ * @category Providers
  */
 export class SocketPendingSubscriber extends SocketSubscriber {
-
     /**
-     *  @ignore
+     * @ignore
      */
     constructor(provider: SocketProvider) {
-        super(provider, [ "newPendingTransactions" ]);
+        super(provider, ['newPendingTransactions']);
     }
 
     async _emit(provider: SocketProvider, message: any): Promise<void> {
-        provider.emit("pending", message);
+        provider.emit('pending', message);
     }
 }
 
 /**
- *  A **SocketEventSubscriber** listens for event logs.
- * 
- *  @category Providers
+ * A **SocketEventSubscriber** listens for event logs.
+ *
+ * @category Providers
  */
 export class SocketEventSubscriber extends SocketSubscriber {
     #logFilter: string;
 
     /**
-     *  The filter.
+     * The filter.
      */
-    get logFilter(): EventFilter { return JSON.parse(this.#logFilter); }
+    get logFilter(): EventFilter {
+        return JSON.parse(this.#logFilter);
+    }
 
     /**
-     *  @ignore
+     * @ignore
      */
     constructor(provider: SocketProvider, filter: EventFilter) {
-        super(provider, [ "logs", filter ]);
+        super(provider, ['logs', filter]);
         this.#logFilter = JSON.stringify(filter);
     }
 
@@ -186,14 +189,13 @@ export class SocketEventSubscriber extends SocketSubscriber {
 }
 
 /**
- *  A **SocketProvider** is backed by a long-lived connection over a
- *  socket, which can subscribe and receive real-time messages over
- *  its communication channel.
- * 
- *  @category Providers
+ * A **SocketProvider** is backed by a long-lived connection over a socket, which can subscribe and receive real-time
+ * messages over its communication channel.
+ *
+ * @category Providers
  */
 export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
-    #callbacks: Map<number, { payload: JsonRpcPayload, resolve: (r: any) => void, reject: (e: Error) => void }>;
+    #callbacks: Map<number, { payload: JsonRpcPayload; resolve: (r: any) => void; reject: (e: Error) => void }>;
 
     // Maps each filterId to its subscriber
     #subs: Map<number | string, SocketSubscriber>;
@@ -203,25 +205,31 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     #pending: Map<number | string, Array<any>>;
 
     /**
-     *  Creates a new **SocketProvider** connected to `network`.
+     * Creates a new **SocketProvider** connected to `network`.
      *
-     *  If unspecified, the network will be discovered.
+     * If unspecified, the network will be discovered.
      */
     constructor(network?: Networkish, _options?: JsonRpcApiProviderOptions) {
         // Copy the options
-        const options = Object.assign({ }, (_options != null) ? _options: { });
+        const options = Object.assign({}, _options != null ? _options : {});
 
         // Support for batches is generally not supported for
         // connection-base providers; if this changes in the future
         // the _send should be updated to reflect this
-        assertArgument(options.batchMaxCount == null || options.batchMaxCount === 1,
-            "sockets-based providers do not support batches", "options.batchMaxCount", _options);
+        assertArgument(
+            options.batchMaxCount == null || options.batchMaxCount === 1,
+            'sockets-based providers do not support batches',
+            'options.batchMaxCount',
+            _options,
+        );
         options.batchMaxCount = 1;
 
         // Socket-based Providers (generally) cannot change their network,
         // since they have a long-lived connection; but let people override
         // this if they have just cause.
-        if (options.staticNetwork == null) { options.staticNetwork = true; }
+        if (options.staticNetwork == null) {
+            options.staticNetwork = true;
+        }
 
         super(network, options);
         this.#callbacks = new Map();
@@ -241,27 +249,27 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
 
     _getSubscriber(sub: Subscription): Subscriber {
         switch (sub.type) {
-            case "close":
-                return new UnmanagedSubscriber("close");
-            case "block":
+            case 'close':
+                return new UnmanagedSubscriber('close');
+            case 'block':
                 return new SocketBlockSubscriber(this);
-            case "pending":
+            case 'pending':
                 return new SocketPendingSubscriber(this);
-            case "event":
+            case 'event':
                 return new SocketEventSubscriber(this, sub.filter);
-            case "orphan":
+            case 'orphan':
                 // Handled auto-matically within AbstractProvider
                 // when the log.removed = true
-                if (sub.filter.orphan === "drop-log") {
-                    return new UnmanagedSubscriber("drop-log");
+                if (sub.filter.orphan === 'drop-log') {
+                    return new UnmanagedSubscriber('drop-log');
                 }
         }
         return super._getSubscriber(sub);
     }
 
     /**
-     *  Register a new subscriber. This is used internalled by Subscribers
-     *  and generally is unecessary unless extending capabilities.
+     * Register a new subscriber. This is used internalled by Subscribers and generally is unecessary unless extending
+     * capabilities.
      */
     _register(filterId: number | string, subscriber: SocketSubscriber): void {
         this.#subs.set(filterId, subscriber);
@@ -274,9 +282,12 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
         }
     }
 
-    async _send(payload: JsonRpcPayload | Array<JsonRpcPayload>, shard?: string): Promise<Array<JsonRpcResult | JsonRpcError>> {
+    async _send(
+        payload: JsonRpcPayload | Array<JsonRpcPayload>,
+        shard?: string,
+    ): Promise<Array<JsonRpcResult | JsonRpcError>> {
         // WebSocket provider doesn't accept batches
-        assertArgument(!Array.isArray(payload), "WebSocket does not support batch send", "payload", payload);
+        assertArgument(!Array.isArray(payload), 'WebSocket does not support batch send', 'payload', payload);
 
         // @TODO: stringify payloads here and store to prevent mutations
 
@@ -291,7 +302,7 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
         // Write the request to the socket
         await this._write(JSON.stringify(payload), shard);
 
-        return <Array<JsonRpcResult | JsonRpcError>>[ await promise ];
+        return <Array<JsonRpcResult | JsonRpcError>>[await promise];
     }
 
     // Sub-classes must call this once they are connected
@@ -310,26 +321,27 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     */
 
     /**
-     *  Sub-classes **must** call this with messages received over their
-     *  transport to be processed and dispatched.
+     * Sub-classes **must** call this with messages received over their transport to be processed and dispatched.
      */
     async _processMessage(message: string): Promise<void> {
-        const result = <JsonRpcResult | JsonRpcError | JsonRpcSubscription>(JSON.parse(message));
+        const result = <JsonRpcResult | JsonRpcError | JsonRpcSubscription>JSON.parse(message);
 
-        if (result && typeof(result) === "object" && "id" in result) {
+        if (result && typeof result === 'object' && 'id' in result) {
             const callback = this.#callbacks.get(result.id);
             if (callback == null) {
-                this.emit("error", makeError("received result for unknown id", "UNKNOWN_ERROR", {
-                    reasonCode: "UNKNOWN_ID",
-                    result
-                }));
+                this.emit(
+                    'error',
+                    makeError('received result for unknown id', 'UNKNOWN_ERROR', {
+                        reasonCode: 'UNKNOWN_ID',
+                        result,
+                    }),
+                );
                 return;
             }
             this.#callbacks.delete(result.id);
 
             callback.resolve(result);
-
-        } else if (result && result.method === "quai_subscription") {
+        } else if (result && result.method === 'quai_subscription') {
             const filterId = result.params.subscription;
             const subscriber = this.#subs.get(filterId);
             if (subscriber) {
@@ -337,26 +349,27 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
             } else {
                 let pending = this.#pending.get(filterId);
                 if (pending == null) {
-                    pending = [ ];
+                    pending = [];
                     this.#pending.set(filterId, pending);
                 }
                 pending.push(result.params.result);
             }
-
         } else {
-            this.emit("error", makeError("received unexpected message", "UNKNOWN_ERROR", {
-                reasonCode: "UNEXPECTED_MESSAGE",
-                result
-            }));
+            this.emit(
+                'error',
+                makeError('received unexpected message', 'UNKNOWN_ERROR', {
+                    reasonCode: 'UNEXPECTED_MESSAGE',
+                    result,
+                }),
+            );
             return;
         }
     }
 
     /**
-     *  Sub-classes **must** override this to send `message` over their
-     *  transport.
+     * Sub-classes **must** override this to send `message` over their transport.
      */
     async _write(message: string, shard?: string): Promise<void> {
-        throw new Error("sub-classes must override this");
+        throw new Error('sub-classes must override this');
     }
 }

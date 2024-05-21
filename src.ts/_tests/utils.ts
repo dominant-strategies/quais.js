@@ -1,30 +1,33 @@
-
-import fs from "fs"
-import path from "path";
-import zlib from "zlib";
+import fs from 'fs';
+import path from 'path';
+import zlib from 'zlib';
 
 // Find the package root (based on the nyc output/ folder)
-const root = (function() {
+const root = (function () {
     let root = process.cwd();
 
     while (true) {
-        if (fs.existsSync(path.join(root, "output"))) { return root; }
-        const parent = path.join(root, "..");
-        if (parent === root) { break; }
+        if (fs.existsSync(path.join(root, 'output'))) {
+            return root;
+        }
+        const parent = path.join(root, '..');
+        if (parent === root) {
+            break;
+        }
         root = parent;
     }
 
-    throw new Error("could not find root");
+    throw new Error('could not find root');
 })();
 
 // Load the tests
 export function loadTests<T>(tag: string): Array<T> {
-   const filename = path.resolve(root, "testcases", tag + ".json.gz");
-   return JSON.parse(zlib.gunzipSync(fs.readFileSync(filename)).toString());
+    const filename = path.resolve(root, 'testcases', tag + '.json.gz');
+    return JSON.parse(zlib.gunzipSync(fs.readFileSync(filename)).toString());
 }
 
 export function log(context: any, text: string): void {
-    if (context && context.test && typeof(context.test._quaisLog) === "function") {
+    if (context && context.test && typeof context.test._quaisLog === 'function') {
         context.test._quaisLog(text);
     } else {
         console.log(text);
@@ -32,7 +35,9 @@ export function log(context: any, text: string): void {
 }
 
 export async function stall(duration: number): Promise<void> {
-    return new Promise((resolve) => { setTimeout(resolve, duration); });
+    return new Promise((resolve) => {
+        setTimeout(resolve, duration);
+    });
 }
 
 export interface MochaRunnable {
@@ -44,7 +49,7 @@ const ATTEMPTS = 5;
 export async function retryIt(name: string, func: (this: MochaRunnable) => Promise<void>): Promise<void> {
     //const errors: Array<Error> = [ ];
 
-    it(name, async function() {
+    it(name, async function () {
         this.timeout(ATTEMPTS * 5000);
 
         for (let i = 0; i < ATTEMPTS; i++) {
@@ -52,14 +57,12 @@ export async function retryIt(name: string, func: (this: MochaRunnable) => Promi
                 await func.call(this);
                 return;
             } catch (error: any) {
-                if (error.message === "sync skip; aborting execution") {
+                if (error.message === 'sync skip; aborting execution') {
                     // Skipping a test; let mocha handle it
                     throw error;
-
-                } else if (error.code === "ERR_ASSERTION") {
+                } else if (error.code === 'ERR_ASSERTION') {
                     // Assertion error; let mocha scold us
                     throw error;
-
                 } else {
                     //errors.push(error);
 
@@ -75,7 +78,7 @@ export async function retryIt(name: string, func: (this: MochaRunnable) => Promi
         }
 
         // All hope is lost.
-        throw new Error(`Failed after ${ ATTEMPTS } attempts; ${ name }`);
+        throw new Error(`Failed after ${ATTEMPTS} attempts; ${name}`);
     });
 }
 

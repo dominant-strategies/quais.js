@@ -1,74 +1,72 @@
 /**
- *  @section api/wallet:JSON Wallets  [json-wallets]
+ * @section api/wallet:JSON Wallets  [json-wallets]
  */
 
-import { CBC, pkcs7Strip } from "aes-js";
+import { CBC, pkcs7Strip } from 'aes-js';
 
-import { getAddress } from "../address/index.js";
-import { pbkdf2 } from "../crypto/index.js";
-import { id } from "../hash/index.js";
-import { getBytes, assertArgument } from "../utils/index.js";
+import { getAddress } from '../address/index.js';
+import { pbkdf2 } from '../crypto/index.js';
+import { id } from '../hash/index.js';
+import { getBytes, assertArgument } from '../utils/index.js';
 
-import { getPassword, looseArrayify, spelunk } from "./utils.js";
-
+import { getPassword, looseArrayify, spelunk } from './utils.js';
 
 /**
- *  The data stored within a JSON Crowdsale wallet is fairly
- *  minimal.
- * 
- *  @category Wallet
+ * The data stored within a JSON Crowdsale wallet is fairly minimal.
+ *
+ * @category Wallet
  */
 export type CrowdsaleAccount = {
     privateKey: string;
     address: string;
-}
+};
 
 /**
- *  Returns true if `json` is a valid JSON Crowdsale wallet.
- * 
- *  @param {string} json - The JSON data to check.
- *  @returns {boolean} True if the JSON data is a valid Crowdsale wallet.
- *  
- *  @category Wallet
+ * Returns true if `json` is a valid JSON Crowdsale wallet.
+ *
+ * @category Wallet
+ * @param {string} json - The JSON data to check.
+ *
+ * @returns {boolean} True if the JSON data is a valid Crowdsale wallet.
  */
 export function isCrowdsaleJson(json: string): boolean {
     try {
         const data = JSON.parse(json);
-        if (data.encseed) { return true; }
-    } catch (error) { }
+        if (data.encseed) {
+            return true;
+        }
+    } catch (error) {}
     return false;
 }
 
 // See: https://github.com/ethereum/pyethsaletool
 
 /**
- *  Before Ethereum launched, it was necessary to create a wallet
- *  format for backers to use, which would be used to receive ether
- *  as a reward for contributing to the project.
+ * Before Ethereum launched, it was necessary to create a wallet format for backers to use, which would be used to
+ * receive ether as a reward for contributing to the project.
  *
- *  The [Crowdsale Wallet](https://github.com/ethereum/pyethsaletool) format is now obsolete, but it is still
- *  useful to support and the additional code is fairly trivial as
- *  all the primitives required are used through core portions of
- *  the library.
- * 
- *  @param {string} json - The JSON data to decrypt.
- *  @param {string | Uint8Array} _password - The password to decrypt the JSON data.
- *  @returns {CrowdsaleAccount} The decrypted account.
- *  
- *  @category Wallet
+ * The [Crowdsale Wallet](https://github.com/ethereum/pyethsaletool) format is now obsolete, but it is still useful to
+ * support and the additional code is fairly trivial as all the primitives required are used through core portions of
+ * the library.
+ *
+ * @category Wallet
+ * @param {string} json - The JSON data to decrypt.
+ * @param {string | Uint8Array} _password - The password to decrypt the JSON data.
+ *
+ * @returns {CrowdsaleAccount} The decrypted account.
  */
 export function decryptCrowdsaleJson(json: string, _password: string | Uint8Array): CrowdsaleAccount {
     const data = JSON.parse(json);
     const password = getPassword(_password);
 
     // Ethereum Address
-    const address = getAddress(spelunk(data, "ethaddr:string!"));
+    const address = getAddress(spelunk(data, 'ethaddr:string!'));
 
     // Encrypted Seed
-    const encseed = looseArrayify(spelunk(data, "encseed:string!"));
-    assertArgument(encseed && (encseed.length % 16) === 0, "invalid encseed", "json", json);
+    const encseed = looseArrayify(spelunk(data, 'encseed:string!'));
+    assertArgument(encseed && encseed.length % 16 === 0, 'invalid encseed', 'json', json);
 
-    const key = getBytes(pbkdf2(password, password, 2000, 32, "sha256")).slice(0, 16);
+    const key = getBytes(pbkdf2(password, password, 2000, 32, 'sha256')).slice(0, 16);
 
     const iv = encseed.slice(0, 16);
     const encryptedSeed = encseed.slice(16);
@@ -78,7 +76,7 @@ export function decryptCrowdsaleJson(json: string, _password: string | Uint8Arra
     const seed = pkcs7Strip(getBytes(aesCbc.decrypt(encryptedSeed)));
 
     // This wallet format is weird... Convert the binary encoded hex to a string.
-    let seedHex = "";
+    let seedHex = '';
     for (let i = 0; i < seed.length; i++) {
         seedHex += String.fromCharCode(seed[i]);
     }
