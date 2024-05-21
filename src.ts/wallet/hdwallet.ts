@@ -288,7 +288,7 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
         let newDepth = this.depth + 1;
         let path = this.path;
         if (path) {
-            let pathFields = path.split('/');
+            const pathFields = path.split('/');
             if (pathFields.length == 6) {
                 pathFields.pop();
                 path = pathFields.join('/');
@@ -305,7 +305,7 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
         const ki = new SigningKey(toBeHex((toBigInt(IL) + BigInt(this.privateKey)) % N, 32));
 
         //BIP44 if we are at the account depth get that fingerprint, otherwise continue with the current one
-        let newFingerprint = this.depth == 3 ? this.fingerprint : this.accountFingerprint;
+        const newFingerprint = this.depth == 3 ? this.fingerprint : this.accountFingerprint;
 
         const params = [_guard, ki, newFingerprint, hexlify(IR), path, index, newDepth, this.mnemonic, this.provider];
         return new (this.constructor as new (...args: any[]) => this)(...params);

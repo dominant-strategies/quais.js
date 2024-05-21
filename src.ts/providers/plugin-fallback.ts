@@ -12,12 +12,15 @@ export class CheckQualifiedPlugin implements AbstractProviderPlugin {
         defineProperties<CheckQualifiedPlugin>(this, { name: PluginIdFallbackProvider });
     }
 
+    // TODO: `provider` is not used, remove?
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     connect(provider: AbstractProvider): CheckQualifiedPlugin {
         return this;
     }
 
-    // Retruns true if this value should be considered qualified for
-    // inclusion in the quorum.
+    // Retruns true if this value should be considered qualified for inclusion in the quorum.
+    // TODO: `action` and `result` are not used, remove?
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isQualified(action: PerformActionRequest, result: any): boolean {
         return true;
     }

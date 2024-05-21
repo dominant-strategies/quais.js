@@ -122,6 +122,7 @@ export class Network {
         if (typeof other === 'string') {
             try {
                 return this.chainId === getBigInt(other);
+                // eslint-disable-next-line no-empty
             } catch (error) {}
             return this.name === other;
         }
@@ -129,6 +130,7 @@ export class Network {
         if (typeof other === 'number' || typeof other === 'bigint') {
             try {
                 return this.chainId === getBigInt(other);
+                // eslint-disable-next-line no-empty
             } catch (error) {}
             return false;
         }
@@ -137,6 +139,7 @@ export class Network {
             if (other.chainId != null) {
                 try {
                     return this.chainId === getBigInt(other.chainId);
+                    // eslint-disable-next-line no-empty
                 } catch (error) {}
                 return false;
             }

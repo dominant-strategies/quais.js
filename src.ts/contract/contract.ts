@@ -634,6 +634,7 @@ async function getSub(contract: BaseContract, operation: string, event: Contract
             if (foundFragment == null) {
                 try {
                     foundFragment = contract.interface.getEvent(log.topics[0]);
+                    // eslint-disable-next-line no-empty
                 } catch (error) {}
             }
 
@@ -665,7 +666,7 @@ async function getSub(contract: BaseContract, operation: string, event: Contract
                 return;
             }
 
-            let started = starting;
+            const started = starting;
             starting = [];
             await Promise.all(started);
             provider.off(filter, listener);
@@ -705,6 +706,7 @@ async function _emit(
         }
         try {
             listener.call(contract, ...passArgs);
+            // eslint-disable-next-line no-empty
         } catch (error) {}
         return !once;
     });
@@ -725,6 +727,7 @@ async function emit(
 ): Promise<boolean> {
     try {
         await lastEmit;
+        // eslint-disable-next-line no-empty
     } catch (error) {}
 
     const resultPromise = _emit(contract, event, args, payloadFunc);
@@ -814,7 +817,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
             deployTx = new ContractTransactionResponse(this.interface, <Provider>provider, _deployTx);
         }
 
-        let subs = new Map();
+        const subs = new Map();
 
         // Resolve the target as the address
         if (typeof target === 'string') {
@@ -1018,6 +1021,8 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     /**
      * @ignore
      */
+    // TODO: implement
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async queryTransaction(hash: string): Promise<Array<EventLog>> {
         throw new Error('@TODO');
     }
@@ -1076,6 +1081,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
             if (foundFragment == null) {
                 try {
                     foundFragment = this.interface.getEvent(log.topics[0]);
+                    // eslint-disable-next-line no-empty
                 } catch (error) {}
             }
 

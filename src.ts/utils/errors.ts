@@ -169,6 +169,8 @@ export type ErrorCode =
  *
  * @category Utils
  */
+// TODO:
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface quaisError<T extends ErrorCode = ErrorCode> extends Error {
     /**
      * The string error code.
@@ -677,7 +679,7 @@ export function makeError<K extends ErrorCode, T extends CodedquaisError<K>>(
     code: K,
     info?: ErrorInfo<T>,
 ): T {
-    let shortMessage = message;
+    const shortMessage = message;
 
     {
         const details: Array<string> = [];
@@ -810,6 +812,7 @@ const _normalizeForms = ['NFD', 'NFC', 'NFKD', 'NFKC'].reduce(
             }
 
             accum.push(form);
+            // eslint-disable-next-line no-empty
         } catch (error) {}
 
         return accum;

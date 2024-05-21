@@ -110,6 +110,7 @@ export function getDefaultProvider(
     let staticNetwork: null | Network = null;
     try {
         staticNetwork = Network.from(network);
+        // eslint-disable-next-line no-empty
     } catch (error) {}
 
     const providers: Array<AbstractProvider> = [];

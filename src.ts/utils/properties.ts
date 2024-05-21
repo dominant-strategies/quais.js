@@ -77,8 +77,8 @@ export function defineProperties<T>(
     values: { [K in keyof T]?: T[K] },
     types?: { [K in keyof T]?: string },
 ): void {
-    for (let key in values) {
-        let value = values[key];
+    for (const key in values) {
+        const value = values[key];
 
         const type = types ? types[key] : null;
         if (type) {

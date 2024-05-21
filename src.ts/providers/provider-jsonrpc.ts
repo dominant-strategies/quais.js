@@ -309,6 +309,8 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
         defineProperties<JsonRpcSigner>(this, { address });
     }
 
+    // TODO: `provider` is passed in, but not used, remove?
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     connect(provider: null | Provider): Signer {
         assert(false, 'cannot reconnect JsonRpcSigner', 'UNSUPPORTED_OPERATION', {
             operation: 'signer.connect',
@@ -602,7 +604,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                         }
                     }
 
-                    let rawResult: Array<Array<JsonRpcResult | JsonRpcError>> = [];
+                    const rawResult: Array<Array<JsonRpcResult | JsonRpcError>> = [];
                     await Promise.all(
                         Array.from(payloadMap).map(async ([key, value]) => {
                             const payload = value.length === 1 ? value[0] : value;
@@ -749,7 +751,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             await this.initPromise;
         }
         if (req.method === 'call' || req.method === 'estimateGas') {
-            let tx = req.transaction;
+            const tx = req.transaction;
             if (tx && tx.type != null && getBigInt(tx.type)) {
                 // If there are no EIP-1559 properties, it might be non-EIP-a559
                 if (tx.maxFeePerGas == null && tx.maxPriorityFeePerGas == null) {
@@ -1444,6 +1446,7 @@ function spelunkData(value: any): null | { message: string; data: string } {
     if (typeof value === 'string') {
         try {
             return spelunkData(JSON.parse(value));
+            // eslint-disable-next-line no-empty
         } catch (error) {}
     }
 
@@ -1471,6 +1474,7 @@ function _spelunkMessage(value: any, result: Array<string>): void {
     if (typeof value === 'string') {
         try {
             return _spelunkMessage(JSON.parse(value), result);
+            // eslint-disable-next-line no-empty
         } catch (error) {}
     }
 }

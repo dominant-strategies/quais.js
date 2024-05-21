@@ -74,6 +74,8 @@ export function getProvider(provider: string, network: string): null | AbstractP
     return null;
 }
 
+// TODO: `newtork` is not used, remove or re-write
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function checkProvider(provider: string, network: string): boolean {
     const creator = getCreator(provider);
     return creator != null;

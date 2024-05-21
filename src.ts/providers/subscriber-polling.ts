@@ -155,6 +155,8 @@ export class OnBlockSubscriber implements Subscriber {
     /**
      * Called on every new block.
      */
+    // TODO: implement this
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
         throw new Error('sub-classes must override this');
     }
@@ -178,6 +180,8 @@ export class OnBlockSubscriber implements Subscriber {
         this.#provider.off('block', this.#poll);
     }
 
+    // TODO: `dropWhilePaused` is not used; remove?
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     pause(dropWhilePaused?: boolean): void {
         this.stop();
     }
@@ -197,6 +201,8 @@ export class PollingOrphanSubscriber extends OnBlockSubscriber {
         this.#filter = copy(filter);
     }
 
+    // TODO: implement this
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
         throw new Error('@TODO');
         console.log(this.#filter);

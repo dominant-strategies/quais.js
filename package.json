@@ -126,7 +126,7 @@
         "_build-dist": "rollup -c && uglifyjs ./dist/quais.js -o ./dist/quais.min.js && uglifyjs ./dist/quais.umd.js -o ./dist/quais.umd.min.js && uglifyjs ./dist/wordlists-extra.js -o ./dist/wordlists-extra.min.js",
         "_dist-stats": "gzip -k9f -S '.gz' ./dist/quais.min.js && gzip -k9f -S '.gz' ./dist/quais.umd.min.js && gzip -k9f -S '.gz' ./dist/wordlists-extra.min.js && du -hs ./dist/*.gz && echo '' && du -hs ./dist/*.js",
         "auto-build": "npm run build -- -w",
-        "lint": "eslint src.ts/**/*.ts",
+        "lint": "eslint src.ts/**/*.ts --fix",
         "build": "tsc --project tsconfig.esm.json",
         "build-all": "npm run build && npm run build-commonjs",
         "build-clean": "npm run clean && npm run build && npm run build-all && npm run _build-dist && npm run _dist-stats",

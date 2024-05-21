@@ -36,7 +36,7 @@ function checkProvider(signer: AbstractSigner, operation: string): Provider {
 }
 
 async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise<TransactionLike> {
-    let pop: any = copyRequest(tx);
+    const pop: any = copyRequest(tx);
 
     if (pop.to != null) {
         pop.to = resolveAddress(pop.to);
@@ -84,7 +84,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
     }
 
     async shardFromAddress(_address: AddressLike): Promise<string> {
-        let address: string | Promise<string> = this._getAddress(_address);
+        const address: string | Promise<string> = this._getAddress(_address);
         return (await address).slice(0, 4);
     }
     /**
@@ -130,7 +130,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             if (pop.type == 0) pop.gasLimit = await this.estimateGas(pop);
             else {
                 //Special cases for type 2 tx to bypass address out of scope in the node
-                let temp = pop.to;
+                const temp = pop.to;
                 pop.to = '0x0000000000000000000000000000000000000000';
                 pop.gasLimit = getBigInt(2 * Number(await this.estimateGas(pop)));
                 pop.to = temp;
@@ -184,7 +184,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
         const provider = checkProvider(this, 'sendTransaction');
-        let sender = await this.getAddress();
+        const sender = await this.getAddress();
         const shard = await this.shardFromAddress(addressFromTransactionRequest(tx));
 
         let pop;
@@ -246,17 +246,28 @@ export class VoidSigner extends AbstractSigner {
         assert(false, `VoidSigner cannot sign ${suffix}`, 'UNSUPPORTED_OPERATION', { operation });
     }
 
+    // TODO: `domain`, `types` and `value` are not used, remove?
+    // TODO: this function only throws, remove?
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async signTransaction(tx: TransactionRequest): Promise<string> {
         this.#throwUnsupported('transactions', 'signTransaction');
     }
 
+    // TODO: `domain`, `types` and `value` are not used, remove?
+    // TODO: this function only throws, remove?
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async signMessage(message: string | Uint8Array): Promise<string> {
         this.#throwUnsupported('messages', 'signMessage');
     }
 
+    // TODO: `domain`, `types` and `value` are not used, remove?
+    // TODO: this function only throws, remove?
     async signTypedData(
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         domain: TypedDataDomain,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         types: Record<string, Array<TypedDataField>>,
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         value: Record<string, any>,
     ): Promise<string> {
         this.#throwUnsupported('typed-data', 'signTypedData');

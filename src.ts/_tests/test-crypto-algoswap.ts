@@ -119,6 +119,8 @@ describe('test registration', function () {
     it('prevents swapping after locked', function () {
         lock();
 
+        // TODO: `params` and `hijackTag` are not used, remove or re-write
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         tests.forEach(({ name, params, hijackTag, algorithm }) => {
             assert.throws(
                 function () {

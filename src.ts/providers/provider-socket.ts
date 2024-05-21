@@ -119,6 +119,7 @@ export class SocketSubscriber implements Subscriber {
     /**
      * Sub-classes **must** override this to emit the events on the provider.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async _emit(provider: SocketProvider, message: any): Promise<void> {
         throw new Error('sub-classes must implemente this; _emit');
     }
@@ -369,6 +370,7 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     /**
      * Sub-classes **must** override this to send `message` over their transport.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async _write(message: string, shard?: string): Promise<void> {
         throw new Error('sub-classes must override this');
     }

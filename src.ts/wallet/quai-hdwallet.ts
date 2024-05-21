@@ -265,7 +265,7 @@ export class QuaiHDWallet extends BaseWallet {
         let newDepth = this.depth + 1;
         let path = this.path;
         if (path) {
-            let pathFields = path.split('/');
+            const pathFields = path.split('/');
             if (pathFields.length == 6) {
                 pathFields.pop();
                 path = pathFields.join('/');
@@ -282,7 +282,7 @@ export class QuaiHDWallet extends BaseWallet {
         const ki = new SigningKey(toBeHex((toBigInt(IL) + BigInt(this.privateKey)) % N, 32));
 
         //BIP44 if we are at the account depth get that fingerprint, otherwise continue with the current one
-        let newFingerprint = this.depth == 3 ? this.fingerprint : this.accountFingerprint;
+        const newFingerprint = this.depth == 3 ? this.fingerprint : this.accountFingerprint;
 
         return new QuaiHDWallet(
             _guard,

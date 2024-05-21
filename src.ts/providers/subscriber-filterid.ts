@@ -53,6 +53,7 @@ export class FilterIdSubscriber implements Subscriber {
     /**
      * Sub-classes **must** override this to begin the subscription.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _subscribe(provider: JsonRpcApiProvider): Promise<string> {
         throw new Error('subclasses must override this');
     }
@@ -60,6 +61,7 @@ export class FilterIdSubscriber implements Subscriber {
     /**
      * Sub-classes **must** override this handle the events.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _emitResults(provider: AbstractProvider, result: Array<any>): Promise<void> {
         throw new Error('subclasses must override this');
     }
@@ -67,10 +69,13 @@ export class FilterIdSubscriber implements Subscriber {
     /**
      * Sub-classes **must** override this handle recovery on errors.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _recover(provider: AbstractProvider): Subscriber {
         throw new Error('subclasses must override this');
     }
 
+    // TODO: `blockNumber` is not used, should it be removed?
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async #poll(blockNumber: number): Promise<void> {
         try {
             // Subscribe if necessary

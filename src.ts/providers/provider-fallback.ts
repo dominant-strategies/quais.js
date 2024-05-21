@@ -798,7 +798,7 @@ export class FallbackProvider extends AbstractProvider {
         if (req.method === 'broadcastTransaction') {
             // Once any broadcast provides a positive result, use it. No
             // need to wait for anyone else
-            const results: Array<null | TallyResult> = this.#configs.map((c) => null);
+            const results: Array<null | TallyResult> = this.#configs.map(() => null);
             const broadcasts = this.#configs.map(async ({ provider, weight }, index) => {
                 try {
                     const result = await provider._perform(req);
@@ -809,6 +809,7 @@ export class FallbackProvider extends AbstractProvider {
             });
 
             // As each promise finishes...
+            // eslint-disable-next-line no-constant-condition
             while (true) {
                 // Check for a valid broadcast result
                 const done = <Array<any>>results.filter((r) => r != null);
@@ -855,6 +856,7 @@ export class FallbackProvider extends AbstractProvider {
         // Bootstrap enough runners to meet quorum
         const running: Set<RunnerState> = new Set();
         let inflightQuorum = 0;
+        // eslint-disable-next-line no-constant-condition
         while (true) {
             const runner = this.#addRunner(running, req);
             if (runner == null) {

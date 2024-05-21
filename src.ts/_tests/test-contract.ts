@@ -281,6 +281,8 @@ describe('Test Typed Contract Interaction', function () {
                 'int248',
                 'int256',
             ],
+            // TODO: `type` is not used, remove or re-write
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             valueFunc: (type: string) => {
                 return 42;
             },
@@ -333,18 +335,24 @@ describe('Test Typed Contract Interaction', function () {
         },
         {
             types: ['bool'],
+            // TODO: `type` is not used, remove or re-write
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             valueFunc: (type: string) => {
                 return true;
             },
         },
         {
             types: ['address'],
+            // TODO: `type` is not used, remove or re-write
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             valueFunc: (type: string) => {
                 return '0x643aA0A61eADCC9Cc202D1915D942d35D005400C';
             },
         },
         {
             types: ['string'],
+            // TODO: `type` is not used, remove or re-write
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             valueFunc: (type: string) => {
                 return 'someString';
             },

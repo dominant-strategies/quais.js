@@ -12,6 +12,7 @@ function splitBuffer(data: Buffer): { messages: Array<string>; remaining: Buffer
     const messages: Array<string> = [];
 
     let lastStart = 0;
+    // eslint-disable-next-line no-constant-condition
     while (true) {
         const nl = data.indexOf(10, lastStart);
         if (nl === -1) {

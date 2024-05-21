@@ -130,7 +130,7 @@ export class Typed {
     /**
      * @ignore
      */
-    readonly _typedSymbol!: Symbol;
+    readonly _typedSymbol!: symbol;
 
     /**
      * @ignore

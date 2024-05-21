@@ -67,6 +67,7 @@ export function ensNormalize(name: string): string {
 export function isValidName(name: string): name is string {
     try {
         return ensNameSplit(name).length !== 0;
+        // eslint-disable-next-line no-empty
     } catch (error) {}
     return false;
 }

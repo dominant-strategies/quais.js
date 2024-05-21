@@ -72,6 +72,7 @@ export class CDPSession {
         this.#id = 1;
         this.#resp = new Map();
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         this.#exit = (status: number) => {};
         this.#done = new Promise((resolve) => {
             this.#exit = resolve;
@@ -80,6 +81,7 @@ export class CDPSession {
         this.#target = '';
         this.#session = '';
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const readyOpen: Promise<void> = new Promise((resolve, reject) => {
             this.websocket.onopen = async () => {
                 resolve();
@@ -133,6 +135,7 @@ export class CDPSession {
                     }
                     console.log(text);
                     //console.log(msg.params.message.text, `${ msg.params.message.url }:${ msg.params.message.line }`);
+                    // eslint-disable-next-line no-empty
                 } else if (msg.method === 'Target.attachedToTarget') {
                 } else {
                     console.log(`WARN: Unhandled event - ${JSON.stringify(msg)}`);
@@ -199,7 +202,7 @@ const TestData = (function () {
         return [String(data.length), zlib.deflateRawSync(data).toString('base64')].join(',');
     }
 
-    let data: Array<string> = [];
+    const data: Array<string> = [];
     data.push(`import { quais } from "/index.js";`);
     data.push(`import { inflate } from "/static/tiny-inflate.js";`);
     data.push(`const fs = new Map();`);
@@ -322,6 +325,7 @@ export function start(_root: string, options: Options): Promise<Server> {
         }
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     return new Promise((resolve, reject) => {
         server.listen(options.port, () => {
             console.log(`Server running on: http://localhost:${options.port}`);
@@ -351,7 +355,8 @@ export function start(_root: string, options: Options): Promise<Server> {
     const args = ['--headless', '--disable-gpu', '--remote-debugging-port=8022'];
     const browser = child_process.spawn(cmd, args);
 
-    let url: string = await new Promise((resolve, reject) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const url: string = await new Promise((resolve, reject) => {
         browser.stdout.on('data', (data) => {
             console.log('OUT', data.toString());
         });

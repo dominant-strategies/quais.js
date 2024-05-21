@@ -79,21 +79,27 @@ export type Utf8ErrorFunc = (
     badCodepoint?: number,
 ) => number;
 
+// `output` and `badCodepoint` are passed to calls below, but not used in the function
 function errorFunc(
     reason: Utf8ErrorReason,
     offset: number,
     bytes: Uint8Array,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     output: Array<number>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     badCodepoint?: number,
 ): number {
     assertArgument(false, `invalid codepoint at offset ${offset}; ${reason}`, 'bytes', bytes);
 }
 
+// `output` and `badCodepoint` are passed to calls below, but not used in the function
 function ignoreFunc(
     reason: Utf8ErrorReason,
     offset: number,
     bytes: Uint8Array,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     output: Array<number>,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     badCodepoint?: number,
 ): number {
     // If there is an invalid prefix (including stray continuation), skip any additional continuation bytes
@@ -221,7 +227,7 @@ function getUtf8CodePoints(_bytes: BytesLike, onError?: Utf8ErrorFunc): Array<nu
         let res: null | number = c & ((1 << (8 - extraLength - 1)) - 1);
 
         for (let j = 0; j < extraLength; j++) {
-            let nextChar = bytes[i];
+            const nextChar = bytes[i];
 
             // Invalid continuation byte
             if ((nextChar & 0xc0) != 0x80) {
@@ -283,7 +289,7 @@ export function toUtf8Bytes(str: string, form?: UnicodeNormalizationForm): Uint8
         str = str.normalize(form);
     }
 
-    let result: Array<number> = [];
+    const result: Array<number> = [];
     for (let i = 0; i < str.length; i++) {
         const c = str.charCodeAt(i);
 
