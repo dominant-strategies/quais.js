@@ -1547,9 +1547,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
      */
     readonly accessList!: null | AccessList;
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    #startBlock: number;
+    protected startBlock: number;
 
     /**
      * @ignore
@@ -1580,7 +1578,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
         this.signature = tx.signature;
 
         this.accessList = tx.accessList != null ? tx.accessList : null;
-        this.#startBlock = -1;
+        this.startBlock = -1;
     }
 
     /**
@@ -1696,7 +1694,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
         const confirms = _confirms == null ? 1 : _confirms;
         const timeout = _timeout == null ? 0 : _timeout;
 
-        let startBlock = this.#startBlock;
+        let startBlock = this.startBlock;
         let nextScan = -1;
         let stopScanning = startBlock === -1 ? true : false;
         const shard = shardFromHash(this.hash);
@@ -1731,8 +1729,8 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
             // Starting to scan; look back a few extra blocks for safety
             if (nextScan === -1) {
                 nextScan = startBlock - 3;
-                if (nextScan < this.#startBlock) {
-                    nextScan = this.#startBlock;
+                if (nextScan < this.startBlock) {
+                    nextScan = this.startBlock;
                 }
             }
 
@@ -1967,7 +1965,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
     replaceableTransaction(startBlock: number): QuaiTransactionResponse {
         assertArgument(Number.isInteger(startBlock) && startBlock >= 0, 'invalid startBlock', 'startBlock', startBlock);
         const tx = new QuaiTransactionResponse(this, this.provider);
-        tx.#startBlock = startBlock;
+        tx.startBlock = startBlock;
         return tx;
     }
 }
@@ -2027,9 +2025,7 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
 
     readonly txOutputs?: Array<TxOutput>;
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    #startBlock: number;
+    protected startBlock: number;
     /**
      * @ignore
      */
@@ -2047,7 +2043,7 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
         this.chainId = tx.chainId;
         this.signature = tx.signature;
 
-        this.#startBlock = -1;
+        this.startBlock = -1;
 
         this.txInputs = tx.txInputs;
         this.txOutputs = tx.txOutputs;
@@ -2383,7 +2379,7 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
     replaceableTransaction(startBlock: number): QiTransactionResponse {
         assertArgument(Number.isInteger(startBlock) && startBlock >= 0, 'invalid startBlock', 'startBlock', startBlock);
         const tx = new QiTransactionResponse(this, this.provider);
-        tx.#startBlock = startBlock;
+        tx.startBlock = startBlock;
         return tx;
     }
 }
