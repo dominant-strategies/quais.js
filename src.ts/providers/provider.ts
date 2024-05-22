@@ -2027,6 +2027,8 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
 
     readonly txOutputs?: Array<TxOutput>;
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     #startBlock: number;
     /**
      * @ignore
