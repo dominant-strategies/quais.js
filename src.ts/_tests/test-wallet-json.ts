@@ -17,6 +17,9 @@ import {
     Wallet,
 } from '../index.js';
 
+import type { HDWalletStatic } from "../wallet/hdwallet.js";
+import { HDWallet } from "../wallet/hdwallet.js";
+
 describe('Tests JSON Wallet Formats', function () {
     const tests = loadTests<TestCaseWallet>('wallets');
     tests.forEach((test) => {
@@ -78,11 +81,11 @@ describe('Tests JSON Wallet Formats', function () {
 
     it('tests encrypting wallet with mnemonic', function () {
         this.timeout(20000);
-        const wallet = QuaiHDWallet.createRandom("m/44'/60'/0'/0/0");
+        const WalletClass = QuaiHDWallet as typeof QuaiHDWallet & HDWalletStatic<QuaiHDWallet>;
+        const wallet = WalletClass.createRandom("m/44'/60'/0'/0/0");
         assert.ok(wallet.mnemonic, 'mnemonic');
         const phrase = wallet.mnemonic.phrase;
         const json = wallet.encryptSync('foobar');
-
         const wallet2 = Wallet.fromEncryptedJsonSync(json, 'foobar');
 
         assert.ok(wallet2 instanceof QuaiHDWallet && wallet2.mnemonic);
@@ -165,8 +168,8 @@ describe('Tests Extra JSON Wallet Functions', function () {
             error: 'invalid scrypt p parameter',
         },
     ];
-
-    const wallet = Wallet.createRandom("m/44'/994'/0'/0");
+    const WalletClass = HDWallet as typeof HDWallet & HDWalletStatic<HDWallet>;
+    const wallet = WalletClass.createRandom("m/44'/994'/0'/0");
     const account = { address: wallet.address, privateKey: wallet.privateKey };
     const password = 'foobar';
 
