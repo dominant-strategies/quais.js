@@ -1547,6 +1547,8 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
      */
     readonly accessList!: null | AccessList;
 
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     #startBlock: number;
 
     /**

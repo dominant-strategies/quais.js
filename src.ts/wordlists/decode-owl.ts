@@ -32,7 +32,8 @@ export function decode(data: string, subs: string): Array<string> {
 
     // Get all tle clumps; each suffix, first-increment and second-increment
     const clumps: Array<string> = [];
-    const leftover = data.replace(/(:|([0-9])|([A-Z][a-z]*))/g, (item, semi) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const leftover = data.replace(/(:|([0-9])|([A-Z][a-z]*))/g, (all, item, semi, word) => {
         if (semi) {
             for (let i = parseInt(semi); i >= 0; i--) {
                 clumps.push(';');
