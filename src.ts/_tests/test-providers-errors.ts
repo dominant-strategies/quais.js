@@ -5,8 +5,11 @@ import { concat, dataSlice, id, toBeArray, zeroPadValue, isCallException, isErro
 import { getProvider, setupProviders, providerNames } from './create-provider.js';
 import { stall } from './utils.js';
 
-import dotenv from 'dotenv';
-import { QuaiTransactionResponse } from '../providers/provider.js';
+import { HDWallet } from "../wallet/hdwallet.js";
+import type { HDWalletStatic } from "../wallet/hdwallet.js";
+
+import dotenv from "dotenv";
+import { QuaiTransactionResponse } from "../providers/provider.js";
 dotenv.config();
 
 type TestCustomError = {
@@ -242,7 +245,8 @@ describe("Test Provider Blockchain Errors", function() {
         it(`tests insufficient funds: ${providerName}`, async function () {
             this.timeout(60000);
 
-            const w = Wallet.createRandom("m/44'/60'/0'/0/0").connect(provider);
+            const WalletClass = HDWallet as typeof HDWallet & HDWalletStatic<HDWallet>;
+            const w = WalletClass.createRandom("m/44'/60'/0'/0/0").connect(provider);
 
             await assert.rejects(
                 async function () {

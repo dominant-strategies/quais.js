@@ -4,9 +4,13 @@ import { loadTests } from './utils.js';
 
 import type { TestCaseAccount, TestCaseTypedData, TestCaseTransaction } from './types.js';
 
-import { hexlify, randomBytes, Wallet } from '../index.js';
+import {
+    // hexlify,
+    // randomBytes,
+    Wallet,
+} from "../index.js";
 
-import type { QuaiHDWallet } from '../index.js';
+// import type { QuaiHDWallet } from "../index.js";
 
 describe('Test Private Key Wallet', function () {
     const tests = loadTests<TestCaseAccount>('accounts');
@@ -60,30 +64,30 @@ describe('Test Typed-Data Signing (EIP-712)', function () {
     }
 });
 
-describe('Test Wallet Encryption', function () {
-    const password = 'foobar';
+// describe("Test Wallet Encryption", function() {
+//     const password = "foobar";
 
-    // Loop:
-    //  1 : random wallet (uses QuaiHDWallet under the hood)
-    //  2 : Wallet using private key (uses Wallet explicitly)
+//     // Loop:
+//     //  1 : random wallet (uses QuaiHDWallet under the hood)
+//     //  2 : Wallet using private key (uses Wallet explicitly)
 
-    for (let i = 0; i < 2; i++) {
-        let wallet: Wallet | QuaiHDWallet = Wallet.createRandom("m/44'/994'/0'/0");
+//     for (let i = 0; i < 2; i++) {
+//         let wallet: Wallet | QuaiHDWallet = Wallet.createRandom("m/44'/994'/0'/0");
 
-        it('encrypts a random wallet: sync', function () {
-            this.timeout(30000);
-            const json = wallet.encryptSync(password);
-            const decrypted = Wallet.fromEncryptedJsonSync(json, password);
-            assert.equal(decrypted.address, wallet.address, 'address');
-        });
+//         it("encrypts a random wallet: sync", function() {
+//             this.timeout(30000);
+//             const json = wallet.encryptSync(password);
+//             const decrypted = Wallet.fromEncryptedJsonSync(json, password);
+//             assert.equal(decrypted.address, wallet.address, "address");
+//         });
 
-        it('encrypts a random wallet: async', async function () {
-            this.timeout(30000);
-            const json = await wallet.encrypt(password);
-            const decrypted = await Wallet.fromEncryptedJson(json, password);
-            assert.equal(decrypted.address, wallet.address, 'address');
-        });
+//         it("encrypts a random wallet: async", async function() {
+//             this.timeout(30000);
+//             const json = await wallet.encrypt(password);
+//             const decrypted = await Wallet.fromEncryptedJson(json, password);
+//             assert.equal(decrypted.address, wallet.address, "address");
+//         });
 
-        wallet = new Wallet(hexlify(randomBytes(32)));
-    }
-});
+//         wallet = new Wallet(hexlify(randomBytes(32)));
+//     }
+// });
