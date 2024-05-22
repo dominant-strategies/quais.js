@@ -1,0 +1,2 @@
+# add test run on pre-push here when tests are working `npm run test`
+npm run build
