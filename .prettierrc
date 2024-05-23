@@ -3,7 +3,9 @@
     "useTabs": false,
     "tabWidth": 4,
     "singleQuote": true,
-    "plugins": ["prettier-plugin-jsdoc"],
+    "plugins": [
+        "prettier-plugin-jsdoc"
+    ],
 
     "jsdocCommentLineStrategy": "multiline",
     "jsdocSeparateReturnsFromParam": true,
