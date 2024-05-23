@@ -5,18 +5,13 @@ import { loadTests } from './utils.js';
 import type { TestCaseAccount, TestCaseCreate, TestCaseCreate2 } from './types.js';
 
 import { getAddress, getCreateAddress, getCreate2Address } from '../index.js';
-import {
-    getAddress,
-    getCreateAddress,
-    getCreate2Address
-} from "../index.js";
 
 describe('computes checksum address', function () {
     const tests = loadTests<TestCaseAccount>('accounts');
     for (const test of tests) {
         it(`computes the checksum address: ${test.name}`, function () {
             assert.equal(getAddress(test.address), test.address);
-//            assert.equal(getAddress(test.icap), test.address);
+            //            assert.equal(getAddress(test.icap), test.address);
             assert.equal(getAddress(test.address.substring(2)), test.address);
             assert.equal(getAddress(test.address.toLowerCase()), test.address);
             assert.equal(getAddress('0x' + test.address.substring(2).toUpperCase()), test.address);
