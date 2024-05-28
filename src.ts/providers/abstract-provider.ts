@@ -124,43 +124,6 @@ function getTag(prefix: string, value: any): string {
 }
 
 /**
- * The types of additional event values that can be emitted for the `"debug"` event.
- *
- * @category Providers
- */
-export type DebugEventAbstractProvider =
-    | {
-          action: 'sendCcipReadFetchRequest';
-          request: FetchRequest;
-          index: number;
-          urls: Array<string>;
-      }
-    | {
-          action: 'receiveCcipReadFetchResult';
-          request: FetchRequest;
-          result: any;
-      }
-    | {
-          action: 'receiveCcipReadFetchError';
-          request: FetchRequest;
-          result: any;
-      }
-    | {
-          action: 'sendCcipReadCall';
-          transaction: { to: string; data: string };
-      }
-    | {
-          action: 'receiveCcipReadCallResult';
-          transaction: { to: string; data: string };
-          result: string;
-      }
-    | {
-          action: 'receiveCcipReadCallError';
-          transaction: { to: string; data: string };
-          error: Error;
-      };
-
-/**
  * The value passed to the {@link AbstractProvider._getSubscriber | **AbstractProvider._getSubscriber} method.
  *
  * Only developers sub-classing {@link AbstractProvider | **AbstractProvider**} will care about this, if they are
@@ -640,8 +603,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     #nextTimer: number;
     #timers: Map<number, { timer: null | Timer; func: () => void; time: number }>;
 
-    #disableCcipRead: boolean;
-
     #options: Required<AbstractProviderOptions>;
 
     /**
@@ -682,7 +643,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         this.#nextTimer = 1;
         this.#timers = new Map();
 
-        this.#disableCcipRead = false;
         this.#connect = [];
         this._urlMap = new Map();
     }
@@ -827,17 +787,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      */
     getPlugin<T extends AbstractProviderPlugin = AbstractProviderPlugin>(name: string): null | T {
         return <T>this.#plugins.get(name) || null;
-    }
-
-    /**
-     * Prevent any CCIP-read operation, regardless of whether requested in a {@link AbstractProvider.call | **call**}
-     * using `enableCcipRead`.
-     */
-    get disableCcipRead(): boolean {
-        return this.#disableCcipRead;
-    }
-    set disableCcipRead(value: boolean) {
-        this.#disableCcipRead = !!value;
     }
 
     // Shares multiple identical requests made during the same 250ms
