@@ -5,7 +5,6 @@ import './test-crypto.js';
 import './test-hash.js';
 import './test-hash-typeddata.js';
 import './test-providers-avatar.js';
-import './test-providers-ccip.js';
 import './test-providers-wildcard.js';
 import './test-rlp.js';
 import './test-transaction.js';

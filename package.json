@@ -137,7 +137,7 @@
         "postpublish": "node lib.esm/_admin/create-release.js",
         "stats": "echo 'Dependencies' && npm ls --all --omit=dev",
         "test": "npm run test-esm",
-        "test-browser": "node lib.esm/_admin/test-browser",
+        "test-browser": "node lib.esm/_tests/test-browser",
         "test-commonjs": "mocha --reporter ./reporter.cjs ./lib.commonjs/_tests/test-*.js",
         "test-coverage": "c8 -o output -r lcov -r text mocha --no-color --reporter ./reporter.cjs ./lib.esm/_tests/test-*.js | tee output/summary.txt",
         "test-esm": "mocha --trace-warnings --reporter ./reporter.cjs -r dotenv/config ./lib.esm/_tests/test-*.js",
