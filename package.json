@@ -2,9 +2,8 @@
     "author": "Dominant Strategies",
     "browser": {
         "./lib.esm/crypto/crypto.js": "./lib.esm/crypto/crypto-browser.js",
-        "./lib.esm/providers/provider-ipcsocket.js": "./lib.esm/providers/provider-ipcsocket-browser.js",
         "./lib.esm/providers/ws.js": "./lib.esm/providers/ws-browser.js",
-        "./lib.esm/utils/base64.js": "./lib.esm/utils/base64-browser.js",
+        "./lib.esm/encoding/base64.js": "./lib.esm/encoding/base64-browser.js",
         "./lib.esm/utils/geturl.js": "./lib.esm/utils/geturl-browser.js",
         "./lib.esm/wordlists/wordlists.js": "./lib.esm/wordlists/wordlists-browser.js"
     },

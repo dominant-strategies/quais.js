@@ -1,5 +1,5 @@
 import { keccak256 } from '../crypto/index.js';
-import { toUtf8Bytes } from '../utils/index.js';
+import { toUtf8Bytes } from '../encoding/index.js';
 
 /**
  * A simple hashing function which operates on UTF-8 strings to compute an 32-byte identifier.

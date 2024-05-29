@@ -1,7 +1,7 @@
 import { ProtoTransaction } from "../transaction/abstract-transaction.js";
 import { ProtoWorkObject } from "../transaction/work-object.js";
-import { hexlify } from "./index.js";
-import * as Proto from "./ProtoBuf/proto_block.js"
+import { hexlify } from "../utils/index.js";
+import * as Proto from "./protoc/proto_block.js"
 
 /**
  * @category Utils

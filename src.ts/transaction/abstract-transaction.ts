@@ -3,7 +3,7 @@ import { getBigInt, assert, assertArgument } from '../utils/index.js';
 
 import type { BigNumberish } from '../utils/index.js';
 import type { SignatureLike } from '../crypto/index.js';
-import { encodeProtoTransaction } from '../utils/proto-encode.js';
+import { encodeProtoTransaction } from '../encoding/proto-encode.js';
 import type { TxInput, TxOutput } from './utxo.js';
 
 /**

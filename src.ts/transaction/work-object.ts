@@ -1,9 +1,8 @@
-import { formatNumber } from '../providers/format';
-import { assert, getBytes, getNumber, hexlify } from '../quais';
-import { decodeProtoWorkObject } from '../utils';
-import { encodeProtoWorkObject } from '../utils/proto-encode';
-import { ProtoTransaction } from './abstract-transaction';
-import { QuaiTransaction, QuaiTransactionLike } from './quai-transaction';
+import { formatNumber } from '../providers/format.js';
+import { assert, getBytes, getNumber, hexlify } from '../utils/index.js';
+import { decodeProtoWorkObject, encodeProtoWorkObject } from '../encoding/index.js';
+import { ProtoTransaction } from './abstract-transaction.js';
+import { QuaiTransaction, QuaiTransactionLike } from './quai-transaction.js';
 
 /**
  * Interface representing a WorkObject, which includes header, body, and transaction information.

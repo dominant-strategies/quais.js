@@ -1,18 +1,17 @@
 /**
  * @ignore
  */
-
-import { assert, computeHmac, sha256 } from '../quais.js';
 import {
     getBytesCopy,
     assertArgument,
-    toUtf8Bytes,
     BytesLike,
     concat,
     dataSlice,
-    encodeBase58,
     getBytes,
+    assert,
 } from '../utils/index.js';
+import { computeHmac, sha256 } from '../crypto/index.js';
+import { encodeBase58, toUtf8Bytes } from '../encoding/index.js';
 
 export function looseArrayify(hexString: string): Uint8Array {
     if (typeof hexString === 'string' && !hexString.startsWith('0x')) {

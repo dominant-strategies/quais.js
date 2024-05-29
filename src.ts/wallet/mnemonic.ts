@@ -6,8 +6,8 @@ import {
     assertNormalize,
     assertPrivate,
     assertArgument,
-    toUtf8Bytes,
 } from '../utils/index.js';
+import { toUtf8Bytes } from '../encoding/index.js';
 import { LangEn } from '../wordlists/lang-en.js';
 
 import type { BytesLike } from '../utils/index.js';

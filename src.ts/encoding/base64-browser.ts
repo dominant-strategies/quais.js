@@ -1,8 +1,6 @@
-// utils/base64-browser
+import { getBytes } from '../utils/data.js';
 
-import { getBytes } from './data.js';
-
-import type { BytesLike } from './data.js';
+import type { BytesLike } from '../utils/data.js';
 
 export function decodeBase64(textData: string): Uint8Array {
     textData = atob(textData);
