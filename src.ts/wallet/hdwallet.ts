@@ -4,7 +4,8 @@
  * @section api/wallet:HD Wallets  [hd-wallets]
  */
 import { computeHmac, randomBytes, SigningKey, sha256, ripemd160 } from '../crypto/index.js';
-import { VoidSigner, Provider } from '../providers/index.js';
+import { Provider } from '../providers/index.js';
+import { VoidSigner } from '../signers/index.js';
 import { computeAddress } from '../transaction/index.js';
 import {
     concat,
