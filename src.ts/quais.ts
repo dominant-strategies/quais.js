@@ -50,7 +50,6 @@ export {
 // HASH
 export {
     id,
-    ensNormalize, isValidName, namehash, dnsEncode,
     hashMessage, verifyMessage,
     solidityPacked, solidityPackedKeccak256, solidityPackedSha256,
     TypedDataEncoder,
@@ -76,7 +75,6 @@ export {
 
     Network,
 
-    EnsPlugin,
     FeeDataNetworkPlugin, FetchUrlFeeDataNetworkPlugin,
     GasCostPlugin, NetworkPlugin,
 

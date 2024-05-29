@@ -5,7 +5,6 @@
  */
 
 export { id } from './id.js';
-export { ensNormalize, isValidName, namehash, dnsEncode } from './namehash.js';
 export { hashMessage, verifyMessage } from './message.js';
 export { solidityPacked, solidityPackedKeccak256, solidityPackedSha256 } from './solidity.js';
 export { TypedDataEncoder, verifyTypedData } from './typed-data.js';

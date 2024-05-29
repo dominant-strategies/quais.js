@@ -19,7 +19,6 @@ in [TypeScript](https://www.typescriptlang.org).
 - Import and export BIP 39 **mnemonic phrases** (12 word backup phrases) and **HD Wallets** (English as well as Czech, French, Italian, Japanese, Korean, Simplified Chinese, Spanish, Traditional Chinese)
 - Meta-classes create JavaScript objects from any contract ABI, including **ABIv2** and **Human-Readable ABI**
 - Connect to Ethereum nodes over [JSON-RPC](https://github.com/ethereum/wiki/wiki/JSON-RPC), [INFURA](https://infura.io), [quaiscan](https://quaiscan.io), [Alchemy](https://alchemyapi.io), [Ankr](https://ankr.com) or [MetaMask](https://metamask.io)
-- **ENS names** are first-class citizens; they can be used anywhere an Ethereum addresses can be used
 - **Small** (~144kb compressed; 460kb uncompressed)
 - **Tree-shaking** focused; include only what you need during bundling
 - **Complete** functionality for all your Ethereum desires
@@ -171,7 +170,6 @@ functionality to interact with Ethereum. There are many other
 packages designed to further enhance the functionality and experience.
 
 - [MulticallProvider](https://github.com/quais-io/ext-provider-multicall) - A Provider which bundles multiple call requests into a single `call` to reduce latency and backend request capacity
-- [MulticoinPlugin](https://github.com/quais-io/ext-provider-plugin-multicoin) - A Provider plugin to expand the support of ENS coin types
 - [GanaceProvider](https://github.com/quais-io/ext-provider-ganache) - A Provider for in-memory node instances, for fast debugging, testing and simulating blockchain operations
 - [Optimism Utilities](https://github.com/quais-io/ext-utils-optimism) - A collection of Optimism utilities
 - [LedgerSigner](https://github.com/quais-io/ext-signer-ledger) - A Signer to interact directly with Ledger Hardware Wallets

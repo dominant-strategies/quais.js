@@ -23,7 +23,6 @@ export { NonceManager } from './signer-noncemanager.js';
 export {
     NetworkPlugin,
     GasCostPlugin,
-    EnsPlugin,
     FeeDataNetworkPlugin,
     FetchUrlFeeDataNetworkPlugin,
 } from './plugins-network.js';
@@ -69,15 +68,6 @@ export type { ContractRunner } from './contracts.js';
 
 export type { BlockParams, LogParams, TransactionReceiptParams, TransactionResponseParams } from './formatting.js';
 
-/*
-export type {
-    CommunityResourcable
-} from "./community.js";
-
-export type {
-    AvatarLinkageType, AvatarLinkage, AvatarResult
-} from "./ens-resolver.js";
-*/
 export type { Networkish } from './network.js';
 
 export type { GasCostParameters } from './plugins-network.js';

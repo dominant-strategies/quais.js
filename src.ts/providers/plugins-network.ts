@@ -5,8 +5,6 @@ import { assertArgument } from '../utils/index.js';
 import type { FeeData, Provider } from './provider.js';
 import type { FetchRequest } from '../utils/fetch.js';
 
-const EnsAddress = '0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e';
-
 /**
  * A **NetworkPlugin** provides additional functionality on a [Network](../classes/Network).
  *
@@ -153,43 +151,6 @@ export class GasCostPlugin extends NetworkPlugin implements GasCostParameters {
 
     clone(): GasCostPlugin {
         return new GasCostPlugin(this.effectiveBlock, this);
-    }
-}
-
-/**
- * An **EnsPlugin** allows a [Network](../classes/Network) to specify the ENS Registry Contract address and the target
- * network to use when using that contract.
- *
- * Various testnets have their own instance of the contract to use, but in general, the mainnet instance supports
- * multi-chain addresses and should be used.
- *
- * @category Providers
- */
-export class EnsPlugin extends NetworkPlugin {
-    /**
-     * The ENS Registrty Contract address.
-     */
-    readonly address!: string;
-
-    /**
-     * The chain ID that the ENS contract lives on.
-     */
-    readonly targetNetwork!: number;
-
-    /**
-     * Creates a new **EnsPlugin** connected to `address` on the `targetNetwork`. The default ENS address and mainnet is
-     * used if unspecified.
-     */
-    constructor(address?: null | string, targetNetwork?: null | number) {
-        super('org.quais.plugins.network.Ens');
-        defineProperties<EnsPlugin>(this, {
-            address: address || EnsAddress,
-            targetNetwork: targetNetwork == null ? 1 : targetNetwork,
-        });
-    }
-
-    clone(): EnsPlugin {
-        return new EnsPlugin(this.address, this.targetNetwork);
     }
 }
 
