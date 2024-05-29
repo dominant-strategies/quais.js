@@ -15,6 +15,7 @@ export {
 // ADDRESS
 export {
     getAddress,
+    computeAddress, recoverAddress,
     getCreateAddress, getCreate2Address,
     isAddressable, isAddress, resolveAddress
 } from "./address/index.js";
@@ -83,7 +84,6 @@ export {
 // TRANSACTION
 export {
     accessListify,
-    computeAddress, recoverAddress,
     AbstractTransaction, FewestCoinSelector,
     QiTransaction
 } from "./transaction/index.js";

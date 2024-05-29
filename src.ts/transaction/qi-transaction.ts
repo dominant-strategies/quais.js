@@ -1,5 +1,5 @@
 import {keccak256} from "../crypto/index.js";
-import {AbstractTransaction, computeAddress, TransactionLike, TxInput, TxOutput} from "./index.js";
+import {AbstractTransaction, TransactionLike, TxInput, TxOutput} from "./index.js";
 import {
     assertArgument,
     getBytes, getShardForAddress,
@@ -8,6 +8,7 @@ import {
 } from "../utils/index.js";
 import { decodeProtoTransaction } from '../encoding/index.js';
 import {formatNumber} from "../providers/format.js";
+import { computeAddress } from "../address/index.js";
 import { ProtoTransaction} from "./abstract-transaction";
 
 /**

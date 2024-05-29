@@ -28,7 +28,6 @@ export type AccessList = Array<AccessListEntry>;
 export type AccessListish = AccessList | Array<[string, Array<string>]> | Record<string, Array<string>>;
 
 export { accessListify } from './accesslist.js';
-export { computeAddress, recoverAddress } from './address.js';
 export { AbstractTransaction } from './abstract-transaction.js';
 
 export { FewestCoinSelector } from './coinselector-fewest.js';
