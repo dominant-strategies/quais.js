@@ -1,6 +1,6 @@
 {
   "exclude": [
-    "src.ts/_admin/**"
+    "src/_admin/**"
   ],
   "extends": "./tsconfig.base.json",
   "compilerOptions": {

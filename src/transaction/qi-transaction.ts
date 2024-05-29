@@ -9,7 +9,7 @@ import {
 import { decodeProtoTransaction } from '../encoding/index.js';
 import {formatNumber} from "../providers/format.js";
 import { computeAddress } from "../address/index.js";
-import { ProtoTransaction} from "./abstract-transaction";
+import { ProtoTransaction} from "./abstract-transaction.js";
 
 /**
  * @category Transaction
