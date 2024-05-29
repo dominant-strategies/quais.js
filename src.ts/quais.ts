@@ -78,7 +78,7 @@ export {
     SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber,
     SocketSubscriber, UnmanagedSubscriber,
 
-    copyRequest, showThrottleMessage
+    copyRequest
 } from "./providers/index.js";
 
 // TRANSACTION
