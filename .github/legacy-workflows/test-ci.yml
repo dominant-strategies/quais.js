@@ -6,8 +6,8 @@ on:
       - main
     paths:
       - 'src.ts/**'
-      - 'lib.esm/**'
-      - 'lib.commonjs/**'
+      - 'lib/esm/**'
+      - 'lib/commonjs/**'
 
 jobs:
   test-node:

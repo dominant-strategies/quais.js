@@ -10,7 +10,7 @@ function getConfig(opts) {
   if (opts.browser) { mainFields.unshift("browser"); }
 
   return {
-    input: "./lib.esm/index.js",
+    input: "./lib/esm/index.js",
     output: {
       file,
       banner: "const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 'undefined' ? window: typeof global !== 'undefined' ? global: typeof self !== 'undefined' ? self: {});",
@@ -33,7 +33,7 @@ export default [
   getConfig({ browser: true }),
   getConfig({ browser: true, suffix: ".umd", format: "umd", name: "quais" }),
   {
-    input: "./lib.esm/wordlists/wordlists-extra.js",
+    input: "./lib/esm/wordlists/wordlists-extra.js",
     output: {
       file: "./dist/wordlists-extra.js",
       format: "esm",

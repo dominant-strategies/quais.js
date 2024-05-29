@@ -1,11 +1,11 @@
 {
     "author": "Dominant Strategies",
     "browser": {
-        "./lib.esm/crypto/crypto.js": "./lib.esm/crypto/crypto-browser.js",
-        "./lib.esm/providers/ws.js": "./lib.esm/providers/ws-browser.js",
-        "./lib.esm/encoding/base64.js": "./lib.esm/encoding/base64-browser.js",
-        "./lib.esm/utils/geturl.js": "./lib.esm/utils/geturl-browser.js",
-        "./lib.esm/wordlists/wordlists.js": "./lib.esm/wordlists/wordlists-browser.js"
+        "./lib/esm/crypto/crypto.js": "./lib/esm/crypto/crypto-browser.js",
+        "./lib/esm/providers/ws.js": "./lib/esm/providers/ws-browser.js",
+        "./lib/esm/encoding/base64.js": "./lib/esm/encoding/base64-browser.js",
+        "./lib/esm/utils/geturl.js": "./lib/esm/utils/geturl-browser.js",
+        "./lib/esm/wordlists/wordlists.js": "./lib/esm/wordlists/wordlists-browser.js"
     },
     "dependencies": {
         "@brandonblack/musig": "^0.0.1-alpha.1",
@@ -53,52 +53,52 @@
     },
     "exports": {
         ".": {
-            "import": "./lib.esm/index.js",
-            "default": "./lib.commonjs/index.js"
+            "import": "./lib/esm/index.js",
+            "default": "./lib/commonjs/index.js"
         },
         "./abi": {
-            "import": "./lib.esm/abi/index.js",
-            "default": "./lib.commonjs/abi/index.js"
+            "import": "./lib/esm/abi/index.js",
+            "default": "./lib/commonjs/abi/index.js"
         },
         "./address": {
-            "import": "./lib.esm/address/index.js",
-            "default": "./lib.commonjs/address/index.js"
+            "import": "./lib/esm/address/index.js",
+            "default": "./lib/commonjs/address/index.js"
         },
         "./constants": {
-            "import": "./lib.esm/constants/index.js",
-            "default": "./lib.commonjs/constants/index.js"
+            "import": "./lib/esm/constants/index.js",
+            "default": "./lib/commonjs/constants/index.js"
         },
         "./contract": {
-            "import": "./lib.esm/contract/index.js",
-            "default": "./lib.commonjs/contract/index.js"
+            "import": "./lib/esm/contract/index.js",
+            "default": "./lib/commonjs/contract/index.js"
         },
         "./crypto": {
-            "import": "./lib.esm/crypto/index.js",
-            "default": "./lib.commonjs/crypto/index.js"
+            "import": "./lib/esm/crypto/index.js",
+            "default": "./lib/commonjs/crypto/index.js"
         },
         "./hash": {
-            "import": "./lib.esm/hash/index.js",
-            "default": "./lib.commonjs/hash/index.js"
+            "import": "./lib/esm/hash/index.js",
+            "default": "./lib/commonjs/hash/index.js"
         },
         "./providers": {
-            "import": "./lib.esm/providers/index.js",
-            "default": "./lib.commonjs/providers/index.js"
+            "import": "./lib/esm/providers/index.js",
+            "default": "./lib/commonjs/providers/index.js"
         },
         "./transaction": {
-            "import": "./lib.esm/transaction/index.js",
-            "default": "./lib.commonjs/transaction/index.js"
+            "import": "./lib/esm/transaction/index.js",
+            "default": "./lib/commonjs/transaction/index.js"
         },
         "./utils": {
-            "import": "./lib.esm/utils/index.js",
-            "default": "./lib.commonjs/utils/index.js"
+            "import": "./lib/esm/utils/index.js",
+            "default": "./lib/commonjs/utils/index.js"
         },
         "./wallet": {
-            "import": "./lib.esm/wallet/index.js",
-            "default": "./lib.commonjs/wallet/index.js"
+            "import": "./lib/esm/wallet/index.js",
+            "default": "./lib/commonjs/wallet/index.js"
         },
         "./wordlists": {
-            "import": "./lib.esm/wordlists/index.js",
-            "default": "./lib.commonjs/wordlists/index.js"
+            "import": "./lib/esm/wordlists/index.js",
+            "default": "./lib/commonjs/wordlists/index.js"
         }
     },
     "gitHead": "3bd0bf5b077f4aa5fab480474e3982e50e1af506",
@@ -109,8 +109,8 @@
         "quaisjs"
     ],
     "license": "MIT",
-    "main": "./lib.commonjs/index.js",
-    "module": "./lib.esm/index.js",
+    "main": "./lib/commonjs/index.js",
+    "module": "./lib/esm/index.js",
     "name": "quais6",
     "publishConfig": {
         "access": "public",
@@ -130,15 +130,15 @@
         "build-clean": "npm run clean && npm run build && npm run build-all && npm run _build-dist && npm run _dist-stats",
         "build-commonjs": "tsc --project tsconfig.commonjs.json",
         "build-dist": "npm run build && npm run _build-dist && npm run _dist-stats",
-        "clean": "rm -rf dist lib.esm lib.commonjs && cp -r misc/basedirs/* .",
+        "clean": "rm -rf dist lib/esm lib/commonjs && cp -r misc/basedirs/* .",
         "update-symlink": "npm run clean && npm run build-all && npm rm -g quais-6 -g && npm link",
-        "postpublish": "node lib.esm/_admin/create-release.js",
+        "postpublish": "node lib/esm/_admin/create-release.js",
         "stats": "echo 'Dependencies' && npm ls --all --omit=dev",
         "test": "npm run test-esm",
-        "test-browser": "node lib.esm/_tests/test-browser",
-        "test-commonjs": "mocha --reporter ./reporter.cjs ./lib.commonjs/_tests/test-*.js",
-        "test-coverage": "c8 -o output -r lcov -r text mocha --no-color --reporter ./reporter.cjs ./lib.esm/_tests/test-*.js | tee output/summary.txt",
-        "test-esm": "mocha --trace-warnings --reporter ./reporter.cjs -r dotenv/config ./lib.esm/_tests/test-*.js",
+        "test-browser": "node lib/esm/_tests/test-browser",
+        "test-commonjs": "mocha --reporter ./reporter.cjs ./lib/commonjs/_tests/test-*.js",
+        "test-coverage": "c8 -o output -r lcov -r text mocha --no-color --reporter ./reporter.cjs ./lib/esm/_tests/test-*.js | tee output/summary.txt",
+        "test-esm": "mocha --trace-warnings --reporter ./reporter.cjs -r dotenv/config ./lib/esm/_tests/test-*.js",
         "prepare": "husky",
         "format": "prettier --write src.ts/**/*.ts"
     },
