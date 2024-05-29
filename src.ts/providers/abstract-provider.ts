@@ -8,11 +8,11 @@
 
 // @TODO
 // Event coalescence
-//   When we register an event with an async value (e.g. address is a Signer
-//   or ENS name), we need to add it immeidately for the Event API, but also
+//   When we register an event with an async value (e.g. address is a Signer), 
+//   we need to add it immeidately for the Event API, but also
 //   need time to resolve the address. Upon resolving the address, we need to
 //   migrate the listener to the static event. We also need to maintain a map
-//   of Signer/ENS name to address so we can sync respond to listenerCount.
+//   of Signer to address so we can sync respond to listenerCount.
 
 import { getAddress, resolveAddress } from '../address/index.js';
 import { ShardData } from '../constants/index.js';
@@ -926,7 +926,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     * Returns or resolves to the address for `address`, resolving ENS names and {@link Addressable | **Addressable**}
+     * Returns or resolves to the address for `address`, resolving {@link Addressable | **Addressable**}
      * objects and returning if already an address.
      *
      * @param {AddressLike} address - The address to normalize.
@@ -986,7 +986,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     * Returns or resolves to a filter for `filter`, resolving any ENS names or {@link Addressable | **Addressable**}
+     * Returns or resolves to a filter for `filter`, resolving any {@link Addressable | **Addressable**}
      * object and returning if already a valid filter.
      *
      * @param {Filter | FilterByBlockHash} filter - The filter to normalize.
@@ -1049,7 +1049,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             return filter;
         };
 
-        // Addresses could be async (ENS names or Addressables)
+        // Addresses could be async (Addressables)
         const address: Array<string | Promise<string>> = [];
         if (filter.address) {
             if (Array.isArray(filter.address)) {
@@ -1087,7 +1087,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     * Returns or resovles to a transaction for `request`, resolving any ENS names or
+     * Returns or resovles to a transaction for `request`, resolving any
      * {@link Addressable | **Addressable**} and returning if already a valid transaction.
      *
      * @param {PerformActionTransaction} _request - The transaction to normalize.

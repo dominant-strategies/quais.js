@@ -16,7 +16,7 @@ import type { Addressable, AddressLike } from './index.js';
  * //_result:
  *
  * // Contracts
- * contract = new Contract('dai.tokens.quais.eth', [], provider);
+ * contract = new Contract('0x643aA0A61eADCC9Cc202D1915D942d35D005400C', [], provider);
  * isAddressable(contract);
  * //_result:
  * ```
@@ -40,21 +40,8 @@ export function isAddressable(value: any): value is Addressable {
  * isAddress('0x8ba1f109551bD432803012645Ac136ddd64DBA72');
  * //_result:
  *
- * // Valid ICAP address
- * isAddress('XE65GB6LDNXYOFTX0NSV3FUWKOWIXAMJK36');
- * //_result:
- *
  * // Invalid checksum
  * isAddress('0x8Ba1f109551bD432803012645Ac136ddd64DBa72');
- * //_result:
- *
- * // Invalid ICAP checksum
- * isAddress('0x8Ba1f109551bD432803012645Ac136ddd64DBA72');
- * //_result:
- *
- * // Not an address (an ENS name requires a provided and an
- * // asynchronous API to access)
- * isAddress('ricmoo.eth');
  * //_result:
  * ```
  *
@@ -83,8 +70,6 @@ async function checkAddress(target: any, promise: Promise<null | string>): Promi
  * Resolves to an address for the `target`, which may be any supported address type, an
  * [**Addressable**](../interfaces/Addressable) or a Promise which resolves to an address.
  *
- * If an ENS name is provided, but that name has not been correctly configured a [[UnconfiguredNameError]] is thrown.
- *
  * @category Address
  * @example
  *
@@ -99,23 +84,12 @@ async function checkAddress(target: any, promise: Promise<null | string>): Promi
  * resolveAddress(Promise.resolve(addr));
  * //_result:
  *
- * // ENS names are resolved asynchronously
- * resolveAddress('dai.tokens.quais.eth', provider);
- * //_result:
- *
  * // Addressable objects are resolved asynchronously
  * contract = new Contract(addr, []);
  * resolveAddress(contract, provider);
  * //_result:
  *
- * // Unconfigured ENS names reject
- * resolveAddress('nothing-here.ricmoo.eth', provider);
- * //_error:
  *
- * // ENS names require a NameResolver object passed in
- * // (notice the provider was omitted)
- * resolveAddress('nothing-here.ricmoo.eth');
- * //_error:
  * ```
  *
  * @param {AddressLike} target - The target to resolve to an address.

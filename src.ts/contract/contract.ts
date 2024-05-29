@@ -747,7 +747,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     /**
      * The target to connect to.
      *
-     * This can be an address, ENS name or any [Addressable](../interfaces/Addressable), such as another contract. To
+     * This can be an address or any [Addressable](../interfaces/Addressable), such as another contract. To
      * get the resovled address, use the `getAddress` method.
      */
     readonly target!: string | Addressable;

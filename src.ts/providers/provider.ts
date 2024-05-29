@@ -373,7 +373,7 @@ export interface QiPreparedTransactionRequest {
 export function copyRequest(req: TransactionRequest): PreparedTransactionRequest {
     const result: any = {};
 
-    // These could be addresses, ENS names or Addressables
+    // These could be addresses or Addressables
     if ('to' in req && req.to) {
         result.to = req.to;
     }
