@@ -224,16 +224,24 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
             operation: 'extendedKey',
         });
 
-        return encodeBase58Check(
+        const myKey = encodeBase58Check(
             concat([
                 '0x0488ADE4',
-                zpad(this.depth, 1),
+                '0x' + zpad(this.depth, 2),
                 this.accountFingerprint ?? '',
-                zpad(this.index, 4),
+                '0x' + zpad(this.index, 4),
                 this.chainCode,
                 concat(['0x00', this.privateKey]),
             ]),
         );
+        return myKey;
+    }
+
+    printBytes(data: BytesLike): void {
+        const hex = hexlify(data).substring(2);
+        console.log(hex.length / 2, hex);
+        const bytes = toBeArray(decodeBase58(encodeBase58Check(data)));
+        console.log(bytes.length - 4, bytes.slice(0, bytes.length - 4));
     }
 
     /**
@@ -357,7 +365,7 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
         const bytes = toBeArray(decodeBase58(extendedKey)); // @TODO: redact
 
         assertArgument(
-            bytes.length === 82 || encodeBase58Check(bytes.slice(0, 78)) === extendedKey,
+            bytes.length === 80 || encodeBase58Check(bytes.slice(0, 76)) === extendedKey,
             'invalid extended key',
             'extendedKey',
             '[ REDACTED ]',
@@ -365,9 +373,9 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
 
         const depth = bytes[4];
         const accountFingerprint = hexlify(bytes.slice(5, 9));
-        const index = parseInt(hexlify(bytes.slice(9, 13)).substring(2), 16);
-        const chainCode = hexlify(bytes.slice(13, 45));
-        const key = bytes.slice(45, 78);
+        const index = parseInt(hexlify(bytes.slice(9, 11)).substring(2), 16);
+        const chainCode = hexlify(bytes.slice(11, 43));
+        const key = bytes.slice(43, 76);
 
         switch (hexlify(bytes.slice(0, 4))) {
             // Public Key
@@ -389,7 +397,7 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
 
             // Private Key
             case '0x0488ade4':
-            case '0x04358394 ':
+            case '0x04358394':
                 if (key[0] !== 0) {
                     break;
                 }
@@ -652,9 +660,9 @@ export class HDNodeVoidWallet extends VoidSigner {
         return encodeBase58Check(
             concat([
                 '0x0488B21E',
-                zpad(this.depth, 1),
+                '0x' + zpad(this.depth, 2),
                 this.accountFingerprint ?? '',
-                zpad(this.index, 4),
+                '0x' + zpad(this.index, 4),
                 this.chainCode,
                 this._publicKey,
             ]),
