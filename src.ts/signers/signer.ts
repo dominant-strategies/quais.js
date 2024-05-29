@@ -2,7 +2,7 @@ import type { Addressable } from '../address/index.js';
 import type { TypedDataDomain, TypedDataField } from '../hash/index.js';
 import type { TransactionLike } from '../transaction/index.js';
 
-import type { ContractRunner } from '../providers/contracts.js';
+import type { ContractRunner } from '../contract/index.js';
 import type { BlockTag, Provider, TransactionRequest, TransactionResponse } from '../providers/provider.js';
 
 /**

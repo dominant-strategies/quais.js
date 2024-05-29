@@ -30,6 +30,7 @@ export type {
     ContractMethod,
     ContractMethodArgs,
     ContractTransaction,
+    ContractRunner,
     DeferredTopicFilter,
     Overrides,
     WrappedFallback,

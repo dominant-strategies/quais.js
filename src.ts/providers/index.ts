@@ -46,8 +46,6 @@ export type {
     PerformActionRequest,
 } from './abstract-provider.js';
 
-export type { ContractRunner } from './contracts.js';
-
 export type { BlockParams, LogParams, TransactionReceiptParams, TransactionResponseParams } from './formatting.js';
 
 export type { Networkish } from './network.js';
@@ -66,6 +64,11 @@ export type {
     MinedBlock,
     MinedTransactionResponse,
     QiTransactionRequest,
+    QiTransactionResponse,
+    QuaiTransactionRequest,
+    QuaiTransactionResponse,
+    QiPreparedTransactionRequest,
+    QuaiPreparedTransactionRequest,
 } from './provider.js';
 
 export type { DebugEventBrowserProvider, Eip1193Provider } from './provider-browser.js';

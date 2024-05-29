@@ -5,10 +5,9 @@ import { BaseContract, copyOverrides, resolveArgs } from './contract.js';
 
 import type { InterfaceAbi } from '../abi/index.js';
 import type { Addressable } from '../address/index.js';
-import type { ContractRunner } from '../providers/index.js';
 import type { BytesLike } from '../utils/index.js';
 import { getShardForAddress, isQiAddress } from '../utils/index.js';
-import type { ContractInterface, ContractMethodArgs, ContractDeployTransaction } from './types.js';
+import type { ContractInterface, ContractMethodArgs, ContractDeployTransaction, ContractRunner } from './types.js';
 import type { ContractTransactionResponse } from './wrappers.js';
 import { Wallet, randomBytes } from '../quais.js';
 import { getContractAddress } from '../address/address.js';
