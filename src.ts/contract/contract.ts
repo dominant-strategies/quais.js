@@ -31,7 +31,7 @@ import {
 import type { EventFragment, FunctionFragment, InterfaceAbi, ParamType, Result } from '../abi/index.js';
 import type { Addressable } from '../address/index.js';
 import type { EventEmitterable, Listener } from '../utils/index.js';
-import type { BlockTag, ContractRunner, Provider, TransactionRequest, TopicFilter } from '../providers/index.js';
+import type { BlockTag, Provider, TransactionRequest, TopicFilter } from '../providers/index.js';
 
 import type {
     BaseContractMethod,
@@ -42,6 +42,7 @@ import type {
     ContractEventArgs,
     ContractEvent,
     ContractTransaction,
+    ContractRunner,
     DeferredTopicFilter,
     WrappedFallback,
 } from './types.js';

@@ -151,7 +151,7 @@ export type {
     ConstantContractMethod, ContractEvent, ContractEventArgs, ContractEventName,
     ContractInterface, ContractMethod, ContractMethodArgs, ContractTransaction,
     DeferredTopicFilter, Overrides,
-    BaseContractMethod, ContractDeployTransaction, PostfixOverrides,
+    ContractRunner, BaseContractMethod, ContractDeployTransaction, PostfixOverrides,
     WrappedFallback
 } from "./contract/index.js";
 
@@ -167,7 +167,7 @@ export type {
 
     AbstractProviderOptions,
 
-    AbstractProviderPlugin, BlockParams, BlockTag, ContractRunner, DebugEventBrowserProvider,
+    AbstractProviderPlugin, BlockParams, BlockTag, DebugEventBrowserProvider,
     Eip1193Provider, EventFilter, Filter, FilterByBlockHash,
     JsonRpcApiProviderOptions, JsonRpcError, JsonRpcPayload, JsonRpcResult,
     JsonRpcTransactionRequest, LogParams, MinedBlock, MinedTransactionResponse, Networkish,
