@@ -13,4 +13,4 @@ using `tsc` and the `/tsconfig.esm.json` configuration.
 
 Do not modify the files in this folder. They are deleted on `build-clean`.
 
-To modify this `README.md`, see the `/output/post-build/lib.esm`.
+To modify this `README.md`, see the `/output/post-build/lib/esm`.

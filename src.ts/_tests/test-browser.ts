@@ -2,7 +2,7 @@
  * Paths /index.js => dist/quais.js /tests/utils.js => in-memory hijack /static/* => output/*
  *
  * - Index.html
- * - Assert.js /tests/* => lib.esm/_tests/*
+ * - Assert.js /tests/* => lib/esm/_tests/*
  */
 
 // See: https://vanilla.aslushnikov.com/?Console
@@ -257,7 +257,7 @@ export function start(_root: string, options: Options): Promise<Server> {
             return;
         } else if (url.startsWith('/tests/')) {
             transform = true;
-            filename = join('./lib.esm/_tests', url.substring(7));
+            filename = join('./lib/esm/_tests', url.substring(7));
         } else {
             //console.log("FALLBACK");
             filename = url.substring(1);

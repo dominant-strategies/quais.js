@@ -13,4 +13,4 @@ output/
 misc/
 
 # js
-lib.commonjs/
+lib/commonjs/
