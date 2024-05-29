@@ -6,11 +6,11 @@ import { TransactionLike, computeAddress, QiTransaction, TxInput } from '../tran
 import { Mnemonic } from './mnemonic.js';
 import { HDWallet, AddressInfo } from "./hdwallet.js";
 import { MuSigFactory } from "@brandonblack/musig"
-import { nobleCrypto } from "./musig-crypto.js";
 import { schnorr } from "@noble/curves/secp256k1";
 import { keccak_256 } from "@noble/hashes/sha3";
 import { getAddress } from "../address/index.js";
-import {QI_COIN_TYPE} from '../constants/index.js';
+import { QI_COIN_TYPE } from '../constants/index.js';
+import { musigCrypto } from '../crypto/index.js';
 
 type Outpoint = {
     Txhash: string;
@@ -198,7 +198,7 @@ export class QiHDWallet extends HDWallet {
     // createMuSigSignature returns a MuSig signature for the given message
     // and private keys corresponding to the input addresses
     private createMuSigSignature(tx: QiTransaction, hash: Uint8Array): string {
-        const musig = MuSigFactory(nobleCrypto);
+        const musig = MuSigFactory(musigCrypto);
 
         // Collect private keys corresponding to the addresses of the inputs
         const privKeysSet = new Set<string>();
@@ -223,7 +223,7 @@ export class QiHDWallet extends HDWallet {
 
         // Create an array of public keys corresponding to the private keys for musig aggregation
         const pubKeys: Uint8Array[] = privKeys
-            .map((privKey) => nobleCrypto.getPublicKey(getBytes(privKey!), true))
+            .map((privKey) => musigCrypto.getPublicKey(getBytes(privKey!), true))
             .filter((pubKey) => pubKey !== null) as Uint8Array[];
 
         // Generate nonces for each public key

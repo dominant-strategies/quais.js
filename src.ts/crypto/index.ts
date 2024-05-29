@@ -41,9 +41,12 @@ function lock(): void {
 
 export { lock };
 
+export { musigCrypto } from './musig.js';
+
 /////////////////////////////
 // Types
 
 export type { ProgressCallback } from './scrypt.js';
 
 export type { SignatureLike } from './signature.js';
+
