@@ -31,7 +31,7 @@ export interface Addressable {
  */
 export type AddressLike = string | Promise<string> | Addressable;
 
-export { getAddress } from './address.js';
+export { getAddress, computeAddress, recoverAddress } from './address.js';
 
 export { getCreateAddress, getCreate2Address } from './contract-address.js';
 

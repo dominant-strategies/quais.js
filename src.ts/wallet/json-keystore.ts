@@ -9,9 +9,8 @@
 
 import { CTR } from 'aes-js';
 
-import { getAddress } from '../address/index.js';
+import { getAddress, computeAddress } from '../address/index.js';
 import { keccak256, pbkdf2, randomBytes, scrypt, scryptSync } from '../crypto/index.js';
-import { computeAddress } from '../transaction/index.js';
 import { concat, getBytes, hexlify, uuidV4, assert, assertArgument } from '../utils/index.js';
 
 import { getPassword, spelunk, zpad } from './utils.js';

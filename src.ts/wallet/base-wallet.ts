@@ -1,7 +1,6 @@
-import { getAddress, resolveAddress } from '../address/index.js';
+import { getAddress, computeAddress, resolveAddress } from '../address/index.js';
 import { hashMessage, TypedDataEncoder } from '../hash/index.js';
 import { AbstractSigner } from '../signers/index.js';
-import { computeAddress } from '../transaction/index.js';
 import { resolveProperties, assertArgument } from '../utils/index.js';
 
 import type { SigningKey } from '../crypto/index.js';
