@@ -9,14 +9,14 @@ import {
     defineProperties, getBigInt, resolveProperties,
     assert, assertArgument, isQiAddress
 } from "../utils/index.js";
-import {addressFromTransactionRequest, copyRequest, QiTransactionRequest, QuaiTransactionRequest} from "./provider.js";
+import {addressFromTransactionRequest, copyRequest, QiTransactionRequest, QuaiTransactionRequest} from "../providers/provider.js";
 
 import type { TypedDataDomain, TypedDataField } from '../hash/index.js';
 import type { TransactionLike } from '../transaction/index.js';
 
 import type {
     BlockTag, Provider, TransactionRequest, TransactionResponse
-} from "./provider.js";
+} from "../providers/provider.js";
 import type { Signer } from "./signer.js";
 import { getTxType } from "../utils/index.js";
 import {QiTransaction, QiTransactionLike, QuaiTransaction, QuaiTransactionLike} from "../transaction/index.js";
