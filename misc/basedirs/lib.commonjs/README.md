@@ -13,4 +13,4 @@ using `tsc` and the `/tsconfig.commonjs.json` configuration.
 
 Do not modify the files in this folder. They are deleted on `build-clean`.
 
-To modify this `README.md`, see the `/output/post-build/lib.commonjs`.
+To modify this `README.md`, see the `/output/post-build/lib/commonjs`.

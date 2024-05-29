@@ -6,6 +6,6 @@ output/**
 dist/*.gz
 /*.env
 .idea/**
-lib.commonjs/**
-lib.esm/**
+lib/commonjs/**
+lib/esm/**
 .env
