@@ -2,13 +2,13 @@ import { ShardData } from '../constants/index.js';
 import { SigningKey, keccak256 as addressKeccak256 } from '../crypto/index.js';
 import { getBytes, getShardForAddress, hexlify } from '../utils/index.js';
 import { Provider, QiTransactionRequest } from '../providers/index.js';
-import { TransactionLike, computeAddress, QiTransaction, TxInput } from '../transaction/index.js';
+import { TransactionLike, QiTransaction, TxInput } from '../transaction/index.js';
 import { Mnemonic } from './mnemonic.js';
 import { HDWallet, AddressInfo } from "./hdwallet.js";
 import { MuSigFactory } from "@brandonblack/musig"
 import { schnorr } from "@noble/curves/secp256k1";
 import { keccak_256 } from "@noble/hashes/sha3";
-import { getAddress } from "../address/index.js";
+import { getAddress, computeAddress } from "../address/index.js";
 import { QI_COIN_TYPE } from '../constants/index.js';
 import { musigCrypto } from '../crypto/index.js';
 

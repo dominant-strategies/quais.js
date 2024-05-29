@@ -1,5 +1,5 @@
-import {keccak256, Signature,} from "../crypto/index.js";
-import {AccessList, accessListify, AccessListish, AbstractTransaction, TransactionLike, recoverAddress} from "./index.js";
+import { keccak256, Signature } from "../crypto/index.js";
+import { AccessList, accessListify, AccessListish, AbstractTransaction, TransactionLike } from "./index.js";
 import {
     assert,
     assertArgument,
@@ -13,8 +13,8 @@ import {
     toBeArray, toBigInt, zeroPadValue
 } from "../utils/index.js";
 import { decodeProtoTransaction, encodeProtoTransaction } from '../encoding/index.js';
-import {getAddress} from "../address/index.js";
-import {formatNumber, handleNumber} from "../providers/format.js";
+import { getAddress, recoverAddress } from "../address/index.js";
+import { formatNumber, handleNumber } from "../providers/format.js";
 import { ProtoTransaction} from "./abstract-transaction.js";
 
 /**
