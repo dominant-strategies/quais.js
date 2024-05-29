@@ -3,7 +3,6 @@ import { assertArgument } from '../utils/index.js';
 
 import { BaseWallet } from './base-wallet.js';
 import { QuaiHDWallet } from './quai-hdwallet.js';
-import { decryptCrowdsaleJson, isCrowdsaleJson } from './json-crowdsale.js';
 import {
     decryptKeystoreJson, decryptKeystoreJsonSync,
     encryptKeystoreJson, encryptKeystoreJsonSync,
@@ -12,7 +11,6 @@ import {
 
 import type { ProgressCallback } from "../crypto/index.js";
 import type { Provider } from "../providers/index.js";
-import type { CrowdsaleAccount } from "./json-crowdsale.js";
 import type { KeystoreAccount } from "./json-keystore.js";
 
 /**
@@ -117,11 +115,9 @@ export class Wallet extends BaseWallet {
      * @returns {QuaiHDWallet | Wallet} The decrypted wallet.
      */
     static fromEncryptedJsonSync(json: string, password: Uint8Array | string): QuaiHDWallet | Wallet {
-        let account: null | CrowdsaleAccount | KeystoreAccount = null;
+        let account: null | KeystoreAccount = null;
         if (isKeystoreJson(json)) {
             account = decryptKeystoreJsonSync(json, password);
-        } else if (isCrowdsaleJson(json)) {
-            account = decryptCrowdsaleJson(json, password);
         } else {
             assertArgument(false, 'invalid JSON wallet', 'json', '[ REDACTED ]');
         }

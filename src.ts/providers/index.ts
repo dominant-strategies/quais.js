@@ -12,11 +12,7 @@ export { AbstractProvider, UnmanagedSubscriber } from './abstract-provider.js';
 
 export { AbstractSigner, VoidSigner } from './abstract-signer.js';
 
-export { getDefaultProvider } from './default-provider.js';
-
 export { Network } from './network.js';
-
-export { NonceManager } from './signer-noncemanager.js';
 
 export {
     Block,
@@ -28,13 +24,10 @@ export {
     //resolveTransactionRequest,
 } from './provider.js';
 
-export { FallbackProvider } from "./provider-fallback.js";
 export { JsonRpcApiProvider, JsonRpcProvider } from "./provider-jsonrpc.js"
 
 export { BrowserProvider } from './provider-browser.js';
 
-import { IpcSocketProvider } from './provider-ipcsocket.js'; /*-browser*/
-export { IpcSocketProvider };
 export { SocketProvider } from './provider-socket.js';
 export { WebSocketProvider } from './provider-websocket.js';
 
@@ -78,8 +71,6 @@ export type {
 } from './provider.js';
 
 export type { DebugEventBrowserProvider, Eip1193Provider } from './provider-browser.js';
-
-export type { FallbackProviderOptions } from './provider-fallback.js';
 
 export type {
     JsonRpcPayload,
