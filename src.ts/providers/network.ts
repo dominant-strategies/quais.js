@@ -6,7 +6,7 @@
 
 import { getBigInt, assert, assertArgument } from '../utils/index.js';
 
-import { EnsPlugin, FetchUrlFeeDataNetworkPlugin, GasCostPlugin } from './plugins-network.js';
+import { FetchUrlFeeDataNetworkPlugin, GasCostPlugin } from './plugins-network.js';
 
 import type { BigNumberish } from '../utils/index.js';
 
@@ -30,14 +30,11 @@ export type Networkish =
     | {
           name?: string;
           chainId?: number;
-          //layerOneConnection?: Provider,
-          ensAddress?: string;
-          ensNetwork?: number;
       };
 
 /* * * *
 // Networks which operation against an L2 can use this plugin to
-// specify how to access L1, for the purpose of resolving ENS,
+// specify how to access L1
 // for example.
 export class LayerOneConnectionPlugin extends NetworkPlugin {
     readonly provider!: Provider;
@@ -108,7 +105,7 @@ export class Network {
      * Returns true if `other` matches this network. Any chain ID must match, and if no chain ID is present, the name
      * must match.
      *
-     * This method does not currently check for additional properties, such as ENS address or plug-in compatibility.
+     * This method does not currently check for additional properties, such as plug-in compatibility.
      *
      * @param {Networkish} other - The network to compare.
      *
@@ -288,14 +285,6 @@ export class Network {
 
             const custom = new Network(<string>network.name, <number>network.chainId);
 
-            if ((<any>network).ensAddress || (<any>network).ensNetwork != null) {
-                custom.attachPlugin(new EnsPlugin((<any>network).ensAddress, (<any>network).ensNetwork));
-            }
-
-            //if ((<any>network).layerOneConnection) {
-            //    custom.attachPlugin(new LayerOneConnectionPlugin((<any>network).layerOneConnection));
-            //}
-
             return custom;
         }
 
@@ -327,7 +316,6 @@ export class Network {
 }
 
 type Options = {
-    ensNetwork?: number;
     altNames?: Array<string>;
     plugins?: Array<NetworkPlugin>;
 };
@@ -411,11 +399,6 @@ function injectCommonNetworks(): void {
         const func = function () {
             const network = new Network(name, chainId);
 
-            // We use 0 to disable ENS
-            if (options.ensNetwork != null) {
-                network.attachPlugin(new EnsPlugin(null, options.ensNetwork));
-            }
-
             network.attachPlugin(new GasCostPlugin());
 
             (options.plugins || []).forEach((plugin) => {
@@ -436,33 +419,30 @@ function injectCommonNetworks(): void {
         }
     }
 
-    registerEth('mainnet', 1, { ensNetwork: 1, altNames: ['homestead'] });
-    registerEth('ropsten', 3, { ensNetwork: 3 });
-    registerEth('rinkeby', 4, { ensNetwork: 4 });
-    registerEth('goerli', 5, { ensNetwork: 5 });
-    registerEth('kovan', 42, { ensNetwork: 42 });
-    registerEth('sepolia', 11155111, { ensNetwork: 11155111 });
+    registerEth('mainnet', 1, { altNames: ['homestead'] });
+    registerEth('ropsten', 3, {});
+    registerEth('rinkeby', 4, {});
+    registerEth('goerli', 5, {});
+    registerEth('kovan', 42, {});
+    registerEth('sepolia', 11155111, {});
 
     registerEth('classic', 61, {});
     registerEth('classicKotti', 6, {});
 
-    registerEth('arbitrum', 42161, {
-        ensNetwork: 1,
-    });
+    registerEth('arbitrum', 42161, {});
     registerEth('arbitrum-goerli', 421613, {});
 
-    registerEth('base', 8453, { ensNetwork: 1 });
+    registerEth('base', 8453, {});
     registerEth('base-goerli', 84531, {});
     registerEth('base-sepolia', 84532, {});
 
-    registerEth('bnb', 56, { ensNetwork: 1 });
+    registerEth('bnb', 56, {});
     registerEth('bnbt', 97, {});
 
-    registerEth('linea', 59144, { ensNetwork: 1 });
+    registerEth('linea', 59144, {});
     registerEth('linea-goerli', 59140, {});
 
     registerEth('matic', 137, {
-        ensNetwork: 1,
         plugins: [getGasStationPlugin('https://gasstation.polygon.technology/v2')],
     });
     registerEth('matic-mumbai', 80001, {
@@ -471,10 +451,10 @@ function injectCommonNetworks(): void {
     });
 
     registerEth('optimism', 10, {
-        ensNetwork: 1,
+        
         plugins: [],
     });
     registerEth('optimism-goerli', 420, {});
 
-    registerEth('xdai', 100, { ensNetwork: 1 });
+    registerEth('xdai', 100, {});
 }

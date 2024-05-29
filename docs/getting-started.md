@@ -228,8 +228,8 @@ account state, fetch historic logs, look up contract code and so on.
   await provider.getBlockNumber()
   //_result:
 
-  // Get the current balance of an account (by address or ENS name)
-  balance = await provider.getBalance("quais.eth")
+  // Get the current balance of an account 
+  balance = await provider.getBalance("0x643aA0A61eADCC9Cc202D1915D942d35D005400C")
   //_result:
 
   // Since the balance is in wei, you may wish to display it
@@ -238,7 +238,7 @@ account state, fetch historic logs, look up contract code and so on.
   //_result:
 
   // Get the next nonce required to send a transaction
-  await provider.getTransactionCount("quais.eth")
+  await provider.getTransactionCount("0x643aA0A61eADCC9Cc202D1915D942d35D005400C")
   //_result:
 ```
 
@@ -300,7 +300,7 @@ human-readable ABI, which is just the Solidity signature.
   ]
 
   // Create a contract
-  contract = new Contract("dai.tokens.quais.eth", abi, provider)
+  contract = new Contract("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", abi, provider)
 ```
 
 ### Read-only methods (i.e. `view` and `pure`)
@@ -319,7 +319,7 @@ data about a Contract.
 
   // Create a contract; connected to a Provider, so it may
   // only access read-only methods (like view and pure)
-  contract = new Contract("dai.tokens.quais.eth", abi, provider)
+  contract = new Contract("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", abi, provider)
 
   // The symbol name for the token
   sym = await contract.symbol()
@@ -348,13 +348,13 @@ data about a Contract.
 
   // Connected to a Signer; can make state changing transactions,
   // which will cost the account ether
-  contract = new Contract("dai.tokens.quais.eth", abi, signer)
+  contract = new Contract("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", abi, signer)
 
   // Send 1 DAI
   amount = parseUnits("1.0", 18);
 
   // Send the transaction
-  tx = await contract.transfer("quais.eth", amount)
+  tx = await contract.transfer("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", amount)
   //_result: @TODO
 
   // Currently the transaction has been sent to the mempool,
@@ -371,19 +371,19 @@ _code: forcing a call (simulation) of a state-changing method @lang<javascript>
   ]
 
   // Connected to a Provider since we only require read access
-  contract = new Contract("dai.tokens.quais.eth", abi, provider)
+  contract = new Contract("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", abi, provider)
 
   amount = parseUnits("1.0", 18)
 
   // There are many limitations to using a static call, but can
   // often be useful to preflight a transaction.
-  await contract.transfer.staticCall("quais.eth", amount)
+  await contract.transfer.staticCall("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", amount)
   //_result:
 
   // We can also simulate the transaction as another account
   other = new VoidSigner("0x643aA0A61eADCC9Cc202D1915D942d35D005400C")
   contractAsOther = contract.connect(other.connect(provider))
-  await contractAsOther.transfer.staticCall("quais.eth", amount)
+  await contractAsOther.transfer.staticCall("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", amount)
   //_result:
 ```
 
@@ -403,7 +403,7 @@ including the filter and a method to remove that listener.
 
   // Create a contract; connected to a Provider, so it may
   // only access read-only methods (like view and pure)
-  contract = new Contract("dai.tokens.quais.eth", abi, provider)
+  contract = new Contract("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", abi, provider)
 
   // Begin listening for any Transfer event
   contract.on("Transfer", (from, to, _amount, event) => {
@@ -422,7 +422,7 @@ including the filter and a method to remove that listener.
   })
 
   // Listen for any Transfer to "quais.eth"
-  filter = contract.filters.Transfer("quais.eth")
+  filter = contract.filters.Transfer("0x643aA0A61eADCC9Cc202D1915D942d35D005400C")
   contract.on(filter, (from, to, amount, event) => {
     // `to` will always be equal to the address of "quais.eth"
   });
@@ -449,7 +449,7 @@ backend.
 
   // Create a contract; connected to a Provider, so it may
   // only access read-only methods (like view and pure)
-  contract = new Contract("dai.tokens.quais.eth", abi, provider)
+  contract = new Contract("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", abi, provider)
 
   // Query the last 100 blocks for any transfer
   filter = contract.filters.Transfer
@@ -464,7 +464,7 @@ backend.
   //_result:
 
   // Query all time for any transfer to quais.eth
-  filter = contract.filters.Transfer("quais.eth")
+  filter = contract.filters.Transfer("0x643aA0A61eADCC9Cc202D1915D942d35D005400C")
   events = await contract.queryFilter(filter)
 
   // The first matching event

@@ -84,7 +84,7 @@ export class BaseWallet extends AbstractSigner {
     }
 
     async signTransaction(tx: QuaiTransactionRequest): Promise<string> {
-        // Replace any Addressable or ENS name with an address
+        // Replace any Addressable with an address
         const { to, from } = await resolveProperties({
             to: tx.to ? resolveAddress(tx.to) : undefined,
             from: tx.from ? resolveAddress(tx.from) : undefined,

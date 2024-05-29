@@ -105,13 +105,6 @@ export interface TestCaseHash {
     keccak256: string;
 }
 
-export interface TestCaseNamehash {
-    name: string;
-    ensName: string;
-    error?: string;
-    namehash?: string;
-}
-
 export interface TestCaseTypedDataDomain {
     name?: string;
     version?: string;
