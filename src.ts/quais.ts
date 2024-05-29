@@ -60,8 +60,6 @@ export {
 export {
     Block, FeeData, Log, TransactionReceipt, TransactionResponse,
 
-    AbstractSigner, VoidSigner,
-
     AbstractProvider,
 
     JsonRpcApiProvider, JsonRpcProvider,
@@ -77,6 +75,10 @@ export {
 
     copyRequest
 } from "./providers/index.js";
+
+export {
+    AbstractSigner, VoidSigner,
+} from "./signers/index.js";
 
 // TRANSACTION
 export {
@@ -160,7 +162,7 @@ export type { TypedDataDomain, TypedDataField } from "./hash/index.js";
 
 // PROVIDERS
 export type {
-    Provider, Signer,
+    Provider,
 
     AbstractProviderOptions,
 
@@ -173,6 +175,11 @@ export type {
     TransactionReceiptParams, TransactionRequest, TransactionResponseParams,
     WebSocketCreator, WebSocketLike
 } from "./providers/index.js";
+
+// SIGNERS
+export type {
+    Signer,
+} from "./signers/index.js";
 
 // TRANSACTION
 export type {

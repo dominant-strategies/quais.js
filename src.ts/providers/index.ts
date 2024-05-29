@@ -10,8 +10,6 @@
 
 export { AbstractProvider, UnmanagedSubscriber } from './abstract-provider.js';
 
-export { AbstractSigner, VoidSigner } from './abstract-signer.js';
-
 export { Network } from './network.js';
 
 export {
@@ -83,5 +81,3 @@ export type {
 } from './provider-jsonrpc.js';
 
 export type { WebSocketCreator, WebSocketLike } from './provider-websocket.js';
-
-export type { Signer } from './signer.js';

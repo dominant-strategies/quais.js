@@ -31,7 +31,7 @@ import type { TransactionLike } from "../transaction/index.js";
 import type { PerformActionRequest, Subscriber, Subscription } from "./abstract-provider.js";
 import type { Networkish } from "./network.js";
 import type {TransactionRequest} from "./provider.js";
-import type { Signer } from "./signer.js";
+import type { Signer } from "../signers/signer.js";
 import { UTXOEntry, UTXOTransactionOutput } from "../transaction/utxo.js";
 
 
