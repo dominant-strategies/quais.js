@@ -19,7 +19,7 @@ import { assertArgument } from './errors.js';
 import { FixedNumber } from './fixednumber.js';
 import { getNumber } from './maths.js';
 
-import type { BigNumberish, Numeric } from '../utils/index.js';
+import type { BigNumberish, Numeric } from './index.js';
 
 const names = ['wei', 'kwei', 'mwei', 'gwei', 'szabo', 'finney', 'ether'];
 

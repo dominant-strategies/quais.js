@@ -19,7 +19,7 @@ The documentation is an area which can always benefit from extra eyes, extra kno
 Contributing to the documentation is welcome, but when making changes to documentation, please ensure that all changes are made **only** to:
 
 -   Updating `/docs/*\*.md`
--   Updating API jsdocs: `/*\* ... */` comment blocks within `/src.ts/`
+-   Updating API jsdocs: `/*\* ... */` comment blocks within `/src/`
 
 When adding a new sections, a [quais Discussion](https://github.com/quais-io/quais.js/discussions) is preferred.
 
@@ -29,7 +29,7 @@ All changes should be in the JSdoc format.
 
 In general the **only** files you should ever include in a PR are:
 
--   TypeScript source: `/src.ts/*\*.ts`
+-   TypeScript source: `/src/*\*.ts`
 
 Do not include a `package.json` with the updated `tarballHash` or `version`, and do not include any generated files in your PR.
 

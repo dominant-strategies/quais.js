@@ -1,4 +1,4 @@
-/* Do NOT modify this file; see /src.ts/_admin/update-version.ts */
+/* Do NOT modify this file; see /src/_admin/update-version.ts */
 
 /**
  *  The current version of quais.

@@ -2,12 +2,12 @@
 	// base config
 	"out": "docs/content",
 	"tsconfig": "tsconfig.base.json",
-	"entryPoints": ["./src.ts/quais.ts"],
+	"entryPoints": ["./src/quais.ts"],
 
 	// specific inclusions and exclusions
 	"excludeProtected": true,
 	"excludeNotDocumented": true,
-	"exclude": ["./src.ts/_admin/**/*", "./src.ts/_tests/**/*", "./src.ts/testcases/**/*"],
+	"exclude": ["./src/_admin/**/*", "./src/_tests/**/*", "./src/testcases/**/*"],
 
 	// plugins
 	"plugin": [

@@ -12,7 +12,7 @@ import type { ContractTransactionResponse } from './wrappers.js';
 import { Wallet, randomBytes } from '../quais.js';
 import { getContractAddress } from '../address/address.js';
 import { getStatic } from '../utils/properties.js';
-import { QuaiTransactionRequest } from '../providers/provider';
+import { QuaiTransactionRequest } from '../providers/provider.js';
 
 // A = Arguments to the constructor
 // I = Interface of deployed contracts
