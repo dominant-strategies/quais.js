@@ -17,11 +17,11 @@
 		"preserveSymlinks": true,
 		"preserveWatchOutput": true,
 		"pretty": false,
-		"rootDir": "./src.ts",
+		"rootDir": "./src",
 		"strict": true,
 		"sourceMap": true,
 		"target": "es2022"
 	},
 	"exclude": [],
-	"include": ["./src.ts/**/*.ts"]
+	"include": ["./src/**/*.ts"]
 }

@@ -47,8 +47,8 @@ import {
     TransactionReceiptParams,
 } from './formatting.js';
 import { WorkObjectLike } from '../transaction/work-object.js';
-import { QiTransactionLike } from '../transaction/qi-transaction';
-import { QuaiTransactionLike } from '../transaction/quai-transaction';
+import { QiTransactionLike } from '../transaction/qi-transaction.js';
+import { QuaiTransactionLike } from '../transaction/quai-transaction.js';
 
 // -----------------------
 
