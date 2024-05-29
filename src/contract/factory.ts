@@ -104,57 +104,6 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         return Object.assign({}, args.pop().from, { data });
     }
 
-    // getDeployTransaction3(...args: Array<any>): TransactionRequest {
-    //     let tx: TransactionRequest = {};
-
-    //     // If we have 1 additional argument, we allow transaction overrides
-    //     if (
-    //       args.length === this.interface.deploy.inputs.length + 1 &&
-    //       typeof args[args.length - 1] === "object"
-    //     ) {
-    //       //tx = shallowCopy(args.pop());
-    //         tx = copyOverrides(args.pop());
-    //       for (const key in tx) {
-    //         if (!allowedTransactionKeys[key]) {
-    //           throw new Error("unknown transaction override " + key);
-    //         }
-    //       }
-    //     }
-
-    //     // Do not allow these to be overridden in a deployment transaction
-    //     ["data", "from", "to"].forEach((key) => {
-    //       if ((<any>tx)[key] == null) {
-    //         return;
-    //       }
-    //       assertArgument(false, "cannot override " + key, key, (<any>tx)[key]);
-    //     });
-
-    //     if (tx.value) {
-    //         const value = Number(tx.value)
-    //         if ( value != 0 && !this.interface.deploy.payable) {
-    //             assertArgument(
-    //                 false,
-    //                 "non-zero value provided to non-payable (or constructor) function",
-    //                     "value", value
-    //             );
-    //         }
-    //     }
-
-    //     // // Make sure the call matches the constructor signature
-    //     // logger.checkArgumentCount(
-    //     //   args.length,
-    //     //   this.interface.deploy.inputs.length,
-    //     //   " in Contract constructor"
-    //     // );
-
-    //     // Set the data to the bytecode + the encoded constructor arguments
-    //     tx.data = hexlify(
-    //       concat([this.bytecode, this.interface.encodeDeploy(args)])
-    //     );
-
-    //     return tx;
-    //   }
-
     /**
      * Resolves to the Contract deployed by passing `args` into the constructor.
      *
@@ -194,7 +143,6 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
             'getContractAddress',
         )?.(tx);
 
-        //const address = getCreateAddress(sentTx);
         return new (<any>BaseContract)(address, this.interface, this.runner, sentTx);
     }
 

@@ -15,10 +15,6 @@ import {
 import type { SignatureLike } from '../crypto/index.js';
 
 function getChecksumAddress(address: string): string {
-    //    if (!isHexString(address, 20)) {
-    //        logger.throwArgumentError("invalid address", "address", address);
-    //    }
-
     address = address.toLowerCase();
 
     const chars = address.substring(2).split('');

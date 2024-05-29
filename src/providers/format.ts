@@ -144,17 +144,12 @@ const _formatBlock = object({
     hash: allowNull(formatHash),
     parentHash: arrayOf(formatHash),
     number: arrayOf(getNumber),
-
     nonce: allowNull(formatData),
-
     gasLimit: getBigInt,
     gasUsed: getBigInt,
-
     miner: allowNull(getAddress),
     extraData: formatData,
-
     baseFeePerGas: allowNull(getBigInt),
-
     extRollupRoot: formatHash,
     extTransactionsRoot: formatHash,
     transactionsRoot: formatHash,
@@ -235,7 +230,6 @@ const _formatTransactionReceipt = object({
     to: allowNull(getAddress, null),
     from: allowNull(getAddress, null),
     contractAddress: allowNull(getAddress, null),
-    // should be allowNull(hash), but broken-EIP-658 support is handled in receipt
     index: getNumber,
     gasUsed: getBigInt,
     logsBloom: allowNull(formatData),
@@ -243,7 +237,6 @@ const _formatTransactionReceipt = object({
     hash: formatHash,
     logs: arrayOf(formatReceiptLog),
     blockNumber: getNumber,
-    //confirmations: allowNull(getNumber, null),
     cumulativeGasUsed: getBigInt,
     effectiveGasPrice: allowNull(getBigInt),
     status: allowNull(getNumber),
@@ -282,8 +275,6 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
             blockHash: allowNull(formatHash, null),
             blockNumber: allowNull(getNumber, null),
             index: allowNull(getNumber, null),
-
-            //confirmations: allowNull(getNumber, null),
 
             from: getAddress,
 
@@ -330,41 +321,6 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
             result.chainId = chainId;
         }
     }
-
-    // @TODO: check chainID
-    /*
-    if (value.chainId != null) {
-        let chainId = value.chainId;
-
-        if (isHexString(chainId)) {
-            chainId = BigNumber.from(chainId).toNumber();
-        }
-
-        result.chainId = chainId;
-
-    } else {
-        let chainId = value.networkId;
-
-        // geth-etc returns chainId
-        if (chainId == null && result.v == null) {
-            chainId = value.chainId;
-        }
-
-        if (isHexString(chainId)) {
-            chainId = BigNumber.from(chainId).toNumber();
-        }
-
-        if (typeof(chainId) !== "number" && result.v != null) {
-            chainId = (result.v - 35) / 2;
-            if (chainId < 0) { chainId = 0; }
-            chainId = parseInt(chainId);
-        }
-
-        if (typeof(chainId) !== "number") { chainId = 0; }
-
-        result.chainId = chainId;
-    }
-    */
 
     // 0x0000... should actually be null
     if (result.blockHash && getBigInt(result.blockHash) === BN_0) {
