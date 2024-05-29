@@ -1,7 +1,9 @@
 import { keccak256 } from '../crypto/index.js';
 import { MessagePrefix } from '../constants/index.js';
 import { recoverAddress } from '../transaction/index.js';
-import { concat, toUtf8Bytes } from '../utils/index.js';
+import { concat } from '../utils/index.js';
+import { toUtf8Bytes } from '../encoding/index.js';
+
 
 import type { SignatureLike } from '../crypto/index.js';
 /**

@@ -10,11 +10,11 @@
  * @_subsection: api/utils:Base58 Encoding [about-base58]
  */
 
-import { getBytes } from './data.js';
-import { assertArgument } from './errors.js';
-import { toBigInt } from './maths.js';
+import { getBytes } from '../utils/data.js';
+import { assertArgument } from '../utils/errors.js';
+import { toBigInt } from '../utils/maths.js';
 
-import type { BytesLike } from './index.js';
+import type { BytesLike } from '../utils/index.js';
 
 const Alphabet = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 let Lookup: null | Record<string, bigint> = null;

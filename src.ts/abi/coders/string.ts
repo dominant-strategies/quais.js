@@ -1,4 +1,4 @@
-import { toUtf8Bytes, toUtf8String } from "../../utils/utf8.js";
+import { toUtf8Bytes, toUtf8String } from "../../encoding/index.js";
 
 import { Typed } from "../typed.js";
 import { DynamicBytesCoder } from "./bytes.js";

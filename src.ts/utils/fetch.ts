@@ -15,11 +15,11 @@
  *
  * @section api/utils/fetching:Fetching Web Content  [about-fetch]
  */
-import { decodeBase64, encodeBase64 } from './base64.js';
+import { decodeBase64, encodeBase64 } from '../encoding/base64.js';
 import { hexlify } from './data.js';
 import { assert, assertArgument } from './errors.js';
 import { defineProperties } from './properties.js';
-import { toUtf8Bytes, toUtf8String } from './utf8.js';
+import { toUtf8Bytes, toUtf8String } from '../encoding/index.js';
 
 import { createGetUrl } from './geturl.js';
 

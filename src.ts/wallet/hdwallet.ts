@@ -9,7 +9,6 @@ import { VoidSigner } from '../signers/index.js';
 import { computeAddress } from '../transaction/index.js';
 import {
     concat,
-    decodeBase58,
     isBytesLike,
     getNumber,
     toBeArray,
@@ -27,6 +26,7 @@ import {
     getBytes,
     dataSlice,
 } from '../utils/index.js';
+import { decodeBase58 } from '../encoding/base58.js';
 import { BaseWallet } from './base-wallet.js';
 import { Mnemonic } from './mnemonic.js';
 import { encryptKeystoreJson, encryptKeystoreJsonSync } from './json-keystore.js';

@@ -5,8 +5,6 @@ import {
     assertArgument,
     BigNumberish,
     BytesLike,
-    decodeProtoTransaction,
-    encodeProtoTransaction,
     getBigInt,
     getBytes,
     getNumber,
@@ -14,6 +12,7 @@ import {
     hexlify, isQiAddress,
     toBeArray, toBigInt, zeroPadValue
 } from "../utils/index.js";
+import { decodeProtoTransaction, encodeProtoTransaction } from '../encoding/index.js';
 import {getAddress} from "../address/index.js";
 import {formatNumber, handleNumber} from "../providers/format.js";
 import { ProtoTransaction} from "./abstract-transaction.js";

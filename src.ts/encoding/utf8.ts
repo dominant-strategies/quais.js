@@ -4,10 +4,10 @@
  *
  * @subsection api/utils:Strings and UTF-8  [about-strings]
  */
-import { getBytes } from './data.js';
-import { assertArgument, assertNormalize } from './errors.js';
+import { getBytes } from '../utils/data.js';
+import { assertArgument, assertNormalize } from '../utils/errors.js';
 
-import type { BytesLike } from './index.js';
+import type { BytesLike } from '../utils/index.js';
 
 ///////////////////////////////
 
