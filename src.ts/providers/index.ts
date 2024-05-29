@@ -21,13 +21,6 @@ export { Network } from './network.js';
 export { NonceManager } from './signer-noncemanager.js';
 
 export {
-    NetworkPlugin,
-    GasCostPlugin,
-    FeeDataNetworkPlugin,
-    FetchUrlFeeDataNetworkPlugin,
-} from './plugins-network.js';
-
-export {
     Block,
     FeeData,
     Log,
@@ -69,8 +62,6 @@ export type { ContractRunner } from './contracts.js';
 export type { BlockParams, LogParams, TransactionReceiptParams, TransactionResponseParams } from './formatting.js';
 
 export type { Networkish } from './network.js';
-
-export type { GasCostParameters } from './plugins-network.js';
 
 export type {
     BlockTag,

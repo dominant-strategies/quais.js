@@ -75,9 +75,6 @@ export {
 
     Network,
 
-    FeeDataNetworkPlugin, FetchUrlFeeDataNetworkPlugin,
-    GasCostPlugin, NetworkPlugin,
-
     SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber,
     SocketSubscriber, UnmanagedSubscriber,
 
@@ -171,7 +168,7 @@ export type {
     AbstractProviderOptions, FallbackProviderOptions,
 
     AbstractProviderPlugin, BlockParams, BlockTag, ContractRunner, DebugEventBrowserProvider,
-    Eip1193Provider, EventFilter, Filter, FilterByBlockHash, GasCostParameters,
+    Eip1193Provider, EventFilter, Filter, FilterByBlockHash,
     JsonRpcApiProviderOptions, JsonRpcError, JsonRpcPayload, JsonRpcResult,
     JsonRpcTransactionRequest, LogParams, MinedBlock, MinedTransactionResponse, Networkish,
     OrphanFilter, PerformActionFilter, PerformActionRequest, PerformActionTransaction,

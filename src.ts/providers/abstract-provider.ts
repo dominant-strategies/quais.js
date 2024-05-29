@@ -57,7 +57,6 @@ import type { BigNumberish } from '../utils/index.js';
 import type { Listener } from '../utils/index.js';
 
 import type { Networkish } from './network.js';
-import type { FetchUrlFeeDataNetworkPlugin } from './plugins-network.js';
 import type {
     BlockParams,
     LogParams,
@@ -1218,7 +1217,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     async getFeeData(shard?: string, txType: boolean = true): Promise<FeeData> {
-        const network = await this.getNetwork();
         const getFeeDataFunc = async () => {
             const { gasPrice, priorityFee } = await resolveProperties({
                 gasPrice: (async () => {
@@ -1256,16 +1254,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
             return new FeeData(gasPrice, maxFeePerGas, maxPriorityFeePerGas);
         };
-
-        // Check for a FeeDataNetWorkPlugin
-        const plugin = <FetchUrlFeeDataNetworkPlugin>(
-            network.getPlugin('org.quais.plugins.network.FetchUrlFeeDataPlugin')
-        );
-        if (plugin) {
-            const req = new FetchRequest(plugin.url);
-            const feeData = await plugin.processFunc(getFeeDataFunc, this, req);
-            return new FeeData(feeData.gasPrice, feeData.maxFeePerGas, feeData.maxPriorityFeePerGas);
-        }
 
         return await getFeeDataFunc();
     }
