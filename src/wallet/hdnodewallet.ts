@@ -27,12 +27,6 @@ import type { Wordlist } from "../wordlists/index.js";
 
 import type { KeystoreAccount } from "./json-keystore.js";
 
-/**
- *  The default derivation path for Ethereum HD Nodes. (i.e. ``"m/44'/60'/0'/0/0"``)
- */
-export const defaultPath: string = "m/44'/60'/0'/0/0";
-
-
 // "Bitcoin seed"
 const MasterSecret = new Uint8Array([ 66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100 ]);
 
@@ -365,9 +359,8 @@ export class HDNodeWallet extends BaseWallet {
     /**
      *  Creates a new random HDNode.
      */
-    static createRandom(password?: string, path?: string, wordlist?: Wordlist): HDNodeWallet {
+    static createRandom(path: string, password?: string, wordlist?: Wordlist): HDNodeWallet {
         if (password == null) { password = ""; }
-        if (path == null) { path = defaultPath; }
         if (wordlist == null) { wordlist = LangEn.wordlist(); }
         const mnemonic = Mnemonic.fromEntropy(randomBytes(16), password, wordlist)
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
@@ -376,17 +369,15 @@ export class HDNodeWallet extends BaseWallet {
     /**
      *  Create an HD Node from %%mnemonic%%.
      */
-    static fromMnemonic(mnemonic: Mnemonic, path?: string): HDNodeWallet {
-        if (!path) { path = defaultPath; }
+    static fromMnemonic(mnemonic: Mnemonic, path: string): HDNodeWallet {
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
 
     /**
      *  Creates an HD Node from a mnemonic %%phrase%%.
      */
-    static fromPhrase(phrase: string, password?: string, path?: string, wordlist?: Wordlist): HDNodeWallet {
+    static fromPhrase(phrase: string, path: string, password?: string,  wordlist?: Wordlist): HDNodeWallet {
         if (password == null) { password = ""; }
-        if (path == null) { path = defaultPath; }
         if (wordlist == null) { wordlist = LangEn.wordlist(); }
         const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist)
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
