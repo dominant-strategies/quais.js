@@ -17,8 +17,6 @@ export { BaseWallet } from './base-wallet.js';
 
 export {QuaiHDWallet} from "./quai-hdwallet.js";
 
-export { isCrowdsaleJson, decryptCrowdsaleJson } from './json-crowdsale.js';
-
 export {
     isKeystoreJson,
     decryptKeystoreJsonSync,
@@ -31,7 +29,6 @@ export { Mnemonic } from './mnemonic.js';
 
 export { Wallet } from './wallet.js';
 
-export type { CrowdsaleAccount } from './json-crowdsale.js';
 export type { KeystoreAccount, EncryptOptions } from './json-keystore.js';
 
 export { QiHDWallet } from './qi-hdwallet.js';

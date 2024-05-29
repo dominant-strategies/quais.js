@@ -58,20 +58,17 @@ export {
 
 // PROVIDERS
 export {
-    getDefaultProvider,
-
     Block, FeeData, Log, TransactionReceipt, TransactionResponse,
 
-    AbstractSigner, NonceManager, VoidSigner,
+    AbstractSigner, VoidSigner,
 
     AbstractProvider,
 
-    FallbackProvider,
     JsonRpcApiProvider, JsonRpcProvider,
 
     BrowserProvider,
 
-    IpcSocketProvider, SocketProvider, WebSocketProvider,
+    SocketProvider, WebSocketProvider,
 
     Network,
 
@@ -115,8 +112,8 @@ export {
     Mnemonic,
     BaseWallet, QuaiHDWallet, HDNodeVoidWallet, QiHDWallet,
     Wallet,
-    isCrowdsaleJson, isKeystoreJson,
-    decryptCrowdsaleJson, decryptKeystoreJsonSync, decryptKeystoreJson,
+    isKeystoreJson,
+    decryptKeystoreJsonSync, decryptKeystoreJson,
     encryptKeystoreJson, encryptKeystoreJsonSync,
 
 
@@ -165,7 +162,7 @@ export type { TypedDataDomain, TypedDataField } from "./hash/index.js";
 export type {
     Provider, Signer,
 
-    AbstractProviderOptions, FallbackProviderOptions,
+    AbstractProviderOptions,
 
     AbstractProviderPlugin, BlockParams, BlockTag, ContractRunner, DebugEventBrowserProvider,
     Eip1193Provider, EventFilter, Filter, FilterByBlockHash,
@@ -209,6 +206,6 @@ export type {
 
 // WALLET
 export type {
-    CrowdsaleAccount, KeystoreAccount, EncryptOptions
+    KeystoreAccount, EncryptOptions
 } from "./wallet/index.js";
 

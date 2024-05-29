@@ -7,12 +7,10 @@ import type { TestCaseWallet } from './types.js';
 import {
     isError,
     getBytes,
-    decryptCrowdsaleJson,
     decryptKeystoreJson,
     decryptKeystoreJsonSync,
     encryptKeystoreJson,
     encryptKeystoreJsonSync,
-    isCrowdsaleJson,
     QuaiHDWallet,
     Wallet,
 } from '../index.js';
@@ -22,16 +20,6 @@ import { HDWallet } from "../wallet/hdwallet.js";
 
 describe('Tests JSON Wallet Formats', function () {
     const tests = loadTests<TestCaseWallet>('wallets');
-    tests.forEach((test) => {
-        if (test.type !== 'crowdsale') {
-            return;
-        }
-        it(`tests decrypting Crowdsale JSON: ${test.name}`, async function () {
-            const password = getBytes(test.password);
-            const account = decryptCrowdsaleJson(test.content, password);
-            assert.equal(account.address, test.address, 'address');
-        });
-    });
 
     tests.forEach((test) => {
         if (test.type !== 'keystore') {
@@ -96,30 +84,6 @@ describe('Tests JSON Wallet Formats', function () {
 });
 
 describe('Tests Extra JSON Wallet Functions', function () {
-    const badCrowdsales: Array<{ name: string; value: any }> = [
-        {
-            name: 'undefined',
-            value: undefined,
-        },
-        {
-            name: 'junk string',
-            value: 'junk!',
-        },
-        {
-            name: 'non-string',
-            value: 42,
-        },
-        {
-            name: 'JSON without encseed',
-            value: JSON.stringify({ foo: 'bar' }),
-        },
-    ];
-
-    for (const { name, value } of badCrowdsales) {
-        it(`tests the invalid isCrowdsale wallet: ${name}`, function () {
-            assert.equal(isCrowdsaleJson(value), false);
-        });
-    }
 
     const badKeystoreOptions: Array<{ name: string; options: any; error: string }> = [
         {
