@@ -12,8 +12,6 @@ export { AbstractProvider, UnmanagedSubscriber } from './abstract-provider.js';
 
 export { AbstractSigner, VoidSigner } from './abstract-signer.js';
 
-export { showThrottleMessage } from './community.js';
-
 export { getDefaultProvider } from './default-provider.js';
 
 export { Network } from './network.js';
