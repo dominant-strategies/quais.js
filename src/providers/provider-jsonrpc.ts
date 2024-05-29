@@ -1091,7 +1091,6 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         // All requests are over HTTP, so we can just start handling requests
         // We do this here rather than the constructor so that we don't send any
         // requests to the network (i.e. quai_chainId) until we absolutely have to.
-        //        await this.initPromise;
         await this._start();
 
         return await super.send(method, params, shard);

@@ -1,8 +1,5 @@
 import { getNumber } from '../utils/index.js';
-
 import type { Subscriber } from './abstract-provider.js';
-
-//#TODO: Temp
 import type { Provider } from './provider.js';
 
 /**

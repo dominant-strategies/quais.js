@@ -5,8 +5,6 @@
  * @_section api/utils:Utilities [about-utils]
  */
 
-
-
 export {
     getBytes,
     getBytesCopy,
@@ -66,9 +64,6 @@ export { getTxType, getShardForAddress, getAddressDetails, isQiAddress } from '.
 export type { BytesLike, DataHexString, HexString } from './data.js';
 
 export type {
-    //ErrorFetchRequestWithBody, ErrorFetchRequest,
-    //ErrorFetchResponseWithBody, ErrorFetchResponse,
-
     ErrorCode,
     quaisError,
     UnknownError,

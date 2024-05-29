@@ -238,16 +238,6 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
         this.#pending = new Map();
     }
 
-    // This value is only valid after _start has been called
-    /*
-    get _network(): Network {
-        if (this.#network == null) {
-            throw new Error("this shouldn't happen");
-        }
-        return this.#network.clone();
-    }
-    */
-
     _getSubscriber(sub: Subscription): Subscriber {
         switch (sub.type) {
             case 'close':
@@ -305,21 +295,6 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
 
         return <Array<JsonRpcResult | JsonRpcError>>[await promise];
     }
-
-    // Sub-classes must call this once they are connected
-    /*
-    async _start(): Promise<void> {
-        if (this.#ready) { return; }
-
-        for (const { payload } of this.#callbacks.values()) {
-            await this._write(JSON.stringify(payload));
-        }
-
-        this.#ready = (async function() {
-            await super._start();
-        })();
-    }
-    */
 
     /**
      * Sub-classes **must** call this with messages received over their transport to be processed and dispatched.

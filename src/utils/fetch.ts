@@ -704,12 +704,6 @@ export class FetchRequest implements Iterable<[key: string, value: string]> {
             req.#body = new Uint8Array(this.#body);
         }
         req.#bodyType = this.#bodyType;
-
-        // Do not forward credentials unless on the same domain; only absolute
-        //req.allowInsecure = false;
-        // paths are currently supported; may want a way to specify to forward?
-        //setStore(req.#props, "creds", getStore(this.#pros, "creds"));
-
         return req;
     }
 

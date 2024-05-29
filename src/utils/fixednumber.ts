@@ -300,28 +300,6 @@ export class FixedNumber {
     }
 
     #checkValue(val: bigint, safeOp?: string): FixedNumber {
-        /*
-        const width = BigInt(this.width);
-        if (this.signed) {
-            const limit = (BN_1 << (width - BN_1));
-            assert(safeOp == null || (val >= -limit  && val < limit), "overflow", "NUMERIC_FAULT", {
-                operation: <string>safeOp, fault: "overflow", value: val
-            });
-
-            if (val > BN_0) {
-                val = fromTwos(mask(val, width), width);
-            } else {
-                val = -fromTwos(mask(-val, width), width);
-            }
-
-        } else {
-            const masked = mask(val, width);
-            assert(safeOp == null || (val >= 0 && val === masked), "overflow", "NUMERIC_FAULT", {
-                operation: <string>safeOp, fault: "overflow", value: val
-            });
-            val = masked;
-        }
-*/
         val = checkValue(val, this.#format, safeOp);
         return new FixedNumber(_guard, val, this.#format);
     }
@@ -800,8 +778,3 @@ export class FixedNumber {
         return new FixedNumber(_guard, value, format);
     }
 }
-
-//const f1 = FixedNumber.fromString("12.56", "fixed16x2");
-//const f2 = FixedNumber.fromString("0.3", "fixed16x2");
-//console.log(f1.divSignal(f2));
-//const BUMP = FixedNumber.from("0.5");

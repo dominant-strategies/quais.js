@@ -174,7 +174,6 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
      * @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
     toProtobuf(): ProtoTransaction {
-        // console.log(`--> (toProtobuf) txInputs: ${JSON.stringify(this.txInputs)}`);
         const protoTx: ProtoTransaction = {
             type: this.type || 2,
             chain_id: formatNumber(this.chainId || 0, 'chainId'),
@@ -236,7 +235,6 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
      */
     static fromProto(protoTx: ProtoTransaction): QiTransaction {
         //  TODO: Fix this because new tx instance requires a 'from' address
-        // if (this.signature == null) { return null; }
         const tx = new QiTransaction();
 
         tx.type = protoTx.type;

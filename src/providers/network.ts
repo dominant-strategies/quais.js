@@ -166,8 +166,6 @@ export class Network {
         // Clonable with network-like abilities
         if (typeof (<Network>network).clone === 'function') {
             const clone = (<Network>network).clone();
-            //if (typeof(network.name) !== "string" || typeof(network.chainId) !== "number") {
-            //}
             return clone;
         }
 

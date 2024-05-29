@@ -692,12 +692,7 @@ export function makeError<K extends ErrorCode, T extends CodedquaisError<K>>(
                     continue;
                 }
                 const value = <any>info[<keyof ErrorInfo<T>>key];
-                //                try {
                 details.push(key + '=' + stringify(value));
-                //                } catch (error: any) {
-                //                console.log("MMM", error.message);
-                //                    details.push(key + "=[could not serialize object]");
-                //                }
             }
         }
         details.push(`code=${code}`);

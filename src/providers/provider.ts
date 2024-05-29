@@ -1230,7 +1230,6 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
 
             etxs: tx.etxs,
             type: tx.type,
-            //byzantium: tx.byzantium,
             status: tx.status,
         });
     }
@@ -1263,7 +1262,6 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             _type: 'TransactionReceipt',
             blockHash,
             blockNumber,
-            //byzantium,
             contractAddress,
             cumulativeGasUsed: toJson(this.cumulativeGasUsed),
             from,
@@ -2137,187 +2135,6 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
         const blockNumber = await this.provider.getBlockNumber(shard);
         return blockNumber - this.blockNumber + 1;
     }
-
-    /**
-     * Resolves once this transaction has been mined and has `confirms` blocks including it (default: `1`) with an
-     * optional `timeout`.
-     *
-     * This can resolve to `null` only if `confirms` is `0` and the transaction has not been mined, otherwise this will
-     * wait until enough confirmations have completed.
-     */
-    //    async wait(_confirms?: number, _timeout?: number): Promise<null | TransactionReceipt> {
-    //        const confirms = (_confirms == null) ? 1 : _confirms;
-    //        const timeout = (_timeout == null) ? 0 : _timeout;
-    //
-    //        let startBlock = this.#startBlock
-    //        let nextScan = -1;
-    //        let stopScanning = (startBlock === -1) ? true : false;
-    //        const shard = shardFromHash(this.hash);
-    //        const checkReplacement = async () => {
-    //            // Get the current transaction count for this sender
-    //            if (stopScanning) { return null; }
-    //            const { blockNumber, nonce } = await resolveProperties({
-    //                blockNumber: this.provider.getBlockNumber(shard),
-    //                nonce: this.provider.getTransactionCount(this.from)
-    //            });
-    //
-    //            // No transaction or our nonce has not been mined yet; but we
-    //            // can start scanning later when we do start
-    //            if (nonce < this.nonce) {
-    //                startBlock = blockNumber;
-    //                return;
-    //            }
-    //
-    //            // We were mined; no replacement
-    //            if (stopScanning) { return null; }
-    //            const mined = await this.getTransaction();
-    //            if (mined && mined.blockNumber != null) { return; }
-    //
-    //            // We were replaced; start scanning for that transaction
-    //
-    //            // Starting to scan; look back a few extra blocks for safety
-    //            if (nextScan === -1) {
-    //                nextScan = startBlock - 3;
-    //                if (nextScan < this.#startBlock) { nextScan = this.#startBlock; }
-    //            }
-    //
-    //            while (nextScan <= blockNumber) {
-    //                // Get the next block to scan
-    //                if (stopScanning) { return null; }
-    //                const block = await this.provider.getBlock(shard, nextScan, true);
-    //
-    //                // This should not happen; but we'll try again shortly
-    //                if (block == null) { return; }
-    //
-    //                // We were mined; no replacement
-    //                for (const hash of block) {
-    //                    if (hash === this.hash) { return; }
-    //                }
-    //
-    //                // Search for the transaction that replaced us
-    //                for (let i = 0; i < block.length; i++) {
-    //                    const tx: TransactionResponse = await block.getTransaction(i);
-    //
-    //                    if (tx.from === this.from && tx.nonce === this.nonce) {
-    //                        // Get the receipt
-    //                        if (stopScanning) { return null; }
-    //                        const receipt = await this.provider.getTransactionReceipt(tx.hash);
-    //
-    //                        // This should not happen; but we'll try again shortly
-    //                        if (receipt == null) { return; }
-    //
-    //                        // We will retry this on the next block (this case could be optimized)
-    //                        if ((blockNumber - receipt.blockNumber + 1) < confirms) { return; }
-    //
-    //                        // The reason we were replaced
-    //                        let reason: "replaced" | "repriced" | "cancelled" = "replaced";
-    //                        if (tx.data === this.data && tx.to === this.to && tx.value === this.value) {
-    //                            reason = "repriced";
-    //                        } else if (tx.data === "0x" && tx.from === tx.to && tx.value === BN_0) {
-    //                            reason = "cancelled"
-    //                        }
-    //
-    //                        assert(false, "transaction was replaced", "TRANSACTION_REPLACED", {
-    //                            cancelled: (reason === "replaced" || reason === "cancelled"),
-    //                            reason,
-    //                            replacement: tx.replaceableTransaction(startBlock),
-    //                            hash: tx.hash,
-    //                            receipt
-    //                        });
-    //                    }
-    //                }
-    //
-    //                nextScan++;
-    //            }
-    //            return;
-    //        };
-    //
-    //        const checkReceipt = (receipt: null | TransactionReceipt) => {
-    //            if (receipt == null || receipt.status !== 0) { return receipt; }
-    //            assert(false, "transaction execution reverted", "CALL_EXCEPTION", {
-    //                action: "sendTransaction",
-    //                data: null, reason: null, invocation: null, revert: null,
-    //                transaction: {
-    //                    to: receipt.to,
-    //                    from: receipt.from,
-    //                    data: "" // @TODO: in v7, split out sendTransaction properties
-    //                }, receipt
-    //            });
-    //        };
-    //
-    //        const receipt = await this.provider.getTransactionReceipt(this.hash);
-    //
-    //        if (confirms === 0) { return checkReceipt(receipt); }
-    //
-    //        if (receipt) {
-    //            if ((await receipt.confirmations()) >= confirms) {
-    //                return checkReceipt(receipt);
-    //            }
-    //
-    //        } else {
-    //            // Check for a replacement; throws if a replacement was found
-    //            await checkReplacement();
-    //
-    //            // Allow null only when the confirms is 0
-    //            if (confirms === 0) { return null; }
-    //        }
-    //
-    //        const waiter = new Promise((resolve, reject) => {
-    //            // List of things to cancel when we have a result (one way or the other)
-    //            const cancellers: Array<() => void> = [];
-    //            const cancel = () => { cancellers.forEach((c) => c()); };
-    //
-    //            // On cancel, stop scanning for replacements
-    //            cancellers.push(() => { stopScanning = true; });
-    //
-    //            // Set up any timeout requested
-    //            if (timeout > 0) {
-    //                const timer = setTimeout(() => {
-    //                    cancel();
-    //                    reject(makeError("wait for transaction timeout", "TIMEOUT"));
-    //                }, timeout);
-    //                cancellers.push(() => { clearTimeout(timer); });
-    //            }
-    //
-    //            const txListener = async (receipt: TransactionReceipt) => {
-    //                // Done; return it!
-    //                if ((await receipt.confirmations()) >= confirms) {
-    //                    cancel();
-    //                    try {
-    //                        resolve(checkReceipt(receipt));
-    //                    } catch (error) { reject(error); }
-    //                }
-    //            };
-    //            cancellers.push(() => { this.provider.off(this.hash, txListener); });
-    //            this.provider.on(this.hash, txListener);
-    //            // We support replacement detection; start checking
-    //            if (startBlock >= 0) {
-    //                const replaceListener = async () => {
-    //                    try {
-    //                        // Check for a replacement; this throws only if one is found
-    //                        await checkReplacement();
-    //
-    //                    } catch (error) {
-    //                        // We were replaced (with enough confirms); re-throw the error
-    //                        if (isError(error, "TRANSACTION_REPLACED")) {
-    //                            cancel();
-    //                            reject(error);
-    //                            return;
-    //                        }
-    //                    }
-    //
-    //                    // Rescheudle a check on the next block
-    //                    if (!stopScanning) {
-    //                        this.provider.once("block", replaceListener);
-    //                    }
-    //                };
-    //                cancellers.push(() => { this.provider.off("block", replaceListener); });
-    //                this.provider.once("block", replaceListener);
-    //            }
-    //        });
-    //
-    //        return await <Promise<TransactionReceipt>>waiter;
-    //    }
 
     /**
      * Returns `true` if this transaction has been included.
