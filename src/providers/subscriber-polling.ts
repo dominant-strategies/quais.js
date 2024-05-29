@@ -26,8 +26,6 @@ export function getPollingSubscriber(provider: AbstractProvider, event: Provider
     });
 }
 
-// @TODO: refactor this
-
 /**
  * A **PollingBlockSubscriber** polls at a regular interval for a change in the block number.
  *
@@ -91,7 +89,6 @@ export class PollingBlockSubscriber implements Subscriber {
         } catch (error) {
             // @TODO: Minor bump, add an "error" event to let subscribers
             //        know things went awry.
-            //console.log(error);
         }
 
         // We have been stopped

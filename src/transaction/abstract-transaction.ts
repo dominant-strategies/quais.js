@@ -222,9 +222,6 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
             case 'standard':
                 this._type = 0;
                 break;
-            // case 1: case "external":
-            //     this.#type = 1;
-            //     break;
             case 2:
             case 'utxo':
                 this._type = 2;
