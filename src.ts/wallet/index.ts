@@ -36,5 +36,3 @@ export { QiHDWallet } from './qi-hdwallet.js';
 export { HDNodeVoidWallet } from "./hdwallet.js";
 
 export type { HDWalletStatic } from "./hdwallet.js";
-
-export { nobleCrypto } from "./musig-crypto.js";

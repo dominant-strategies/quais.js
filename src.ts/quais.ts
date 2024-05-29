@@ -117,9 +117,6 @@ export {
     isKeystoreJson,
     decryptKeystoreJsonSync, decryptKeystoreJson,
     encryptKeystoreJson, encryptKeystoreJsonSync,
-
-
-    nobleCrypto,
 } from "./wallet/index.js";
 
 // WORDLIST

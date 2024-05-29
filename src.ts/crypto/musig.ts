@@ -1,3 +1,6 @@
+import { sha256 } from '@noble/hashes/sha256';
+import { secp256k1, schnorr } from '@noble/curves/secp256k1';
+
 // BigInt / Uint8Array versions of Crypto functions that do not require point
 // math. If your JS interpreter has BigInt, you can use all of these. If not,
 // you'll need to either shim it in or override more of these functions.
@@ -40,13 +43,13 @@ function write32b(num: bigint, dest: Uint8Array = new Uint8Array(32)): Uint8Arra
     return dest;
 }
 
-export function readScalar(bytes: Uint8Array): bigint {
+function readScalar(bytes: Uint8Array): bigint {
     const a = read32b(bytes);
     if (a >= CURVE.n) throw new Error('Expected value mod n');
     return a;
 }
 
-export function readSecret(bytes: Uint8Array): bigint {
+function readSecret(bytes: Uint8Array): bigint {
     const a = readScalar(bytes);
     if (a === 0n) throw new Error('Expected non-zero');
     return a;
@@ -84,7 +87,7 @@ function jacobiSymbol(a: bigint): -1 | 0 | 1 {
     return sign > 0 ? 1 : -1;
 }
 
-export function isPoint(p: Uint8Array): boolean {
+function isPoint(p: Uint8Array): boolean {
     if (p.length < 33) return false;
 
     const t = p[0];
@@ -107,7 +110,7 @@ export function isPoint(p: Uint8Array): boolean {
     return left === right;
 }
 
-export function isXOnlyPoint(p: Uint8Array): boolean {
+function isXOnlyPoint(p: Uint8Array): boolean {
     if (p.length !== 32) return false;
     const x = read32b(p);
     if (x === _0n) return false;
@@ -116,33 +119,33 @@ export function isXOnlyPoint(p: Uint8Array): boolean {
     return jacobiSymbol(y2) === 1; // If sqrt(y^2) exists, x is on the curve.
 }
 
-export function scalarAdd(a: Uint8Array, b: Uint8Array): Uint8Array {
+function scalarAdd(a: Uint8Array, b: Uint8Array): Uint8Array {
     const aN = readScalar(a);
     const bN = readScalar(b);
     const sum = (aN + bN) % CURVE.n;
     return write32b(sum);
 }
 
-export function scalarMultiply(a: Uint8Array, b: Uint8Array): Uint8Array {
+function scalarMultiply(a: Uint8Array, b: Uint8Array): Uint8Array {
     const aN = readScalar(a);
     const bN = readScalar(b);
     const product = (aN * bN) % CURVE.n;
     return write32b(product);
 }
 
-export function scalarNegate(a: Uint8Array): Uint8Array {
+function scalarNegate(a: Uint8Array): Uint8Array {
     const aN = readScalar(a);
     const negated = aN === _0n ? _0n : CURVE.n - aN;
     return write32b(negated);
 }
 
-export function scalarMod(a: Uint8Array): Uint8Array {
+function scalarMod(a: Uint8Array): Uint8Array {
     const aN = read32b(a);
     const remainder = aN % CURVE.n;
     return write32b(remainder);
 }
 
-export function isScalar(t: Uint8Array): boolean {
+function isScalar(t: Uint8Array): boolean {
     try {
         readScalar(t);
         return true;
@@ -151,7 +154,7 @@ export function isScalar(t: Uint8Array): boolean {
     }
 }
 
-export function isSecret(s: Uint8Array): boolean {
+function isSecret(s: Uint8Array): boolean {
     try {
         readSecret(s);
         return true;
@@ -160,7 +163,7 @@ export function isSecret(s: Uint8Array): boolean {
     }
 }
 
-export function pointNegate(p: Uint8Array): Uint8Array {
+function pointNegate(p: Uint8Array): Uint8Array {
     // hasEvenY does basic structure check, so start there
     const even = hasEvenY(p);
     // `from` because node.Buffer.slice doesn't copy but looks like a Uint8Array
@@ -176,13 +179,13 @@ export function pointNegate(p: Uint8Array): Uint8Array {
     return negated;
 }
 
-export function pointX(p: Uint8Array): Uint8Array {
+function pointX(p: Uint8Array): Uint8Array {
     if (p.length === 32) return p;
     hasEvenY(p); // hasEvenY throws if not well structured
     return p.slice(1, 33);
 }
 
-export function hasEvenY(p: Uint8Array): boolean {
+function hasEvenY(p: Uint8Array): boolean {
     if (p.length === 33) {
         if (p[0] === 2) return true;
         else if (p[0] === 3) return false;
@@ -194,3 +197,116 @@ export function hasEvenY(p: Uint8Array): boolean {
     }
     throw new Error('Wrong length to be a point');
 }
+
+function pointMultiplyUnsafe(p: Uint8Array, a: Uint8Array, compress: boolean): Uint8Array | null {
+    try {
+        const product = secp256k1.ProjectivePoint.fromHex(p).multiplyAndAddUnsafe(
+            secp256k1.ProjectivePoint.ZERO,
+            BigInt(`0x${Buffer.from(a).toString('hex')}`),
+            BigInt(1),
+        );
+        if (!product) return null;
+        return product.toRawBytes(compress);
+    } catch {
+        return null;
+    }
+}
+
+function pointMultiplyAndAddUnsafe(
+    p1: Uint8Array,
+    a: Uint8Array,
+    p2: Uint8Array,
+    compress: boolean,
+): Uint8Array | null {
+    try {
+        const p2p = secp256k1.ProjectivePoint.fromHex(p2);
+        const p = secp256k1.ProjectivePoint.fromHex(p1).multiplyAndAddUnsafe(
+            p2p,
+            BigInt(`0x${Buffer.from(a).toString('hex')}`),
+            BigInt(1),
+        );
+        if (!p) return null;
+        return p.toRawBytes(compress);
+    } catch {
+        return null;
+    }
+}
+
+function pointAdd(a: Uint8Array, b: Uint8Array, compress: boolean): Uint8Array | null {
+    try {
+        return secp256k1.ProjectivePoint.fromHex(a).add(secp256k1.ProjectivePoint.fromHex(b)).toRawBytes(compress);
+    } catch {
+        return null;
+    }
+}
+
+function pointAddTweak(p: Uint8Array, tweak: Uint8Array, compress: boolean): Uint8Array | null {
+    try {
+        const P = secp256k1.ProjectivePoint.fromHex(p);
+        const t = readSecret(tweak);
+        const Q = secp256k1.ProjectivePoint.BASE.multiplyAndAddUnsafe(P, t, 1n);
+        if (!Q) throw new Error('Tweaked point at infinity');
+        return Q.toRawBytes(compress);
+    } catch {
+        return null;
+    }
+}
+
+function pointCompress(p: Uint8Array, compress = true): Uint8Array {
+    return secp256k1.ProjectivePoint.fromHex(p).toRawBytes(compress);
+}
+
+function liftX(p: Uint8Array): Uint8Array | null {
+    try {
+        return secp256k1.ProjectivePoint.fromHex(p).toRawBytes(false);
+    } catch {
+        return null;
+    }
+}
+
+function getPublicKey(s: Uint8Array, compress: boolean): Uint8Array | null {
+    try {
+        return secp256k1.getPublicKey(s, compress);
+    } catch {
+        return null;
+    }
+}
+
+function taggedHash(tag: string, ...messages: Uint8Array[]): Uint8Array {
+    return schnorr.utils.taggedHash(tag, ...messages);
+}
+
+function sha256Hash(...messages: Uint8Array[]): Uint8Array {
+    const h = sha256.create();
+    for (const message of messages) h.update(message);
+    return h.digest();
+}
+
+export const musigCrypto = {
+    read32b,
+    write32b,
+    readScalar,
+    readSecret,
+    secp256k1Right,
+    jacobiSymbol,
+    isPoint,
+    isXOnlyPoint,
+    scalarAdd,
+    scalarMultiply,
+    scalarNegate,
+    scalarMod,
+    isScalar,
+    isSecret,
+    pointNegate,
+    pointX,
+    hasEvenY,
+    pointMultiplyUnsafe,
+    pointMultiplyAndAddUnsafe,
+    pointAdd,
+    pointAddTweak,
+    pointCompress,
+    liftX,
+    getPublicKey,
+    taggedHash,
+    sha256: sha256Hash,
+};
