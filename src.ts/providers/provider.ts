@@ -18,7 +18,7 @@ import type { BigNumberish, EventEmitterable } from '../utils/index.js';
 import type { Signature } from '../crypto/index.js';
 import type { AccessList, AccessListish } from '../transaction/index.js';
 
-import type { ContractRunner } from './contracts.js';
+import type { ContractRunner } from '../contract/index.js';
 import type { Network } from './network.js';
 import type { Outpoint } from '../transaction/utxo.js';
 import type { TxInput, TxOutput } from '../transaction/utxo.js';
