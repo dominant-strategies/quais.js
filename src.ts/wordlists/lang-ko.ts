@@ -1,5 +1,6 @@
 import { id } from '../hash/index.js';
-import { assertArgument, toUtf8String } from '../utils/index.js';
+import { assertArgument } from '../utils/index.js';
+import { toUtf8String } from '../encoding/index.js';
 
 import { Wordlist } from './wordlist.js';
 

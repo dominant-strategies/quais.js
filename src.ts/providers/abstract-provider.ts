@@ -32,8 +32,8 @@ import {
     defineProperties,
     EventPayload,
     resolveProperties,
-    decodeProtoTransaction,
 } from '../utils/index.js';
+import { decodeProtoTransaction } from '../encoding/index.js';
 
 import { formatBlock, formatLog, formatTransactionReceipt, formatTransactionResponse } from './format.js';
 import { Network } from './network.js';

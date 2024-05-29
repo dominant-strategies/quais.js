@@ -4,7 +4,9 @@
  * @category Application Binary Interface
  */
 
-import { getBytes, toUtf8Bytes, toUtf8String, zeroPadBytes } from '../utils/index.js';
+import { getBytes, zeroPadBytes } from '../utils/index.js';
+import { toUtf8Bytes, toUtf8String, } from '../encoding/index.js';
+
 
 import type { BytesLike } from '../utils/index.js';
 

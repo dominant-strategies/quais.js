@@ -90,8 +90,6 @@ export {
 
 // UTILS
 export {
-    decodeBase58, encodeBase58,
-    decodeBase64, encodeBase64,
     concat, dataLength, dataSlice, getBytes, getBytesCopy, hexlify,
     isHexString, isBytesLike, stripZerosLeft, zeroPadBytes, zeroPadValue,
     defineProperties, resolveProperties,
@@ -104,10 +102,16 @@ export {
     getBigInt, getNumber, getUint, toBeArray, toBigInt, toBeHex, toNumber, toQuantity,
     fromTwos, toTwos, mask,
     formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits,
-    toUtf8Bytes, toUtf8CodePoints, toUtf8String,
-    Utf8ErrorFuncs,
     uuidV4, getTxType, getShardForAddress, getAddressDetails, isQiAddress,
 } from "./utils/index.js";
+
+export {
+    decodeBase58, encodeBase58,
+    decodeBase64, encodeBase64,
+    decodeProtoTransaction, encodeProtoTransaction,
+    decodeProtoWorkObject, encodeProtoWorkObject,
+    toUtf8Bytes, toUtf8CodePoints, toUtf8String, Utf8ErrorFuncs,
+} from "./encoding/index.js";
 
 // WALLET
 export {
@@ -190,7 +194,6 @@ export type {
     BigNumberish, Numeric,
     ErrorCode,
     FixedFormat,
-    Utf8ErrorFunc, UnicodeNormalizationForm, Utf8ErrorReason,
 
     GetUrlResponse,
     FetchPreflightFunc, FetchProcessFunc, FetchRetryFunc,
@@ -207,6 +210,10 @@ export type {
     CallExceptionAction, CallExceptionTransaction,
     EventEmitterable, Listener
 } from "./utils/index.js";
+
+export type {
+    Utf8ErrorFunc, UnicodeNormalizationForm, Utf8ErrorReason,
+} from "./encoding/index.js";
 
 // WALLET
 export type {

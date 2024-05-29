@@ -7,11 +7,11 @@ import {
     hexlify,
     toBeArray,
     toTwos,
-    toUtf8Bytes,
     zeroPadBytes,
     zeroPadValue,
     assertArgument,
 } from '../utils/index.js';
+import { toUtf8Bytes } from '../encoding/index.js';
 
 const regexBytes = new RegExp('^bytes([0-9]+)$');
 const regexNumber = new RegExp('^(u?int)([0-9]*)$');
