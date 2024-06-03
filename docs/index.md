@@ -1,26 +1,14 @@
 # Documentation
 
-The quais.js library aims to be a complete and compact library
-for interacting with the Ethereum Blockchain and its ecosystem.
+The quais.js library aims to be a complete and compact library for interacting with the Ethereum Blockchain and its ecosystem.
 
-It is often used to create decentralized applications (dapps),
-wallets (such as [MetaMask](https://metamask.io/) and [Tally](https://tallyho.org)) and
-other tools and simple scripts that require reading and writing
+It is often used to create decentralized applications (dapps), wallets (such as [MetaMask](https://metamask.io/) and [Tally](https://tallyho.org)) and other tools and simple scripts that require reading and writing
 to the blockchain.
 
-\_subsection: About this documentation?
+## About this documentation?
 
-These docs are still under construction, and are being expanded
-every day.
+These docs are still under construction, and are being expanded every day.
 
-Developers new to quais should be sure to read through the
-[[getting-started]] section.
+Developers new to quais should be sure to read through the getting started section.
 
-And the [[about-api]] is available for drilling down into more details
-about the entire Application Programming Interface.
-
-\_subsection: Older Documentation
-
--   [v5 documentation](link-docs-v5)
--   [v4 documentation](link-docs-v4)
--   [v3 documentation](link-docs-v3)
+And the about-api is available for drilling down into more details about the entire Application Programming Interface.

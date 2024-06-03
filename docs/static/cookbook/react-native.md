@@ -1,11 +1,8 @@
 # React Native
 
-When using React Native, many of the built-in cryptographic primitives
-can be replaced by native, substantially faster implementations.
+When using React Native, many of the built-in cryptographic primitives can be replaced by native, substantially faster implementations.
 
-This should be available in its own package in the future, but for now
-this is highly recommended, and requires installing the
-[Quick Crypto](https://www.npmjs.com/package/react-native-quick-crypto) package.
+This should be available in its own package in the future, but for now this is highly recommended, and requires installing the [Quick Crypto](https://www.npmjs.com/package/react-native-quick-crypto) package.
 
 ```js
 import { quais } from 'quais';
