@@ -34,7 +34,7 @@ the site can then authenticate them with. By providing a timestamp
 the site can ensure that an older signed message cannot be used again
 in the future.
 
-The format that is signed uses [[link-eip-191]] with the
+The format that is signed uses [EIP-191](https://eips.ethereum.org/EIPS/eip-191) with the
 **personal sign** version code (`0x45`, or `"E"`).
 
 For those interested in the choice of this prefix, signed messages
@@ -44,7 +44,7 @@ the length of `"Bitcoin Signed Message:\\n"`.). When Ethereum adopted
 the similar feature, the relevant string was `"\\x19Ethereum Signed Message:\\n"`.
 
 In one of the most brilliant instances of technical retcon-ing,
-since 0x19 is invalid as the first byte of a transaction (in [[link-rlp]] it
+since 0x19 is invalid as the first byte of a transaction (in [Recursive-Length Prefix](https://ethereum.org/en/developers/docs/data-structures-and-encoding/rlp/) it
 indicates a single byte of value 25), the initial byte `\\x19` has
 now been adopted as a prefix for //some sort of signed data//,
 where the second byte determines how to interpret that data. If the
@@ -59,25 +59,28 @@ format for future formats (of which there now a few).
 
 Anyways, the necessary JavaScript and Solidity are provided below.
 
-
 ```js
 // The contract below is deployed to Sepolia at this address
-contractAddress = "0xf554DA5e35b2e40C09DDB481545A395da1736513";
-contract = new Contract(contractAddress, [
-  "function recoverStringFromCompact(string message, (bytes32 r, bytes32 yParityAndS) sig) pure returns (address)",
-  "function recoverStringFromExpanded(string message, (uint8 v, bytes32 r, bytes32 s) sig) pure returns (address)",
-  "function recoverStringFromVRS(string message, uint8 v, bytes32 r, bytes32 s) pure returns (address)",
-  "function recoverStringFromRaw(string message, bytes sig) pure returns (address)",
-  "function recoverHashFromCompact(bytes32 hash, (bytes32 r, bytes32 yParityAndS) sig) pure returns (address)"
-], new quais.InfuraProvider("sepolia"));
+contractAddress = '0xf554DA5e35b2e40C09DDB481545A395da1736513';
+contract = new Contract(
+    contractAddress,
+    [
+        'function recoverStringFromCompact(string message, (bytes32 r, bytes32 yParityAndS) sig) pure returns (address)',
+        'function recoverStringFromExpanded(string message, (uint8 v, bytes32 r, bytes32 s) sig) pure returns (address)',
+        'function recoverStringFromVRS(string message, uint8 v, bytes32 r, bytes32 s) pure returns (address)',
+        'function recoverStringFromRaw(string message, bytes sig) pure returns (address)',
+        'function recoverHashFromCompact(bytes32 hash, (bytes32 r, bytes32 yParityAndS) sig) pure returns (address)',
+    ],
+    new quais.InfuraProvider('sepolia'),
+);
 
 // The Signer; it does not need to be connected to a Provider to sign
-signer = new Wallet(id("foobar"));
-signer.address
+signer = new Wallet(id('foobar'));
+signer.address;
 //_result:
 
 // Our message
-message = "Hello World";
+message = 'Hello World';
 
 // The raw signature; 65 bytes
 rawSig = await signer.signMessage(message);
@@ -87,7 +90,6 @@ rawSig = await signer.signMessage(message);
 // flexibility, such as using it as a struct
 sig = Signature.from(rawSig);
 //_result:
-
 
 // If the signature matches the EIP-2098 format, a Signature
 // can be passed as the struct value directly, since the
@@ -114,12 +116,11 @@ await contract.recoverStringFromRaw(message, rawSig);
 
 The Solidity Contract has been deployed and verified on
 the Sepolia testnet at the address
-[0xf554DA5e35b2e40C09DDB481545A395da1736513](link-sol-recovermessage).
+[0xf554DA5e35b2e40C09DDB481545A395da1736513](https://sepolia.quaiscan.io/address/0xf554da5e35b2e40c09ddb481545a395da1736513#code).
 
 It provides a variety of examples using various Signature
-encodings and formats, to recover the address for an [[link-eip-191]]
+encodings and formats, to recover the address for an [EIP-191](https://eips.ethereum.org/EIPS/eip-191)
 signed message.
-
 
 ```solidity
 // SPDX-License-Identifier: MIT
@@ -225,7 +226,7 @@ contract RecoverMessage {
   // When using raw signatures, some tools return the v as 0 or 1. In this case you must
   // add 27 to that value as v must be either 27 or 28.
   //
-  // This Signature format is 65 bytes of data, but when ABI encoded is 160 bytes in length; 
+  // This Signature format is 65 bytes of data, but when ABI encoded is 160 bytes in length;
   // a pointer (32 bytes), a length (32 bytes) and the padded 3 words of data (96 bytes).
   function recoverStringFromRaw(string calldata message, bytes calldata sig) public pure returns (address) {
 

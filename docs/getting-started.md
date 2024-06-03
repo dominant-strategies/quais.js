@@ -4,7 +4,6 @@ This is a very short introduction to quais, but covers many of the
 most common operations that developers require and provides a
 starting point for those newer to Quai Network.
 
-
 ## Getting quais
 
 If using NPM, you must first install quais.
@@ -23,23 +22,21 @@ have been imported in the code examples, but you may import the
 necessary objects in any way you wish.
 
 ```js title=Importing In NodeJS
-  // Import everything
-  import { quais } from "quais";
+// Import everything
+import { quais } from 'quais';
 
-  // Import just a few select items
-  import { BrowserProvider, parseUnits } from "quais";
+// Import just a few select items
+import { BrowserProvider, parseUnits } from 'quais';
 
-  // Import from a specific export
-  import { HDNodeWallet } from "quais/wallet";
+// Import from a specific export
+import { HDNodeWallet } from 'quais/wallet';
 ```
 
 ```js title=Importing In a Browser
-  <script type="module">
-    import { quais } from "https://cdnjs.cloudflare.com/ajax/libs/quais/6.7.0/quais.min.js";
-    // Your code here...
-  </script>
+<script type="module">
+    import {quais} from "https://cdnjs.cloudflare.com/ajax/libs/quais/6.7.0/quais.min.js"; // Your code here...
+</script>
 ```
-
 
 ## Some Common Terminology
 
@@ -59,7 +56,7 @@ abstracted into another Object, the **Signer**.
 ### Signer
 
 A [[Signer]] wraps all operations that interact with an account. An
-account generally has a private key located //somewhere*, which can be
+account generally has a private key located //somewhere\*, which can be
 used to sign a variety of types of payloads.
 
 The private key may be located in memory (using a [[Wallet]]) or
@@ -103,8 +100,7 @@ about the transaction, such as which block it was included in, the actual
 fee paid, gas used, all the events that it emitted and whether it was
 successful or reverted.
 
-
-## Connecting to Ethereum  @<starting-connecting>
+## Connecting to Ethereum @<starting-connecting>
 
 This very first thing needed to begin interacting with the blockchain is
 connecting to it using a [[Provider]].
@@ -112,11 +108,11 @@ connecting to it using a [[Provider]].
 ### MetaMask (and other injected providers)
 
 The quickest and easiest way to experiment and begin developing
-on Ethereum is to use [[link-metamask]], which is a browser
+on Ethereum is to use [MetaMask](https://metamask.io/), which is a browser
 extension that injects objects into the `window`, providing:
 
-- read-only access to the Ethereum network (a [[Provider]])
-- authenticated write access backed by a private key (a [[Signer]])
+-   read-only access to the Ethereum network (a [[Provider]])
+-   authenticated write access backed by a private key (a [[Signer]])
 
 When requesting access to the authenticated methods, such as
 sending a transaction or even requesting the private key address,
@@ -127,20 +123,17 @@ let signer = null;
 
 let provider;
 if (window.ethereum == null) {
-
     // If MetaMask is not installed, we use the default provider,
     // which is backed by a variety of third-party services (such
     // as INFURA). They do not have private keys installed,
     // so they only have read-only access
-    console.log("MetaMask not installed; using read-only defaults")
-    provider = quais.getDefaultProvider()
-
+    console.log('MetaMask not installed; using read-only defaults');
+    provider = quais.getDefaultProvider();
 } else {
-
     // Connect to the MetaMask EIP-1193 object. This is a standard
     // protocol that allows quais access to make all read-only
     // requests through MetaMask.
-    provider = new quais.BrowserProvider(window.ethereum)
+    provider = new quais.BrowserProvider(window.ethereum);
 
     // It also provides an opportunity to request access to write
     // operations, which will be performed by the private key
@@ -149,13 +142,12 @@ if (window.ethereum == null) {
 }
 ```
 
-
 ### Custom RPC Backend
 
-If you are running your own Ethereum node (e.g. [[link-geth]])
-or using a custom third-party service (e.g. [[link-infura]]),
+If you are running your own Ethereum node (e.g. link-geth [Geth](https://geth.ethereum.org))
+or using a custom third-party service (e.g. [INFURA](https://infura.io)),
 you can use the [[JsonRpcProvider]] directly, which communicates
-using the [[link-jsonrpc]] protocol.
+using the [link-jsonrpc](https://github.com/ethereum/wiki/wiki/JSON-RPC) protocol.
 
 When using your own Ethereum node or a developer-base blockchain,
 such as Hardhat or Ganache, you can get access to the accounts with
@@ -164,13 +156,13 @@ such as Hardhat or Ganache, you can get access to the accounts with
 ```js
 // If no url is provided, it connects to the default
 // http://localhost:8545, which most nodes use.
-provider = new quais.JsonRpcProvider(url)
+provider = new quais.JsonRpcProvider(url);
 
 // Get write access as an account by getting the signer
-signer = await provider.getSigner()
+signer = await provider.getSigner();
 ```
 
-## User Interaction  
+## User Interaction
 
 All units in Ethereum tend to be integer values, since dealing with
 decimals and floating points can lead to imprecise and non-obvious
@@ -189,31 +181,30 @@ its decimal string representation (e.g. `"2.56"`) to its lowest-unit
 integer representation (e.g. `256`). And when displaying a value to
 a user the opposite operation is necessary.
 
-In Ethereum, *one ether* is equal to `10 *\* 18` wei and *one gwei*
+In Ethereum, _one ether_ is equal to `10 *\* 18` wei and _one gwei_
 is equal to `10 *\* 9` wei, so the values get very large very quickly,
 so some convenience functions are provided to help convert between
 representations.
 
 ```js
-  // Convert user-provided strings in ether to wei for a value
-  eth = parseEther("1.0")
-  //_result:
+// Convert user-provided strings in ether to wei for a value
+eth = parseEther('1.0');
+//_result:
 
-  // Convert user-provided strings in gwei to wei for max base fee
-  feePerGas = parseUnits("4.5", "gwei")
-  //_result:
+// Convert user-provided strings in gwei to wei for max base fee
+feePerGas = parseUnits('4.5', 'gwei');
+//_result:
 
-  // Convert a value in wei to a string in ether to display in a UI
-  formatEther(eth)
-  //_result:
+// Convert a value in wei to a string in ether to display in a UI
+formatEther(eth);
+//_result:
 
-  // Convert a value in wei to a string in gwei to display in a UI
-  formatUnits(feePerGas, "gwei")
-  //_result:
+// Convert a value in wei to a string in gwei to display in a UI
+formatUnits(feePerGas, 'gwei');
+//_result:
 ```
 
-
-## Interacting with the Blockchain 
+## Interacting with the Blockchain
 
 ### Querying State
 
@@ -222,24 +213,24 @@ the data on the blockchain. This can be used to query the current
 account state, fetch historic logs, look up contract code and so on.
 
 ```js
-  //_hide: provider = new InfuraProvider();
+//_hide: provider = new InfuraProvider();
 
-  // Look up the current block number (i.e. height)
-  await provider.getBlockNumber()
-  //_result:
+// Look up the current block number (i.e. height)
+await provider.getBlockNumber();
+//_result:
 
-  // Get the current balance of an account (by address or ENS name)
-  balance = await provider.getBalance("quais.eth")
-  //_result:
+// Get the current balance of an account (by address or ENS name)
+balance = await provider.getBalance('quais.eth');
+//_result:
 
-  // Since the balance is in wei, you may wish to display it
-  // in ether instead.
-  formatEther(balance)
-  //_result:
+// Since the balance is in wei, you may wish to display it
+// in ether instead.
+formatEther(balance);
+//_result:
 
-  // Get the next nonce required to send a transaction
-  await provider.getTransactionCount("quais.eth")
-  //_result:
+// Get the next nonce required to send a transaction
+await provider.getTransactionCount('quais.eth');
+//_result:
 ```
 
 ### Sending Transactions
@@ -248,7 +239,7 @@ To write to the blockchain you require access to a private key
 which controls some account. In most cases, those private keys
 are not accessible directly to your code, and instead you make
 requests via a [[Signer]], which dispatches the request to a
-service (such as [[link-metamask]]) which provides strictly
+service (such as [MetaMask](https://metamask.io/)) which provides strictly
 gated access and requires feedback to the user to approve or
 reject operations.
 
@@ -256,8 +247,8 @@ reject operations.
 // When sending a transaction, the value is in wei, so parseEther
 // converts ether to wei.
 tx = await signer.sendTransaction({
-  to: "quais.eth",
-  value: parseEther("1.0")
+    to: 'quais.eth',
+    value: parseEther('1.0'),
 });
 //_result:
 
@@ -265,7 +256,6 @@ tx = await signer.sendTransaction({
 receipt = await tx.wait();
 //_result:
 ```
-
 
 ## Contracts
 
@@ -293,14 +283,14 @@ an ABI by hand it is often easier (and more readable) to use the
 human-readable ABI, which is just the Solidity signature.
 
 ```js
-  abi = [
-    "function decimals() view returns (string)",
-    "function symbol() view returns (string)",
-    "function balanceOf(address addr) view returns (uint)"
-  ]
+abi = [
+    'function decimals() view returns (string)',
+    'function symbol() view returns (string)',
+    'function balanceOf(address addr) view returns (uint)',
+];
 
-  // Create a contract
-  contract = new Contract("dai.tokens.quais.eth", abi, provider)
+// Create a contract
+contract = new Contract('dai.tokens.quais.eth', abi, provider);
 ```
 
 ### Read-only methods (i.e. `view` and `pure`)
@@ -310,32 +300,32 @@ blockchain, but often provide a simple interface to get important
 data about a Contract.
 
 ```js
-  // The contract ABI (fragments we care about)
-  abi = [
-    "function decimals() view returns (uint8)",
-    "function symbol() view returns (string)",
-    "function balanceOf(address a) view returns (uint)"
-  ]
+// The contract ABI (fragments we care about)
+abi = [
+    'function decimals() view returns (uint8)',
+    'function symbol() view returns (string)',
+    'function balanceOf(address a) view returns (uint)',
+];
 
-  // Create a contract; connected to a Provider, so it may
-  // only access read-only methods (like view and pure)
-  contract = new Contract("dai.tokens.quais.eth", abi, provider)
+// Create a contract; connected to a Provider, so it may
+// only access read-only methods (like view and pure)
+contract = new Contract('dai.tokens.quais.eth', abi, provider);
 
-  // The symbol name for the token
-  sym = await contract.symbol()
-  //_result:
+// The symbol name for the token
+sym = await contract.symbol();
+//_result:
 
-  // The number of decimals the token uses
-  decimals = await contract.decimals()
-  //_result:
+// The number of decimals the token uses
+decimals = await contract.decimals();
+//_result:
 
-  // Read the token balance for an account
-  balance = await contract.balanceOf("quais.eth")
-  //_result:
+// Read the token balance for an account
+balance = await contract.balanceOf('quais.eth');
+//_result:
 
-  // Format the balance for humans, such as in a UI
-  formatUnits(balance, decimals)
-  //_result:
+// Format the balance for humans, such as in a UI
+formatUnits(balance, decimals);
+//_result:
 ```
 
 ### State-changing Methods
@@ -397,42 +387,40 @@ is an [[EventPayload]], which includes more information about the event
 including the filter and a method to remove that listener.
 
 ```js title=listen for ERC-20 events
-  abi = [
-    "event Transfer(address indexed from, address indexed to, uint amount)"
-  ]
+abi = ['event Transfer(address indexed from, address indexed to, uint amount)'];
 
-  // Create a contract; connected to a Provider, so it may
-  // only access read-only methods (like view and pure)
-  contract = new Contract("dai.tokens.quais.eth", abi, provider)
+// Create a contract; connected to a Provider, so it may
+// only access read-only methods (like view and pure)
+contract = new Contract('dai.tokens.quais.eth', abi, provider);
 
-  // Begin listening for any Transfer event
-  contract.on("Transfer", (from, to, _amount, event) => {
-    const amount = formatEther(_amount, 18)
-    console.log(`${ from } => ${ to }: ${ amount }`);
+// Begin listening for any Transfer event
+contract.on('Transfer', (from, to, _amount, event) => {
+    const amount = formatEther(_amount, 18);
+    console.log(`${from} => ${to}: ${amount}`);
 
     // The `event.log` has the entire EventLog
 
     // Optionally, stop listening
     event.removeListener();
-  });
+});
 
-  // Same as above
-  contract.on(contract.filters.Transfer, (from, to, amount, event) => {
+// Same as above
+contract.on(contract.filters.Transfer, (from, to, amount, event) => {
     // See above
-  })
+});
 
-  // Listen for any Transfer to "quais.eth"
-  filter = contract.filters.Transfer("quais.eth")
-  contract.on(filter, (from, to, amount, event) => {
+// Listen for any Transfer to "quais.eth"
+filter = contract.filters.Transfer('quais.eth');
+contract.on(filter, (from, to, amount, event) => {
     // `to` will always be equal to the address of "quais.eth"
-  });
+});
 
-  // Listen for any event, whether it is present in the ABI
-  // or not. Since unknown events can be picked up, the
-  // parameters are not destructed.
-  contract.on("*", (event) => {
+// Listen for any event, whether it is present in the ABI
+// or not. Since unknown events can be picked up, the
+// parameters are not destructed.
+contract.on('*', (event) => {
     // The `event.log` has the entire EventLog
-  });
+});
 ```
 
 ### Query Historic Events
@@ -442,36 +430,33 @@ be prohibitively slow, may return an error or may truncate the
 results without any indication. This is at the discretion of each
 backend.
 
-```js  title=Query historic ERC-20 events
-  abi = [
-    "event Transfer(address indexed from, address indexed to, uint amount)"
-  ]
+```js title=Query historic ERC-20 events
+abi = ['event Transfer(address indexed from, address indexed to, uint amount)'];
 
-  // Create a contract; connected to a Provider, so it may
-  // only access read-only methods (like view and pure)
-  contract = new Contract("dai.tokens.quais.eth", abi, provider)
+// Create a contract; connected to a Provider, so it may
+// only access read-only methods (like view and pure)
+contract = new Contract('dai.tokens.quais.eth', abi, provider);
 
-  // Query the last 100 blocks for any transfer
-  filter = contract.filters.Transfer
-  events = await contract.queryFilter(filter, -100)
+// Query the last 100 blocks for any transfer
+filter = contract.filters.Transfer;
+events = await contract.queryFilter(filter, -100);
 
-  // The events are a normal Array
-  events.length
-  //_result:
+// The events are a normal Array
+events.length;
+//_result:
 
-  // The first matching event
-  events[0]
-  //_result:
+// The first matching event
+events[0];
+//_result:
 
-  // Query all time for any transfer to quais.eth
-  filter = contract.filters.Transfer("quais.eth")
-  events = await contract.queryFilter(filter)
+// Query all time for any transfer to quais.eth
+filter = contract.filters.Transfer('quais.eth');
+events = await contract.queryFilter(filter);
 
-  // The first matching event
-  events[0]
-  //_result:
+// The first matching event
+events[0];
+//_result:
 ```
-
 
 ### Signing Messages
 
@@ -483,24 +468,22 @@ For example, signing **a message** can be used to prove ownership of an
 account which a website could use to authenticate a user and log them in.
 
 ```js
-  // Our signer; Signing messages does not require a Provider
-  signer = new Wallet(id("test"))
-  //_result:
+// Our signer; Signing messages does not require a Provider
+signer = new Wallet(id('test'));
+//_result:
 
-  message = "sign into quais.org?"
+message = 'sign into quais.org?';
 
-  // Signing the message
-  sig = await signer.signMessage(message);
-  //_result:
+// Signing the message
+sig = await signer.signMessage(message);
+//_result:
 
-  // Validating a message; notice the address matches the signer
-  verifyMessage(message, sig)
-  //_result:
-
+// Validating a message; notice the address matches the signer
+verifyMessage(message, sig);
+//_result:
 ```
 
 Many other more advanced protocols built on top of signed messages are
 used to allow a private key to authorize other users to transfer their
 tokens, allowing the transaction fees of the transfer to be paid by
 someone else.
-
