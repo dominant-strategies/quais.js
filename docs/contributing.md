@@ -41,7 +41,8 @@ Contributing new features usually require a deeper understanding of the internal
 
 When making any of the following changes, you must first open a [quais Discussion](https://github.com/quais-io/quais.js/discussions) as the minor version will need to be bumped.
 
--   any signature change (such as adding a parameter, changing a parameter type, changing the return type)
+-   any signature change (such as adding a parameter, changing a
+    parameter type, changing the return type)
 -   adding any new export; such as a class, function or constants
 -   adding any method to any class
 -   changing any `exports` property within the `package.json`

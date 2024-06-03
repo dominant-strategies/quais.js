@@ -64,8 +64,7 @@ It may be read from when it is connected to a [[Provider]] or state-changing ope
 
 ### Receipt
 
-Once a **Transaction** has been submitted to the blockchain, it is placed
-in the memory pool (mempool) until a validator decides to include it.
+Once a **Transaction** has been submitted to the blockchain, it is placed in the memory pool (mempool) until a validator decides to include it.
 
 A transaction's changes are only made once it has been included in the blockchain, at which time a receipt is available, which includes details about the transaction, such as which block it was included in, the actual fee paid, gas used, all the events that it emitted and whether it was successful or reverted.
 
