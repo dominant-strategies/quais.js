@@ -33,6 +33,8 @@ export type { KeystoreAccount, EncryptOptions } from './json-keystore.js';
 
 export { QiHDWallet } from './qi-hdwallet.js';
 
-export { HDNodeVoidWallet } from "./hdwallet.js";
+export { HDNodeVoidWallet } from "./hdnodewallet.js";
 
-export type { HDWalletStatic } from "./hdwallet.js";
+// export type { HDWalletStatic } from "./hdwallet.js";
+
+// export { nobleCrypto } from "./musig-crypto.js";

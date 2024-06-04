@@ -19,6 +19,7 @@ export {
     TransactionReceipt,
     TransactionResponse,
     copyRequest,
+    QuaiTransactionRequest
     //resolveTransactionRequest,
 } from './provider.js';
 
