@@ -303,7 +303,7 @@ export interface WrappedFallback {
  * The most common ContractRunners are [Providers](../classes/Provider) which enable read-only access and
  * [Signers](../classes/Signer) which enable write-access.
  *
- * @category Category
+ * @category Contract
  */
 export interface ContractRunner {
     /**
