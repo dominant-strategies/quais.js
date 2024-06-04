@@ -4,10 +4,11 @@
  *  @_subsection: api/wallet:HD Wallets  [hd-wallets]
  */
 import { computeHmac, randomBytes, ripemd160, SigningKey, sha256 } from "../crypto/index.js";
-import { VoidSigner } from "../providers/index.js";
-import { computeAddress } from "../transaction/index.js";
+import { VoidSigner } from "../signers/index.js";
+import { computeAddress } from "../address/index.js";
+import { decodeBase58, encodeBase58 } from "../encoding/index.js";
 import {
-    concat, dataSlice, decodeBase58, defineProperties, encodeBase58,
+    concat, dataSlice, defineProperties,
     getBytes, hexlify, isBytesLike,
     getNumber, toBeArray, toBigInt, toBeHex,
     assertPrivate, assert, assertArgument
