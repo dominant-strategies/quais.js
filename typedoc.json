@@ -1,37 +1,38 @@
 {
-	// base config
-	"out": "docs/content",
-	"tsconfig": "tsconfig.base.json",
-	"entryPoints": ["./src/quais.ts"],
+    // base config
+    "out": "docs/content",
+    "tsconfig": "tsconfig.base.json",
+    "entryPoints": ["./src/quais.ts"],
 
-	// specific inclusions and exclusions
-	"excludeProtected": true,
-	"excludeNotDocumented": true,
-	"exclude": ["./src/_admin/**/*", "./src/_tests/**/*", "./src/testcases/**/*"],
+    // specific inclusions and exclusions
+    "excludeProtected": true,
+    "excludeNotDocumented": true,
+    "exclude": ["./src/_admin/**/*", "./src/_tests/**/*", "./src/testcases/**/*"],
 
-	// plugins
-	"plugin": [
-		"typedoc-plugin-remove-references", // remove additional references that clutter documentation
-		"typedoc-plugin-markdown", // generate markdown files
-		"typedoc-plugin-frontmatter", // add frontmatter to markdown files, prereq for the below custom plugin
-		"./docs/plugins/typedoc-plugin-mintlify-frontmatter.mjs", // formats frontmatter to match mintlify
-		"./docs/plugins/typedoc-plugin-navigation-output.mjs" // formats navigation to match mintlify
-	],
+    // plugins
+    "plugin": [
+        "typedoc-plugin-remove-references", // remove additional references that clutter documentation
+        "typedoc-plugin-markdown", // generate markdown files
+        "typedoc-plugin-frontmatter", // add frontmatter to markdown files, prereq for the below custom plugin
+        "./docs/plugins/typedoc-plugin-mintlify-frontmatter.mjs", // formats frontmatter to match mintlify
+        "./docs/plugins/typedoc-plugin-navigation-output.mjs", // formats navigation to match mintlify
+        "./docs/plugins/typedoc-plugin-link-formatter.mjs" // removes ".mdx" from links
+    ],
 
-	// formatting + mintlify compatibility
-	"fileExtension": ".mdx", // use mdx files for mintlfiy compatibility
-	"entryFileName": "index.mdx", // rename entry from "README.md" to "index.mdx"
-	"mergeReadme": true, // merge README.md into index.mdx
-	"hidePageHeader": true, // hide page header, conflicts with mintlify
-	"hidePageTitle": true, // hide page title, conflicts with mintlify
-	"hideBreadcrumbs": true, // hide breadcrumbs, conflicts with mintlify
-	"useCodeBlocks": true, // makes API definitions more readable
-	"expandObjects": true,
-	"parametersFormat": "table", // readability
-	"propertiesFormat": "table", // readability
-	"publicPath": "/content/", // format links for mintlify
-	"navigation": {
-		"includeCategories": true,
-		"includeGroups": false
-	}
+    // formatting + mintlify compatibility
+    "fileExtension": ".mdx", // use mdx files for mintlfiy compatibility
+    "entryFileName": "index.mdx", // rename entry from "README.md" to "index.mdx"
+    "mergeReadme": true, // merge README.md into index.mdx
+    "hidePageHeader": true, // hide page header, conflicts with mintlify
+    "hidePageTitle": true, // hide page title, conflicts with mintlify
+    "hideBreadcrumbs": true, // hide breadcrumbs, conflicts with mintlify
+    "useCodeBlocks": true, // makes API definitions more readable
+    "expandObjects": true,
+    "parametersFormat": "table", // readability
+    "propertiesFormat": "table", // readability
+    "publicPath": "/content/", // format links for mintlify
+    "navigation": {
+        "includeCategories": true,
+        "includeGroups": false
+    }
 }
