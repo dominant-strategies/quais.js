@@ -369,6 +369,7 @@ export interface QiPreparedTransactionRequest {
 /**
  * Returns a copy of `req` with all properties coerced to their strict types.
  *
+ * @category Providers
  * @param {TransactionRequest} req - The transaction request to copy.
  *
  * @returns {PreparedTransactionRequest} The prepared transaction request.
