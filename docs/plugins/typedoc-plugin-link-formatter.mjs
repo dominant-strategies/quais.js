@@ -8,21 +8,17 @@ import { MarkdownPageEvent } from 'typedoc-plugin-markdown';
  */
 export function load(app) {
     app.renderer.on(
-        MarkdownPageEvent.BEGIN,
+        MarkdownPageEvent.END,
         /**
          * @param {import('typedoc-plugin-markdown').MarkdownPageEvent} page
          */
         (page) => {
-            let summary = '';
-            if (page.model?.comment?.summary) {
-                summary = page.model.comment.summary[0].text + '...';
-                summary = summary.replace(/\n/g, ' ');
+            if (page.contents) {
+                if (page.contents.includes('.mdx')) {
+                  const regex = /(\.mdx)/g;
+                  page.contents = page.contents.replace(regex, '');
+                }
             }
-            page.frontmatter = {
-                title: page.model?.name,
-                description: summary,
-                ...page.frontmatter,
-            };
         },
     );
 }
