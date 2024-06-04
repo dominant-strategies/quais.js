@@ -11,7 +11,7 @@ An **Application Binary Interface** (ABI) provides a way to describe the encodin
 
 For example, a string is often encoded as a UTF-8 sequence of bytes, which uses specific bits within sub-sequences to indicate emoji and other special characters. Every implementation of UTF-8 must understand and operate under the same rules so that strings work universally. In this way, UTF-8 standard is itself an ABI.
 
-When interacting with Ethereum, a contract received a sequence of bytes as input (provided by sending a transaction or through a call) and returns a result as a sequence of bytes. So, each Contract has its own ABI that helps specify how to encode the input and how to decode the output.
+When interacting with Quai, a contract received a sequence of bytes as input (provided by sending a transaction or through a call) and returns a result as a sequence of bytes. So, each Contract has its own ABI that helps specify how to encode the input and how to decode the output.
 
 It is up to the contract developer to make this ABI available. Many Contracts implement a standard (such as ERC-20), in which case the ABI for that standard can be used. Many developers choose to verify their source code on quaiscan, in which case quaiscan computes the ABI and provides it through their website (which can be fetched using the `getContract` method). Otherwise, beyond reverse engineering the Contract there is not a meaningful way to extract the contract ABI.
 

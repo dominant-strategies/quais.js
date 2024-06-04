@@ -23,7 +23,7 @@ import { quais } from 'quais';
 import { BrowserProvider, parseUnits } from 'quais';
 
 // Import from a specific export
-import { HDNodeWallet } from 'quais/wallet';
+import { QuaiHDWallet, QiHDWallet } from 'quais/wallet';
 ```
 
 ```js title=Importing In a Browser
@@ -38,13 +38,13 @@ To begin, it is useful to have a basic understanding of the types of objects ava
 
 ### Provider
 
-A Provider is a read-only connection to the blockchain, which allows querying the blockchain state, such as account, block or transaction details, querying event logs or evaluating read-only code using call.
+A `Provider` is a read-only connection to the blockchain, which allows querying the blockchain state, such as account, block or transaction details, querying event logs or evaluating read-only code using call.
 
 If you are coming from Web3.js, you are used to a **Provider** offering both read and write access. In quais, all write operations are further abstracted into another Object, the **Signer**.
 
 ### Signer
 
-A Signer wraps all operations that interact with an account. An account generally has a private key located //somewhere\*, which can be used to sign a variety of types of payloads.
+A `Signer` wraps all operations that interact with an account. An account generally has a private key located _somewhere_, which can be used to sign a variety of types of payloads.
 
 The private key may be located in memory (using a Wallet) or protected via some IPC layer, such as MetaMask which proxies interaction from a website to a browser plug-in, which keeps the private key out of the reach of the website and only permits interaction after requesting permission from the user and receiving authorization.
 
@@ -58,71 +58,58 @@ Transactions include sending ether from one user to another, deploying a **Contr
 
 ### Contract
 
-A Contract is a program that has been deployed to the blockchain, which includes some code and has allocated storage which it can read from and write to.
+A `Contract` is a program that has been deployed to the blockchain, which includes some code and has allocated storage which it can read from and write to.
 
 It may be read from when it is connected to a Provider or state-changing operations can be called when connected to a Signer.
 
 ### Receipt
 
-Once a **Transaction** has been submitted to the blockchain, it is placed in the memory pool (mempool) until a validator decides to include it.
+Once a **Transaction** has been submitted to the blockchain, it is placed in the memory pool (mempool) until a miner decides to include it.
 
 A transaction's changes are only made once it has been included in the blockchain, at which time a receipt is available, which includes details about the transaction, such as which block it was included in, the actual fee paid, gas used, all the events that it emitted and whether it was successful or reverted.
 
-## Connecting to Ethereum @<starting-connecting>
+## Connecting to Quai
 
 This very first thing needed to begin interacting with the blockchain is connecting to it using a [[Provider]].
 
-### MetaMask (and other injected providers)
+### Pelagus (and other injected providers)
 
-The quickest and easiest way to experiment and begin developing on Ethereum is to use [MetaMask](https://metamask.io/), which is a browser extension that injects objects into the `window`, providing:
+The quickest and easiest way to experiment and begin developing on Quai is to use [Pelagus](https://pelaguswallet.io/), which is a browser extension that injects objects into the `window`, providing:
 
--   read-only access to the Ethereum network (a Provider)
+-   read-only access to Quai (a Provider)
 -   authenticated write access backed by a private key (a Signer)
 
 When requesting access to the authenticated methods, such as sending a transaction or even requesting the private key address, MetaMask will show a pop-up to the user asking for permission.
 
 ```js
 let signer = null;
-
 let provider;
-if (window.ethereum == null) {
-    // If MetaMask is not installed, we use the default provider,
-    // which is backed by a variety of third-party services (such
-    // as INFURA). They do not have private keys installed,
-    // so they only have read-only access
-    console.log('MetaMask not installed; using read-only defaults');
-    provider = quais.getDefaultProvider();
+
+if (window.pelagus == null) {
+    // Indicate if Pelagus is not installed
+    console.log('Pelagus not installed');
 } else {
-    // Connect to the MetaMask EIP-1193 object. This is a standard
+    // Connect to the Pelagus EIP-1193 object. This is a standard
     // protocol that allows quais access to make all read-only
-    // requests through MetaMask.
-    provider = new quais.BrowserProvider(window.ethereum);
+    // requests through Pelagus.
+    provider = new quais.BrowserProvider(window.pelagus);
 
     // It also provides an opportunity to request access to write
     // operations, which will be performed by the private key
-    // that MetaMask manages for the user.
+    // that Pelagus manages for the user.
     signer = await provider.getSigner();
 }
 ```
 
 ### Custom RPC Backend
 
-If you are running your own Ethereum node (e.g. link-geth [Geth](https://geth.ethereum.org)) or using a custom third-party service (e.g. [INFURA](https://infura.io)), you can use the `JsonRpcProvider` directly, which communicates using the [link-jsonrpc](https://github.com/ethereum/wiki/wiki/JSON-RPC) protocol.
+If you are running your own Quai node (e.g. [go-quai](https://qu.ai/docs/category/node/)) or using a custom third-party service, you can use the `JsonRpcProvider` directly, which communicates using the [JSON-RPC](https://qu.ai/docs/develop/apis/json-rpc-api/) protocol.
 
-When using your own Ethereum node or a developer-base blockchain, such as Hardhat or Ganache, you can get access to the accounts with `JsonRpcProvider-getSigner`.
-
-```js
-// If no url is provided, it connects to the default
-// http://localhost:8545, which most nodes use.
-provider = new quais.JsonRpcProvider(url);
-
-// Get write access as an account by getting the signer
-signer = await provider.getSigner();
-```
+When using your own Quai node as a provider, the resultant `Signer` will return `null`. The go-quai client does not bundle a CLI wallet or key manager, so it is not possible to sign transactions directly from the node.
 
 ## User Interaction
 
-All units in Ethereum tend to be integer values, since dealing with decimals and floating points can lead to imprecise and non-obvious results when performing mathematic operations.
+All units in Quai tend to be integer values, since dealing with decimals and floating points can lead to imprecise and non-obvious results when performing mathematic operations.
 
 As a result, the internal units used (e.g. wei) which are suited for machine-readable purposes and maths are often very large and not easily human-readable.
 
@@ -130,24 +117,20 @@ For example, imagine dealing with dollars and cents; you would show values like 
 
 So, when accepting data that a user types, it must be converted from its decimal string representation (e.g. `"2.56"`) to its lowest-unit integer representation (e.g. `256`). And when displaying a value to a user the opposite operation is necessary.
 
-In Ethereum, _one ether_ is equal to `10 *\* 18` wei and _one gwei_ is equal to `10 *\* 9` wei, so the values get very large very quickly, so some convenience functions are provided to help convert between representations.
+In Quai, _one quai_ is equal to `10 *\* 18` wei and _one gwei_ is equal to `10 *\* 9` wei, so the values get very large very quickly, so some convenience functions are provided to help convert between representations.
 
 ```js
-// Convert user-provided strings in ether to wei for a value
-eth = parseEther('1.0');
-//_result:
+// Convert user-provided strings in Quai to wei for a value
+quai = parseQuai('1.0');
 
 // Convert user-provided strings in gwei to wei for max base fee
 feePerGas = parseUnits('4.5', 'gwei');
-//_result:
 
-// Convert a value in wei to a string in ether to display in a UI
-formatEther(eth);
-//_result:
+// Convert a value in wei to a string in Quai to display in a UI
+formatQuai(quai);
 
 // Convert a value in wei to a string in gwei to display in a UI
 formatUnits(feePerGas, 'gwei');
-//_result:
 ```
 
 ## Interacting with the Blockchain
@@ -157,42 +140,31 @@ formatUnits(feePerGas, 'gwei');
 Once you have a Provider, you have a read-only connection to the data on the blockchain. This can be used to query the current account state, fetch historic logs, look up contract code and so on.
 
 ```js
-//_hide: provider = new InfuraProvider();
-
 // Look up the current block number (i.e. height)
 await provider.getBlockNumber();
-//_result:
 
 // Get the current balance of an account
 balance = await provider.getBalance('0x643aA0A61eADCC9Cc202D1915D942d35D005400C');
-//_result:
 
 // Since the balance is in wei, you may wish to display it
-// in ether instead.
-formatEther(balance);
-//_result:
+// in Quai instead.
+formatQuai(balance);
 
 // Get the next nonce required to send a transaction
 await provider.getTransactionCount('0x643aA0A61eADCC9Cc202D1915D942d35D005400C');
-//_result:
 ```
 
 ### Sending Transactions
 
-To write to the blockchain you require access to a private key which controls some account. In most cases, those private keys are not accessible directly to your code, and instead you make requests via a [[Signer]], which dispatches the request to a service (such as [MetaMask](https://metamask.io/)) which provides strictly gated access and requires feedback to the user to approve or reject operations.
+To write to the blockchain you require access to a private key which controls some account. In most cases, those private keys are not accessible directly to your code, and instead you make requests via a `Signer`, which dispatches the request to a service (such as [Pelagus](https://pelaguswallet.io/)) which provides strictly gated access and requires feedback to the user to approve or reject operations.
 
 ```js
-// When sending a transaction, the value is in wei, so parseEther
-// converts ether to wei.
+// When sending a transaction, the value is in wei, so parseQuai
+// converts quai to wei.
 tx = await signer.sendTransaction({
-    to: 'quais.eth',
-    value: parseEther('1.0'),
+    to: '0x643aA0A61eADCC9Cc202D1915D942d35D005400C',
+    value: parseQuai('1.0'),
 });
-//_result:
-
-// Often you may wish to wait until the transaction is mined
-receipt = await tx.wait();
-//_result:
 ```
 
 ## Contracts
@@ -238,112 +210,54 @@ contract = new Contract('0x643aA0A61eADCC9Cc202D1915D942d35D005400C', abi, provi
 
 // The symbol name for the token
 sym = await contract.symbol();
-//_result:
 
 // The number of decimals the token uses
 decimals = await contract.decimals();
-//_result:
 
 // Read the token balance for an account
-balance = await contract.balanceOf('quais.eth');
-//_result:
+balance = await contract.balanceOf('0x643aA0A61eADCC9Cc202D1915D942d35D005400C');
 
 // Format the balance for humans, such as in a UI
 formatUnits(balance, decimals);
-//_result:
 ```
 
 ### State-changing Methods
 
 ```js title=Change state on an ERC-20 contract
+abi = ['function transfer(address to, uint amount)'];
 
-  abi = [
-    "function transfer(address to, uint amount)"
-  ]
+// Connected to a Signer; can make state changing transactions,
+// which will cost the account quai
+contract = new Contract('0x643aA0A61eADCC9Cc202D1915D942d35D005400C', abi, signer);
 
-  // Connected to a Signer; can make state changing transactions,
-  // which will cost the account ether
-  contract = new Contract("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", abi, signer)
+// Send 1 ERC-20 token to another account
+amount = parseUnits('1.0', 18);
 
-  // Send 1 DAI
-  amount = parseUnits("1.0", 18);
+// Send the transaction
+tx = await contract.transfer('0x643aA0A61eADCC9Cc202D1915D942d35D005400C', amount);
+```
 
-  // Send the transaction
-  tx = await contract.transfer("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", amount)
-  //_result: @TODO
+```js title=Preflighting a Transaction
+abi = ['function transfer(address to, uint amount) returns (bool)'];
 
-  // Currently the transaction has been sent to the mempool,
-  // but has not yet been included. So, we...
+// Connected to a Provider since we only require read access
+contract = new Contract('0x643aA0A61eADCC9Cc202D1915D942d35D005400C', abi, provider);
 
-  // ...wait for the transaction to be included.
-  await tx.wait()
-  //_result: @TODO
+amount = parseUnits('1.0', 18);
 
-_code: forcing a call (simulation) of a state-changing method @lang<javascript>
+// There are many limitations to using a static call, but can
+// often be useful to preflight a transaction.
+await contract.transfer.staticCall('0x643aA0A61eADCC9Cc202D1915D942d35D005400C', amount);
 
-  abi = [
-    "function transfer(address to, uint amount) returns (bool)"
-  ]
-
-  // Connected to a Provider since we only require read access
-  contract = new Contract("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", abi, provider)
-
-  amount = parseUnits("1.0", 18)
-
-  // There are many limitations to using a static call, but can
-  // often be useful to preflight a transaction.
-  await contract.transfer.staticCall("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", amount)
-  //_result:
-
-  // We can also simulate the transaction as another account
-  other = new VoidSigner("0x643aA0A61eADCC9Cc202D1915D942d35D005400C")
-  contractAsOther = contract.connect(other.connect(provider))
-  await contractAsOther.transfer.staticCall("0x643aA0A61eADCC9Cc202D1915D942d35D005400C", amount)
-  //_result:
+// We can also simulate the transaction as another account
+other = new VoidSigner('0x643aA0A61eADCC9Cc202D1915D942d35D005400C');
+contractAsOther = contract.connect(other.connect(provider));
+await contractAsOther.transfer.staticCall('0x643aA0A61eADCC9Cc202D1915D942d35D005400C', amount);
 ```
 
 ### Listening to Events
 
-When adding event listeners for a named event, the event parameters are destructed for the listener.
-
-There is always one additional parameter passed to a listener, which is an `EventPayload`, which includes more information about the event including the filter and a method to remove that listener.
-
-```js title=listen for ERC-20 events
-abi = ['event Transfer(address indexed from, address indexed to, uint amount)'];
-
-// Create a contract; connected to a Provider, so it may
-// only access read-only methods (like view and pure)
-contract = new Contract('0x643aA0A61eADCC9Cc202D1915D942d35D005400C', abi, provider);
-
-// Begin listening for any Transfer event
-contract.on('Transfer', (from, to, _amount, event) => {
-    const amount = formatEther(_amount, 18);
-    console.log(`${from} => ${to}: ${amount}`);
-
-    // The `event.log` has the entire EventLog
-
-    // Optionally, stop listening
-    event.removeListener();
-});
-
-// Same as above
-contract.on(contract.filters.Transfer, (from, to, amount, event) => {
-    // See above
-});
-
-// Listen for any Transfer to "quais.eth"
-filter = contract.filters.Transfer('0x643aA0A61eADCC9Cc202D1915D942d35D005400C');
-contract.on(filter, (from, to, amount, event) => {
-    // `to` will always be equal to the address of "quais.eth"
-});
-
-// Listen for any event, whether it is present in the ABI
-// or not. Since unknown events can be picked up, the
-// parameters are not destructed.
-contract.on('*', (event) => {
-    // The `event.log` has the entire EventLog
-});
-```
+Quais does not natively support event listening via polling. Instead, it relies on the shim package [`quais-polling`](https://npmjs.com/package/quais-polling) to provide a short-lived event listener. For more information, see the [quais-polling documentation](https://www.npmjs.com/package/quais-polling).
 
 ### Query Historic Events
 
@@ -362,11 +276,9 @@ events = await contract.queryFilter(filter, -100);
 
 // The events are a normal Array
 events.length;
-//_result:
 
 // The first matching event
 events[0];
-//_result:
 
 // Query all time for any transfer to quais.eth
 filter = contract.filters.Transfer('0x643aA0A61eADCC9Cc202D1915D942d35D005400C');
@@ -374,7 +286,6 @@ events = await contract.queryFilter(filter);
 
 // The first matching event
 events[0];
-//_result:
 ```
 
 ### Signing Messages
@@ -386,17 +297,14 @@ For example, signing **a message** can be used to prove ownership of an account 
 ```js
 // Our signer; Signing messages does not require a Provider
 signer = new Wallet(id('test'));
-//_result:
 
-message = 'sign into quais.org?';
+message = 'sign into qu.ai?';
 
 // Signing the message
 sig = await signer.signMessage(message);
-//_result:
 
 // Validating a message; notice the address matches the signer
 verifyMessage(message, sig);
-//_result:
 ```
 
 Many other more advanced protocols built on top of signed messages are used to allow a private key to authorize other users to transfer their tokens, allowing the transaction fees of the transfer to be paid by someone else.
