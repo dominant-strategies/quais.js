@@ -6,13 +6,13 @@ The ecrecover algorithm allows the public key to be determined given some messag
 
 How a digest is derived depends on the type of data being signed and a variety of encoding formats are employed. Each format is designed to ensure that they do not collide, so for example, a user **cannot** be tricked into signing a message which is actually a valid transaction.
 
-For this reason, most APIs in Ethereum do not permit signing a raw digest, and instead require a separate API for each format type and require the related data be specified, protecting the user from accidentally authorizing an action they didn't intend.
+For this reason, most APIs in Quai Network do not permit signing a raw digest, and instead require a separate API for each format type and require the related data be specified, protecting the user from accidentally authorizing an action they didn't intend.
 
 ## Messages
 
 A signed message can be any data, but it is generally recommended to use human-readable text, as this is easier for a user to verify visually.
 
-This technique could be used, for example, to sign into a service by using the text `"I am signing into quais.org on 2023-06-04 12:57pm"`. The user can then see the message in MetaMask or on a Ledger Hardware Wallet and accept that they wish to sign the message which the site can then authenticate them with. By providing a timestamp the site can ensure that an older signed message cannot be used again in the future.
+This technique could be used, for example, to sign into a service by using the text `"I am signing into qu.ai on 2023-06-04 12:57pm"`. The user can then see the message in Pelagus and accept that they wish to sign the message which the site can then authenticate them with. By providing a timestamp the site can ensure that an older signed message cannot be used again in the future.
 
 The format that is signed uses [EIP-191](https://eips.ethereum.org/EIPS/eip-191) with the **personal sign** version code (`0x45`, or `"E"`).
 
@@ -40,39 +40,32 @@ contract = new Contract(
 // The Signer; it does not need to be connected to a Provider to sign
 signer = new Wallet(id('foobar'));
 signer.address;
-//_result:
 
 // Our message
 message = 'Hello World';
 
 // The raw signature; 65 bytes
 rawSig = await signer.signMessage(message);
-//_result:
 
 // Converting it to a Signature object provides more
 // flexibility, such as using it as a struct
 sig = Signature.from(rawSig);
-//_result:
 
 // If the signature matches the EIP-2098 format, a Signature
 // can be passed as the struct value directly, since the
 // parser will pull out the matching struct keys from sig.
 await contract.recoverStringFromCompact(message, sig);
-//_result:
 
 // Likewise, if the struct keys match an expanded signature
 // struct, it can also be passed as the struct value directly.
 await contract.recoverStringFromExpanded(message, sig);
-//_result:
 
 // If using an older API which requires the v, r and s be passed
 // separately, those members are present on the Signature.
 await contract.recoverStringFromVRS(message, sig.v, sig.r, sig.s);
-//_result:
 
 // Or if using an API that expects a raw signature.
 await contract.recoverStringFromRaw(message, rawSig);
-//_result:
 
 // Note: The above recovered addresses matches the signer address
 ```
@@ -83,9 +76,6 @@ It provides a variety of examples using various Signature encodings and formats,
 
 ```solidity
 // SPDX-License-Identifier: MIT
-
-// For more info, see: https://docs.quais.org
-
 
 pragma solidity ^0.8.21;
 
