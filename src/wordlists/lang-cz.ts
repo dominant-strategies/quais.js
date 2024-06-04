@@ -9,8 +9,6 @@ let wordlist: null | LangCz = null;
 /**
  * The [Czech wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/czech.txt) for [mnemonic
  * phrases](https://en.bitcoin.it/wiki/BIP_0039).
- *
- * @_docloc: api/wordlists
  */
 export class LangCz extends WordlistOwl {
     /**

@@ -12,8 +12,6 @@
  *
  * The native unit in Ethereum, //ether// is divisible to 18 decimal places, where each individual unit is called a
  * //wei//.
- *
- * @_subsection api/utils:Unit Conversion  [about-units]
  */
 import { assertArgument } from './errors.js';
 import { FixedNumber } from './fixednumber.js';
@@ -30,7 +28,7 @@ const names = ['wei', 'kwei', 'mwei', 'gwei', 'szabo', 'finney', 'ether'];
  * @category Utils
  * @param {BigNumberish} value - The value to convert.
  * @param {string | Numeric} [unit=18] - The unit to convert to. Default is `18` Default is `18` Default is `18` Default
- *   is `18`
+ *   is `18` Default is `18` Default is `18`
  *
  * @returns {string} The converted value.
  * @throws {Error} If the unit is invalid.
@@ -55,7 +53,7 @@ export function formatUnits(value: BigNumberish, unit?: string | Numeric): strin
  * @category Utils
  * @param {string} value - The value to convert.
  * @param {string | Numeric} [unit=18] - The unit to convert from. Default is `18` Default is `18` Default is `18`
- *   Default is `18`
+ *   Default is `18` Default is `18` Default is `18`
  *
  * @returns {bigint} The converted value.
  * @throws {Error} If the unit is invalid.

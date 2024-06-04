@@ -6,8 +6,6 @@
  * - A sub-class MUST call the `_start()` method once connected
  * - A sub-class MUST override the `_write(string)` method
  * - A sub-class MUST call `_processMessage(string)` for each message
- *
- * @_subsection: api/providers/abstract-provider:Socket Providers  [about-socketProvider]
  */
 
 import { UnmanagedSubscriber } from './abstract-provider.js';

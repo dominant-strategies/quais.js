@@ -11,8 +11,6 @@ let wordlist: null | LangFr = null;
 /**
  * The [French wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/french.txt) for [mnemonic
  * phrases](https://en.bitcoin.it/wiki/BIP_0039).
- *
- * @_docloc: api/wordlists
  */
 export class LangFr extends WordlistOwlA {
     /**

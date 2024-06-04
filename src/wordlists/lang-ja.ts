@@ -142,8 +142,6 @@ let wordlist: null | LangJa = null;
 /**
  * The [Japanese wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/japanese.txt) for [mnemonic
  * phrases](https://en.bitcoin.it/wiki/BIP_0039).
- *
- * @_docloc: api/wordlists
  */
 export class LangJa extends Wordlist {
     /**

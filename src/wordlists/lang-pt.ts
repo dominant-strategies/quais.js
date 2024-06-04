@@ -9,8 +9,6 @@ let wordlist: null | LangPt = null;
 /**
  * The [Portuguese wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/portuguese.txt) for [mnemonic
  * phrases](https://en.bitcoin.it/wiki/BIP_0039).
- *
- * @_docloc: api/wordlists
  */
 export class LangPt extends WordlistOwl {
     /**

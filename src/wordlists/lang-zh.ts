@@ -2,7 +2,6 @@ import { id } from '../hash/index.js';
 import { assertArgument } from '../utils/index.js';
 import { toUtf8String } from '../encoding/index.js';
 
-
 import { Wordlist } from './wordlist.js';
 
 const data =
@@ -64,8 +63,6 @@ const wordlists: Record<string, LangZh> = {};
  * The [Tradional Chinese wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/chinese_traditional.txt) and
  * [Simplified Chinese wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/chinese_simplified.txt) for
  * [mnemonic phrases](https://en.bitcoin.it/wiki/BIP_0039)).
- *
- * @_docloc: api/wordlists
  */
 export class LangZh extends Wordlist {
     /**

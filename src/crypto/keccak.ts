@@ -1,7 +1,5 @@
 /**
  * Cryptographic hashing functions
- *
- * @_subsection: api/crypto:Hash Functions [about-crypto-hashing]
  */
 
 import { keccak_256 } from '@noble/hashes/sha3';

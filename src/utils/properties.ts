@@ -1,7 +1,5 @@
 /**
  * Property helper functions.
- *
- * @_subsection api/utils:Properties [about-properties]
  */
 
 function checkType(value: any, type: string, name: string): void {

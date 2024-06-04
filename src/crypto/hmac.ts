@@ -1,7 +1,6 @@
 /**
  * An **HMAC** enables verification that a given key was used to authenticate a payload.
  *
- * @_subsection: api/crypto:HMAC [about-hmac]
  * @see {@link https://en.wikipedia.org/wiki/HMAC | HMAC - Wikipedia}
  */
 import { createHmac } from './crypto.js';

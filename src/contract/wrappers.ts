@@ -161,7 +161,7 @@ export class ContractUnknownEventPayload extends EventPayload<ContractEventName>
     readonly log!: Log;
 
     /**
-     * @_event:
+     * @ignore
      */
     constructor(contract: BaseContract, listener: null | Listener, filter: ContractEventName, log: Log) {
         super(contract, listener, filter);
