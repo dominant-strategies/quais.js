@@ -25,7 +25,7 @@ in [TypeScript](https://www.typescriptlang.org).
 
 ## Keep Updated
 
-For advisories and important notices, follow [@quainetwork](https://twitter.com/quaisnetwork)
+For advisories and important notices, follow [@quainetwork](https://twitter.com/quainetwork)
 on Twitter as well as watch this GitHub project.
 
 For more general news, discussions, and feedback, join the
