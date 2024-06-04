@@ -13,14 +13,8 @@ export function load(app) {
          * @param {import('typedoc-plugin-markdown').MarkdownPageEvent} page
          */
         (page) => {
-            let summary = '';
-            if (page.model?.comment?.summary) {
-                summary = page.model.comment.summary[0].text + '...';
-                summary = summary.replace(/\n/g, ' ');
-            }
             page.frontmatter = {
                 title: page.model?.name,
-                description: summary,
                 ...page.frontmatter,
             };
         },
