@@ -3,8 +3,6 @@
  *
  * Fixed-point math is still based on integers under-the-hood, but uses an internal offset to store fractional
  * components below, and each operation corrects for this after each operation.
- *
- * @_section: api/utils/fixed-point-math:Fixed-Point Maths  [about-fixed-point-math]
  */
 import { getBytes } from './data.js';
 import { assert, assertArgument, assertPrivate } from './errors.js';

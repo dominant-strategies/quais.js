@@ -9,13 +9,11 @@
  *
  * The [QuaiHDWallet](../classes/QuaiHDWallet) can be used when it is necessary to access low-level details of how an HD
  * wallets are derived, exported or imported.
- *
- * @section api/wallet:Wallets [about-wallets]
  */
 
 export { BaseWallet } from './base-wallet.js';
 
-export {QuaiHDWallet} from "./quai-hdwallet.js";
+export { QuaiHDWallet } from './quai-hdwallet.js';
 
 export {
     isKeystoreJson,
@@ -34,7 +32,3 @@ export type { KeystoreAccount, EncryptOptions } from './json-keystore.js';
 export { QiHDWallet } from './qi-hdwallet.js';
 
 export { HDNodeVoidWallet } from "./hdnodewallet.js";
-
-// export type { HDWalletStatic } from "./hdwallet.js";
-
-// export { nobleCrypto } from "./musig-crypto.js";

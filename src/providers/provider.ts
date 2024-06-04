@@ -147,7 +147,7 @@ export function addressFromTransactionRequest(tx: TransactionRequest): AddressLi
  *
  * This is used to pass to various operations, which will internally coerce any types and populate any necessary values.
  *
- * @category Transaction
+ * @category Providers
  */
 export type TransactionRequest = QuaiTransactionRequest | QiTransactionRequest;
 

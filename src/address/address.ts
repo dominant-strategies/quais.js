@@ -102,7 +102,7 @@ export function getContractAddress(from: string, nonce: BigNumberish, data: Byte
  *
  * The key may be any standard form of public key or a private key.
  *
- * @category Transaction
+ * @category Address
  * @param {string | SigningKey} key - The key to compute the address for.
  *
  * @returns {string} The address.
@@ -120,7 +120,7 @@ export function computeAddress(key: string | SigningKey): string {
 /**
  * Returns the recovered address for the private key that was used to sign `digest` that resulted in `signature`.
  *
- * @category Transaction
+ * @category Address
  * @param {BytesLike} digest - The digest of the message.
  * @param {SignatureLike} signature - The signature.
  *

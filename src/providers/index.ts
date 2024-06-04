@@ -4,15 +4,13 @@
  *
  * It is one of the most fundamental components of interacting with a blockchain application, and there are many ways to
  * connect, such as over HTTP, WebSockets or injected providers such as [MetaMask](https://metamask.io/).
- *
- * @_section: api/providers:Providers [about-providers]
  */
 
 export { AbstractProvider, UnmanagedSubscriber } from './abstract-provider.js';
 
 export { Network } from './network.js';
 
-export { JsonRpcApiProvider, JsonRpcProvider } from "./provider-jsonrpc.js"
+export { JsonRpcApiProvider, JsonRpcProvider } from './provider-jsonrpc.js';
 
 export { BrowserProvider } from './provider-browser.js';
 

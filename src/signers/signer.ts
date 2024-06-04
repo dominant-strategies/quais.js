@@ -12,7 +12,7 @@ import type { BlockTag, Provider, TransactionRequest, TransactionResponse } from
  * The API remains abstract though, so that it can deal with more advanced exotic Signing entities, such as Smart
  * Contract Wallets or Virtual Wallets (where the private key may not be known).
  *
- * @category Providers
+ * @category Signers
  */
 export interface Signer extends Addressable, ContractRunner {
     /**

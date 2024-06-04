@@ -1,7 +1,5 @@
 /**
  * Explain UUID and link to RFC here.
- *
- * @section api/utils:UUID [about-uuid]
  */
 import { getBytes, hexlify } from './data.js';
 

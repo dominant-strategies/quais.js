@@ -11,8 +11,6 @@
  *
  * There are a variety of [BIP-39 Wordlists](https://github.com/bitcoin/bips/blob/master/bip-0039/bip-0039-wordlists.md)
  * for different languages, but for maximal compatibility, the [English Wordlist](LangEn) is recommended.
- *
- * @section api/wordlists:Wordlists [about-wordlists]
  */
 export { Wordlist } from './wordlist.js';
 export { LangEn } from './lang-en.js';

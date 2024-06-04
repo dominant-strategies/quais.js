@@ -12,7 +12,7 @@ import type { BytesLike } from '../utils/data.js';
 /**
  * Decodes the base-64 encoded `value`.
  *
- * @category Utils
+ * @category Encoding
  * @example
  *
  * ```ts
@@ -40,7 +40,7 @@ export function decodeBase64(value: string): Uint8Array {
 /**
  * Encodes `data` as a base-64 encoded string.
  *
- * @category Utils
+ * @category Encoding
  * @example
  *
  * ```ts

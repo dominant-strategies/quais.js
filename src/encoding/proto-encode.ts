@@ -1,10 +1,10 @@
-import { ProtoTransaction } from "../transaction/abstract-transaction.js";
-import { ProtoWorkObject } from "../transaction/work-object.js";
-import { hexlify } from "../utils/index.js";
-import * as Proto from "./protoc/proto_block.js"
+import { ProtoTransaction } from '../transaction/abstract-transaction.js';
+import { ProtoWorkObject } from '../transaction/work-object.js';
+import { hexlify } from '../utils/index.js';
+import * as Proto from './protoc/proto_block.js';
 
 /**
- * @category Utils
+ * @category Encoding
  * @param {ProtoTransaction} protoTx - Write variable description
  *
  * @returns {string} Write return description
@@ -16,7 +16,7 @@ export function encodeProtoTransaction(protoTx: ProtoTransaction): string {
 }
 
 /**
- * @category Utils
+ * @category Encoding
  * @param {ProtoWorkObject} protoWo - Write variable description
  *
  * @returns {string} Write return description

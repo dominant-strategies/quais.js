@@ -3,8 +3,6 @@
  * information and allows for extensible forms of encryption.
  *
  * These utilities facilitate decrypting and encrypting the most common JSON Wallet formats.
- *
- * @section api/wallet:JSON Wallets  [json-wallets]
  */
 
 import { CTR } from 'aes-js';
