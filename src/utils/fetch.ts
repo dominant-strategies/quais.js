@@ -12,8 +12,6 @@
  * server throttling, authentication, etc.
  *
  * It also handles common gateways, such as IPFS and data URIs.
- *
- * @section api/utils/fetching:Fetching Web Content  [about-fetch]
  */
 import { decodeBase64, encodeBase64 } from '../encoding/base64.js';
 import { hexlify } from './data.js';

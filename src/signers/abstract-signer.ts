@@ -1,8 +1,6 @@
 /**
  * Generally the [Wallet](../classes/Wallet) and [JsonRpcSigner](../classes/JsonRpcSigner) and their sub-classes are
  * sufficent for most developers, but this is provided to fascilitate more complex Signers.
- *
- * @section api/providers/abstract-signer: Subclassing Signer [abstract-signer]
  */
 import { AddressLike, resolveAddress, validateAddress } from '../address/index.js';
 import { defineProperties, getBigInt, resolveProperties, assert, assertArgument, isQiAddress } from '../utils/index.js';
@@ -55,7 +53,7 @@ async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise
  * An **AbstractSigner** includes most of teh functionality required to get a {@link Signer | **Signer**} working as
  * expected, but requires a few Signer-specific methods be overridden.
  *
- * @category Providers
+ * @category Signers
  */
 export abstract class AbstractSigner<P extends null | Provider = null | Provider> implements Signer {
     /**
@@ -214,7 +212,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
  * This for example allow impersonating an account for the purpose of static calls or estimating gas, but does not allow
  * sending transactions.
  *
- * @category Providers
+ * @category Signers
  */
 export class VoidSigner extends AbstractSigner {
     /**

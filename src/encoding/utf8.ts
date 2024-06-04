@@ -14,7 +14,7 @@ import type { BytesLike } from '../utils/index.js';
 /**
  * The stanard normalization forms.
  *
- * @category Utils
+ * @category Encoding
  */
 export type UnicodeNormalizationForm = 'NFC' | 'NFD' | 'NFKC' | 'NFKD';
 
@@ -40,7 +40,7 @@ export type UnicodeNormalizationForm = 'NFC' | 'NFD' | 'NFKC' | 'NFKD';
  * **`"OVERLONG"`** - the string is an overlong representation. The `badCodepoint` indicates the computed codepoint,
  * which has already been bounds checked.
  *
- * @category Utils
+ * @category Encoding
  */
 export type Utf8ErrorReason =
     | 'UNEXPECTED_CONTINUE'
@@ -69,7 +69,7 @@ export type Utf8ErrorReason =
  *
  * The function should return the number of bytes that should be skipped when control resumes to the FSM.
  *
- * @category Utils
+ * @category Encoding
  */
 export type Utf8ErrorFunc = (
     reason: Utf8ErrorReason,
@@ -160,7 +160,7 @@ function replaceFunc(
  * **`"replace"`** - replace any illegal UTF-8 sequence with the UTF-8 replacement character (i.e. `"\\ufffd"`) and
  * accepts non-canonical (overlong) codepoints
  *
- * @category Utils
+ * @category Encoding
  * @returns Record<"error" | "ignore" | "replace", Utf8ErrorFunc>
  */
 export const Utf8ErrorFuncs: Readonly<Record<'error' | 'ignore' | 'replace', Utf8ErrorFunc>> = Object.freeze({
@@ -276,7 +276,7 @@ function getUtf8CodePoints(_bytes: BytesLike, onError?: Utf8ErrorFunc): Array<nu
  *
  * If `form` is specified, the string is normalized.
  *
- * @category Utils
+ * @category Encoding
  * @param {string} str - The string to convert.
  * @param {UnicodeNormalizationForm} [form] - The normalization form to use.
  *
@@ -339,7 +339,7 @@ function _toUtf8String(codePoints: Array<number>): string {
  * When `onError` function is specified, it is called on UTF-8 errors allowing recovery using the
  * {@link Utf8ErrorFunc | **Utf8ErrorFunc**} API. (default: [error](Utf8ErrorFuncs))
  *
- * @category Utils
+ * @category Encoding
  * @param {BytesLike} bytes - The UTF-8 data to convert.
  * @param {Utf8ErrorFunc} [onError] - The error handling function.
  *
@@ -354,7 +354,7 @@ export function toUtf8String(bytes: BytesLike, onError?: Utf8ErrorFunc): string 
  *
  * If `form` is specified, the string is normalized.
  *
- * @category Utils
+ * @category Encoding
  * @param {string} str - The string to convert.
  * @param {UnicodeNormalizationForm} [form] - The normalization form to use.
  *

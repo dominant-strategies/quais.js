@@ -4,8 +4,6 @@
  *
  * The {@link isError | **isError**} function can be used to check the error `code` and provide a type guard for the
  * properties present on that error interface.
- *
- * @_section: api/utils/errors:Errors [about-errors]
  */
 
 import { version } from '../_version.js';

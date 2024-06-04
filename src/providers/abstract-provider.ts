@@ -2,8 +2,6 @@
  * The available providers should suffice for most developers purposes, but the
  * {@link AbstractProvider | **AbstractProvider**} class has many features which enable sub-classing it for specific
  * purposes.
- *
- * @section api/providers/abstract-provider: Subclassing Provider  [abstract-provider]
  */
 
 // @TODO

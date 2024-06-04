@@ -1,7 +1,5 @@
 /**
  * A fundamental building block of Ethereum is the underlying cryptographic primitives.
- *
- * @_section: api/crypto:Cryptographic Functions   [about-crypto]
  */
 
 null;
@@ -49,4 +47,3 @@ export { musigCrypto } from './musig.js';
 export type { ProgressCallback } from './scrypt.js';
 
 export type { SignatureLike } from './signature.js';
-

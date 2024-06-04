@@ -1,12 +1,12 @@
 import type { EventFragment, FunctionFragment, Result, Typed } from '../abi/index.js';
 import type { ContractTransactionResponse } from './wrappers.js';
-import type { 
+import type {
     Provider,
     TopicFilter,
     QuaiTransactionRequest,
     QuaiPreparedTransactionRequest,
     TransactionResponse,
-    TransactionRequest
+    TransactionRequest,
 } from '../providers/index.js';
 
 /**
@@ -303,7 +303,7 @@ export interface WrappedFallback {
  * The most common ContractRunners are [Providers](../classes/Provider) which enable read-only access and
  * [Signers](../classes/Signer) which enable write-access.
  *
- * @category Providers
+ * @category Category
  */
 export interface ContractRunner {
     /**

@@ -1,9 +1,3 @@
-/**
- * About provider formatting?
- *
- * @section api/providers/formatting:Formatting [provider-formatting]
- */
-
 import type { Signature } from '../crypto/index.js';
 import type { AccessList, TxInput, TxOutput } from '../transaction/index.js';
 

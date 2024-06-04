@@ -1,8 +1,6 @@
 /**
  * There are many simple utilities required to interact with Ethereum and to simplify the library, without increasing
  * the library dependencies for simple functions.
- *
- * @_section api/utils:Utilities [about-utils]
  */
 
 export {
@@ -104,4 +102,3 @@ export type {
 export type { FixedFormat } from './fixednumber.js';
 
 export type { BigNumberish, Numeric } from './maths.js';
-

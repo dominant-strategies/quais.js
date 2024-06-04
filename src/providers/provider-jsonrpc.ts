@@ -5,8 +5,6 @@
  * - HTTP or HTTPS - [JsonRpcProvider](../classes/JsonRpcProvider)
  * - WebSocket - [WebSocketProvider](../classes/WebSocketProvider)
  * - IPC - [IpcSocketProvider](../classes/IpcSocketProvider)
- *
- * @_section: api/providers/jsonrpc:JSON-RPC Provider  [about-jsonrpcProvider]
  */
 
 // @TODO:
@@ -1011,22 +1009,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
         return <Promise<JsonRpcResult>>promise;
     }
-
-    /**
-     * Resolves to the {@link Signer | **Signer**} account for\
-     * `address` managed by the client.
-     *
-     * If the `address` is a number, it is used as an index in the the accounts from
-     * {@link JsonRpcApiProvider.listAccounts | **listAccount**}.
-     *
-     * This can only be used on clients which manage accounts (such as Geth with imported account or MetaMask). go-quai
-     * clients do not support internal key management, so this method will always throw.
-     *
-     * @param {number | string} address - The address or index of the account to get.
-     *
-     * @returns {Promise<JsonRpcSigner>} The signer for the account.
-     * @throws {Error} If the account doesn't exist.
-     */
 
     destroy(): void {
         // Stop processing requests

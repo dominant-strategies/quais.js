@@ -1,7 +1,5 @@
 /**
  * Utilities for common tasks involving hashing. Also see [cryptographic hashing](about-crypto-hashing).
- *
- * @_section: api/hashing:Hashing Utilities  [about-hashing]
  */
 
 export { id } from './id.js';
