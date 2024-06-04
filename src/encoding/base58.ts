@@ -6,8 +6,6 @@
  * Note that Base58 encodes a **numeric** value, not arbitrary bytes, since any zero-bytes on the left would get
  * removed. To mitigate this issue most schemes that use Base58 choose specific high-order values to ensure non-zero
  * prefixes.
- *
- * @_subsection: api/utils:Base58 Encoding [about-base58]
  */
 
 import { getBytes } from '../utils/data.js';

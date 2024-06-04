@@ -1,7 +1,5 @@
 /**
  * Some mathematic operations.
- *
- * @_subsection: api/utils:Math Helpers  [about-maths]
  */
 import { hexlify, isBytesLike } from './data.js';
 import { assert, assertArgument } from './errors.js';

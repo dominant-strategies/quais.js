@@ -1,7 +1,5 @@
 /**
  * A **Network** encapsulates the various properties required to interact with a specific chain.
- *
- * @_subsection: api/providers:Networks [networks]
  */
 
 import { getBigInt, assertArgument } from '../utils/index.js';
@@ -27,7 +25,6 @@ export type Networkish =
           name?: string;
           chainId?: number;
       };
-
 
 const Networks: Map<string | bigint, () => Network> = new Map();
 
@@ -141,7 +138,6 @@ export class Network {
      * @returns {Network} The Network instance.
      */
     static from(network?: Networkish): Network {
-
         // Default network
         if (network == null) {
             return Network.from('mainnet');

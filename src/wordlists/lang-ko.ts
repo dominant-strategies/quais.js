@@ -68,8 +68,6 @@ let wordlist: null | LangKo = null;
 /**
  * The [Korean wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/korean.txt) for [mnemonic
  * phrases](https://en.bitcoin.it/wiki/BIP_0039).
- *
- * @_docloc: api/wordlists
  */
 export class LangKo extends Wordlist {
     /**

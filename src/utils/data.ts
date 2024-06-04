@@ -1,7 +1,5 @@
 /**
  * Some data helpers.
- *
- * @_subsection api/utils:Data Helpers  [about-data]
  */
 import { assert, assertArgument } from './errors.js';
 
