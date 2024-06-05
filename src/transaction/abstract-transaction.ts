@@ -173,6 +173,8 @@ export interface ProtoAccessList {
 /**
  * @category Transaction
  * @todo Write documentation for this interface.
+ *
+ * @todo Write documentation for this interface.
  */
 export interface ProtoAccessTuple {
     address: Uint8Array;
@@ -186,6 +188,7 @@ type allowedSignatureTypes = Signature | string;
  * who (the {@link ProtoTransaction.to | **to** } address), what (the {@link ProtoTransaction.data | **data** }) and how
  * much (the {@link ProtoTransaction.value | **value** } in ether) the operation should entail.
  *
+ * @category Transaction
  * @category Transaction
  * @example
  *
