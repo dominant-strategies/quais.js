@@ -35,4 +35,4 @@ export { getAddress, computeAddress, recoverAddress } from './address.js';
 
 export { getCreateAddress, getCreate2Address } from './contract-address.js';
 
-export { isAddressable, isAddress, resolveAddress } from './checks.js';
+export { isAddressable, isAddress, resolveAddress, validateAddress } from './checks.js';

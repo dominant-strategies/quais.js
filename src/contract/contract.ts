@@ -1,5 +1,5 @@
 import { Interface, Typed } from '../abi/index.js';
-import { isAddressable, resolveAddress } from '../address/index.js';
+import { isAddressable, resolveAddress, validateAddress } from '../address/index.js';
 // import from provider.ts instead of index.ts to prevent circular dep
 // from quaiscanProvider
 import {
@@ -205,9 +205,11 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
 
         const tx: ContractTransaction = <any>await copyOverrides<'data'>(overrides, ['data']);
         tx.to = await contract.getAddress();
+        validateAddress(tx.to);
 
         if (tx.from) {
             tx.from = await resolveAddress(tx.from);
+            validateAddress(tx.from);
         }
 
         const iface = contract.interface;
@@ -749,8 +751,8 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     /**
      * The target to connect to.
      *
-     * This can be an address or any [Addressable](../interfaces/Addressable), such as another contract. To
-     * get the resovled address, use the `getAddress` method.
+     * This can be an address or any [Addressable](../interfaces/Addressable), such as another contract. To get the
+     * resovled address, use the `getAddress` method.
      */
     readonly target!: string | Addressable;
 

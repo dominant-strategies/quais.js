@@ -1,6 +1,6 @@
 import { assertArgument } from '../utils/index.js';
 
-import { getAddress } from './address.js';
+import { formatMixedCaseChecksumAddress, getAddress } from './address.js';
 
 import type { Addressable, AddressLike } from './index.js';
 
@@ -63,7 +63,7 @@ async function checkAddress(target: any, promise: Promise<null | string>): Promi
     if (result == null || result === '0x0000000000000000000000000000000000000000') {
         assertArgument(false, 'invalid AddressLike value; did not resolve to a value address', 'target', target);
     }
-    return getAddress(result);
+    return result;
 }
 
 /**
@@ -88,8 +88,6 @@ async function checkAddress(target: any, promise: Promise<null | string>): Promi
  * contract = new Contract(addr, []);
  * resolveAddress(contract, provider);
  * //_result:
- *
- *
  * ```
  *
  * @param {AddressLike} target - The target to resolve to an address.
@@ -100,7 +98,7 @@ async function checkAddress(target: any, promise: Promise<null | string>): Promi
 export function resolveAddress(target: AddressLike): string | Promise<string> {
     if (typeof target === 'string') {
         if (target.match(/^0x[0-9a-f]{40}$/i)) {
-            return getAddress(target);
+            return target;
         }
     } else if (isAddressable(target)) {
         return checkAddress(target, target.getAddress());
@@ -109,4 +107,23 @@ export function resolveAddress(target: AddressLike): string | Promise<string> {
     }
 
     assertArgument(false, 'unsupported addressable value', 'target', target);
+}
+
+/**
+ * Checks if the address is a valid mixed case checksummed address.
+ *
+ * @category Address
+ * @param address - The address to validate.
+ *
+ * @returns True if the address is a valid mixed case checksummed address.
+ */
+export function validateAddress(address: string): void {
+    assertArgument(typeof address === 'string', 'address must be string', 'address', address);
+    assertArgument(
+        Boolean(address.match(/^(0x)?[0-9a-fA-F]{40}$/)),
+        'invalid address string format',
+        'address',
+        address,
+    );
+    assertArgument(formatMixedCaseChecksumAddress(address) === address, 'invalid address checksum', 'address', address);
 }

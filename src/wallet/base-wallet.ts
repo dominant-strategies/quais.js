@@ -1,4 +1,4 @@
-import { getAddress, computeAddress, resolveAddress } from '../address/index.js';
+import { getAddress, computeAddress, resolveAddress, validateAddress } from '../address/index.js';
 import { hashMessage, TypedDataEncoder } from '../hash/index.js';
 import { AbstractSigner } from '../signers/index.js';
 import { resolveProperties, assertArgument } from '../utils/index.js';
@@ -90,21 +90,27 @@ export class BaseWallet extends AbstractSigner {
         });
 
         if (to != null) {
+            validateAddress(to);
             tx.to = to;
         }
         if (from != null) {
+            validateAddress(from);
             tx.from = from;
         }
 
         if (tx.from != null) {
-            assertArgument(getAddress(<string>(tx.from)) === this.#address,
-                "transaction from address mismatch", "tx.from", tx.from);
+            assertArgument(
+                getAddress(<string>tx.from) === this.#address,
+                'transaction from address mismatch',
+                'tx.from',
+                tx.from,
+            );
         }
 
         const btx = QuaiTransaction.from(<QuaiTransactionLike>tx);
-        console.log('unsigned', btx.unsignedSerialized)
-        const digest= keccak256(btx.unsignedSerialized)
-        btx.signature = this.signingKey.sign(digest)
+        console.log('unsigned', btx.unsignedSerialized);
+        const digest = keccak256(btx.unsignedSerialized);
+        btx.signature = this.signingKey.sign(digest);
 
         return btx.serialized;
     }

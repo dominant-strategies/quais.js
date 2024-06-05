@@ -1,9 +1,11 @@
+import { validateAddress } from '../address/index.js';
 import { getAddress } from '../address/index.js';
 import { assertArgument, isHexString } from '../utils/index.js';
 
 import type { AccessList, AccessListish } from './index.js';
 
 function accessSetify(addr: string, storageKeys: Array<string>): { address: string; storageKeys: Array<string> } {
+    validateAddress(addr);
     return {
         address: getAddress(addr),
         storageKeys: storageKeys.map((storageKey, index) => {
