@@ -4,22 +4,22 @@
  *
  * @section api/providers/abstract-signer: Subclassing Signer [abstract-signer]
  */
-import { AddressLike, resolveAddress } from '../address/index.js';
+import { AddressLike, resolveAddress, validateAddress } from '../address/index.js';
+import { defineProperties, getBigInt, resolveProperties, assert, assertArgument, isQiAddress } from '../utils/index.js';
 import {
-    defineProperties, getBigInt, resolveProperties,
-    assert, assertArgument, isQiAddress
-} from "../utils/index.js";
-import {addressFromTransactionRequest, copyRequest, QiTransactionRequest, QuaiTransactionRequest} from "../providers/provider.js";
+    addressFromTransactionRequest,
+    copyRequest,
+    QiTransactionRequest,
+    QuaiTransactionRequest,
+} from '../providers/provider.js';
 
 import type { TypedDataDomain, TypedDataField } from '../hash/index.js';
 import type { TransactionLike } from '../transaction/index.js';
 
-import type {
-    BlockTag, Provider, TransactionRequest, TransactionResponse
-} from "../providers/provider.js";
-import type { Signer } from "./signer.js";
-import { getTxType } from "../utils/index.js";
-import {QiTransaction, QiTransactionLike, QuaiTransaction, QuaiTransactionLike} from "../transaction/index.js";
+import type { BlockTag, Provider, TransactionRequest, TransactionResponse } from '../providers/provider.js';
+import type { Signer } from './signer.js';
+import { getTxType } from '../utils/index.js';
+import { QiTransaction, QiTransactionLike, QuaiTransaction, QuaiTransactionLike } from '../transaction/index.js';
 import { toZone, Zone } from '../constants/index.js';
 
 function checkProvider(signer: AbstractSigner, operation: string): Provider {
@@ -34,6 +34,7 @@ async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise
 
     if (pop.to != null) {
         pop.to = resolveAddress(pop.to);
+        validateAddress(pop.to);
     }
 
     if (pop.from != null) {
@@ -45,6 +46,7 @@ async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise
     } else {
         pop.from = signer.getAddress();
     }
+    validateAddress(pop.from);
 
     return await resolveProperties(pop);
 }

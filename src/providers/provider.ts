@@ -128,7 +128,6 @@ export class FeeData {
 }
 
 export function addressFromTransactionRequest(tx: TransactionRequest): AddressLike {
-    //return 'from' in tx ? tx.from : tx.inputs[0].address;
     if ('from' in tx) {
         return tx.from;
     }

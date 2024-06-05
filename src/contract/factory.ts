@@ -4,7 +4,7 @@ import { concat, defineProperties, getBytes, hexlify, assert, assertArgument } f
 import { BaseContract, copyOverrides, resolveArgs } from './contract.js';
 
 import type { InterfaceAbi } from '../abi/index.js';
-import type { Addressable } from '../address/index.js';
+import { validateAddress, type Addressable } from '../address/index.js';
 import type { BytesLike } from '../utils/index.js';
 import { getZoneForAddress, isQiAddress } from '../utils/index.js';
 import type { ContractInterface, ContractMethodArgs, ContractDeployTransaction, ContractRunner } from './types.js';
@@ -133,6 +133,7 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         );
 
         if (this.runner instanceof Wallet) {
+            validateAddress(this.runner.address);
             tx.from = this.runner.address;
         }
         const grindedTx = await this.grindContractAddress(tx);
@@ -170,7 +171,6 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         while (i < 10000) {
             const contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
             const contractShard = getZoneForAddress(contractAddress);
-            console.log('contractAddress ', contractAddress);
             const utxo = isQiAddress(contractAddress);
             if (contractShard === toShard && !utxo) {
                 return tx;

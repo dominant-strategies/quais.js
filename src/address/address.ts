@@ -14,7 +14,7 @@ import {
 
 import type { SignatureLike } from '../crypto/index.js';
 
-function getChecksumAddress(address: string): string {
+export function formatMixedCaseChecksumAddress(address: string): string {
     address = address.toLowerCase();
 
     const chars = address.substring(2).split('');
@@ -39,11 +39,11 @@ function getChecksumAddress(address: string): string {
 }
 
 /**
- * Returns a normalized and checksumed address for `address`. This accepts non-checksum addresses, checksum addresses
- * and [[getIcapAddress]] formats.
+ * Returns a normalized and checksumed address for `address`. This accepts non-checksum addressesa and checksum
+ * addresses.
  *
- * The checksum in Ethereum uses the capitalization (upper-case vs lower-case) of the characters within an address to
- * encode its checksum, which offers, on average, a checksum of 15-bits.
+ * The checksum in Quai uses the capitalization (upper-case vs lower-case) of the characters within an address to encode
+ * its checksum, which offers, on average, a checksum of 15-bits.
  *
  * If `address` contains both upper-case and lower-case, it is assumed to already be a checksum address and its checksum
  * is validated, and if the address fails its expected checksum an error is thrown.
@@ -60,19 +60,11 @@ function getChecksumAddress(address: string): string {
  * getAddress('0x8ba1f109551bd432803012645ac136ddd64dba72');
  * //_result:
  *
- * // Converts ICAP address and adds checksum
- * getAddress('XE65GB6LDNXYOFTX0NSV3FUWKOWIXAMJK36');
- * //_result:
- *
  * // Throws an error if an address contains mixed case,
  * // but the checksum fails
  * getAddress('0x8Ba1f109551bD432803012645Ac136ddd64DBA72');
  * //_error:
  * ```
- *
- * @todo Revise this documentation as ICAP addresses are not supported
- *
- * @todo GetIcapAddress has been removed, link must be revised or removed
  */
 export function getAddress(address: string): string {
     assertArgument(typeof address === 'string', 'invalid address', 'address', address);
@@ -83,12 +75,13 @@ export function getAddress(address: string): string {
             address = '0x' + address;
         }
 
-        const result = getChecksumAddress(address);
+        const result = formatMixedCaseChecksumAddress(address);
 
-        // It is a checksummed address with a bad checksum
+        // If original address is mix cased and recomputed version doesn't
+        // match the original this could indicate a potential typo or mispaste.
         assertArgument(
             !address.match(/([A-F].*[a-f])|([a-f].*[A-F])/) || result === address,
-            'bad address checksum',
+            'invalid address checksum',
             'address',
             address,
         );
@@ -96,7 +89,7 @@ export function getAddress(address: string): string {
         return result;
     }
 
-    assertArgument(false, 'invalid address', 'address', address);
+    assertArgument(false, 'invalid address string format', 'address', address);
 }
 
 export function getContractAddress(from: string, nonce: BigNumberish, data: BytesLike): string {

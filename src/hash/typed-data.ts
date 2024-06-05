@@ -127,7 +127,7 @@ const domainChecks: Record<string, (value: any) => any> = {
     },
     verifyingContract: function (value: any) {
         try {
-            return getAddress(value).toLowerCase();
+            return getAddress(value);
             // eslint-disable-next-line no-empty
         } catch (error) {}
         assertArgument(false, `invalid domain value "verifyingContract"`, 'domain.verifyingContract', value);

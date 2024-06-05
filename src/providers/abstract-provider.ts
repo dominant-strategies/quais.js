@@ -1100,10 +1100,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                 ? 'address' in <any>request[key][0]
                     ? (<TxOutput[]>(<any>request)[key]).map((it) => resolveAddress(hexlify(it.address)))
                     : (<TxInput[]>(<any>request)[key]).map((it) =>
-                          resolveAddress(
-                              getAddress(
-                                  keccak256('0x' + SigningKey.computePublicKey(it.pub_key).substring(4)).substring(26),
-                              ),
+                          getAddress(
+                              keccak256('0x' + SigningKey.computePublicKey(it.pub_key).substring(4)).substring(26),
                           ),
                       )
                 : resolveAddress((<any>request)[key]);

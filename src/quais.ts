@@ -28,10 +28,15 @@ export {
 // ADDRESS
 export {
     getAddress,
-    computeAddress, recoverAddress,
-    getCreateAddress, getCreate2Address,
-    isAddressable, isAddress, resolveAddress
-} from "./address/index.js";
+    computeAddress,
+    recoverAddress,
+    getCreateAddress,
+    getCreate2Address,
+    isAddressable,
+    isAddress,
+    resolveAddress,
+    validateAddress,
+} from './address/index.js';
 
 //CONSTANTS
 export {
@@ -78,77 +83,123 @@ export {
 // HASH
 export {
     id,
-    hashMessage, verifyMessage,
-    solidityPacked, solidityPackedKeccak256, solidityPackedSha256,
+    hashMessage,
+    verifyMessage,
+    solidityPacked,
+    solidityPackedKeccak256,
+    solidityPackedSha256,
     TypedDataEncoder,
     verifyTypedData,
 } from './hash/index.js';
 
 // PROVIDERS
 export {
-    Block, FeeData, Log, TransactionReceipt, TransactionResponse,
-
+    Block,
+    FeeData,
+    Log,
+    TransactionReceipt,
+    TransactionResponse,
     AbstractProvider,
-
-    JsonRpcApiProvider, JsonRpcProvider,
-
+    JsonRpcApiProvider,
+    JsonRpcProvider,
     BrowserProvider,
-
-    SocketProvider, WebSocketProvider,
-
+    SocketProvider,
+    WebSocketProvider,
     Network,
+    SocketBlockSubscriber,
+    SocketEventSubscriber,
+    SocketPendingSubscriber,
+    SocketSubscriber,
+    UnmanagedSubscriber,
+    copyRequest,
+} from './providers/index.js';
 
-    SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber,
-    SocketSubscriber, UnmanagedSubscriber,
-
-    copyRequest
-} from "./providers/index.js";
-
-export {
-    AbstractSigner, VoidSigner,
-} from "./signers/index.js";
+export { AbstractSigner, VoidSigner } from './signers/index.js';
 
 // TRANSACTION
-export {
-    accessListify,
-    AbstractTransaction, FewestCoinSelector,
-    QiTransaction
-} from "./transaction/index.js";
+export { accessListify, AbstractTransaction, FewestCoinSelector, QiTransaction } from './transaction/index.js';
 
 // UTILS
 export {
-    concat, dataLength, dataSlice, getBytes, getBytesCopy, hexlify,
-    isHexString, isBytesLike, stripZerosLeft, zeroPadBytes, zeroPadValue,
-    defineProperties, resolveProperties,
-    assert, assertArgument, assertArgumentCount, assertNormalize, assertPrivate,
+    concat,
+    dataLength,
+    dataSlice,
+    getBytes,
+    getBytesCopy,
+    hexlify,
+    isHexString,
+    isBytesLike,
+    stripZerosLeft,
+    zeroPadBytes,
+    zeroPadValue,
+    defineProperties,
+    resolveProperties,
+    assert,
+    assertArgument,
+    assertArgumentCount,
+    assertNormalize,
+    assertPrivate,
     makeError,
-    isCallException, isError,
+    isCallException,
+    isError,
     EventPayload,
-    FetchRequest, FetchResponse, FetchCancelSignal,
+    FetchRequest,
+    FetchResponse,
+    FetchCancelSignal,
     FixedNumber,
-    getBigInt, getNumber, getUint, toBeArray, toBigInt, toBeHex, toNumber, toQuantity,
-    fromTwos, toTwos, mask,
-    formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits,
-    uuidV4, getTxType, getZoneForAddress, getAddressDetails, isQiAddress,
-} from "./utils/index.js";
+    getBigInt,
+    getNumber,
+    getUint,
+    toBeArray,
+    toBigInt,
+    toBeHex,
+    toNumber,
+    toQuantity,
+    fromTwos,
+    toTwos,
+    mask,
+    formatQuai,
+    parseQuai,
+    formatEther,
+    parseEther,
+    formatUnits,
+    parseUnits,
+    uuidV4,
+    getTxType,
+    getZoneForAddress,
+    getAddressDetails,
+    isQiAddress,
+} from './utils/index.js';
 
 export {
-    decodeBase58, encodeBase58,
-    decodeBase64, encodeBase64,
-    decodeProtoTransaction, encodeProtoTransaction,
-    decodeProtoWorkObject, encodeProtoWorkObject,
-    toUtf8Bytes, toUtf8CodePoints, toUtf8String, Utf8ErrorFuncs,
-} from "./encoding/index.js";
+    decodeBase58,
+    encodeBase58,
+    decodeBase64,
+    encodeBase64,
+    decodeProtoTransaction,
+    encodeProtoTransaction,
+    decodeProtoWorkObject,
+    encodeProtoWorkObject,
+    toUtf8Bytes,
+    toUtf8CodePoints,
+    toUtf8String,
+    Utf8ErrorFuncs,
+} from './encoding/index.js';
 
 // WALLET
 export {
     Mnemonic,
-    BaseWallet, QuaiHDWallet, HDNodeVoidWallet, QiHDWallet,
+    BaseWallet,
+    QuaiHDWallet,
+    HDNodeVoidWallet,
+    QiHDWallet,
     Wallet,
     isKeystoreJson,
-    decryptKeystoreJsonSync, decryptKeystoreJson,
-    encryptKeystoreJson, encryptKeystoreJsonSync,
-} from "./wallet/index.js";
+    decryptKeystoreJsonSync,
+    decryptKeystoreJson,
+    encryptKeystoreJson,
+    encryptKeystoreJsonSync,
+} from './wallet/index.js';
 
 // WORDLIST
 export { Wordlist, LangEn, LangEs, WordlistOwl, WordlistOwlA, wordlists } from './wordlists/index.js';
@@ -172,12 +223,22 @@ export type { Addressable, AddressLike } from './address/index.js';
 
 // CONTRACT
 export type {
-    ConstantContractMethod, ContractEvent, ContractEventArgs, ContractEventName,
-    ContractInterface, ContractMethod, ContractMethodArgs, ContractTransaction,
-    DeferredTopicFilter, Overrides,
-    ContractRunner, BaseContractMethod, ContractDeployTransaction, PostfixOverrides,
-    WrappedFallback
-} from "./contract/index.js";
+    ConstantContractMethod,
+    ContractEvent,
+    ContractEventArgs,
+    ContractEventName,
+    ContractInterface,
+    ContractMethod,
+    ContractMethodArgs,
+    ContractTransaction,
+    DeferredTopicFilter,
+    Overrides,
+    ContractRunner,
+    BaseContractMethod,
+    ContractDeployTransaction,
+    PostfixOverrides,
+    WrappedFallback,
+} from './contract/index.js';
 
 // CRYPTO
 export type { ProgressCallback, SignatureLike } from './crypto/index.js';
@@ -188,23 +249,42 @@ export type { TypedDataDomain, TypedDataField } from './hash/index.js';
 // PROVIDERS
 export type {
     Provider,
-
     AbstractProviderOptions,
-
-    AbstractProviderPlugin, BlockParams, BlockTag, DebugEventBrowserProvider,
-    Eip1193Provider, EventFilter, Filter, FilterByBlockHash,
-    JsonRpcApiProviderOptions, JsonRpcError, JsonRpcPayload, JsonRpcResult,
-    JsonRpcTransactionRequest, LogParams, MinedBlock, MinedTransactionResponse, Networkish,
-    OrphanFilter, PerformActionFilter, PerformActionRequest, PerformActionTransaction,
-    PreparedTransactionRequest, ProviderEvent, Subscriber, Subscription, TopicFilter,
-    TransactionReceiptParams, TransactionRequest, TransactionResponseParams,
-    WebSocketCreator, WebSocketLike
-} from "./providers/index.js";
+    AbstractProviderPlugin,
+    BlockParams,
+    BlockTag,
+    DebugEventBrowserProvider,
+    Eip1193Provider,
+    EventFilter,
+    Filter,
+    FilterByBlockHash,
+    JsonRpcApiProviderOptions,
+    JsonRpcError,
+    JsonRpcPayload,
+    JsonRpcResult,
+    JsonRpcTransactionRequest,
+    LogParams,
+    MinedBlock,
+    MinedTransactionResponse,
+    Networkish,
+    OrphanFilter,
+    PerformActionFilter,
+    PerformActionRequest,
+    PerformActionTransaction,
+    PreparedTransactionRequest,
+    ProviderEvent,
+    Subscriber,
+    Subscription,
+    TopicFilter,
+    TransactionReceiptParams,
+    TransactionRequest,
+    TransactionResponseParams,
+    WebSocketCreator,
+    WebSocketLike,
+} from './providers/index.js';
 
 // SIGNERS
-export type {
-    Signer,
-} from "./signers/index.js";
+export type { Signer } from './signers/index.js';
 
 // TRANSACTION
 export type { AccessList, AccessListish, AccessListEntry, TransactionLike } from './transaction/index.js';
@@ -212,32 +292,44 @@ export type { AccessList, AccessListish, AccessListEntry, TransactionLike } from
 // UTILS
 export type {
     BytesLike,
-    BigNumberish, Numeric,
+    BigNumberish,
+    Numeric,
     ErrorCode,
     FixedFormat,
-
     GetUrlResponse,
-    FetchPreflightFunc, FetchProcessFunc, FetchRetryFunc,
-    FetchGatewayFunc, FetchGetUrlFunc,
-
-    quaisError, UnknownError, NotImplementedError, UnsupportedOperationError, NetworkError,
-    ServerError, TimeoutError, BadDataError, CancelledError, BufferOverrunError,
-    NumericFaultError, InvalidArgumentError, MissingArgumentError, UnexpectedArgumentError,
-    CallExceptionError, InsufficientFundsError, NonceExpiredError,
-    ReplacementUnderpricedError, TransactionReplacedError,
+    FetchPreflightFunc,
+    FetchProcessFunc,
+    FetchRetryFunc,
+    FetchGatewayFunc,
+    FetchGetUrlFunc,
+    quaisError,
+    UnknownError,
+    NotImplementedError,
+    UnsupportedOperationError,
+    NetworkError,
+    ServerError,
+    TimeoutError,
+    BadDataError,
+    CancelledError,
+    BufferOverrunError,
+    NumericFaultError,
+    InvalidArgumentError,
+    MissingArgumentError,
+    UnexpectedArgumentError,
+    CallExceptionError,
+    InsufficientFundsError,
+    NonceExpiredError,
+    ReplacementUnderpricedError,
+    TransactionReplacedError,
     ActionRejectedError,
     CodedquaisError,
+    CallExceptionAction,
+    CallExceptionTransaction,
+    EventEmitterable,
+    Listener,
+} from './utils/index.js';
 
-    CallExceptionAction, CallExceptionTransaction,
-    EventEmitterable, Listener
-} from "./utils/index.js";
-
-export type {
-    Utf8ErrorFunc, UnicodeNormalizationForm, Utf8ErrorReason,
-} from "./encoding/index.js";
+export type { Utf8ErrorFunc, UnicodeNormalizationForm, Utf8ErrorReason } from './encoding/index.js';
 
 // WALLET
-export type {
-    KeystoreAccount, EncryptOptions
-} from "./wallet/index.js";
-
+export type { KeystoreAccount, EncryptOptions } from './wallet/index.js';

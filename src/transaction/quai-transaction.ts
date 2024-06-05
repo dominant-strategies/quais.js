@@ -1,5 +1,5 @@
-import { keccak256, Signature } from "../crypto/index.js";
-import { AccessList, accessListify, AccessListish, AbstractTransaction, TransactionLike } from "./index.js";
+import { keccak256, Signature } from '../crypto/index.js';
+import { AccessList, accessListify, AccessListish, AbstractTransaction, TransactionLike } from './index.js';
 import {
     assert,
     assertArgument,
@@ -9,13 +9,16 @@ import {
     getBytes,
     getNumber,
     getZoneForAddress,
-    hexlify, isQiAddress,
-    toBeArray, toBigInt, zeroPadValue
-} from "../utils/index.js";
+    hexlify,
+    isQiAddress,
+    toBeArray,
+    toBigInt,
+    zeroPadValue,
+} from '../utils/index.js';
 import { decodeProtoTransaction, encodeProtoTransaction } from '../encoding/index.js';
-import { getAddress, recoverAddress } from "../address/index.js";
-import { formatNumber, handleNumber } from "../providers/format.js";
-import { ProtoTransaction} from "./abstract-transaction.js";
+import { recoverAddress, validateAddress } from '../address/index.js';
+import { formatNumber, handleNumber } from '../providers/format.js';
+import { ProtoTransaction } from './abstract-transaction.js';
 import { Zone } from '../constants';
 
 /**
@@ -113,7 +116,8 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         return this.#to;
     }
     set to(value: null | string) {
-        this.#to = value == null ? null : getAddress(value);
+        if (value !== null) validateAddress(value);
+        this.#to = value;
     }
 
     get hash(): null | string {
@@ -122,12 +126,13 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         }
         return this.unsignedHash;
     }
+
     get unsignedHash(): string {
         const destUtxo = isQiAddress(this.to || '');
         const originUtxo = isQiAddress(this.from);
 
         if (!this.originZone) {
-            throw new Error('Invalid Shard for from or to address');
+            throw new Error('Invalid Zone for from address');
         }
         if (this.isExternal && destUtxo !== originUtxo) {
             throw new Error('Cross-zone & cross-ledger transactions are not supported');
@@ -397,6 +402,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             result.type = tx.type;
         }
         if (tx.to != null) {
+            validateAddress(tx.to);
             result.to = tx.to;
         }
         if (tx.nonce != null) {
@@ -432,6 +438,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         }
 
         if (tx.from != null) {
+            validateAddress(tx.from);
             assertArgument(result.from.toLowerCase() === (tx.from || '').toLowerCase(), 'from mismatch', 'tx', tx);
             result.from = tx.from;
         }
@@ -449,7 +456,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     static fromProto(protoTx: ProtoTransaction): QuaiTransaction {
         //  TODO: Fix this because new tx instance requires a 'from' address
         let signature: null | Signature = null;
-        let address;
+        let address: string = '';
         if (protoTx.v && protoTx.r && protoTx.s) {
             // check if protoTx.r is zero
             if (protoTx.r.reduce((acc, val) => (acc += val), 0) == 0) {
@@ -468,22 +475,25 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             delete protoTxCopy.etx_index;
 
             address = recoverAddress(keccak256(encodeProtoTransaction(protoTxCopy)), signature);
-        } else {
-            address = '';
         }
-
         const tx = new QuaiTransaction(address);
 
         if (signature) {
             tx.signature = signature;
         }
+
+        if (protoTx.to !== null) {
+            const toAddr = hexlify(protoTx.to!);
+            validateAddress(toAddr);
+            tx.to = toAddr;
+        }
+
         tx.type = protoTx.type;
         tx.chainId = toBigInt(protoTx.chain_id);
         tx.nonce = Number(protoTx.nonce);
         tx.maxPriorityFeePerGas = toBigInt(protoTx.gas_tip_cap!);
         tx.maxFeePerGas = toBigInt(protoTx.gas_fee_cap!);
         tx.gasLimit = toBigInt(protoTx.gas!);
-        tx.to = protoTx.to !== null ? hexlify(protoTx.to!) : null;
         tx.value = protoTx.value !== null ? toBigInt(protoTx.value!) : BigInt(0);
         tx.data = hexlify(protoTx.data!);
         tx.accessList = protoTx.access_list!.access_tuples.map((tuple) => ({
