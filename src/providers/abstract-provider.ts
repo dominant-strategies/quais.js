@@ -8,14 +8,14 @@
 
 // @TODO
 // Event coalescence
-//   When we register an event with an async value (e.g. address is a Signer), 
+//   When we register an event with an async value (e.g. address is a Signer),
 //   we need to add it immeidately for the Event API, but also
 //   need time to resolve the address. Upon resolving the address, we need to
 //   migrate the listener to the static event. We also need to maintain a map
 //   of Signer to address so we can sync respond to listenerCount.
 
 import { getAddress, resolveAddress } from '../address/index.js';
-import { ShardData } from '../constants/index.js';
+import { Shard, toShard, toZone, Zone } from '../constants/index.js';
 import { TxInput, TxOutput } from '../transaction/index.js';
 import { Outpoint } from '../transaction/utxo.js';
 import {
@@ -74,11 +74,11 @@ import type {
     Provider,
     ProviderEvent,
     TransactionRequest,
-} from "./provider.js";
-import { WorkObjectLike } from "../transaction/work-object.js";
-import {QiTransaction, QuaiTransaction} from "../transaction/index.js";
-import {QuaiTransactionResponseParams} from "./formatting.js";
-import {keccak256, SigningKey} from "../crypto/index.js";
+} from './provider.js';
+import { WorkObjectLike } from '../transaction/work-object.js';
+import { QiTransaction, QuaiTransaction } from '../transaction/index.js';
+import { QuaiTransactionResponseParams } from './formatting.js';
+import { keccak256, SigningKey } from '../crypto/index.js';
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -363,13 +363,13 @@ export type PerformActionFilter =
           topics?: Array<null | string | Array<string>>;
           fromBlock?: BlockTag;
           toBlock?: BlockTag;
-          shard: string;
+          shard: Shard;
       }
     | {
           address?: string | Array<string>;
           topics?: Array<null | string | Array<string>>;
           blockHash?: string;
-          shard: string;
+          shard: Shard;
       };
 
 /**
@@ -425,117 +425,117 @@ export type PerformActionRequest =
     | {
           method: 'broadcastTransaction';
           signedTransaction: string;
-          shard: string;
+          zone: Zone;
       }
     | {
           method: 'call';
           transaction: PerformActionTransaction;
           blockTag: BlockTag;
-          shard?: string;
+          zone?: Zone;
       }
     | {
           method: 'chainId';
-          shard?: string;
+          zone?: Zone;
       }
     | {
           method: 'estimateGas';
           transaction: PerformActionTransaction;
-          shard?: string;
+          zone?: Zone;
       }
     | {
           method: 'getBalance';
           address: string;
           blockTag: BlockTag;
-          shard: string;
+          zone: Zone;
       }
     | {
           method: 'getOutpointsByAddress';
           address: string;
-          shard: string;
+          zone: Zone;
       }
     | {
           method: 'getBlock';
           blockTag: BlockTag;
           includeTransactions: boolean;
-          shard: string;
+          shard: Shard;
       }
     | {
           method: 'getBlock';
           blockHash: string;
           includeTransactions: boolean;
-          shard: string;
+          shard: Shard;
       }
     | {
           method: 'getBlockNumber';
-          shard?: string;
+          shard?: Shard;
       }
     | {
           method: 'getCode';
           address: string;
           blockTag: BlockTag;
-          shard: string;
+          zone: Zone;
       }
     | {
           method: 'getGasPrice';
           txType: boolean;
-          shard?: string;
+          zone?: Zone;
       }
     | {
           method: 'getLogs';
           filter: PerformActionFilter;
-          shard: string;
+          zone: Zone;
       }
     | {
           method: 'getMaxPriorityFeePerGas';
-          shard?: string;
+          zone?: Zone;
       }
     | {
           method: 'getStorage';
           address: string;
           position: bigint;
           blockTag: BlockTag;
-          shard: string;
+          zone: Zone;
       }
     | {
           method: 'getTransaction';
           hash: string;
-          shard: string;
+          zone: Zone;
       }
     | {
           method: 'getTransactionCount';
           address: string;
           blockTag: BlockTag;
-          shard: string;
+          zone: Zone;
       }
     | {
           method: 'getTransactionReceipt';
           hash: string;
-          shard: string;
+          zone: Zone;
       }
     | {
           method: 'getTransactionResult';
           hash: string;
-          shard: string;
+          zone: Zone;
       }
     | {
           method: 'getRunningLocations';
-          shard?: string;
+          shard?: Shard;
       }
     | {
           method: 'getProtocolTrieExpansionCount';
-          shard: string;
+          shard: Shard;
       }
     | {
           method: 'getQiRateAtBlock';
           blockTag: BlockTag;
           amt: number;
-          shard: string;
+          zone: Zone;
       }
     | {
           method: 'getQuaiRateAtBlock';
           blockTag: BlockTag;
           amt: number;
-          shard: string;
+          zone: Zone;
       }
     | {
           method: 'getProtocolExpansionNumber';
@@ -581,7 +581,7 @@ const defaultOptions = {
  * @category Providers
  */
 export class AbstractProvider<C = FetchRequest> implements Provider {
-    _urlMap: Map<string, C>;
+    _urlMap: Map<Shard, C>;
     #connect: FetchRequest[];
     #subs: Map<string, Sub>;
     #plugins: Map<string, AbstractProviderPlugin>;
@@ -649,13 +649,13 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     async initUrlMap<U = string[] | FetchRequest>(urls: U): Promise<void> {
         if (urls instanceof FetchRequest) {
             urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':9001';
-            this._urlMap.set('0x', urls as C);
+            this._urlMap.set(Shard.Prime, urls as C);
             this.#connect.push(urls);
             const shards = await this.getRunningLocations();
             shards.forEach((shard) => {
                 const port = 9200 + 20 * shard[0] + shard[1];
                 this._urlMap.set(
-                    `0x${shard[0].toString(16)}${shard[1].toString(16)}`,
+                    toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
                     new FetchRequest(urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':' + port) as C,
                 );
             });
@@ -665,13 +665,13 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             for (const url of urls) {
                 const primeUrl = url.split(':')[0] + ':' + url.split(':')[1] + ':9001';
                 const primeConnect = new FetchRequest(primeUrl);
-                this._urlMap.set('0x', primeConnect as C);
+                this._urlMap.set(Shard.Prime, primeConnect as C);
                 this.#connect.push(primeConnect);
                 const shards = await this.getRunningLocations();
                 shards.forEach((shard) => {
                     const port = 9200 + 20 * shard[0] + shard[1];
                     this._urlMap.set(
-                        `0x${shard[0].toString(16)}${shard[1].toString(16)}`,
+                        toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
                         new FetchRequest(url.split(':')[0] + ':' + url.split(':')[1] + ':' + port) as C,
                     );
                 });
@@ -679,33 +679,26 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         }
     }
 
-    shardBytes(shard: string): string {
-        return (
-            ShardData.find((it) => it.name == shard || it.byte == shard || it.nickname == shard || it.shard == shard)
-                ?.byte || ''
-        );
-    }
-
     get connect(): FetchRequest[] {
         return this.#connect;
     }
 
-    async shardFromAddress(_address: AddressLike): Promise<string> {
+    async zoneFromAddress(_address: AddressLike): Promise<Zone> {
         const address: string | Promise<string> = this._getAddress(_address);
-        return (await address).slice(0, 4);
+        return toZone((await address).slice(0, 4));
     }
 
-    shardFromHash(hash: string): string {
-        return hash.slice(0, 4);
+    shardFromHash(hash: string): Shard {
+        return toShard(hash.slice(0, 4));
     }
 
-    async getLatestQuaiRate(shard: string, amt: number = 1): Promise<bigint> {
-        const blockNumber = await this.getBlockNumber(shard);
-        return this.getQuaiRateAtBlock(shard, blockNumber, amt);
+    async getLatestQuaiRate(zone: Zone, amt: number = 1): Promise<bigint> {
+        const blockNumber = await this.getBlockNumber(toShard(zone));
+        return this.getQuaiRateAtBlock(zone, blockNumber, amt);
     }
 
-    async getQuaiRateAtBlock(shard: string, blockTag: BlockTag, amt: number = 1): Promise<bigint> {
-        let resolvedBlockTag = this._getBlockTag(shard, blockTag);
+    async getQuaiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: number = 1): Promise<bigint> {
+        let resolvedBlockTag = this._getBlockTag(toShard(zone), blockTag);
         if (typeof resolvedBlockTag !== 'string') {
             resolvedBlockTag = await resolvedBlockTag;
         }
@@ -714,7 +707,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             method: 'getQuaiRateAtBlock',
             blockTag: resolvedBlockTag,
             amt,
-            shard: shard,
+            zone: zone,
         });
     }
 
@@ -724,13 +717,13 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         });
     }
 
-    async getLatestQiRate(shard: string, amt: number = 1): Promise<bigint> {
-        const blockNumber = await this.getBlockNumber(shard);
-        return this.getQiRateAtBlock(shard, blockNumber, amt);
+    async getLatestQiRate(zone: Zone, amt: number = 1): Promise<bigint> {
+        const blockNumber = await this.getBlockNumber(toShard(zone));
+        return this.getQiRateAtBlock(zone, blockNumber, amt);
     }
 
-    async getQiRateAtBlock(shard: string, blockTag: BlockTag, amt: number = 1): Promise<bigint> {
-        let resolvedBlockTag = this._getBlockTag(shard, blockTag);
+    async getQiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: number = 1): Promise<bigint> {
+        let resolvedBlockTag = this._getBlockTag(toShard(zone), blockTag);
         if (typeof resolvedBlockTag !== 'string') {
             resolvedBlockTag = await resolvedBlockTag;
         }
@@ -739,7 +732,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             method: 'getQiRateAtBlock',
             blockTag: resolvedBlockTag,
             amt,
-            shard: shard,
+            zone: zone,
         });
     }
 
@@ -886,12 +879,12 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * Sub-classes **must** override this.
      *
-     * @param {string} [shard] - The shard to use for the network detection.
+     * @param {Shard} [shard] - The shard to use for the network detection.
      *
      * @returns {Promise<Network>} A promise resolving to the network.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _detectNetwork(shard?: string): Promise<Network> {
+    _detectNetwork(shard?: Shard): Promise<Network> {
         assert(false, 'sub-classes must implement this', 'UNSUPPORTED_OPERATION', {
             operation: '_detectNetwork',
         });
@@ -916,7 +909,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     // State
 
-    async getBlockNumber(shard?: string): Promise<number> {
+    async getBlockNumber(shard?: Shard): Promise<number> {
         const blockNumber = getNumber(await this.#perform({ method: 'getBlockNumber', shard: shard }), '%response');
         if (this.#lastBlockNumber >= 0) {
             this.#lastBlockNumber = blockNumber;
@@ -925,8 +918,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     * Returns or resolves to the address for `address`, resolving {@link Addressable | **Addressable**}
-     * objects and returning if already an address.
+     * Returns or resolves to the address for `address`, resolving {@link Addressable | **Addressable**} objects and
+     * returning if already an address.
      *
      * @param {AddressLike} address - The address to normalize.
      *
@@ -940,12 +933,12 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Returns or resolves to a valid block tag for `blockTag`, resolving negative values and returning if already a
      * valid block tag.
      *
-     * @param {string} [shard] - The shard to use for the block tag.
+     * @param {Shard} [shard] - The shard to use for the block tag.
      * @param {BlockTag} [blockTag] - The block tag to normalize.
      *
      * @returns {string | Promise<string>} A promise that resolves to a valid block tag.
      */
-    _getBlockTag(shard?: string, blockTag?: BlockTag): string | Promise<string> {
+    _getBlockTag(shard?: Shard, blockTag?: BlockTag): string | Promise<string> {
         if (blockTag == null) {
             return 'latest';
         }
@@ -985,8 +978,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     * Returns or resolves to a filter for `filter`, resolving any {@link Addressable | **Addressable**}
-     * object and returning if already a valid filter.
+     * Returns or resolves to a filter for `filter`, resolving any {@link Addressable | **Addressable**} object and
+     * returning if already a valid filter.
      *
      * @param {Filter | FilterByBlockHash} filter - The filter to normalize.
      *
@@ -1006,7 +999,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
         const blockHash = 'blockHash' in filter ? filter.blockHash : undefined;
 
-        const resolve = (_address: Array<string>, fromBlock?: string, toBlock?: string, shard?: string) => {
+        const resolve = (_address: Array<string>, fromBlock?: string, toBlock?: string, shard?: Shard) => {
             let address: undefined | string | Array<string> = undefined;
             switch (_address.length) {
                 case 0:
@@ -1086,8 +1079,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
-     * Returns or resovles to a transaction for `request`, resolving any
-     * {@link Addressable | **Addressable**} and returning if already a valid transaction.
+     * Returns or resovles to a transaction for `request`, resolving any {@link Addressable | **Addressable**} and
+     * returning if already a valid transaction.
      *
      * @param {PerformActionTransaction} _request - The transaction to normalize.
      *
@@ -1136,7 +1129,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         });
 
         if (request.blockTag != null) {
-            const blockTag = this._getBlockTag(request.chainId?.toString(), request.blockTag);
+            const blockTag = this._getBlockTag(
+                request.chainId ? toShard(request.chainId.toString()) : undefined,
+                request.blockTag,
+            );
             if (isPromise(blockTag)) {
                 promises.push(
                     (async function () {
@@ -1158,7 +1154,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return request;
     }
 
-    async getNetwork(shard: string = 'prime'): Promise<Network> {
+    async getNetwork(shard: Shard = Shard.Prime): Promise<Network> {
         // No explicit network was set and this is our first time
         if (this.#networkPromise == null) {
             // Detect the current network (shared with all calls)
@@ -1206,22 +1202,22 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return expected.clone();
     }
 
-    async getRunningLocations(shard?: string): Promise<number[][]> {
+    async getRunningLocations(shard?: Shard): Promise<number[][]> {
         return await this.#perform(
             shard ? { method: 'getRunningLocations', shard: shard } : { method: 'getRunningLocations' },
         );
     }
 
-    async getProtocolTrieExpansionCount(shard: string): Promise<number> {
+    async getProtocolTrieExpansionCount(shard: Shard): Promise<number> {
         return await this.#perform({ method: 'getProtocolTrieExpansionCount', shard: shard });
     }
 
-    async getFeeData(shard?: string, txType: boolean = true): Promise<FeeData> {
+    async getFeeData(zone?: Zone, txType: boolean = true): Promise<FeeData> {
         const getFeeDataFunc = async () => {
             const { gasPrice, priorityFee } = await resolveProperties({
                 gasPrice: (async () => {
                     try {
-                        const value = await this.#perform({ method: 'getGasPrice', txType, shard: shard });
+                        const value = await this.#perform({ method: 'getGasPrice', txType, zone: zone });
                         return getBigInt(value, '%response');
                     } catch (error) {
                         console.log(error);
@@ -1231,7 +1227,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                 priorityFee: (async () => {
                     try {
                         const value = txType
-                            ? await this.#perform({ method: 'getMaxPriorityFeePerGas', shard: shard })
+                            ? await this.#perform({ method: 'getMaxPriorityFeePerGas', zone: zone })
                             : 0;
                         return getBigInt(value, '%response');
                         // eslint-disable-next-line no-empty
@@ -1263,12 +1259,12 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         if (isPromise(tx)) {
             tx = await tx;
         }
-        const shard = await this.shardFromAddress(addressFromTransactionRequest(tx));
+        const zone = await this.zoneFromAddress(addressFromTransactionRequest(tx));
         return getBigInt(
             await this.#perform({
                 method: 'estimateGas',
                 transaction: tx,
-                shard: shard,
+                zone: zone,
             }),
             '%response',
         );
@@ -1276,15 +1272,15 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     // TODO: `attempt` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async #call(tx: PerformActionTransaction, blockTag: string, attempt: number, shard?: string): Promise<string> {
+    async #call(tx: PerformActionTransaction, blockTag: string, attempt: number, zone?: Zone): Promise<string> {
         // This came in as a PerformActionTransaction, so to/from are safe; we can cast
         const transaction = <PerformActionTransaction>copyRequest(tx);
-        return hexlify(await this._perform({ method: "call", transaction, blockTag, shard }));
+        return hexlify(await this._perform({ method: 'call', transaction, blockTag, zone }));
     }
 
     // TODO: `shard` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async #checkNetwork<T>(promise: Promise<T>, shard?: string): Promise<T> {
+    async #checkNetwork<T>(promise: Promise<T>, shard?: Shard): Promise<T> {
         const { value } = await resolveProperties({
             network: this.getNetwork(),
             value: promise,
@@ -1293,19 +1289,21 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     async call(_tx: QuaiTransactionRequest): Promise<string> {
-        const shard = await this.shardFromAddress(addressFromTransactionRequest(_tx));
+        const zone = await this.zoneFromAddress(addressFromTransactionRequest(_tx));
+        const shard = toShard(zone);
         const { tx, blockTag } = await resolveProperties({
             tx: this._getTransactionRequest(_tx),
             blockTag: this._getBlockTag(shard, _tx.blockTag),
         });
 
-        return await this.#checkNetwork(this.#call(tx, blockTag, -1, shard), shard);
+        return await this.#checkNetwork(this.#call(tx, blockTag, -1, zone), shard);
     }
 
     // Account
     async #getAccountValue(request: _PerformAccountRequest, _address: AddressLike, _blockTag?: BlockTag): Promise<any> {
         let address: string | Promise<string> = this._getAddress(_address);
-        const shard = await this.shardFromAddress(_address);
+        const zone = await this.zoneFromAddress(_address);
+        const shard = toShard(zone);
 
         let blockTag: string | Promise<string> = this._getBlockTag(shard, _blockTag);
 
@@ -1314,7 +1312,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         }
 
         return await this.#checkNetwork(
-            this.#perform(Object.assign(request, { address, blockTag, shard: shard }) as PerformActionRequest),
+            this.#perform(Object.assign(request, { address, blockTag, zone: zone }) as PerformActionRequest),
             shard,
         );
     }
@@ -1348,14 +1346,14 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     // Write
-    async broadcastTransaction(shard: string, signedTx: string): Promise<TransactionResponse> {
+    async broadcastTransaction(zone: Zone, signedTx: string): Promise<TransactionResponse> {
         const type = decodeProtoTransaction(getBytes(signedTx)).type;
         const { blockNumber, hash, network } = await resolveProperties({
-            blockNumber: this.getBlockNumber(shard),
+            blockNumber: this.getBlockNumber(toShard(zone)),
             hash: this._perform({
                 method: 'broadcastTransaction',
                 signedTransaction: signedTx,
-                shard: shard,
+                zone: zone,
             }),
             network: this.getNetwork(),
         });
@@ -1372,7 +1370,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         }
     }
 
-    async #getBlock(shard: string, block: BlockTag | string, includeTransactions: boolean): Promise<any> {
+    async #getBlock(shard: Shard, block: BlockTag | string, includeTransactions: boolean): Promise<any> {
         // @TODO: Add CustomBlockPlugin check
         if (isHexString(block, 32)) {
             return await this.#perform({
@@ -1397,7 +1395,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     // Queries
-    async getBlock(shard: string, block: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block> {
+    async getBlock(shard: Shard, block: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block> {
         const { network, params } = await resolveProperties({
             network: this.getNetwork(),
             params: this.#getBlock(shard, block, !!prefetchTxs),
@@ -1409,10 +1407,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     async getTransaction(hash: string): Promise<null | TransactionResponse> {
-        const shard = this.shardFromHash(hash);
+        const zone = toZone(this.shardFromHash(hash));
         const { network, params } = await resolveProperties({
             network: this.getNetwork(),
-            params: this.#perform({ method: 'getTransaction', hash, shard: shard }),
+            params: this.#perform({ method: 'getTransaction', hash, zone: zone }),
         });
         if (params == null) {
             return null;
@@ -1422,10 +1420,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     async getTransactionReceipt(hash: string): Promise<null | TransactionReceipt> {
-        const shard = this.shardFromHash(hash);
+        const zone = toZone(this.shardFromHash(hash));
         const { network, params } = await resolveProperties({
             network: this.getNetwork(),
-            params: this.#perform({ method: 'getTransactionReceipt', hash, shard: shard }),
+            params: this.#perform({ method: 'getTransactionReceipt', hash, zone: zone }),
         });
         if (params == null) {
             return null;
@@ -1433,7 +1431,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         // Some backends did not backfill the effectiveGasPrice in to old transactions
         // in the receipt, so we look it up manually and inject it.
         if (params.gasPrice == null && params.effectiveGasPrice == null) {
-            const tx = await this.#perform({ method: 'getTransaction', hash, shard: shard });
+            const tx = await this.#perform({ method: 'getTransaction', hash, zone: zone });
             if (tx == null) {
                 throw new Error('report this; could not find tx or effectiveGasPrice');
             }
@@ -1444,10 +1442,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     async getTransactionResult(hash: string): Promise<null | string> {
-        const shard = this.shardFromHash(hash);
+        const zone = toZone(this.shardFromHash(hash));
         const { result } = await resolveProperties({
             network: this.getNetwork(),
-            result: this.#perform({ method: 'getTransactionResult', hash, shard: shard }),
+            result: this.#perform({ method: 'getTransactionResult', hash, zone: zone }),
         });
         if (result == null) {
             return null;
@@ -1461,11 +1459,11 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         if (isPromise(filter)) {
             filter = await filter;
         }
-        const shard = filter.shard;
+        const zone = toZone(filter.shard);
 
         const { network, params } = await resolveProperties({
             network: this.getNetwork(),
-            params: this.#perform<Array<LogParams>>({ method: 'getLogs', filter, shard: shard }),
+            params: this.#perform<Array<LogParams>>({ method: 'getLogs', filter, zone: zone }),
         });
 
         return params.map((p) => this._wrapLog(p, network));
@@ -1531,7 +1529,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     // TODO: not implemented yet
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async waitForBlock(shard: string, blockTag?: BlockTag): Promise<Block> {
+    async waitForBlock(shard: Shard, blockTag?: BlockTag): Promise<Block> {
         assert(false, 'not implemented yet', 'NOT_IMPLEMENTED', {
             operation: 'waitForBlock',
         });

@@ -124,7 +124,7 @@
         "_dist-stats": "gzip -k9f -S '.gz' ./dist/quais.min.js && gzip -k9f -S '.gz' ./dist/quais.umd.min.js && gzip -k9f -S '.gz' ./dist/wordlists-extra.min.js && du -hs ./dist/*.gz && echo '' && du -hs ./dist/*.js",
         "auto-build": "npm run build -- -w",
         "lint": "eslint src/**/*.ts --fix",
-        "build": "tsc --project tsconfig.esm.json",
+        "build": "tsc --project tsconfig.esm.json && cp ./misc/basedirs/lib.esm/package.json ./lib/esm",
         "build-all": "npm run build && npm run build-commonjs",
         "build-clean": "npm run clean && npm run build && npm run build-all && npm run _build-dist && npm run _dist-stats",
         "build-commonjs": "tsc --project tsconfig.commonjs.json",

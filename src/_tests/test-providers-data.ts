@@ -8,8 +8,9 @@ import assert from 'assert';
 //import type { Provider } from "../index.js";
 import { getTxType, quais } from '../index.js';
 import axios from 'axios';
-import { stall } from "./utils.js";
-import dotenv from "dotenv";
+import { stall } from './utils.js';
+import dotenv from 'dotenv';
+import { Shard } from '../constants/index.js';
 dotenv.config();
 // import {
 //     networkFeatureAtBlock, networkNames,
@@ -20,13 +21,12 @@ dotenv.config();
 
 //setupProviders();
 
-
 const providerC1 = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
 const privateKey = process.env.CYPRUS1PK;
-console.log(privateKey)
+console.log(privateKey);
 const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', providerC1);
-const destinationC1 = '0x0047f9CEa7662C567188D58640ffC48901cde02a'
-const destinationC2 = '0x011ae0a1Bd5B71b4F16F8FdD3AEF278C3D042449'
+const destinationC1 = '0x0047f9CEa7662C567188D58640ffC48901cde02a';
+const destinationC2 = '0x011ae0a1Bd5B71b4F16F8FdD3AEF278C3D042449';
 
 function equals(name: string, actual: any, expected: any): void {
     if (expected && expected.eq) {
@@ -100,43 +100,43 @@ async function getRPCGasPrice(url: string | undefined) {
 async function sendTransaction(to: string) {
     let txResponse;
     let typeValue;
-    try{
-        console.log("Nonce: ", await providerC1.getTransactionCount(wallet.address, 'latest'),)
-        do{
-        typeValue = getTxType(wallet.address, to);
-        const gas = await getRPCGasPrice(process.env.CYPRUS1URL);
-        let tx: {
-            from: string;
-            to: string;
-            value: any;  
-            gasPrice: any;
-            maxFeePerGas: any;
-            maxPriorityFeePerGas:any;
-            nonce: number;
-            data: string;
-            type: number;
-            gasLimit: number;
-            chainId: number;
-            etxGasLimit?: any;
-            etxGasTip?: any;
-            etxGasPrice?: any;
-        } = {
-            from: wallet.address,
-            to,
-            value: quais.parseEther("0.1"),  // Sending 0.1 ether
-            gasPrice: gas*2,
-            maxFeePerGas: quais.parseUnits('20', 'gwei'),
-            maxPriorityFeePerGas: quais.parseUnits('20', 'gwei'),
-            nonce: await providerC1.getTransactionCount(wallet.address, 'latest'),
-            data: '',
-            type: typeValue,
-            gasLimit: typeValue == 0 ? 21000 : 42000,
-            chainId: Number(process.env.CHAIN_ID || 1337),
-        };
-        txResponse = await wallet.sendTransaction(tx);
-        console.log(txResponse)
-        await stall(15000);
-    } while (txResponse.hash == null);
+    try {
+        console.log('Nonce: ', await providerC1.getTransactionCount(wallet.address, 'latest'));
+        do {
+            typeValue = getTxType(wallet.address, to);
+            const gas = await getRPCGasPrice(process.env.CYPRUS1URL);
+            const tx: {
+                from: string;
+                to: string;
+                value: any;
+                gasPrice: any;
+                maxFeePerGas: any;
+                maxPriorityFeePerGas: any;
+                nonce: number;
+                data: string;
+                type: number;
+                gasLimit: number;
+                chainId: number;
+                etxGasLimit?: any;
+                etxGasTip?: any;
+                etxGasPrice?: any;
+            } = {
+                from: wallet.address,
+                to,
+                value: quais.parseEther('0.1'), // Sending 0.1 ether
+                gasPrice: gas * 2,
+                maxFeePerGas: quais.parseUnits('20', 'gwei'),
+                maxPriorityFeePerGas: quais.parseUnits('20', 'gwei'),
+                nonce: await providerC1.getTransactionCount(wallet.address, 'latest'),
+                data: '',
+                type: typeValue,
+                gasLimit: typeValue == 0 ? 21000 : 42000,
+                chainId: Number(process.env.CHAIN_ID || 1337),
+            };
+            txResponse = await wallet.sendTransaction(tx);
+            console.log(txResponse);
+            await stall(15000);
+        } while (txResponse.hash == null);
 
         console.log(`Transaction hash for type ${typeValue}: `, txResponse.hash);
         return txResponse;
@@ -152,16 +152,13 @@ async function fetchRPCBlock(blockNumber: string | null) {
     try {
         let response;
         do {
-        response = await axios.post(process.env.CYPRUS1URL || "http://localhost:8610", {
-        jsonrpc: "2.0",
-        method: "quai_getBlockByNumber",
-        params: [
-            blockNumber || '0xA',
-            false
-        ],
-        id: 1
-        });
-    }while (response?.data?.result?.woHeader?.headerHash == null)
+            response = await axios.post(process.env.CYPRUS1URL || 'http://localhost:8610', {
+                jsonrpc: '2.0',
+                method: 'quai_getBlockByNumber',
+                params: [blockNumber || '0xA', false],
+                id: 1,
+            });
+        } while (response?.data?.result?.woHeader?.headerHash == null);
         return response.data.result;
     } catch (error: any) {
         throw error;
@@ -242,7 +239,7 @@ describe('Test Provider Block operations', function () {
     });
 
     it('should fetch block by number', async function () {
-        const responseBlock = (await providerC1.getBlock('0,0', '0xA')) as quais.Block;
+        const responseBlock = (await providerC1.getBlock(Shard.Cyprus1, '0xA')) as quais.Block;
         assert.ok(responseBlock != null, 'block != null');
         // TODO: `provider` is not used, remove?
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -256,7 +253,7 @@ describe('Test Provider Block operations', function () {
 
     it('should fetch block by hash', async function () {
         assert.ok(block.hash != null, 'block.hash != null');
-        const responseBlock = (await providerC1.getBlock('0,0', block.hash)) as quais.Block;
+        const responseBlock = (await providerC1.getBlock(Shard.Paxos2, block.hash)) as quais.Block;
         assert.ok(responseBlock != null, 'block != null');
         // TODO: `provider` is not used, remove?
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -274,8 +271,8 @@ describe('Test Transaction operations', function () {
     let internalToExternalTx: any;
 
     it('should fetch balance after internal tx', async function () {
-        this.timeout(60000)
-        const oldBal = await fetchRPCBalance(destinationC1, process.env.CYPRUS1URL || "http://localhost:8610");
+        this.timeout(60000);
+        const oldBal = await fetchRPCBalance(destinationC1, process.env.CYPRUS1URL || 'http://localhost:8610');
         internalTx = await sendTransaction(destinationC1);
         await stall(30000);
         const expectedBal = BigInt(internalTx.value);
@@ -283,11 +280,13 @@ describe('Test Transaction operations', function () {
         const actualBal = Number(balance) - Number(oldBal);
         const tolerance = 1e-6; // Define a small tolerance level
 
-        const withinTolerance = Math.abs((actualBal - Number(expectedBal)) * 100 / Number(expectedBal)) <= tolerance;
-        assert(withinTolerance, `Actual balance ${actualBal} is not within the acceptable range of expected balance ${Number(expectedBal)}`);
+        const withinTolerance = Math.abs(((actualBal - Number(expectedBal)) * 100) / Number(expectedBal)) <= tolerance;
+        assert(
+            withinTolerance,
+            `Actual balance ${actualBal} is not within the acceptable range of expected balance ${Number(expectedBal)}`,
+        );
 
-
-        const receipt = await fetchRPCTxReceipt(internalTx.hash, process.env.CYPRUS1URL || "http://localhost:8610");
+        const receipt = await fetchRPCTxReceipt(internalTx.hash, process.env.CYPRUS1URL || 'http://localhost:8610');
         const expectedReceipt = {
             blockHash: receipt.blockHash,
             contractAddress: receipt.contractAddress || null,
@@ -312,16 +311,18 @@ describe('Test Transaction operations', function () {
             ...receiptResponse,
             logs: receiptResponse?.logs,
         };
-        console.log(receiptResult.blockHash)
-        equals("Internal Tx Receipt", receiptResult, expectedReceipt);
-
+        console.log(receiptResult.blockHash);
+        equals('Internal Tx Receipt', receiptResult, expectedReceipt);
     });
 
     it('should fetch transaction receipt for internal to external tx', async function () {
         this.timeout(120000);
         internalToExternalTx = await sendTransaction(destinationC2);
         await stall(60000);
-        const receipt = await fetchRPCTxReceipt(internalToExternalTx.hash, process.env.CYPRUS1URL || "http://localhost:8610");
+        const receipt = await fetchRPCTxReceipt(
+            internalToExternalTx.hash,
+            process.env.CYPRUS1URL || 'http://localhost:8610',
+        );
         await stall(30000);
         const etx = receipt.etxs[0];
         const expectedReceipt = {

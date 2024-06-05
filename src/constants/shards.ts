@@ -1,72 +1,72 @@
+import { ZoneData } from './zones.js';
+
+export enum Shard {
+    Cyprus = '0x0',
+    Cyprus1 = '0x00',
+    Cyprus2 = '0x01',
+    Cyprus3 = '0x02',
+    Paxos = '0x1',
+    Paxos1 = '0x10',
+    Paxos2 = '0x11',
+    Paxos3 = '0x12',
+    Hydra = '0x2',
+    Hydra1 = '0x20',
+    Hydra2 = '0x21',
+    Hydra3 = '0x22',
+    Prime = '0x',
+}
+
+function shardFromBytes(shard: string): Shard {
+    switch (shard) {
+        case '0x00':
+            return Shard.Cyprus1;
+        case '0x01':
+            return Shard.Cyprus2;
+        case '0x02':
+            return Shard.Cyprus3;
+        case '0x10':
+            return Shard.Paxos1;
+        case '0x11':
+            return Shard.Paxos2;
+        case '0x12':
+            return Shard.Paxos3;
+        case '0x20':
+            return Shard.Hydra1;
+        case '0x21':
+            return Shard.Hydra2;
+        case '0x22':
+            return Shard.Hydra3;
+        default:
+            throw new Error('Invalid shard');
+    }
+}
 /**
  * Constant data that defines each shard within the network.
  *
  * @category Constants
  */
-
 export const ShardData = [
+    ...ZoneData,
     {
-        name: 'Cyprus One',
-        nickname: 'cyprus1',
-        shard: 'zone-0-0',
+        name: 'Cyprus',
+        nickname: 'cyprus',
+        shard: 'region-0',
         context: 2,
-        byte: '0x00', //0000 0000 region-0 zone-0
+        byte: '0x0',
     },
     {
-        name: 'Cyprus Two',
-        nickname: 'cyprus2',
-        shard: 'zone-0-1',
+        name: 'Paxos',
+        nickname: 'paxos',
+        shard: 'region-1',
         context: 2,
-        byte: '0x01', // 0000 0001 region-0 zone-1
+        byte: '0x1',
     },
     {
-        name: 'Cyprus Three',
-        nickname: 'cyprus3',
-        shard: 'zone-0-2',
+        name: 'Hydra',
+        nickname: 'hydra',
+        shard: 'region-2',
         context: 2,
-        byte: '0x02', // 0000 0010 region-0 zone-2
-    },
-    {
-        name: 'Paxos One',
-        nickname: 'paxos1',
-        shard: 'zone-1-0',
-        context: 2,
-        byte: '0x10', // 0001 0000 region-1 zone-0
-    },
-    {
-        name: 'Paxos Two',
-        nickname: 'paxos2',
-        shard: 'zone-1-1',
-        context: 2,
-        byte: '0x11', // 0001 0001 region-1 zone-1
-    },
-    {
-        name: 'Paxos Three',
-        nickname: 'paxos3',
-        shard: 'zone-1-2',
-        context: 2,
-        byte: '0x12', // 0001 0010 region-1 zone-2
-    },
-    {
-        name: 'Hydra One',
-        nickname: 'hydra1',
-        shard: 'zone-2-0',
-        context: 2,
-        byte: '0x20', // 0010 0000 region-2 zone-0
-    },
-    {
-        name: 'Hydra Two',
-        nickname: 'hydra2',
-        shard: 'zone-2-1',
-        context: 2,
-        byte: '0x21', // 0010 0001 region-2 zone-1
-    },
-    {
-        name: 'Hydra Three',
-        nickname: 'hydra3',
-        shard: 'zone-2-2',
-        context: 2,
-        byte: '0x22', // 0010 0010 region-2 zone-2
+        byte: '0x2',
     },
     {
         name: 'Prime',
@@ -76,3 +76,10 @@ export const ShardData = [
         byte: '0x',
     },
 ];
+
+export function toShard(shard: string): Shard {
+    return shardFromBytes(
+        ShardData.find((it) => it.name == shard || it.byte == shard || it.nickname == shard || it.shard == shard)
+            ?.byte || '',
+    );
+}

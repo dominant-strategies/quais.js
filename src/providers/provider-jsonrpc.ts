@@ -14,26 +14,30 @@
 
 // https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/eth1.0-apis/assembled-spec/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=true&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false
 
-import { AbiCoder } from "../abi/index.js";
-import { accessListify } from "../transaction/index.js";
+import { AbiCoder } from '../abi/index.js';
+import { accessListify } from '../transaction/index.js';
 import {
-    getBigInt, hexlify, isHexString, toQuantity,
-    makeError, assert, assertArgument,
-    FetchRequest
-} from "../utils/index.js";
+    getBigInt,
+    hexlify,
+    isHexString,
+    toQuantity,
+    makeError,
+    assert,
+    assertArgument,
+    FetchRequest,
+} from '../utils/index.js';
 
-import { AbstractProvider, UnmanagedSubscriber } from "./abstract-provider.js";
-import { Network } from "./network.js";
-import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from "./subscriber-filterid.js";
+import { AbstractProvider, UnmanagedSubscriber } from './abstract-provider.js';
+import { Network } from './network.js';
+import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from './subscriber-filterid.js';
 
-import type { TransactionLike } from "../transaction/index.js";
+import type { TransactionLike } from '../transaction/index.js';
 
-import type { PerformActionRequest, Subscriber, Subscription } from "./abstract-provider.js";
-import type { Networkish } from "./network.js";
-import type {TransactionRequest} from "./provider.js";
-import type { Signer } from "../signers/signer.js";
-import { UTXOEntry, UTXOTransactionOutput } from "../transaction/utxo.js";
-
+import type { PerformActionRequest, Subscriber, Subscription } from './abstract-provider.js';
+import type { Networkish } from './network.js';
+import type { TransactionRequest } from './provider.js';
+import { UTXOEntry, UTXOTransactionOutput } from '../transaction/utxo.js';
+import { Shard, toShard } from '../constants/index.js';
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -257,7 +261,7 @@ export interface QuaiJsonRpcTransactionRequest extends AbstractJsonRpcTransactio
 type ResolveFunc = (result: JsonRpcResult) => void;
 type RejectFunc = (error: Error) => void;
 
-type Payload = { payload: JsonRpcPayload; resolve: ResolveFunc; reject: RejectFunc; shard?: string };
+type Payload = { payload: JsonRpcPayload; resolve: ResolveFunc; reject: RejectFunc; shard?: Shard };
 
 /**
  * The JsonRpcApiProvider is an abstract class and **MUST** be sub-classed.
@@ -337,7 +341,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                     await Promise.all(
                         Array.from(payloadMap).map(async ([key, value]) => {
                             const payload = value.length === 1 ? value[0] : value;
-                            const shard = key;
+                            const shard = key ? toShard(key) : undefined;
 
                             this.emit('debug', { action: 'sendRpcPayload', payload });
 
@@ -464,7 +468,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      */
     abstract _send(
         payload: JsonRpcPayload | Array<JsonRpcPayload>,
-        shard?: string,
+        shard?: Shard,
     ): Promise<Array<JsonRpcResult | JsonRpcError>>;
 
     /**
@@ -484,7 +488,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             if (tx && tx.type != null && getBigInt(tx.type)) {
                 // If there are no EIP-1559 properties, it might be non-EIP-a559
                 if (tx.maxFeePerGas == null && tx.maxPriorityFeePerGas == null) {
-                    const feeData = await this.getFeeData(req.shard);
+                    const feeData = await this.getFeeData(req.zone);
                     if (feeData.maxFeePerGas == null && feeData.maxPriorityFeePerGas == null) {
                         // Network doesn't know about EIP-1559 (and hence type)
                         req = Object.assign({}, req, {
@@ -498,7 +502,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
         const request = this.getRpcRequest(req);
 
         if (request != null) {
-            const shard = 'shard' in req ? req.shard : undefined;
+            const shard = 'shard' in req ? req.shard : 'zone' in req ? toShard(req.zone!) : undefined;
             return await this.send(request.method, request.args, shard);
         }
 
@@ -979,11 +983,11 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      *
      * @param {string} method - The method to call.
      * @param {any[] | Record<string, any>} params - The parameters to pass to the method.
-     * @param {string} shard - The shard to send the request to.
+     * @param {Shard} shard - The shard to send the request to.
      *
      * @returns {Promise<any>} A promise that resolves to the result of the method call.
      */
-    send(method: string, params: Array<any> | Record<string, any>, shard?: string): Promise<any> {
+    send(method: string, params: Array<any> | Record<string, any>, shard?: Shard): Promise<any> {
         // @TODO: cache chainId?? purge on switch_networks
 
         // We have been destroyed; no operations are supported anymore
@@ -1076,18 +1080,17 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         return subscriber;
     }
 
-    _getConnection(shard?: string): FetchRequest {
+    _getConnection(shard?: Shard): FetchRequest {
         let connection;
-        if (typeof shard === 'string') {
-            const shardBytes = this.shardBytes(shard);
-            connection = this._urlMap.get(shardBytes) ?? this.connect[this.connect.length - 1]!.clone();
+        if (shard !== undefined) {
+            connection = this._urlMap.get(shard) ?? this.connect[this.connect.length - 1]!.clone();
         } else {
             connection = this.connect[this.connect.length - 1]!.clone();
         }
         return new FetchRequest(connection.url);
     }
 
-    async send(method: string, params: Array<any> | Record<string, any>, shard?: string): Promise<any> {
+    async send(method: string, params: Array<any> | Record<string, any>, shard?: Shard): Promise<any> {
         // All requests are over HTTP, so we can just start handling requests
         // We do this here rather than the constructor so that we don't send any
         // requests to the network (i.e. quai_chainId) until we absolutely have to.
@@ -1096,7 +1099,7 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         return await super.send(method, params, shard);
     }
 
-    async _send(payload: JsonRpcPayload | Array<JsonRpcPayload>, shard?: string): Promise<Array<JsonRpcResult>> {
+    async _send(payload: JsonRpcPayload | Array<JsonRpcPayload>, shard?: Shard): Promise<Array<JsonRpcResult>> {
         // Configure a POST connection for the requested method
         const request = this._getConnection(shard);
         request.body = JSON.stringify(payload);

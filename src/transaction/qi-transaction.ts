@@ -2,7 +2,7 @@ import {keccak256} from "../crypto/index.js";
 import {AbstractTransaction, TransactionLike, TxInput, TxOutput} from "./index.js";
 import {
     assertArgument,
-    getBytes, getShardForAddress,
+    getBytes, getZoneForAddress,
     hexlify, isQiAddress,
     toBigInt
 } from "../utils/index.js";
@@ -10,6 +10,7 @@ import { decodeProtoTransaction } from '../encoding/index.js';
 import {formatNumber} from "../providers/format.js";
 import { computeAddress } from "../address/index.js";
 import { ProtoTransaction} from "./abstract-transaction.js";
+import { Zone } from '../constants/index.js';
 
 /**
  * @category Transaction
@@ -67,18 +68,18 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
             throw new Error('Transaction must have at least one input and one output');
         }
 
-        const destUtxo = isQiAddress(hexlify(this.txOutputs[0].address) || "");
+        const destUtxo = isQiAddress(hexlify(this.txOutputs[0].address) || '');
         const pubKey = hexlify(this.txInputs[0].pub_key);
-        const senderAddr = computeAddress(pubKey || "");
+        const senderAddr = computeAddress(pubKey || '');
         const originUtxo = isQiAddress(senderAddr);
 
-        if (!this.destShard || !this.originShard) {
+        if (!this.destZone || !this.originZone) {
             throw new Error(
-                `Invalid shards: origin ${this.originShard} ->  destination ${this.destShard} (address: ${senderAddr})`,
+                `Invalid zones: origin ${this.originZone} ->  destination ${this.destZone} (address: ${senderAddr})`,
             );
         }
         if (this.isExternal && destUtxo !== originUtxo) {
-            throw new Error('Cross-shard & cross-ledger transactions are not supported');
+            throw new Error('Cross-zone & cross-ledger transactions are not supported');
         }
 
         const hexString = this.serialized.startsWith('0x') ? this.serialized.substring(2) : this.serialized;
@@ -87,7 +88,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         const hashHex = keccak256(dataBuffer);
         const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
 
-        const origin = this.originShard ? parseInt(this.originShard, 16) : 0;
+        const origin = this.originZone ? parseInt(this.originZone.slice(2), 16) : 0;
         hashBuffer[0] = origin;
         hashBuffer[1] |= 0x80;
         hashBuffer[2] = origin;
@@ -96,15 +97,17 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         return '0x' + hashBuffer.toString('hex');
     }
 
-    get originShard(): string | undefined {
+    get originZone(): Zone | undefined {
         const pubKey = hexlify(this.txInputs[0].pub_key);
         const senderAddr = computeAddress(pubKey || '');
 
-        return getShardForAddress(senderAddr)?.byte.slice(2);
+        const zone = getZoneForAddress(senderAddr);
+        return zone ?? undefined;
     }
 
-    get destShard(): string | undefined {
-        return getShardForAddress(hexlify(this.txOutputs[0].address) || '')?.byte.slice(2);
+    get destZone(): Zone | undefined {
+        const zone = getZoneForAddress(hexlify(this.txOutputs[0].address) || '');
+        return zone ?? undefined;
     }
 
     /**

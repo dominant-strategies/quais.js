@@ -56,7 +56,7 @@ export { formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits
 
 export { uuidV4 } from './uuid.js';
 
-export { getTxType, getShardForAddress, getAddressDetails, isQiAddress } from './shards.js';
+export { getTxType, getZoneForAddress, getAddressDetails, isQiAddress } from './shards.js';
 
 /////////////////////////////
 // Types

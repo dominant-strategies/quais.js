@@ -6,7 +6,7 @@ import { BaseContract, copyOverrides, resolveArgs } from './contract.js';
 import type { InterfaceAbi } from '../abi/index.js';
 import type { Addressable } from '../address/index.js';
 import type { BytesLike } from '../utils/index.js';
-import { getShardForAddress, isQiAddress } from '../utils/index.js';
+import { getZoneForAddress, isQiAddress } from '../utils/index.js';
 import type { ContractInterface, ContractMethodArgs, ContractDeployTransaction, ContractRunner } from './types.js';
 import type { ContractTransactionResponse } from './wrappers.js';
 import { Wallet, randomBytes } from '../quais.js';
@@ -164,14 +164,14 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         }
 
         const sender = String(tx.from);
-        const toShard = getShardForAddress(sender);
+        const toShard = getZoneForAddress(sender);
         let i = 0;
         const startingData = tx.data;
         while (i < 10000) {
-            var contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
-            var contractShard = getShardForAddress(contractAddress);
-            console.log("contractAddress ", contractAddress);
-            var utxo = isQiAddress(contractAddress);
+            const contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
+            const contractShard = getZoneForAddress(contractAddress);
+            console.log('contractAddress ', contractAddress);
+            const utxo = isQiAddress(contractAddress);
             if (contractShard === toShard && !utxo) {
                 return tx;
             }

@@ -8,7 +8,7 @@ import {
     getBigInt,
     getBytes,
     getNumber,
-    getShardForAddress,
+    getZoneForAddress,
     hexlify, isQiAddress,
     toBeArray, toBigInt, zeroPadValue
 } from "../utils/index.js";
@@ -16,6 +16,7 @@ import { decodeProtoTransaction, encodeProtoTransaction } from '../encoding/inde
 import { getAddress, recoverAddress } from "../address/index.js";
 import { formatNumber, handleNumber } from "../providers/format.js";
 import { ProtoTransaction} from "./abstract-transaction.js";
+import { Zone } from '../constants';
 
 /**
  * @category Transaction
@@ -122,14 +123,14 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         return this.unsignedHash;
     }
     get unsignedHash(): string {
-        const destUtxo = isQiAddress(this.to || "");
+        const destUtxo = isQiAddress(this.to || '');
         const originUtxo = isQiAddress(this.from);
 
-        if (!this.originShard) {
-            throw new Error("Invalid Shard for from or to address");
+        if (!this.originZone) {
+            throw new Error('Invalid Shard for from or to address');
         }
         if (this.isExternal && destUtxo !== originUtxo) {
-            throw new Error('Cross-shard & cross-ledger transactions are not supported');
+            throw new Error('Cross-zone & cross-ledger transactions are not supported');
         }
 
         const hexString = this.serialized.startsWith('0x') ? this.serialized.substring(2) : this.serialized;
@@ -138,7 +139,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         const hashHex = keccak256(dataBuffer);
         const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
 
-        const origin = this.originShard ? parseInt(this.originShard, 16) : 0;
+        const origin = this.originZone ? parseInt(this.originZone.slice(2), 16) : 0;
         hashBuffer[0] = origin;
         hashBuffer[1] &= 0x7f;
         hashBuffer[2] = origin;
@@ -147,14 +148,16 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         return '0x' + hashBuffer.toString('hex');
     }
 
-    get originShard(): string | undefined {
+    get originZone(): Zone | undefined {
         const senderAddr = this.from;
 
-        return getShardForAddress(senderAddr)?.byte.slice(2);
+        const zone = getZoneForAddress(senderAddr);
+        return zone ?? undefined;
     }
 
-    get destShard(): string | undefined {
-        return this.to !== null ? getShardForAddress(this.to || "")?.byte.slice(2) : undefined;
+    get destZone(): Zone | undefined {
+        const zone = this.to !== null ? getZoneForAddress(this.to || '') : undefined;
+        return zone ?? undefined;
     }
 
     /**
@@ -362,8 +365,8 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             gas_fee_cap: formatNumber(this.maxFeePerGas || 0, 'maxFeePerGas'),
             gas: Number(this.gasLimit || 0),
             to: this.to != null ? getBytes(this.to as string) : null,
-            value: formatNumber(this.value || 0, "value"),
-            data: getBytes(this.data || "0x"),
+            value: formatNumber(this.value || 0, 'value'),
+            data: getBytes(this.data || '0x'),
             access_list: { access_tuples: [] },
         };
 
@@ -449,14 +452,10 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         let address;
         if (protoTx.v && protoTx.r && protoTx.s) {
             // check if protoTx.r is zero
-            if (protoTx.r.reduce((acc, val) => acc += val, 0) == 0) {
-                throw new Error("Proto decoding only supported for signed transactions")
+            if (protoTx.r.reduce((acc, val) => (acc += val), 0) == 0) {
+                throw new Error('Proto decoding only supported for signed transactions');
             }
-            const signatureFields = [
-                hexlify(protoTx.v!),
-                hexlify(protoTx.r!),
-                hexlify(protoTx.s!),
-            ];
+            const signatureFields = [hexlify(protoTx.v!), hexlify(protoTx.r!), hexlify(protoTx.s!)];
             signature = _parseSignature(signatureFields);
 
             const protoTxCopy = structuredClone(protoTx);
