@@ -3,17 +3,16 @@
  *
  * @section api/wallet:HD Wallets  [hd-wallets]
  */
-import { SigningKey } from "../crypto/index.js";
-import { Mnemonic } from "./mnemonic.js";
-import type { Provider } from "../providers/index.js";
-import { HDWallet, AddressInfo} from "./hdwallet.js";
-import { QUAI_COIN_TYPE } from '../constants/index.js';
-
+import { SigningKey } from '../crypto/index.js';
+import { Mnemonic } from './mnemonic.js';
+import type { Provider } from '../providers/index.js';
+import { HDWallet, AddressInfo } from './hdwallet.js';
+import { QUAI_COIN_TYPE, Zone } from '../constants/index.js';
 
 // keeps track of the addresses and outpoints for a given shard (zone)
 type ShardWalletData = {
     addressesInfo: AddressInfo[];
-}
+};
 
 /**
  * An **QuaiHDWallet** is a [Signer](../interfaces/Signer) backed by the private key derived from an HD Node using the
@@ -25,16 +24,14 @@ type ShardWalletData = {
  * @category Wallet
  */
 export class QuaiHDWallet extends HDWallet {
-
     /**
-     *  The Quai cointype.
+     * The Quai cointype.
      */
     readonly coinType: number = QUAI_COIN_TYPE;
 
     /**
-     * Map of shard name (zone) to shardWalletData
-     * shardWalletData contains the private keys, addresses and derive indexes for the shard
-     * that are known to the wallet
+     * Map of shard name (zone) to shardWalletData shardWalletData contains the private keys, addresses and derive
+     * indexes for the shard that are known to the wallet
      */
     #shardWalletsMap: Map<string, ShardWalletData> = new Map();
 
@@ -44,24 +41,34 @@ export class QuaiHDWallet extends HDWallet {
 
     set shardWallets(shardWallets: Map<string, ShardWalletData>) {
         this.#shardWalletsMap = shardWallets;
-    }    
-    
-    constructor(guard: any, signingKey: SigningKey, accountFingerprint: string, chainCode: string, path: null | string, index: number, depth: number, mnemonic: null | Mnemonic, provider: null | Provider) {
+    }
+
+    constructor(
+        guard: any,
+        signingKey: SigningKey,
+        accountFingerprint: string,
+        chainCode: string,
+        path: null | string,
+        index: number,
+        depth: number,
+        mnemonic: null | Mnemonic,
+        provider: null | Provider,
+    ) {
         super(guard, signingKey, accountFingerprint, chainCode, path, index, depth, mnemonic, provider);
     }
 
-    async getAddress(zone: string): Promise<string> {
+    async getAddress(zone: Zone): Promise<string> {
         let index = 0;
         let shardWalletData: ShardWalletData | undefined = this.#shardWalletsMap.get(zone);
         if (shardWalletData) {
             const pos = shardWalletData.addressesInfo.length;
-            index = shardWalletData!.addressesInfo[pos-1].index + 1;
+            index = shardWalletData!.addressesInfo[pos - 1].index + 1;
         } else {
-            shardWalletData = {addressesInfo: []};
+            shardWalletData = { addressesInfo: [] };
             this.#shardWalletsMap.set(zone, shardWalletData);
         }
 
-        const addressInfo = this.deriveAddress(index, zone, "Quai");
+        const addressInfo = this.deriveAddress(index, zone, 'Quai');
         shardWalletData.addressesInfo.push(addressInfo);
         return addressInfo.address;
     }

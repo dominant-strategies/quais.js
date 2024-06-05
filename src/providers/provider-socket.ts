@@ -19,6 +19,7 @@ import type { EventFilter } from './provider.js';
 import type { JsonRpcApiProviderOptions, JsonRpcError, JsonRpcPayload, JsonRpcResult } from './provider-jsonrpc.js';
 import type { Networkish } from './network.js';
 import type { WebSocketLike } from './provider-websocket.js';
+import { Shard } from '../constants/index.js';
 
 type JsonRpcSubscription = {
     method: string;
@@ -275,7 +276,7 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
 
     async _send(
         payload: JsonRpcPayload | Array<JsonRpcPayload>,
-        shard?: string,
+        shard?: Shard,
     ): Promise<Array<JsonRpcResult | JsonRpcError>> {
         // WebSocket provider doesn't accept batches
         assertArgument(!Array.isArray(payload), 'WebSocket does not support batch send', 'payload', payload);
@@ -346,7 +347,7 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
      * Sub-classes **must** override this to send `message` over their transport.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    async _write(message: string, shard?: string): Promise<void> {
+    async _write(message: string, shard?: Shard): Promise<void> {
         throw new Error('sub-classes must override this');
     }
 }

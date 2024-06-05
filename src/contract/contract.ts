@@ -46,6 +46,7 @@ import type {
     DeferredTopicFilter,
     WrappedFallback,
 } from './types.js';
+import { toShard, Zone } from '../constants/index.js';
 
 const BN_0 = BigInt(0);
 
@@ -1032,7 +1033,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
      * Provide historic access to event data for `event` in the range `fromBlock` (default: `0`) to `toBlock` (default:
      * `"latest"`) inclusive.
      *
-     * @param {string} shard - The shard to query.
+     * @param {Zone} zone - The zone to query.
      * @param {ContractEventName} event - The event to query.
      * @param {BlockTag} fromBlock - The block to start querying from.
      * @param {BlockTag} toBlock - The block to stop querying at.
@@ -1040,7 +1041,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
      * @returns An array of event logs.
      */
     async queryFilter(
-        shard: string,
+        zone: Zone,
         event: ContractEventName,
         fromBlock?: BlockTag,
         toBlock?: BlockTag,
@@ -1054,7 +1055,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
         const { addr, addrPromise } = getInternal(this);
         const address = addr ? addr : await addrPromise;
         const { fragment, topics } = await getSubInfo(this, event);
-        const filter = { address, topics, fromBlock, toBlock, shard: shard };
+        const filter = { address, topics, fromBlock, toBlock, shard: toShard(zone) };
 
         const provider = getProvider(this.runner);
         assert(provider, 'contract runner does not have a provider', 'UNSUPPORTED_OPERATION', {

@@ -9,6 +9,7 @@ import type { Provider } from '../providers/index.js';
 
 import type { BaseContract } from './contract.js';
 import type { ContractEventName } from './types.js';
+import { Shard } from '../constants/index.js';
 
 /**
  * An **EventLog** contains additional properties parsed from the {@link Log | **Log**}.
@@ -170,11 +171,11 @@ export class ContractUnknownEventPayload extends EventPayload<ContractEventName>
     /**
      * Resolves to the block the event occured in.
      *
-     * @param {string} shard - The shard to get the block from.
+     * @param {Shard} shard - The shard to get the block from.
      *
      * @returns {Promise<Block>} A promise resolving to the block the event occured in.
      */
-    async getBlock(shard: string): Promise<Block> {
+    async getBlock(shard: Shard): Promise<Block> {
         return await this.log.getBlock(shard);
     }
 

@@ -22,6 +22,7 @@ import type { ContractRunner } from '../contract/index.js';
 import type { Network } from './network.js';
 import type { Outpoint } from '../transaction/utxo.js';
 import type { TxInput, TxOutput } from '../transaction/utxo.js';
+import type { Zone, Shard } from '../constants/index.js';
 
 const BN_0 = BigInt(0);
 
@@ -49,6 +50,7 @@ import {
 import { WorkObjectLike } from '../transaction/work-object.js';
 import { QiTransactionLike } from '../transaction/qi-transaction.js';
 import { QuaiTransactionLike } from '../transaction/quai-transaction.js';
+import { toShard, toZone } from '../constants/index.js';
 
 // -----------------------
 
@@ -1044,11 +1046,11 @@ export class Log implements LogParams {
     /**
      * Returns the block that this log occurred in.
      *
-     * @param {string} shard - The shard to fetch the block from.
+     * @param {Shard} shard - The shard to fetch the block from.
      *
      * @returns {Promise<Block>} A promise resolving to the block.
      */
-    async getBlock(shard: string): Promise<Block> {
+    async getBlock(shard: Shard): Promise<Block> {
         const block = await this.provider.getBlock(shard, this.blockHash);
         assert(!!block, 'failed to find transaction', 'UNKNOWN_ERROR', {});
         return block;
@@ -1087,8 +1089,8 @@ export class Log implements LogParams {
 //////////////////////
 // Transaction Receipt
 
-export function shardFromHash(hash: string): string {
-    return hash.slice(0, 4);
+export function zoneFromHash(hash: string): Zone {
+    return toZone(hash.slice(0, 4));
 }
 /**
  * A **TransactionReceipt** includes additional information about a transaction that is only available after it has been
@@ -1305,12 +1307,12 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
     /**
      * Resolves to the block this transaction occurred in.
      *
-     * @param {string} shard - The shard to fetch the block from.
+     * @param {Shard} shard - The shard to fetch the block from.
      *
      * @returns {Promise<Block>} A promise resolving to the block.
      * @throws {Error} If the block is not found.
      */
-    async getBlock(shard: string): Promise<Block> {
+    async getBlock(shard: Shard): Promise<Block> {
         const block = await this.provider.getBlock(shard, this.blockHash);
         if (block == null) {
             throw new Error('TODO');
@@ -1351,8 +1353,8 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
      * @throws {Error} If the block is not found.
      */
     async confirmations(): Promise<number> {
-        const shard = shardFromHash(this.hash);
-        return (await this.provider.getBlockNumber(shard)) - this.blockNumber + 1;
+        const zone = zoneFromHash(this.hash);
+        return (await this.provider.getBlockNumber(toShard(zone))) - this.blockNumber + 1;
     }
 
     /**
@@ -1612,11 +1614,11 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
      *
      * This will return null if the transaction has not been included yet.
      *
-     * @param {string} shard - The shard to fetch the block from.
+     * @param {Shard} shard - The shard to fetch the block from.
      *
      * @returns {null | Promise<Block>} A promise resolving to the block.
      */
-    async getBlock(shard: string): Promise<null | Block> {
+    async getBlock(shard: Shard): Promise<null | Block> {
         let blockNumber = this.blockNumber;
         if (blockNumber == null) {
             const tx = await this.getTransaction();
@@ -1656,11 +1658,11 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
      * @throws {Error} If the block is not found.
      */
     async confirmations(): Promise<number> {
-        const shard = shardFromHash(this.hash);
+        const zone = zoneFromHash(this.hash);
         if (this.blockNumber == null) {
             const { tx, blockNumber } = await resolveProperties({
                 tx: this.getTransaction(),
-                blockNumber: this.provider.getBlockNumber(shard),
+                blockNumber: this.provider.getBlockNumber(toShard(zone)),
             });
 
             // Not mined yet...
@@ -1671,7 +1673,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
             return blockNumber - tx.blockNumber + 1;
         }
 
-        const blockNumber = await this.provider.getBlockNumber(shard);
+        const blockNumber = await this.provider.getBlockNumber(toShard(zone));
         return blockNumber - this.blockNumber + 1;
     }
 
@@ -1695,14 +1697,14 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
         let startBlock = this.startBlock;
         let nextScan = -1;
         let stopScanning = startBlock === -1 ? true : false;
-        const shard = shardFromHash(this.hash);
+        const zone = zoneFromHash(this.hash);
         const checkReplacement = async () => {
             // Get the current transaction count for this sender
             if (stopScanning) {
                 return null;
             }
             const { blockNumber, nonce } = await resolveProperties({
-                blockNumber: this.provider.getBlockNumber(shard),
+                blockNumber: this.provider.getBlockNumber(toShard(zone)),
                 nonce: this.provider.getTransactionCount(this.from),
             });
 
@@ -1737,7 +1739,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
                 if (stopScanning) {
                     return null;
                 }
-                const block = await this.provider.getBlock(shard, nextScan, true);
+                const block = await this.provider.getBlock(toShard(zone), nextScan, true);
 
                 // This should not happen; but we'll try again shortly
                 if (block == null) {
@@ -2073,11 +2075,11 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
      *
      * This will return null if the transaction has not been included yet.
      *
-     * @param {string} shard - The shard to fetch the block from.
+     * @param {Shard} shard - The shard to fetch the block from.
      *
      * @returns {null | Promise<Block>} A promise resolving to the block or null if not found.
      */
-    async getBlock(shard: string): Promise<null | Block> {
+    async getBlock(shard: Shard): Promise<null | Block> {
         let blockNumber = this.blockNumber;
         if (blockNumber == null) {
             const tx = await this.getTransaction();
@@ -2117,11 +2119,11 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
      * @returns {Promise<number>} A promise resolving to the number of confirmations.
      */
     async confirmations(): Promise<number> {
-        const shard = shardFromHash(this.hash);
+        const zone = zoneFromHash(this.hash);
         if (this.blockNumber == null) {
             const { tx, blockNumber } = await resolveProperties({
                 tx: this.getTransaction(),
-                blockNumber: this.provider.getBlockNumber(shard),
+                blockNumber: this.provider.getBlockNumber(toShard(zone)),
             });
 
             // Not mined yet...
@@ -2132,7 +2134,7 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
             return blockNumber - tx.blockNumber + 1;
         }
 
-        const blockNumber = await this.provider.getBlockNumber(shard);
+        const blockNumber = await this.provider.getBlockNumber(toShard(zone));
         return blockNumber - this.blockNumber + 1;
     }
 
@@ -2322,7 +2324,7 @@ export interface Filter extends EventFilter {
      */
     toBlock?: BlockTag;
 
-    shard: string;
+    shard: Shard;
 }
 
 /**
@@ -2335,7 +2337,7 @@ export interface FilterByBlockHash extends EventFilter {
      * The blockhash of the specific block for the filter.
      */
     blockHash?: string;
-    shard: string;
+    shard: Shard;
 }
 
 //////////////////////
@@ -2407,34 +2409,32 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
     /**
      * Get the current block number.
      *
-     * @param {string} shard - The shard to fetch the block number from.
+     * @param {Shard} shard - The shard to fetch the block number from.
      *
      * @returns {Promise<number>} A promise resolving to the block number.
      */
-    getBlockNumber(shard: string): Promise<number>;
+    getBlockNumber(shard: Shard): Promise<number>;
 
     /**
      * Get the connected {@link Network | **Network**}.
      *
-     * @param {string} shard - The shard to fetch the network from.
+     * @param {Shard} shard - The shard to fetch the network from.
      *
      * @returns {Promise<Network>} A promise resolving to the network.
      */
-    getNetwork(shard?: string): Promise<Network>;
+    getNetwork(shard?: Shard): Promise<Network>;
 
     /**
      * Get the best guess at the recommended {@link FeeData | **FeeData**}.
      *
-     * @param {string} shard - The shard to fetch the fee data from.
+     * @param {Zone} zone - The shard to fetch the fee data from.
      *
      * @returns {Promise<FeeData>} A promise resolving to the fee data.
      */
-    getFeeData(shard: string): Promise<FeeData>;
+    getFeeData(zone: Zone): Promise<FeeData>;
 
     /**
      * Get a work object to package a transaction in.
-     *
-     * @param {string} shard - The shard to fetch the work object from.
      *
      * @returns {Promise<WorkObjectLike>} A promise resolving to the work object.
      */
@@ -2534,14 +2534,14 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * Broadcasts the `signedTx` to the network, adding it to the memory pool of any node for which the transaction
      * meets the rebroadcast requirements.
      *
-     * @param {string} shard - The shard to broadcast the transaction to.
+     * @param {Zone} zone - The zone to broadcast the transaction to.
      * @param {string} signedTx - The signed transaction to broadcast.
      * @param {AddressLike} [from] - The address that signed the transaction.
      *
      * @returns {Promise<TransactionResponse>} A promise resolving to the transaction response.
      * @throws {Error} If the transaction is invalid or the transaction is replaced.
      */
-    broadcastTransaction(shard: string, signedTx: string, from?: AddressLike): Promise<TransactionResponse>;
+    broadcastTransaction(zone: Zone, signedTx: string, from?: AddressLike): Promise<TransactionResponse>;
 
     ////////////////////
     // Queries
@@ -2552,14 +2552,14 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * If `prefetchTxs`, and the backend supports including transactions with block requests, all transactions will be
      * included and the {@link Block | **Block**} object will not need to make remote calls for getting transactions.
      *
-     * @param {string} shard - The shard to fetch the block from.
+     * @param {Shard} shard - The shard to fetch the block from.
      * @param {BlockTag | string} blockHashOrBlockTag - The block hash or block tag to fetch.
      * @param {boolean} [prefetchTxs] - If true, prefetch the transactions.
      *
      * @returns {Promise<null | Block>} A promise resolving to the block or null if not found.
      * @throws {Error} If the block is not found.
      */
-    getBlock(shard: string, blockHashOrBlockTag: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block>;
+    getBlock(shard: Shard, blockHashOrBlockTag: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block>;
 
     /**
      * Resolves to the transaction for `hash`.
@@ -2625,12 +2625,12 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *
      * This can be useful for waiting some number of blocks by using the `currentBlockNumber + N`.
      *
-     * @param {string} shard - The shard to fetch the block from.
+     * @param {Shard} shard - The shard to fetch the block from.
      * @param {BlockTag} [blockTag] - The block tag to fetch.
      *
      * @returns {Promise<Block>} A promise resolving to the block.
      */
-    waitForBlock(shard: string, blockTag?: BlockTag): Promise<Block>;
+    waitForBlock(shard: Shard, blockTag?: BlockTag): Promise<Block>;
 
     /**
      * Resolves to the number indicating the size of the network

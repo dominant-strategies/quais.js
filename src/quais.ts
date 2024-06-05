@@ -1,16 +1,29 @@
 // VERSION
-export { version } from "./_version.js";
+export { version } from './_version.js';
 
 // APPLICATION BINARY INTERFACE
 export {
-    decodeBytes32String, encodeBytes32String,
-
+    decodeBytes32String,
+    encodeBytes32String,
     AbiCoder,
-    ConstructorFragment, ErrorFragment, EventFragment, Fragment, FallbackFragment, FunctionFragment, NamedFragment, ParamType, StructFragment,
-
-    checkResultErrors, ErrorDescription, Indexed, Interface, LogDescription, Result, TransactionDescription,
+    ConstructorFragment,
+    ErrorFragment,
+    EventFragment,
+    Fragment,
+    FallbackFragment,
+    FunctionFragment,
+    NamedFragment,
+    ParamType,
+    StructFragment,
+    checkResultErrors,
+    ErrorDescription,
+    Indexed,
+    Interface,
+    LogDescription,
+    Result,
+    TransactionDescription,
     Typed,
-} from "./abi/index.js";
+} from './abi/index.js';
 
 // ADDRESS
 export {
@@ -23,17 +36,28 @@ export {
 //CONSTANTS
 export {
     ZeroAddress,
-    WeiPerEther, MaxUint256, MinInt256, MaxInt256, N,
+    WeiPerEther,
+    MaxUint256,
+    MinInt256,
+    MaxInt256,
+    N,
     ZeroHash,
-    quaisymbol, MessagePrefix
-} from "./constants/index.js";
+    quaisymbol,
+    MessagePrefix,
+} from './constants/index.js';
 
 // CONTRACT
 export {
-    BaseContract, Contract,
+    BaseContract,
+    Contract,
     ContractFactory,
-    ContractEventPayload, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, EventLog, UndecodedEventLog
-} from "./contract/index.js";
+    ContractEventPayload,
+    ContractTransactionReceipt,
+    ContractTransactionResponse,
+    ContractUnknownEventPayload,
+    EventLog,
+    UndecodedEventLog,
+} from './contract/index.js';
 
 // CRYPTO
 export {
@@ -41,12 +65,15 @@ export {
     randomBytes,
     keccak256,
     ripemd160,
-    sha256, sha512,
+    sha256,
+    sha512,
     pbkdf2,
-    scrypt, scryptSync,
+    scrypt,
+    scryptSync,
     lock,
-    Signature, SigningKey
-} from "./crypto/index.js";
+    Signature,
+    SigningKey,
+} from './crypto/index.js';
 
 // HASH
 export {
@@ -54,8 +81,8 @@ export {
     hashMessage, verifyMessage,
     solidityPacked, solidityPackedKeccak256, solidityPackedSha256,
     TypedDataEncoder,
-    verifyTypedData
-} from "./hash/index.js";
+    verifyTypedData,
+} from './hash/index.js';
 
 // PROVIDERS
 export {
@@ -102,7 +129,7 @@ export {
     getBigInt, getNumber, getUint, toBeArray, toBigInt, toBeHex, toNumber, toQuantity,
     fromTwos, toTwos, mask,
     formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits,
-    uuidV4, getTxType, getShardForAddress, getAddressDetails, isQiAddress,
+    uuidV4, getTxType, getZoneForAddress, getAddressDetails, isQiAddress,
 } from "./utils/index.js";
 
 export {
@@ -124,27 +151,24 @@ export {
 } from "./wallet/index.js";
 
 // WORDLIST
-export {
-    Wordlist, LangEn, LangEs, WordlistOwl, WordlistOwlA, wordlists
-} from "./wordlists/index.js";
-
-
+export { Wordlist, LangEn, LangEs, WordlistOwl, WordlistOwlA, wordlists } from './wordlists/index.js';
 
 /////////////////////////////
 // Types
 
 // APPLICATION BINARY INTERFACE
 export type {
-    JsonFragment, JsonFragmentType,
-    FormatType, FragmentType,
+    JsonFragment,
+    JsonFragmentType,
+    FormatType,
+    FragmentType,
     InterfaceAbi,
-    ParamTypeWalkFunc, ParamTypeWalkAsyncFunc
-} from "./abi/index.js";
+    ParamTypeWalkFunc,
+    ParamTypeWalkAsyncFunc,
+} from './abi/index.js';
 
 // ADDRESS
-export type {
-    Addressable, AddressLike
-} from "./address/index.js";
+export type { Addressable, AddressLike } from './address/index.js';
 
 // CONTRACT
 export type {
@@ -156,10 +180,10 @@ export type {
 } from "./contract/index.js";
 
 // CRYPTO
-export type { ProgressCallback, SignatureLike } from "./crypto/index.js";
+export type { ProgressCallback, SignatureLike } from './crypto/index.js';
 
 // HASH
-export type { TypedDataDomain, TypedDataField } from "./hash/index.js";
+export type { TypedDataDomain, TypedDataField } from './hash/index.js';
 
 // PROVIDERS
 export type {
@@ -183,10 +207,7 @@ export type {
 } from "./signers/index.js";
 
 // TRANSACTION
-export type {
-    AccessList, AccessListish, AccessListEntry,
-    TransactionLike
-} from "./transaction/index.js";
+export type { AccessList, AccessListish, AccessListEntry, TransactionLike } from './transaction/index.js';
 
 // UTILS
 export type {

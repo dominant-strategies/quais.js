@@ -1,6 +1,6 @@
-import { ShardData } from '../constants/index.js';
+import { ShardData, toShard, Zone } from '../constants/index.js';
 import { SigningKey, keccak256 as addressKeccak256 } from '../crypto/index.js';
-import { getBytes, getShardForAddress, hexlify } from '../utils/index.js';
+import { getBytes, getZoneForAddress, hexlify } from '../utils/index.js';
 import { Provider, QiTransactionRequest } from '../providers/index.js';
 import { TransactionLike, QiTransaction, TxInput } from '../transaction/index.js';
 import { Mnemonic } from './mnemonic.js';
@@ -90,11 +90,11 @@ export class QiHDWallet extends HDWallet {
      * Initializes the wallet by generating addresses and private keys for the specified zone. The wallet will generate
      * addresses until it has `GAP` number of naked addresses. A provider must be set before calling this method.
      *
-     * @param {string} zone - Zone identifier used to validate the derived address.
+     * @param {Zone} zone - Zone identifier used to validate the derived address.
      *
      * @returns {Promise<void>}
      */
-    public async init(zone: string): Promise<void> {
+    public async init(zone: Zone): Promise<void> {
         if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
         if (!this.provider) throw new Error('Provider not set');
 
@@ -108,7 +108,7 @@ export class QiHDWallet extends HDWallet {
         let derivationIndex = 0;
 
         while (nakedCount < GAP) {
-            const addressInfo = this.deriveAddress(derivationIndex, zone, "Qi");
+            const addressInfo = this.deriveAddress(derivationIndex, zone, 'Qi');
             // store the address, private key and index
             shardWalletData.addressesInfo.push(addressInfo);
             // query the network node for the outpoints of the address and update the balance
@@ -182,11 +182,12 @@ export class QiHDWallet extends HDWallet {
         const pubKey = input.pub_key;
         const address = this.getAddressFromPubKey(hexlify(pubKey));
         // get shard from address
-        const shard = getShardForAddress(address);
+        const zone = getZoneForAddress(address);
+        const shard = zone ? toShard(zone) : undefined;
         if (!shard) throw new Error(`Invalid shard location for address: ${address}`);
         // get the wallet data corresponding to the shard
-        const shardWalletData = this.#shardWalletsMap.get(shard.nickname);
-        if (!shardWalletData) throw new Error(`Missing wallet data for shard: ${shard.name}`);
+        const shardWalletData = this.#shardWalletsMap.get(shard);
+        if (!shardWalletData) throw new Error(`Missing wallet data for shard: ${shard}`);
         // get the private key corresponding to the address
         const privKey = shardWalletData.addressesInfo.find((utxoAddr) => utxoAddr.address === address)?.privKey;
         if (!privKey) throw new Error(`Missing private key for ${hexlify(pubKey)}`);
@@ -207,11 +208,11 @@ export class QiHDWallet extends HDWallet {
             const address = computeAddress(hexlify(input.pub_key));
 
             // get shard from address
-            const shard = getShardForAddress(address);
+            const shard = getZoneForAddress(address);
             if (!shard) throw new Error(`Invalid address: ${address}`);
             // get the wallet data corresponding to the shard
-            const shardWalletData = this.#shardWalletsMap.get(shard.nickname);
-            if (!shardWalletData) throw new Error(`Missing wallet data for shard: ${(shard.name, shard.nickname)}`);
+            const shardWalletData = this.#shardWalletsMap.get(shard);
+            if (!shardWalletData) throw new Error(`Missing wallet data for shard: ${shard}`);
 
             const utxoAddrObj = shardWalletData.addressesInfo.find((utxoAddr) => utxoAddr.address === address);
             if (!utxoAddrObj) {

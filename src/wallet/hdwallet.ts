@@ -18,7 +18,7 @@ import {
     assert,
     assertArgument,
     hexlify,
-    getShardForAddress,
+    getZoneForAddress,
     isQiAddress,
     BytesLike,
     Numeric,
@@ -30,7 +30,7 @@ import { decodeBase58 } from '../encoding/base58.js';
 import { BaseWallet } from './base-wallet.js';
 import { Mnemonic } from './mnemonic.js';
 import { encryptKeystoreJson, encryptKeystoreJsonSync } from './json-keystore.js';
-import { N } from '../constants/index.js';
+import { N, Zone } from '../constants/index.js';
 import type { ProgressCallback } from '../crypto/index.js';
 import type { Wordlist } from '../wordlists/index.js';
 import type { KeystoreAccount } from './json-keystore.js';
@@ -42,10 +42,10 @@ const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
 
 // Used to type the instantiation of a child wallet class from static methods
 export interface HDWalletStatic<T> {
-	new(...args: any[]): T;
-	_fromSeed(_seed: BytesLike, mnemonic: null | Mnemonic): T;
-	isValidPath(path: string): boolean;
-	derivePath(path: string): T;
+    new (...args: any[]): T;
+    _fromSeed(_seed: BytesLike, mnemonic: null | Mnemonic): T;
+    isValidPath(path: string): boolean;
+    derivePath(path: string): T;
 }
 
 export type AddressInfo = {
@@ -160,54 +160,53 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
         return new (this.constructor as new (...args: any[]) => this)(...params);
     }
 
-	protected account(): KeystoreAccount {
-		const account: KeystoreAccount = {
-			address: this.address,
-			privateKey: this.privateKey,
-		};
-		const m = this.mnemonic;
-		if (this.path && m && m.wordlist.locale === "en" && m.password === "") {
-			account.mnemonic = {
-				path: this.path,
-				locale: "en",
-				entropy: m.entropy,
-			};
-		}
+    protected account(): KeystoreAccount {
+        const account: KeystoreAccount = {
+            address: this.address,
+            privateKey: this.privateKey,
+        };
+        const m = this.mnemonic;
+        if (this.path && m && m.wordlist.locale === 'en' && m.password === '') {
+            account.mnemonic = {
+                path: this.path,
+                locale: 'en',
+                entropy: m.entropy,
+            };
+        }
 
         return account;
     }
 
-	/**
-	 *  Resolves to a [JSON Keystore Wallet](json-wallets) encrypted with
-	 *  `password`.
-	 *
-	 *  If `progressCallback` is specified, it will receive periodic
-	 *  updates as the encryption process progreses.
-	 *
-	 *  @param {Uint8Array | string} password - The password to encrypt the wallet with.
-	 *  @param {ProgressCallback} [progressCallback] - An optional callback to receive progress updates.
-	 *  @returns {Promise<string>} The encrypted JSON Keystore Wallet.
-	 */
-	async encrypt(password: Uint8Array | string,progressCallback?: ProgressCallback): Promise<string> {
-		return await encryptKeystoreJson(this.account(), password, {progressCallback});
-	}
+    /**
+     * Resolves to a [JSON Keystore Wallet](json-wallets) encrypted with `password`.
+     *
+     * If `progressCallback` is specified, it will receive periodic updates as the encryption process progreses.
+     *
+     * @param {Uint8Array | string} password - The password to encrypt the wallet with.
+     * @param {ProgressCallback} [progressCallback] - An optional callback to receive progress updates.
+     *
+     * @returns {Promise<string>} The encrypted JSON Keystore Wallet.
+     */
+    async encrypt(password: Uint8Array | string, progressCallback?: ProgressCallback): Promise<string> {
+        return await encryptKeystoreJson(this.account(), password, { progressCallback });
+    }
 
-	/**
-	 *  Returns a [JSON Keystore Wallet](json-wallets) encryped with
-	 *  `password`.
-	 *
-	 *  It is preferred to use the [async version](encrypt) instead,
-	 *  which allows a {@link ProgressCallback | **ProgressCallback**} to keep the user informed.
-	 *
-	 *  This method will block the event loop (freezing all UI) until
-	 *  it is complete, which may be a non-trivial duration.
-	 *
-	 *  @param {Uint8Array | string} password - The password to encrypt the wallet with.
-	 *  @returns {string} The encrypted JSON Keystore Wallet.
-	 */
-	encryptSync(password: Uint8Array | string): string {
-		return encryptKeystoreJsonSync(this.account(), password);
-	}
+    /**
+     * Returns a [JSON Keystore Wallet](json-wallets) encryped with `password`.
+     *
+     * It is preferred to use the [async version](encrypt) instead, which allows a
+     * {@link ProgressCallback | **ProgressCallback**} to keep the user informed.
+     *
+     * This method will block the event loop (freezing all UI) until it is complete, which may be a non-trivial
+     * duration.
+     *
+     * @param {Uint8Array | string} password - The password to encrypt the wallet with.
+     *
+     * @returns {string} The encrypted JSON Keystore Wallet.
+     */
+    encryptSync(password: Uint8Array | string): string {
+        return encryptKeystoreJsonSync(this.account(), password);
+    }
 
     /**
      * The extended key.
@@ -496,37 +495,40 @@ export abstract class HDWallet extends BaseWallet implements HDNodeLike<HDWallet
         return this._fromSeed(seed, null);
     }
 
-	/**
-	 * Derives address by incrementing address_index according to BIP44
-	 *
-	 *  @param {number} index - The index of the address to derive.
-	 *  @param {string} [zone] - The zone of the address to derive.
-	 *  @returns {HDWallet} The derived HD Node.
-	 *  @throws {Error} If the path is missing or the zone is invalid.
-	 */
-	protected deriveAddress(startingIndex: number, zone: string, ledgerType: 'Qi' | 'Quai'): AddressInfo {
-		if (!this.path) throw new Error("Missing wallet's address derivation path");
+    /**
+     * Derives address by incrementing address_index according to BIP44
+     *
+     * @param {number} index - The index of the address to derive.
+     * @param {Zone} [zone] - The zone of the address to derive.
+     *
+     * @returns {HDWallet} The derived HD Node.
+     * @throws {Error} If the path is missing or the zone is invalid.
+     */
+    protected deriveAddress(startingIndex: number, zone: Zone, ledgerType: 'Qi' | 'Quai'): AddressInfo {
+        if (!this.path) throw new Error("Missing wallet's address derivation path");
 
         let newWallet: this;
 
-		const isValidAddressForZone = (address: string) => {
-			const shardNickname = getShardForAddress(address)?.nickname.toLowerCase();
-			const isCorrectShard = shardNickname === zone;
-			const isCorrectCoinType = newWallet.coinType === this.coinType;
-			const isCorrectLedger = (ledgerType === 'Qi') ? isQiAddress(address) : !isQiAddress(address);
-	
-			return isCorrectShard && isCorrectCoinType && isCorrectLedger;
-		}
+        const isValidAddressForZone = (address: string) => {
+            const addressZone = getZoneForAddress(address);
+            const isCorrectShard = addressZone === zone;
+            const isCorrectCoinType = newWallet.coinType === this.coinType;
+            const isCorrectLedger = ledgerType === 'Qi' ? isQiAddress(address) : !isQiAddress(address);
 
-		let addrIndex: number = startingIndex;
-		do {
-			newWallet = this.derivePath(addrIndex.toString());
-			addrIndex++;
-			// put a hard limit on the number of addresses to derive
-			if (addrIndex - startingIndex > MAX_ADDRESS_DERIVATION_ATTEMPTS) {
-				throw new Error(`Failed to derive a valid address for the zone ${zone} after MAX_ADDRESS_DERIVATION_ATTEMPTS attempts.`);
-			}
-		} while (!isValidAddressForZone(newWallet.address));
+            return isCorrectShard && isCorrectCoinType && isCorrectLedger;
+        };
+
+        let addrIndex: number = startingIndex;
+        do {
+            newWallet = this.derivePath(addrIndex.toString());
+            addrIndex++;
+            // put a hard limit on the number of addresses to derive
+            if (addrIndex - startingIndex > MAX_ADDRESS_DERIVATION_ATTEMPTS) {
+                throw new Error(
+                    `Failed to derive a valid address for the zone ${zone} after MAX_ADDRESS_DERIVATION_ATTEMPTS attempts.`,
+                );
+            }
+        } while (!isValidAddressForZone(newWallet.address));
 
         const addresInfo = { address: newWallet.address, privKey: newWallet.privateKey, index: addrIndex - 1 };
 
