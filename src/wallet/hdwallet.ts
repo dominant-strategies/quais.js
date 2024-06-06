@@ -5,7 +5,7 @@ import type { Wordlist } from "../wordlists/index.js";
 import { randomBytes } from "../crypto/index.js";
 import { getZoneForAddress, isQiAddress } from "../utils/index.js";
 import { TransactionRequest, Provider } from '../providers/index.js';
-import { ZoneData } from '../constants/index.js';
+import { ZoneData, ShardData } from '../constants/index.js';
 
 export interface NeuteredAddressInfo {
 	pubKey: string;
@@ -37,7 +37,7 @@ export abstract class HDWallet {
 	// Wallet parent path
 	protected static _parentPath: string = "";
 
-	readonly provider?: Provider;
+	protected provider?: Provider;
 
 	/**
 	 *  @private
@@ -61,7 +61,7 @@ export abstract class HDWallet {
 		this._accounts.set(accountIndex, newNode);
 	}
 
-	protected deriveAddress(account: number, startingIndex: number, zone: string, change: boolean = false): HDNodeWallet {
+	protected deriveAddress(account: number, startingIndex: number, zone: string, isChange: boolean = false): HDNodeWallet {
 		const isValidAddressForZone = (address: string) => {
             const zone = getZoneForAddress(address);
             if (!zone) {
@@ -74,7 +74,7 @@ export abstract class HDWallet {
 		}
 		// derive the address node
 		const accountNode = this._accounts.get(account);
-		const changeIndex = change ? 1 : 0;
+		const changeIndex = isChange ? 1 : 0;
 		const changeNode = accountNode!.deriveChild(changeIndex);
 		let addrIndex: number = startingIndex;
 		let addressNode: HDNodeWallet;
@@ -123,6 +123,7 @@ export abstract class HDWallet {
 	}
 
 	getNextAddress(accountIndex: number, zone: string): NeuteredAddressInfo {
+		if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
 		if (!this._accounts.has(accountIndex)) {
 			this.addAccount(accountIndex);
 		}
@@ -142,7 +143,6 @@ export abstract class HDWallet {
 			change: false,
 			zone: zone
 		};
-
 		this._addresses.set(neuteredAddressInfo.address, neuteredAddressInfo);
 		this._privateKeys.set(addressNode.address, addressNode.privateKey);
 
@@ -163,6 +163,7 @@ export abstract class HDWallet {
 	}
 
 	getAddressesForZone(zone: string): NeuteredAddressInfo[] {
+		if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
 		const addresses = this._addresses.values();
 		return Array.from(addresses).filter((addressInfo) => addressInfo.zone === zone);
 	}
@@ -195,6 +196,23 @@ export abstract class HDWallet {
 
 	abstract signTransaction(tx: TransactionRequest): Promise<string>
 
+	// TODO: Implement this method
 	// abstract sendTransaction(tx: TransactionRequest): Promise<string>
+
+	connect(provider: Provider): void {
+		this.provider = provider;
+	}
+
+    // helper function to validate the zone
+    protected validateZone(zone: string): boolean {
+        zone = zone.toLowerCase();
+        const shard = ShardData.find(
+            (shard) =>
+                shard.name.toLowerCase() === zone ||
+                shard.nickname.toLowerCase() === zone ||
+                shard.byte.toLowerCase() === zone,
+        );
+        return shard !== undefined;
+	}	
 
 }
