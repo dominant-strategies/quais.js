@@ -4,8 +4,8 @@ import { LangEn } from "../wordlists/lang-en.js"
 import type { Wordlist } from "../wordlists/index.js";
 import { randomBytes } from "../crypto/index.js";
 import { getZoneForAddress, isQiAddress } from "../utils/index.js";
-import { TransactionRequest, Provider } from '../providers/index.js';
 import { ZoneData, ShardData } from '../constants/index.js';
+import { TransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 
 export interface NeuteredAddressInfo {
 	pubKey: string;
@@ -197,7 +197,7 @@ export abstract class HDWallet {
 	abstract signTransaction(tx: TransactionRequest): Promise<string>
 
 	// TODO: Implement this method
-	// abstract sendTransaction(tx: TransactionRequest): Promise<string>
+	abstract sendTransaction(tx: TransactionRequest): Promise<TransactionResponse>
 
 	connect(provider: Provider): void {
 		this.provider = provider;

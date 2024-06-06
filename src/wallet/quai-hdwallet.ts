@@ -1,7 +1,7 @@
 
 import { HDWallet } from './hdwallet';
 import { HDNodeWallet } from "./hdnodewallet";
-import { QuaiTransactionRequest, Provider } from '../providers/index.js';
+import { QuaiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { resolveAddress } from "../address/index.js";
 
 export class QuaiHDWallet extends HDWallet {
@@ -13,9 +13,7 @@ export class QuaiHDWallet extends HDWallet {
         super(root, provider);
     }
 
-    async signTransaction(tx: QuaiTransactionRequest): Promise<string> {
-        // check the wallet has the private key for the from address
-        const from = await resolveAddress(tx.from);
+    private _getHDNode(from: string): HDNodeWallet {
         const fromAddressInfo = this._addresses.get(from);
         if (!fromAddressInfo) {
             throw new Error(`Address ${from} is not known to wallet`);
@@ -27,11 +25,23 @@ export class QuaiHDWallet extends HDWallet {
             throw new Error(`Account ${fromAddressInfo.account} not found`);
         }
         const changeNode = accountNode.deriveChild(0);
-        const fromNode = changeNode.deriveChild(fromAddressInfo.index);
-        // sign the transaction with the derived HD node
+        return changeNode.deriveChild(fromAddressInfo.index);
+    }
+
+    async signTransaction(tx: QuaiTransactionRequest): Promise<string> {
+        const from = await resolveAddress(tx.from);
+        const fromNode = this._getHDNode(from);
         const signedTx = await fromNode.signTransaction(tx);
         return signedTx;        
     }
 
-    
+    async sendTransaction(tx: QuaiTransactionRequest): Promise<TransactionResponse> { 
+        if (!this.provider) {
+            throw new Error("Provider is not set");
+        }
+        const from = await resolveAddress(tx.from);
+        const fromNode = this._getHDNode(from);
+        const fromNodeConnected = fromNode.connect(this.provider);
+        return await fromNodeConnected.sendTransaction(tx);
+    }
 }
