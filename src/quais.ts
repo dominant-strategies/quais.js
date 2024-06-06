@@ -78,6 +78,7 @@ export {
     lock,
     Signature,
     SigningKey,
+    musigCrypto
 } from './crypto/index.js';
 
 // HASH
@@ -117,7 +118,11 @@ export {
 export { AbstractSigner, VoidSigner } from './signers/index.js';
 
 // TRANSACTION
-export { accessListify, AbstractTransaction, FewestCoinSelector, QiTransaction } from './transaction/index.js';
+export {
+    accessListify,
+    AbstractTransaction, FewestCoinSelector,
+    QiTransaction, QuaiTransaction
+} from "./transaction/index.js";
 
 // UTILS
 export {
