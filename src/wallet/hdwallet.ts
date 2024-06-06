@@ -28,9 +28,6 @@ export abstract class HDWallet {
 	// Map of addresses to address info
 	protected _addresses: Map<string, NeuteredAddressInfo> = new Map();
 
-	// Map of addresses to private keys
-	protected _privateKeys: Map<string, string> = new Map();
-
 	// Root node of the HD wallet
 	protected _root: HDNodeWallet;
 
@@ -116,8 +113,6 @@ export abstract class HDWallet {
 
 		this._addresses.set(neuteredAddressInfo.address, neuteredAddressInfo);
 
-		this._privateKeys.set(addressNode.address, addressNode.privateKey);
-
 		return neuteredAddressInfo;
 
 	}
@@ -144,7 +139,6 @@ export abstract class HDWallet {
 			zone: zone
 		};
 		this._addresses.set(neuteredAddressInfo.address, neuteredAddressInfo);
-		this._privateKeys.set(addressNode.address, addressNode.privateKey);
 
 		return neuteredAddressInfo;
 	}
@@ -191,12 +185,8 @@ export abstract class HDWallet {
 		return (this as any).createInstance(mnemonic);
 	}
 
-	// TODO: Implement this method
-	// static fromExtendedKey(extendedKey: string): HDWallet {}
-
 	abstract signTransaction(tx: TransactionRequest): Promise<string>
 
-	// TODO: Implement this method
 	abstract sendTransaction(tx: TransactionRequest): Promise<TransactionResponse>
 
 	connect(provider: Provider): void {
