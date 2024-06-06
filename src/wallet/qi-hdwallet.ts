@@ -2,7 +2,7 @@
 
 import { HDWallet, NeuteredAddressInfo } from './hdwallet';
 import { HDNodeWallet } from "./hdnodewallet";
-import { QiTransactionRequest, Provider } from '../providers/index.js';
+import { QiTransactionRequest, Provider, TransactionRequest, TransactionResponse } from '../providers/index.js';
 import { computeAddress } from "../address/index.js";
 import { getBytes, hexlify } from '../utils/index.js';
 import { TransactionLike, QiTransaction, TxInput } from '../transaction/index.js';
@@ -107,6 +107,27 @@ export class QiHDWallet extends HDWallet {
 
 		txobj.signature = signature;
 		return txobj.serialized;
+	}
+
+	async sendTransaction(tx: QiTransactionRequest): Promise<TransactionResponse> {
+		if (!this.provider) {
+            throw new Error("Provider is not set");
+		}
+		if (!tx.inputs || tx.inputs.length === 0) {
+			throw new Error('Transaction has no inputs');
+		}
+		const input = tx.inputs[0];
+		const address = computeAddress(hexlify(input.pub_key));
+		const shard = await this._root.shardFromAddress(address);
+
+		// verify all inputs are from the same shard
+		if (tx.inputs.some(async (input) => await this._root.shardFromAddress(computeAddress(hexlify(input.pub_key))) !== shard)) {
+			throw new Error('All inputs must be from the same shard');
+		}
+
+		const signedTx = await this.signTransaction(tx);
+
+		return await this.provider.broadcastTransaction(shard, signedTx);
 	}
 
 	// createSchnorrSignature returns a schnorr signature for the given message and private key
