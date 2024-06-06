@@ -108,9 +108,8 @@ export class BaseWallet extends AbstractSigner {
         }
 
         const btx = QuaiTransaction.from(<QuaiTransactionLike>tx);
-        console.log('unsigned', btx.unsignedSerialized);
-        const digest = keccak256(btx.unsignedSerialized);
-        btx.signature = this.signingKey.sign(digest);
+        const digest= keccak256(btx.unsignedSerialized)
+        btx.signature = this.signingKey.sign(digest)
 
         return btx.serialized;
     }

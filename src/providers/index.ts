@@ -12,23 +12,21 @@ export { AbstractProvider, UnmanagedSubscriber } from './abstract-provider.js';
 
 export { Network } from './network.js';
 
-export {
-    Block,
-    FeeData,
-    Log,
-    TransactionReceipt,
-    TransactionResponse,
-    copyRequest,
-    QuaiTransactionRequest
-    //resolveTransactionRequest,
-} from './provider.js';
-
 export { JsonRpcApiProvider, JsonRpcProvider } from "./provider-jsonrpc.js"
 
 export { BrowserProvider } from './provider-browser.js';
 
 export { SocketProvider } from './provider-socket.js';
 export { WebSocketProvider } from './provider-websocket.js';
+
+export {
+    Block,
+    FeeData,
+    Log,
+    TransactionReceipt,
+    TransactionResponse,
+    copyRequest
+} from './provider.js';
 
 export {
     SocketSubscriber,
