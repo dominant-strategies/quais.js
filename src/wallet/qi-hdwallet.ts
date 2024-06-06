@@ -11,11 +11,13 @@ import { schnorr } from "@noble/curves/secp256k1";
 import { keccak_256 } from "@noble/hashes/sha3";
 import { musigCrypto } from '../crypto/index.js';
 import { Outpoint } from '../transaction/utxo.js';
-import { ShardData } from '../constants/shards.js';
+
 
 type OutpointInfo = {
 	outpoint: Outpoint;
 	address: string;
+	zone: string;
+	account?: number;
 };
 
 export class QiHDWallet extends HDWallet {
@@ -26,8 +28,15 @@ export class QiHDWallet extends HDWallet {
 
 	protected static _parentPath = `m/44'/${this._cointype}'`;
 
+	// Map of change addresses to address info
 	protected _changeAddresses: Map<string, NeuteredAddressInfo> = new Map();
 
+	// Array of naked addresses
+	protected _nakedChangeAddresses: NeuteredAddressInfo[] = [];
+
+	// Array of naked change addresses
+	protected _nakedAddresses: NeuteredAddressInfo[] = [];
+	
 	protected _outpoints: OutpointInfo[] = [];
 
 	private constructor(root: HDNodeWallet, provider?: Provider) {
@@ -35,6 +44,7 @@ export class QiHDWallet extends HDWallet {
 	}
 
 	getNextChangeAddress(account: number, zone: string): NeuteredAddressInfo {
+		if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
 		if (!this._accounts.has(account)) {
 			this.addAccount(account);
 		}
@@ -59,8 +69,17 @@ export class QiHDWallet extends HDWallet {
 		return neuteredAddressInfo;
 	}
 
+	// getNextChangeAddress(account: number, zone: string): NeuteredAddressInfo {
+	// 	return this._getNextAddress(account, zone, this._changeAddresses, true);
+	// }
+
 	importOutpoints(outpoints: OutpointInfo[]): void {
 		this._outpoints.push(...outpoints);
+	}
+
+	getOutpoints(zone: string): OutpointInfo[] {
+		if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
+		return this._outpoints.filter((outpoint) => outpoint.zone === zone);
 	}
 
 	/**
@@ -138,7 +157,7 @@ export class QiHDWallet extends HDWallet {
 	}
 
 	// Helper method that returns the private key for the public key
-	derivePrivateKeyForInput(input: TxInput): string {
+	private derivePrivateKeyForInput(input: TxInput): string {
 		if (!input.pub_key) throw new Error('Missing public key for input');
 		const pubKey = hexlify(input.pub_key);
 		const address = computeAddress(pubKey);
@@ -155,47 +174,93 @@ export class QiHDWallet extends HDWallet {
 		return addressNode.privateKey;
 	}
 
+	// scan scans the specified zone for addresses with unspent outputs.
+	// Starting at index 0, tt will generate new addresses until
+	// the gap limit is reached for both naked and change addresses.
+	async scan(zone: string, account: number = 0): Promise<void> { 
+		// flush the existing addresses and outpoints
+		this._addresses = new Map();
+		this._changeAddresses = new Map();
+		this._nakedAddresses = [];
+		this._nakedChangeAddresses = [];
+		this._outpoints = [];
 
+		await this._scan(zone, account);
+	}
 
-	async rescan(zone: string, account: number = 0): Promise<void> {
-		if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
-		if (!this.provider) throw new Error('Provider not set');
-
-		if (!this._accounts.has(account)) {
-			this.addAccount(account);
-		}
-
-		let nakedAddressesCount = 0;
-		let changeAddressesCount = 0;
-
-		while (nakedAddressesCount < QiHDWallet._GAP_LIMIT || changeAddressesCount < QiHDWallet._GAP_LIMIT) { 
-			const addressInfo = this.getNextAddress(account, zone);
-			const outpoints = await this.getOutpointsByAddress(addressInfo.address);
-			if (outpoints.length === 0) {
-					nakedAddressesCount++;
-			} else {
-					nakedAddressesCount = 0;
-					const newOutpointsInfo = outpoints.map((outpoint) => {
-						return { outpoint, address: addressInfo.address };
-					});
-					this._outpoints.push(...newOutpointsInfo);
-			}
-
-			const changeAddressInfo = this.getNextChangeAddress(account, zone);
-			const changeOutpoints = await this.getOutpointsByAddress(changeAddressInfo.address);
-			if (changeOutpoints.length === 0) {
-					changeAddressesCount++;
-			} else {
-					changeAddressesCount = 0;
-					const newOutpointsInfo = changeOutpoints.map((outpoint) => {
-						return { outpoint, address: changeAddressInfo.address };
-					});
-					this._outpoints.push(...newOutpointsInfo);
+	// sync scans the specified zone for addresses with unspent outputs.
+	// Starting at the last address index, it will generate new addresses until
+	// the gap limit is reached for both naked and change addresses.
+	// If no account is specified, it will scan all accounts known to the wallet
+	async sync(zone: string, account?: number): Promise<void> { 
+		if (account) {
+			await this._scan(zone, account);
+		} else {
+			for (const account of this._accounts.keys()) {
+				await this._scan(zone, account);
 			}
 		}
 	}
 
-    // getOutpointsByAddress queries the network node for the outpoints of the specified address
+	private async _scan(zone: string, account: number = 0): Promise<void> {
+		if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
+		if (!this.provider) throw new Error('Provider not set');
+	  
+		if (!this._accounts.has(account)) {
+		  this.addAccount(account);
+		}
+
+		let nakedAddressesCount = 0;
+		let changeNakedAddressesCount = 0;
+	  
+		// helper function to handle the common logic for both naked and change addresses
+		const handleAddressScanning = async (
+		  getAddressInfo: () => NeuteredAddressInfo,
+			addressesCount: number,
+			nakedAddresArray: NeuteredAddressInfo[],
+		): Promise<number> => {
+		  const addressInfo = getAddressInfo();
+		  const outpoints = await this.getOutpointsByAddress(addressInfo.address);
+		  if (outpoints.length === 0) {
+			  addressesCount++;
+			  nakedAddresArray.push(addressInfo)
+		  } else {
+			  addressesCount = 0;
+			  nakedAddresArray = [];
+			const newOutpointsInfo = outpoints.map((outpoint) => ({
+				outpoint,
+				address: addressInfo.address,
+				zone: zone,
+			}));
+			this._outpoints.push(...newOutpointsInfo);
+		  }
+		  return addressesCount;
+		};
+
+		// main loop to scan addresses up to the gap limit
+		while (nakedAddressesCount < QiHDWallet._GAP_LIMIT || changeNakedAddressesCount < QiHDWallet._GAP_LIMIT) {
+		  [nakedAddressesCount, changeNakedAddressesCount] = await Promise.all([
+			nakedAddressesCount < QiHDWallet._GAP_LIMIT
+			  ? handleAddressScanning(
+				  () => this.getNextAddress(account, zone),
+				  nakedAddressesCount,
+				  this._nakedAddresses,
+				)
+			  : nakedAddressesCount,
+
+			changeNakedAddressesCount < QiHDWallet._GAP_LIMIT
+			  ? handleAddressScanning(
+				  () => this.getNextChangeAddress(account, zone),
+				  changeNakedAddressesCount,
+				  this._nakedChangeAddresses,
+				)
+			  : changeNakedAddressesCount,
+		  ]);
+		}
+	  }
+	
+	
+	// getOutpointsByAddress queries the network node for the outpoints of the specified address
     private async getOutpointsByAddress(address: string): Promise<Outpoint[]> {
         try {
             const outpointsMap = await this.provider!.getOutpointsByAddress(address);
@@ -206,20 +271,23 @@ export class QiHDWallet extends HDWallet {
         } catch (error) {
             throw new Error(`Failed to get outpoints for address: ${address}`);
         }
-    }
+	}
 
+	getChangeAddressesForZone(zone: string): NeuteredAddressInfo[] {
+		if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
+		const changeAddresses = this._changeAddresses.values();
+		return Array.from(changeAddresses).filter((addressInfo) => addressInfo.zone === zone);
+	}
 
-    // helper function to validate the zone
-    private validateZone(zone: string): boolean {
-        zone = zone.toLowerCase();
-        const shard = ShardData.find(
-            (shard) =>
-                shard.name.toLowerCase() === zone ||
-                shard.nickname.toLowerCase() === zone ||
-                shard.byte.toLowerCase() === zone,
-        );
-        return shard !== undefined;
-    }
+	getNakedAddressesForZone(zone: string): NeuteredAddressInfo[] {
+		if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
+		const nakedAddresses = this._nakedAddresses.filter((addressInfo) => addressInfo.zone === zone);
+		return nakedAddresses;
+	}
 
-
+	getNakedChangeAddressesForZone(zone: string): NeuteredAddressInfo[] {
+		if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
+		const nakedChangeAddresses = this._nakedChangeAddresses.filter((addressInfo) => addressInfo.zone === zone);
+		return nakedChangeAddresses;
+	}
 }
