@@ -2,7 +2,7 @@
 
 import { HDWallet, NeuteredAddressInfo } from './hdwallet';
 import { HDNodeWallet } from "./hdnodewallet";
-import { QiTransactionRequest, Provider, TransactionRequest, TransactionResponse } from '../providers/index.js';
+import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress } from "../address/index.js";
 import { getBytes, hexlify } from '../utils/index.js';
 import { TransactionLike, QiTransaction, TxInput } from '../transaction/index.js';
@@ -11,7 +11,7 @@ import { schnorr } from "@noble/curves/secp256k1";
 import { keccak_256 } from "@noble/hashes/sha3";
 import { musigCrypto } from '../crypto/index.js';
 import { Outpoint } from '../transaction/utxo.js';
-
+import { getZoneForAddress } from '../utils/index.js';
 
 type OutpointInfo = {
 	outpoint: Outpoint;
@@ -118,10 +118,13 @@ export class QiHDWallet extends HDWallet {
 		}
 		const input = tx.inputs[0];
 		const address = computeAddress(hexlify(input.pub_key));
-		const shard = await this._root.shardFromAddress(address);
+		const shard = getZoneForAddress(address);
+		if (!shard) {
+			throw new Error(`Address ${address} not found in any shard`);
+		}
 
 		// verify all inputs are from the same shard
-		if (tx.inputs.some(async (input) => await this._root.shardFromAddress(computeAddress(hexlify(input.pub_key))) !== shard)) {
+		if (tx.inputs.some((input) => getZoneForAddress(computeAddress(hexlify(input.pub_key))) !== shard)) {
 			throw new Error('All inputs must be from the same shard');
 		}
 

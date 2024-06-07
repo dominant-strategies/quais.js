@@ -60,11 +60,11 @@ export abstract class HDWallet {
 
 	protected deriveAddress(account: number, startingIndex: number, zone: string, isChange: boolean = false): HDNodeWallet {
 		const isValidAddressForZone = (address: string) => {
-            const zone = getZoneForAddress(address);
+            const zoneByte = getZoneForAddress(address);
             if (!zone) {
                 return false;
             }
-            const shardNickname = ZoneData.find((zoneData) => zoneData.byte === zone)?.nickname;
+            const shardNickname = ZoneData.find((zoneData) => zoneData.byte === zoneByte)?.nickname;
 			const isCorrectShard = shardNickname === zone.toLowerCase();
 			const isCorrectLedger = (this.coinType() === 969) ? isQiAddress(address) : !isQiAddress(address);
 			return isCorrectShard && isCorrectLedger;
