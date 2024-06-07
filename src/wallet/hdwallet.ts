@@ -1,19 +1,19 @@
-import { HDNodeWallet } from './hdnodewallet.js';
-import { Mnemonic } from './mnemonic.js';
-import { LangEn } from '../wordlists/lang-en.js';
-import type { Wordlist } from '../wordlists/index.js';
-import { randomBytes } from '../crypto/index.js';
-import { getZoneForAddress, isQiAddress } from '../utils/index.js';
-import { ZoneData, ShardData } from '../constants/index.js';
+import { HDNodeWallet } from "./hdnodewallet";
+import { Mnemonic } from "./mnemonic.js";
+import { LangEn } from "../wordlists/lang-en.js"
+import type { Wordlist } from "../wordlists/index.js";
+import { randomBytes } from "../crypto/index.js";
+import { getZoneForAddress, isQiAddress } from "../utils/index.js";
+import { Zone } from '../constants/index.js';
 import { TransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 
 export interface NeuteredAddressInfo {
-    pubKey: string;
-    address: string;
-    account: number;
-    index: number;
-    change: boolean;
-    zone: string;
+	pubKey: string;
+	address: string;
+	account: number;
+	index: number;
+	change: boolean;
+	zone: Zone;
 }
 
 // Constant to represent the maximum attempt to derive an address
@@ -55,43 +55,36 @@ export abstract class AbstractHDWallet {
         this._accounts.set(accountIndex, newNode);
     }
 
-    protected deriveAddress(
-        account: number,
-        startingIndex: number,
-        zone: string,
-        isChange: boolean = false,
-    ): HDNodeWallet {
+    protected deriveAddress(account: number, startingIndex: number, zone: Zone, isChange: boolean = false): HDNodeWallet {
+        this.validateZone(zone);
         const isValidAddressForZone = (address: string) => {
-            const zoneByte = getZoneForAddress(address);
-            if (!zone) {
+            const addressZone = getZoneForAddress(address);
+            if (!addressZone) {
                 return false;
             }
-            const shardNickname = ZoneData.find((zoneData) => zoneData.byte === zoneByte)?.nickname;
-            const isCorrectShard = shardNickname === zone.toLowerCase();
-            const isCorrectLedger = this.coinType() === 969 ? isQiAddress(address) : !isQiAddress(address);
-            return isCorrectShard && isCorrectLedger;
-        };
-        // derive the address node
-        const accountNode = this._accounts.get(account);
-        const changeIndex = isChange ? 1 : 0;
-        const changeNode = accountNode!.deriveChild(changeIndex);
-        let addrIndex: number = startingIndex;
-        let addressNode: HDNodeWallet;
-        do {
-            addressNode = changeNode.deriveChild(addrIndex);
-            addrIndex++;
-            // put a hard limit on the number of addresses to derive
-            if (addrIndex - startingIndex > MAX_ADDRESS_DERIVATION_ATTEMPTS) {
-                throw new Error(
-                    `Failed to derive a valid address for the zone ${zone} after MAX_ADDRESS_DERIVATION_ATTEMPTS attempts.`,
-                );
-            }
-        } while (!isValidAddressForZone(addressNode.address));
+			const isCorrectShard = addressZone === zone;
+			const isCorrectLedger = (this.coinType() === 969) ? isQiAddress(address) : !isQiAddress(address);
+			return isCorrectShard && isCorrectLedger;
+		}
+		// derive the address node
+		const accountNode = this._accounts.get(account);
+		const changeIndex = isChange ? 1 : 0;
+		const changeNode = accountNode!.deriveChild(changeIndex);
+		let addrIndex: number = startingIndex;
+		let addressNode: HDNodeWallet;
+		do {
+			addressNode = changeNode.deriveChild(addrIndex);
+			addrIndex++;
+			// put a hard limit on the number of addresses to derive
+			if (addrIndex - startingIndex > MAX_ADDRESS_DERIVATION_ATTEMPTS) {
+				throw new Error(`Failed to derive a valid address for the zone ${zone} after MAX_ADDRESS_DERIVATION_ATTEMPTS attempts.`);
+			}
+		} while (!isValidAddressForZone(addressNode.address));
 
         return addressNode;
     }
 
-    addAddress(account: number, zone: string, addressIndex: number): NeuteredAddressInfo {
+    addAddress(account: number, addressIndex: number, zone: Zone): NeuteredAddressInfo {
         if (!this._accounts.has(account)) {
             this.addAccount(account);
         }
@@ -118,9 +111,8 @@ export abstract class AbstractHDWallet {
 
         return neuteredAddressInfo;
     }
-
-    getNextAddress(accountIndex: number, zone: string): NeuteredAddressInfo {
-        if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
+	getNextAddress(accountIndex: number, zone: Zone): NeuteredAddressInfo {
+        this.validateZone(zone);
         if (!this._accounts.has(accountIndex)) {
             this.addAccount(accountIndex);
         }
@@ -161,11 +153,11 @@ export abstract class AbstractHDWallet {
         return Array.from(addresses).filter((addressInfo) => addressInfo.account === account);
     }
 
-    getAddressesForZone(zone: string): NeuteredAddressInfo[] {
-        if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
-        const addresses = this._addresses.values();
-        return Array.from(addresses).filter((addressInfo) => addressInfo.zone === zone);
-    }
+	getAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+        this.validateZone(zone);
+		const addresses = this._addresses.values();
+		return Array.from(addresses).filter((addressInfo) => addressInfo.zone === zone);
+	}
 
 	protected static createInstance<T extends AbstractHDWallet>(this: new (root: HDNodeWallet) => T, mnemonic: Mnemonic): T {
         const coinType = (this as any)._coinType;
@@ -173,42 +165,6 @@ export abstract class AbstractHDWallet {
 		return new this(root);
 	}
 
-<<<<<<< HEAD
-    static fromMnemonic<T extends HDWallet>(this: new (root: HDNodeWallet) => T, mnemonic: Mnemonic): T {
-        return (this as any).createInstance(mnemonic);
-    }
-
-    static createRandom<T extends HDWallet>(
-        this: new (root: HDNodeWallet) => T,
-        password?: string,
-        wordlist?: Wordlist,
-    ): T {
-        if (password == null) {
-            password = '';
-        }
-        if (wordlist == null) {
-            wordlist = LangEn.wordlist();
-        }
-        const mnemonic = Mnemonic.fromEntropy(randomBytes(16), password, wordlist);
-        return (this as any).createInstance(mnemonic);
-    }
-
-    static fromPhrase<T extends HDWallet>(
-        this: new (root: HDNodeWallet) => T,
-        phrase: string,
-        password?: string,
-        wordlist?: Wordlist,
-    ): T {
-        if (password == null) {
-            password = '';
-        }
-        if (wordlist == null) {
-            wordlist = LangEn.wordlist();
-        }
-        const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist);
-        return (this as any).createInstance(mnemonic);
-    }
-=======
 	static fromMnemonic<T extends AbstractHDWallet>(this: new (root: HDNodeWallet) => T, mnemonic: Mnemonic): T {
 		return (this as any).createInstance(mnemonic);
 	}
@@ -226,7 +182,6 @@ export abstract class AbstractHDWallet {
 		const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist);
 		return (this as any).createInstance(mnemonic);
 	}
->>>>>>> e0d7b0d3 (rename HDWallt to AbstractHDWallet)
 
     abstract signTransaction(tx: TransactionRequest): Promise<string>;
 
@@ -236,15 +191,9 @@ export abstract class AbstractHDWallet {
         this.provider = provider;
     }
 
-    // helper function to validate the zone
-    protected validateZone(zone: string): boolean {
-        zone = zone.toLowerCase();
-        const shard = ShardData.find(
-            (shard) =>
-                shard.name.toLowerCase() === zone ||
-                shard.nickname.toLowerCase() === zone ||
-                shard.byte.toLowerCase() === zone,
-        );
-        return shard !== undefined;
+    protected validateZone(zone: Zone): void {
+        if (!Object.values(Zone).includes(zone)) {
+            throw new Error(`Invalid zone: ${zone}`);
+        }
     }
 }
