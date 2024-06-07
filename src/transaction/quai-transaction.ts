@@ -16,7 +16,7 @@ import {
     zeroPadValue,
 } from '../utils/index.js';
 import { decodeProtoTransaction, encodeProtoTransaction } from '../encoding/index.js';
-import { recoverAddress, validateAddress } from '../address/index.js';
+import { getAddress, recoverAddress, validateAddress } from '../address/index.js';
 import { formatNumber, handleNumber } from '../providers/format.js';
 import { ProtoTransaction } from './abstract-transaction.js';
 import { Zone } from '../constants';
@@ -486,7 +486,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
         if (protoTx.to !== null) {
             const toAddr = hexlify(protoTx.to!);
-            tx.to = toAddr;
+            tx.to = getAddress(toAddr);
         }
 
         tx.type = protoTx.type;
