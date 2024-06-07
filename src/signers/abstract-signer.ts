@@ -39,7 +39,7 @@ async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise
 
     if (pop.from != null) {
         const from = pop.from;
-        pop.from = Promise.all([signer.getAddress(), resolveAddress(from)]).then(([address, from]) => {
+        pop.from = await Promise.all([signer.getAddress(), resolveAddress(from)]).then(([address, from]) => {
             assertArgument(address.toLowerCase() === from.toLowerCase(), 'transaction from mismatch', 'tx.from', from);
             return address;
         });
