@@ -12,15 +12,18 @@ import { keccak_256 } from '@noble/hashes/sha3';
 import { musigCrypto } from '../crypto/index.js';
 import { Outpoint } from '../transaction/utxo.js';
 import { getZoneForAddress } from '../utils/index.js';
+import { Zone } from '../constants/index.js';
 
 type OutpointInfo = {
     outpoint: Outpoint;
     address: string;
-    zone: string;
+    zone: Zone;
     account?: number;
 };
 
 export class QiHDWallet extends AbstractHDWallet {
+
+    protected static _GAP_LIMIT: number = 20;
 
     protected static _cointype: number = 969;
 
@@ -30,26 +33,26 @@ export class QiHDWallet extends AbstractHDWallet {
     // Array of naked change addresses
     protected _nakedAddresses: NeuteredAddressInfo[] = [];
 
+    // Array of naked change addresses
+    protected _nakedChangeAddresses: NeuteredAddressInfo[] = [];
+
     protected _outpoints: OutpointInfo[] = [];
 
     private constructor(root: HDNodeWallet, provider?: Provider) {
         super(root, provider);
     }
 
-    getNextChangeAddress(account: number, zone: string): NeuteredAddressInfo {
-        if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
-        if (!this._accounts.has(account)) {
-            this.addAccount(account);
-        }
-        const filteredAccountInfos = Array.from(this._changeAddresses.values()).filter(
-            (addressInfo) => addressInfo.account === account && addressInfo.zone === zone,
-        );
-        const lastIndex = filteredAccountInfos.reduce(
-            (maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index),
-            -1,
-        );
-        // call derive address with change = true
-        const addressNode = this.deriveAddress(account, lastIndex + 1, zone, true);
+	getNextChangeAddress(account: number, zone: Zone): NeuteredAddressInfo {
+		this.validateZone(zone);
+		if (!this._accounts.has(account)) {
+			this.addAccount(account);
+		}
+		const filteredAccountInfos = Array.from(this._changeAddresses.values()).filter((addressInfo) =>
+			addressInfo.account === account && addressInfo.zone === zone
+		);
+		const lastIndex = filteredAccountInfos.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1);
+		// call derive address with change = true
+		const addressNode = this.deriveAddress(account, lastIndex + 1, zone, true);
 
         const neuteredAddressInfo = {
             pubKey: addressNode.publicKey,
@@ -65,18 +68,18 @@ export class QiHDWallet extends AbstractHDWallet {
         return neuteredAddressInfo;
     }
 
-    // getNextChangeAddress(account: number, zone: string): NeuteredAddressInfo {
-    // 	return this._getNextAddress(account, zone, this._changeAddresses, true);
-    // }
+	importOutpoints(outpoints: OutpointInfo[]): void {
+        outpoints.forEach((outpoint) => {
+            this.validateZone(outpoint.zone);
+            this._outpoints.push(outpoint);
+        });
+		
+	}
 
-    importOutpoints(outpoints: OutpointInfo[]): void {
-        this._outpoints.push(...outpoints);
-    }
-
-    getOutpoints(zone: string): OutpointInfo[] {
-        if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
-        return this._outpoints.filter((outpoint) => outpoint.zone === zone);
-    }
+	getOutpoints(zone: Zone): OutpointInfo[] {
+		this.validateZone(zone);
+		return this._outpoints.filter((outpoint) => outpoint.zone === zone);
+	}
 
     /**
      * Signs a Qi transaction and returns the serialized transaction
@@ -194,41 +197,42 @@ export class QiHDWallet extends AbstractHDWallet {
         return addressNode.privateKey;
     }
 
-    // scan scans the specified zone for addresses with unspent outputs.
-    // Starting at index 0, tt will generate new addresses until
-    // the gap limit is reached for both naked and change addresses.
-    async scan(zone: string, account: number = 0): Promise<void> {
-        // flush the existing addresses and outpoints
-        this._addresses = new Map();
-        this._changeAddresses = new Map();
-        this._nakedAddresses = [];
-        this._nakedChangeAddresses = [];
-        this._outpoints = [];
+	// scan scans the specified zone for addresses with unspent outputs.
+	// Starting at index 0, tt will generate new addresses until
+	// the gap limit is reached for both naked and change addresses.
+	async scan(zone: Zone, account: number = 0): Promise<void> { 
+		this.validateZone(zone);
+		// flush the existing addresses and outpoints
+		this._addresses = new Map();
+		this._changeAddresses = new Map();
+		this._nakedAddresses = [];
+		this._nakedChangeAddresses = [];
+		this._outpoints = [];
 
         await this._scan(zone, account);
     }
 
-    // sync scans the specified zone for addresses with unspent outputs.
-    // Starting at the last address index, it will generate new addresses until
-    // the gap limit is reached for both naked and change addresses.
-    // If no account is specified, it will scan all accounts known to the wallet
-    async sync(zone: string, account?: number): Promise<void> {
-        if (account) {
-            await this._scan(zone, account);
-        } else {
-            for (const account of this._accounts.keys()) {
-                await this._scan(zone, account);
-            }
-        }
-    }
+	// sync scans the specified zone for addresses with unspent outputs.
+	// Starting at the last address index, it will generate new addresses until
+	// the gap limit is reached for both naked and change addresses.
+	// If no account is specified, it will scan all accounts known to the wallet
+	async sync(zone: Zone, account?: number): Promise<void> { 
+		this.validateZone(zone);
+		if (account) {
+			await this._scan(zone, account);
+		} else {
+			for (const account of this._accounts.keys()) {
+				await this._scan(zone, account);
+			}
+		}
+	}
 
-    private async _scan(zone: string, account: number = 0): Promise<void> {
-        if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
-        if (!this.provider) throw new Error('Provider not set');
-
-        if (!this._accounts.has(account)) {
-            this.addAccount(account);
-        }
+	private async _scan(zone: Zone, account: number = 0): Promise<void> {
+		if (!this.provider) throw new Error('Provider not set');
+	  
+		if (!this._accounts.has(account)) {
+		  this.addAccount(account);
+		}
 
         let nakedAddressesCount = 0;
         let changeNakedAddressesCount = 0;
@@ -292,21 +296,21 @@ export class QiHDWallet extends AbstractHDWallet {
         }
     }
 
-    getChangeAddressesForZone(zone: string): NeuteredAddressInfo[] {
-        if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
-        const changeAddresses = this._changeAddresses.values();
-        return Array.from(changeAddresses).filter((addressInfo) => addressInfo.zone === zone);
-    }
+	getChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+		this.validateZone(zone);
+		const changeAddresses = this._changeAddresses.values();
+		return Array.from(changeAddresses).filter((addressInfo) => addressInfo.zone === zone);
+	}
 
-    getNakedAddressesForZone(zone: string): NeuteredAddressInfo[] {
-        if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
-        const nakedAddresses = this._nakedAddresses.filter((addressInfo) => addressInfo.zone === zone);
-        return nakedAddresses;
-    }
+	getNakedAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+		this.validateZone(zone);
+		const nakedAddresses = this._nakedAddresses.filter((addressInfo) => addressInfo.zone === zone);
+		return nakedAddresses;
+	}
 
-    getNakedChangeAddressesForZone(zone: string): NeuteredAddressInfo[] {
-        if (!this.validateZone(zone)) throw new Error(`Invalid zone: ${zone}`);
-        const nakedChangeAddresses = this._nakedChangeAddresses.filter((addressInfo) => addressInfo.zone === zone);
-        return nakedChangeAddresses;
-    }
+	getNakedChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+		this.validateZone(zone);
+		const nakedChangeAddresses = this._nakedChangeAddresses.filter((addressInfo) => addressInfo.zone === zone);
+		return nakedChangeAddresses;
+	}
 }
