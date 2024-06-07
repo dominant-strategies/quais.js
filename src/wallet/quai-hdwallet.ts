@@ -1,9 +1,10 @@
-import { HDWallet } from './hdwallet.js';
-import { HDNodeWallet } from './hdnodewallet.js';
+
+import { AbstractHDWallet } from './hdwallet';
+import { HDNodeWallet } from "./hdnodewallet";
 import { QuaiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { resolveAddress } from '../address/index.js';
 
-export class QuaiHDWallet extends HDWallet {
+export class QuaiHDWallet extends AbstractHDWallet {
     protected static _cointype: number = 994;
 
     private constructor(root: HDNodeWallet, provider?: Provider) {

@@ -1,5 +1,7 @@
-import { HDWallet, NeuteredAddressInfo } from './hdwallet.js';
-import { HDNodeWallet } from './hdnodewallet.js';
+
+
+import { AbstractHDWallet, NeuteredAddressInfo } from './hdwallet';
+import { HDNodeWallet } from "./hdnodewallet";
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress } from '../address/index.js';
 import { getBytes, hexlify } from '../utils/index.js';
@@ -18,8 +20,7 @@ type OutpointInfo = {
     account?: number;
 };
 
-export class QiHDWallet extends HDWallet {
-    protected static _GAP_LIMIT: number = 20;
+export class QiHDWallet extends AbstractHDWallet {
 
     protected static _cointype: number = 969;
 
