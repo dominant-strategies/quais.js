@@ -6,8 +6,6 @@ import { resolveAddress } from '../address/index.js';
 export class QuaiHDWallet extends HDWallet {
     protected static _cointype: number = 994;
 
-    protected static _parentPath = `m/44'/${this._cointype}'`;
-
     private constructor(root: HDNodeWallet, provider?: Provider) {
         super(root, provider);
     }

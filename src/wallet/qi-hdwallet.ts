@@ -23,13 +23,8 @@ export class QiHDWallet extends HDWallet {
 
     protected static _cointype: number = 969;
 
-    protected static _parentPath = `m/44'/${this._cointype}'`;
-
-    // Map of change addresses to address info
-    protected _changeAddresses: Map<string, NeuteredAddressInfo> = new Map();
-
-    // Array of naked addresses
-    protected _nakedChangeAddresses: NeuteredAddressInfo[] = [];
+	// Map of change addresses to address info
+	protected _changeAddresses: Map<string, NeuteredAddressInfo> = new Map();
 
     // Array of naked change addresses
     protected _nakedAddresses: NeuteredAddressInfo[] = [];

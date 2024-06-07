@@ -31,10 +31,7 @@ export abstract class HDWallet {
     // Root node of the HD wallet
     protected _root: HDNodeWallet;
 
-    // Wallet parent path
-    protected static _parentPath: string = '';
-
-    protected provider?: Provider;
+	protected provider?: Provider;
 
     /**
      * @private
@@ -44,13 +41,13 @@ export abstract class HDWallet {
         this.provider = provider;
     }
 
-    protected parentPath(): string {
-        return (this.constructor as typeof HDWallet)._parentPath;
-    }
-
-    protected coinType(): number {
-        return (this.constructor as typeof HDWallet)._coinType!;
-    }
+    protected static parentPath(coinType: number): string {
+		return `m/44'/${coinType}'`;
+	}
+	
+	protected coinType(): number {
+		return (this.constructor as typeof HDWallet)._coinType!;
+	}
 
     // helper methods that adds an account HD node to the HD wallet following the BIP-44 standard.
     protected addAccount(accountIndex: number): void {
@@ -170,10 +167,11 @@ export abstract class HDWallet {
         return Array.from(addresses).filter((addressInfo) => addressInfo.zone === zone);
     }
 
-    protected static createInstance<T extends HDWallet>(this: new (root: HDNodeWallet) => T, mnemonic: Mnemonic): T {
-        const root = HDNodeWallet.fromMnemonic(mnemonic, (this as any)._parentPath);
-        return new this(root);
-    }
+	protected static createInstance<T extends HDWallet>(this: new (root: HDNodeWallet) => T, mnemonic: Mnemonic): T {
+        const coinType = (this as any)._coinType;
+		const root = HDNodeWallet.fromMnemonic(mnemonic, (this as any).parentPath(coinType));
+		return new this(root);
+	}
 
     static fromMnemonic<T extends HDWallet>(this: new (root: HDNodeWallet) => T, mnemonic: Mnemonic): T {
         return (this as any).createInstance(mnemonic);
