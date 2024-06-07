@@ -49,6 +49,8 @@ export {
     ZeroHash,
     quaisymbol,
     MessagePrefix,
+    Zone,
+    Shard,
 } from './constants/index.js';
 
 // CONTRACT

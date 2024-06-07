@@ -1,7 +1,7 @@
 /**
  * @ignore
  */
-import { getAddress, getCreateAddress } from '../address/index.js';
+import { getAddress } from '../address/index.js';
 import { Signature } from '../crypto/index.js';
 import { accessListify } from '../transaction/index.js';
 import {
@@ -21,6 +21,8 @@ import type {
     TransactionReceiptParams,
     TransactionResponseParams,
     EtxParams,
+    QiTransactionResponseParams,
+    QuaiTransactionResponseParams,
 } from './formatting.js';
 
 const BN_0 = BigInt(0);
@@ -89,7 +91,7 @@ export function formatBoolean(value: any): boolean {
 }
 
 export function formatData(value: string): string {
-    assertArgument(isHexString(value, true), 'invalid data', 'value', value);
+    assertArgument(isHexString(value), 'invalid data', 'value', value);
     return value;
 }
 
@@ -140,28 +142,72 @@ export function formatLog(value: any): LogParams {
     return _formatLog(value);
 }
 
-const _formatBlock = object({
-    hash: allowNull(formatHash),
-    parentHash: arrayOf(formatHash),
-    number: arrayOf(getNumber),
-    nonce: allowNull(formatData),
-    gasLimit: getBigInt,
-    gasUsed: getBigInt,
-    miner: allowNull(getAddress),
-    extraData: formatData,
-    baseFeePerGas: allowNull(getBigInt),
+const _formatWoBodyHeader = object({
+    baseFeePerGas: getBigInt,
+    efficiencyScore: getBigInt,
+    etxEligibleSlices: formatHash,
+    etxSetRoot: formatHash,
+    evmRoot: formatHash,
+    expansionNumber: getNumber,
     extRollupRoot: formatHash,
     extTransactionsRoot: formatHash,
-    transactionsRoot: formatHash,
+    extraData: formatData,
+    gasLimit: getBigInt,
+    gasUsed: getBigInt,
+    hash: formatHash,
+    interlinkRootHash: formatHash,
     manifestHash: arrayOf(formatHash),
+    miner: allowNull(getAddress),
+    mixHash: formatHash,
+    nonce: formatData,
+    number: arrayOf(getNumber),
     parentDeltaS: arrayOf(getBigInt),
     parentEntropy: arrayOf(getBigInt),
-    subManifest: arrayOf(formatData),
+    parentHash: arrayOf(formatHash),
+    parentUncledS: arrayOf(allowNull(getBigInt)),
+    parentUncledSubDeltaS: arrayOf(getBigInt),
+    primeTerminus: formatHash,
     receiptsRoot: formatHash,
     sha3Uncles: formatHash,
     size: getBigInt,
-    evmRoot: formatHash,
+    thresholdCount: getBigInt,
+    transactionsRoot: formatHash,
+    uncledS: getBigInt,
     utxoRoot: formatHash,
+});
+
+const _formatWoBody = object({
+    extTransactions: arrayOf(formatTransactionResponse),
+    header: _formatWoBodyHeader,
+    interlinkHashes: arrayOf(formatHash),
+    manifest: arrayOf(formatHash),
+    transactions: arrayOf(formatTransactionResponse),
+    uncles: arrayOf(formatHash),
+});
+
+const _formatWoHeader = object({
+    difficulty: formatData,
+    headerHash: formatHash,
+    location: formatData,
+    mixHash: formatHash,
+    nonce: formatData,
+    number: formatData,
+    parentHash: formatHash,
+    time: formatData,
+    txHash: formatHash,
+});
+
+const _formatBlock = object({
+    extTransactions: arrayOf(formatHash),
+    interlinkHashes: arrayOf(formatHash),
+    order: getNumber,
+    size: getBigInt,
+    subManifest: arrayOf(formatData),
+    totalEntropy: getBigInt,
+    transactions: arrayOf(formatHash),
+    uncles: arrayOf(formatHash),
+    woBody: _formatWoBody,
+    woHeader: _formatWoHeader,
 });
 
 export function formatBlock(value: any): BlockParams {
@@ -226,26 +272,29 @@ export function formatEtx(value: any): EtxParams {
     return _formatEtx(value);
 }
 
-const _formatTransactionReceipt = object({
-    to: allowNull(getAddress, null),
-    from: allowNull(getAddress, null),
-    contractAddress: allowNull(getAddress, null),
-    index: getNumber,
-    gasUsed: getBigInt,
-    logsBloom: allowNull(formatData),
-    blockHash: formatHash,
-    hash: formatHash,
-    logs: arrayOf(formatReceiptLog),
-    blockNumber: getNumber,
-    cumulativeGasUsed: getBigInt,
-    effectiveGasPrice: allowNull(getBigInt),
-    status: allowNull(getNumber),
-    type: allowNull(getNumber, 0),
-    etxs: (value) => (value === null ? [] : arrayOf(formatEtx)(value)),
-}, {
-    hash: ["transactionHash"],
-    index: ["transactionIndex"],
-});
+const _formatTransactionReceipt = object(
+    {
+        to: allowNull(getAddress, null),
+        from: allowNull(getAddress, null),
+        contractAddress: allowNull(getAddress, null),
+        index: getNumber,
+        gasUsed: getBigInt,
+        logsBloom: allowNull(formatData),
+        blockHash: formatHash,
+        hash: formatHash,
+        logs: arrayOf(formatReceiptLog),
+        blockNumber: getNumber,
+        cumulativeGasUsed: getBigInt,
+        effectiveGasPrice: allowNull(getBigInt),
+        status: allowNull(getNumber),
+        type: allowNull(getNumber, 0),
+        etxs: (value) => (value === null ? [] : arrayOf(formatEtx)(value)),
+    },
+    {
+        hash: ['transactionHash'],
+        index: ['transactionIndex'],
+    },
+);
 
 export function formatTransactionReceipt(value: any): TransactionReceiptParams {
     const result = _formatTransactionReceipt(value);
@@ -253,78 +302,96 @@ export function formatTransactionReceipt(value: any): TransactionReceiptParams {
 }
 
 export function formatTransactionResponse(value: any): TransactionResponseParams {
-    // Some clients (TestRPC) do strange things like return 0x0 for the
-    // 0 address; correct this to be a real address
-    if (value.to && getBigInt(value.to) === BN_0) {
-        value.to = '0x0000000000000000000000000000000000000000';
-    }
-    if (value.type === '0x1') value.from = value.sender;
+    // Determine if it is a Quai or Qi transaction based on the type
+    const transactionType = parseInt(value.type, 16);
 
-    const result = object(
-        {
-            hash: formatHash,
+    let result: TransactionResponseParams;
 
-            type: (value: any) => {
-                if (value === '0x' || value == null) {
-                    return 0;
-                }
-                return getNumber(value);
+    if (transactionType === 0x1) {
+        // QuaiTransactionResponseParams
+        result = object(
+            {
+                hash: formatHash,
+                type: (value: any) => {
+                    if (value === '0x' || value == null) {
+                        return 0;
+                    }
+                    return parseInt(value, 16);
+                },
+                accessList: allowNull(accessListify, null),
+                blockHash: allowNull(formatHash, null),
+                blockNumber: allowNull((value: any) => (value ? parseInt(value, 16) : null), null),
+                index: allowNull((value: any) => (value ? BigInt(value) : null), null),
+                from: getAddress,
+                maxPriorityFeePerGas: allowNull((value: any) => (value ? BigInt(value) : null)),
+                maxFeePerGas: allowNull((value: any) => (value ? BigInt(value) : null)),
+                gasLimit: allowNull((value: any) => (value ? BigInt(value) : null), null),
+                to: allowNull(getAddress, null),
+                value: allowNull((value: any) => (value ? BigInt(value) : null), null),
+                nonce: allowNull((value: any) => (value ? parseInt(value, 16) : null), null),
+                creates: allowNull(getAddress, null),
+                chainId: allowNull((value: any) => (value ? BigInt(value) : null), null),
+                data: (value: any) => value,
             },
-            accessList: allowNull(accessListify, null),
+            {
+                data: ['input'],
+                gasLimit: ['gas'],
+                index: ['transactionIndex'],
+            },
+        )(value) as QuaiTransactionResponseParams;
 
-            blockHash: allowNull(formatHash, null),
-            blockNumber: allowNull(getNumber, null),
-            index: allowNull(getNumber, null),
-
-            from: getAddress,
-
-            maxPriorityFeePerGas: allowNull(getBigInt),
-            maxFeePerGas: allowNull(getBigInt),
-
-            gasLimit: getBigInt,
-            to: allowNull(getAddress, null),
-            value: getBigInt,
-            nonce: getNumber,
-
-            creates: allowNull(getAddress, null),
-
-            chainId: allowNull(getBigInt, null),
-        },
-        {
-            data: ['input'],
-            gasLimit: ['gas'],
-            index: ['transactionIndex'],
-        },
-    )(value);
-
-    // If to and creates are empty, populate the creates from the value
-    if (result.to == null && result.creates == null) {
-        result.creates = getCreateAddress(result);
-    }
-
-    // Add an access list to supported transaction types
-    if ((value.type === 1 || value.type === 2) && value.accessList == null) {
-        result.accessList = [];
-    }
-
-    // Compute the signature
-    if (value.signature) {
-        result.signature = Signature.from(value.signature);
-    } else {
-        result.signature = Signature.from(value);
-    }
-
-    // Some backends omit ChainId on legacy transactions, but we can compute it
-    if (result.chainId == null) {
-        const chainId = result.signature.legacyChainId;
-        if (chainId != null) {
-            result.chainId = chainId;
+        // Add an access list to supported transaction types
+        if ((value.type === 1 || value.type === 2) && value.accessList == null) {
+            result.accessList = [];
         }
-    }
 
-    // 0x0000... should actually be null
-    if (result.blockHash && getBigInt(result.blockHash) === BN_0) {
-        result.blockHash = null;
+        // Compute the signature
+        if (value.signature) {
+            result.signature = Signature.from(value.signature);
+        } else {
+            result.signature = Signature.from(value);
+        }
+
+        // Some backends omit ChainId on legacy transactions, but we can compute it
+        if (result.chainId == null) {
+            const chainId = result.signature.legacyChainId;
+            if (chainId != null) {
+                result.chainId = chainId;
+            }
+        }
+
+        // 0x0000... should actually be null
+        if (result.blockHash && getBigInt(result.blockHash) === BN_0) {
+            result.blockHash = null;
+        }
+    } else if (transactionType === 0x2) {
+        // QiTransactionResponseParams
+        result = object(
+            {
+                hash: formatHash,
+                type: (value: any) => {
+                    if (value === '0x' || value == null) {
+                        return 0;
+                    }
+                    return parseInt(value, 16);
+                },
+                blockHash: allowNull(formatHash, null),
+                blockNumber: allowNull((value: any) => (value ? parseInt(value, 16) : null), null),
+                index: allowNull((value: any) => (value ? BigInt(value) : null), null),
+                chainId: allowNull((value: any) => (value ? BigInt(value) : null), null),
+                signature: (value: any) => value,
+                txInputs: allowNull((value: any) => value, null),
+                txOutputs: allowNull((value: any) => value, null),
+            },
+            {
+                index: ['transactionIndex'],
+                signature: ['utxoSignature'],
+                txInputs: ['inputs'],
+                txOutputs: ['outputs'],
+            },
+        )(value) as QiTransactionResponseParams;
+    } else {
+        throw new Error('Unknown transaction type');
     }
 
     return result;

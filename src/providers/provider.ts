@@ -46,6 +46,9 @@ import {
     QiTransactionResponseParams,
     QuaiTransactionResponseParams,
     TransactionReceiptParams,
+    WoBodyHeaderParams,
+    WoBodyParams,
+    WoHeaderParams,
 } from './formatting.js';
 import { WorkObjectLike } from '../transaction/work-object.js';
 import { QiTransactionLike } from '../transaction/qi-transaction.js';
@@ -61,7 +64,7 @@ function getValue<T>(value: undefined | null | T): null | T {
     return value;
 }
 
-function toJson(value: null | bigint): null | string {
+function toJson(value: null | bigint | string): null | string {
     if (value == null) {
         return null;
     }
@@ -436,131 +439,134 @@ export function copyRequest(req: TransactionRequest): PreparedTransactionRequest
  *
  * @category Providers
  */
-export interface MinedBlock extends Block {
-    /**
-     * The block number also known as the block height.
-     */
-    readonly number: number;
+export interface MinedBlock extends Block {}
 
-    /**
-     * The block hash.
-     */
-    readonly hash: string;
-
-    /**
-     * The block timestamp, in seconds from epoch.
-     */
-    readonly timestamp: number;
-
-    /**
-     * The block date, created from the {@link MinedBlock.timestamp | **timestamp**}.
-     */
-    readonly date: Date;
-
-    /**
-     * The miner of the block, also known as the `author` or block `producer`.
-     */
-    readonly miner: string;
+export class WoBody implements WoBodyParams {
+    readonly extTransactions!: Array<string | QuaiTransactionResponseParams>;
+    readonly header: WoBodyHeader;
+    readonly interlinkHashes: Array<string>;
+    readonly manifest: Array<string>;
+    readonly transactions!: Array<string | QuaiTransactionResponseParams>;
+    readonly uncles!: Array<string>;
+    constructor(params: WoBodyParams) {
+        this.extTransactions = params.extTransactions;
+        this.header = new WoBodyHeader(params.header);
+        this.interlinkHashes = params.interlinkHashes;
+        this.manifest = params.manifest;
+        this.transactions = params.transactions;
+        this.uncles = params.uncles;
+    }
 }
 
+export class WoBodyHeader implements WoBodyHeaderParams {
+    readonly baseFeePerGas!: null | bigint;
+    readonly efficiencyScore: bigint;
+    readonly etxEligibleSlices: string;
+    readonly etxSetRoot: string;
+    readonly evmRoot!: string;
+    readonly expansionNumber: number;
+    readonly extRollupRoot!: string;
+    readonly extTransactionsRoot!: string;
+    readonly extraData!: string;
+    readonly gasLimit!: bigint;
+    readonly gasUsed!: bigint;
+    readonly hash!: null | string;
+    readonly interlinkRootHash: string;
+    readonly manifestHash!: Array<string>;
+    readonly miner!: string;
+    readonly mixHash!: string;
+    readonly nonce!: string;
+    readonly number!: Array<string>;
+    readonly parentDeltaS!: Array<bigint>;
+    readonly parentEntropy!: Array<bigint>;
+    readonly parentHash!: Array<string>;
+    readonly parentUncledS: Array<bigint | null>;
+    readonly parentUncledSubDeltaS: Array<bigint>;
+    readonly primeTerminus: string;
+    readonly receiptsRoot!: string;
+    readonly sha3Uncles!: string;
+    readonly size!: bigint;
+    readonly thresholdCount: bigint;
+    readonly transactionsRoot!: string;
+    readonly uncledS: bigint;
+    readonly utxoRoot!: string;
+    constructor(params: WoBodyHeaderParams) {
+        this.baseFeePerGas = params.baseFeePerGas;
+        this.efficiencyScore = params.efficiencyScore;
+        this.etxEligibleSlices = params.etxEligibleSlices;
+        this.etxSetRoot = params.etxSetRoot;
+        this.evmRoot = params.evmRoot;
+        this.expansionNumber = params.expansionNumber;
+        this.extRollupRoot = params.extRollupRoot;
+        this.extTransactionsRoot = params.extTransactionsRoot;
+        this.extraData = params.extraData;
+        this.gasLimit = params.gasLimit;
+        this.gasUsed = params.gasUsed;
+        this.hash = params.hash;
+        this.interlinkRootHash = params.interlinkRootHash;
+        this.manifestHash = params.manifestHash;
+        this.miner = params.miner;
+        this.mixHash = params.mixHash;
+        this.nonce = params.nonce;
+        this.number = params.number;
+        this.parentDeltaS = params.parentDeltaS;
+        this.parentEntropy = params.parentEntropy;
+        this.parentHash = params.parentHash;
+        this.parentUncledS = params.parentUncledS;
+        this.parentUncledSubDeltaS = params.parentUncledSubDeltaS;
+        this.primeTerminus = params.primeTerminus;
+        this.receiptsRoot = params.receiptsRoot;
+        this.sha3Uncles = params.sha3Uncles;
+        this.size = params.size;
+        this.thresholdCount = params.thresholdCount;
+        this.transactionsRoot = params.transactionsRoot;
+        this.uncledS = params.uncledS;
+        this.utxoRoot = params.utxoRoot;
+    }
+}
+
+export class WoHeader implements WoHeaderParams {
+    readonly difficulty!: string;
+    readonly headerHash: string;
+    readonly location!: string;
+    readonly mixHash!: string;
+    readonly nonce!: string;
+    readonly number!: string;
+    readonly parentHash!: string;
+    readonly time: string;
+    readonly txHash: string;
+    constructor(params: WoHeaderParams) {
+        this.difficulty = params.difficulty;
+        this.headerHash = params.headerHash;
+        this.location = params.location;
+        this.mixHash = params.mixHash;
+        this.nonce = params.nonce;
+        this.number = params.number;
+        this.parentHash = params.parentHash;
+        this.time = params.time;
+        this.txHash = params.txHash;
+    }
+}
 /**
  * A **Block** represents the data associated with a full block on Ethereum.
  *
  * @category Providers
  */
 export class Block implements BlockParams, Iterable<string> {
+    readonly #extTransactions!: Array<string | QuaiTransactionResponse>;
+    readonly interlinkHashes: Array<string>; // New parameter
+    readonly order!: number;
+    readonly size!: bigint;
+    readonly subManifest!: Array<string> | null;
+    readonly totalEntropy!: bigint;
+    readonly #transactions!: Array<string | QuaiTransactionResponse>;
+    readonly uncles!: Array<string> | null;
+    readonly woBody: WoBody; // New nested parameter structure
+    readonly woHeader: WoHeader; // New nested parameter structure
     /**
      * The provider connected to the block used to fetch additional details if necessary.
      */
     readonly provider!: Provider;
-
-    /**
-     * The block number, sometimes called the block height. This is a sequential number that is one higher than the
-     * parent block.
-     */
-    readonly number!: Array<number> | number;
-
-    /**
-     * The block hash.
-     *
-     * This hash includes all properties, so can be safely used to identify an exact set of block properties.
-     */
-    readonly hash!: null | string;
-
-    /**
-     * The timestamp for this block, which is the number of seconds since epoch that this block was included.
-     */
-    readonly timestamp!: number;
-
-    /**
-     * The block hash of the parent block.
-     */
-    readonly parentHash!: Array<string> | string;
-
-    /**
-     * The nonce.
-     *
-     * On legacy networks, this is the random number inserted which permitted the difficulty target to be reached.
-     */
-    readonly nonce!: string;
-
-    /**
-     * The difficulty target.
-     *
-     * On legacy networks, this is the proof-of-work target required for a block to meet the protocol rules to be
-     * included.
-     *
-     * On modern networks, this is a random number arrived at using randao. @TODO: Find links?
-     */
-    readonly difficulty!: bigint;
-
-    /**
-     * The total gas limit for this block.
-     */
-    readonly gasLimit!: bigint;
-
-    /**
-     * The total gas used in this block.
-     */
-    readonly gasUsed!: bigint;
-
-    /**
-     * The miner coinbase address, wihch receives any subsidies for including this block.
-     */
-    readonly miner!: string;
-
-    /**
-     * Any extra data the validator wished to include.
-     */
-    readonly extraData!: string;
-
-    /**
-     * The base fee per gas that all transactions in this block were charged.
-     *
-     * This adjusts after each block, depending on how congested the network is.
-     */
-    readonly baseFeePerGas!: null | bigint;
-
-    readonly manifestHash!: Array<string>;
-    readonly location!: bigint;
-    readonly parentDeltaS!: Array<bigint>;
-    readonly parentEntropy!: Array<bigint>;
-    readonly order!: number;
-    readonly subManifest!: Array<string> | null;
-    readonly totalEntropy!: bigint;
-    readonly mixHash!: string;
-    readonly receiptsRoot!: string;
-    readonly sha3Uncles!: string;
-    readonly size!: bigint;
-    readonly evmRoot!: string;
-    readonly utxoRoot!: string;
-    readonly uncles!: Array<string> | null;
-
-    readonly #transactions: Array<string | QuaiTransactionResponse>;
-    readonly transactionsRoot: string;
-    readonly extRollupRoot: string;
-    readonly #extTransactions: Array<string | QuaiTransactionResponse>;
-    readonly extTransactionsRoot: string;
 
     /**
      * Create a new **Block** object.
@@ -582,49 +588,15 @@ export class Block implements BlockParams, Iterable<string> {
             return tx;
         });
 
-        this.transactionsRoot = block.transactionsRoot;
-
-        this.extRollupRoot = block.extRollupRoot;
-
-        this.extTransactionsRoot = block.extTransactionsRoot;
-
-        defineProperties<Block>(this, {
-            provider,
-
-            hash: getValue(block.hash),
-
-            number: block.number,
-
-            parentHash: block.parentHash,
-
-            nonce: block.nonce,
-            difficulty: block.difficulty,
-
-            gasLimit: block.gasLimit,
-            gasUsed: block.gasUsed,
-            miner: block.miner,
-            extraData: block.extraData,
-
-            baseFeePerGas: getValue(block.baseFeePerGas),
-
-            manifestHash: block.manifestHash,
-            location: block.location,
-            parentDeltaS: block.parentDeltaS,
-            parentEntropy: block.parentEntropy,
-            order: block.order,
-            subManifest: block.subManifest,
-            totalEntropy: block.totalEntropy,
-            mixHash: block.mixHash,
-            receiptsRoot: block.receiptsRoot,
-            sha3Uncles: block.sha3Uncles,
-            size: block.size,
-            evmRoot: block.evmRoot,
-            utxoRoot: block.utxoRoot,
-            uncles: block.uncles,
-            transactionsRoot: block.transactionsRoot,
-            extRollupRoot: block.extRollupRoot,
-            extTransactionsRoot: block.extTransactionsRoot,
-        });
+        this.interlinkHashes = block.interlinkHashes;
+        this.order = block.order;
+        this.size = block.size;
+        this.subManifest = block.subManifest;
+        this.totalEntropy = block.totalEntropy;
+        this.uncles = block.uncles;
+        this.woBody = new WoBody(block.woBody);
+        this.woHeader = new WoHeader(block.woHeader);
+        this.provider = provider;
     }
 
     /**
@@ -700,36 +672,7 @@ export class Block implements BlockParams, Iterable<string> {
      * Returns a JSON-friendly value.
      */
     toJSON(): any {
-        const {
-            baseFeePerGas,
-            difficulty,
-            extraData,
-            gasLimit,
-            gasUsed,
-            hash,
-            miner,
-            nonce,
-            number,
-            parentHash,
-            timestamp,
-            manifestHash,
-            location,
-            parentDeltaS,
-            parentEntropy,
-            order,
-            subManifest,
-            totalEntropy,
-            mixHash,
-            receiptsRoot,
-            sha3Uncles,
-            size,
-            evmRoot,
-            utxoRoot,
-            uncles,
-            transactionsRoot,
-            extRollupRoot,
-            extTransactionsRoot,
-        } = this;
+        const { interlinkHashes, order, size, subManifest, totalEntropy, uncles, woBody, woHeader } = this;
 
         // Using getters to retrieve the transactions and extTransactions
         const transactions = this.transactions;
@@ -737,34 +680,63 @@ export class Block implements BlockParams, Iterable<string> {
 
         return {
             _type: 'Block',
-            baseFeePerGas: toJson(baseFeePerGas),
-            difficulty: toJson(difficulty),
-            extraData,
-            gasLimit: toJson(gasLimit),
-            gasUsed: toJson(gasUsed),
-            hash,
-            miner,
-            nonce,
-            number,
-            parentHash,
-            timestamp,
-            manifestHash,
-            location,
-            parentDeltaS,
-            parentEntropy,
+            interlinkHashes,
             order,
+            size: toJson(size),
             subManifest,
-            totalEntropy,
-            mixHash,
-            receiptsRoot,
-            sha3Uncles,
-            size,
-            evmRoot,
-            utxoRoot,
+            totalEntropy: toJson(totalEntropy),
             uncles,
-            transactionsRoot,
-            extRollupRoot,
-            extTransactionsRoot,
+            woBody: {
+                extTransactions: woBody.extTransactions,
+                header: {
+                    baseFeePerGas: toJson(woBody.header.baseFeePerGas),
+                    efficiencyScore: toJson(woBody.header.efficiencyScore),
+                    etxEligibleSlices: woBody.header.etxEligibleSlices,
+                    etxSetRoot: woBody.header.etxSetRoot,
+                    evmRoot: woBody.header.evmRoot,
+                    expansionNumber: woBody.header.expansionNumber,
+                    extRollupRoot: woBody.header.extRollupRoot,
+                    extTransactionsRoot: woBody.header.extTransactionsRoot,
+                    extraData: woBody.header.extraData,
+                    gasLimit: toJson(woBody.header.gasLimit),
+                    gasUsed: toJson(woBody.header.gasUsed),
+                    hash: woBody.header.hash,
+                    interlinkRootHash: woBody.header.interlinkRootHash,
+                    manifestHash: woBody.header.manifestHash,
+                    miner: woBody.header.miner,
+                    mixHash: woBody.header.mixHash,
+                    nonce: woBody.header.nonce,
+                    number: woBody.header.number,
+                    parentDeltaS: woBody.header.parentDeltaS.map((val) => toJson(val)),
+                    parentEntropy: woBody.header.parentEntropy.map((val) => toJson(val)),
+                    parentHash: woBody.header.parentHash,
+                    parentUncledS: woBody.header.parentUncledS.map((val) => toJson(val)),
+                    parentUncledSubDeltaS: woBody.header.parentUncledSubDeltaS.map((val) => toJson(val)),
+                    primeTerminus: woBody.header.primeTerminus,
+                    receiptsRoot: woBody.header.receiptsRoot,
+                    sha3Uncles: woBody.header.sha3Uncles,
+                    size: toJson(woBody.header.size),
+                    thresholdCount: toJson(woBody.header.thresholdCount),
+                    transactionsRoot: woBody.header.transactionsRoot,
+                    uncledS: toJson(woBody.header.uncledS),
+                    utxoRoot: woBody.header.utxoRoot,
+                },
+                interlinkHashes: woBody.interlinkHashes,
+                manifest: woBody.manifest,
+                transactions: woBody.transactions,
+                uncles: woBody.uncles,
+            },
+            woHeader: {
+                difficulty: woHeader.difficulty,
+                headerHash: woHeader.headerHash,
+                location: woHeader.location,
+                mixHash: woHeader.mixHash,
+                nonce: woHeader.nonce,
+                number: woHeader.number,
+                parentHash: woHeader.parentHash,
+                time: woHeader.time,
+                txHash: woHeader.txHash,
+            },
             transactions, // Includes the transaction hashes or full transactions based on the prefetched data
             extTransactions, // Includes the extended transaction hashes or full transactions based on the prefetched data
         };
@@ -798,10 +770,12 @@ export class Block implements BlockParams, Iterable<string> {
      * included at.
      */
     get date(): null | Date {
-        if (this.timestamp == null) {
+        const timestampHex = this.woHeader.time;
+        if (!timestampHex) {
             return null;
         }
-        return new Date(this.timestamp * 1000);
+        const timestamp = parseInt(timestampHex, 16);
+        return new Date(timestamp * 1000);
     }
 
     /**
@@ -912,17 +886,20 @@ export class Block implements BlockParams, Iterable<string> {
      * @returns {boolean} True if the block has been mined.
      */
     isMined(): this is MinedBlock {
-        return !!this.hash;
+        return !!this.woBody.header.hash;
     }
 
     /**
      * @ignore
      */
     orphanedEvent(): OrphanFilter {
-        if (!this.isMined()) {
+        if (!this.isMined() || !this.woHeader.number) {
             throw new Error('');
         }
-        return createOrphanedBlockFilter(this);
+        return createOrphanedBlockFilter({
+            hash: this.woBody.header.hash!,
+            number: parseInt(this.woHeader.number!, 16),
+        });
     }
 }
 

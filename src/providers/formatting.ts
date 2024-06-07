@@ -16,98 +16,71 @@ import type { AccessList, TxInput, TxOutput } from '../transaction/index.js';
  * @category Providers
  */
 export interface BlockParams {
-    /**
-     * The block hash.
-     */
-    hash?: null | string;
-
-    /**
-     * The block number.
-     */
-    number: Array<number> | number;
-
-    /**
-     * The hash of the previous block in the blockchain. The genesis block has the parentHash of the
-     * [ZeroHash](../variables/ZeroHash).
-     */
-    parentHash: Array<string> | string;
-
-    /**
-     * A random sequence provided during the mining process for proof-of-work networks.
-     */
-    nonce: string;
-
-    /**
-     * For proof-of-work networks, the difficulty target is used to adjust the difficulty in mining to ensure a expected
-     * block rate.
-     */
-    difficulty: bigint;
-
-    /**
-     * The maximum amount of gas a block can consume.
-     */
-    gasLimit: bigint;
-
-    /**
-     * The amount of gas a block consumed.
-     */
-    gasUsed: bigint;
-
-    /**
-     * The miner (or author) of a block.
-     */
-    miner: string;
-
-    /**
-     * Additional data the miner choose to include.
-     */
-    extraData: string;
-
-    /**
-     * The protocol-defined base fee per gas in an [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) block.
-     */
-    baseFeePerGas: null | bigint;
-
-    manifestHash: Array<string>;
-
-    location: bigint;
-
-    parentDeltaS: Array<bigint>;
-
-    parentEntropy: Array<bigint>;
-
-    order: number;
-
-    subManifest: Array<string> | null;
-
-    totalEntropy: bigint;
-
-    mixHash: string;
-
-    receiptsRoot: string;
-
-    sha3Uncles: string;
-
-    size: bigint;
-
-    evmRoot: string;
-
-    utxoRoot: string;
-
-    uncles: Array<string> | null;
-
-    /**
-     * The list of transactions in the block.
-     */
-    transactions: ReadonlyArray<string | QuaiTransactionResponseParams>;
-
-    transactionsRoot: string;
-
-    extRollupRoot: string;
-
     extTransactions: ReadonlyArray<string | QuaiTransactionResponseParams>;
+    interlinkHashes: Array<string>; // New parameter
+    order: number;
+    size: bigint;
+    subManifest: Array<string> | null;
+    totalEntropy: bigint;
+    transactions: ReadonlyArray<string | QuaiTransactionResponseParams>;
+    uncles: Array<string> | null;
+    woBody: WoBodyParams; // New nested parameter structure
+    woHeader: WoHeaderParams; // New nested parameter structure
+}
 
+export interface WoBodyParams {
+    extTransactions: Array<string | QuaiTransactionResponseParams>;
+    header: WoBodyHeaderParams;
+    interlinkHashes: Array<string>;
+    manifest: Array<string>;
+    transactions: Array<string | QuaiTransactionResponseParams>;
+    uncles: Array<string>;
+}
+
+export interface WoBodyHeaderParams {
+    baseFeePerGas: null | bigint;
+    efficiencyScore: bigint;
+    etxEligibleSlices: string;
+    etxSetRoot: string;
+    evmRoot: string;
+    expansionNumber: number;
+    extRollupRoot: string;
     extTransactionsRoot: string;
+    extraData: string;
+    gasLimit: bigint;
+    gasUsed: bigint;
+    hash: null | string;
+    interlinkRootHash: string;
+    manifestHash: Array<string>;
+    miner: string;
+    mixHash: string;
+    nonce: string;
+    number: Array<string>;
+    parentDeltaS: Array<bigint>;
+    parentEntropy: Array<bigint>;
+    parentHash: Array<string>;
+    parentUncledS: Array<bigint | null>;
+    parentUncledSubDeltaS: Array<bigint>;
+    primeTerminus: string;
+    receiptsRoot: string;
+    sha3Uncles: string;
+    size: bigint;
+    thresholdCount: bigint;
+    transactionsRoot: string;
+    uncledS: bigint;
+    utxoRoot: string;
+}
+
+export interface WoHeaderParams {
+    difficulty: string;
+    headerHash: string;
+    location: string;
+    mixHash: string;
+    nonce: string;
+    number: string;
+    parentHash: string;
+    time: string;
+    txHash: string;
 }
 
 //////////////////////
