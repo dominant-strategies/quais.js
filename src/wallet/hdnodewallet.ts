@@ -249,13 +249,21 @@ export class HDNodeWallet extends BaseWallet {
         //   - Mainnet: public=0x0488B21E, private=0x0488ADE4
         //   - Testnet: public=0x043587CF, private=0x04358394
 
-        assert(this.depth < 256, "Depth too deep", "UNSUPPORTED_OPERATION", { operation: "extendedKey" });
+        assert(this.depth < 256, 'Depth too deep', 'UNSUPPORTED_OPERATION', {
+            operation: 'extendedKey',
+        });
 
-        return encodeBase58Check(concat([
-            "0x0488ADE4", zpad(this.depth, 1), this.parentFingerprint,
-            zpad(this.index, 4), this.chainCode,
-            concat([ "0x00", this.privateKey ])
-        ]));
+        const myKey = encodeBase58Check(
+            concat([
+                '0x0488ADE4',
+                '0x' + zpad(this.depth, 2),
+                this.parentFingerprint ?? '',
+                '0x' + zpad(this.index, 4),
+                this.chainCode,
+                concat(['0x00', this.privateKey]),
+            ]),
+        );
+        return myKey;
     }
 
     /**
