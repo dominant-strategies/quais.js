@@ -486,7 +486,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
         if (protoTx.to !== null) {
             const toAddr = hexlify(protoTx.to!);
-            validateAddress(toAddr);
             tx.to = toAddr;
         }
 
