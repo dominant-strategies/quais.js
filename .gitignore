@@ -9,3 +9,4 @@ dist/*.gz
 lib/commonjs/**
 lib/esm/**
 .env
+.DS_Store
