@@ -120,21 +120,19 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         this.#to = value;
     }
 
+    /**
+     * The permuted hash of the transaction as specified by
+     * [QIP-0010](https://github.com/quai-network/qips/blob/master/qip-0010.md).
+     */
     get hash(): null | string {
-        if (this.signature == null) {
-            return null;
-        }
-        return this.unsignedHash;
-    }
-
-    get unsignedHash(): string {
-        const destUtxo = isQiAddress(this.to || '');
-        const originUtxo = isQiAddress(this.from);
+        if (this.signature == null) return null;
 
         if (!this.originZone) {
             throw new Error('Invalid Zone for from address');
         }
-        if (this.isExternal && destUtxo !== originUtxo) {
+
+        const isSameLedger = isQiAddress(this.from) === isQiAddress(this.to || '');
+        if (this.isExternal && !isSameLedger) {
             throw new Error('Cross-zone & cross-ledger transactions are not supported');
         }
 
@@ -153,13 +151,17 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         return '0x' + hashBuffer.toString('hex');
     }
 
+    /**
+     * The zone of the sender address
+     */
     get originZone(): Zone | undefined {
-        const senderAddr = this.from;
-
-        const zone = getZoneForAddress(senderAddr);
+        const zone = getZoneForAddress(this.from);
         return zone ?? undefined;
     }
 
+    /**
+     * The zone of the recipient address
+     */
     get destZone(): Zone | undefined {
         const zone = this.to !== null ? getZoneForAddress(this.to || '') : undefined;
         return zone ?? undefined;
@@ -361,7 +363,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      *
      * @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
-    toProtobuf(): ProtoTransaction {
+    toProtobuf(includeSignature: boolean = true): ProtoTransaction {
         const protoTx: ProtoTransaction = {
             type: this.type || 0,
             chain_id: formatNumber(this.chainId || 0, 'chainId'),
@@ -375,7 +377,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             access_list: { access_tuples: [] },
         };
 
-        if (this.signature) {
+        if (this.signature && includeSignature) {
             protoTx.v = formatNumber(this.signature.yParity, 'yParity');
             protoTx.r = toBeArray(this.signature.r);
             protoTx.s = toBeArray(this.signature.s);

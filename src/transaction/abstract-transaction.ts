@@ -1,4 +1,4 @@
-import { Signature } from '../crypto/index.js';
+import { keccak256, Signature } from '../crypto/index.js';
 import { getBigInt, assert, assertArgument } from '../utils/index.js';
 
 import type { BigNumberish } from '../utils/index.js';
@@ -281,8 +281,8 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
      *
      * This is the digest that a [Signer](../interfaces/Signer) must sign to authorize this transaction.
      */
-    get unsignedHash(): string {
-        throw new Error('Method not implemented.');
+    get digest(): string {
+        return keccak256(this.unsignedSerialized);
     }
 
     /**
@@ -315,7 +315,7 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
             'UNSUPPORTED_OPERATION',
             { operation: '.serialized' },
         );
-        return this.#serialize();
+        return encodeProtoTransaction(this.toProtobuf(true));
     }
 
     /**
@@ -324,7 +324,7 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
      * The hash of this is the digest which needs to be signed to authorize this transaction.
      */
     get unsignedSerialized(): string {
-        return this.#serialize();
+        return encodeProtoTransaction(this.toProtobuf(false));
     }
 
     /**
@@ -362,7 +362,7 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
      *
      * @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
-    abstract toProtobuf(): ProtoTransaction;
+    abstract toProtobuf(includeSignature: boolean): ProtoTransaction;
 
     abstract get originZone(): Zone | undefined;
 
@@ -370,14 +370,5 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
 
     get isExternal(): boolean {
         return this.destZone !== undefined && this.originZone !== this.destZone;
-    }
-
-    /**
-     * Serializes the WorkObject to a string.
-     *
-     * @returns {string} The serialized WorkObject.
-     */
-    #serialize(): string {
-        return encodeProtoTransaction(this.toProtobuf());
     }
 }
