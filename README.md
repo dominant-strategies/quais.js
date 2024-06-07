@@ -1,10 +1,12 @@
-# The quais Project 6.8.1
+# Quais Javascript SDK
 
 [![npm (tag)](https://img.shields.io/npm/v/quais)](https://www.npmjs.com/package/quais)
 ![npm bundle size (version)](https://img.shields.io/bundlephobia/minzip/quais)
 ![npm (downloads)](https://img.shields.io/npm/dm/quais)
 
 ---
+
+**This library is still under development and not ready for production use.**
 
 A complete, compact and simple library for Quai and Qi, written
 in [TypeScript](https://www.typescriptlang.org).
@@ -30,11 +32,6 @@ on Twitter as well as watch this GitHub project.
 
 For more general news, discussions, and feedback, join the
 [Quai Developer Discord](https://discord.gg/s8y8asPwNC).
-
-**Key Versions**
-
--   **Coming Soon**: Additional support for Golden Age Testnet, including Qi, provider upgrades, and more.
--   [0.1.17](https://www.npmjs.com/package/quais/v/0.1.17): Full support for Quai Network's Iron Age Testnet.
 
 ## Installing
 
@@ -63,8 +60,8 @@ For developers looking to contribute to quais or integrate it into their project
 1. Clone the quais repository and navigate into it.
 
     ```bash
-    git clone https://github.com/dominant-strategies/quais-6.js.git
-    cd quais-6.js
+    git clone https://github.com/dominant-strategies/quais.js.git
+    cd quais.js
     ```
 
 2. Install dependencies.
@@ -117,9 +114,9 @@ If you need to revert back to the official quais package published on npm, you c
 
 ## Documentation
 
-Documentation for the Quais SDK is under construction and will be available soon. In the meantime, please refer to the reference material below:
+Documentation for the Quais SDK is under heavy development and will be updated often soon. In the meantime, please refer to the reference material below:
 
--   [Ethers V6 Documentation](https://docs.ethers.io/v6/)
+-   [Quais Javascript SDK Documentation](https://dominantstrategies.mintlify.app/static)
 -   [Quai Network JSON RPC Docs](https://qu.ai/docs/develop/apis/json-rpc-api/)
 
 ## Extension Packages
