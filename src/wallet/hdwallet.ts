@@ -77,14 +77,14 @@ export abstract class AbstractHDWallet {
 			addrIndex++;
 			// put a hard limit on the number of addresses to derive
 			if (addrIndex - startingIndex > MAX_ADDRESS_DERIVATION_ATTEMPTS) {
-				throw new Error(`Failed to derive a valid address for the zone ${zone} after MAX_ADDRESS_DERIVATION_ATTEMPTS attempts.`);
+				throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
 			}
 		} while (!isValidAddressForZone(addressNode.address));
 
         return addressNode;
     }
 
-    addAddress(account: number, addressIndex: number, zone: Zone): NeuteredAddressInfo {
+    public addAddress(account: number, addressIndex: number, zone: Zone): NeuteredAddressInfo {
         if (!this._accounts.has(account)) {
             this.addAccount(account);
         }
@@ -111,7 +111,7 @@ export abstract class AbstractHDWallet {
 
         return neuteredAddressInfo;
     }
-	getNextAddress(accountIndex: number, zone: Zone): NeuteredAddressInfo {
+	public getNextAddress(accountIndex: number, zone: Zone): NeuteredAddressInfo {
         this.validateZone(zone);
         if (!this._accounts.has(accountIndex)) {
             this.addAccount(accountIndex);
@@ -140,7 +140,7 @@ export abstract class AbstractHDWallet {
         return neuteredAddressInfo;
     }
 
-    getAddressInfo(address: string): NeuteredAddressInfo | null {
+    public getAddressInfo(address: string): NeuteredAddressInfo | null {
         const addressInfo = this._addresses.get(address);
         if (!addressInfo) {
             return null;
@@ -148,12 +148,12 @@ export abstract class AbstractHDWallet {
         return addressInfo;
     }
 
-    getAddressesForAccount(account: number): NeuteredAddressInfo[] {
+    public getAddressesForAccount(account: number): NeuteredAddressInfo[] {
         const addresses = this._addresses.values();
         return Array.from(addresses).filter((addressInfo) => addressInfo.account === account);
     }
 
-	getAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+	public getAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
         this.validateZone(zone);
 		const addresses = this._addresses.values();
 		return Array.from(addresses).filter((addressInfo) => addressInfo.zone === zone);
@@ -187,7 +187,7 @@ export abstract class AbstractHDWallet {
 
     abstract sendTransaction(tx: TransactionRequest): Promise<TransactionResponse>;
 
-    connect(provider: Provider): void {
+    public connect(provider: Provider): void {
         this.provider = provider;
     }
 

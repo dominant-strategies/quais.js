@@ -26,14 +26,14 @@ export class QuaiHDWallet extends AbstractHDWallet {
         return changeNode.deriveChild(fromAddressInfo.index);
     }
 
-    async signTransaction(tx: QuaiTransactionRequest): Promise<string> {
+    public async signTransaction(tx: QuaiTransactionRequest): Promise<string> {
         const from = await resolveAddress(tx.from);
         const fromNode = this._getHDNode(from);
         const signedTx = await fromNode.signTransaction(tx);
         return signedTx;
     }
 
-    async sendTransaction(tx: QuaiTransactionRequest): Promise<TransactionResponse> {
+    public async sendTransaction(tx: QuaiTransactionRequest): Promise<TransactionResponse> { 
         if (!this.provider) {
             throw new Error('Provider is not set');
         }
