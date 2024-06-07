@@ -19,8 +19,8 @@ export interface NeuteredAddressInfo {
 // Constant to represent the maximum attempt to derive an address
 const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
 
-export abstract class HDWallet {
-    protected static _coinType?: number = 969 || 994;
+export abstract class AbstractHDWallet {
+	protected static _coinType?: number = 969 || 994;
 
     // Map of account number to HDNodeWallet
     protected _accounts: Map<number, HDNodeWallet> = new Map();
@@ -46,7 +46,7 @@ export abstract class HDWallet {
 	}
 	
 	protected coinType(): number {
-		return (this.constructor as typeof HDWallet)._coinType!;
+		return (this.constructor as typeof AbstractHDWallet)._coinType!;
 	}
 
     // helper methods that adds an account HD node to the HD wallet following the BIP-44 standard.
@@ -167,12 +167,13 @@ export abstract class HDWallet {
         return Array.from(addresses).filter((addressInfo) => addressInfo.zone === zone);
     }
 
-	protected static createInstance<T extends HDWallet>(this: new (root: HDNodeWallet) => T, mnemonic: Mnemonic): T {
+	protected static createInstance<T extends AbstractHDWallet>(this: new (root: HDNodeWallet) => T, mnemonic: Mnemonic): T {
         const coinType = (this as any)._coinType;
 		const root = HDNodeWallet.fromMnemonic(mnemonic, (this as any).parentPath(coinType));
 		return new this(root);
 	}
 
+<<<<<<< HEAD
     static fromMnemonic<T extends HDWallet>(this: new (root: HDNodeWallet) => T, mnemonic: Mnemonic): T {
         return (this as any).createInstance(mnemonic);
     }
@@ -207,6 +208,25 @@ export abstract class HDWallet {
         const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist);
         return (this as any).createInstance(mnemonic);
     }
+=======
+	static fromMnemonic<T extends AbstractHDWallet>(this: new (root: HDNodeWallet) => T, mnemonic: Mnemonic): T {
+		return (this as any).createInstance(mnemonic);
+	}
+
+	static createRandom<T extends AbstractHDWallet>(this: new (root: HDNodeWallet) => T, password?: string, wordlist?: Wordlist): T {
+		if (password == null) { password = ""; }
+		if (wordlist == null) { wordlist = LangEn.wordlist(); }
+		const mnemonic = Mnemonic.fromEntropy(randomBytes(16), password, wordlist);
+		return (this as any).createInstance(mnemonic);
+	}
+
+	static fromPhrase<T extends AbstractHDWallet>(this: new (root: HDNodeWallet) => T, phrase: string, password?: string, wordlist?: Wordlist): T {
+		if (password == null) { password = ""; }
+		if (wordlist == null) { wordlist = LangEn.wordlist(); }
+		const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist);
+		return (this as any).createInstance(mnemonic);
+	}
+>>>>>>> e0d7b0d3 (rename HDWallt to AbstractHDWallet)
 
     abstract signTransaction(tx: TransactionRequest): Promise<string>;
 
