@@ -1,15 +1,10 @@
-import {keccak256} from "../crypto/index.js";
-import {AbstractTransaction, TransactionLike, TxInput, TxOutput} from "./index.js";
-import {
-    assertArgument,
-    getBytes, getZoneForAddress,
-    hexlify, isQiAddress,
-    toBigInt
-} from "../utils/index.js";
+import { keccak256 } from '../crypto/index.js';
+import { AbstractTransaction, TransactionLike, TxInput, TxOutput } from './index.js';
+import { assertArgument, getBytes, getZoneForAddress, hexlify, isQiAddress, toBigInt } from '../utils/index.js';
 import { decodeProtoTransaction } from '../encoding/index.js';
-import {formatNumber} from "../providers/format.js";
-import { computeAddress } from "../address/index.js";
-import { ProtoTransaction} from "./abstract-transaction.js";
+import { formatNumber } from '../providers/format.js';
+import { computeAddress } from '../address/index.js';
+import { ProtoTransaction } from './abstract-transaction.js';
 import { Zone } from '../constants/index.js';
 
 /**
@@ -57,28 +52,30 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         this.#txOutputs = value.map((output) => ({ ...output }));
     }
 
+    /**
+     * The permuted hash of the transaction as specified by
+     * [QIP-0010](https://github.com/quai-network/qips/blob/master/qip-0010.md).
+     */
     get hash(): null | string {
         if (this.signature == null) {
             return null;
         }
-        return this.unsignedHash;
-    }
-    get unsignedHash(): string {
+
         if (this.txInputs.length < 1 || this.txOutputs.length < 1) {
             throw new Error('Transaction must have at least one input and one output');
         }
 
-        const destUtxo = isQiAddress(hexlify(this.txOutputs[0].address) || '');
         const pubKey = hexlify(this.txInputs[0].pub_key);
         const senderAddr = computeAddress(pubKey || '');
-        const originUtxo = isQiAddress(senderAddr);
 
         if (!this.destZone || !this.originZone) {
             throw new Error(
                 `Invalid zones: origin ${this.originZone} ->  destination ${this.destZone} (address: ${senderAddr})`,
             );
         }
-        if (this.isExternal && destUtxo !== originUtxo) {
+
+        const isSameLedger = isQiAddress(senderAddr) === isQiAddress(hexlify(this.txOutputs[0].address) || '');
+        if (this.isExternal && !isSameLedger) {
             throw new Error('Cross-zone & cross-ledger transactions are not supported');
         }
 
@@ -97,6 +94,9 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         return '0x' + hashBuffer.toString('hex');
     }
 
+    /**
+     * The zone of the sender address
+     */
     get originZone(): Zone | undefined {
         const pubKey = hexlify(this.txInputs[0].pub_key);
         const senderAddr = computeAddress(pubKey || '');
@@ -105,6 +105,9 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         return zone ?? undefined;
     }
 
+    /**
+     * The zone of the recipient address
+     */
     get destZone(): Zone | undefined {
         const zone = getZoneForAddress(hexlify(this.txOutputs[0].address) || '');
         return zone ?? undefined;
@@ -176,7 +179,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
      *
      * @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
-    toProtobuf(): ProtoTransaction {
+    toProtobuf(includeSignature: boolean = true): ProtoTransaction {
         const protoTx: ProtoTransaction = {
             type: this.type || 2,
             chain_id: formatNumber(this.chainId || 0, 'chainId'),
@@ -184,7 +187,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
             tx_outs: { tx_outs: this.txOutputs },
         };
 
-        if (this.signature) {
+        if (this.signature && includeSignature) {
             protoTx.signature = getBytes(this.signature);
         }
 
@@ -237,7 +240,6 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
      * @returns {QiTransaction} The decoded transaction.
      */
     static fromProto(protoTx: ProtoTransaction): QiTransaction {
-        //  TODO: Fix this because new tx instance requires a 'from' address
         const tx = new QiTransaction();
 
         tx.type = protoTx.type;
