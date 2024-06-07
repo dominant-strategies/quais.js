@@ -42,7 +42,7 @@ export class QiHDWallet extends AbstractHDWallet {
         super(root, provider);
     }
 
-	getNextChangeAddress(account: number, zone: Zone): NeuteredAddressInfo {
+	public getNextChangeAddress(account: number, zone: Zone): NeuteredAddressInfo {
 		this.validateZone(zone);
 		if (!this._accounts.has(account)) {
 			this.addAccount(account);
@@ -68,7 +68,7 @@ export class QiHDWallet extends AbstractHDWallet {
         return neuteredAddressInfo;
     }
 
-	importOutpoints(outpoints: OutpointInfo[]): void {
+	public importOutpoints(outpoints: OutpointInfo[]): void {
         outpoints.forEach((outpoint) => {
             this.validateZone(outpoint.zone);
             this._outpoints.push(outpoint);
@@ -76,23 +76,23 @@ export class QiHDWallet extends AbstractHDWallet {
 		
 	}
 
-	getOutpoints(zone: Zone): OutpointInfo[] {
+	public getOutpoints(zone: Zone): OutpointInfo[] {
 		this.validateZone(zone);
 		return this._outpoints.filter((outpoint) => outpoint.zone === zone);
 	}
 
-    /**
-     * Signs a Qi transaction and returns the serialized transaction
-     *
-     * @param {QiTransactionRequest} tx - The transaction to sign.
-     *
-     * @returns {Promise<string>} The serialized transaction.
-     * @throws {Error} If the UTXO transaction is invalid.
-     */
-    async signTransaction(tx: QiTransactionRequest): Promise<string> {
-        const txobj = QiTransaction.from(<TransactionLike>tx);
-        if (!txobj.txInputs || txobj.txInputs.length == 0 || !txobj.txOutputs)
-            throw new Error('Invalid UTXO transaction, missing inputs or outputs');
+	/**
+	 * Signs a Qi transaction and returns the serialized transaction
+	 *
+	 * @param {QiTransactionRequest} tx - The transaction to sign.
+	 *
+	 * @returns {Promise<string>} The serialized transaction.
+	 * @throws {Error} If the UTXO transaction is invalid.
+	 */
+	public async signTransaction(tx: QiTransactionRequest): Promise<string> {
+		const txobj = QiTransaction.from(<TransactionLike>tx);
+		if (!txobj.txInputs || txobj.txInputs.length == 0 || !txobj.txOutputs)
+			throw new Error('Invalid UTXO transaction, missing inputs or outputs');
 
         const hash = keccak_256(txobj.unsignedSerialized);
 
@@ -108,19 +108,19 @@ export class QiHDWallet extends AbstractHDWallet {
         return txobj.serialized;
     }
 
-    async sendTransaction(tx: QiTransactionRequest): Promise<TransactionResponse> {
-        if (!this.provider) {
-            throw new Error('Provider is not set');
-        }
-        if (!tx.inputs || tx.inputs.length === 0) {
-            throw new Error('Transaction has no inputs');
-        }
-        const input = tx.inputs[0];
-        const address = computeAddress(hexlify(input.pub_key));
-        const shard = getZoneForAddress(address);
-        if (!shard) {
-            throw new Error(`Address ${address} not found in any shard`);
-        }
+	public async sendTransaction(tx: QiTransactionRequest): Promise<TransactionResponse> {
+		if (!this.provider) {
+            throw new Error("Provider is not set");
+		}
+		if (!tx.inputs || tx.inputs.length === 0) {
+			throw new Error('Transaction has no inputs');
+		}
+		const input = tx.inputs[0];
+		const address = computeAddress(hexlify(input.pub_key));
+		const shard = getZoneForAddress(address);
+		if (!shard) {
+			throw new Error(`Address ${address} not found in any shard`);
+		}
 
         // verify all inputs are from the same shard
         if (tx.inputs.some((input) => getZoneForAddress(computeAddress(hexlify(input.pub_key))) !== shard)) {
@@ -200,7 +200,7 @@ export class QiHDWallet extends AbstractHDWallet {
 	// scan scans the specified zone for addresses with unspent outputs.
 	// Starting at index 0, tt will generate new addresses until
 	// the gap limit is reached for both gap and change addresses.
-	async scan(zone: Zone, account: number = 0): Promise<void> { 
+	public async scan(zone: Zone, account: number = 0): Promise<void> { 
 		this.validateZone(zone);
 		// flush the existing addresses and outpoints
 		this._addresses = new Map();
@@ -216,7 +216,7 @@ export class QiHDWallet extends AbstractHDWallet {
 	// Starting at the last address index, it will generate new addresses until
 	// the gap limit is reached for both gap and change addresses.
 	// If no account is specified, it will scan all accounts known to the wallet
-	async sync(zone: Zone, account?: number): Promise<void> { 
+	public async sync(zone: Zone, account?: number): Promise<void> { 
 		this.validateZone(zone);
 		if (account) {
 			await this._scan(zone, account);
@@ -285,7 +285,7 @@ export class QiHDWallet extends AbstractHDWallet {
 	
 	
 	// getOutpointsByAddress queries the network node for the outpoints of the specified address
-    private async getOutpointsByAddress(address: string): Promise<Outpoint[]> {
+	private async getOutpointsByAddress(address: string): Promise<Outpoint[]> {
         try {
             const outpointsMap = await this.provider!.getOutpointsByAddress(address);
             if (!outpointsMap) {
@@ -297,19 +297,19 @@ export class QiHDWallet extends AbstractHDWallet {
         }
     }
 
-	getChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+	public getChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
 		this.validateZone(zone);
 		const changeAddresses = this._changeAddresses.values();
 		return Array.from(changeAddresses).filter((addressInfo) => addressInfo.zone === zone);
 	}
 
-	getGapAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+	public getGapAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
 		this.validateZone(zone);
 		const gapAddresses = this._gapAddresses.filter((addressInfo) => addressInfo.zone === zone);
 		return gapAddresses;
 	}
 
-	getGapChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+	public getGapChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
 		this.validateZone(zone);
 		const gapChangeAddresses = this._gapChangeAddresses.filter((addressInfo) => addressInfo.zone === zone);
 		return gapChangeAddresses;
