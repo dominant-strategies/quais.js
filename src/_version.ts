@@ -5,4 +5,4 @@
  *
  * @ignore
  */
-export const version: string = '0.1.0-pre';
+export const version: string = '1.0.0-pre';

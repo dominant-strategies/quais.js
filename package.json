@@ -112,7 +112,7 @@
     "license": "MIT",
     "main": "./lib/commonjs/index.js",
     "module": "./lib/esm/index.js",
-    "name": "quais.js",
+    "name": "quais",
     "publishConfig": {
         "access": "public",
         "tag": "latest"
@@ -143,7 +143,7 @@
         "format": "prettier --write src/**/*.ts"
     },
     "sideEffects": false,
-    "version": "0.1.0-pre",
+    "version": "1.0.0-pre",
     "husky": {
         "hooks": {
             "pre-commit": "lint-staged"
