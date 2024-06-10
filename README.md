@@ -19,7 +19,7 @@ in [TypeScript](https://www.typescriptlang.org).
 -   Connect to Quai nodes over [JSON-RPC](https://qu.ai/docs/develop/apis/json-rpc-api/), [quaiscan](https://quaiscan.io), or [Pelagus](https://pelaguswallet.io)
 -   **Small** (~136kb compressed; 460kb uncompressed)
 -   **Tree-shaking** focused; include only what you need during bundling
--   **Complete** functionality for all your Ethereum desires
+-   **Complete** functionality for all your Quai desires
 -   Extensive documentation **coming soon**
 -   Large collection of **test cases** which are maintained and added to
 -   Fully written in **TypeScript**, with strict types for security and safety
