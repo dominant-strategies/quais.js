@@ -36,6 +36,7 @@ export {
     isAddress,
     resolveAddress,
     validateAddress,
+    formatMixedCaseChecksumAddress,
 } from './address/index.js';
 
 //CONSTANTS
@@ -80,7 +81,7 @@ export {
     lock,
     Signature,
     SigningKey,
-    musigCrypto
+    musigCrypto,
 } from './crypto/index.js';
 
 // HASH
@@ -122,9 +123,11 @@ export { AbstractSigner, VoidSigner } from './signers/index.js';
 // TRANSACTION
 export {
     accessListify,
-    AbstractTransaction, FewestCoinSelector,
-    QiTransaction, QuaiTransaction
-} from "./transaction/index.js";
+    AbstractTransaction,
+    FewestCoinSelector,
+    QiTransaction,
+    QuaiTransaction,
+} from './transaction/index.js';
 
 // UTILS
 export {

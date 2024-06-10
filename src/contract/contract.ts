@@ -336,10 +336,6 @@ function buildWrappedMethod<
                     data: contract.interface.encodeFunctionData(fragment, resolvedArgs),
                 }),
             );
-
-            // if (overrides.from) {
-            //     overrides.from = await resolveAddress(overrides.from, getResolver(contract.runner));
-            // }
         }
 
         if (fragment.inputs.length !== args.length) {
@@ -350,7 +346,7 @@ function buildWrappedMethod<
 
         return await resolveProperties({
             to: contract.getAddress(),
-            from: args.pop().from,
+            from: args.pop()?.from ?? '0x0000000000000000000000000000000000000000',
             data: contract.interface.encodeFunctionData(fragment, resolvedArgs),
         });
     };
@@ -368,8 +364,17 @@ function buildWrappedMethod<
         assert(canSend(runner), 'contract runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
             operation: 'sendTransaction',
         });
+        const pop = await populateTransaction(...args);
+        if (
+            runner &&
+            'address' in runner &&
+            typeof runner.address == 'string' &&
+            pop.from === '0x0000000000000000000000000000000000000000'
+        ) {
+            pop.from = runner.address;
+        }
 
-        const tx = (await runner.sendTransaction(await populateTransaction(...args))) as QuaiTransactionResponse;
+        const tx = (await runner.sendTransaction(await pop)) as QuaiTransactionResponse;
         const provider = getProvider(contract.runner);
         // @TODO: the provider can be null; make a custom dummy provider that will throw a
         // meaningful error
@@ -390,8 +395,15 @@ function buildWrappedMethod<
         assert(canCall(runner), 'contract runner does not support calling', 'UNSUPPORTED_OPERATION', {
             operation: 'call',
         });
-
         const tx = await populateTransaction(...args);
+        if (
+            runner &&
+            'address' in runner &&
+            typeof runner.address == 'string' &&
+            tx.from === '0x0000000000000000000000000000000000000000'
+        ) {
+            tx.from = runner.address;
+        }
 
         let result = '0x';
         try {
