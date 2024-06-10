@@ -44,7 +44,7 @@ async function populate(signer: AbstractSigner, tx: TransactionRequest): Promise
             return address;
         });
     } else {
-        pop.from = signer.getAddress();
+        pop.from = await signer.getAddress();
     }
     validateAddress(pop.from);
 
