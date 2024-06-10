@@ -13,7 +13,7 @@ interface ContractAbi {
     transfer: quais.BaseContractMethod<[quais.AddressLike, bigint], [boolean], quais.ContractTransactionResponse>;
 }
 
-describe("Tests contract integration", function() {
+describe('Tests contract integration', function () {
     const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
     const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', provider);
     const abi = QRC20.abi;
@@ -27,17 +27,19 @@ describe("Tests contract integration", function() {
     let address: string;
 
     before(async function () {
-        this.timeout(100000);
+        this.timeout(200000);
 
         const factory = new quais.ContractFactory(abi, bytecode, wallet as quais.ContractRunner);
         contract = (await factory.deploy(constructorArgs.name, constructorArgs.symbol, constructorArgs.totalSupply, {
             gasLimit: 5000000,
+            maxFeePerGas: quais.parseUnits('10', 'gwei'),
+            maxPriorityFeePerGas: quais.parseUnits('3', 'gwei'),
         })) as Contract;
         address = await contract.getAddress();
         console.log('Contract deployed to:', address);
 
         let tries = 0;
-        const POLLING_TRIES = 10; // define POLLING_TRIES if not defined elsewhere
+        const POLLING_TRIES = 20; // define POLLING_TRIES if not defined elsewhere
         let deployed = false;
         let code = await provider.getCode(address);
         while (tries < POLLING_TRIES && !deployed) {

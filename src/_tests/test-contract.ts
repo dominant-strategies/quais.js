@@ -10,15 +10,15 @@ import { stall } from './utils.js';
 
 setupProviders();
 
-describe("Test Contract", function() {
-    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL)
+describe('Test Contract', function () {
+    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
     const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', provider);
     const abi = TestContract.abi;
     const bytecode = TestContract.bytecode;
     let contract: Contract;
     let addr: string;
     before(async function () {
-        this.timeout(60000);
+        this.timeout(100000);
         await stall(10000);
         const factory = new ContractFactory(abi, bytecode, wallet as ContractRunner);
         contract = (await factory.deploy({
@@ -28,7 +28,7 @@ describe("Test Contract", function() {
         })) as Contract;
         addr = await contract.getAddress();
         console.log('Contract deployed to: ', addr);
-        await stall(30000);
+        await stall(50000);
     });
 
     it('tests contract calls', async function () {
@@ -359,8 +359,8 @@ describe('Test Typed Contract Interaction', function () {
         },
     ];
 
-    const abi = TypedContract.abi
-    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL)
+    const abi = TypedContract.abi;
+    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
     const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', provider);
     const bytecode = TypedContract.bytecode;
     let contract: Contract;
@@ -375,7 +375,7 @@ describe('Test Typed Contract Interaction', function () {
         })) as Contract;
         addr = await contract.getAddress();
         console.log('Contract deployed to: ', addr);
-        await stall(50000);
+        await stall(100000);
     });
 
     for (const { types, valueFunc } of tests) {
@@ -423,7 +423,7 @@ describe('Test Contract Fallback', function () {
     const tests: Array<TestContractFallback> = [
         {
             name: 'none',
-            address: '0x0ccdace3d8353fed9b87a2d63c40452923ccdae5',
+            address: '0x0CcdacE3D8353FeD9B87a2D63c40452923CcDAE5',
             abi: [],
             sendNone: { error: 'no fallback' },
             sendData: { error: 'no fallback' },
@@ -432,7 +432,7 @@ describe('Test Contract Fallback', function () {
         },
         {
             name: 'non-payable fallback',
-            address: '0x3f10193f79a639b11ec9d2ab42a25a4a905a8870',
+            address: '0x3F10193F79A639b11eC9d2AB42A25A4a905a8870',
             abi: ['fallback()'],
             sendNone: { data: '0x' },
             sendData: { data: '0x1234' },
@@ -441,7 +441,7 @@ describe('Test Contract Fallback', function () {
         },
         {
             name: 'payable fallback',
-            address: '0xe2de6b97c5eb9fee8a47ca6c0fa642331e0b6330',
+            address: '0xe2de6B97C5eB9Fee8a47ca6c0fa642331E0B6330',
             abi: ['fallback() payable'],
             sendNone: { data: '0x' },
             sendData: { data: '0x1234' },
@@ -450,7 +450,7 @@ describe('Test Contract Fallback', function () {
         },
         {
             name: 'receive-only',
-            address: '0xf8f2afbbe37f6a4520e4db7f99495655aa31229b',
+            address: '0xF8F2AfbBE37F6a4520e4Db7F99495655aa31229b',
             abi: ['receive()'],
             sendNone: { data: '0x' },
             sendData: { error: 'overrides.data' },
@@ -459,7 +459,7 @@ describe('Test Contract Fallback', function () {
         },
         {
             name: 'receive and payable fallback',
-            address: '0x7d97ca5d9dea1cd0364f1d493252006a3c4e18a0',
+            address: '0x7d97CA5D9deA1Cd0364f1D493252006A3c4e18a0',
             abi: ['fallback() payable', 'receive()'],
             sendNone: { data: '0x' },
             sendData: { data: '0x1234' },
@@ -468,7 +468,7 @@ describe('Test Contract Fallback', function () {
         },
         {
             name: 'receive and non-payable fallback',
-            address: '0x5b59d934f0d22b15e73b5d6b9ae83486b70df67e',
+            address: '0x5B59D934f0D22b15e73b5d6b9Ae83486B70dF67e',
             abi: ['fallback()', 'receive()'],
             sendNone: { data: '0x' },
             sendData: { data: '0x' },

@@ -307,7 +307,7 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
 
     let result: TransactionResponseParams;
 
-    if (transactionType === 0x1) {
+    if (transactionType === 0x0) {
         // QuaiTransactionResponseParams
         result = object(
             {
@@ -341,7 +341,7 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
         )(value) as QuaiTransactionResponseParams;
 
         // Add an access list to supported transaction types
-        if ((value.type === 1 || value.type === 2) && value.accessList == null) {
+        if ((value.type === 0 || value.type === 2) && value.accessList == null) {
             result.accessList = [];
         }
 

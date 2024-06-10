@@ -53,7 +53,7 @@ describe('computes checksum address', function () {
             function (error: any) {
                 return (
                     error.code === 'INVALID_ARGUMENT' &&
-                    error.message.match(/^bad address checksum/) &&
+                    error.message.match(/^invalid address checksum/) &&
                     error.argument === 'address' &&
                     error.value === value
                 );
@@ -84,6 +84,7 @@ describe('computes ICAP address', function () {
     }
 });
 
+// TODO: make getCreateAddress match go-quai's implementation to get this to pass
 describe('computes create address', function () {
     const tests = loadTests<TestCaseCreate>('create');
     for (const { sender, creates } of tests) {
