@@ -25,6 +25,11 @@ in [TypeScript](https://www.typescriptlang.org).
 -   Fully written in **TypeScript**, with strict types for security and safety
 -   **MIT License** (including ALL dependencies); completely open source to do with as you please
 
+**Versions**
+
+-   [0.1.17](https://www.npmjs.com/package/quais/v/0.1.17): Full support for Quai Network's Iron Age Testnet.
+-   [1.0.0-pre](https://www.npmjs.com/package/quais/v/1.0.0-pre): Full support for Quai Network's Golden Age Testnet.
+
 ## Keep Updated
 
 For advisories and important notices, follow [@quainetwork](https://twitter.com/quainetwork)
