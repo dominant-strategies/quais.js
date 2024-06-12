@@ -5,30 +5,18 @@ import { resolveAddress } from '../address/index.js';
 import { AllowedCoinType } from '../constants/index.js';
 
 export class QuaiHDWallet extends AbstractHDWallet {
+
+    protected static _version: number = 1;
+    
     protected static _coinType: AllowedCoinType = 994;
 
     private constructor(root: HDNodeWallet, provider?: Provider) {
         super(root, provider);
     }
 
-    private _getHDNode(from: string): HDNodeWallet {
-        const fromAddressInfo = this._addresses.get(from);
-        if (!fromAddressInfo) {
-            throw new Error(`Address ${from} is not known to wallet`);
-        }
-
-        // derive a HD node for the from address using the index
-        const accountNode = this._accounts.get(fromAddressInfo.account);
-        if (!accountNode) {
-            throw new Error(`Account ${fromAddressInfo.account} not found`);
-        }
-        const changeNode = accountNode.deriveChild(0);
-        return changeNode.deriveChild(fromAddressInfo.index);
-    }
-
     public async signTransaction(tx: QuaiTransactionRequest): Promise<string> {
         const from = await resolveAddress(tx.from);
-        const fromNode = this._getHDNode(from);
+        const fromNode = this._getHDNodeForAddress(from);
         const signedTx = await fromNode.signTransaction(tx);
         return signedTx;
     }
@@ -38,8 +26,13 @@ export class QuaiHDWallet extends AbstractHDWallet {
             throw new Error('Provider is not set');
         }
         const from = await resolveAddress(tx.from);
-        const fromNode = this._getHDNode(from);
+        const fromNode = this._getHDNodeForAddress(from);
         const fromNodeConnected = fromNode.connect(this.provider);
         return await fromNodeConnected.sendTransaction(tx);
+    }
+
+    public async signMessage(address: string, message: string | Uint8Array): Promise<string> { 
+        const addrNode = this._getHDNodeForAddress(address);
+        return await addrNode.signMessage(message);
     }
 }
