@@ -6,6 +6,7 @@ import { randomBytes } from "../crypto/index.js";
 import { getZoneForAddress, isQiAddress } from "../utils/index.js";
 import { Zone } from '../constants/index.js';
 import { TransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
+import { AllowedCoinType } from "../constants/index.js";
 
 export interface NeuteredAddressInfo {
 	pubKey: string;
@@ -20,7 +21,7 @@ export interface NeuteredAddressInfo {
 const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
 
 export abstract class AbstractHDWallet {
-	protected static _coinType?: number = 969 || 994;
+	protected static _coinType?: AllowedCoinType;
 
     // Map of account number to HDNodeWallet
     protected _accounts: Map<number, HDNodeWallet> = new Map();

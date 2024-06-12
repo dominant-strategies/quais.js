@@ -3,9 +3,10 @@ import { AbstractHDWallet } from './hdwallet';
 import { HDNodeWallet } from "./hdnodewallet";
 import { QuaiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { resolveAddress } from '../address/index.js';
+import { AllowedCoinType } from "../constants/index.js";
 
 export class QuaiHDWallet extends AbstractHDWallet {
-    protected static _cointype: number = 994;
+    protected static _coinType: AllowedCoinType = 994;
 
     private constructor(root: HDNodeWallet, provider?: Provider) {
         super(root, provider);

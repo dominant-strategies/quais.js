@@ -3,6 +3,4 @@
  * 
  *  @category Constants
  */
-
-export const QI_COIN_TYPE = 969;
-export const QUAI_COIN_TYPE = 994;
+export type AllowedCoinType = 969 | 994;

@@ -12,7 +12,7 @@ import { keccak_256 } from '@noble/hashes/sha3';
 import { musigCrypto } from '../crypto/index.js';
 import { Outpoint } from '../transaction/utxo.js';
 import { getZoneForAddress } from '../utils/index.js';
-import { Zone } from '../constants/index.js';
+import { AllowedCoinType, Zone } from '../constants/index.js';
 
 type OutpointInfo = {
     outpoint: Outpoint;
@@ -25,7 +25,7 @@ export class QiHDWallet extends AbstractHDWallet {
 
     protected static _GAP_LIMIT: number = 20;
 
-    protected static _cointype: number = 969;
+    protected static _coinType: AllowedCoinType = 969;
 
 	// Map of change addresses to address info
 	protected _changeAddresses: Map<string, NeuteredAddressInfo> = new Map();
