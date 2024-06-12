@@ -4,7 +4,8 @@ import { concat, defineProperties, getBytes, hexlify, assert, assertArgument } f
 import { BaseContract, copyOverrides, resolveArgs } from './contract.js';
 
 import type { InterfaceAbi } from '../abi/index.js';
-import { validateAddress, type Addressable } from '../address/index.js';
+import { validateAddress } from '../address/index.js';
+import type { Addressable } from '../address/index.js';
 import type { BytesLike } from '../utils/index.js';
 import { getZoneForAddress, isQiAddress } from '../utils/index.js';
 import type { ContractInterface, ContractMethodArgs, ContractDeployTransaction, ContractRunner } from './types.js';
