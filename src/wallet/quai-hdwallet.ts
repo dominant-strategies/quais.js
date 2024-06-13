@@ -1,9 +1,8 @@
-
-import { AbstractHDWallet } from './hdwallet';
-import { HDNodeWallet } from "./hdnodewallet";
+import { AbstractHDWallet } from './hdwallet.js';
+import { HDNodeWallet } from './hdnodewallet.js';
 import { QuaiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { resolveAddress } from '../address/index.js';
-import { AllowedCoinType } from "../constants/index.js";
+import { AllowedCoinType } from '../constants/index.js';
 
 export class QuaiHDWallet extends AbstractHDWallet {
     protected static _coinType: AllowedCoinType = 994;
@@ -34,7 +33,7 @@ export class QuaiHDWallet extends AbstractHDWallet {
         return signedTx;
     }
 
-    public async sendTransaction(tx: QuaiTransactionRequest): Promise<TransactionResponse> { 
+    public async sendTransaction(tx: QuaiTransactionRequest): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
         }
