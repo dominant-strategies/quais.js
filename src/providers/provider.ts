@@ -139,7 +139,10 @@ export function addressFromTransactionRequest(tx: TransactionRequest): AddressLi
             keccak256('0x' + SigningKey.computePublicKey(tx.inputs[0].pub_key).substring(4)).substring(26),
         );
     }
-    throw new Error('Unable to determine sender from transaction inputs or from field');
+    if ('to' in tx && tx.to !== null) {
+        return tx.to as AddressLike;
+    }
+    throw new Error('Unable to determine address from transaction inputs, from or to field');
 }
 /**
  * A **TransactionRequest** is a transactions with potentially various properties not defined, or with less strict types

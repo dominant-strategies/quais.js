@@ -34,7 +34,7 @@ export interface QuaiTransactionLike extends TransactionLike {
     /**
      * The sender.
      */
-    from: string;
+    from?: string;
     /**
      * The nonce.
      */
@@ -107,7 +107,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     #maxFeePerGas: null | bigint;
     #value: bigint;
     #accessList: null | AccessList;
-    from: string;
+    from?: string;
 
     /**
      * The `to` address for the transaction or `null` if the transaction is an `init` transaction.
@@ -131,7 +131,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             throw new Error('Invalid Zone for from address');
         }
 
-        const isSameLedger = isQiAddress(this.from) === isQiAddress(this.to || '');
+        const isSameLedger = !(this.from && this.to) || isQiAddress(this.from) === isQiAddress(this.to);
         if (this.isExternal && !isSameLedger) {
             throw new Error('Cross-zone & cross-ledger transactions are not supported');
         }
@@ -142,7 +142,11 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         const hashHex = keccak256(dataBuffer);
         const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
 
-        const origin = this.originZone ? parseInt(this.originZone.slice(2), 16) : 0;
+        const origin = this.originZone
+            ? parseInt(this.originZone.slice(2), 16)
+            : this.destZone
+              ? parseInt(this.destZone.slice(2), 16)
+              : 0;
         hashBuffer[0] = origin;
         hashBuffer[1] &= 0x7f;
         hashBuffer[2] = origin;
@@ -155,7 +159,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      * The zone of the sender address
      */
     get originZone(): Zone | undefined {
-        const zone = getZoneForAddress(this.from);
+        const zone = this.from ? getZoneForAddress(this.from) : undefined;
         return zone ?? undefined;
     }
 
@@ -268,7 +272,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     /**
      * Creates a new Transaction with default values.
      */
-    constructor(from: string) {
+    constructor(from?: string) {
         super();
         this.#to = null;
         this.#nonce = 0;
@@ -441,7 +445,12 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
         if (tx.from != null) {
             validateAddress(tx.from);
-            assertArgument(result.from.toLowerCase() === (tx.from || '').toLowerCase(), 'from mismatch', 'tx', tx);
+            assertArgument(
+                (result.from || '').toLowerCase() === (tx.from || '').toLowerCase(),
+                'from mismatch',
+                'tx',
+                tx,
+            );
             result.from = tx.from;
         }
         return result;

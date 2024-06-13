@@ -346,7 +346,7 @@ function buildWrappedMethod<
 
         return await resolveProperties({
             to: contract.getAddress(),
-            from: args.pop()?.from ?? '0x0000000000000000000000000000000000000000',
+            from: args.pop()?.from,
             data: contract.interface.encodeFunctionData(fragment, resolvedArgs),
         });
     };
@@ -365,12 +365,7 @@ function buildWrappedMethod<
             operation: 'sendTransaction',
         });
         const pop = await populateTransaction(...args);
-        if (
-            runner &&
-            'address' in runner &&
-            typeof runner.address == 'string' &&
-            pop.from === '0x0000000000000000000000000000000000000000'
-        ) {
+        if (!pop.from && 'address' in runner && typeof runner.address === 'string') {
             pop.from = runner.address;
         }
 
@@ -396,14 +391,6 @@ function buildWrappedMethod<
             operation: 'call',
         });
         const tx = await populateTransaction(...args);
-        if (
-            runner &&
-            'address' in runner &&
-            typeof runner.address == 'string' &&
-            tx.from === '0x0000000000000000000000000000000000000000'
-        ) {
-            tx.from = runner.address;
-        }
 
         let result = '0x';
         try {
