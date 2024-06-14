@@ -130,8 +130,11 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         if (!this.originZone) {
             throw new Error('Invalid Zone for from address');
         }
+        if (!(this.from && this.to)) {
+            throw new Error('Missing from or to address');
+        }
 
-        const isSameLedger = !(this.from && this.to) || isQiAddress(this.from) === isQiAddress(this.to);
+        const isSameLedger = isQiAddress(this.from) === isQiAddress(this.to);
         if (this.isExternal && !isSameLedger) {
             throw new Error('Cross-zone & cross-ledger transactions are not supported');
         }
@@ -142,11 +145,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         const hashHex = keccak256(dataBuffer);
         const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
 
-        const origin = this.originZone
-            ? parseInt(this.originZone.slice(2), 16)
-            : this.destZone
-              ? parseInt(this.destZone.slice(2), 16)
-              : 0;
+        const origin = this.originZone ? parseInt(this.originZone.slice(2), 16) : 0;
         hashBuffer[0] = origin;
         hashBuffer[1] &= 0x7f;
         hashBuffer[2] = origin;

@@ -366,7 +366,7 @@ function buildWrappedMethod<
         });
         const pop = await populateTransaction(...args);
         if (!pop.from && 'address' in runner && typeof runner.address === 'string') {
-            pop.from = runner.address;
+            pop.from = await resolveAddress(runner.address);
         }
 
         const tx = (await runner.sendTransaction(await pop)) as QuaiTransactionResponse;
@@ -391,6 +391,9 @@ function buildWrappedMethod<
             operation: 'call',
         });
         const tx = await populateTransaction(...args);
+        if (!tx.from && 'address' in runner && typeof runner.address === 'string') {
+            tx.from = await resolveAddress(runner.address);
+        }
 
         let result = '0x';
         try {
