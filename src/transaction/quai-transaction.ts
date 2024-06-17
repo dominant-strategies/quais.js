@@ -443,7 +443,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         }
 
         if (tx.from != null) {
-            validateAddress(tx.from);
+            assertArgument(!isQiAddress(tx.from), 'from address must be a Quai address', 'tx.from', tx.from);
             assertArgument(
                 (result.from || '').toLowerCase() === (tx.from || '').toLowerCase(),
                 'from mismatch',
