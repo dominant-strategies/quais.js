@@ -3,13 +3,8 @@
  * sufficent for most developers, but this is provided to fascilitate more complex Signers.
  */
 import { AddressLike, resolveAddress, validateAddress } from '../address/index.js';
-import { defineProperties, getBigInt, resolveProperties, assert, assertArgument, isQiAddress } from '../utils/index.js';
-import {
-    addressFromTransactionRequest,
-    copyRequest,
-    QiTransactionRequest,
-    QuaiTransactionRequest,
-} from '../providers/provider.js';
+import { defineProperties, getBigInt, resolveProperties, assert, assertArgument } from '../utils/index.js';
+import { addressFromTransactionRequest, copyRequest, QuaiTransactionRequest } from '../providers/provider.js';
 
 import type { TypedDataDomain, TypedDataField } from '../hash/index.js';
 import type { TransactionLike } from '../transaction/index.js';
@@ -17,7 +12,7 @@ import type { TransactionLike } from '../transaction/index.js';
 import type { BlockTag, Provider, TransactionRequest, TransactionResponse } from '../providers/provider.js';
 import type { Signer } from './signer.js';
 import { getTxType } from '../utils/index.js';
-import { QiTransaction, QiTransactionLike, QuaiTransaction, QuaiTransactionLike } from '../transaction/index.js';
+import { QuaiTransaction, QuaiTransactionLike } from '../transaction/index.js';
 import { toZone, Zone } from '../constants/index.js';
 
 function checkProvider(signer: AbstractSigner, operation: string): Provider {
@@ -155,19 +150,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         return await resolveProperties(pop);
     }
 
-    async populateQiTransaction(tx: QiTransactionRequest): Promise<QiTransactionLike> {
-        const pop = {
-            inputsUTXO: tx.inputs,
-            outputsUTXO: tx.outputs,
-            chainId: tx.chainId,
-            type: 2,
-        };
-
-        //@TOOD: Don't await all over the place; save them up for
-        // the end for better batching
-        return await resolveProperties(pop);
-    }
-
     async estimateGas(tx: TransactionRequest): Promise<bigint> {
         return checkProvider(this, 'estimateGas').estimateGas(await this.populateCall(tx));
     }
@@ -178,22 +160,13 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
     async sendTransaction(tx: TransactionRequest): Promise<TransactionResponse> {
         const provider = checkProvider(this, 'sendTransaction');
-        const sender = await this.getAddress();
         const zone = await this.zoneFromAddress(addressFromTransactionRequest(tx));
+        const pop = await this.populateQuaiTransaction(tx as QuaiTransactionRequest);
+        const txObj = QuaiTransaction.from(pop);
 
-        let pop;
-        let txObj;
-        if (isQiAddress(sender)) {
-            pop = await this.populateQiTransaction(tx);
-            txObj = QiTransaction.from(pop);
-        } else {
-            pop = await this.populateQuaiTransaction(tx as QuaiTransactionRequest);
-            txObj = QuaiTransaction.from(pop);
-        }
-
+        const sender = await this.getAddress();
         const signedTx = await this.signTransaction(txObj);
-
-        return await provider.broadcastTransaction(zone, signedTx, 'from' in tx ? tx.from : undefined);
+        return await provider.broadcastTransaction(zone, signedTx, sender);
     }
 
     abstract signTransaction(tx: TransactionRequest): Promise<string>;
