@@ -106,6 +106,7 @@ export {
     AbstractProvider,
     JsonRpcApiProvider,
     JsonRpcProvider,
+    JsonRpcSigner,
     BrowserProvider,
     SocketProvider,
     WebSocketProvider,
