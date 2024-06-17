@@ -1,7 +1,6 @@
 import { AbstractHDWallet, NeuteredAddressInfo, SerializedHDWallet } from './hdwallet';
 import { HDNodeWallet } from './hdnodewallet';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
-import { computeAddress } from '../address/index.js';
 import { getBytes, hexlify } from '../utils/index.js';
 import { TransactionLike, QiTransaction, TxInput } from '../transaction/index.js';
 import { MuSigFactory } from '@brandonblack/musig';
@@ -126,7 +125,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const address = computeAddress(input.pubkey);
         const shard = getZoneForAddress(address);
         if (!shard) {
-            throw new Error(`Address ${address} not found in any shard`);
+            throw new Error(`Address ${input.address} not found in any shard`);
         }
 
         // verify all inputs are from the same shard

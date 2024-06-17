@@ -3,7 +3,6 @@ import { AbstractTransaction, TransactionLike, TxInput, TxOutput } from './index
 import { assertArgument, getBytes, getZoneForAddress, hexlify, isQiAddress, toBigInt } from '../utils/index.js';
 import { decodeProtoTransaction } from '../encoding/index.js';
 import { formatNumber } from '../providers/format.js';
-import { computeAddress } from '../address/index.js';
 import { ProtoTransaction } from './abstract-transaction.js';
 import { Zone } from '../constants/index.js';
 

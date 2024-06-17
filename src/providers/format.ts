@@ -1,7 +1,7 @@
 /**
  * @ignore
  */
-import { getAddress } from '../address/index.js';
+import { computeAddress, getAddress } from '../address/index.js';
 import { Signature } from '../crypto/index.js';
 import { accessListify } from '../transaction/index.js';
 import { hexlify } from '../utils/data';
