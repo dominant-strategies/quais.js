@@ -1,7 +1,6 @@
 import { AbstractHDWallet, NeuteredAddressInfo } from './hdwallet.js';
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
-import { computeAddress } from '../address/index.js';
 import { getBytes, hexlify } from '../utils/index.js';
 import { TransactionLike, QiTransaction, TxInput } from '../transaction/index.js';
 import { MuSigFactory } from '@brandonblack/musig';
@@ -115,14 +114,13 @@ export class QiHDWallet extends AbstractHDWallet {
             throw new Error('Transaction has no inputs');
         }
         const input = tx.inputs[0];
-        const address = computeAddress(hexlify(input.pub_key));
-        const shard = getZoneForAddress(address);
+        const shard = getZoneForAddress(input.address);
         if (!shard) {
-            throw new Error(`Address ${address} not found in any shard`);
+            throw new Error(`Address ${input.address} not found in any shard`);
         }
 
         // verify all inputs are from the same shard
-        if (tx.inputs.some((input) => getZoneForAddress(computeAddress(hexlify(input.pub_key))) !== shard)) {
+        if (tx.inputs.some((input) => getZoneForAddress(input.address) !== shard)) {
             throw new Error('All inputs must be from the same shard');
         }
 
@@ -180,9 +178,8 @@ export class QiHDWallet extends AbstractHDWallet {
 
     // Helper method that returns the private key for the public key
     private derivePrivateKeyForInput(input: TxInput): string {
-        if (!input.pub_key) throw new Error('Missing public key for input');
-        const pubKey = hexlify(input.pub_key);
-        const address = computeAddress(pubKey);
+        if (!input.address) throw new Error('Missing address for input');
+        const address = input.address;
         // get address info
         const addressInfo = this.getAddressInfo(address);
         if (!addressInfo) throw new Error(`Address not found: ${address}`);

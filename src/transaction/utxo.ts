@@ -20,82 +20,6 @@ export type Outpoint = {
  *
  * @todo If not used, replace with `ignore`
  */
-export type UTXOTransactionInput = {
-    previousOutPoint: Outpoint;
-    pubKey: Uint8Array;
-};
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export interface UTXOEntry extends UTXOEntryLike {
-    denomination: null | bigint;
-    address: string;
-}
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export interface UTXOEntryLike {
-    denomination: null | BigNumberish;
-    address: null | string;
-}
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export type UTXOTransactionOutputLike = UTXOEntryLike;
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export type UTXOTransactionOutput = UTXOEntry;
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export type TxOutput = {
-    address: Uint8Array;
-    denomination: number;
-};
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export type TxInput = {
-    previous_out_point: {
-        hash: {
-            value: Uint8Array;
-        };
-        index: number;
-    };
-    pub_key: Uint8Array;
-};
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
 export interface UTXOEntry {
     denomination: null | bigint;
     address: string;
@@ -111,6 +35,31 @@ export interface UTXOLike extends UTXOEntry {
     txhash?: null | string;
     index?: null | number;
 }
+
+/**
+ * @category Transaction
+ * @todo Write documentation for this type.
+ *
+ * @todo If not used, replace with `ignore`
+ */
+export type TxInput = {
+    txHash: string;
+    index: number;
+    address: string;
+    pubKey: string;
+    denomination?: number;
+};
+
+/**
+ * @category Transaction
+ * @todo Write documentation for this type.
+ *
+ * @todo If not used, replace with `ignore`
+ */
+export type TxOutput = {
+    address: string;
+    denomination: number;
+};
 
 /**
  * @category Transaction

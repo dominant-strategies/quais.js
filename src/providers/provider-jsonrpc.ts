@@ -29,12 +29,11 @@ import { AbstractProvider, UnmanagedSubscriber } from './abstract-provider.js';
 import { Network } from './network.js';
 import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from './subscriber-filterid.js';
 
-import type { TransactionLike } from '../transaction/index.js';
+import type { TransactionLike, TxInput, TxOutput } from '../transaction/index.js';
 
 import type { PerformActionRequest, Subscriber, Subscription } from './abstract-provider.js';
 import type { Networkish } from './network.js';
 import type { TransactionRequest } from './provider.js';
-import { UTXOEntry, UTXOTransactionOutput } from '../transaction/utxo.js';
 import { Shard, toShard } from '../constants/index.js';
 
 type Timer = ReturnType<typeof setTimeout>;
@@ -191,9 +190,9 @@ export interface AbstractJsonRpcTransactionRequest {
 export type JsonRpcTransactionRequest = QiJsonRpcTransactionRequest | QuaiJsonRpcTransactionRequest;
 
 export interface QiJsonRpcTransactionRequest extends AbstractJsonRpcTransactionRequest {
-    txInputs?: Array<UTXOEntry>;
+    txInputs?: Array<TxInput>;
 
-    txOutputs?: Array<UTXOTransactionOutput>;
+    txOutputs?: Array<TxOutput>;
 }
 
 /**
