@@ -14,6 +14,7 @@
         "aes-js": "4.0.0-beta.5",
         "dotenv": "^16.4.1",
         "google-protobuf": "^3.21.2",
+        "tslib": "^2.6.2",
         "ws": "8.5.0"
     },
     "description": "A complete and compact Quai library, for dapps, wallets and any other tools.",
@@ -39,7 +40,6 @@
         "rollup": "3.21.5",
         "semver": "7.5.4",
         "ts-mocha": "^10.0.0",
-        "tslib": "^2.6.2",
         "typedoc": "^0.25.13",
         "typedoc-plugin-frontmatter": "^1.0.0",
         "typedoc-plugin-markdown": "^4.0.1",
@@ -143,7 +143,7 @@
         "format": "prettier --write src/**/*.ts"
     },
     "sideEffects": false,
-    "version": "1.0.0-alpha",
+    "version": "1.0.0-alpha.1",
     "husky": {
         "hooks": {
             "pre-commit": "lint-staged"
