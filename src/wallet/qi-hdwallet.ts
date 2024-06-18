@@ -321,6 +321,15 @@ export class QiHDWallet extends AbstractHDWallet {
         return gapChangeAddresses;
     }
 
+    /**
+     * Signs a message using the private key associated with the given address.
+     *
+     * @param {string} address - The address for which the message is to be signed.
+     * @param {string | Uint8Array} message - The message to be signed, either as a string or Uint8Array.
+     *
+     * @returns {Promise<string>} A promise that resolves to the signature of the message in hexadecimal string format.
+     * @throws {Error} If the address does not correspond to a valid HD node or if signing fails.
+     */
     public async signMessage(address: string, message: string | Uint8Array): Promise<string> {
         const addrNode = this._getHDNodeForAddress(address);
         const privKey = addrNode.privateKey;
@@ -329,8 +338,14 @@ export class QiHDWallet extends AbstractHDWallet {
         return hexlify(signature);
     }
 
-    public async serialize(): Promise<SerializedQiHDWallet> {
-        const hdwalletSerialized = await super.serialize();
+    /**
+     * Serializes the HD wallet state into a format suitable for storage or transmission.
+     *
+     * @returns {SerializedQiHDWallet} An object representing the serialized state of the HD wallet, including
+     *   outpoints, change addresses, gap addresses, and other inherited properties.
+     */
+    public serialize(): SerializedQiHDWallet {
+        const hdwalletSerialized = super.serialize();
         return {
             outpoints: this._outpoints,
             changeAddresses: Array.from(this._changeAddresses.values()),
@@ -340,6 +355,15 @@ export class QiHDWallet extends AbstractHDWallet {
         };
     }
 
+    /**
+     * Deserializes a serialized QiHDWallet object and reconstructs the wallet instance.
+     *
+     * @param {SerializedQiHDWallet} serialized - The serialized object representing the state of a QiHDWallet.
+     *
+     * @returns {Promise<QiHDWallet>} A promise that resolves to a reconstructed QiHDWallet instance.
+     * @throws {Error} If the serialized data is invalid or if any addresses in the gap addresses or gap change
+     *   addresses do not exist in the wallet.
+     */
     public static async deserialize(serialized: SerializedQiHDWallet): Promise<QiHDWallet> {
         super.validateSerializedWallet(serialized);
         // create the wallet instance
@@ -376,6 +400,20 @@ export class QiHDWallet extends AbstractHDWallet {
         return wallet;
     }
 
+    /**
+     * Validates an array of OutpointInfo objects.
+     *
+     * This method checks the validity of each OutpointInfo object by performing the following validations:
+     *
+     * - Validates the zone using the `validateZone` method.
+     * - Checks if the address exists in the wallet.
+     * - Checks if the account (if provided) exists in the wallet.
+     * - Validates the Outpoint by ensuring that `Txhash`, `Index`, and `Denomination` are not null.
+     *
+     * @private
+     * @param {OutpointInfo[]} outpointInfo - An array of OutpointInfo objects to be validated.
+     * @throws {Error} If any of the validations fail, an error is thrown with a descriptive message.
+     */
     private validateOutpointInfo(outpointInfo: OutpointInfo[]): void {
         outpointInfo.forEach((info) => {
             // validate zone
