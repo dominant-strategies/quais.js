@@ -26,7 +26,6 @@ import {
     isError,
     FetchRequest,
     defineProperties,
-    getBytes,
     resolveProperties,
 } from '../utils/index.js';
 
@@ -39,7 +38,6 @@ import type { TransactionLike, TxInput, TxOutput } from '../transaction/index.js
 import type { PerformActionRequest, Subscriber, Subscription } from './abstract-provider.js';
 import type { Networkish } from './network.js';
 import type { Provider, QuaiTransactionRequest, TransactionRequest, TransactionResponse } from './provider.js';
-import { UTXOEntry, UTXOTransactionOutput } from '../transaction/utxo.js';
 import { Shard, toShard } from '../constants/index.js';
 import {
     AbstractSigner,
@@ -373,20 +371,6 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
                         tx.to = await resolveAddress(_to);
                     })(),
                 );
-            }
-        } else {
-            // Make sure the from matches the sender
-            if (tx.outputs) {
-                for (let i = 0; i < tx.outputs.length; i++) {
-                    if (tx.outputs[i].address) {
-                        promises.push(
-                            (async () => {
-                                const address = await resolveAddress(hexlify(tx.outputs![i].address));
-                                tx.outputs![i].address = getBytes(address);
-                            })(),
-                        );
-                    }
-                }
             }
         }
 

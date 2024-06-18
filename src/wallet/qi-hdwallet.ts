@@ -426,7 +426,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 throw new Error(`Account ${info.account} not found in wallet`);
             }
             // validate Outpoint
-            if (info.outpoint.Txhash == null || info.outpoint.Index == null || info.outpoint.Denomination == null) {
+            if (info.outpoint.txhash == null || info.outpoint.index == null || info.outpoint.denomination == null) {
                 throw new Error(`Invalid Outpoint: ${JSON.stringify(info)} `);
             }
         });
