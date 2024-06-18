@@ -65,8 +65,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
             throw new Error('Transaction must have at least one input and one output');
         }
 
-        const pubKey = hexlify(this.txInputs[0].pubkey);
-        const senderAddr = computeAddress(pubKey || '');
+        const senderAddr = computeAddress(this.txInputs[0].pubkey || '');
 
         if (!this.destZone || !this.originZone) {
             throw new Error(
@@ -98,8 +97,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
      * The zone of the sender address
      */
     get originZone(): Zone | undefined {
-        const pubKey = hexlify(this.txInputs[0].pubkey);
-        const senderAddr = computeAddress(pubKey || '');
+        const senderAddr = computeAddress(this.txInputs[0].pubkey || '');
 
         const zone = getZoneForAddress(senderAddr);
         return zone ?? undefined;
