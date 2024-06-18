@@ -435,3 +435,9 @@ export interface QiTransactionResponseParams {
 
     txInputs?: TxInput[];
 }
+
+export interface OutpointResponseParams {
+    Txhash: string;
+    Index: number;
+    Denomination: number;
+}

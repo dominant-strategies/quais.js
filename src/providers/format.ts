@@ -4,6 +4,7 @@
 import { getAddress } from '../address/index.js';
 import { Signature } from '../crypto/index.js';
 import { accessListify } from '../transaction/index.js';
+import { hexlify } from '../utils/data';
 import {
     getBigInt,
     getNumber,
@@ -380,8 +381,8 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
                 index: allowNull((value: any) => (value ? BigInt(value) : null), null),
                 chainId: allowNull((value: any) => (value ? BigInt(value) : null), null),
                 signature: (value: any) => value,
-                txInputs: allowNull((value: any) => value, null),
-                txOutputs: allowNull((value: any) => value, null),
+                txInputs: allowNull((value: any) => value.map(_formatTxInput), null),
+                txOutputs: allowNull((value: any) => value.map(_formatTxOutput), null),
             },
             {
                 index: ['transactionIndex'],
@@ -396,3 +397,21 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
 
     return result;
 }
+
+const _formatTxInput = object(
+    {
+        txhash: formatHash,
+        index: getNumber,
+        pubkey: hexlify,
+    },
+    {
+        txhash: ['previous_out_point', 'hash', 'value'],
+        index: ['previous_out_point', 'index'],
+        pubkey: ['pub_key'],
+    },
+);
+
+const _formatTxOutput = object({
+    address: (addr: string) => hexlify(getAddress(addr)),
+    denomination: getNumber,
+});

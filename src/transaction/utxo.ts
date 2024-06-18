@@ -9,85 +9,9 @@ import type { BigNumberish } from '../utils/index.js';
  * @todo If not used, replace with `ignore`
  */
 export type Outpoint = {
-    Txhash: string;
-    Index: number;
-    Denomination: number;
-};
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export type UTXOTransactionInput = {
-    previousOutPoint: Outpoint;
-    pubKey: Uint8Array;
-};
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export interface UTXOEntry extends UTXOEntryLike {
-    denomination: null | bigint;
-    address: string;
-}
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export interface UTXOEntryLike {
-    denomination: null | BigNumberish;
-    address: null | string;
-}
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export type UTXOTransactionOutputLike = UTXOEntryLike;
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export type UTXOTransactionOutput = UTXOEntry;
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export type TxOutput = {
-    address: Uint8Array;
+    txhash: string;
+    index: number;
     denomination: number;
-};
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export type TxInput = {
-    previous_out_point: {
-        hash: {
-            value: Uint8Array;
-        };
-        index: number;
-    };
-    pub_key: Uint8Array;
 };
 
 /**
@@ -111,6 +35,30 @@ export interface UTXOLike extends UTXOEntry {
     txhash?: null | string;
     index?: null | number;
 }
+
+/**
+ * @category Transaction
+ * @todo Write documentation for this type.
+ *
+ * @todo If not used, replace with `ignore`
+ */
+export type TxInput = {
+    txhash: string;
+    index: number;
+    pubkey: string;
+};
+
+/**
+ * @category Transaction
+ * @todo Write documentation for this type.
+ *
+ * @todo If not used, replace with `ignore`
+ */
+export type TxOutput = {
+    address: string;
+    denomination: number;
+};
+
 
 /**
  * @category Transaction

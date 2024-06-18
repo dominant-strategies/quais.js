@@ -65,8 +65,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
             throw new Error('Transaction must have at least one input and one output');
         }
 
-        const pubKey = hexlify(this.txInputs[0].pub_key);
-        const senderAddr = computeAddress(pubKey || '');
+        const senderAddr = computeAddress(this.txInputs[0].pubkey || '');
 
         if (!this.destZone || !this.originZone) {
             throw new Error(
@@ -98,8 +97,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
      * The zone of the sender address
      */
     get originZone(): Zone | undefined {
-        const pubKey = hexlify(this.txInputs[0].pub_key);
-        const senderAddr = computeAddress(pubKey || '');
+        const senderAddr = computeAddress(this.txInputs[0].pubkey || '');
 
         const zone = getZoneForAddress(senderAddr);
         return zone ?? undefined;
@@ -109,7 +107,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
      * The zone of the recipient address
      */
     get destZone(): Zone | undefined {
-        const zone = getZoneForAddress(hexlify(this.txOutputs[0].address) || '');
+        const zone = getZoneForAddress(this.txOutputs[0].address);
         return zone ?? undefined;
     }
 
@@ -183,8 +181,21 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         const protoTx: ProtoTransaction = {
             type: this.type || 2,
             chain_id: formatNumber(this.chainId || 0, 'chainId'),
-            tx_ins: { tx_ins: this.txInputs },
-            tx_outs: { tx_outs: this.txOutputs },
+            tx_ins: {
+                tx_ins: this.txInputs.map((input) => ({
+                    previous_out_point: {
+                        hash: { value: getBytes(input.txhash) },
+                        index: input.index,
+                    },
+                    pub_key: getBytes(input.pubkey),
+                })),
+            },
+            tx_outs: {
+                tx_outs: this.txOutputs.map((output) => ({
+                    address: getBytes(output.address),
+                    denomination: output.denomination,
+                })),
+            },
         };
 
         if (this.signature && includeSignature) {
@@ -246,8 +257,17 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         tx.chainId = toBigInt(protoTx.chain_id);
 
         if (protoTx.type == 2) {
-            tx.txInputs = protoTx.tx_ins?.tx_ins ?? [];
-            tx.txOutputs = protoTx.tx_outs?.tx_outs ?? [];
+            tx.txInputs =
+                protoTx.tx_ins?.tx_ins.map((input) => ({
+                    txhash: hexlify(input.previous_out_point.hash.value),
+                    index: input.previous_out_point.index,
+                    pubkey: hexlify(input.pub_key),
+                })) ?? [];
+            tx.txOutputs =
+                protoTx.tx_outs?.tx_outs.map((output) => ({
+                    address: hexlify(output.address),
+                    denomination: output.denomination,
+                })) ?? [];
         }
 
         if (protoTx.signature) {

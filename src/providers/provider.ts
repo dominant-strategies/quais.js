@@ -9,9 +9,8 @@ import {
     isError,
     makeError,
 } from '../utils/index.js';
-import { getAddress } from '../address/index.js';
+import { computeAddress } from '../address/index.js';
 import { accessListify } from '../transaction/index.js';
-import { keccak256, SigningKey } from '../crypto/index.js';
 
 import type { AddressLike } from '../address/index.js';
 import type { BigNumberish, EventEmitterable } from '../utils/index.js';
@@ -135,9 +134,7 @@ export function addressFromTransactionRequest(tx: TransactionRequest): AddressLi
         return tx.from;
     }
     if (tx.inputs) {
-        return getAddress(
-            keccak256('0x' + SigningKey.computePublicKey(tx.inputs[0].pub_key).substring(4)).substring(26),
-        );
+        return computeAddress(tx.inputs[0].pubkey);
     }
     if ('to' in tx && tx.to !== null) {
         return tx.to as AddressLike;
@@ -2441,7 +2438,7 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *
      * @param {AddressLike} address - The address to fetch the UTXO entries for.
      *
-     * @returns {Promise<UTXOEntry[]>} A promise resolving to the UTXO entries.
+     * @returns {Promise<Outpoint[]>} A promise resolving to the UTXO entries.
      * @note On nodes without archive access enabled, the `blockTag` may be
      *  **silently ignored** by the node, which may cause issues if relied on.
      */

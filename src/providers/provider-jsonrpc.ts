@@ -13,7 +13,7 @@
 // https://playground.open-rpc.org/?schemaUrl=https://raw.githubusercontent.com/ethereum/eth1.0-apis/assembled-spec/openrpc.json&uiSchema%5BappBar%5D%5Bui:splitView%5D=true&uiSchema%5BappBar%5D%5Bui:input%5D=false&uiSchema%5BappBar%5D%5Bui:examplesDropdown%5D=false
 
 import { AbiCoder } from '../abi/index.js';
-import { getAddress } from '../address/index.js';
+import { getAddress, resolveAddress } from '../address/index.js';
 import { accessListify, QuaiTransactionLike } from '../transaction/index.js';
 import {
     getBigInt,
@@ -26,7 +26,6 @@ import {
     isError,
     FetchRequest,
     defineProperties,
-    getBytes,
     resolveProperties,
 } from '../utils/index.js';
 
@@ -34,22 +33,15 @@ import { AbstractProvider, UnmanagedSubscriber } from './abstract-provider.js';
 import { Network } from './network.js';
 import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from './subscriber-filterid.js';
 
-import type { TransactionLike } from '../transaction/index.js';
+import type { TransactionLike, TxInput, TxOutput } from '../transaction/index.js';
 
 import type { PerformActionRequest, Subscriber, Subscription } from './abstract-provider.js';
 import type { Networkish } from './network.js';
 import type { Provider, QuaiTransactionRequest, TransactionRequest, TransactionResponse } from './provider.js';
-import { UTXOEntry, UTXOTransactionOutput } from '../transaction/utxo.js';
 import { Shard, toShard } from '../constants/index.js';
-import {
-    AbstractSigner,
-    resolveAddress,
-    Signer,
-    toUtf8Bytes,
-    TypedDataDomain,
-    TypedDataEncoder,
-    TypedDataField,
-} from '../quais';
+import { TypedDataDomain, TypedDataEncoder, TypedDataField } from '../hash/index.js';
+import { AbstractSigner, Signer } from '../signers/index.js';
+import { toUtf8Bytes } from '../encoding/index.js';
 import { addressFromTransactionRequest } from './provider.js';
 
 type Timer = ReturnType<typeof setTimeout>;
@@ -234,9 +226,9 @@ export interface AbstractJsonRpcTransactionRequest {
 export type JsonRpcTransactionRequest = QiJsonRpcTransactionRequest | QuaiJsonRpcTransactionRequest;
 
 export interface QiJsonRpcTransactionRequest extends AbstractJsonRpcTransactionRequest {
-    txInputs?: Array<UTXOEntry>;
+    txInputs?: Array<TxInput>;
 
-    txOutputs?: Array<UTXOTransactionOutput>;
+    txOutputs?: Array<TxOutput>;
 }
 
 /**
@@ -373,20 +365,6 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
                         tx.to = await resolveAddress(_to);
                     })(),
                 );
-            }
-        } else {
-            // Make sure the from matches the sender
-            if (tx.outputs) {
-                for (let i = 0; i < tx.outputs.length; i++) {
-                    if (tx.outputs[i].address) {
-                        promises.push(
-                            (async () => {
-                                const address = await resolveAddress(hexlify(tx.outputs![i].address));
-                                tx.outputs![i].address = getBytes(address);
-                            })(),
-                        );
-                    }
-                }
             }
         }
 

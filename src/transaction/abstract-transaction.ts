@@ -4,7 +4,6 @@ import { getBigInt, assert, assertArgument } from '../utils/index.js';
 import type { BigNumberish } from '../utils/index.js';
 import type { SignatureLike } from '../crypto/index.js';
 import { encodeProtoTransaction } from '../encoding/proto-encode.js';
-import type { TxInput, TxOutput } from './utxo.js';
 import { Zone } from '../constants/index.js';
 
 /**
@@ -147,18 +146,45 @@ export interface ProtoTransaction {
     /**
      * @todo Write documentation for this property.
      */
-    tx_ins?: { tx_ins: Array<TxInput> };
+    tx_ins?: { tx_ins: Array<ProtoTxInput> };
 
     /**
      * @todo Write documentation for this property.
      */
-    tx_outs?: { tx_outs: Array<TxOutput> };
+    tx_outs?: { tx_outs: Array<ProtoTxOutput> };
 
     /**
      * @todo Write documentation for this property.
      */
     signature?: Uint8Array;
 }
+
+/**
+ * @category Transaction
+ * @todo Write documentation for this type.
+ *
+ * @todo If not used, replace with `ignore`
+ */
+export type ProtoTxOutput = {
+    address: Uint8Array;
+    denomination: number;
+};
+
+/**
+ * @category Transaction
+ * @todo Write documentation for this type.
+ *
+ * @todo If not used, replace with `ignore`
+ */
+export type ProtoTxInput = {
+    previous_out_point: {
+        hash: {
+            value: Uint8Array;
+        };
+        index: number;
+    };
+    pub_key: Uint8Array;
+};
 
 /**
  * @category Transaction

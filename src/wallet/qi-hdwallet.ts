@@ -123,14 +123,14 @@ export class QiHDWallet extends AbstractHDWallet {
             throw new Error('Transaction has no inputs');
         }
         const input = tx.inputs[0];
-        const address = computeAddress(hexlify(input.pub_key));
+        const address = computeAddress(input.pubkey);
         const shard = getZoneForAddress(address);
         if (!shard) {
             throw new Error(`Address ${address} not found in any shard`);
         }
 
         // verify all inputs are from the same shard
-        if (tx.inputs.some((input) => getZoneForAddress(computeAddress(hexlify(input.pub_key))) !== shard)) {
+        if (tx.inputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
             throw new Error('All inputs must be from the same shard');
         }
 
@@ -188,9 +188,8 @@ export class QiHDWallet extends AbstractHDWallet {
 
     // Helper method that returns the private key for the public key
     private derivePrivateKeyForInput(input: TxInput): string {
-        if (!input.pub_key) throw new Error('Missing public key for input');
-        const pubKey = hexlify(input.pub_key);
-        const address = computeAddress(pubKey);
+        if (!input.pubkey) throw new Error('Missing public key for input');
+        const address = computeAddress(input.pubkey);
         // get address info
         const addressInfo = this.getAddressInfo(address);
         if (!addressInfo) throw new Error(`Address not found: ${address}`);
@@ -427,7 +426,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 throw new Error(`Account ${info.account} not found in wallet`);
             }
             // validate Outpoint
-            if (info.outpoint.Txhash == null || info.outpoint.Index == null || info.outpoint.Denomination == null) {
+            if (info.outpoint.txhash == null || info.outpoint.index == null || info.outpoint.denomination == null) {
                 throw new Error(`Invalid Outpoint: ${JSON.stringify(info)} `);
             }
         });
