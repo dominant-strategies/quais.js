@@ -251,8 +251,19 @@ export abstract class AbstractHDWallet {
         }
     }
 
-    // Returns the HD node that derives the address.
-    // If the address is not found in the wallet, an error is thrown.
+    /**
+     * Derives and returns the Hierarchical Deterministic (HD) node wallet associated with a given address.
+     *
+     * This method fetches the account and address information from the wallet's internal storage, derives the
+     * appropriate change node based on whether the address is a change address, and further derives the final HD node
+     * using the address index.
+     *
+     * @param {string} addr - The address for which to derive the HD node.
+     *
+     * @returns {HDNodeWallet} - The derived HD node wallet corresponding to the given address.
+     * @throws {Error} If the given address is not known to the wallet.
+     * @throws {Error} If the account associated with the address is not found.
+     */
     protected _getHDNodeForAddress(addr: string): HDNodeWallet {
         const addressInfo = this._addresses.get(addr);
         if (!addressInfo) {

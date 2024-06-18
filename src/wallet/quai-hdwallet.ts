@@ -5,6 +5,7 @@ import { resolveAddress } from '../address/index.js';
 import { AllowedCoinType } from '../constants/index.js';
 import { SerializedHDWallet } from './hdwallet.js';
 import { Mnemonic } from './mnemonic.js';
+import { TypedDataDomain, TypedDataField } from '../hash/index.js';
 
 export class QuaiHDWallet extends AbstractHDWallet {
     protected static _version: number = 1;
@@ -49,5 +50,27 @@ export class QuaiHDWallet extends AbstractHDWallet {
         wallet.importSerializedAddresses(wallet._addresses, serialized.addresses);
 
         return wallet;
+    }
+
+    /**
+     * Signs typed data using the private key associated with the given address.
+     *
+     * @param {string} address - The address for which the typed data is to be signed.
+     * @param {TypedDataDomain} domain - The domain information of the typed data, defining the scope of the signature.
+     * @param {Record<string, TypedDataField[]>} types - The types of the data to be signed, mapping each data type name
+     *   to its fields.
+     * @param {Record<string, unknown>} value - The actual data to be signed.
+     *
+     * @returns {Promise<string>} A promise that resolves to the signed data in string format.
+     * @throws {Error} If the address does not correspond to a valid HD node or if signing fails.
+     */
+    public async signTypedData(
+        address: string,
+        domain: TypedDataDomain,
+        types: Record<string, Array<TypedDataField>>,
+        value: Record<string, unknown>,
+    ): Promise<string> {
+        const addrNode = this._getHDNodeForAddress(address);
+        return addrNode.signTypedData(domain, types, value);
     }
 }
