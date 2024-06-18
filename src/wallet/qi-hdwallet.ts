@@ -79,10 +79,8 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     public importOutpoints(outpoints: OutpointInfo[]): void {
-        outpoints.forEach((outpoint) => {
-            this.validateZone(outpoint.zone);
-            this._outpoints.push(outpoint);
-        });
+        this.validateOutpointInfo(outpoints);
+        this._outpoints.push(...outpoints);
     }
 
     public getOutpoints(zone: Zone): OutpointInfo[] {
@@ -373,21 +371,27 @@ export class QiHDWallet extends AbstractHDWallet {
         }
 
         // validate the outpoints and import them
-        for (const outpointInfo of serialized.outpoints) {
-            // check the zone is valid
-            wallet.validateZone(outpointInfo.zone);
-            // check the outpoint address is known to the wallet
-            if (!wallet._addresses.has(outpointInfo.address)) {
-                throw new Error(`Address ${outpointInfo.address} not found in wallet`);
-            }
-            const outpoint = outpointInfo.outpoint;
-            // TODO: implement a more robust check for Outpoint
-            // check the Outpoint fields are not empty
-            if (outpoint.Txhash == null || outpoint.Index == null || outpoint.Denomination == null) {
-                throw new Error(`Invalid Outpoint: ${JSON.stringify(outpoint)} `);
-            }
-            wallet._outpoints.push(outpointInfo);
-        }
+        wallet.validateOutpointInfo(serialized.outpoints);
+        wallet._outpoints.push(...serialized.outpoints);
         return wallet;
+    }
+
+    private validateOutpointInfo(outpointInfo: OutpointInfo[]): void {
+        outpointInfo.forEach((info) => {
+            // validate zone
+            this.validateZone(info.zone);
+            // validate address
+            if (!this._addresses.has(info.address)) {
+                throw new Error(`Address ${info.address} not found in wallet`);
+            }
+            // validate account
+            if (info.account && !this._accounts.has(info.account)) {
+                throw new Error(`Account ${info.account} not found in wallet`);
+            }
+            // validate Outpoint
+            if (info.outpoint.Txhash == null || info.outpoint.Index == null || info.outpoint.Denomination == null) {
+                throw new Error(`Invalid Outpoint: ${JSON.stringify(info)} `);
+            }
+        });
     }
 }
