@@ -280,9 +280,24 @@ export abstract class AbstractHDWallet {
         return changeNode.deriveChild(addressInfo.index);
     }
 
+    /**
+     * Abstract method to sign a message using the private key associated with the given address.
+     *
+     * @param {string} address - The address for which the message is to be signed.
+     * @param {string | Uint8Array} message - The message to be signed, either as a string or Uint8Array.
+     *
+     * @returns {Promise<string>} A promise that resolves to the signature of the message in hexadecimal string format.
+     * @throws {Error} If the method is not implemented in the subclass.
+     */
     abstract signMessage(address: string, message: string | Uint8Array): Promise<string>;
 
-    public async serialize(): Promise<SerializedHDWallet> {
+    /**
+     * Serializes the HD wallet state into a format suitable for storage or transmission.
+     *
+     * @returns {SerializedHDWallet} An object representing the serialized state of the HD wallet, including version,
+     *   mnemonic phrase, coin type, and addresses.
+     */
+    public serialize(): SerializedHDWallet {
         const addresses = Array.from(this._addresses.values());
         return {
             version: (this.constructor as any)._version,
@@ -292,12 +307,28 @@ export abstract class AbstractHDWallet {
         };
     }
 
+    /**
+     * Deserializes a serialized HD wallet object and reconstructs the wallet instance. This method must be implemented
+     * in the subclass.
+     *
+     * @param {SerializedHDWallet} _serialized - The serialized object representing the state of an HD wallet.
+     *
+     * @returns {AbstractHDWallet} An instance of AbstractHDWallet.
+     * @throws {Error} This method must be implemented in the subclass.
+     */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public static async deserialize(_serialized: SerializedHDWallet): Promise<AbstractHDWallet> {
         throw new Error('deserialize method must be implemented in the subclass');
     }
 
-    // This method is used to validate the version and coinType of the serialized wallet.
+    /**
+     * Validates the version and coinType of the serialized wallet.
+     *
+     * @param {SerializedHDWallet} serialized - The serialized wallet data to be validated.
+     * @throws {Error} If the version or coinType of the serialized wallet does not match the expected values.
+     * @protected
+     * @static
+     */
     protected static validateSerializedWallet(serialized: SerializedHDWallet): void {
         if (serialized.version !== (this as any)._version) {
             throw new Error(`Invalid version ${serialized.version} for wallet (expected ${(this as any)._version})`);
@@ -307,9 +338,16 @@ export abstract class AbstractHDWallet {
         }
     }
 
-    // This method is used to import addresses from a serialized wallet into the addresses map.
-    // Before adding the addresses, a validation is performed to ensure the address, public key and zone
-    // match the expected values.
+    /**
+     * Imports addresses from a serialized wallet into the addresses map. Before adding the addresses, a validation is
+     * performed to ensure the address, public key, and zone match the expected values.
+     *
+     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map where the addresses will be imported.
+     * @param {NeuteredAddressInfo[]} addresses - The array of addresses to be imported, each containing account, index,
+     *   change, address, pubKey, and zone information.
+     * @throws {Error} If there is a mismatch between the expected and actual address, public key, or zone.
+     * @protected
+     */
     protected importSerializedAddresses(
         addressMap: Map<string, NeuteredAddressInfo>,
         addresses: NeuteredAddressInfo[],

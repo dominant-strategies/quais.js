@@ -38,6 +38,23 @@ export class QuaiHDWallet extends AbstractHDWallet {
         return await addrNode.signMessage(message);
     }
 
+    /**
+     * Deserializes the given serialized HD wallet data into an instance of QuaiHDWallet.
+     *
+     * This method performs the following steps:
+     *
+     * - Validates the serialized wallet data.
+     * - Creates a new wallet instance using the mnemonic phrase and derivation path.
+     * - Imports the addresses into the wallet instance.
+     *
+     * @async
+     * @param {SerializedHDWallet} serialized - The serialized wallet data to be deserialized.
+     *
+     * @returns {Promise<QuaiHDWallet>} A promise that resolves to an instance of QuaiHDWallet.
+     * @throws {Error} If validation of the serialized wallet data fails or if deserialization fails.
+     * @public
+     * @static
+     */
     public static async deserialize(serialized: SerializedHDWallet): Promise<QuaiHDWallet> {
         super.validateSerializedWallet(serialized);
         // create the wallet instance
