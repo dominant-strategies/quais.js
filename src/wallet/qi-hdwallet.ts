@@ -1,7 +1,5 @@
-
-
 import { AbstractHDWallet, NeuteredAddressInfo, SerializedHDWallet } from './hdwallet';
-import { HDNodeWallet } from "./hdnodewallet";
+import { HDNodeWallet } from './hdnodewallet';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress } from '../address/index.js';
 import { getBytes, hexlify } from '../utils/index.js';
@@ -13,6 +11,7 @@ import { musigCrypto } from '../crypto/index.js';
 import { Outpoint } from '../transaction/utxo.js';
 import { getZoneForAddress } from '../utils/index.js';
 import { AllowedCoinType, Zone } from '../constants/index.js';
+import { Mnemonic } from './mnemonic.js';
 
 type OutpointInfo = {
     outpoint: Outpoint;
@@ -21,15 +20,14 @@ type OutpointInfo = {
     account?: number;
 };
 
-interface SerializedQiHDWallet extends SerializedHDWallet{
-	outpoints: OutpointInfo[];
-	changeAddresses: NeuteredAddressInfo[];
-	gapAddresses: NeuteredAddressInfo[];
-	gapChangeAddresses: NeuteredAddressInfo[];
+interface SerializedQiHDWallet extends SerializedHDWallet {
+    outpoints: OutpointInfo[];
+    changeAddresses: NeuteredAddressInfo[];
+    gapAddresses: NeuteredAddressInfo[];
+    gapChangeAddresses: NeuteredAddressInfo[];
 }
 
 export class QiHDWallet extends AbstractHDWallet {
-
     protected static _version: number = 1;
 
     protected static _GAP_LIMIT: number = 20;
@@ -319,71 +317,77 @@ export class QiHDWallet extends AbstractHDWallet {
         return gapAddresses;
     }
 
-	public getGapChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
-		this.validateZone(zone);
-		const gapChangeAddresses = this._gapChangeAddresses.filter((addressInfo) => addressInfo.zone === zone);
-		return gapChangeAddresses;
-	}
+    public getGapChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+        this.validateZone(zone);
+        const gapChangeAddresses = this._gapChangeAddresses.filter((addressInfo) => addressInfo.zone === zone);
+        return gapChangeAddresses;
+    }
 
-	public async signMessage(address: string, message: string | Uint8Array): Promise<string> {
-		const addrNode = this._getHDNodeForAddress(address);
-		const privKey = addrNode.privateKey;
-		const digest = keccak_256(message);
-		const signature = schnorr.sign(digest, getBytes(privKey));
-		return hexlify(signature);
-	}
-	
-	public async serialize(): Promise<SerializedQiHDWallet> {
-		const hdwalletSerialized = await super.serialize();
-		return {
-			outpoints: this._outpoints,
-			changeAddresses: Array.from(this._changeAddresses.values()),
-			gapAddresses: this._gapAddresses,
-			gapChangeAddresses: this._gapChangeAddresses,
-			...hdwalletSerialized,
-		};
-	}
+    public async signMessage(address: string, message: string | Uint8Array): Promise<string> {
+        const addrNode = this._getHDNodeForAddress(address);
+        const privKey = addrNode.privateKey;
+        const digest = keccak_256(message);
+        const signature = schnorr.sign(digest, getBytes(privKey));
+        return hexlify(signature);
+    }
 
-	public static async deserialize(serialized: SerializedQiHDWallet): Promise<QiHDWallet> {
-		const wallet = await super.deserialize<QiHDWallet>(serialized) as QiHDWallet;
-		// import the change addresses
-		wallet.importSerializedAddresses(wallet._changeAddresses, serialized.changeAddresses);
+    public async serialize(): Promise<SerializedQiHDWallet> {
+        const hdwalletSerialized = await super.serialize();
+        return {
+            outpoints: this._outpoints,
+            changeAddresses: Array.from(this._changeAddresses.values()),
+            gapAddresses: this._gapAddresses,
+            gapChangeAddresses: this._gapChangeAddresses,
+            ...hdwalletSerialized,
+        };
+    }
 
-		// import the gap addresses, verifying they exist in the wallet
-		for (const gapAddressInfo of serialized.gapAddresses) {
-			const gapAddress = gapAddressInfo.address;
-			if (!wallet._addresses.has(gapAddress)) {
-				throw new Error(`Address ${gapAddress} not found in wallet`);
-			}
-			wallet._gapAddresses.push(gapAddressInfo);
+    public static async deserialize(serialized: SerializedQiHDWallet): Promise<QiHDWallet> {
+        super.validateSerializedWallet(serialized);
+        // create the wallet instance
+        const mnemonic = Mnemonic.fromPhrase(serialized.phrase);
+        const path = (this as any).parentPath(serialized.coinType);
+        const root = HDNodeWallet.fromMnemonic(mnemonic, path);
+        const wallet = new this(root);
 
-		}
-		// import the gap change addresses, verifying they exist in the wallet
-		for (const gapChangeAddressInfo of serialized.gapChangeAddresses) {
-			const gapChangeAddress = gapChangeAddressInfo.address;
-			if (!wallet._changeAddresses.has(gapChangeAddress)) {
-				throw new Error(`Address ${gapChangeAddress} not found in wallet`);
-			}
-			wallet._gapChangeAddresses.push(gapChangeAddressInfo);
-		}
+        // import the addresses
+        wallet.importSerializedAddresses(wallet._addresses, serialized.addresses);
+        // import the change addresses
+        wallet.importSerializedAddresses(wallet._changeAddresses, serialized.changeAddresses);
 
-		// validate the outpoints and import them
-		for (const outpointInfo of serialized.outpoints) {
-			// check the zone is valid
-			wallet.validateZone(outpointInfo.zone);
-			// check the outpoint address is known to the wallet
-			if (!wallet._addresses.has(outpointInfo.address)) {
-				throw new Error(`Address ${outpointInfo.address} not found in wallet`);
-			}
-			const outpoint = outpointInfo.outpoint;
-			// TODO: implement a more robust check for Outpoint
-			// check the Outpoint fields are not empty
-			if (outpoint.Txhash == null || outpoint.Index == null || outpoint.Denomination == null) {
-				throw new Error(`Invalid Outpoint: ${JSON.stringify(outpoint)} `);
-			}
-			wallet._outpoints.push(outpointInfo);
-		}
-		return wallet;
+        // import the gap addresses, verifying they already exist in the wallet
+        for (const gapAddressInfo of serialized.gapAddresses) {
+            const gapAddress = gapAddressInfo.address;
+            if (!wallet._addresses.has(gapAddress)) {
+                throw new Error(`Address ${gapAddress} not found in wallet`);
+            }
+            wallet._gapAddresses.push(gapAddressInfo);
+        }
+        // import the gap change addresses, verifying they already exist in the wallet
+        for (const gapChangeAddressInfo of serialized.gapChangeAddresses) {
+            const gapChangeAddress = gapChangeAddressInfo.address;
+            if (!wallet._changeAddresses.has(gapChangeAddress)) {
+                throw new Error(`Address ${gapChangeAddress} not found in wallet`);
+            }
+            wallet._gapChangeAddresses.push(gapChangeAddressInfo);
+        }
 
-	}
+        // validate the outpoints and import them
+        for (const outpointInfo of serialized.outpoints) {
+            // check the zone is valid
+            wallet.validateZone(outpointInfo.zone);
+            // check the outpoint address is known to the wallet
+            if (!wallet._addresses.has(outpointInfo.address)) {
+                throw new Error(`Address ${outpointInfo.address} not found in wallet`);
+            }
+            const outpoint = outpointInfo.outpoint;
+            // TODO: implement a more robust check for Outpoint
+            // check the Outpoint fields are not empty
+            if (outpoint.Txhash == null || outpoint.Index == null || outpoint.Denomination == null) {
+                throw new Error(`Invalid Outpoint: ${JSON.stringify(outpoint)} `);
+            }
+            wallet._outpoints.push(outpointInfo);
+        }
+        return wallet;
+    }
 }

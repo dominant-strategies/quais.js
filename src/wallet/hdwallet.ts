@@ -7,8 +7,6 @@ import { getZoneForAddress, isQiAddress } from '../utils/index.js';
 import { Zone } from '../constants/index.js';
 import { TransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { AllowedCoinType } from '../constants/index.js';
-import { QiHDWallet } from './qi-hdwallet.js';
-import { QuaiHDWallet } from './quai-hdwallet.js';
 
 export interface NeuteredAddressInfo {
     pubKey: string;
@@ -283,31 +281,24 @@ export abstract class AbstractHDWallet {
         };
     }
 
-    static async deserialize<T extends AbstractHDWallet>(
-        this: new (root: HDNodeWallet, provider?: Provider) => T,
-        serialized: SerializedHDWallet,
-    ): Promise<QuaiHDWallet | QiHDWallet> {
-        // validate the version and coinType
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public static async deserialize(_serialized: SerializedHDWallet): Promise<AbstractHDWallet> {
+        throw new Error('deserialize method must be implemented in the subclass');
+    }
+
+    // This method is used to validate the version and coinType of the serialized wallet.
+    protected static validateSerializedWallet(serialized: SerializedHDWallet): void {
         if (serialized.version !== (this as any)._version) {
             throw new Error(`Invalid version ${serialized.version} for wallet (expected ${(this as any)._version})`);
         }
         if (serialized.coinType !== (this as any)._coinType) {
             throw new Error(`Invalid coinType ${serialized.coinType} for wallet (expected ${(this as any)._coinType})`);
         }
-        // create the wallet instance
-        const mnemonic = Mnemonic.fromPhrase(serialized.phrase);
-        const path = (this as any).parentPath(serialized.coinType);
-        const root = HDNodeWallet.fromMnemonic(mnemonic, path);
-        const wallet = new this(root);
-
-        // import the addresses
-        wallet.importSerializedAddresses(wallet._addresses, serialized.addresses);
-
-        return wallet as T;
     }
 
-    // This method is used to import addresses from a serialized wallet.
-    // It validates the addresses and adds them to the wallet.
+    // This method is used to import addresses from a serialized wallet into the addresses map.
+    // Before adding the addresses, a validation is performed to ensure the address, public key and zone
+    // match the expected values.
     protected importSerializedAddresses(
         addressMap: Map<string, NeuteredAddressInfo>,
         addresses: NeuteredAddressInfo[],
