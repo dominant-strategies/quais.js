@@ -12,7 +12,7 @@
 //   migrate the listener to the static event. We also need to maintain a map
 //   of Signer to address so we can sync respond to listenerCount.
 
-import { resolveAddress } from '../address/index.js';
+import { computeAddress, resolveAddress } from '../address/index.js';
 import { Shard, toShard, toZone, Zone } from '../constants/index.js';
 import { TxInput, TxOutput } from '../transaction/index.js';
 import { Outpoint } from '../transaction/utxo.js';
@@ -58,6 +58,7 @@ import type { Networkish } from './network.js';
 import type {
     BlockParams,
     LogParams,
+    OutpointResponseParams,
     QiTransactionResponseParams,
     TransactionReceiptParams,
     TransactionResponseParams,
@@ -1098,7 +1099,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             const addr = Array.isArray((<any>request)[key])
                 ? 'address' in <any>request[key][0]
                     ? (<TxOutput[]>(<any>request)[key]).map((it) => it.address)
-                    : (<TxInput[]>(<any>request)[key]).map((it) => it.address)
+                    : (<TxInput[]>(<any>request)[key]).map((it) => computeAddress(it.pubkey))
                 : resolveAddress((<any>request)[key]);
             if (isPromise(addr)) {
                 if (Array.isArray(addr)) {
@@ -1315,7 +1316,16 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     async getOutpointsByAddress(address: AddressLike): Promise<Outpoint[]> {
-        return await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest');
+        const outpoints: OutpointResponseParams[] = await this.#getAccountValue(
+            { method: 'getOutpointsByAddress' },
+            address,
+            'latest',
+        );
+        return outpoints.map((outpoint: OutpointResponseParams) => ({
+            txhash: outpoint.Txhash,
+            index: outpoint.Index,
+            denomination: outpoint.Denomination,
+        }));
     }
 
     async getTransactionCount(address: AddressLike, blockTag?: BlockTag): Promise<number> {

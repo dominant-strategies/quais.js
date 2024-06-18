@@ -3,6 +3,7 @@ import { AbstractTransaction, TransactionLike, TxInput, TxOutput } from './index
 import { assertArgument, getBytes, getZoneForAddress, hexlify, isQiAddress, toBigInt } from '../utils/index.js';
 import { decodeProtoTransaction } from '../encoding/index.js';
 import { formatNumber } from '../providers/format.js';
+import { computeAddress } from '../address/index.js';
 import { ProtoTransaction } from './abstract-transaction.js';
 import { Zone } from '../constants/index.js';
 
@@ -64,8 +65,8 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
             throw new Error('Transaction must have at least one input and one output');
         }
 
-        // Use the first input address as the sender address
-        const senderAddr = this.txInputs[0].address;
+        const pubKey = hexlify(this.txInputs[0].pubkey);
+        const senderAddr = computeAddress(pubKey || '');
 
         if (!this.destZone || !this.originZone) {
             throw new Error(
@@ -97,7 +98,8 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
      * The zone of the sender address
      */
     get originZone(): Zone | undefined {
-        const senderAddr = this.txInputs[0].address;
+        const pubKey = hexlify(this.txInputs[0].pubkey);
+        const senderAddr = computeAddress(pubKey || '');
 
         const zone = getZoneForAddress(senderAddr);
         return zone ?? undefined;
@@ -184,10 +186,10 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
             tx_ins: {
                 tx_ins: this.txInputs.map((input) => ({
                     previous_out_point: {
-                        hash: { value: getBytes(input.txHash) },
+                        hash: { value: getBytes(input.txhash) },
                         index: input.index,
                     },
-                    pub_key: getBytes(input.pubKey),
+                    pub_key: getBytes(input.pubkey),
                 })),
             },
             tx_outs: {
@@ -259,11 +261,9 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         if (protoTx.type == 2) {
             tx.txInputs =
                 protoTx.tx_ins?.tx_ins.map((input) => ({
-                    txHash: hexlify(input.previous_out_point.hash.value),
+                    txhash: hexlify(input.previous_out_point.hash.value),
                     index: input.previous_out_point.index,
-                    address: hexlify(input.pub_key),
-                    pubKey: hexlify(input.pub_key),
-                    // there is no denomination in the protobuf object, I think the client should return it though
+                    pubkey: hexlify(input.pub_key),
                 })) ?? [];
             tx.txOutputs =
                 protoTx.tx_outs?.tx_outs.map((output) => ({

@@ -1,7 +1,7 @@
 /**
  * @ignore
  */
-import { computeAddress, getAddress } from '../address/index.js';
+import { getAddress } from '../address/index.js';
 import { Signature } from '../crypto/index.js';
 import { accessListify } from '../transaction/index.js';
 import { hexlify } from '../utils/data';
@@ -400,17 +400,14 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
 
 const _formatTxInput = object(
     {
-        txHash: formatHash,
+        txhash: formatHash,
         index: getNumber,
-        address: computeAddress,
-        pubKey: hexlify,
-        denomination: allowNull(getNumber, 0),
+        pubkey: hexlify,
     },
     {
-        txHash: ['previous_out_point', 'hash', 'value'],
+        txhash: ['previous_out_point', 'hash', 'value'],
         index: ['previous_out_point', 'index'],
-        address: ['pub_key'],
-        pubKey: ['pub_key'],
+        pubkey: ['pub_key'],
     },
 );
 

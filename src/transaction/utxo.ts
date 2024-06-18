@@ -8,10 +8,33 @@ import type { BigNumberish } from '../utils/index.js';
  *
  * @todo If not used, replace with `ignore`
  */
+export type TxInput = {
+    txhash: string;
+    index: number;
+    pubkey: string;
+};
+
+/**
+ * @category Transaction
+ * @todo Write documentation for this type.
+ *
+ * @todo If not used, replace with `ignore`
+ */
+export type TxOutput = {
+    address: string;
+    denomination: number;
+};
+
+/**
+ * @category Transaction
+ * @todo Write documentation for this type.
+ *
+ * @todo If not used, replace with `ignore`
+ */
 export type Outpoint = {
-    Txhash: string;
-    Index: number;
-    Denomination: number;
+    txhash: string;
+    index: number;
+    denomination: number;
 };
 
 /**
@@ -35,31 +58,6 @@ export interface UTXOLike extends UTXOEntry {
     txhash?: null | string;
     index?: null | number;
 }
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export type TxInput = {
-    txHash: string;
-    index: number;
-    address: string;
-    pubKey: string;
-    denomination?: number;
-};
-
-/**
- * @category Transaction
- * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
- */
-export type TxOutput = {
-    address: string;
-    denomination: number;
-};
 
 /**
  * @category Transaction

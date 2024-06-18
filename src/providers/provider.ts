@@ -9,6 +9,7 @@ import {
     isError,
     makeError,
 } from '../utils/index.js';
+import { computeAddress } from '../address/index.js';
 import { accessListify } from '../transaction/index.js';
 
 import type { AddressLike } from '../address/index.js';
@@ -133,7 +134,7 @@ export function addressFromTransactionRequest(tx: TransactionRequest): AddressLi
         return tx.from;
     }
     if (tx.inputs) {
-        return tx.inputs[0].address;
+        return computeAddress(tx.inputs[0].pubkey);
     }
     if ('to' in tx && tx.to !== null) {
         return tx.to as AddressLike;
