@@ -54,28 +54,10 @@ export class QiHDWallet extends AbstractHDWallet {
         if (!this._accounts.has(account)) {
             this.addAccount(account);
         }
-        const filteredAccountInfos = Array.from(this._changeAddresses.values()).filter(
-            (addressInfo) => addressInfo.account === account && addressInfo.zone === zone,
-        );
-        const lastIndex = filteredAccountInfos.reduce(
-            (maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index),
-            -1,
-        );
-        // call derive address with change = true
-        const addressNode = this.deriveAddress(account, lastIndex + 1, zone, true);
+        const lastIndex = this.getLastAddressIndex(this._changeAddresses, zone, account, true);
+        const addressNode = this.deriveAddressNode(account, lastIndex + 1, zone, true);
 
-        const neuteredAddressInfo = {
-            pubKey: addressNode.publicKey,
-            address: addressNode.address,
-            account: account,
-            index: addressNode.index,
-            change: true,
-            zone: zone,
-        };
-
-        this._changeAddresses.set(neuteredAddressInfo.address, neuteredAddressInfo);
-
-        return neuteredAddressInfo;
+        return this.createAndStoreAddressInfo(addressNode, account, zone, true, this._changeAddresses);
     }
 
     public importOutpoints(outpoints: OutpointInfo[]): void {
