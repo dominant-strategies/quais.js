@@ -27,10 +27,8 @@ export {
 } from './provider-socket.js';
 
 export type {
-    AbstractProviderOptions,
     Subscription,
     Subscriber,
-    AbstractProviderPlugin,
     PerformActionFilter,
     PerformActionTransaction,
     PerformActionRequest,

@@ -50,11 +50,11 @@ export {
 
 export { resolveProperties, defineProperties } from './properties.js';
 
-export { formatQuai, parseQuai, formatEther, parseEther, formatUnits, parseUnits } from './units.js';
+export { formatQuai, parseQuai, formatUnits, parseUnits } from './units.js';
 
 export { uuidV4 } from './uuid.js';
 
-export { getTxType, getZoneForAddress, getAddressDetails, isQiAddress } from './shards.js';
+export { getTxType, getZoneForAddress, getAddressDetails } from './shards.js';
 
 /////////////////////////////
 // Types
