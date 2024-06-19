@@ -1,5 +1,12 @@
 import { ZoneData } from './zones.js';
 
+/**
+ * A shard represents a chain within the Quai network hierarchy. A shard refer to the Prime chain, a region under the
+ * Prime chain, or a Zone within a region. The value is a hexadecimal string representing the encoded value of the
+ * shard. Read more [here](https://github.com/quai-network/qips/blob/master/qip-0002.md).
+ *
+ * @category Constants
+ */
 export enum Shard {
     Cyprus = '0x0',
     Cyprus1 = '0x00',

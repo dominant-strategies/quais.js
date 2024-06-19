@@ -10,13 +10,12 @@ import {
     getNumber,
     getZoneForAddress,
     hexlify,
-    isQiAddress,
     toBeArray,
     toBigInt,
     zeroPadValue,
 } from '../utils/index.js';
 import { decodeProtoTransaction, encodeProtoTransaction } from '../encoding/index.js';
-import { getAddress, recoverAddress, validateAddress } from '../address/index.js';
+import { getAddress, recoverAddress, validateAddress, isQuaiAddress } from '../address/index.js';
 import { formatNumber, handleNumber } from '../providers/format.js';
 import { ProtoTransaction } from './abstract-transaction.js';
 import { Zone } from '../constants';
@@ -134,7 +133,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             throw new Error('Missing from or to address');
         }
 
-        const isSameLedger = isQiAddress(this.from) === isQiAddress(this.to);
+        const isSameLedger = isQuaiAddress(this.from) === isQuaiAddress(this.to);
         if (this.isExternal && !isSameLedger) {
             throw new Error('Cross-zone & cross-ledger transactions are not supported');
         }
@@ -443,7 +442,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         }
 
         if (tx.from != null) {
-            assertArgument(!isQiAddress(tx.from), 'from address must be a Quai address', 'tx.from', tx.from);
+            assertArgument(isQuaiAddress(tx.from), 'from address must be a Quai address', 'tx.from', tx.from);
             assertArgument(
                 (result.from || '').toLowerCase() === (tx.from || '').toLowerCase(),
                 'from mismatch',

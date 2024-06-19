@@ -27,6 +27,33 @@ interface SerializedQiHDWallet extends SerializedHDWallet {
     gapChangeAddresses: NeuteredAddressInfo[];
 }
 
+/**
+ * The Qi HD wallet is a BIP44-compliant hierarchical deterministic wallet used for managing a set of addresses in the
+ * Qi ledger. This is wallet implementation is the primary way to interact with the Qi UTXO ledger on the Quai network.
+ *
+ * The Qi HD wallet supports:
+ *
+ * - Adding accounts to the wallet heierchy
+ * - Generating addresses for a specific account in any {@link Zone}
+ * - Signing and sending transactions for any address in the wallet
+ * - Serializing the wallet to JSON and deserializing it back to a wallet instance.
+ *
+ * @category Wallet
+ * @example
+ *
+ * ```ts
+ * import { QiHDWallet, Zone } from 'quais';
+ *
+ * const wallet = new QiHDWallet();
+ * const cyrpus1Address = wallet.getNextAddress(0, Zone.Cyrpus1); // get the first address in the Cyrpus1 zone
+ * await wallet.sendTransaction({ txInputs: [...], txOutputs: [...] }); // send a transaction
+ * const serializedWallet = wallet.serialize(); // serialize current (account/address) state of the wallet
+ * .
+ * .
+ * .
+ * const deserializedWallet = QiHDWallet.deserialize(serializedWallet); // create a new wallet instance from the serialized data
+ * ```
+ */
 export class QiHDWallet extends AbstractHDWallet {
     protected static _version: number = 1;
 
