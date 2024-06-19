@@ -19,7 +19,7 @@ import { decodeProtoTransaction, encodeProtoTransaction } from '../encoding/inde
 import { getAddress, recoverAddress, validateAddress } from '../address/index.js';
 import { formatNumber, handleNumber } from '../providers/format.js';
 import { ProtoTransaction } from './abstract-transaction.js';
-import { Zone } from '../constants';
+import { Zone } from '../constants/index.js';
 
 /**
  * @category Transaction
