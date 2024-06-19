@@ -330,27 +330,6 @@ function getTime(): number {
 }
 
 /**
- * An **AbstractPlugin** is used to provide additional internal services to an
- * {@link AbstractProvider | **AbstractProvider**} without adding backwards-incompatible changes to method signatures or
- * other internal and complex logic.
- *
- * @category Providers
- */
-export interface AbstractProviderPlugin {
-    /**
-     * The reverse domain notation of the plugin.
-     */
-    readonly name: string;
-
-    /**
-     * Creates a new instance of the plugin, connected to `provider`.
-     *
-     * @param {AbstractProvider} provider - The provider to connect to.
-     */
-    connect(provider: AbstractProvider<any>): AbstractProviderPlugin;
-}
-
-/**
  * A normalized filter used for {@link PerformActionRequest | **PerformActionRequest**} objects.
  *
  * @category Providers
@@ -582,7 +561,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     _urlMap: Map<Shard, C>;
     #connect: FetchRequest[];
     #subs: Map<string, Sub>;
-    #plugins: Map<string, AbstractProviderPlugin>;
 
     // null=unpaused, true=paused+dropWhilePaused, false=paused
     #pausedState: null | boolean;
@@ -632,7 +610,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         this.#performCache = new Map();
 
         this.#subs = new Map();
-        this.#plugins = new Map();
         this.#pausedState = null;
 
         this.#destroyed = false;
@@ -744,39 +721,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      */
     get provider(): this {
         return this;
-    }
-
-    /**
-     * Returns all the registered plug-ins.
-     *
-     * @returns {AbstractProviderPlugin[]} An array of all the registered plug-ins.
-     */
-    get plugins(): Array<AbstractProviderPlugin> {
-        return Array.from(this.#plugins.values());
-    }
-
-    /**
-     * Attach a new plug-in.
-     *
-     * @param {AbstractProviderPlugin} plugin - The plug-in to attach.
-     */
-    attachPlugin(plugin: AbstractProviderPlugin): this {
-        if (this.#plugins.get(plugin.name)) {
-            throw new Error(`cannot replace existing plugin: ${plugin.name} `);
-        }
-        this.#plugins.set(plugin.name, plugin.connect(this));
-        return this;
-    }
-
-    /**
-     * Get a plugin by name.
-     *
-     * @param {string} name - The name of the plugin to get.
-     *
-     * @returns {AbstractProviderPlugin | null} The plugin, or `null` if not found.
-     */
-    getPlugin<T extends AbstractProviderPlugin = AbstractProviderPlugin>(name: string): null | T {
-        return <T>this.#plugins.get(name) || null;
     }
 
     // Shares multiple identical requests made during the same 250ms
@@ -1374,7 +1318,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     async #getBlock(shard: Shard, block: BlockTag | string, includeTransactions: boolean): Promise<any> {
-        // @TODO: Add CustomBlockPlugin check
         if (isHexString(block, 32)) {
             return await this.#perform({
                 method: 'getBlock',
