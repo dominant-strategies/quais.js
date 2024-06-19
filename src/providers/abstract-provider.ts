@@ -1321,7 +1321,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             address,
             'latest',
         );
-        return outpoints.map((outpoint: OutpointResponseParams) => ({
+        return (outpoints ?? []).map((outpoint: OutpointResponseParams) => ({
             txhash: outpoint.Txhash,
             index: outpoint.Index,
             denomination: outpoint.Denomination,

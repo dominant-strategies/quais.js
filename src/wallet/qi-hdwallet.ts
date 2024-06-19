@@ -280,7 +280,7 @@ export class QiHDWallet extends AbstractHDWallet {
             }
             return Object.values(outpointsMap) as Outpoint[];
         } catch (error) {
-            throw new Error(`Failed to get outpoints for address: ${address}`);
+            throw new Error(`Failed to get outpoints for address: ${address} - error: ${error}`);
         }
     }
 
