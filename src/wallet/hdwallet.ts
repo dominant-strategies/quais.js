@@ -66,13 +66,13 @@ export abstract class AbstractHDWallet {
         this._accounts.set(accountIndex, newNode);
     }
 
-    protected deriveAddress(
+    protected deriveAddressNode(
         account: number,
         startingIndex: number,
         zone: Zone,
         isChange: boolean = false,
     ): HDNodeWallet {
-        this.validateZone(zone);
+        // helper method to check if derived address is valid for a given zone
         const isValidAddressForZone = (address: string) => {
             const addressZone = getZoneForAddress(address);
             if (!addressZone) {
@@ -123,7 +123,7 @@ export abstract class AbstractHDWallet {
             }
         });
 
-        // derive the address node
+        // derive the address node and validate the zone
         const changeIndex = isChange ? 1 : 0;
         const addressNode = this._root.deriveChild(account).deriveChild(changeIndex).deriveChild(addressIndex);
         const zone = getZoneForAddress(addressNode.address);
@@ -131,19 +131,7 @@ export abstract class AbstractHDWallet {
             throw new Error(`Failed to derive a valid address zone for the index ${addressIndex}`);
         }
 
-        // create the NeuteredAddressInfo object and update the map
-        const neuteredAddressInfo = {
-            pubKey: addressNode.publicKey,
-            address: addressNode.address,
-            account: account,
-            index: addressNode.index,
-            change: isChange,
-            zone: zone,
-        };
-
-        addressMap.set(neuteredAddressInfo.address, neuteredAddressInfo);
-
-        return neuteredAddressInfo;
+        return this.createAndStoreAddressInfo(addressNode, account, zone, isChange, addressMap);
     }
 
     public getNextAddress(accountIndex: number, zone: Zone): NeuteredAddressInfo {
@@ -151,28 +139,10 @@ export abstract class AbstractHDWallet {
         if (!this._accounts.has(accountIndex)) {
             this.addAccount(accountIndex);
         }
+        const lastIndex = this.getLastAddressIndex(this._addresses, zone, accountIndex, false);
+        const addressNode = this.deriveAddressNode(accountIndex, lastIndex + 1, zone);
 
-        const filteredAccountInfos = Array.from(this._addresses.values()).filter(
-            (addressInfo) => addressInfo.account === accountIndex && addressInfo.zone === zone,
-        );
-        const lastIndex = filteredAccountInfos.reduce(
-            (maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index),
-            -1,
-        );
-        const addressNode = this.deriveAddress(accountIndex, lastIndex + 1, zone);
-
-        // create the NeuteredAddressInfo object and update the maps
-        const neuteredAddressInfo = {
-            pubKey: addressNode.publicKey,
-            address: addressNode.address,
-            account: accountIndex,
-            index: addressNode.index,
-            change: false,
-            zone: zone,
-        };
-        this._addresses.set(neuteredAddressInfo.address, neuteredAddressInfo);
-
-        return neuteredAddressInfo;
+        return this.createAndStoreAddressInfo(addressNode, accountIndex, zone, false, this._addresses);
     }
 
     public getAddressInfo(address: string): NeuteredAddressInfo | null {
@@ -371,5 +341,72 @@ export abstract class AbstractHDWallet {
                 throw new Error(`Zone mismatch: ${addressInfo.zone} != ${newAddressInfo.zone}`);
             }
         }
+    }
+
+    /**
+     * Retrieves the highest address index from the given address map for a specified zone, account, and change type.
+     *
+     * This method filters the address map based on the provided zone, account, and change type, then determines the
+     * maximum address index from the filtered addresses.
+     *
+     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map containing address information, where the key is
+     *   an address string and the value is a NeuteredAddressInfo object.
+     * @param {Zone} zone - The specific zone to filter the addresses by.
+     * @param {number} account - The account number to filter the addresses by.
+     * @param {boolean} isChange - A boolean indicating whether to filter for change addresses (true) or receiving
+     *   addresses (false).
+     *
+     * @returns {number} - The highest address index for the specified criteria, or -1 if no addresses match.
+     * @protected
+     */
+    protected getLastAddressIndex(
+        addressMap: Map<string, NeuteredAddressInfo>,
+        zone: Zone,
+        account: number,
+        isChange: boolean,
+    ): number {
+        const addresses = Array.from(addressMap.values()).filter(
+            (addressInfo) =>
+                addressInfo.account === account && addressInfo.zone === zone && addressInfo.change === isChange,
+        );
+        return addresses.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1);
+    }
+
+    /**
+     * Creates and stores address information in the address map for a specified account, zone, and change type.
+     *
+     * This method constructs a NeuteredAddressInfo object using the provided HDNodeWallet and other parameters, then
+     * stores this information in the provided address map.
+     *
+     * @param {HDNodeWallet} addressNode - The HDNodeWallet object containing the address and public key information.
+     * @param {number} account - The account number to associate with the address.
+     * @param {Zone} zone - The specific zone to associate with the address.
+     * @param {boolean} isChange - A boolean indicating whether the address is a change address (true) or a receiving
+     *   address (false).
+     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map to store the created NeuteredAddressInfo, with the
+     *   address as the key.
+     *
+     * @returns {NeuteredAddressInfo} - The created NeuteredAddressInfo object.
+     * @protected
+     */
+    protected createAndStoreAddressInfo(
+        addressNode: HDNodeWallet,
+        account: number,
+        zone: Zone,
+        isChange: boolean,
+        addressMap: Map<string, NeuteredAddressInfo>,
+    ): NeuteredAddressInfo {
+        const neuteredAddressInfo: NeuteredAddressInfo = {
+            pubKey: addressNode.publicKey,
+            address: addressNode.address,
+            account,
+            index: addressNode.index,
+            change: isChange,
+            zone,
+        };
+
+        addressMap.set(neuteredAddressInfo.address, neuteredAddressInfo);
+
+        return neuteredAddressInfo;
     }
 }
