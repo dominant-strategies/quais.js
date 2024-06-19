@@ -1,5 +1,5 @@
-import { AbstractHDWallet, NeuteredAddressInfo, SerializedHDWallet } from './hdwallet';
-import { HDNodeWallet } from './hdnodewallet';
+import { AbstractHDWallet, NeuteredAddressInfo, SerializedHDWallet } from './hdwallet.js';
+import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress } from '../address/index.js';
 import { getBytes, hexlify } from '../utils/index.js';
