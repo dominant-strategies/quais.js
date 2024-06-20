@@ -26,6 +26,17 @@ export type HexString = string;
  */
 export type BytesLike = DataHexString | Uint8Array;
 
+/**
+ * Converts a BytesLike value to a Uint8Array.
+ *
+ * @ignore
+ * @category Utils
+ * @param {BytesLike} value - The value to convert.
+ * @param {string} [name] - The name of the value for error context.
+ * @param {boolean} [copy] - Whether to create a copy of the value.
+ * @returns {Uint8Array} The converted Uint8Array.
+ * @throws {Error} If the value is not a valid BytesLike.
+ */
 function _getBytes(value: BytesLike, name?: string, copy?: boolean): Uint8Array {
     if (value instanceof Uint8Array) {
         if (copy) {
@@ -53,7 +64,7 @@ function _getBytes(value: BytesLike, name?: string, copy?: boolean): Uint8Array 
  *
  * @category Utils
  * @param {BytesLike} value - The value to convert to a Uint8Array.
- * @param {string} name - The name of the value for error context.
+ * @param {string} [name] - The name of the value for error context.
  *
  * @returns {Uint8Array} The typed Uint8Array.
  */
@@ -78,8 +89,8 @@ export function getBytesCopy(value: BytesLike, name?: string): Uint8Array {
 /**
  * Returns true if `value` is a valid {@link HexString | **HexString**}.
  *
- * If `length` is `true` or a //number//, it also checks that `value` is a valid
- * {@link DataHexString | **DataHexString**} of `length` (if a //number//) bytes of data (e.g. `0x1234` is 2 bytes).
+ * If `length` is `true` or a number, it also checks that `value` is a valid
+ * {@link DataHexString | **DataHexString**} of `length` (if a number) bytes of data (e.g. `0x1234` is 2 bytes).
  *
  * @category Utils
  * @param {any} value - The value to check.
@@ -174,6 +185,7 @@ export function dataLength(data: BytesLike): number {
  * @param {number} [end] - The end offset.
  *
  * @returns {string} The sliced data.
+ * @throws {Error} If the end offset is beyond the data bounds.
  */
 export function dataSlice(data: BytesLike, start?: number, end?: number): string {
     const bytes = getBytes(data);
@@ -203,6 +215,17 @@ export function stripZerosLeft(data: BytesLike): string {
     return '0x' + bytes;
 }
 
+/**
+ * Pads the data to the specified length.
+ *
+ * @ignore
+ * @category Utils
+ * @param {BytesLike} data - The data to pad.
+ * @param {number} length - The length to pad to.
+ * @param {boolean} left - Whether to pad on the left.
+ * @returns {string} The padded data.
+ * @throws {Error} If the padding exceeds data length.
+ */
 function zeroPad(data: BytesLike, length: number, left: boolean): string {
     const bytes = getBytes(data);
     assert(length >= bytes.length, 'padding exceeds data length', 'BUFFER_OVERRUN', {

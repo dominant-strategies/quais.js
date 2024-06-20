@@ -28,7 +28,7 @@ const names = ['wei', 'kwei', 'mwei', 'gwei', 'szabo', 'finney', 'ether'];
  * @category Utils
  * @param {BigNumberish} value - The value to convert.
  * @param {string | Numeric} [unit=18] - The unit to convert to. Default is `18` Default is `18` Default is `18` Default
- *   is `18` Default is `18` Default is `18`
+ *   is `18` Default is `18` Default is `18` Default is `18`
  *
  * @returns {string} The converted value.
  * @throws {Error} If the unit is invalid.
@@ -53,7 +53,7 @@ export function formatUnits(value: BigNumberish, unit?: string | Numeric): strin
  * @category Utils
  * @param {string} value - The value to convert.
  * @param {string | Numeric} [unit=18] - The unit to convert from. Default is `18` Default is `18` Default is `18`
- *   Default is `18` Default is `18` Default is `18`
+ *   Default is `18` Default is `18` Default is `18` Default is `18`
  *
  * @returns {bigint} The converted value.
  * @throws {Error} If the unit is invalid.
@@ -121,7 +121,3 @@ export function parseQuai(ether: string): bigint {
 export function parseQi(value: string): bigint {
     return parseUnits(value, 3);
 }
-
-// Aliases to maintain backwards compatibility. These will be removed in the future.
-export const formatEther = formatQuai;
-export const parseEther = parseQuai;

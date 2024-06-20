@@ -74,6 +74,15 @@ export function isKeystoreJson(json: string): boolean {
     return false;
 }
 
+/**
+ * Decrypts the given ciphertext using the provided key and data.
+ *
+ * @param {any} data - The data containing encryption parameters.
+ * @param {Uint8Array} key - The key to use for decryption.
+ * @param {Uint8Array} ciphertext - The ciphertext to decrypt.
+ *
+ * @returns {string} The decrypted data as a hex string.
+ */
 function decrypt(data: any, key: Uint8Array, ciphertext: Uint8Array): string {
     const cipher = spelunk<string>(data, 'crypto.cipher:string');
     if (cipher === 'aes-128-ctr') {
@@ -87,6 +96,14 @@ function decrypt(data: any, key: Uint8Array, ciphertext: Uint8Array): string {
     });
 }
 
+/**
+ * Retrieves the account details from the given data and key.
+ *
+ * @param {any} data - The data containing account information.
+ * @param {string} _key - The key to use for decryption.
+ *
+ * @returns {KeystoreAccount} The decrypted account details.
+ */
 function getAccount(data: any, _key: string): KeystoreAccount {
     const key = getBytes(_key);
     const ciphertext = spelunk<Uint8Array>(data, 'crypto.ciphertext:data!');
@@ -152,6 +169,13 @@ type KdfParams =
           algorithm: 'sha256' | 'sha512';
       };
 
+/**
+ * Retrieves the key derivation function parameters from the given data.
+ *
+ * @param {any} data - The data containing KDF parameters.
+ *
+ * @returns {KdfParams} The key derivation function parameters.
+ */
 function getDecryptKdfParams(data: any): KdfParams {
     const kdf = spelunk(data, 'crypto.kdf:string');
     if (kdf && typeof kdf === 'string') {
@@ -222,6 +246,13 @@ export function decryptKeystoreJsonSync(json: string, _password: string | Uint8A
     return getAccount(data, key);
 }
 
+/**
+ * Pauses execution for the specified duration.
+ *
+ * @param {number} duration - The duration to stall in milliseconds.
+ *
+ * @returns {Promise<void>} A promise that resolves after the specified duration.
+ */
 function stall(duration: number): Promise<void> {
     return new Promise((resolve) => {
         setTimeout(() => {
@@ -276,6 +307,13 @@ export async function decryptKeystoreJson(
     return getAccount(data, key);
 }
 
+/**
+ * Retrieves the key derivation function parameters for encryption.
+ *
+ * @param {EncryptOptions} options - The encryption options.
+ *
+ * @returns {ScryptParams} The key derivation function parameters.
+ */
 function getEncryptKdfParams(options: EncryptOptions): ScryptParams {
     // Check/generate the salt
     const salt = options.salt != null ? getBytes(options.salt, 'options.salt') : randomBytes(32);
@@ -317,6 +355,16 @@ function getEncryptKdfParams(options: EncryptOptions): ScryptParams {
     return { name: 'scrypt', dkLen: 32, salt, N, r, p };
 }
 
+/**
+ * Encrypts the keystore with the given key, KDF parameters, account, and options.
+ *
+ * @param {Uint8Array} key - The key to use for encryption.
+ * @param {ScryptParams} kdf - The key derivation function parameters.
+ * @param {KeystoreAccount} account - The account to encrypt.
+ * @param {EncryptOptions} options - The encryption options.
+ *
+ * @returns {any} The encrypted keystore data.
+ */
 function _encryptKeystore(key: Uint8Array, kdf: ScryptParams, account: KeystoreAccount, options: EncryptOptions): any {
     const privateKey = getBytes(account.privateKey, 'privateKey');
 

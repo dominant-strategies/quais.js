@@ -1,5 +1,6 @@
 /**
  * A **Network** encapsulates the various properties required to interact with a specific chain.
+ * @category Providers
  */
 
 import { getBigInt, assertArgument } from '../utils/index.js';
@@ -7,9 +8,9 @@ import { getBigInt, assertArgument } from '../utils/index.js';
 import type { BigNumberish } from '../utils/index.js';
 
 /**
- * A Networkish can be used to allude to a Network, by specifing:
+ * A Networkish can be used to allude to a Network, by specifying:
  *
- * - A [Network](../classes/Network) object
+ * - A {@link Network} object
  * - A well-known (or registered) network name
  * - A well-known (or registered) chain ID
  * - An object with sufficient details to describe a network
@@ -39,6 +40,8 @@ export class Network {
 
     /**
      * Creates a new **Network** for `name` and `chainId`.
+     * @param {string} name - The network name.
+     * @param {BigNumberish} chainId - The network chain ID.
      */
     constructor(name: string, chainId: BigNumberish) {
         this.#name = name;
@@ -47,6 +50,7 @@ export class Network {
 
     /**
      * Returns a JSON-compatible representation of a Network.
+     * @returns {Object} The JSON representation of the network.
      */
     toJSON(): any {
         return { name: this.name, chainId: String(this.chainId) };
@@ -55,21 +59,33 @@ export class Network {
     /**
      * The network common name.
      *
-     * This is the canonical name, as networks migh have multiple names.
+     * This is the canonical name, as networks might have multiple names.
+     * @returns {string} The network name.
      */
     get name(): string {
         return this.#name;
     }
+
+    /**
+     * Sets the network name.
+     * @param {string} value - The new network name.
+     */
     set name(value: string) {
         this.#name = value;
     }
 
     /**
      * The network chain ID.
+     * @returns {bigint} The network chain ID.
      */
     get chainId(): bigint {
         return this.#chainId;
     }
+
+    /**
+     * Sets the network chain ID.
+     * @param {BigNumberish} value - The new network chain ID.
+     */
     set chainId(value: BigNumberish) {
         this.#chainId = getBigInt(value, 'chainId');
     }
@@ -81,8 +97,8 @@ export class Network {
      * This method does not currently check for additional properties, such as plug-in compatibility.
      *
      * @param {Networkish} other - The network to compare.
-     *
      * @returns {boolean} True if the networks match.
+     * @ignore
      */
     matches(other: Networkish): boolean {
         if (other == null) {
@@ -124,6 +140,7 @@ export class Network {
 
     /**
      * Create a copy of this Network.
+     * @returns {Network} A new Network instance.
      */
     clone(): Network {
         const clone = new Network(this.name, this.chainId);
@@ -133,9 +150,9 @@ export class Network {
     /**
      * Returns a new Network for the `network` name or chainId.
      *
-     * @param {Networkish} network - The network to get.
-     *
+     * @param {Networkish} [network] - The network to get.
      * @returns {Network} The Network instance.
+     * @throws {Error} If the network is invalid.
      */
     static from(network?: Networkish): Network {
         // Default network
@@ -187,7 +204,7 @@ export class Network {
      *
      * @param {string | number | bigint} nameOrChainId - The name or chain ID to register.
      * @param {() => Network} networkFunc - The function to create the Network.
-     * @throws If a network is already registered for `nameOrChainId`.
+     * @throws {Error} If a network is already registered for `nameOrChainId`.
      */
     static register(nameOrChainId: string | number | bigint, networkFunc: () => Network): void {
         if (typeof nameOrChainId === 'number') {

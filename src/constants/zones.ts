@@ -1,3 +1,10 @@
+/**
+ * A zone is the lowest level shard within the Quai network hierarchy. Zones are the only shards in the network that
+ * accept user transactions. The value is a hexadecimal string representing the encoded value of the zone. Read more
+ * [here](https://github.com/quai-network/qips/blob/master/qip-0002.md).
+ *
+ * @category Constants
+ */
 export enum Zone {
     Cyprus1 = '0x00',
     Cyprus2 = '0x01',

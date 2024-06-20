@@ -82,7 +82,7 @@ export class FewestCoinSelector extends AbstractCoinSelector {
             throw new Error('Insufficient funds');
         }
 
-        // // Check if any denominations can be removed from the input set and it still remain valid
+        // Check if any denominations can be removed from the input set and it still remain valid
         selectedUTXOs = this.sortUTXOsByDenomination(selectedUTXOs, 'asc');
 
         let runningTotal = totalValue;
@@ -139,6 +139,13 @@ export class FewestCoinSelector extends AbstractCoinSelector {
         };
     }
 
+    /**
+     * Sorts UTXOs by their denomination.
+     *
+     * @param {UTXO[]} utxos - The UTXOs to sort.
+     * @param {'asc' | 'desc'} direction - The direction to sort ('asc' for ascending, 'desc' for descending).
+     * @returns {UTXO[]} The sorted UTXOs.
+     */
     private sortUTXOsByDenomination(utxos: UTXO[], direction: 'asc' | 'desc'): UTXO[] {
         if (direction === 'asc') {
             return [...utxos].sort((a, b) => {
@@ -152,12 +159,23 @@ export class FewestCoinSelector extends AbstractCoinSelector {
         });
     }
 
+    /**
+     * Validates the target amount.
+     *
+     * @param {SpendTarget} target - The target amount to validate.
+     * @throws Will throw an error if the target amount is less than or equal to 0.
+     */
     private validateTarget(target: SpendTarget) {
         if (target.value <= BigInt(0)) {
             throw new Error('Target amount must be greater than 0');
         }
     }
 
+    /**
+     * Validates the available UTXOs.
+     *
+     * @throws Will throw an error if there are no available UTXOs.
+     */
     private validateUTXOs() {
         if (this.availableUXTOs.length === 0) {
             throw new Error('No UTXOs available');

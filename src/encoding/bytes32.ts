@@ -5,21 +5,20 @@
  */
 
 import { getBytes, zeroPadBytes } from '../utils/index.js';
-import { toUtf8Bytes, toUtf8String, } from '../encoding/index.js';
-
+import { toUtf8Bytes, toUtf8String } from './index.js';
 
 import type { BytesLike } from '../utils/index.js';
 
 /**
- * Encodes a string as a Bytes32 string.
+ * Encodes a string as a Bytes32 string. This is used to encode ABI data.
  *
- * @category Application Binary Interface
+ * @category Encoding
  * @param {string} text - The string to encode.
  *
  * @returns {string} The Bytes32-encoded string.
  * @throws {Error} If the string is too long to fit in a Bytes32 format.
  */
-export function encodeBytes32String(text: string): string {
+export function encodeBytes32(text: string): string {
     // Get the bytes
     const bytes = toUtf8Bytes(text);
 
@@ -33,15 +32,15 @@ export function encodeBytes32String(text: string): string {
 }
 
 /**
- * Decodes a Bytes32-encoded string into a regular string.
+ * Decodes a Bytes32-encoded string into a regular string. This is used to decode ABI-encoded data.
  *
- * @category Application Binary Interface
+ * @category Encoding
  * @param {BytesLike} _bytes - The Bytes32-encoded data.
  *
  * @returns {string} The decoded string.
  * @throws {Error} If the input is not exactly 32 bytes long or lacks a null terminator.
  */
-export function decodeBytes32String(_bytes: BytesLike): string {
+export function decodeBytes32(_bytes: BytesLike): string {
     const data = getBytes(_bytes, 'bytes');
 
     // Must be 32 bytes with a null-termination

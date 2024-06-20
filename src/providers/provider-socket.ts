@@ -19,6 +19,12 @@ import type { Networkish } from './network.js';
 import type { WebSocketLike } from './provider-websocket.js';
 import { Shard } from '../constants/index.js';
 
+/**
+ * @property {string} method - The method name.
+ * @property {Object} params - The parameters.
+ * @property {any} params.result - The result.
+ * @property {string} params.subscription - The subscription ID.
+ */
 type JsonRpcSubscription = {
     method: string;
     params: {
@@ -40,6 +46,7 @@ export class SocketSubscriber implements Subscriber {
 
     /**
      * The filter.
+     * @type {Array<any>}
      */
     get filter(): Array<any> {
         return JSON.parse(this.#filter);
@@ -52,6 +59,8 @@ export class SocketSubscriber implements Subscriber {
 
     /**
      * Creates a new **SocketSubscriber** attached to `provider` listening to `filter`.
+     * @param {SocketProvider} provider - The socket provider.
+     * @param {Array<any>} filter - The filter.
      */
     constructor(provider: SocketProvider, filter: Array<any>) {
         this.#provider = provider;
@@ -61,6 +70,9 @@ export class SocketSubscriber implements Subscriber {
         this.#emitPromise = null;
     }
 
+    /**
+     * Start the subscriber.
+     */
     start(): void {
         this.#filterId = this.#provider.send('quai_subscribe', this.filter).then((filterId) => {
             this.#provider._register(filterId, this);
@@ -68,6 +80,9 @@ export class SocketSubscriber implements Subscriber {
         });
     }
 
+    /**
+     * Stop the subscriber.
+     */
     stop(): void {
         (<Promise<number>>this.#filterId).then((filterId) => {
             this.#provider.send('quai_unsubscribe', [filterId]);
@@ -75,8 +90,10 @@ export class SocketSubscriber implements Subscriber {
         this.#filterId = null;
     }
 
-    // @TODO: pause should trap the current blockNumber, unsub, and on resume use getLogs
-    //        and resume
+    /**
+     * Pause the subscriber.
+     * @param {boolean} [dropWhilePaused] - Whether to drop logs while paused.
+     */
     pause(dropWhilePaused?: boolean): void {
         assert(
             dropWhilePaused,
@@ -87,11 +104,16 @@ export class SocketSubscriber implements Subscriber {
         this.#paused = !!dropWhilePaused;
     }
 
+    /**
+     * Resume the subscriber.
+     */
     resume(): void {
         this.#paused = null;
     }
 
     /**
+     * Handle incoming messages.
+     * @param {any} message - The message to handle.
      * @ignore
      */
     _handleMessage(message: any): void {
@@ -117,10 +139,13 @@ export class SocketSubscriber implements Subscriber {
 
     /**
      * Sub-classes **must** override this to emit the events on the provider.
+     * @param {SocketProvider} provider - The socket provider.
+     * @param {any} message - The message to emit.
+     * @returns {Promise<void>}
+     * @abstract
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async _emit(provider: SocketProvider, message: any): Promise<void> {
-        throw new Error('sub-classes must implemente this; _emit');
+        throw new Error('sub-classes must implement this; _emit');
     }
 }
 
@@ -131,30 +156,46 @@ export class SocketSubscriber implements Subscriber {
  */
 export class SocketBlockSubscriber extends SocketSubscriber {
     /**
+     * Creates a new **SocketBlockSubscriber**.
+     * @param {SocketProvider} provider - The socket provider.
      * @ignore
      */
     constructor(provider: SocketProvider) {
         super(provider, ['newHeads']);
     }
 
+    /**
+     * Emit the block event.
+     * @param {SocketProvider} provider - The socket provider.
+     * @param {any} message - The message to emit.
+     * @returns {Promise<void>}
+     */
     async _emit(provider: SocketProvider, message: any): Promise<void> {
         provider.emit('block', parseInt(message.number));
     }
 }
 
 /**
- * A **SocketPendingSubscriber** listens for pending transacitons and emits `"pending"` events.
+ * A **SocketPendingSubscriber** listens for pending transactions and emits `"pending"` events.
  *
  * @category Providers
  */
 export class SocketPendingSubscriber extends SocketSubscriber {
     /**
+     * Creates a new **SocketPendingSubscriber**.
+     * @param {SocketProvider} provider - The socket provider.
      * @ignore
      */
     constructor(provider: SocketProvider) {
         super(provider, ['newPendingTransactions']);
     }
 
+    /**
+     * Emit the pending event.
+     * @param {SocketProvider} provider - The socket provider.
+     * @param {any} message - The message to emit.
+     * @returns {Promise<void>}
+     */
     async _emit(provider: SocketProvider, message: any): Promise<void> {
         provider.emit('pending', message);
     }
@@ -170,12 +211,16 @@ export class SocketEventSubscriber extends SocketSubscriber {
 
     /**
      * The filter.
+     * @type {EventFilter}
      */
     get logFilter(): EventFilter {
         return JSON.parse(this.#logFilter);
     }
 
     /**
+     * Creates a new **SocketEventSubscriber**.
+     * @param {SocketProvider} provider - The socket provider.
+     * @param {EventFilter} filter - The event filter.
      * @ignore
      */
     constructor(provider: SocketProvider, filter: EventFilter) {
@@ -183,6 +228,12 @@ export class SocketEventSubscriber extends SocketSubscriber {
         this.#logFilter = JSON.stringify(filter);
     }
 
+    /**
+     * Emit the event log.
+     * @param {SocketProvider} provider - The socket provider.
+     * @param {any} message - The message to emit.
+     * @returns {Promise<void>}
+     */
     async _emit(provider: SocketProvider, message: any): Promise<void> {
         provider.emit(this.logFilter, provider._wrapLog(message, provider._network));
     }
@@ -208,6 +259,8 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
      * Creates a new **SocketProvider** connected to `network`.
      *
      * If unspecified, the network will be discovered.
+     * @param {Networkish} [network] - The network to connect to.
+     * @param {JsonRpcApiProviderOptions} [_options] - The options for the provider.
      */
     constructor(network?: Networkish, _options?: JsonRpcApiProviderOptions) {
         // Copy the options
@@ -237,6 +290,11 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
         this.#pending = new Map();
     }
 
+    /**
+     * Get the subscriber for a given subscription.
+     * @param {Subscription} sub - The subscription.
+     * @returns {Subscriber} The subscriber.
+     */
     _getSubscriber(sub: Subscription): Subscriber {
         switch (sub.type) {
             case 'close':
@@ -258,8 +316,10 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     }
 
     /**
-     * Register a new subscriber. This is used internalled by Subscribers and generally is unecessary unless extending
+     * Register a new subscriber. This is used internally by Subscribers and generally is unnecessary unless extending
      * capabilities.
+     * @param {number | string} filterId - The filter ID.
+     * @param {SocketSubscriber} subscriber - The subscriber.
      */
     _register(filterId: number | string, subscriber: SocketSubscriber): void {
         this.#subs.set(filterId, subscriber);
@@ -272,6 +332,12 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
         }
     }
 
+    /**
+     * Send a JSON-RPC payload.
+     * @param {JsonRpcPayload | Array<JsonRpcPayload>} payload - The payload to send.
+     * @param {Shard} [shard] - The shard.
+     * @returns {Promise<Array<JsonRpcResult | JsonRpcError>>} The result or error.
+     */
     async _send(
         payload: JsonRpcPayload | Array<JsonRpcPayload>,
         shard?: Shard,
@@ -297,6 +363,7 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
 
     /**
      * Sub-classes **must** call this with messages received over their transport to be processed and dispatched.
+     * @param {string} message - The message to process.
      */
     async _processMessage(message: string): Promise<void> {
         const result = <JsonRpcResult | JsonRpcError | JsonRpcSubscription>JSON.parse(message);
@@ -343,8 +410,11 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
 
     /**
      * Sub-classes **must** override this to send `message` over their transport.
+     * @param {string} message - The message to send.
+     * @param {Shard} [shard] - The shard.
+     * @returns {Promise<void>}
+     * @abstract
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async _write(message: string, shard?: Shard): Promise<void> {
         throw new Error('sub-classes must override this');
     }

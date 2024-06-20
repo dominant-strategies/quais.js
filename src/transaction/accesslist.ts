@@ -4,6 +4,13 @@ import { assertArgument, isHexString } from '../utils/index.js';
 
 import type { AccessList, AccessListish } from './index.js';
 
+/**
+ * Converts an address and storage keys into an access set.
+ *
+ * @param {string} addr - The address to validate and convert.
+ * @param {Array<string>} storageKeys - The storage keys to validate and convert.
+ * @returns {{ address: string; storageKeys: Array<string> }} The access set.
+ */
 function accessSetify(addr: string, storageKeys: Array<string>): { address: string; storageKeys: Array<string> } {
     validateAddress(addr);
     return {
@@ -16,11 +23,10 @@ function accessSetify(addr: string, storageKeys: Array<string>): { address: stri
 }
 
 /**
- * Returns a {@link AccessList | **AccessList** } from any quais-supported access-list structure.
+ * Returns an {@link AccessList | **AccessList**} from any quasi-supported access-list structure.
  *
  * @category Transaction
  * @param {AccessListish} value - The value to convert to an access list.
- *
  * @returns {AccessList} The access list.
  * @throws {Error} If the value is not a valid access list.
  */

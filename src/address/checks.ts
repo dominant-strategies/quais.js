@@ -127,3 +127,31 @@ export function validateAddress(address: string): void {
     );
     assertArgument(formatMixedCaseChecksumAddress(address) === address, 'invalid address checksum', 'address', address);
 }
+
+/**
+ * Checks whether a given address is in the Qi ledger scope by checking the 9th bit of the address.
+ *
+ * @category Address
+ * @param {string} address - The address to check
+ *
+ * @returns {boolean} True if the address is in the Qi ledger scope, false otherwise.
+ */
+export function isQiAddress(address: string): boolean {
+    const secondByte = address.substring(4, 6);
+    const binaryString = parseInt(secondByte, 16).toString(2).padStart(8, '0');
+    const isUTXO = binaryString[0] === '1';
+
+    return isUTXO;
+}
+
+/**
+ * Checks whether a given address is in the Quai ledger scope by checking the 9th bit of the address.
+ *
+ * @category Address
+ * @param {string} address - The address to check
+ *
+ * @returns {boolean} True if the address is in the Quai ledger scope, false otherwise.
+ */
+export function isQuaiAddress(address: string): boolean {
+    return !isQiAddress(address);
+}

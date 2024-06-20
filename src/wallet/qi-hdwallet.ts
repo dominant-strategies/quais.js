@@ -13,13 +13,28 @@ import { getZoneForAddress } from '../utils/index.js';
 import { AllowedCoinType, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
 
-type OutpointInfo = {
+/**
+ * @property {Outpoint} outpoint - The outpoint object.
+ * @property {string} address - The address associated with the outpoint.
+ * @property {Zone} zone - The zone of the outpoint.
+ * @property {number} [account] - The account number (optional).
+ * @interface OutpointInfo
+ */
+interface OutpointInfo {
     outpoint: Outpoint;
     address: string;
     zone: Zone;
     account?: number;
-};
+}
 
+/**
+ * @extends SerializedHDWallet
+ * @property {OutpointInfo[]} outpoints - Array of outpoint information.
+ * @property {NeuteredAddressInfo[]} changeAddresses - Array of change addresses.
+ * @property {NeuteredAddressInfo[]} gapAddresses - Array of gap addresses.
+ * @property {NeuteredAddressInfo[]} gapChangeAddresses - Array of gap change addresses.
+ * @interface SerializedQiHDWallet
+ */
 interface SerializedQiHDWallet extends SerializedHDWallet {
     outpoints: OutpointInfo[];
     changeAddresses: NeuteredAddressInfo[];
@@ -27,24 +42,89 @@ interface SerializedQiHDWallet extends SerializedHDWallet {
     gapChangeAddresses: NeuteredAddressInfo[];
 }
 
+/**
+ * The Qi HD wallet is a BIP44-compliant hierarchical deterministic wallet used for managing a set of addresses in the
+ * Qi ledger. This is wallet implementation is the primary way to interact with the Qi UTXO ledger on the Quai network.
+ *
+ * The Qi HD wallet supports:
+ *
+ * - Adding accounts to the wallet heierchy
+ * - Generating addresses for a specific account in any {@link Zone}
+ * - Signing and sending transactions for any address in the wallet
+ * - Serializing the wallet to JSON and deserializing it back to a wallet instance.
+ *
+ * @category Wallet
+ * @example
+ *
+ * ```ts
+ * import { QiHDWallet, Zone } from 'quais';
+ *
+ * const wallet = new QiHDWallet();
+ * const cyrpus1Address = wallet.getNextAddress(0, Zone.Cyrpus1); // get the first address in the Cyrpus1 zone
+ * await wallet.sendTransaction({ txInputs: [...], txOutputs: [...] }); // send a transaction
+ * const serializedWallet = wallet.serialize(); // serialize current (account/address) state of the wallet
+ * .
+ * .
+ * .
+ * const deserializedWallet = QiHDWallet.deserialize(serializedWallet); // create a new wallet instance from the serialized data
+ * ```
+ */
 export class QiHDWallet extends AbstractHDWallet {
+    /**
+     * @private
+     * @type {number}
+     */
     protected static _version: number = 1;
 
+    /**
+     * @private
+     * @type {number}
+     */
     protected static _GAP_LIMIT: number = 20;
 
+    /**
+     * @private
+     * @type {AllowedCoinType}
+     */
     protected static _coinType: AllowedCoinType = 969;
 
-    // Map of change addresses to address info
+    /**
+     * Map of change addresses to address info.
+     *
+     * @private
+     * @type {Map<string, NeuteredAddressInfo>}
+     */
     protected _changeAddresses: Map<string, NeuteredAddressInfo> = new Map();
 
-    // Array of gap addresses
+    /**
+     * Array of gap addresses.
+     *
+     * @private
+     * @type {NeuteredAddressInfo[]}
+     */
     protected _gapChangeAddresses: NeuteredAddressInfo[] = [];
 
-    // Array of gap change addresses
+    /**
+     * Array of gap change addresses.
+     *
+     * @private
+     * @type {NeuteredAddressInfo[]}
+     */
     protected _gapAddresses: NeuteredAddressInfo[] = [];
 
+    /**
+     * Array of outpoint information.
+     *
+     * @private
+     * @type {OutpointInfo[]}
+     */
     protected _outpoints: OutpointInfo[] = [];
 
+    /**
+     * @private
+     * @param {HDNodeWallet} root - The root HDNodeWallet.
+     * @param {Provider} [provider] - The provider (optional).
+     */
     private constructor(root: HDNodeWallet, provider?: Provider) {
         super(root, provider);
     }
@@ -61,18 +141,30 @@ export class QiHDWallet extends AbstractHDWallet {
         return this._getNextAddress(account, zone, true, this._changeAddresses);
     }
 
+    /**
+     * Imports an array of outpoints.
+     *
+     * @param {OutpointInfo[]} outpoints - The outpoints to import.
+     */
     public importOutpoints(outpoints: OutpointInfo[]): void {
         this.validateOutpointInfo(outpoints);
         this._outpoints.push(...outpoints);
     }
 
+    /**
+     * Gets the outpoints for the specified zone.
+     *
+     * @param {Zone} zone - The zone.
+     *
+     * @returns {OutpointInfo[]} The outpoints for the zone.
+     */
     public getOutpoints(zone: Zone): OutpointInfo[] {
         this.validateZone(zone);
         return this._outpoints.filter((outpoint) => outpoint.zone === zone);
     }
 
     /**
-     * Signs a Qi transaction and returns the serialized transaction
+     * Signs a Qi transaction and returns the serialized transaction.
      *
      * @param {QiTransactionRequest} tx - The transaction to sign.
      *
@@ -98,6 +190,14 @@ export class QiHDWallet extends AbstractHDWallet {
         return txobj.serialized;
     }
 
+    /**
+     * Sends a Qi transaction.
+     *
+     * @param {QiTransactionRequest} tx - The transaction to send.
+     *
+     * @returns {Promise<TransactionResponse>} The transaction response.
+     * @throws {Error} If the provider is not set or if the transaction has no inputs.
+     */
     public async sendTransaction(tx: QiTransactionRequest): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
@@ -122,15 +222,30 @@ export class QiHDWallet extends AbstractHDWallet {
         return await this.provider.broadcastTransaction(shard, signedTx);
     }
 
-    // createSchnorrSignature returns a schnorr signature for the given message and private key
+    /**
+     * Returns a schnorr signature for the given message and private key.
+     *
+     * @private
+     * @param {TxInput} input - The transaction input.
+     * @param {Uint8Array} hash - The hash of the message.
+     *
+     * @returns {string} The schnorr signature.
+     */
     private createSchnorrSignature(input: TxInput, hash: Uint8Array): string {
         const privKey = this.getPrivateKeyForTxInput(input);
         const signature = schnorr.sign(hash, getBytes(privKey));
         return hexlify(signature);
     }
 
-    // createMuSigSignature returns a MuSig signature for the given message
-    // and private keys corresponding to the input addresses
+    /**
+     * Returns a MuSig signature for the given message and private keys corresponding to the input addresses.
+     *
+     * @private
+     * @param {QiTransaction} tx - The Qi transaction.
+     * @param {Uint8Array} hash - The hash of the message.
+     *
+     * @returns {string} The MuSig signature.
+     */
     private createMuSigSignature(tx: QiTransaction, hash: Uint8Array): string {
         const musig = MuSigFactory(musigCrypto);
 
@@ -319,7 +434,15 @@ export class QiHDWallet extends AbstractHDWallet {
         return addressesCount;
     }
 
-    // getOutpointsByAddress queries the network node for the outpoints of the specified address
+    /**
+     * Queries the network node for the outpoints of the specified address.
+     *
+     * @private
+     * @param {string} address - The address to query.
+     *
+     * @returns {Promise<Outpoint[]>} The outpoints for the address.
+     * @throws {Error} If the query fails.
+     */
     private async getOutpointsByAddress(address: string): Promise<Outpoint[]> {
         try {
             const outpointsMap = await this.provider!.getOutpointsByAddress(address);
@@ -332,18 +455,39 @@ export class QiHDWallet extends AbstractHDWallet {
         }
     }
 
+    /**
+     * Gets the change addresses for the specified zone.
+     *
+     * @param {Zone} zone - The zone.
+     *
+     * @returns {NeuteredAddressInfo[]} The change addresses for the zone.
+     */
     public getChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
         this.validateZone(zone);
         const changeAddresses = this._changeAddresses.values();
         return Array.from(changeAddresses).filter((addressInfo) => addressInfo.zone === zone);
     }
 
+    /**
+     * Gets the gap addresses for the specified zone.
+     *
+     * @param {Zone} zone - The zone.
+     *
+     * @returns {NeuteredAddressInfo[]} The gap addresses for the zone.
+     */
     public getGapAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
         this.validateZone(zone);
         const gapAddresses = this._gapAddresses.filter((addressInfo) => addressInfo.zone === zone);
         return gapAddresses;
     }
 
+    /**
+     * Gets the gap change addresses for the specified zone.
+     *
+     * @param {Zone} zone - The zone.
+     *
+     * @returns {NeuteredAddressInfo[]} The gap change addresses for the zone.
+     */
     public getGapChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
         this.validateZone(zone);
         const gapChangeAddresses = this._gapChangeAddresses.filter((addressInfo) => addressInfo.zone === zone);
@@ -430,9 +574,8 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     /**
-     * Validates an array of OutpointInfo objects.
-     *
-     * This method checks the validity of each OutpointInfo object by performing the following validations:
+     * Validates an array of OutpointInfo objects. This method checks the validity of each OutpointInfo object by
+     * performing the following validations:
      *
      * - Validates the zone using the `validateZone` method.
      * - Checks if the address exists in the wallet.

@@ -54,8 +54,13 @@ import { QiTransactionLike } from '../transaction/qi-transaction.js';
 import { QuaiTransactionLike } from '../transaction/quai-transaction.js';
 import { toShard, toZone } from '../constants/index.js';
 
-// -----------------------
-
+/**
+ * Get the value if it is not null or undefined.
+ *
+ * @ignore
+ * @param {undefined | null | T} value - The value to check.
+ * @returns {null | T} The value if not null or undefined, otherwise null.
+ */
 function getValue<T>(value: undefined | null | T): null | T {
     if (value == null) {
         return null;
@@ -63,14 +68,19 @@ function getValue<T>(value: undefined | null | T): null | T {
     return value;
 }
 
+/**
+ * Convert a value to a JSON-friendly string.
+ *
+ * @ignore
+ * @param {null | bigint | string} value - The value to convert.
+ * @returns {null | string} The JSON-friendly string or null.
+ */
 function toJson(value: null | bigint | string): null | string {
     if (value == null) {
         return null;
     }
     return value.toString();
 }
-
-// @TODO? <T extends FeeData = { }> implements Required<T>
 
 /**
  * A **FeeData** wraps all the fee-related values associated with the network.
@@ -96,7 +106,7 @@ export class FeeData {
     readonly maxFeePerGas!: null | bigint;
 
     /**
-     * The additional amout to pay per gas to encourage a validator to include the transaction.
+     * The additional amount to pay per gas to encourage a validator to include the transaction.
      *
      * The purpose of this is to compensate the validator for the adjusted risk for including a given transaction.
      *
@@ -106,6 +116,10 @@ export class FeeData {
 
     /**
      * Creates a new FeeData for `gasPrice`, `maxFeePerGas` and `maxPriorityFeePerGas`.
+     *
+     * @param {null | bigint} [gasPrice] - The gas price.
+     * @param {null | bigint} [maxFeePerGas] - The maximum fee per gas.
+     * @param {null | bigint} [maxPriorityFeePerGas] - The maximum priority fee per gas.
      */
     constructor(gasPrice?: null | bigint, maxFeePerGas?: null | bigint, maxPriorityFeePerGas?: null | bigint) {
         defineProperties<FeeData>(this, {
@@ -117,6 +131,8 @@ export class FeeData {
 
     /**
      * Returns a JSON-friendly value.
+     *
+     * @returns {any} The JSON-friendly value.
      */
     toJSON(): any {
         const { gasPrice, maxFeePerGas, maxPriorityFeePerGas } = this;
@@ -129,6 +145,13 @@ export class FeeData {
     }
 }
 
+/**
+ * Determines the address from a transaction request.
+ *
+ * @param {TransactionRequest} tx - The transaction request.
+ * @returns {AddressLike} The address from the transaction request.
+ * @throws {Error} If unable to determine the address.
+ */
 export function addressFromTransactionRequest(tx: TransactionRequest): AddressLike {
     if ('from' in tx) {
         return tx.from;
@@ -141,6 +164,7 @@ export function addressFromTransactionRequest(tx: TransactionRequest): AddressLi
     }
     throw new Error('Unable to determine address from transaction inputs, from or to field');
 }
+
 /**
  * A **TransactionRequest** is a transactions with potentially various properties not defined, or with less strict types
  * for its values.
@@ -177,7 +201,7 @@ export interface QuaiTransactionRequest {
     nonce?: null | number;
 
     /**
-     * The maximum amount of gas to allow this transaction to consime.
+     * The maximum amount of gas to allow this transaction to consume.
      */
     gasLimit?: null | BigNumberish;
 
@@ -226,8 +250,6 @@ export interface QuaiTransactionRequest {
      */
     customData?: any;
 
-    // Only meaningful when used for call
-
     /**
      * When using `call` or `estimateGas`, this allows a specific block to be queried. Many backends do not support this
      * and when unsupported errors are silently squelched and `"latest"` is used.
@@ -250,8 +272,14 @@ export interface QiTransactionRequest {
      */
     chainId?: null | BigNumberish;
 
+    /**
+     * The inputs for the transaction.
+     */
     inputs?: null | Array<TxInput>;
 
+    /**
+     * The outputs for the transaction.
+     */
     outputs?: null | Array<TxOutput>;
 }
 
@@ -286,11 +314,10 @@ export interface QuaiPreparedTransactionRequest {
     /**
      * The nonce of the transaction, used to prevent replay attacks.
      */
-
     nonce?: number;
 
     /**
-     * The maximum amount of gas to allow this transaction to consime.
+     * The maximum amount of gas to allow this transaction to consume.
      */
     gasLimit?: bigint;
 
@@ -361,8 +388,14 @@ export interface QiPreparedTransactionRequest {
      */
     chainId?: bigint;
 
+    /**
+     * The inputs for the transaction.
+     */
     inputs?: null | Array<TxInput>;
 
+    /**
+     * The outputs for the transaction.
+     */
     outputs?: null | Array<TxOutput>;
 }
 
@@ -371,7 +404,6 @@ export interface QiPreparedTransactionRequest {
  *
  * @category Providers
  * @param {TransactionRequest} req - The transaction request to copy.
- *
  * @returns {PreparedTransactionRequest} The prepared transaction request.
  * @throws {Error} If the request is invalid.
  */
@@ -429,9 +461,6 @@ export function copyRequest(req: TransactionRequest): PreparedTransactionRequest
     return result;
 }
 
-//////////////////////
-// Block
-
 /**
  * An Interface to indicate a {@link Block | **Block**} has been included in the blockchain. This asserts a Type Guard
  * that necessary properties are non-null.
@@ -442,6 +471,11 @@ export function copyRequest(req: TransactionRequest): PreparedTransactionRequest
  */
 export interface MinedBlock extends Block {}
 
+/**
+ * Represents the body of a work object.
+ *
+ * @category Providers
+ */
 export class WoBody implements WoBodyParams {
     readonly extTransactions!: Array<string | QuaiTransactionResponseParams>;
     readonly header: WoBodyHeader;
@@ -449,6 +483,12 @@ export class WoBody implements WoBodyParams {
     readonly manifest: Array<string>;
     readonly transactions!: Array<string | QuaiTransactionResponseParams>;
     readonly uncles!: Array<string>;
+
+    /**
+     * Creates a new WoBody instance.
+     *
+     * @param {WoBodyParams} params - The parameters for the WoBody.
+     */
     constructor(params: WoBodyParams) {
         this.extTransactions = params.extTransactions;
         this.header = new WoBodyHeader(params.header);
@@ -459,6 +499,11 @@ export class WoBody implements WoBodyParams {
     }
 }
 
+/**
+ * Represents the header of a work object body.
+ *
+ * @category Providers
+ */
 export class WoBodyHeader implements WoBodyHeaderParams {
     readonly baseFeePerGas!: null | bigint;
     readonly efficiencyScore: bigint;
@@ -491,6 +536,12 @@ export class WoBodyHeader implements WoBodyHeaderParams {
     readonly transactionsRoot!: string;
     readonly uncledS: bigint;
     readonly utxoRoot!: string;
+
+    /**
+     * Creates a new WoBodyHeader instance.
+     *
+     * @param {WoBodyHeaderParams} params - The parameters for the WoBodyHeader.
+     */
     constructor(params: WoBodyHeaderParams) {
         this.baseFeePerGas = params.baseFeePerGas;
         this.efficiencyScore = params.efficiencyScore;
@@ -526,6 +577,11 @@ export class WoBodyHeader implements WoBodyHeaderParams {
     }
 }
 
+/**
+ * Represents the header of a work object.
+ *
+ * @category Providers
+ */
 export class WoHeader implements WoHeaderParams {
     readonly difficulty!: string;
     readonly headerHash: string;
@@ -536,6 +592,12 @@ export class WoHeader implements WoHeaderParams {
     readonly parentHash!: string;
     readonly time: string;
     readonly txHash: string;
+
+    /**
+     * Creates a new WoHeader instance.
+     *
+     * @param {WoHeaderParams} params - The parameters for the WoHeader.
+     */
     constructor(params: WoHeaderParams) {
         this.difficulty = params.difficulty;
         this.headerHash = params.headerHash;
@@ -548,6 +610,7 @@ export class WoHeader implements WoHeaderParams {
         this.txHash = params.txHash;
     }
 }
+
 /**
  * A **Block** represents the data associated with a full block on Ethereum.
  *
@@ -573,6 +636,9 @@ export class Block implements BlockParams, Iterable<string> {
      * Create a new **Block** object.
      *
      * This should generally not be necessary as the unless implementing a low-level library.
+     *
+     * @param {BlockParams} block - The block parameters.
+     * @param {Provider} provider - The provider.
      */
     constructor(block: BlockParams, provider: Provider) {
         this.#transactions = block.transactions.map((tx) => {
@@ -602,6 +668,8 @@ export class Block implements BlockParams, Iterable<string> {
 
     /**
      * Returns the list of transaction hashes, in the order they were executed within the block.
+     *
+     * @returns {ReadonlyArray<string>} The list of transaction hashes.
      */
     get transactions(): ReadonlyArray<string> {
         return this.#transactions.map((tx) => {
@@ -612,6 +680,11 @@ export class Block implements BlockParams, Iterable<string> {
         });
     }
 
+    /**
+     * Returns the list of extended transaction hashes, in the order they were executed within the block.
+     *
+     * @returns {ReadonlyArray<string>} The list of extended transaction hashes.
+     */
     get extTransactions(): ReadonlyArray<string> {
         return this.#extTransactions.map((tx) => {
             if (typeof tx === 'string') {
@@ -626,6 +699,9 @@ export class Block implements BlockParams, Iterable<string> {
      *
      * This is only available for blocks which prefetched transactions, by passing `true` to `prefetchTxs` into
      * {@link Provider.getBlock | **getBlock**}.
+     *
+     * @returns {Array<TransactionResponse>} The list of prefetched transactions.
+     * @throws {Error} If the transactions were not prefetched.
      */
     get prefetchedTransactions(): Array<TransactionResponse> {
         const txs = this.#transactions.slice();
@@ -648,6 +724,15 @@ export class Block implements BlockParams, Iterable<string> {
         return <Array<TransactionResponse>>txs;
     }
 
+    /**
+     * Returns the complete extended transactions, in the order they were executed within the block.
+     *
+     * This is only available for blocks which prefetched transactions, by passing `true` to `prefetchTxs` into
+     * {@link Provider.getBlock | **getBlock**}.
+     *
+     * @returns {Array<TransactionResponse>} The list of prefetched extended transactions.
+     * @throws {Error} If the transactions were not prefetched.
+     */
     get prefetchedExtTransactions(): Array<TransactionResponse> {
         const txs = this.#extTransactions.slice();
 
@@ -671,6 +756,8 @@ export class Block implements BlockParams, Iterable<string> {
 
     /**
      * Returns a JSON-friendly value.
+     *
+     * @returns {any} The JSON-friendly value.
      */
     toJSON(): any {
         const { interlinkHashes, order, size, subManifest, totalEntropy, uncles, woBody, woHeader } = this;
@@ -761,6 +848,8 @@ export class Block implements BlockParams, Iterable<string> {
 
     /**
      * The number of transactions in this block.
+     *
+     * @returns {number} The number of transactions.
      */
     get length(): number {
         return this.#transactions.length;
@@ -769,6 +858,8 @@ export class Block implements BlockParams, Iterable<string> {
     /**
      * The [Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) this block was
      * included at.
+     *
+     * @returns {null | Date} The date this block was included at, or null if the timestamp is not available.
      */
     get date(): null | Date {
         const timestampHex = this.woHeader.time;
@@ -785,6 +876,7 @@ export class Block implements BlockParams, Iterable<string> {
      * @param {number | string} indexOrHash - The index or hash of the transaction.
      *
      * @returns {Promise<TransactionResponse>} A promise resolving to the transaction.
+     * @throws {Error} If the transaction is not found.
      */
     async getTransaction(indexOrHash: number | string): Promise<TransactionResponse> {
         // Find the internal value by its index or hash
@@ -820,6 +912,14 @@ export class Block implements BlockParams, Iterable<string> {
         }
     }
 
+    /**
+     * Get the extended transaction at `index` within this block.
+     *
+     * @param {number | string} indexOrHash - The index or hash of the extended transaction.
+     *
+     * @returns {Promise<TransactionResponse>} A promise resolving to the extended transaction.
+     * @throws {Error} If the extended transaction is not found.
+     */
     async getExtTransaction(indexOrHash: number | string): Promise<TransactionResponse> {
         // Find the internal value by its index or hash
         let tx: string | TransactionResponse | undefined = undefined;
@@ -863,6 +963,7 @@ export class Block implements BlockParams, Iterable<string> {
      * @param {number | string} indexOrHash - The index or hash of the transaction.
      *
      * @returns {TransactionResponse} The transaction.
+     * @throws {Error} If the transaction is not found.
      */
     getPrefetchedTransaction(indexOrHash: number | string): TransactionResponse {
         const txs = this.prefetchedTransactions;
@@ -2616,3 +2717,5 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      */
     getProtocolExpansionNumber(): Promise<number>;
 }
+
+

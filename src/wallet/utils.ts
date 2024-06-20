@@ -1,6 +1,7 @@
 /**
- * @ignore
+ * @module wallet/utils
  */
+
 import {
     getBytesCopy,
     assertArgument,
@@ -13,6 +14,11 @@ import {
 import { computeHmac, sha256 } from '../crypto/index.js';
 import { encodeBase58, toUtf8Bytes } from '../encoding/index.js';
 
+/**
+ * Converts a hex string to a Uint8Array. If the string does not start with '0x', it adds it.
+ * @param {string} hexString - The hex string to convert.
+ * @returns {Uint8Array} The resulting byte array.
+ */
 export function looseArrayify(hexString: string): Uint8Array {
     if (typeof hexString === 'string' && !hexString.startsWith('0x')) {
         hexString = '0x' + hexString;
@@ -20,6 +26,11 @@ export function looseArrayify(hexString: string): Uint8Array {
     return getBytesCopy(hexString);
 }
 
+/**
+ * Converts a password to a Uint8Array. If the password is a string, it converts it to UTF-8 bytes.
+ * @param {string|Uint8Array} password - The password to convert.
+ * @returns {Uint8Array} The resulting byte array.
+ */
 export function getPassword(password: string | Uint8Array): Uint8Array {
     if (typeof password === 'string') {
         return toUtf8Bytes(password, 'NFKC');
@@ -27,6 +38,12 @@ export function getPassword(password: string | Uint8Array): Uint8Array {
     return getBytesCopy(password);
 }
 
+/**
+ * Traverses an object based on a path and returns the value at that path.
+ * @param {any} object - The object to traverse.
+ * @param {string} _path - The path to traverse.
+ * @returns {T} The value at the specified path.
+ */
 export function spelunk<T>(object: any, _path: string): T {
     const match = _path.match(/^([a-z0-9$_.-]*)(:([a-z]+))?(!)?$/i);
     assertArgument(match != null, 'invalid path', 'path', _path);
@@ -99,15 +116,24 @@ export function spelunk<T>(object: any, _path: string): T {
 
 // HDNODEWallet and UTXO Wallet util methods
 
-// "Bitcoin seed"
+/** "Bitcoin seed" */
 export const MasterSecret = new Uint8Array([66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100]);
 
+/** Hardened bit constant */
 export const HardenedBit = 0x80000000;
 
+/** Constant N used in cryptographic operations */
 export const N = BigInt('0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
 
+/** Hexadecimal characters */
 export const Nibbles = '0123456789abcdef';
 
+/**
+ * Pads a value with leading zeros to a specified length.
+ * @param {string|number} value - The value to pad.
+ * @param {number} length - The desired length.
+ * @returns {string} The padded value.
+ */
 export function zpad(value: string | number, length: number): string {
     // Determine if the value is hexadecimal
     const isHex = typeof value === 'string' && value.startsWith('0x');
@@ -130,6 +156,11 @@ export function zpad(value: string | number, length: number): string {
     return result;
 }
 
+/**
+ * Encodes a value using Base58Check encoding.
+ * @param {BytesLike} _value - The value to encode.
+ * @returns {string} The Base58Check encoded string.
+ */
 export function encodeBase58Check(_value: BytesLike): string {
     const value = getBytes(_value);
     const check = dataSlice(sha256(sha256(value)), 0, 4);
@@ -137,6 +168,14 @@ export function encodeBase58Check(_value: BytesLike): string {
     return encodeBase58(bytes);
 }
 
+/**
+ * Serializes an index, chain code, public key, and private key into a pair of derived keys.
+ * @param {number} index - The index to serialize.
+ * @param {string} chainCode - The chain code.
+ * @param {string} publicKey - The public key.
+ * @param {null|string} privateKey - The private key.
+ * @returns {{IL: Uint8Array, IR: Uint8Array}} The derived keys.
+ */
 export function ser_I(
     index: number,
     chainCode: string,
@@ -164,41 +203,4 @@ export function ser_I(
     const I = getBytes(computeHmac('sha512', chainCode, data));
 
     return { IL: I.slice(0, 32), IR: I.slice(32) };
-}
-
-export type HDNodeLike<T> = {
-    coinType?: number;
-    depth: number;
-    deriveChild: (i: number) => T;
-    // setCoinType?: () => void
-};
-
-export function derivePath<T extends HDNodeLike<T>>(node: T, path: string): T {
-    const components = path.split('/');
-
-    assertArgument(components.length > 0 && (components[0] === 'm' || node.depth > 0), 'invalid path', 'path', path);
-
-    if (components[0] === 'm') {
-        components.shift();
-    }
-
-    let result: T = node;
-    for (let i = 0; i < components.length; i++) {
-        const component = components[i];
-
-        if (component.match(/^[0-9]+'$/)) {
-            const index = parseInt(component.substring(0, component.length - 1));
-            assertArgument(index < HardenedBit, 'invalid path index', `path[${i}]`, component);
-            result = result.deriveChild(HardenedBit + index);
-        } else if (component.match(/^[0-9]+$/)) {
-            const index = parseInt(component);
-            assertArgument(index < HardenedBit, 'invalid path index', `path[${i}]`, component);
-            result = result.deriveChild(index);
-        } else {
-            assertArgument(false, 'invalid path component', `path[${i}]`, component);
-        }
-    }
-    // Extract the coin type from the path and set it on the node
-    // if (result.setCoinType) result.setCoinType();
-    return result;
 }

@@ -50,34 +50,68 @@ import { toShard, Zone } from '../constants/index.js';
 
 const BN_0 = BigInt(0);
 
+/**
+ * Interface for a contract runner that can call transactions.
+ * @interface
+ */
 interface ContractRunnerCaller extends ContractRunner {
     call: (tx: TransactionRequest) => Promise<string>;
 }
 
+/**
+ * Interface for a contract runner that can estimate gas.
+ * @interface
+ */
 interface ContractRunnerEstimater extends ContractRunner {
     estimateGas: (tx: TransactionRequest) => Promise<bigint>;
 }
 
+/**
+ * Interface for a contract runner that can send transactions.
+ * @interface
+ */
 interface ContractRunnerSender extends ContractRunner {
     sendTransaction: (tx: TransactionRequest) => Promise<TransactionResponse>;
 }
 
+/**
+ * Check if the value can call transactions.
+ * @param {any} value - The value to check.
+ * @returns {value is ContractRunnerCaller} True if the value can call transactions.
+ */
 function canCall(value: any): value is ContractRunnerCaller {
     return value && typeof value.call === 'function';
 }
 
+/**
+ * Check if the value can estimate gas.
+ * @param {any} value - The value to check.
+ * @returns {value is ContractRunnerEstimater} True if the value can estimate gas.
+ */
 function canEstimate(value: any): value is ContractRunnerEstimater {
     return value && typeof value.estimateGas === 'function';
 }
 
+/**
+ * Check if the value can send transactions.
+ * @param {any} value - The value to check.
+ * @returns {value is ContractRunnerSender} True if the value can send transactions.
+ */
 function canSend(value: any): value is ContractRunnerSender {
     return value && typeof value.sendTransaction === 'function';
 }
 
+/**
+ * Class representing a prepared topic filter.
+ * @implements {DeferredTopicFilter}
+ */
 class PreparedTopicFilter implements DeferredTopicFilter {
     #filter: Promise<TopicFilter>;
     readonly fragment!: EventFragment;
 
+    /**
+     * @ignore
+     */
     constructor(contract: BaseContract, fragment: EventFragment, args: Array<any>) {
         defineProperties<PreparedTopicFilter>(this, { fragment });
         if (fragment.inputs.length < args.length) {
@@ -108,18 +142,21 @@ class PreparedTopicFilter implements DeferredTopicFilter {
         })();
     }
 
+    /**
+     * Get the topic filter.
+     * @returns {Promise<TopicFilter>} The topic filter.
+     */
     getTopicFilter(): Promise<TopicFilter> {
         return this.#filter;
     }
 }
 
-// A = Arguments passed in as a tuple
-// R = The result type of the call (i.e. if only one return type,
-//     the qualified type, otherwise Result)
-// D = The type the default call will return (i.e. R for view/pure,
-//     TransactionResponse otherwise)
-//export interface ContractMethod<A extends Array<any> = Array<any>, R = any, D extends R | ContractTransactionResponse = ContractTransactionResponse> {
-
+/**
+ * Get the runner for a specific feature.
+ * @param {any} value - The value to check.
+ * @param {keyof ContractRunner} feature - The feature to check for.
+ * @returns {null | T} The runner if available, otherwise null.
+ */
 function getRunner<T extends ContractRunner>(value: any, feature: keyof ContractRunner): null | T {
     if (value == null) {
         return null;
@@ -133,6 +170,11 @@ function getRunner<T extends ContractRunner>(value: any, feature: keyof Contract
     return null;
 }
 
+/**
+ * Get the provider from a contract runner.
+ * @param {null | ContractRunner} value - The contract runner.
+ * @returns {null | Provider} The provider if available, otherwise null.
+ */
 function getProvider(value: null | ContractRunner): null | Provider {
     if (value == null) {
         return null;
@@ -142,6 +184,11 @@ function getProvider(value: null | ContractRunner): null | Provider {
 
 /**
  * @ignore
+ * Copy overrides and validate them.
+ * @param {any} arg - The argument containing overrides.
+ * @param {Array<string>} [allowed] - The allowed override keys.
+ * @returns {Promise<Omit<ContractTransaction, O>>} The copied and validated overrides.
+ * @throws {Error} If the overrides are invalid.
  */
 export async function copyOverrides<O extends string = 'data' | 'to'>(
     arg: any,
@@ -177,6 +224,11 @@ export async function copyOverrides<O extends string = 'data' | 'to'>(
 
 /**
  * @ignore
+ * Resolve arguments for a contract runner.
+ * @param {null | ContractRunner} _runner - The contract runner.
+ * @param {ReadonlyArray<ParamType>} inputs - The input parameter types.
+ * @param {Array<any>} args - The arguments to resolve.
+ * @returns {Promise<Array<any>>} The resolved arguments.
  */
 export async function resolveArgs(
     _runner: null | ContractRunner,
@@ -197,7 +249,18 @@ export async function resolveArgs(
     );
 }
 
+/**
+ * Build a wrapped fallback method for a contract.
+ * @param {BaseContract} contract - The contract instance.
+ * @returns {WrappedFallback} The wrapped fallback method.
+ */
 function buildWrappedFallback(contract: BaseContract): WrappedFallback {
+    /**
+     * Populate a transaction with overrides.
+     * @param {Omit<QuaiTransactionRequest, 'to'>} [overrides] - The transaction overrides.
+     * @returns {Promise<ContractTransaction>} The populated transaction.
+     * @throws {Error} If the overrides are invalid.
+     */
     const populateTransaction = async function (
         overrides?: Omit<QuaiTransactionRequest, 'to'>,
     ): Promise<ContractTransaction> {
@@ -248,6 +311,12 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
         return tx;
     };
 
+    /**
+     * Perform a static call with the given overrides.
+     * @param {Omit<QuaiTransactionRequest, 'to'>} [overrides] - The transaction overrides.
+     * @returns {Promise<string>} The result of the static call.
+     * @throws {Error} If the call fails.
+     */
     const staticCall = async function (overrides?: Omit<QuaiTransactionRequest, 'to'>): Promise<string> {
         const runner = getRunner(contract.runner, 'call');
         assert(canCall(runner), 'contract runner does not support calling', 'UNSUPPORTED_OPERATION', {
@@ -266,6 +335,12 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
         }
     };
 
+    /**
+     * Send a transaction with the given overrides.
+     * @param {Omit<QuaiTransactionRequest, 'to'>} [overrides] - The transaction overrides.
+     * @returns {Promise<ContractTransactionResponse>} The transaction response.
+     * @throws {Error} If the transaction fails.
+     */
     const send = async function (overrides?: Omit<QuaiTransactionRequest, 'to'>): Promise<ContractTransactionResponse> {
         const runner = contract.runner;
         assert(canSend(runner), 'contract runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
@@ -279,6 +354,12 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
         return new ContractTransactionResponse(contract.interface, <Provider>provider, tx);
     };
 
+    /**
+     * Estimate the gas required for a transaction with the given overrides.
+     * @param {Omit<QuaiTransactionRequest, 'to'>} [overrides] - The transaction overrides.
+     * @returns {Promise<bigint>} The estimated gas.
+     * @throws {Error} If the gas estimation fails.
+     */
     const estimateGas = async function (overrides?: Omit<QuaiTransactionRequest, 'to'>): Promise<bigint> {
         const runner = getRunner(contract.runner, 'estimateGas');
         assert(canEstimate(runner), 'contract runner does not support gas estimation', 'UNSUPPORTED_OPERATION', {
@@ -288,6 +369,12 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
         return await runner.estimateGas(await populateTransaction(overrides));
     };
 
+    /**
+     * Send a transaction with the given overrides.
+     * @param {Omit<QuaiTransactionRequest, 'to'>} [overrides] - The transaction overrides.
+     * @returns {Promise<ContractTransactionResponse>} The transaction response.
+     * @throws {Error} If the transaction fails.
+     */
     const method = async (overrides?: Omit<QuaiTransactionRequest, 'to'>) => {
         return await send(overrides);
     };
@@ -304,11 +391,23 @@ function buildWrappedFallback(contract: BaseContract): WrappedFallback {
     return <WrappedFallback>method;
 }
 
+/**
+ * Build a wrapped method for a contract.
+ * @param {BaseContract} contract - The contract instance.
+ * @param {string} key - The method key.
+ * @returns {BaseContractMethod<A, R, D>} The wrapped method.
+ */
 function buildWrappedMethod<
     A extends Array<any> = Array<any>,
     R = any,
     D extends R | ContractTransactionResponse = ContractTransactionResponse,
 >(contract: BaseContract, key: string): BaseContractMethod<A, R, D> {
+    /**
+     * Get the function fragment for the given arguments.
+     * @param {...ContractMethodArgs<A>} args - The method arguments.
+     * @returns {FunctionFragment} The function fragment.
+     * @throws {Error} If no matching fragment is found.
+     */
     const getFragment = function (...args: ContractMethodArgs<A>): FunctionFragment {
         const fragment = contract.interface.getFunction(key, args);
         assert(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
@@ -318,6 +417,12 @@ function buildWrappedMethod<
         return fragment;
     };
 
+    /**
+     * Populate a transaction with the given arguments.
+     * @param {...ContractMethodArgs<A>} args - The method arguments.
+     * @returns {Promise<ContractTransaction>} The populated transaction.
+     * @throws {Error} If the arguments are invalid.
+     */
     const populateTransaction = async function (...args: ContractMethodArgs<A>): Promise<ContractTransaction> {
         const fragment = getFragment(...args);
 
@@ -351,6 +456,12 @@ function buildWrappedMethod<
         });
     };
 
+    /**
+     * Perform a static call with the given arguments.
+     * @param {...ContractMethodArgs<A>} args - The method arguments.
+     * @returns {Promise<R>} The result of the static call.
+     * @throws {Error} If the call fails.
+     */
     const staticCall = async function (...args: ContractMethodArgs<A>): Promise<R> {
         const result = await staticCallResult(...args);
         if (result.length === 1) {
@@ -359,6 +470,12 @@ function buildWrappedMethod<
         return <R>(<unknown>result);
     };
 
+    /**
+     * Send a transaction with the given arguments.
+     * @param {...ContractMethodArgs<A>} args - The method arguments.
+     * @returns {Promise<ContractTransactionResponse>} The transaction response.
+     * @throws {Error} If the transaction fails.
+     */
     const send = async function (...args: ContractMethodArgs<A>): Promise<ContractTransactionResponse> {
         const runner = contract.runner;
         assert(canSend(runner), 'contract runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
@@ -376,6 +493,12 @@ function buildWrappedMethod<
         return new ContractTransactionResponse(contract.interface, <Provider>provider, tx);
     };
 
+    /**
+     * Estimate the gas required for a transaction with the given arguments.
+     * @param {...ContractMethodArgs<A>} args - The method arguments.
+     * @returns {Promise<bigint>} The estimated gas.
+     * @throws {Error} If the gas estimation fails.
+     */
     const estimateGas = async function (...args: ContractMethodArgs<A>): Promise<bigint> {
         const runner = getRunner(contract.runner, 'estimateGas');
         assert(canEstimate(runner), 'contract runner does not support gas estimation', 'UNSUPPORTED_OPERATION', {
@@ -385,6 +508,12 @@ function buildWrappedMethod<
         return await runner.estimateGas(await populateTransaction(...args));
     };
 
+    /**
+     * Perform a static call and return the result with the given arguments.
+     * @param {...ContractMethodArgs<A>} args - The method arguments.
+     * @returns {Promise<Result>} The result of the static call.
+     * @throws {Error} If the call fails.
+     */
     const staticCallResult = async function (...args: ContractMethodArgs<A>): Promise<Result> {
         const runner = getRunner(contract.runner, 'call');
         assert(canCall(runner), 'contract runner does not support calling', 'UNSUPPORTED_OPERATION', {
@@ -409,6 +538,12 @@ function buildWrappedMethod<
         return contract.interface.decodeFunctionResult(fragment, result);
     };
 
+    /**
+     * Send a transaction or perform a static call based on the method arguments.
+     * @param {...ContractMethodArgs<A>} args - The method arguments.
+     * @returns {Promise<R | ContractTransactionResponse>} The result of the method call.
+     * @throws {Error} If the method call fails.
+     */
     const method = async (...args: ContractMethodArgs<A>) => {
         const fragment = getFragment(...args);
         if (fragment.constant) {
@@ -448,7 +583,19 @@ function buildWrappedMethod<
     return <BaseContractMethod<A, R, D>>method;
 }
 
+/**
+ * Build a wrapped event for a contract.
+ * @param {BaseContract} contract - The contract instance.
+ * @param {string} key - The event key.
+ * @returns {ContractEvent<A>} The wrapped event.
+ */
 function buildWrappedEvent<A extends Array<any> = Array<any>>(contract: BaseContract, key: string): ContractEvent<A> {
+    /**
+     * Get the event fragment for the given arguments.
+     * @param {...ContractEventArgs<A>} args - The event arguments.
+     * @returns {EventFragment} The event fragment.
+     * @throws {Error} If no matching fragment is found.
+     */
     const getFragment = function (...args: ContractEventArgs<A>): EventFragment {
         const fragment = contract.interface.getEvent(key, args);
 
@@ -460,6 +607,11 @@ function buildWrappedEvent<A extends Array<any> = Array<any>>(contract: BaseCont
         return fragment;
     };
 
+    /**
+     * Create a prepared topic filter for the event.
+     * @param {...ContractMethodArgs<A>} args - The event arguments.
+     * @returns {PreparedTopicFilter} The prepared topic filter.
+     */
     const method = function (...args: ContractMethodArgs<A>): PreparedTopicFilter {
         return new PreparedTopicFilter(contract, getFragment(...args), args);
     };
@@ -515,14 +667,29 @@ type Internal = {
 
 const internalValues: WeakMap<BaseContract, Internal> = new WeakMap();
 
+/**
+ * Set internal values for a contract.
+ * @param {BaseContract} contract - The contract instance.
+ * @param {Internal} values - The internal values.
+ */
 function setInternal(contract: BaseContract, values: Internal): void {
     internalValues.set(contract[internal], values);
 }
 
+/**
+ * Get internal values for a contract.
+ * @param {BaseContract} contract - The contract instance.
+ * @returns {Internal} The internal values.
+ */
 function getInternal(contract: BaseContract): Internal {
     return internalValues.get(contract[internal]) as Internal;
 }
 
+/**
+ * Check if a value is a deferred topic filter.
+ * @param {any} value - The value to check.
+ * @returns {value is DeferredTopicFilter} True if the value is a deferred topic filter.
+ */
 function isDeferred(value: any): value is DeferredTopicFilter {
     return (
         value &&
@@ -533,6 +700,13 @@ function isDeferred(value: any): value is DeferredTopicFilter {
     );
 }
 
+/**
+ * Get subscription information for an event.
+ * @param {BaseContract} contract - The contract instance.
+ * @param {ContractEventName} event - The event name.
+ * @returns {Promise<{ fragment: null | EventFragment; tag: string; topics: TopicFilter }>} The subscription information.
+ * @throws {Error} If the event name is unknown.
+ */
 async function getSubInfo(
     contract: BaseContract,
     event: ContractEventName,
@@ -617,11 +791,25 @@ async function getSubInfo(
     return { fragment, tag, topics };
 }
 
+/**
+ * Check if a contract has a subscription for an event.
+ * @param {BaseContract} contract - The contract instance.
+ * @param {ContractEventName} event - The event name.
+ * @returns {Promise<null | Sub>} The subscription if available, otherwise null.
+ */
 async function hasSub(contract: BaseContract, event: ContractEventName): Promise<null | Sub> {
     const { subs } = getInternal(contract);
     return subs.get((await getSubInfo(contract, event)).tag) || null;
 }
 
+/**
+ * Get a subscription for an event.
+ * @param {BaseContract} contract - The contract instance.
+ * @param {string} operation - The operation name.
+ * @param {ContractEventName} event - The event name.
+ * @returns {Promise<Sub>} The subscription.
+ * @throws {Error} If the contract runner does not support subscribing.
+ */
 async function getSub(contract: BaseContract, operation: string, event: ContractEventName): Promise<Sub> {
     // Make sure our runner can actually subscribe to events
     const provider = getProvider(contract.runner);
@@ -683,14 +871,25 @@ async function getSub(contract: BaseContract, operation: string, event: Contract
     }
     return sub;
 }
-
-// We use this to ensure one emit resolves before firing the next to
-// ensure correct ordering (note this cannot throw and just adds the
-// notice to the event queu using setTimeout).
+/**
+ * We use this to ensure one emit resolves before firing the next to
+ * ensure correct ordering (note this cannot throw and just adds the
+ * notice to the event queue using setTimeout).
+ */
 let lastEmit: Promise<any> = Promise.resolve();
 
 type PayloadFunc = (listener: null | Listener) => ContractUnknownEventPayload;
 
+/**
+ * Emit an event with the given arguments and payload function.
+ *
+ * @param {BaseContract} contract - The contract instance.
+ * @param {ContractEventName} event - The event name.
+ * @param {Array<any>} args - The arguments to pass to the listeners.
+ * @param {null | PayloadFunc} payloadFunc - The payload function.
+ * @returns {Promise<boolean>} Resolves to true if any listeners were called.
+ * @ignore
+ */
 async function _emit(
     contract: BaseContract,
     event: ContractEventName,
@@ -725,6 +924,15 @@ async function _emit(
     return count > 0;
 }
 
+/**
+ * Emit an event with the given arguments and payload function.
+ *
+ * @param {BaseContract} contract - The contract instance.
+ * @param {ContractEventName} event - The event name.
+ * @param {Array<any>} args - The arguments to pass to the listeners.
+ * @param {null | PayloadFunc} payloadFunc - The payload function.
+ * @returns {Promise<boolean>} Resolves to true if any listeners were called.
+ */
 async function emit(
     contract: BaseContract,
     event: ContractEventName,
@@ -742,7 +950,6 @@ async function emit(
 }
 
 const passProperties = ['then'];
-
 /**
  * Creates a new contract connected to target with the abi and optionally connected to a runner to perform operations on
  * behalf of.
@@ -754,7 +961,7 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
      * The target to connect to.
      *
      * This can be an address or any [Addressable](../interfaces/Addressable), such as another contract. To get the
-     * resovled address, use the `getAddress` method.
+     * resolved address, use the `getAddress` method.
      */
     readonly target!: string | Addressable;
 
@@ -790,6 +997,8 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
     /**
      * Creates a new contract connected to `target` with the `abi` and optionally connected to a `runner` to perform
      * operations on behalf of.
+     * 
+     * @ignore
      */
     constructor(
         target: string | Addressable,
@@ -908,6 +1117,9 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
     /**
      * Return a new Contract instance with the same target and ABI, but a different `runner`.
+     * 
+     * @param {null | ContractRunner} runner - The runner to use.
+     * @returns {BaseContract} The new contract instance.
      */
     connect(runner: null | ContractRunner): BaseContract {
         return new BaseContract(this.target, this.interface, runner);
@@ -915,6 +1127,9 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
     /**
      * Return a new Contract instance with the same ABI and runner, but a different `target`.
+     * 
+     * @param {string | Addressable} target - The target to connect to.
+     * @returns {BaseContract} The new contract instance.
      */
     attach(target: string | Addressable): BaseContract {
         return new BaseContract(target, this.interface, this.runner);
@@ -922,6 +1137,8 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
     /**
      * Return the resolved address of this Contract.
+     * 
+     * @returns {Promise<string>} The resolved address.
      */
     async getAddress(): Promise<string> {
         return await getInternal(this).addrPromise;
@@ -929,6 +1146,9 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
     /**
      * Return the deployed bytecode or null if no bytecode is found.
+     * 
+     * @returns {Promise<null | string>} The deployed bytecode or null.
+     * @throws {Error} If the runner does not support .provider.
      */
     async getDeployedCode(): Promise<null | string> {
         const provider = getProvider(this.runner);
@@ -945,9 +1165,12 @@ export class BaseContract implements Addressable, EventEmitterable<ContractEvent
 
     /**
      * Resolve to this Contract once the bytecode has been deployed, or resolve immediately if already deployed.
+     * 
+     * @returns {Promise<this>} The contract instance.
+     * @throws {Error} If the contract runner does not support .provider.
      */
     async waitForDeployment(): Promise<this> {
-        // We have the deployement transaction; just use that (throws if deployement fails)
+        // We have the deployment transaction; just use that (throws if deployment fails)
         const deployTx = this.deploymentTransaction();
         if (deployTx) {
             await deployTx.wait();
@@ -1308,3 +1531,5 @@ function _ContractBase(): new (
  * @category Contract
  */
 export class Contract extends _ContractBase() {}
+
+

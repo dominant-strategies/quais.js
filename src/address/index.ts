@@ -31,8 +31,8 @@ export interface Addressable {
  */
 export type AddressLike = string | Promise<string> | Addressable;
 
-export { getAddress, computeAddress, recoverAddress, formatMixedCaseChecksumAddress } from './address.js';
+export { getAddress, computeAddress, recoverAddress, formatMixedCaseChecksumAddress, getContractAddress } from './address.js';
 
 export { getCreateAddress, getCreate2Address } from './contract-address.js';
 
-export { isAddressable, isAddress, resolveAddress, validateAddress } from './checks.js';
+export { isAddressable, isAddress, resolveAddress, validateAddress, isQuaiAddress, isQiAddress } from './checks.js';

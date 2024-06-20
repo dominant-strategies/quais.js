@@ -7,15 +7,69 @@ import { SerializedHDWallet } from './hdwallet.js';
 import { Mnemonic } from './mnemonic.js';
 import { TypedDataDomain, TypedDataField } from '../hash/index.js';
 
+/**
+ * The Quai HD wallet is a BIP44-compliant hierarchical deterministic wallet used for managing a set of addresses in the
+ * Quai ledger. This is the easiest way to manage the interaction of managing accounts and addresses on the Quai
+ * network, however, if your use case requires a single address Quai address, you can use the {@link Wallet} class.
+ *
+ * The Quai HD wallet supports:
+ *
+ * - Adding accounts to the wallet heierchy
+ * - Generating addresses for a specific account in any {@link Zone}
+ * - Signing and sending transactions for any address in the wallet
+ * - Signing and verifying EIP1193 typed data for any address in the wallet.
+ * - Serializing the wallet to JSON and deserializing it back to a wallet instance.
+ *
+ * @category Wallet
+ * @example
+ *
+ * ```ts
+ * import { QuaiHDWallet, Zone } from 'quais';
+ *
+ * const wallet = new QuaiHDWallet();
+ * const cyrpus1Address = wallet.getNextAddress(0, Zone.Cyrpus1); // get the first address in the Cyrpus1 zone
+ * await wallet.sendTransaction({ from: address, to: '0x...', value: 100 }); // send a transaction
+ * const serializedWallet = wallet.serialize(); // serialize current (account/address) state of the wallet
+ * .
+ * .
+ * .
+ * const deserializedWallet = QuaiHDWallet.deserialize(serializedWallet); // create a new wallet instance from the serialized data
+ * ```
+ */
 export class QuaiHDWallet extends AbstractHDWallet {
+    /**
+     * The version of the wallet.
+     *
+     * @type {number}
+     * @static
+     */
     protected static _version: number = 1;
 
+    /**
+     * The coin type for the wallet.
+     *
+     * @type {AllowedCoinType}
+     * @static
+     */
     protected static _coinType: AllowedCoinType = 994;
 
+    /**
+     * Create a QuaiHDWallet instance.
+     *
+     * @param {HDNodeWallet} root - The root HD node wallet.
+     * @param {Provider} [provider] - The provider.
+     */
     private constructor(root: HDNodeWallet, provider?: Provider) {
         super(root, provider);
     }
 
+    /**
+     * Sign a transaction.
+     *
+     * @param {QuaiTransactionRequest} tx - The transaction request.
+     *
+     * @returns {Promise<string>} A promise that resolves to the signed transaction.
+     */
     public async signTransaction(tx: QuaiTransactionRequest): Promise<string> {
         const from = await resolveAddress(tx.from);
         const fromNode = this._getHDNodeForAddress(from);
@@ -23,6 +77,14 @@ export class QuaiHDWallet extends AbstractHDWallet {
         return signedTx;
     }
 
+    /**
+     * Send a transaction.
+     *
+     * @param {QuaiTransactionRequest} tx - The transaction request.
+     *
+     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+     * @throws {Error} If the provider is not set.
+     */
     public async sendTransaction(tx: QuaiTransactionRequest): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
@@ -33,6 +95,14 @@ export class QuaiHDWallet extends AbstractHDWallet {
         return await fromNodeConnected.sendTransaction(tx);
     }
 
+    /**
+     * Sign a message.
+     *
+     * @param {string} address - The address.
+     * @param {string | Uint8Array} message - The message to sign.
+     *
+     * @returns {Promise<string>} A promise that resolves to the signed message.
+     */
     public async signMessage(address: string, message: string | Uint8Array): Promise<string> {
         const addrNode = this._getHDNodeForAddress(address);
         return await addrNode.signMessage(message);
@@ -40,12 +110,6 @@ export class QuaiHDWallet extends AbstractHDWallet {
 
     /**
      * Deserializes the given serialized HD wallet data into an instance of QuaiHDWallet.
-     *
-     * This method performs the following steps:
-     *
-     * - Validates the serialized wallet data.
-     * - Creates a new wallet instance using the mnemonic phrase and derivation path.
-     * - Imports the addresses into the wallet instance.
      *
      * @async
      * @param {SerializedHDWallet} serialized - The serialized wallet data to be deserialized.

@@ -3,6 +3,12 @@ import { assert, isHexString } from '../utils/index.js';
 import type { AbstractProvider, Subscriber } from './abstract-provider.js';
 import type { EventFilter, OrphanFilter, ProviderEvent } from './provider.js';
 
+/**
+ * Deep copies an object.
+ *
+ * @param {any} obj - The object to copy.
+ * @returns {any} The copied object.
+ */
 function copy(obj: any): any {
     return JSON.parse(JSON.stringify(obj));
 }
@@ -10,6 +16,10 @@ function copy(obj: any): any {
 /**
  * Return the polling subscriber for common events.
  *
+ * @param {AbstractProvider} provider - The provider to attach the subscriber to.
+ * @param {ProviderEvent} event - The event to subscribe to.
+ * @returns {Subscriber} The polling subscriber.
+ * @throws {Error} If the event is unsupported.
  * @category Providers
  */
 export function getPollingSubscriber(provider: AbstractProvider, event: ProviderEvent): Subscriber {
@@ -34,7 +44,6 @@ export function getPollingSubscriber(provider: AbstractProvider, event: Provider
 export class PollingBlockSubscriber implements Subscriber {
     #provider: AbstractProvider;
     #poller: null | number;
-
     #interval: number;
 
     // The most recent block we have scanned for events. The value -2
@@ -43,25 +52,39 @@ export class PollingBlockSubscriber implements Subscriber {
 
     /**
      * Create a new **PollingBlockSubscriber** attached to `provider`.
+     * @ignore
      */
     constructor(provider: AbstractProvider) {
         this.#provider = provider;
         this.#poller = null;
         this.#interval = 4000;
-
         this.#blockNumber = -2;
     }
 
     /**
      * The polling interval.
+     *
+     * @returns {number} The current polling interval.
      */
     get pollingInterval(): number {
         return this.#interval;
     }
+
+    /**
+     * Sets the polling interval.
+     *
+     * @param {number} value - The new polling interval.
+     */
     set pollingInterval(value: number) {
         this.#interval = value;
     }
 
+    /**
+     * Polls for new blocks.
+     *
+     * @returns {Promise<void>} A promise that resolves when polling is complete.
+     * @ignore
+     */
     async #poll(): Promise<void> {
         try {
             const blockNumber = await this.#provider.getBlockNumber();
@@ -99,6 +122,9 @@ export class PollingBlockSubscriber implements Subscriber {
         this.#poller = this.#provider._setTimeout(this.#poll.bind(this), this.#interval);
     }
 
+    /**
+     * Starts the polling process.
+     */
     start(): void {
         if (this.#poller) {
             return;
@@ -107,6 +133,9 @@ export class PollingBlockSubscriber implements Subscriber {
         this.#poll();
     }
 
+    /**
+     * Stops the polling process.
+     */
     stop(): void {
         if (!this.#poller) {
             return;
@@ -115,6 +144,11 @@ export class PollingBlockSubscriber implements Subscriber {
         this.#poller = null;
     }
 
+    /**
+     * Pauses the polling process.
+     *
+     * @param {boolean} [dropWhilePaused] - Whether to drop the block number while paused.
+     */
     pause(dropWhilePaused?: boolean): void {
         this.stop();
         if (dropWhilePaused) {
@@ -122,13 +156,16 @@ export class PollingBlockSubscriber implements Subscriber {
         }
     }
 
+    /**
+     * Resumes the polling process.
+     */
     resume(): void {
         this.start();
     }
 }
 
 /**
- * An **OnBlockSubscriber** can be sub-classed, with a {@link OnBlockSubscriber._poll | **_poll**} implmentation which
+ * An **OnBlockSubscriber** can be sub-classed, with a {@link OnBlockSubscriber._poll | **_poll**} implementation which
  * will be called on every new block.
  *
  * @category Providers
@@ -140,6 +177,7 @@ export class OnBlockSubscriber implements Subscriber {
 
     /**
      * Create a new **OnBlockSubscriber** attached to `provider`.
+     * @ignore
      */
     constructor(provider: AbstractProvider) {
         this.#provider = provider;
@@ -151,13 +189,19 @@ export class OnBlockSubscriber implements Subscriber {
 
     /**
      * Called on every new block.
+     *
+     * @param {number} blockNumber - The block number.
+     * @param {AbstractProvider} provider - The provider.
+     * @returns {Promise<void>} A promise that resolves when the poll is complete.
+     * @throws {Error} If the method is not overridden by a subclass.
      */
-    // TODO: implement this
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
         throw new Error('sub-classes must override this');
     }
 
+    /**
+     * Starts the subscriber.
+     */
     start(): void {
         if (this.#running) {
             return;
@@ -168,6 +212,9 @@ export class OnBlockSubscriber implements Subscriber {
         this.#provider.on('block', this.#poll);
     }
 
+    /**
+     * Stops the subscriber.
+     */
     stop(): void {
         if (!this.#running) {
             return;
@@ -177,11 +224,18 @@ export class OnBlockSubscriber implements Subscriber {
         this.#provider.off('block', this.#poll);
     }
 
-    // TODO: `dropWhilePaused` is not used; remove?
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    /**
+     * Pauses the subscriber.
+     *
+     * @param {boolean} [dropWhilePaused] - Whether to drop the block number while paused.
+     */
     pause(dropWhilePaused?: boolean): void {
         this.stop();
     }
+
+    /**
+     * Resumes the subscriber.
+     */
     resume(): void {
         this.start();
     }
@@ -193,13 +247,23 @@ export class OnBlockSubscriber implements Subscriber {
 export class PollingOrphanSubscriber extends OnBlockSubscriber {
     #filter: OrphanFilter;
 
+    /**
+     * Create a new **PollingOrphanSubscriber** attached to `provider`, listening for `filter`.
+     * @ignore
+     */
     constructor(provider: AbstractProvider, filter: OrphanFilter) {
         super(provider);
         this.#filter = copy(filter);
     }
 
-    // TODO: implement this
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    /**
+     * Polls for orphaned blocks.
+     *
+     * @param {number} blockNumber - The block number.
+     * @param {AbstractProvider} provider - The provider.
+     * @returns {Promise<void>} A promise that resolves when the poll is complete.
+     * @throws {Error} If the method is not implemented.
+     */
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
         throw new Error('@TODO');
         console.log(this.#filter);
@@ -216,12 +280,20 @@ export class PollingTransactionSubscriber extends OnBlockSubscriber {
 
     /**
      * Create a new **PollingTransactionSubscriber** attached to `provider`, listening for `hash`.
+     * @ignore
      */
     constructor(provider: AbstractProvider, hash: string) {
         super(provider);
         this.#hash = hash;
     }
 
+    /**
+     * Polls for the transaction receipt.
+     *
+     * @param {number} blockNumber - The block number.
+     * @param {AbstractProvider} provider - The provider.
+     * @returns {Promise<void>} A promise that resolves when the poll is complete.
+     */
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
         const tx = await provider.getTransactionReceipt(this.#hash);
         if (tx) {
@@ -239,15 +311,12 @@ export class PollingEventSubscriber implements Subscriber {
     #provider: AbstractProvider;
     #filter: EventFilter;
     #poller: (b: number) => void;
-
     #running: boolean;
-
-    // The most recent block we have scanned for events. The value -2
-    // indicates we still need to fetch an initial block number
     #blockNumber: number;
 
     /**
-     * Create a new **PollingTransactionSubscriber** attached to `provider`, listening for `filter%%.
+     * Create a new **PollingEventSubscriber** attached to `provider`, listening for `filter`.
+     * @ignore
      */
     constructor(provider: AbstractProvider, filter: EventFilter) {
         this.#provider = provider;
@@ -257,6 +326,13 @@ export class PollingEventSubscriber implements Subscriber {
         this.#blockNumber = -2;
     }
 
+    /**
+     * Polls for logs based on the filter.
+     *
+     * @param {number} blockNumber - The block number.
+     * @returns {Promise<void>} A promise that resolves when the poll is complete.
+     * @ignore
+     */
     async #poll(blockNumber: number): Promise<void> {
         // The initial block hasn't been determined yet
         if (this.#blockNumber === -2) {
@@ -288,6 +364,9 @@ export class PollingEventSubscriber implements Subscriber {
         }
     }
 
+    /**
+     * Starts the subscriber.
+     */
     start(): void {
         if (this.#running) {
             return;
@@ -302,6 +381,9 @@ export class PollingEventSubscriber implements Subscriber {
         this.#provider.on('block', this.#poller);
     }
 
+    /**
+     * Stops the subscriber.
+     */
     stop(): void {
         if (!this.#running) {
             return;
@@ -311,6 +393,11 @@ export class PollingEventSubscriber implements Subscriber {
         this.#provider.off('block', this.#poller);
     }
 
+    /**
+     * Pauses the subscriber.
+     *
+     * @param {boolean} [dropWhilePaused] - Whether to drop the block number while paused.
+     */
     pause(dropWhilePaused?: boolean): void {
         this.stop();
         if (dropWhilePaused) {
@@ -318,6 +405,9 @@ export class PollingEventSubscriber implements Subscriber {
         }
     }
 
+    /**
+     * Resumes the subscriber.
+     */
     resume(): void {
         this.start();
     }

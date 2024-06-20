@@ -3,7 +3,7 @@ import { loadTests } from './utils.js';
 
 import type { TestCaseAbi, TestCaseAbiVerbose } from './types.js';
 
-import { AbiCoder, Interface, decodeBytes32String, encodeBytes32String } from '../index.js';
+import { AbiCoder, Interface, decodeBytes32, encodeBytes32 } from '../index.js';
 
 function equal(actual: any, expected: TestCaseAbiVerbose): void {
     switch (expected.type) {
@@ -62,8 +62,8 @@ describe('Test Bytes32 strings', function () {
 
     for (const { name, str, expected } of tests) {
         it(`encodes and decodes Bytes32 strings: ${name}`, function () {
-            const bytes32 = encodeBytes32String(str);
-            const decoded = decodeBytes32String(bytes32);
+            const bytes32 = encodeBytes32(str);
+            const decoded = decodeBytes32(bytes32);
             assert.equal(bytes32, expected, 'formatted correctly');
             assert.equal(decoded, str, 'parsed correctly');
         });

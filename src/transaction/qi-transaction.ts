@@ -1,50 +1,73 @@
 import { keccak256 } from '../crypto/index.js';
 import { AbstractTransaction, TransactionLike, TxInput, TxOutput } from './index.js';
-import { assertArgument, getBytes, getZoneForAddress, hexlify, isQiAddress, toBigInt } from '../utils/index.js';
+import { assertArgument, getBytes, getZoneForAddress, hexlify, toBigInt } from '../utils/index.js';
 import { decodeProtoTransaction } from '../encoding/index.js';
 import { formatNumber } from '../providers/format.js';
-import { computeAddress } from '../address/index.js';
+import { computeAddress, isQiAddress } from '../address/index.js';
 import { ProtoTransaction } from './abstract-transaction.js';
 import { Zone } from '../constants/index.js';
 
 /**
+ * Interface representing a QiTransaction.
  * @category Transaction
- * @todo Write documentation for this interface.
  */
 export interface QiTransactionLike extends TransactionLike {
     /**
-     * @todo Write documentation for this property.
+     * Transaction inputs.
+     * @type {TxInput[] | null}
      */
     txInputs?: null | TxInput[];
 
     /**
-     * @todo Write documentation for this property.
+     * Transaction outputs.
+     * @type {TxOutput[] | null}
      */
     txOutputs?: null | TxOutput[];
 }
 
 /**
+ * Class representing a QiTransaction.
  * @category Transaction
- * @todo Write documentation for this class.
- *
- * @todo Write documentation for the properties of this class.
+ * @extends {AbstractTransaction<string>}
+ * @implements {QiTransactionLike}
  */
 export class QiTransaction extends AbstractTransaction<string> implements QiTransactionLike {
     #txInputs?: null | TxInput[];
     #txOutputs?: null | TxOutput[];
 
+    /**
+     * Get transaction inputs.
+     * @returns {TxInput[]} The transaction inputs.
+     */
     get txInputs(): TxInput[] {
         return (this.#txInputs ?? []).map((entry) => ({ ...entry }));
     }
+
+    /**
+     * Set transaction inputs.
+     * @param {TxInput[] | null} value - The transaction inputs.
+     * @throws {Error} If the value is not an array.
+     */
     set txInputs(value: TxInput[] | null) {
         if (!Array.isArray(value)) {
             throw new Error('txInputs must be an array');
         }
         this.#txInputs = value.map((entry) => ({ ...entry }));
     }
+
+    /**
+     * Get transaction outputs.
+     * @returns {TxOutput[]} The transaction outputs.
+     */
     get txOutputs(): TxOutput[] {
         return (this.#txOutputs ?? []).map((output) => ({ ...output }));
     }
+
+    /**
+     * Set transaction outputs.
+     * @param {TxOutput[] | null} value - The transaction outputs.
+     * @throws {Error} If the value is not an array.
+     */
     set txOutputs(value: TxOutput[] | null) {
         if (!Array.isArray(value)) {
             throw new Error('txOutputs must be an array');
@@ -53,8 +76,10 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     }
 
     /**
-     * The permuted hash of the transaction as specified by
-     * [QIP-0010](https://github.com/quai-network/qips/blob/master/qip-0010.md).
+     * Get the permuted hash of the transaction as specified by QIP-0010.
+     * @see {@link [QIP0010](https://github.com/quai-network/qips/blob/master/qip-0010.md)}
+     * @returns {string | null} The transaction hash.
+     * @throws {Error} If the transaction has no inputs or outputs, or if cross-zone & cross-ledger transactions are not supported.
      */
     get hash(): null | string {
         if (this.signature == null) {
@@ -94,7 +119,8 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     }
 
     /**
-     * The zone of the sender address
+     * Get the zone of the sender address.
+     * @returns {Zone | undefined} The origin zone.
      */
     get originZone(): Zone | undefined {
         const senderAddr = computeAddress(this.txInputs[0].pubkey || '');
@@ -104,7 +130,8 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     }
 
     /**
-     * The zone of the recipient address
+     * Get the zone of the recipient address.
+     * @returns {Zone | undefined} The destination zone.
      */
     get destZone(): Zone | undefined {
         const zone = getZoneForAddress(this.txOutputs[0].address);
@@ -122,7 +149,6 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Validates the explicit properties and returns a list of compatible transaction types.
-     *
      * @returns {number[]} The compatible transaction types.
      */
     inferTypes(): Array<number> {
@@ -141,8 +167,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     }
 
     /**
-     * Create a copy of this transaciton.
-     *
+     * Create a copy of this transaction.
      * @returns {QiTransaction} The cloned transaction.
      */
     clone(): QiTransaction {
@@ -151,7 +176,6 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Return a JSON-friendly object.
-     *
      * @returns {QiTransactionLike} The JSON-friendly object.
      */
     toJSON(): TransactionLike {
@@ -174,7 +198,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Return a protobuf-friendly JSON object.
-     *
+     * @param {boolean} [includeSignature=true] - Whether to include the signature.
      * @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
     toProtobuf(includeSignature: boolean = true): ProtoTransaction {
@@ -206,11 +230,10 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     }
 
     /**
-     * Create a **Transaction** from a serialized transaction or a Transaction-like object.
-     *
+     * Create a Transaction from a serialized transaction or a Transaction-like object.
      * @param {string | QiTransactionLike} tx - The transaction to decode.
-     *
      * @returns {QiTransaction} The decoded transaction.
+     * @throws {Error} If the transaction is unsigned and defines a hash.
      */
     static from(tx: string | QiTransactionLike): QiTransaction {
         if (typeof tx === 'string') {
@@ -243,11 +266,8 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
     }
 
     /**
-     * Create a **Transaction** from a ProtoTransaction object.
-     *
+     * Create a Transaction from a ProtoTransaction object.
      * @param {ProtoTransaction} protoTx - The transaction to decode.
-     * @param {Uint8Array} [payload] - The serialized transaction.
-     *
      * @returns {QiTransaction} The decoded transaction.
      */
     static fromProto(protoTx: ProtoTransaction): QiTransaction {

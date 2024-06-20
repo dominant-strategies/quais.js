@@ -7,12 +7,12 @@ import type { InterfaceAbi } from '../abi/index.js';
 import { validateAddress } from '../address/index.js';
 import type { Addressable } from '../address/index.js';
 import type { BytesLike } from '../utils/index.js';
-import { getZoneForAddress, isQiAddress } from '../utils/index.js';
+import { getZoneForAddress,  } from '../utils/index.js';
 import type { ContractInterface, ContractMethodArgs, ContractDeployTransaction, ContractRunner } from './types.js';
 import type { ContractTransactionResponse } from './wrappers.js';
 import { Wallet } from '../wallet/index.js';
 import { randomBytes } from '../crypto/index.js';
-import { getContractAddress } from '../address/address.js';
+import { getContractAddress, isQiAddress } from '../address/index.js';
 import { getStatic } from '../utils/properties.js';
 import { QuaiTransactionRequest } from '../providers/provider.js';
 

@@ -4,13 +4,14 @@
  * purposes.
  */
 
-// @TODO
-// Event coalescence
-//   When we register an event with an async value (e.g. address is a Signer),
-//   we need to add it immeidately for the Event API, but also
-//   need time to resolve the address. Upon resolving the address, we need to
-//   migrate the listener to the static event. We also need to maintain a map
-//   of Signer to address so we can sync respond to listenerCount.
+/**
+ * @todo Event coalescence
+ * When we register an event with an async value (e.g. address is a Signer),
+ * we need to add it immediately for the Event API, but also
+ * need time to resolve the address. Upon resolving the address, we need to
+ * migrate the listener to the static event. We also need to maintain a map
+ * of Signer to address so we can sync respond to listenerCount.
+ */
 
 import { computeAddress, resolveAddress } from '../address/index.js';
 import { Shard, toShard, toZone, Zone } from '../constants/index.js';
@@ -80,13 +81,26 @@ import { QuaiTransactionResponseParams } from './formatting.js';
 
 type Timer = ReturnType<typeof setTimeout>;
 
-// Constants
+/**
+ * Constants
+ */
 const BN_2 = BigInt(2);
 
+/**
+ * Check if a value is a Promise.
+ * @param {any} value - The value to check.
+ * @returns {boolean} True if the value is a Promise, false otherwise.
+ */
 function isPromise<T = any>(value: any): value is Promise<T> {
     return value && typeof value.then === 'function';
 }
 
+/**
+ * Get a tag string based on a prefix and value.
+ * @param {string} prefix - The prefix for the tag.
+ * @param {any} value - The value to include in the tag.
+ * @returns {string} The generated tag.
+ */
 function getTag(prefix: string, value: any): string {
     return (
         prefix +
@@ -121,7 +135,7 @@ function getTag(prefix: string, value: any): string {
 }
 
 /**
- * The value passed to the {@link AbstractProvider._getSubscriber | **AbstractProvider._getSubscriber} method.
+ * The value passed to the {@link AbstractProvider._getSubscriber | **AbstractProvider._getSubscriber**} method.
  *
  * Only developers sub-classing {@link AbstractProvider | **AbstractProvider**} will care about this, if they are
  * modifying a low-level feature of how subscriptions operate.
@@ -199,12 +213,13 @@ export interface Subscriber {
  */
 export class UnmanagedSubscriber implements Subscriber {
     /**
-     * The name fof the event.
+     * The name of the event.
      */
     name!: string;
 
     /**
      * Create a new UnmanagedSubscriber with `name`.
+     * @param {string} name - The name of the event.
      */
     constructor(name: string) {
         defineProperties<UnmanagedSubscriber>(this, { name });
@@ -213,7 +228,9 @@ export class UnmanagedSubscriber implements Subscriber {
     start(): void {}
     stop(): void {}
 
-    // TODO: `dropWhilePaused` is not used, remove or re-write
+    /**
+     * @todo `dropWhilePaused` is not used, remove or re-write
+     */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     pause(dropWhilePaused?: boolean): void {}
     resume(): void {}
@@ -224,23 +241,35 @@ type Sub = {
     nameMap: Map<string, string>;
     addressableMap: WeakMap<Addressable, string>;
     listeners: Array<{ listener: Listener; once: boolean }>;
-    // @TODO: get rid of this, as it is (and has to be)
+    // @todo get rid of this, as it is (and has to be)
     // tracked in subscriber
     started: boolean;
     subscriber: Subscriber;
 };
 
+/**
+ * Create a deep copy of a value.
+ * @param {T} value - The value to copy.
+ * @returns {T} The copied value.
+ */
 function copy<T = any>(value: T): T {
     return JSON.parse(JSON.stringify(value));
 }
 
+/**
+ * Remove duplicates and sort an array of strings.
+ * @param {Array<string>} items - The array of strings.
+ * @returns {Array<string>} The concisified array.
+ */
 function concisify(items: Array<string>): Array<string> {
     items = Array.from(new Set(items).values());
     items.sort();
     return items;
 }
 
-// TODO: `provider` is not used, remove or re-write
+/**
+ * @todo `provider` is not used, remove or re-write
+ */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function getSubscription(_event: ProviderEvent, provider: AbstractProvider<any>): Promise<Subscription> {
     if (_event == null) {
@@ -273,7 +302,7 @@ async function getSubscription(_event: ProviderEvent, provider: AbstractProvider
 
     if ((<any>_event).orphan) {
         const event = <OrphanFilter>_event;
-        // @TODO: Should lowercase and whatnot things here instead of copy...
+        // @todo Should lowercase and whatnot things here instead of copy...
         return { type: 'orphan', tag: getTag('orphan', event), filter: copy(event) };
     }
 
@@ -325,29 +354,12 @@ async function getSubscription(_event: ProviderEvent, provider: AbstractProvider
     assertArgument(false, 'unknown ProviderEvent', 'event', _event);
 }
 
+/**
+ * Get the current time in milliseconds.
+ * @returns {number} The current time in milliseconds.
+ */
 function getTime(): number {
     return new Date().getTime();
-}
-
-/**
- * An **AbstractPlugin** is used to provide additional internal services to an
- * {@link AbstractProvider | **AbstractProvider**} without adding backwards-incompatible changes to method signatures or
- * other internal and complex logic.
- *
- * @category Providers
- */
-export interface AbstractProviderPlugin {
-    /**
-     * The reverse domain notation of the plugin.
-     */
-    readonly name: string;
-
-    /**
-     * Creates a new instance of the plugin, connected to `provider`.
-     *
-     * @param {AbstractProvider} provider - The provider to connect to.
-     */
-    connect(provider: AbstractProvider<any>): AbstractProviderPlugin;
 }
 
 /**
@@ -582,7 +594,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     _urlMap: Map<Shard, C>;
     #connect: FetchRequest[];
     #subs: Map<string, Sub>;
-    #plugins: Map<string, AbstractProviderPlugin>;
 
     // null=unpaused, true=paused+dropWhilePaused, false=paused
     #pausedState: null | boolean;
@@ -632,7 +643,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         this.#performCache = new Map();
 
         this.#subs = new Map();
-        this.#plugins = new Map();
         this.#pausedState = null;
 
         this.#destroyed = false;
@@ -644,6 +654,11 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         this._urlMap = new Map();
     }
 
+    /**
+     * Initialize the URL map with the provided URLs.
+     * @param {U} urls - The URLs to initialize the map with.
+     * @returns {Promise<void>} A promise that resolves when the map is initialized.
+     */
     async initUrlMap<U = string[] | FetchRequest>(urls: U): Promise<void> {
         if (urls instanceof FetchRequest) {
             urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':9001';
@@ -677,24 +692,51 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         }
     }
 
+    /**
+     * Get the list of connected FetchRequests.
+     * @returns {FetchRequest[]} The list of connected FetchRequests.
+     */
     get connect(): FetchRequest[] {
         return this.#connect;
     }
 
+    /**
+     * Get the zone from an address.
+     * @param {AddressLike} _address - The address to get the zone from.
+     * @returns {Promise<Zone>} A promise that resolves to the zone.
+     */
     async zoneFromAddress(_address: AddressLike): Promise<Zone> {
         const address: string | Promise<string> = this._getAddress(_address);
         return toZone((await address).slice(0, 4));
     }
 
+    /**
+     * Get the shard from a hash.
+     * @param {string} hash - The hash to get the shard from.
+     * @returns {Shard} The shard.
+     */
     shardFromHash(hash: string): Shard {
         return toShard(hash.slice(0, 4));
     }
 
+    /**
+     * Get the latest Quai rate for a zone.
+     * @param {Zone} zone - The zone to get the rate for.
+     * @param {number} [amt=1] - The amount to get the rate for.
+     * @returns {Promise<bigint>} A promise that resolves to the latest Quai rate.
+     */
     async getLatestQuaiRate(zone: Zone, amt: number = 1): Promise<bigint> {
         const blockNumber = await this.getBlockNumber(toShard(zone));
         return this.getQuaiRateAtBlock(zone, blockNumber, amt);
     }
 
+    /**
+     * Get the Quai rate at a specific block.
+     * @param {Zone} zone - The zone to get the rate for.
+     * @param {BlockTag} blockTag - The block tag to get the rate at.
+     * @param {number} [amt=1] - The amount to get the rate for.
+     * @returns {Promise<bigint>} A promise that resolves to the Quai rate at the specified block.
+     */
     async getQuaiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: number = 1): Promise<bigint> {
         let resolvedBlockTag = this._getBlockTag(toShard(zone), blockTag);
         if (typeof resolvedBlockTag !== 'string') {
@@ -709,17 +751,34 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         });
     }
 
+    /**
+     * Get the protocol expansion number.
+     * @returns {Promise<number>} A promise that resolves to the protocol expansion number.
+     */
     async getProtocolExpansionNumber(): Promise<number> {
         return await this.#perform({
             method: 'getProtocolExpansionNumber',
         });
     }
 
+    /**
+     * Get the latest Qi rate for a zone.
+     * @param {Zone} zone - The zone to get the rate for.
+     * @param {number} [amt=1] - The amount to get the rate for.
+     * @returns {Promise<bigint>} A promise that resolves to the latest Qi rate.
+     */
     async getLatestQiRate(zone: Zone, amt: number = 1): Promise<bigint> {
         const blockNumber = await this.getBlockNumber(toShard(zone));
         return this.getQiRateAtBlock(zone, blockNumber, amt);
     }
 
+    /**
+     * Get the Qi rate at a specific block.
+     * @param {Zone} zone - The zone to get the rate for.
+     * @param {BlockTag} blockTag - The block tag to get the rate at.
+     * @param {number} [amt=1] - The amount to get the rate for.
+     * @returns {Promise<bigint>} A promise that resolves to the Qi rate at the specified block.
+     */
     async getQiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: number = 1): Promise<bigint> {
         let resolvedBlockTag = this._getBlockTag(toShard(zone), blockTag);
         if (typeof resolvedBlockTag !== 'string') {
@@ -734,6 +793,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         });
     }
 
+    /**
+     * Get the polling interval.
+     * @returns {number} The polling interval.
+     */
     get pollingInterval(): number {
         return this.#options.pollingInterval;
     }
@@ -741,45 +804,17 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     /**
      * Returns `this`, to allow an **AbstractProvider** to implement the [Contract Runner](../classes/ContractRunner)
      * interface.
+     * @returns {this} The provider instance.
      */
     get provider(): this {
         return this;
     }
 
     /**
-     * Returns all the registered plug-ins.
-     *
-     * @returns {AbstractProviderPlugin[]} An array of all the registered plug-ins.
+     * Shares multiple identical requests made during the same 250ms.
+     * @param {PerformActionRequest} req - The request to perform.
+     * @returns {Promise<T>} A promise that resolves to the result of the operation.
      */
-    get plugins(): Array<AbstractProviderPlugin> {
-        return Array.from(this.#plugins.values());
-    }
-
-    /**
-     * Attach a new plug-in.
-     *
-     * @param {AbstractProviderPlugin} plugin - The plug-in to attach.
-     */
-    attachPlugin(plugin: AbstractProviderPlugin): this {
-        if (this.#plugins.get(plugin.name)) {
-            throw new Error(`cannot replace existing plugin: ${plugin.name} `);
-        }
-        this.#plugins.set(plugin.name, plugin.connect(this));
-        return this;
-    }
-
-    /**
-     * Get a plugin by name.
-     *
-     * @param {string} name - The name of the plugin to get.
-     *
-     * @returns {AbstractProviderPlugin | null} The plugin, or `null` if not found.
-     */
-    getPlugin<T extends AbstractProviderPlugin = AbstractProviderPlugin>(name: string): null | T {
-        return <T>this.#plugins.get(name) || null;
-    }
-
-    // Shares multiple identical requests made during the same 250ms
     async #perform<T = any>(req: PerformActionRequest): Promise<T> {
         const timeout = this.#options.cacheTimeout;
         // Caching disabled
@@ -815,7 +850,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @returns {Block} The wrapped block.
      */
-    // TODO: `newtork` is not used, remove or re-write
+    // @todo `network` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _wrapBlock(value: BlockParams, network: Network): Block {
         // Handle known node by -> remove null values from the number array
@@ -834,7 +869,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @returns {Log} The wrapped log.
      */
-    // TODO: `newtork` is not used, remove or re-write
+    // @todo `network` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _wrapLog(value: LogParams, network: Network): Log {
         return new Log(formatLog(value), this);
@@ -849,7 +884,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @returns {TransactionReceipt} The wrapped transaction receipt.
      */
-    // TODO: `newtork` is not used, remove or re-write
+    // @todo `network` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _wrapTransactionReceipt(value: TransactionReceiptParams, network: Network): TransactionReceipt {
         return new TransactionReceipt(formatTransactionReceipt(value), this);
@@ -1374,7 +1409,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     async #getBlock(shard: Shard, block: BlockTag | string, includeTransactions: boolean): Promise<any> {
-        // @TODO: Add CustomBlockPlugin check
         if (isHexString(block, 32)) {
             return await this.#perform({
                 method: 'getBlock',
@@ -1915,3 +1949,4 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         }
     }
 }
+

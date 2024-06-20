@@ -3,8 +3,6 @@ export { version } from './_version.js';
 
 // APPLICATION BINARY INTERFACE
 export {
-    decodeBytes32String,
-    encodeBytes32String,
     AbiCoder,
     ConstructorFragment,
     ErrorFragment,
@@ -32,11 +30,13 @@ export {
     recoverAddress,
     getCreateAddress,
     getCreate2Address,
-    isAddressable,
-    isAddress,
     resolveAddress,
     validateAddress,
     formatMixedCaseChecksumAddress,
+    isAddressable,
+    isAddress,
+    isQuaiAddress,
+    isQiAddress,
 } from './address/index.js';
 
 //CONSTANTS
@@ -102,7 +102,6 @@ export {
     FeeData,
     Log,
     TransactionReceipt,
-    TransactionResponse,
     AbstractProvider,
     JsonRpcApiProvider,
     JsonRpcProvider,
@@ -122,16 +121,11 @@ export {
 export { AbstractSigner, VoidSigner } from './signers/index.js';
 
 // TRANSACTION
-export {
-    accessListify,
-    AbstractTransaction,
-    FewestCoinSelector,
-    QiTransaction,
-    QuaiTransaction,
-} from './transaction/index.js';
+export { accessListify, FewestCoinSelector, QiTransaction, QuaiTransaction } from './transaction/index.js';
 
 // UTILS
 export {
+    // data
     concat,
     dataLength,
     dataSlice,
@@ -143,14 +137,8 @@ export {
     stripZerosLeft,
     zeroPadBytes,
     zeroPadValue,
-    defineProperties,
-    resolveProperties,
-    assert,
-    assertArgument,
-    assertArgumentCount,
-    assertNormalize,
-    assertPrivate,
-    makeError,
+
+    // errors
     isCallException,
     isError,
     EventPayload,
@@ -158,6 +146,8 @@ export {
     FetchResponse,
     FetchCancelSignal,
     FixedNumber,
+
+    // numbers
     getBigInt,
     getNumber,
     getUint,
@@ -169,40 +159,41 @@ export {
     fromTwos,
     toTwos,
     mask,
+
+    // strings
     formatQuai,
     parseQuai,
-    formatEther,
-    parseEther,
     formatUnits,
     parseUnits,
     uuidV4,
     getTxType,
     getZoneForAddress,
     getAddressDetails,
-    isQiAddress,
 } from './utils/index.js';
 
 export {
+    // bytes 32
+    decodeBytes32,
+    encodeBytes32,
+
+    // base 58
     decodeBase58,
     encodeBase58,
+
+    // base 64
     decodeBase64,
     encodeBase64,
-    decodeProtoTransaction,
-    encodeProtoTransaction,
-    decodeProtoWorkObject,
-    encodeProtoWorkObject,
+
+    // utf8
     toUtf8Bytes,
     toUtf8CodePoints,
     toUtf8String,
-    Utf8ErrorFuncs,
 } from './encoding/index.js';
 
 // WALLET
 export {
     Mnemonic,
-    BaseWallet,
     QuaiHDWallet,
-    HDNodeVoidWallet,
     QiHDWallet,
     Wallet,
     isKeystoreJson,
@@ -260,8 +251,6 @@ export type { TypedDataDomain, TypedDataField } from './hash/index.js';
 // PROVIDERS
 export type {
     Provider,
-    AbstractProviderOptions,
-    AbstractProviderPlugin,
     BlockParams,
     BlockTag,
     DebugEventBrowserProvider,
@@ -289,6 +278,7 @@ export type {
     TopicFilter,
     TransactionReceiptParams,
     TransactionRequest,
+    TransactionResponse,
     TransactionResponseParams,
     WebSocketCreator,
     WebSocketLike,
