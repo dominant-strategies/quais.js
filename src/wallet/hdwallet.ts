@@ -44,9 +44,7 @@ export abstract class AbstractHDWallet {
 
     protected static _coinType?: AllowedCoinType;
 
-    /**
-     * Map of addresses to address info.
-     */
+    // Map of addresses to address info
     protected _addresses: Map<string, NeuteredAddressInfo> = new Map();
 
     /**
@@ -93,7 +91,7 @@ export abstract class AbstractHDWallet {
      * @param {number} startingIndex - The index from which to start deriving addresses.
      * @param {Zone} zone - The zone (shard) for which the address should be valid.
      * @param {boolean} [isChange=false] - Whether to derive a change address (default is false). Default is `false`
-     *   Default is `false` Default is `false` Default is `false`
+     *   Default is `false` Default is `false`
      *
      * @returns {HDNodeWallet} - The derived HD node wallet containing a valid address for the specified zone.
      * @throws {Error} If a valid address for the specified zone cannot be derived within the allowed attempts.
