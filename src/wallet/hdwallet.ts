@@ -64,6 +64,7 @@ export abstract class AbstractHDWallet {
      * @param {number} startingIndex - The index from which to start deriving addresses.
      * @param {Zone} zone - The zone (shard) for which the address should be valid.
      * @param {boolean} [isChange=false] - Whether to derive a change address (default is false). Default is `false`
+     *   Default is `false`
      *
      * @returns {HDNodeWallet} - The derived HD node wallet containing a valid address for the specified zone.
      * @throws {Error} If a valid address for the specified zone cannot be derived within the allowed attempts.
@@ -131,12 +132,20 @@ export abstract class AbstractHDWallet {
         return this.createAndStoreAddressInfo(addressNode, account, zone, isChange, addressMap);
     }
 
-    public getNextAddress(accountIndex: number, zone: Zone): NeuteredAddressInfo {
-        this.validateZone(zone);
-        const lastIndex = this.getLastAddressIndex(this._addresses, zone, accountIndex, false);
-        const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone);
+    public getNextAddress(account: number, zone: Zone): NeuteredAddressInfo {
+        return this._getNextAddress(account, zone, false, this._addresses);
+    }
 
-        return this.createAndStoreAddressInfo(addressNode, accountIndex, zone, false, this._addresses);
+    protected _getNextAddress(
+        accountIndex: number,
+        zone: Zone,
+        isChange: boolean,
+        addressMap: Map<string, NeuteredAddressInfo>,
+    ): NeuteredAddressInfo {
+        this.validateZone(zone);
+        const lastIndex = this.getLastAddressIndex(addressMap, zone, accountIndex, isChange);
+        const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, isChange);
+        return this.createAndStoreAddressInfo(addressNode, accountIndex, zone, isChange, addressMap);
     }
 
     public getAddressInfo(address: string): NeuteredAddressInfo | null {
