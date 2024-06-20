@@ -78,9 +78,6 @@ export class QiHDWallet extends AbstractHDWallet {
 
     public getNextChangeAddress(account: number, zone: Zone): NeuteredAddressInfo {
         this.validateZone(zone);
-        if (!this._accounts.has(account)) {
-            this.addAccount(account);
-        }
         const lastIndex = this.getLastAddressIndex(this._changeAddresses, zone, account, true);
         const addressNode = this.deriveAddressNode(account, lastIndex + 1, zone, true);
 
@@ -203,12 +200,11 @@ export class QiHDWallet extends AbstractHDWallet {
         const addressInfo = this.getAddressInfo(address);
         if (!addressInfo) throw new Error(`Address not found: ${address}`);
         // derive an HDNode for the address and get the private key
-        const accountNode = this._accounts.get(addressInfo.account);
-        if (!accountNode) {
-            throw new Error(`Account ${addressInfo.account} not found for address ${address}`);
-        }
-        const changeNode = accountNode.deriveChild(0);
-        const addressNode = changeNode.deriveChild(addressInfo.index);
+        const changeIndex = addressInfo.change ? 1 : 0;
+        const addressNode = this._root
+            .deriveChild(addressInfo.account)
+            .deriveChild(changeIndex)
+            .deriveChild(addressInfo.index);
         return addressNode.privateKey;
     }
 
@@ -233,21 +229,11 @@ export class QiHDWallet extends AbstractHDWallet {
     // If no account is specified, it will scan all accounts known to the wallet
     public async sync(zone: Zone, account?: number): Promise<void> {
         this.validateZone(zone);
-        if (account) {
-            await this._scan(zone, account);
-        } else {
-            for (const account of this._accounts.keys()) {
-                await this._scan(zone, account);
-            }
-        }
+        return this._scan(zone, account);
     }
 
     private async _scan(zone: Zone, account: number = 0): Promise<void> {
         if (!this.provider) throw new Error('Provider not set');
-
-        if (!this._accounts.has(account)) {
-            this.addAccount(account);
-        }
 
         let gapAddressesCount = 0;
         let changeGapAddressesCount = 0;
@@ -426,13 +412,13 @@ export class QiHDWallet extends AbstractHDWallet {
         outpointInfo.forEach((info) => {
             // validate zone
             this.validateZone(info.zone);
-            // validate address
-            if (!this._addresses.has(info.address)) {
+            // validate address and account
+            const addressInfo = this.getAddressInfo(info.address);
+            if (!addressInfo) {
                 throw new Error(`Address ${info.address} not found in wallet`);
             }
-            // validate account
-            if (info.account && !this._accounts.has(info.account)) {
-                throw new Error(`Account ${info.account} not found in wallet`);
+            if (info.account !== undefined && info.account !== addressInfo.account) {
+                throw new Error(`Account ${info.account} not found for address ${info.address}`);
             }
             // validate Outpoint
             if (info.outpoint.txhash == null || info.outpoint.index == null || info.outpoint.denomination == null) {
