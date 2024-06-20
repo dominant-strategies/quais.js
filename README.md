@@ -28,7 +28,7 @@ in [TypeScript](https://www.typescriptlang.org).
 **Versions**
 
 -   [0.1.17](https://www.npmjs.com/package/quais/v/0.1.17): Full support for Quai Network's Iron Age Testnet.
--   [1.0.0-alpha](https://www.npmjs.com/package/quais/v/1.0.0-alpha.2): Full support for Quai Network's Golden Age Testnet.
+-   [1.0.0-alpha](https://www.npmjs.com/package/quais/v/1.0.0-alpha.3): Full support for Quai Network's Golden Age Testnet.
 
 ## Keep Updated
 
