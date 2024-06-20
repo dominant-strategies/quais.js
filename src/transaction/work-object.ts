@@ -8,6 +8,7 @@ import { QuaiTransaction, QuaiTransactionLike } from './quai-transaction.js';
  * Interface representing a WorkObject, which includes header, body, and transaction information.
  *
  * @category Transaction
+ * @ignore
  */
 export interface WorkObjectLike {
     /**
@@ -30,6 +31,7 @@ export interface WorkObjectLike {
  * Interface representing the header information of a WorkObject.
  *
  * @category Transaction
+ * @ignore
  */
 export interface WorkObjectHeaderLike {
     /**
@@ -72,6 +74,7 @@ export interface WorkObjectHeaderLike {
  * Interface representing the body information of a WorkObject.
  *
  * @category Transaction
+ * @ignore
  */
 export interface WorkObjectBodyLike {
     /**
@@ -104,6 +107,7 @@ export interface WorkObjectBodyLike {
  * Interface representing the header information within the body of a WorkObject.
  *
  * @category Transaction
+ * @ignore
  */
 export interface HeaderLike {
     /**

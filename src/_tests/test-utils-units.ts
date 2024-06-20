@@ -2,7 +2,7 @@ import assert from 'assert';
 
 import { loadTests } from './utils.js';
 
-import { formatEther, formatUnits, parseEther, parseUnits } from '../index.js';
+import { formatQuai, formatUnits, parseQuai, parseUnits } from '../index.js';
 
 import type { TestCaseUnit } from './types.js';
 
@@ -28,7 +28,7 @@ describe('Tests unit conversion', function () {
             it(`converts wei to ${unit} string: ${test.name}`, function () {
                 const wei = BigInt(test.wei);
                 if (decimals === 18) {
-                    assert.equal(formatEther(wei), str, 'formatEther');
+                    assert.equal(formatQuai(wei), str, 'formatQuai');
                     assert.equal(formatUnits(wei), str, 'formatUnits');
                 }
                 assert.equal(formatUnits(wei, unit), str, `formatUnits(${unit})`);
@@ -45,7 +45,7 @@ describe('Tests unit conversion', function () {
             it(`converts ${format} string to wei: ${test.name}`, function () {
                 const wei = BigInt(test.wei);
                 if (decimals === 18) {
-                    assert.equal(parseEther(str), wei, 'parseEther');
+                    assert.equal(parseQuai(str), wei, 'parseQuai');
                     assert.equal(parseUnits(str), wei, 'parseUnits');
                 }
                 assert.equal(parseUnits(str, unit), wei, `parseUnits(${unit})`);

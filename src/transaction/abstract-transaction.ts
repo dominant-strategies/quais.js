@@ -25,136 +25,111 @@ export interface TransactionLike {
     /**
      * The signature for the transaction
      */
-
     signature?: null | SignatureLike;
 
+    /**
+     * The hash of the transaction.
+     */
     hash?: null | string;
 }
 
 /**
  * @category Transaction
  * @todo Write documentation for this interface.
- *
- * @todo Write documentation for this interface.
  */
 export interface ProtoTransaction {
     /**
-     * @todo Write documentation for this property.
+     * The type of the transaction.
      */
     type: number;
 
     /**
-     * @todo Write documentation for this property.
+     * The recipient address.
      */
     to?: Uint8Array | null;
 
     /**
-     * @todo Write documentation for this property.
+     * The nonce of the transaction.
      */
     nonce?: number;
 
     /**
-     * @todo Write documentation for this property.
+     * The value of the transaction.
      */
     value?: Uint8Array;
 
     /**
-     * @todo Write documentation for this property.
+     * The gas limit for the transaction.
      */
     gas?: number;
 
     /**
-     * @todo Write documentation for this property.
+     * The data of the transaction.
      */
     data?: Uint8Array;
 
     /**
-     * @todo Write documentation for this property.
+     * The chain ID of the transaction.
      */
     chain_id: Uint8Array;
 
     /**
-     * @todo Write documentation for this property.
+     * The gas fee cap for the transaction.
      */
     gas_fee_cap?: Uint8Array;
 
     /**
-     * @todo Write documentation for this property.
+     * The gas tip cap for the transaction.
      */
     gas_tip_cap?: Uint8Array;
 
     /**
-     * @todo Write documentation for this property.
+     * The access list for the transaction.
      */
     access_list?: ProtoAccessList;
 
     /**
-     * @todo Write documentation for this property.
-     */
-    etx_gas_limit?: number;
-
-    /**
-     * @todo Write documentation for this property.
-     */
-    etx_gas_price?: Uint8Array;
-
-    /**
-     * @todo Write documentation for this property.
-     */
-    etx_gas_tip?: Uint8Array;
-
-    /**
-     * @todo Write documentation for this property.
-     */
-    etx_data?: Uint8Array;
-
-    /**
-     * @todo Write documentation for this property.
-     */
-    etx_access_list?: ProtoAccessList;
-
-    /**
-     * @todo Write documentation for this property.
+     * The V component of the signature.
      */
     v?: Uint8Array;
 
     /**
-     * @todo Write documentation for this property.
+     * The R component of the signature.
      */
     r?: Uint8Array;
 
     /**
-     * @todo Write documentation for this property.
+     * The S component of the signature.
      */
     s?: Uint8Array;
 
     /**
-     * @todo Write documentation for this property.
+     * The originating transaction hash.
      */
     originating_tx_hash?: string;
 
     /**
-     * @todo Write documentation for this property.
+     * The external transaction index.
      */
     etx_index?: number;
 
     /**
-     * @todo Write documentation for this property.
+     * The external transaction sender.
      */
     etx_sender?: Uint8Array;
 
     /**
-     * @todo Write documentation for this property.
+     * The transaction inputs.
      */
     tx_ins?: { tx_ins: Array<ProtoTxInput> };
 
     /**
-     * @todo Write documentation for this property.
+     * The transaction outputs.
      */
     tx_outs?: { tx_outs: Array<ProtoTxOutput> };
 
     /**
-     * @todo Write documentation for this property.
+     * The signature of the transaction.
      */
     signature?: Uint8Array;
 }
@@ -162,37 +137,53 @@ export interface ProtoTransaction {
 /**
  * @category Transaction
  * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
  */
 export type ProtoTxOutput = {
+    /**
+     * The address of the output.
+     */
     address: Uint8Array;
+
+    /**
+     * The denomination of the output.
+     */
     denomination: number;
 };
 
 /**
  * @category Transaction
  * @todo Write documentation for this type.
- *
- * @todo If not used, replace with `ignore`
  */
 export type ProtoTxInput = {
+    /**
+     * The previous out point.
+     */
     previous_out_point: {
+        /**
+         * The hash of the previous out point.
+         */
         hash: {
             value: Uint8Array;
         };
+        /**
+         * The index of the previous out point.
+         */
         index: number;
     };
+    /**
+     * The public key.
+     */
     pub_key: Uint8Array;
 };
 
 /**
  * @category Transaction
  * @todo Write documentation for this interface.
- *
- * @todo Write documentation for this interface.
  */
 export interface ProtoAccessList {
+    /**
+     * The access tuples.
+     */
     access_tuples: Array<ProtoAccessTuple>;
 }
 
@@ -201,27 +192,23 @@ export interface ProtoAccessList {
  * @todo Write documentation for this interface.
  */
 export interface ProtoAccessTuple {
+    /**
+     * The address of the access tuple.
+     */
     address: Uint8Array;
+
+    /**
+     * The storage keys of the access tuple.
+     */
     storage_key: Array<Uint8Array>;
 }
 
 type allowedSignatureTypes = Signature | string;
 
 /**
- * A **Transaction** describes an operation to be executed on Ethereum by an Externally Owned Account (EOA). It includes
- * who (the {@link ProtoTransaction.to | **to** } address), what (the {@link ProtoTransaction.data | **data** }) and how
- * much (the {@link ProtoTransaction.value | **value** } in ether) the operation should entail.
- *
- * @category Transaction
- * @example
- *
- * ```ts
- * tx = new Transaction();
- * //_result:
- *
- * tx.data = '0x1234';
- * //_result:
- * ```
+ * An **AbstractTransaction** describes the common operations to be executed on Quai and Qi ledgers
+ * by an Externally Owned Account (EOA). This class must be subclassed by concrete implementations
+ * of transactions on each ledger.
  */
 export abstract class AbstractTransaction<S extends allowedSignatureTypes> implements TransactionLike {
     protected _type: number | null;
@@ -293,6 +280,7 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
             this._signature = (value == null ? null : Signature.from(value)) as S;
         }
     }
+
     /**
      * Creates a new Transaction with default values.
      */
@@ -324,7 +312,6 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
         from: string;
         signature: Signature;
     } {
-        //isSigned(): this is SignedTransaction {
         return this.signature != null;
     }
 
@@ -370,7 +357,7 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
     abstract inferTypes(): Array<number>;
 
     /**
-     * Create a copy of this transaciton.
+     * Create a copy of this transaction.
      *
      * @returns {AbstractTransaction} The cloned transaction.
      */
@@ -386,14 +373,30 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
     /**
      * Return a protobuf-friendly JSON object.
      *
+     * @param {boolean} includeSignature - Whether to include the signature in the protobuf.
      * @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
     abstract toProtobuf(includeSignature: boolean): ProtoTransaction;
 
+    /**
+     * Get the origin zone of the transaction.
+     *
+     * @returns {Zone | undefined} The origin zone.
+     */
     abstract get originZone(): Zone | undefined;
 
+    /**
+     * Get the destination zone of the transaction.
+     *
+     * @returns {Zone | undefined} The destination zone.
+     */
     abstract get destZone(): Zone | undefined;
 
+    /**
+     * Check if the transaction is external.
+     *
+     * @returns {boolean} True if the transaction is external.
+     */
     get isExternal(): boolean {
         return this.destZone !== undefined && this.originZone !== this.destZone;
     }

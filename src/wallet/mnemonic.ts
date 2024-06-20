@@ -13,16 +13,33 @@ import { LangEn } from '../wordlists/lang-en.js';
 import type { BytesLike } from '../utils/index.js';
 import type { Wordlist } from '../wordlists/index.js';
 
-// Returns a byte with the MSB bits set
+/**
+ * Returns a byte with the MSB bits set.
+ *
+ * @param {number} bits - The number of bits to set.
+ * @returns {number} The byte with the MSB bits set.
+ */
 function getUpperMask(bits: number): number {
     return (((1 << bits) - 1) << (8 - bits)) & 0xff;
 }
 
-// Returns a byte with the LSB bits set
+/**
+ * Returns a byte with the LSB bits set.
+ *
+ * @param {number} bits - The number of bits to set.
+ * @returns {number} The byte with the LSB bits set.
+ */
 function getLowerMask(bits: number): number {
     return ((1 << bits) - 1) & 0xff;
 }
 
+/**
+ * Converts a mnemonic phrase to entropy.
+ *
+ * @param {string} mnemonic - The mnemonic phrase.
+ * @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
+ * @returns {string} The entropy.
+ */
 function mnemonicToEntropy(mnemonic: string, wordlist?: null | Wordlist): string {
     assertNormalize('NFKD');
 
@@ -70,6 +87,13 @@ function mnemonicToEntropy(mnemonic: string, wordlist?: null | Wordlist): string
     return hexlify(entropy.slice(0, entropyBits / 8));
 }
 
+/**
+ * Converts entropy to a mnemonic phrase.
+ *
+ * @param {Uint8Array} entropy - The entropy.
+ * @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
+ * @returns {string} The mnemonic phrase.
+ */
 function entropyToMnemonic(entropy: Uint8Array, wordlist?: null | Wordlist): string {
     assertArgument(
         entropy.length % 4 === 0 && entropy.length >= 16 && entropy.length <= 32,
@@ -149,7 +173,11 @@ export class Mnemonic {
     readonly entropy!: string;
 
     /**
-     * @private
+     * @param {any} guard - The guard object.
+     * @param {string} entropy - The entropy.
+     * @param {string} phrase - The mnemonic phrase.
+     * @param {string} [password] - The password for the mnemonic.
+     * @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
      */
     constructor(guard: any, entropy: string, phrase: string, password?: null | string, wordlist?: null | Wordlist) {
         if (password == null) {
@@ -164,6 +192,8 @@ export class Mnemonic {
 
     /**
      * Returns the seed for the mnemonic.
+     *
+     * @returns {string} The seed.
      */
     computeSeed(): string {
         const salt = toUtf8Bytes('mnemonic' + this.password, 'NFKD');
@@ -178,7 +208,6 @@ export class Mnemonic {
      * @param {string} phrase - The mnemonic phrase.
      * @param {string} [password] - The password for the mnemonic.
      * @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
-     *
      * @returns {Mnemonic} The new Mnemonic object.
      */
     static fromPhrase(phrase: string, password?: null | string, wordlist?: null | Wordlist): Mnemonic {
@@ -202,7 +231,6 @@ export class Mnemonic {
      * @param {BytesLike} _entropy - The entropy for the mnemonic.
      * @param {string} [password] - The password for the mnemonic.
      * @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
-     *
      * @returns {Mnemonic} The new Mnemonic object.
      */
     static fromEntropy(_entropy: BytesLike, password?: null | string, wordlist?: null | Wordlist): Mnemonic {
@@ -222,7 +250,6 @@ export class Mnemonic {
      *
      * @param {BytesLike} _entropy - The entropy for the mnemonic.
      * @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
-     *
      * @returns {string} The mnemonic phrase.
      */
     static entropyToPhrase(_entropy: BytesLike, wordlist?: null | Wordlist): string {
@@ -235,7 +262,6 @@ export class Mnemonic {
      *
      * @param {string} phrase - The mnemonic phrase.
      * @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
-     *
      * @returns {string} The entropy.
      */
     static phraseToEntropy(phrase: string, wordlist?: null | Wordlist): string {
@@ -250,7 +276,6 @@ export class Mnemonic {
      *
      * @param {string} phrase - The mnemonic phrase.
      * @param {Wordlist} [wordlist] - The wordlist for the mnemonic.
-     *
      * @returns {boolean} True if the phrase is valid.
      * @throws {Error} If the phrase is invalid.
      */

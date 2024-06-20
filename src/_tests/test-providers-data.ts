@@ -123,7 +123,7 @@ async function sendTransaction(to: string) {
             } = {
                 from: wallet.address,
                 to,
-                value: quais.parseEther('0.1'), // Sending 0.1 ether
+                value: quais.parseQuai('0.1'), // Sending 0.1 ether
                 gasPrice: gas * 2,
                 maxFeePerGas: quais.parseUnits('20', 'gwei'),
                 maxPriorityFeePerGas: quais.parseUnits('20', 'gwei'),

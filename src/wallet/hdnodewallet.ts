@@ -1,8 +1,3 @@
-/**
- *  Explain HD Wallets..
- *
- *  @_subsection: api/wallet:HD Wallets  [hd-wallets]
- */
 import { computeHmac, randomBytes, ripemd160, SigningKey, sha256 } from "../crypto/index.js";
 import { VoidSigner } from "../signers/index.js";
 import { computeAddress } from "../address/index.js";
@@ -113,29 +108,32 @@ function derivePath<T extends HDNodeLike<T>>(node: T, path: string): T {
 
 /**
  *  An **HDNodeWallet** is a [[Signer]] backed by the private key derived
- *  from an HD Node using the [[link-bip-32]] stantard.
+ *  from an HD Node using the [[link-bip-32]] standard.
  *
- *  An HD Node forms a hierarchal structure with each HD Node having a
+ *  An HD Node forms a hierarchical structure with each HD Node having a
  *  private key and the ability to derive child HD Nodes, defined by
  *  a path indicating the index of each child.
  */
 export class HDNodeWallet extends BaseWallet {
     /**
      *  The compressed public key.
+     *  @type {string}
      */
     readonly publicKey!: string;
 
     /**
      *  The fingerprint.
      *
-     *  A fingerprint allows quick qay to detect parent and child nodes,
+     *  A fingerprint allows a quick way to detect parent and child nodes,
      *  but developers should be prepared to deal with collisions as it
      *  is only 4 bytes.
+     *  @type {string}
      */
     readonly fingerprint!: string;
 
     /**
      *  The parent fingerprint.
+     *  @type {string}
      */
     readonly parentFingerprint!: string;
 
@@ -143,39 +141,53 @@ export class HDNodeWallet extends BaseWallet {
      *  The mnemonic used to create this HD Node, if available.
      *
      *  Sources such as extended keys do not encode the mnemonic, in
-     *  which case this will be ``null``.
+     *  which case this will be `null`.
+     *  @type {null | Mnemonic}
      */
     readonly mnemonic!: null | Mnemonic;
 
     /**
      *  The chaincode, which is effectively a public key used
      *  to derive children.
+     *  @type {string}
      */
     readonly chainCode!: string;
 
     /**
      *  The derivation path of this wallet.
      *
-     *  Since extended keys do not provider full path details, this
-     *  may be ``null``, if instantiated from a source that does not
-     *  enocde it.
+     *  Since extended keys do not provide full path details, this
+     *  may be `null`, if instantiated from a source that does not
+     *  encode it.
+     *  @type {null | string}
      */
     readonly path!: null | string;
 
     /**
-     *  The child index of this wallet. Values over ``2 *\* 31`` indicate
+     *  The child index of this wallet. Values over `2 ** 31` indicate
      *  the node is hardened.
+     *  @type {number}
      */
     readonly index!: number;
 
     /**
      *  The depth of this wallet, which is the number of components
      *  in its path.
+     *  @type {number}
      */
     readonly depth!: number;
 
     /**
      *  @private
+     *  @param {any} guard
+     *  @param {SigningKey} signingKey
+     *  @param {string} parentFingerprint
+     *  @param {string} chainCode
+     *  @param {null | string} path
+     *  @param {number} index
+     *  @param {number} depth
+     *  @param {null | Mnemonic} mnemonic
+     *  @param {null | Provider} provider
      */
     constructor(guard: any, signingKey: SigningKey, parentFingerprint: string, chainCode: string, path: null | string, index: number, depth: number, mnemonic: null | Mnemonic, provider: null | Provider) {
         super(signingKey, provider);
@@ -192,11 +204,20 @@ export class HDNodeWallet extends BaseWallet {
         defineProperties<HDNodeWallet>(this, { mnemonic });
     }
 
+    /**
+     *  Connects the wallet to a provider.
+     *  @param {null | Provider} provider
+     *  @returns {HDNodeWallet}
+     */
     connect(provider: null | Provider): HDNodeWallet {
         return new HDNodeWallet(_guard, this.signingKey, this.parentFingerprint,
             this.chainCode, this.path, this.index, this.depth, this.mnemonic, provider);
     }
 
+    /**
+     *  @private
+     *  @returns {KeystoreAccount}
+     */
     #account(): KeystoreAccount {
         const account: KeystoreAccount = { address: this.address, privateKey: this.privateKey };
         const m = this.mnemonic;
@@ -213,24 +234,29 @@ export class HDNodeWallet extends BaseWallet {
 
     /**
      *  Resolves to a [JSON Keystore Wallet](json-wallets) encrypted with
-     *  %%password%%.
+     *  `password`.
      *
-     *  If %%progressCallback%% is specified, it will receive periodic
-     *  updates as the encryption process progreses.
+     *  If `progressCallback` is specified, it will receive periodic
+     *  updates as the encryption process progresses.
+     *  @param {Uint8Array | string} password
+     *  @param {ProgressCallback} [progressCallback]
+     *  @returns {Promise<string>}
      */
     async encrypt(password: Uint8Array | string, progressCallback?: ProgressCallback): Promise<string> {
         return await encryptKeystoreJson(this.#account(), password, { progressCallback });
     }
 
     /**
-     *  Returns a [JSON Keystore Wallet](json-wallets) encryped with
-     *  %%password%%.
+     *  Returns a [JSON Keystore Wallet](json-wallets) encrypted with
+     *  `password`.
      *
      *  It is preferred to use the [async version](encrypt) instead,
-     *  which allows a [[ProgressCallback]] to keep the user informed.
+     *  which allows a `ProgressCallback` to keep the user informed.
      *
      *  This method will block the event loop (freezing all UI) until
      *  it is complete, which may be a non-trivial duration.
+     *  @param {Uint8Array | string} password
+     *  @returns {string}
      */
     encryptSync(password: Uint8Array | string): string {
         return encryptKeystoreJsonSync(this.#account(), password);
@@ -239,8 +265,9 @@ export class HDNodeWallet extends BaseWallet {
     /**
      *  The extended key.
      *
-     *  This key will begin with the prefix ``xpriv`` and can be used to
+     *  This key will begin with the prefix `xpriv` and can be used to
      *  reconstruct this HD Node to derive its children.
+     *  @returns {string}
      */
     get extendedKey(): string {
         // We only support the mainnet values for now, but if anyone needs
@@ -269,6 +296,7 @@ export class HDNodeWallet extends BaseWallet {
     /**
      *  Returns true if this wallet has a path, providing a Type Guard
      *  that the path is non-null.
+     *  @returns {boolean}
      */
     hasPath(): this is { path: string } { return (this.path != null); }
 
@@ -278,6 +306,7 @@ export class HDNodeWallet extends BaseWallet {
      *
      *  A neutered node has no private key, but can be used to derive
      *  child addresses and other public data about the HD Node.
+     *  @returns {HDNodeVoidWallet}
      */
     neuter(): HDNodeVoidWallet {
         return new HDNodeVoidWallet(_guard, this.address, this.publicKey,
@@ -286,7 +315,9 @@ export class HDNodeWallet extends BaseWallet {
     }
 
     /**
-     *  Return the child for %%index%%.
+     *  Return the child for `index`.
+     *  @param {Numeric} _index
+     *  @returns {HDNodeWallet}
      */
     deriveChild(_index: Numeric): HDNodeWallet {
         const index = getNumber(_index, "index");
@@ -308,12 +339,20 @@ export class HDNodeWallet extends BaseWallet {
     }
 
     /**
-     *  Return the HDNode for %%path%% from this node.
+     *  Return the HDNode for `path` from this node.
+     *  @param {string} path
+     *  @returns {HDNodeWallet}
      */
     derivePath(path: string): HDNodeWallet {
         return derivePath<HDNodeWallet>(this, path);
     }
 
+    /**
+     *  @private
+     *  @param {BytesLike} _seed
+     *  @param {null | Mnemonic} mnemonic
+     *  @returns {HDNodeWallet}
+     */
     static #fromSeed(_seed: BytesLike, mnemonic: null | Mnemonic): HDNodeWallet {
         assertArgument(isBytesLike(_seed), "invalid seed", "seed", "[REDACTED]");
 
@@ -328,11 +367,13 @@ export class HDNodeWallet extends BaseWallet {
     }
 
     /**
-     *  Creates a new HD Node from %%extendedKey%%.
+     *  Creates a new HD Node from `extendedKey`.
      *
-     *  If the %%extendedKey%% will either have a prefix or ``xpub`` or
-     *  ``xpriv``, returning a neutered HD Node ([[HDNodeVoidWallet]])
-     *  or full HD Node ([[HDNodeWallet) respectively.
+     *  If the `extendedKey` will either have a prefix or `xpub` or
+     *  `xpriv`, returning a neutered HD Node ([[HDNodeVoidWallet]])
+     *  or full HD Node ([[HDNodeWallet]]) respectively.
+     *  @param {string} extendedKey
+     *  @returns {HDNodeWallet | HDNodeVoidWallet}
      */
     static fromExtendedKey(extendedKey: string): HDNodeWallet | HDNodeVoidWallet {
         const bytes = toBeArray(decodeBase58(extendedKey)); // @TODO: redact
@@ -367,6 +408,10 @@ export class HDNodeWallet extends BaseWallet {
 
     /**
      *  Creates a new random HDNode.
+     *  @param {string} path
+     *  @param {string} [password]
+     *  @param {Wordlist} [wordlist]
+     *  @returns {HDNodeWallet}
      */
     static createRandom(path: string, password?: string, wordlist?: Wordlist): HDNodeWallet {
         if (password == null) { password = ""; }
@@ -376,14 +421,22 @@ export class HDNodeWallet extends BaseWallet {
     }
 
     /**
-     *  Create an HD Node from %%mnemonic%%.
+     *  Create an HD Node from `mnemonic`.
+     *  @param {Mnemonic} mnemonic
+     *  @param {string} path
+     *  @returns {HDNodeWallet}
      */
     static fromMnemonic(mnemonic: Mnemonic, path: string): HDNodeWallet {
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
     }
 
     /**
-     *  Creates an HD Node from a mnemonic %%phrase%%.
+     *  Creates an HD Node from a mnemonic `phrase`.
+     *  @param {string} phrase
+     *  @param {string} path
+     *  @param {string} [password]
+     *  @param {Wordlist} [wordlist]
+     *  @returns {HDNodeWallet}
      */
     static fromPhrase(phrase: string, path: string, password?: string,  wordlist?: Wordlist): HDNodeWallet {
         if (password == null) { password = ""; }
@@ -393,7 +446,9 @@ export class HDNodeWallet extends BaseWallet {
     }
 
     /**
-     *  Creates an HD Node from a %%seed%%.
+     *  Creates an HD Node from a `seed`.
+     *  @param {BytesLike} seed
+     *  @returns {HDNodeWallet}
      */
     static fromSeed(seed: BytesLike): HDNodeWallet {
         return HDNodeWallet.#fromSeed(seed, null);
@@ -404,59 +459,75 @@ export class HDNodeWallet extends BaseWallet {
  *  A **HDNodeVoidWallet** cannot sign, but provides access to
  *  the children nodes of a [[link-bip-32]] HD wallet addresses.
  *
- *  The can be created by using an extended ``xpub`` key to
+ *  They can be created by using an extended `xpub` key to
  *  [[HDNodeWallet_fromExtendedKey]] or by 
- *  [nuetering](HDNodeWallet-neuter) a [[HDNodeWallet]].
+ *  [neutering](HDNodeWallet-neuter) a [[HDNodeWallet]].
  */
 export class HDNodeVoidWallet extends VoidSigner {
     /**
      *  The compressed public key.
+     *  @type {string}
      */
     readonly publicKey!: string;
 
     /**
      *  The fingerprint.
      *
-     *  A fingerprint allows quick qay to detect parent and child nodes,
+     *  A fingerprint allows a quick way to detect parent and child nodes,
      *  but developers should be prepared to deal with collisions as it
      *  is only 4 bytes.
+     *  @type {string}
      */
     readonly fingerprint!: string;
 
     /**
      *  The parent node fingerprint.
+     *  @type {string}
      */
     readonly parentFingerprint!: string;
 
     /**
      *  The chaincode, which is effectively a public key used
      *  to derive children.
+     *  @type {string}
      */
     readonly chainCode!: string;
 
     /**
      *  The derivation path of this wallet.
      *
-     *  Since extended keys do not provider full path details, this
-     *  may be ``null``, if instantiated from a source that does not
-     *  enocde it.
+     *  Since extended keys do not provide full path details, this
+     *  may be `null`, if instantiated from a source that does not
+     *  encode it.
+     *  @type {null | string}
      */
     readonly path!: null | string;
 
     /**
-     *  The child index of this wallet. Values over ``2 *\* 31`` indicate
+     *  The child index of this wallet. Values over `2 ** 31` indicate
      *  the node is hardened.
+     *  @type {number}
      */
     readonly index!: number;
 
     /**
      *  The depth of this wallet, which is the number of components
      *  in its path.
+     *  @type {number}
      */
     readonly depth!: number;
 
     /**
      *  @private
+     *  @param {any} guard
+     *  @param {string} address
+     *  @param {string} publicKey
+     *  @param {string} parentFingerprint
+     *  @param {string} chainCode
+     *  @param {null | string} path
+     *  @param {number} index
+     *  @param {number} depth
+     *  @param {null | Provider} provider
      */
     constructor(guard: any, address: string, publicKey: string, parentFingerprint: string, chainCode: string, path: null | string, index: number, depth: number, provider: null | Provider) {
         super(address, provider);
@@ -470,6 +541,11 @@ export class HDNodeVoidWallet extends VoidSigner {
         });
     }
 
+    /**
+     *  Connects the wallet to a provider.
+     *  @param {null | Provider} provider
+     *  @returns {HDNodeVoidWallet}
+     */
     connect(provider: null | Provider): HDNodeVoidWallet {
         return new HDNodeVoidWallet(_guard, this.address, this.publicKey,
             this.parentFingerprint, this.chainCode, this.path, this.index, this.depth, provider);
@@ -478,8 +554,9 @@ export class HDNodeVoidWallet extends VoidSigner {
     /**
      *  The extended key.
      *
-     *  This key will begin with the prefix ``xpub`` and can be used to
+     *  This key will begin with the prefix `xpub` and can be used to
      *  reconstruct this neutered key to derive its children addresses.
+     *  @returns {string}
      */
     get extendedKey(): string {
         // We only support the mainnet values for now, but if anyone needs
@@ -503,11 +580,14 @@ export class HDNodeVoidWallet extends VoidSigner {
     /**
      *  Returns true if this wallet has a path, providing a Type Guard
      *  that the path is non-null.
+     *  @returns {boolean}
      */
     hasPath(): this is { path: string } { return (this.path != null); }
 
     /**
-     *  Return the child for %%index%%.
+     *  Return the child for `index`.
+     *  @param {Numeric} _index
+     *  @returns {HDNodeVoidWallet}
      */
     deriveChild(_index: Numeric): HDNodeVoidWallet {
         const index = getNumber(_index, "index");
@@ -531,37 +611,24 @@ export class HDNodeVoidWallet extends VoidSigner {
     }
 
     /**
-     *  Return the signer for %%path%% from this node.
+     *  Return the signer for `path` from this node.
+     *  @param {string} path
+     *  @returns {HDNodeVoidWallet}
      */
     derivePath(path: string): HDNodeVoidWallet {
         return derivePath<HDNodeVoidWallet>(this, path);
     }
 }
 
-/*
-export class HDNodeWalletManager {
-    #root: HDNodeWallet;
-
-    constructor(phrase: string, password?: null | string, path?: null | string, locale?: null | Wordlist) {
-        if (password == null) { password = ""; }
-        if (path == null) { path = "m/44'/60'/0'/0"; }
-        if (locale == null) { locale = LangEn.wordlist(); }
-        this.#root = HDNodeWallet.fromPhrase(phrase, password, path, locale);
-    }
-
-    getSigner(index?: number): HDNodeWallet {
-        return this.#root.deriveChild((index == null) ? 0: index);
-    }
-}
-*/
-
 /**
- *  Returns the [[link-bip-32]] path for the account at %%index%%.
+ *  Returns the [[link-bip-32]] path for the account at `index`.
  *
  *  This is the pattern used by wallets like Ledger.
  *
  *  There is also an [alternate pattern](getIndexedAccountPath) used by
  *  some software.
+ *  @param {Numeric} _index
+ *  @returns {string}
  */
 export function getAccountPath(_index: Numeric): string {
     const index = getNumber(_index, "index");
@@ -571,16 +638,18 @@ export function getAccountPath(_index: Numeric): string {
 
 /**
  *  Returns the path using an alternative pattern for deriving accounts,
- *  at %%index%%.
+ *  at `index`.
  *
- *  This derivation path uses the //index// component rather than the
- *  //account// component to derive sequential accounts.
+ *  This derivation path uses the `index` component rather than the
+ *  `account` component to derive sequential accounts.
  *
  *  This is the pattern used by wallets like MetaMask.
+ *  @param {Numeric} _index
+ *  @returns {string}
  */
 export function getIndexedAccountPath(_index: Numeric): string {
     const index = getNumber(_index, "index");
     assertArgument(index >= 0 && index < HardenedBit, "invalid account index", "index", index);
-    return `m/44'/60'/0'/0/${ index}`;
+    return `m/44'/60'/0'/0/${ index }`;
 }
 

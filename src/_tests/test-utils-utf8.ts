@@ -1,6 +1,7 @@
 import assert from 'assert';
 
-import { toUtf8Bytes, toUtf8CodePoints, toUtf8String, Utf8ErrorFuncs } from '../index.js';
+import { toUtf8Bytes, toUtf8CodePoints, toUtf8String } from '../index.js';
+import { Utf8ErrorFuncs } from '../encoding/index.js';
 
 export type TestCaseBadString = {
     name: string;

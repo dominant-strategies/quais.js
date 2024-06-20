@@ -7,6 +7,12 @@ import type { Network } from './network.js';
 import type { EventFilter } from './provider.js';
 import type { JsonRpcApiProvider } from './provider-jsonrpc.js';
 
+/**
+ * Deep copies an object.
+ *
+ * @param {any} obj - The object to copy.
+ * @returns {any} A deep copy of the object.
+ */
 function copy(obj: any): any {
     return JSON.parse(JSON.stringify(obj));
 }
@@ -14,8 +20,8 @@ function copy(obj: any): any {
 /**
  * Some backends support subscribing to events using a Filter ID.
  *
- * When subscribing with this technique, the node issues a unique //Filter ID//. At this point the node dedicates
- * resources to the filter, so that periodic calls to follow up on the //Filter ID// will receive any events since the
+ * When subscribing with this technique, the node issues a unique **Filter ID**. At this point the node dedicates
+ * resources to the filter, so that periodic calls to follow up on the **Filter ID** will receive any events since the
  * last call.
  *
  * @category Providers
@@ -33,9 +39,12 @@ export class FilterIdSubscriber implements Subscriber {
     #hault: boolean;
 
     /**
-     * Creates a new **FilterIdSubscriber** which will used {@link FilterIdSubscriber._subscribe | **_subscribe**} and
+     * @ignore
+     * Creates a new **FilterIdSubscriber** which will use {@link FilterIdSubscriber._subscribe | **_subscribe**} and
      * {@link FilterIdSubscriber._emitResults | **_emitResults**} to setup the subscription and provide the event to the
      * `provider`.
+     *
+     * @param {JsonRpcApiProvider<any>} provider - The provider to use.
      */
     constructor(provider: JsonRpcApiProvider<any>) {
         this.#provider = provider;
@@ -52,30 +61,45 @@ export class FilterIdSubscriber implements Subscriber {
 
     /**
      * Sub-classes **must** override this to begin the subscription.
+     *
+     * @param {JsonRpcApiProvider} provider - The provider to use.
+     * @returns {Promise<string>} A promise that resolves to the subscription ID.
+     * @throws {Error} If the method is not overridden.
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _subscribe(provider: JsonRpcApiProvider): Promise<string> {
         throw new Error('subclasses must override this');
     }
 
     /**
-     * Sub-classes **must** override this handle the events.
+     * Sub-classes **must** override this to handle the events.
+     *
+     * @param {AbstractProvider} provider - The provider to use.
+     * @param {Array<any>} result - The results to handle.
+     * @returns {Promise<void>} A promise that resolves when the results are handled.
+     * @throws {Error} If the method is not overridden.
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _emitResults(provider: AbstractProvider, result: Array<any>): Promise<void> {
         throw new Error('subclasses must override this');
     }
 
     /**
-     * Sub-classes **must** override this handle recovery on errors.
+     * Sub-classes **must** override this to handle recovery on errors.
+     *
+     * @param {AbstractProvider} provider - The provider to use.
+     * @returns {Subscriber} The recovered subscriber.
+     * @throws {Error} If the method is not overridden.
      */
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _recover(provider: AbstractProvider): Subscriber {
         throw new Error('subclasses must override this');
     }
 
-    // TODO: `blockNumber` is not used, should it be removed?
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    /**
+     * Polls for new events.
+     *
+     * @ignore
+     * @param {number} blockNumber - The block number to poll from.
+     * @returns {Promise<void>} A promise that resolves when polling is complete.
+     */
     async #poll(blockNumber: number): Promise<void> {
         try {
             // Subscribe if necessary
@@ -107,7 +131,7 @@ export class FilterIdSubscriber implements Subscriber {
             }
 
             if ((this.#network as Network).chainId !== network.chainId) {
-                throw new Error('chaid changed');
+                throw new Error('chain changed');
             }
 
             if (this.#hault) {
@@ -123,6 +147,11 @@ export class FilterIdSubscriber implements Subscriber {
         this.#provider.once('block', this.#poller);
     }
 
+    /**
+     * Tears down the subscription.
+     *
+     * @ignore
+     */
     #teardown(): void {
         const filterIdPromise = this.#filterIdPromise;
         if (filterIdPromise) {
@@ -133,6 +162,9 @@ export class FilterIdSubscriber implements Subscriber {
         }
     }
 
+    /**
+     * Starts the subscriber.
+     */
     start(): void {
         if (this.#running) {
             return;
@@ -142,6 +174,9 @@ export class FilterIdSubscriber implements Subscriber {
         this.#poll(-2);
     }
 
+    /**
+     * Stops the subscriber.
+     */
     stop(): void {
         if (!this.#running) {
             return;
@@ -153,6 +188,11 @@ export class FilterIdSubscriber implements Subscriber {
         this.#provider.off('block', this.#poller);
     }
 
+    /**
+     * Pauses the subscriber.
+     *
+     * @param {boolean} [dropWhilePaused] - Whether to drop the subscription while paused.
+     */
     pause(dropWhilePaused?: boolean): void {
         if (dropWhilePaused) {
             this.#teardown();
@@ -160,6 +200,9 @@ export class FilterIdSubscriber implements Subscriber {
         this.#provider.off('block', this.#poller);
     }
 
+    /**
+     * Resumes the subscriber.
+     */
     resume(): void {
         this.start();
     }
@@ -174,22 +217,45 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
     #event: EventFilter;
 
     /**
-     * Creates a new **FilterIdEventSubscriber** attached to `provider` listening for `filter%%.
+     * @ignore
+     * Creates a new **FilterIdEventSubscriber** attached to `provider` listening for `filter`.
+     *
+     * @param {JsonRpcApiProvider<any>} provider - The provider to use.
+     * @param {EventFilter} filter - The event filter to use.
      */
     constructor(provider: JsonRpcApiProvider<any>, filter: EventFilter) {
         super(provider);
         this.#event = copy(filter);
     }
 
+    /**
+     * Recovers the subscriber.
+     *
+     * @param {AbstractProvider<any>} provider - The provider to use.
+     * @returns {Subscriber} The recovered subscriber.
+     */
     _recover(provider: AbstractProvider<any>): Subscriber {
         return new PollingEventSubscriber(provider, this.#event);
     }
 
+    /**
+     * Subscribes to the event filter.
+     *
+     * @param {JsonRpcApiProvider<any>} provider - The provider to use.
+     * @returns {Promise<string>} A promise that resolves to the subscription ID.
+     */
     async _subscribe(provider: JsonRpcApiProvider<any>): Promise<string> {
         const filterId = await provider.send('quai_newFilter', [this.#event]);
         return filterId;
     }
 
+    /**
+     * Emits the results of the event filter.
+     *
+     * @param {JsonRpcApiProvider<any>} provider - The provider to use.
+     * @param {Array<any>} results - The results to emit.
+     * @returns {Promise<void>} A promise that resolves when the results are emitted.
+     */
     async _emitResults(provider: JsonRpcApiProvider<any>, results: Array<any>): Promise<void> {
         for (const result of results) {
             provider.emit(this.#event, provider._wrapLog(result, provider._network));
@@ -203,10 +269,23 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
  * @category Providers
  */
 export class FilterIdPendingSubscriber extends FilterIdSubscriber {
+    /**
+     * Subscribes to the pending transactions filter.
+     *
+     * @param {JsonRpcApiProvider<any>} provider - The provider to use.
+     * @returns {Promise<string>} A promise that resolves to the subscription ID.
+     */
     async _subscribe(provider: JsonRpcApiProvider<any>): Promise<string> {
         return await provider.send('quai_newPendingTransactionFilter', []);
     }
 
+    /**
+     * Emits the results of the pending transactions filter.
+     *
+     * @param {JsonRpcApiProvider<any>} provider - The provider to use.
+     * @param {Array<any>} results - The results to emit.
+     * @returns {Promise<void>} A promise that resolves when the results are emitted.
+     */
     async _emitResults(provider: JsonRpcApiProvider<any>, results: Array<any>): Promise<void> {
         for (const result of results) {
             provider.emit('pending', result);

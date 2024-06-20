@@ -19,7 +19,7 @@ import type {
  * EventPayload as a single parameter, which includes a `.signature` property that can be used to further filter the
  * event.
  *
- * {@link TopicFilter | **TopicFilter} - A filter defined using the standard Ethereum API which provides the specific
+ * {@link TopicFilter | **TopicFilter**} - A filter defined using the standard Ethereum API which provides the specific
  * topic hash or topic hashes to watch for along with any additional values to filter by. This will only pass a single
  * parameter to the listener, the EventPayload which will include additional details to refine by, such as the event
  * name and signature.
@@ -47,7 +47,15 @@ export interface ContractInterface {
  * @category Contract
  */
 export interface DeferredTopicFilter {
+    /**
+     * Get the topic filter.
+     * @returns {Promise<TopicFilter>} A promise resolving to the topic filter.
+     */
     getTopicFilter(): Promise<TopicFilter>;
+
+    /**
+     * The fragment of the event.
+     */
     fragment: EventFragment;
 }
 
@@ -118,6 +126,11 @@ export interface BaseContractMethod<
     R = any,
     D extends R | ContractTransactionResponse = R | ContractTransactionResponse,
 > {
+    /**
+     * Call the contract method with arguments.
+     * @param {...ContractMethodArgs<A>} args - The arguments to call the method with.
+     * @returns {Promise<D>} A promise resolving to the result of the call.
+     */
     (...args: ContractMethodArgs<A>): Promise<D>;
 
     /**
@@ -134,7 +147,6 @@ export interface BaseContractMethod<
      * Returns the fragment constrained by `args`. This can be used to resolve ambiguous method names.
      *
      * @param {ContractMethodArgs<A>} args - The arguments to constrain the fragment by.
-     *
      * @returns {FunctionFragment} The constrained fragment.
      */
     getFragment(...args: ContractMethodArgs<A>): FunctionFragment;
@@ -143,7 +155,6 @@ export interface BaseContractMethod<
      * Returns a populated transaction that can be used to perform the contract method with `args`.
      *
      * @param {ContractMethodArgs<A>} args - The arguments to populate the transaction with.
-     *
      * @returns {Promise<ContractTransaction>} A promise resolving to the populated transaction.
      */
     populateTransaction(...args: ContractMethodArgs<A>): Promise<ContractTransaction>;
@@ -155,7 +166,6 @@ export interface BaseContractMethod<
      * will be returned.
      *
      * @param {ContractMethodArgs<A>} args - The arguments to call the method with.
-     *
      * @returns {Promise<R>} A promise resolving to the result of the static call.
      */
     staticCall(...args: ContractMethodArgs<A>): Promise<R>;
@@ -164,7 +174,6 @@ export interface BaseContractMethod<
      * Send a transaction for the contract method with `args`.
      *
      * @param {ContractMethodArgs<A>} args - The arguments to call the method with.
-     *
      * @returns {Promise<ContractTransactionResponse>} A promise resolving to the transaction response.
      */
     send(...args: ContractMethodArgs<A>): Promise<ContractTransactionResponse>;
@@ -173,7 +182,6 @@ export interface BaseContractMethod<
      * Estimate the gas to send the contract method with `args`.
      *
      * @param {ContractMethodArgs<A>} args - The arguments to call the method with.
-     *
      * @returns {Promise<bigint>} A promise resolving to the estimated gas.
      */
     estimateGas(...args: ContractMethodArgs<A>): Promise<bigint>;
@@ -182,7 +190,6 @@ export interface BaseContractMethod<
      * Call the contract method with `args` and return the Result without any dereferencing.
      *
      * @param {ContractMethodArgs<A>} args - The arguments to call the method with.
-     *
      * @returns {Promise<Result>} A promise resolving to the Result of the static call.
      */
     staticCallResult(...args: ContractMethodArgs<A>): Promise<Result>;
@@ -200,7 +207,7 @@ export interface ContractMethod<
 > extends BaseContractMethod<A, R, D> {}
 
 /**
- * A pure of view method on a Contract.
+ * A pure or view method on a Contract.
  *
  * @category Contract
  */
@@ -219,6 +226,11 @@ export type ContractEventArgs<A extends Array<any>> = { [I in keyof A]?: A[I] | 
  * @category Contract
  */
 export interface ContractEvent<A extends Array<any> = Array<any>> {
+    /**
+     * Create a deferred topic filter for the event.
+     * @param {...ContractEventArgs<A>} args - The arguments to create the filter with.
+     * @returns {DeferredTopicFilter} The deferred topic filter.
+     */
     (...args: ContractEventArgs<A>): DeferredTopicFilter;
 
     /**
@@ -235,7 +247,6 @@ export interface ContractEvent<A extends Array<any> = Array<any>> {
      * Returns the fragment constrained by `args`. This can be used to resolve ambiguous event names.
      *
      * @param {ContractEventArgs<A>} args - The arguments to constrain the fragment by.
-     *
      * @returns {EventFragment} The constrained fragment.
      */
     getFragment(...args: ContractEventArgs<A>): EventFragment;
@@ -247,6 +258,11 @@ export interface ContractEvent<A extends Array<any> = Array<any>> {
  * @category Contract
  */
 export interface WrappedFallback {
+    /**
+     * Call the fallback method.
+     * @param {Omit<TransactionRequest, 'to'>} [overrides] - The transaction overrides.
+     * @returns {Promise<ContractTransactionResponse>} A promise resolving to the transaction response.
+     */
     (overrides?: Omit<TransactionRequest, 'to'>): Promise<ContractTransactionResponse>;
 
     /**
@@ -254,8 +270,7 @@ export interface WrappedFallback {
      *
      * For non-receive fallback, `data` may be overridden.
      *
-     * @param {Omit<TransactionRequest, 'to'>} overrides - The transaction overrides.
-     *
+     * @param {Omit<TransactionRequest, 'to'>} [overrides] - The transaction overrides.
      * @returns {Promise<ContractTransaction>} A promise resolving to the populated transaction.
      */
     populateTransaction(overrides?: Omit<TransactionRequest, 'to'>): Promise<ContractTransaction>;
@@ -265,9 +280,8 @@ export interface WrappedFallback {
      *
      * For non-receive fallback, `data` may be overridden.
      *
-     * @param {Omit<TransactionRequest, 'to'>} overrides - The transaction overrides.
-     *
-     * @returns {Promise<ContractTransactionResponse>} A promise resolving to the transaction response.
+     * @param {Omit<TransactionRequest, 'to'>} [overrides] - The transaction overrides.
+     * @returns {Promise<string>} A promise resolving to the result of the call.
      */
     staticCall(overrides?: Omit<TransactionRequest, 'to'>): Promise<string>;
 
@@ -276,8 +290,7 @@ export interface WrappedFallback {
      *
      * For non-receive fallback, `data` may be overridden.
      *
-     * @param {Omit<TransactionRequest, 'to'>} overrides - The transaction overrides.
-     *
+     * @param {Omit<TransactionRequest, 'to'>} [overrides] - The transaction overrides.
      * @returns {Promise<ContractTransactionResponse>} A promise resolving to the transaction response.
      */
     send(overrides?: Omit<TransactionRequest, 'to'>): Promise<ContractTransactionResponse>;
@@ -287,8 +300,7 @@ export interface WrappedFallback {
      *
      * For non-receive fallback, `data` may be overridden.
      *
-     * @param {Omit<TransactionRequest, 'to'>} overrides - The transaction overrides.
-     *
+     * @param {Omit<TransactionRequest, 'to'>} [overrides] - The transaction overrides.
      * @returns {Promise<bigint>} A promise resolving to the estimated gas.
      */
     estimateGas(overrides?: Omit<TransactionRequest, 'to'>): Promise<bigint>;
@@ -318,7 +330,6 @@ export interface ContractRunner {
      * Required to estimate gas.
      *
      * @param {TransactionRequest} tx - The transaction object.
-     *
      * @returns {Promise<bigint>} A promise resolving to the estimated gas.
      */
     estimateGas?: (tx: TransactionRequest) => Promise<bigint>;
@@ -327,7 +338,6 @@ export interface ContractRunner {
      * Required for pure, view or static calls to contracts.
      *
      * @param {QuaiTransactionRequest} tx - The transaction object.
-     *
      * @returns {Promise<string>} A promise resolving to the result of the call.
      */
     call?: (tx: QuaiTransactionRequest) => Promise<string>;
@@ -336,7 +346,6 @@ export interface ContractRunner {
      * Required for state mutating calls
      *
      * @param {TransactionRequest} tx - The transaction object.
-     *
      * @returns {Promise<TransactionResponse>} A promise resolving to the transaction response.
      */
     sendTransaction?: (tx: TransactionRequest) => Promise<TransactionResponse>;

@@ -11,10 +11,10 @@ import { QuaiTransaction, QuaiTransactionLike } from '../transaction/quai-transa
 import { keccak256 } from '../crypto/index.js';
 
 /**
- * The **BaseWallet** is a stream-lined implementation of a [Signer](../interfaces/Signer) that operates with a private
+ * The **BaseWallet** is a stream-lined implementation of a {@link AbstractSigner} that operates with a private
  * key.
  *
- * It is preferred to use the [Wallet](../classes/Wallet) class, as it offers additional functionality and simplifies
+ * It is preferred to use the {@link Wallet} class, as it offers additional functionality and simplifies
  * loading a variety of JSON formats, Mnemonic Phrases, etc.
  *
  * This class may be of use for those attempting to implement a minimal Signer.
@@ -24,15 +24,25 @@ import { keccak256 } from '../crypto/index.js';
 export class BaseWallet extends AbstractSigner {
     /**
      * The wallet address.
+     * @type {string}
+     * @readonly
      */
     readonly #address!: string;
 
+    /**
+     * The signing key used for signing payloads.
+     * @type {SigningKey}
+     * @readonly
+     */
     readonly #signingKey: SigningKey;
 
     /**
      * Creates a new BaseWallet for `privateKey`, optionally connected to `provider`.
      *
      * If `provider` is not specified, only offline methods can be used.
+     *
+     * @param {SigningKey} privateKey - The private key for the wallet.
+     * @param {null | Provider} [provider] - The provider to connect to.
      */
     constructor(privateKey: SigningKey, provider?: null | Provider) {
         super(provider);
@@ -53,6 +63,8 @@ export class BaseWallet extends AbstractSigner {
 
     /**
      * The address of this wallet.
+     * @type {string}
+     * @readonly
      */
     get address(): string {
         return this.#address;
@@ -60,6 +72,8 @@ export class BaseWallet extends AbstractSigner {
 
     /**
      * The {@link SigningKey | **SigningKey**} used for signing payloads.
+     * @type {SigningKey}
+     * @readonly
      */
     get signingKey(): SigningKey {
         return this.#signingKey;
@@ -67,6 +81,8 @@ export class BaseWallet extends AbstractSigner {
 
     /**
      * The private key for this wallet.
+     * @type {string}
+     * @readonly
      */
     get privateKey(): string {
         return this.signingKey.privateKey;
@@ -74,14 +90,32 @@ export class BaseWallet extends AbstractSigner {
 
     // TODO: `_zone` is not used, should it be removed?
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    /**
+     * Returns the address of this wallet.
+     *
+     * @param {string} [_zone] - The zone (optional).
+     * @returns {Promise<string>} The wallet address.
+     */
     async getAddress(_zone?: string): Promise<string> {
         return this.#address;
     }
 
+    /**
+     * Connects the wallet to a provider.
+     *
+     * @param {null | Provider} provider - The provider to connect to.
+     * @returns {BaseWallet} The connected wallet.
+     */
     connect(provider: null | Provider): BaseWallet {
         return new BaseWallet(this.#signingKey, provider);
     }
 
+    /**
+     * Signs a transaction.
+     *
+     * @param {QuaiTransactionRequest} tx - The transaction request.
+     * @returns {Promise<string>} The signed transaction.
+     */
     async signTransaction(tx: QuaiTransactionRequest): Promise<string> {
         // Replace any Addressable with an address
         const { to, from } = await resolveProperties({
@@ -113,6 +147,13 @@ export class BaseWallet extends AbstractSigner {
         return btx.serialized;
     }
 
+    /**
+     * Signs a message.
+     *
+     * @param {string | Uint8Array} message - The message to sign.
+     * @returns {Promise<string>} The signed message.
+     * @async
+     */
     async signMessage(message: string | Uint8Array): Promise<string> {
         return this.signMessageSync(message);
     }
@@ -123,13 +164,21 @@ export class BaseWallet extends AbstractSigner {
      * Returns the signature for `message` signed with this wallet.
      *
      * @param {string | Uint8Array} message - The message to sign.
-     *
      * @returns {string} The serialized signature.
      */
     signMessageSync(message: string | Uint8Array): string {
         return this.signingKey.sign(hashMessage(message)).serialized;
     }
 
+    /**
+     * Signs typed data.
+     *
+     * @param {TypedDataDomain} domain - The domain of the typed data.
+     * @param {Record<string, Array<TypedDataField>>} types - The types of the typed data.
+     * @param {Record<string, any>} value - The value of the typed data.
+     * @returns {Promise<string>} The signed typed data.
+     * @async
+     */
     async signTypedData(
         domain: TypedDataDomain,
         types: Record<string, Array<TypedDataField>>,

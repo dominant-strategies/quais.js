@@ -37,16 +37,26 @@ export type WebSocketCreator = () => WebSocketLike;
  * WebSockets are often preferred because they retain a live connection to a server, which permits more instant access
  * to events.
  *
- * However, this incurs higher server infrasturture costs, so additional resources may be required to host your own
+ * However, this incurs higher server infrastructure costs, so additional resources may be required to host your own
  * WebSocket nodes and many third-party services charge additional fees for WebSocket endpoints.
  *
  * @category Providers
+ * @extends SocketProvider
  */
 export class WebSocketProvider extends SocketProvider {
     #websockets: WebSocketLike[];
 
+    /**
+     * A map to track the readiness of each shard.
+     * @type {Map<Shard, boolean>}
+     */
     readyMap: Map<Shard, boolean> = new Map();
 
+    /**
+     * Get the array of WebSocketLike objects.
+     * @throws {Error} If the websocket is closed.
+     * @returns {WebSocketLike[]} The array of WebSocketLike objects.
+     */
     get websocket(): WebSocketLike[] {
         if (this.#websockets == null) {
             throw new Error('websocket closed');
@@ -54,6 +64,12 @@ export class WebSocketProvider extends SocketProvider {
         return this.#websockets;
     }
 
+    /**
+     * Create a new WebSocketProvider.
+     * @param {string | string[] | WebSocketLike | WebSocketCreator} url - The URL(s) or WebSocket object or creator.
+     * @param {Networkish} [network] - The network to connect to.
+     * @param {JsonRpcApiProviderOptions} [options] - The options for the JSON-RPC API provider.
+     */
     constructor(
         url: string | string[] | WebSocketLike | WebSocketCreator,
         network?: Networkish,
@@ -64,6 +80,12 @@ export class WebSocketProvider extends SocketProvider {
         this.initPromise = this.initUrlMap(typeof url === 'string' ? [url] : url);
     }
 
+    /**
+     * Initialize a WebSocket connection for a shard.
+     * @ignore
+     * @param {WebSocketLike} websocket - The WebSocket object.
+     * @param {Shard} shard - The shard identifier.
+     */
     initWebSocket(websocket: WebSocketLike, shard: Shard): void {
         websocket.onopen = async () => {
             try {
@@ -81,6 +103,12 @@ export class WebSocketProvider extends SocketProvider {
         };
     }
 
+    /**
+     * Wait until the shard is ready.
+     * @param {Shard} shard - The shard identifier.
+     * @throws {Error} If the shard is not ready within the timeout period.
+     * @returns {Promise<void>} A promise that resolves when the shard is ready.
+     */
     async waitShardReady(shard: Shard): Promise<void> {
         let count = 0;
         while (!this.readyMap.get(shard)) {
@@ -92,6 +120,12 @@ export class WebSocketProvider extends SocketProvider {
         }
     }
 
+    /**
+     * Initialize the URL map with WebSocket connections.
+     * @ignore
+     * @param {U} urls - The URLs or WebSocket object or creator.
+     * @returns {Promise<void>} A promise that resolves when the URL map is initialized.
+     */
     async initUrlMap<U = string[] | WebSocketLike | WebSocketCreator>(urls: U) {
         const createWebSocket = (baseUrl: string, port: number): WebSocketLike => {
             return new _WebSocket(`${baseUrl}:${port}`) as WebSocketLike;
@@ -141,6 +175,14 @@ export class WebSocketProvider extends SocketProvider {
         }
     }
 
+    /**
+     * Write a message to the WebSocket.
+     * @ignore
+     * @param {string} message - The message to send.
+     * @param {Shard} [shard] - The shard identifier.
+     * @throws {Error} If the WebSocket is closed or the shard is not found.
+     * @returns {Promise<void>} A promise that resolves when the message is sent.
+     */
     async _write(message: string, shard?: Shard): Promise<void> {
         if (this.websocket.length < 1) {
             throw new Error('Websocket closed');
@@ -158,6 +200,10 @@ export class WebSocketProvider extends SocketProvider {
         websocket.send(message);
     }
 
+    /**
+     * Destroy the WebSocket connections and clean up resources.
+     * @returns {Promise<void>} A promise that resolves when the WebSocket connections are closed.
+     */
     async destroy(): Promise<void> {
         this.#websockets.forEach((it) => it.close());
         this.#websockets = [];

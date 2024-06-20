@@ -1,6 +1,7 @@
 import assert from 'assert';
 
-import { decodeBase64, encodeBase64, defineProperties, isError, toUtf8Bytes } from '../index.js';
+import { decodeBase64, encodeBase64, isError, toUtf8Bytes } from '../index.js';
+import { defineProperties } from '../utils/index.js';
 
 describe('Base64 Coding', function () {
     const tests = [
