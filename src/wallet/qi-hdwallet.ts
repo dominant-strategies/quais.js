@@ -190,7 +190,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * until the gap limit is reached for both gap and change addresses.
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
-     * @param {number} [account=0] - The index of the account to scan. Defaults to 0. Default is `0`
+     * @param {number} [account=0] - The index of the account to scan. Defaults to 0. Default is `0` Default is `0`
      *
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the zone is invalid.
@@ -220,7 +220,23 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     public async sync(zone: Zone, account?: number): Promise<void> {
         this.validateZone(zone);
-        return this._scan(zone, account);
+        // if no account is specified, scan all accounts.
+        if (account === undefined) {
+            const addressInfos = Array.from(this._addresses.values());
+            const accounts = addressInfos.reduce<number[]>((unique, info) => {
+                if (!unique.includes(info.account)) {
+                    unique.push(info.account);
+                }
+                return unique;
+            }, []);
+
+            for (const acc of accounts) {
+                await this._scan(zone, acc);
+            }
+        } else {
+            await this._scan(zone, account);
+        }
+        return;
     }
 
     /**
@@ -228,7 +244,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * scanning logic, generating new addresses until the gap limit is reached for both gap and change addresses.
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
-     * @param {number} [account=0] - The index of the account to scan. Defaults to 0. Default is `0`
+     * @param {number} [account=0] - The index of the account to scan. Defaults to 0. Default is `0` Default is `0`
      *
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the provider is not set.
