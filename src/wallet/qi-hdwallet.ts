@@ -151,7 +151,7 @@ export class QiHDWallet extends AbstractHDWallet {
 
     // createSchnorrSignature returns a schnorr signature for the given message and private key
     private createSchnorrSignature(input: TxInput, hash: Uint8Array): string {
-        const privKey = this.derivePrivateKeyForInput(input);
+        const privKey = this.getPrivateKeyForTxInput(input);
         const signature = schnorr.sign(hash, getBytes(privKey));
         return hexlify(signature);
     }
@@ -164,7 +164,7 @@ export class QiHDWallet extends AbstractHDWallet {
         // Collect private keys corresponding to the pubkeys found on the inputs
         const privKeysSet = new Set<string>();
         tx.txInputs!.forEach((input) => {
-            const privKey = this.derivePrivateKeyForInput(input);
+            const privKey = this.getPrivateKeyForTxInput(input);
             privKeysSet.add(privKey);
         });
         const privKeys = Array.from(privKeysSet);
@@ -196,8 +196,24 @@ export class QiHDWallet extends AbstractHDWallet {
         return hexlify(finalSignature);
     }
 
-    // Helper method that returns the private key for the public key
-    private derivePrivateKeyForInput(input: TxInput): string {
+    /**
+     * Retrieves the private key for a given transaction input.
+     *
+     * This method derives the private key for a transaction input by following these steps:
+     *
+     * 1. Ensures the input contains a public key.
+     * 2. Computes the address from the public key.
+     * 3. Fetches address information associated with the computed address.
+     * 4. Derives the hierarchical deterministic (HD) node corresponding to the address.
+     * 5. Returns the private key of the derived HD node.
+     *
+     * @private
+     * @param {TxInput} input - The transaction input containing the public key.
+     *
+     * @returns {string} The private key corresponding to the transaction input.
+     * @throws {Error} If the input does not contain a public key or if the address information cannot be found.
+     */
+    private getPrivateKeyForTxInput(input: TxInput): string {
         if (!input.pubkey) throw new Error('Missing public key for input');
         const address = computeAddress(input.pubkey);
         // get address info
@@ -218,6 +234,7 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
      * @param {number} [account=0] - The index of the account to scan. Defaults to 0. Default is `0` Default is `0`
+     *   Default is `0`
      *
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the zone is invalid.
@@ -272,6 +289,7 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
      * @param {number} [account=0] - The index of the account to scan. Defaults to 0. Default is `0` Default is `0`
+     *   Default is `0`
      *
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the provider is not set.
