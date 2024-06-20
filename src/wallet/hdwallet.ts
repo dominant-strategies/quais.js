@@ -9,6 +9,9 @@ import { Zone } from '../constants/index.js';
 import { TransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { AllowedCoinType } from '../constants/index.js';
 
+/**
+ * Interface representing information about a neutered address.
+ */
 export interface NeuteredAddressInfo {
     pubKey: string;
     address: string;
@@ -18,6 +21,9 @@ export interface NeuteredAddressInfo {
     zone: Zone;
 }
 
+/**
+ * Interface representing the serialized state of an HD wallet.
+ */
 export interface SerializedHDWallet {
     version: number;
     phrase: string;
@@ -25,34 +31,56 @@ export interface SerializedHDWallet {
     addresses: Array<NeuteredAddressInfo>;
 }
 
-// Constant to represent the maximum attempt to derive an address
+/**
+ * Constant to represent the maximum attempt to derive an address.
+ */
 const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
 
+/**
+ * Abstract class representing a Hierarchical Deterministic (HD) wallet.
+ */
 export abstract class AbstractHDWallet {
     protected static _version: number = 1;
 
     protected static _coinType?: AllowedCoinType;
 
-    // Map of addresses to address info
+    /**
+     * Map of addresses to address info.
+     */
     protected _addresses: Map<string, NeuteredAddressInfo> = new Map();
 
-    // Root node of the HD wallet
+    /**
+     * Root node of the HD wallet.
+     */
     protected _root: HDNodeWallet;
 
     protected provider?: Provider;
 
     /**
-     * @private
+     * @param {HDNodeWallet} root - The root node of the HD wallet.
+     * @param {Provider} [provider] - The provider for the HD wallet.
      */
     protected constructor(root: HDNodeWallet, provider?: Provider) {
         this._root = root;
         this.provider = provider;
     }
 
+    /**
+     * Returns the parent path for a given coin type.
+     *
+     * @param {number} coinType - The coin type.
+     *
+     * @returns {string} The parent path.
+     */
     protected static parentPath(coinType: number): string {
         return `m/44'/${coinType}'`;
     }
 
+    /**
+     * Returns the coin type of the wallet.
+     *
+     * @returns {AllowedCoinType} The coin type.
+     */
     protected coinType(): AllowedCoinType {
         return (this.constructor as typeof AbstractHDWallet)._coinType!;
     }
@@ -65,7 +93,7 @@ export abstract class AbstractHDWallet {
      * @param {number} startingIndex - The index from which to start deriving addresses.
      * @param {Zone} zone - The zone (shard) for which the address should be valid.
      * @param {boolean} [isChange=false] - Whether to derive a change address (default is false). Default is `false`
-     *   Default is `false` Default is `false`
+     *   Default is `false` Default is `false` Default is `false`
      *
      * @returns {HDNodeWallet} - The derived HD node wallet containing a valid address for the specified zone.
      * @throws {Error} If a valid address for the specified zone cannot be derived within the allowed attempts.
@@ -104,11 +132,30 @@ export abstract class AbstractHDWallet {
         );
     }
 
+    /**
+     * Adds an address to the wallet.
+     *
+     * @param {number} account - The account number.
+     * @param {number} addressIndex - The address index.
+     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false`
+     *
+     * @returns {NeuteredAddressInfo} The added address info.
+     */
     public addAddress(account: number, addressIndex: number, isChange: boolean = false): NeuteredAddressInfo {
         return this._addAddress(this._addresses, account, addressIndex, isChange);
     }
 
-    // helper method to add an address to the wallet address map
+    /**
+     * Helper method to add an address to the wallet address map.
+     *
+     * @param {Map<string, NeuteredAddressInfo>} addressMap - The address map.
+     * @param {number} account - The account number.
+     * @param {number} addressIndex - The address index.
+     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false`
+     *
+     * @returns {NeuteredAddressInfo} The added address info.
+     * @throws {Error} If the address for the index already exists.
+     */
     protected _addAddress(
         addressMap: Map<string, NeuteredAddressInfo>,
         account: number,
@@ -168,6 +215,13 @@ export abstract class AbstractHDWallet {
         return this.createAndStoreAddressInfo(addressNode, accountIndex, zone, isChange, addressMap);
     }
 
+    /**
+     * Gets the address info for a given address.
+     *
+     * @param {string} address - The address.
+     *
+     * @returns {NeuteredAddressInfo | null} The address info or null if not found.
+     */
     public getAddressInfo(address: string): NeuteredAddressInfo | null {
         const addressInfo = this._addresses.get(address);
         if (!addressInfo) {
@@ -176,17 +230,39 @@ export abstract class AbstractHDWallet {
         return addressInfo;
     }
 
+    /**
+     * Gets the addresses for a given account.
+     *
+     * @param {number} account - The account number.
+     *
+     * @returns {NeuteredAddressInfo[]} The addresses for the account.
+     */
     public getAddressesForAccount(account: number): NeuteredAddressInfo[] {
         const addresses = this._addresses.values();
         return Array.from(addresses).filter((addressInfo) => addressInfo.account === account);
     }
 
+    /**
+     * Gets the addresses for a given zone.
+     *
+     * @param {Zone} zone - The zone.
+     *
+     * @returns {NeuteredAddressInfo[]} The addresses for the zone.
+     */
     public getAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
         this.validateZone(zone);
         const addresses = this._addresses.values();
         return Array.from(addresses).filter((addressInfo) => addressInfo.zone === zone);
     }
 
+    /**
+     * Creates an instance of the HD wallet.
+     *
+     * @param {new (root: HDNodeWallet) => T} this - The constructor of the HD wallet.
+     * @param {Mnemonic} mnemonic - The mnemonic.
+     *
+     * @returns {T} The created instance.
+     */
     protected static createInstance<T extends AbstractHDWallet>(
         this: new (root: HDNodeWallet) => T,
         mnemonic: Mnemonic,
@@ -196,10 +272,27 @@ export abstract class AbstractHDWallet {
         return new this(root);
     }
 
+    /**
+     * Creates an HD wallet from a mnemonic.
+     *
+     * @param {new (root: HDNodeWallet) => T} this - The constructor of the HD wallet.
+     * @param {Mnemonic} mnemonic - The mnemonic.
+     *
+     * @returns {T} The created instance.
+     */
     static fromMnemonic<T extends AbstractHDWallet>(this: new (root: HDNodeWallet) => T, mnemonic: Mnemonic): T {
         return (this as any).createInstance(mnemonic);
     }
 
+    /**
+     * Creates a random HD wallet.
+     *
+     * @param {new (root: HDNodeWallet) => T} this - The constructor of the HD wallet.
+     * @param {string} [password] - The password.
+     * @param {Wordlist} [wordlist] - The wordlist.
+     *
+     * @returns {T} The created instance.
+     */
     static createRandom<T extends AbstractHDWallet>(
         this: new (root: HDNodeWallet) => T,
         password?: string,
@@ -215,6 +308,16 @@ export abstract class AbstractHDWallet {
         return (this as any).createInstance(mnemonic);
     }
 
+    /**
+     * Creates an HD wallet from a phrase.
+     *
+     * @param {new (root: HDNodeWallet) => T} this - The constructor of the HD wallet.
+     * @param {string} phrase - The phrase.
+     * @param {string} [password] - The password.
+     * @param {Wordlist} [wordlist] - The wordlist.
+     *
+     * @returns {T} The created instance.
+     */
     static fromPhrase<T extends AbstractHDWallet>(
         this: new (root: HDNodeWallet) => T,
         phrase: string,
@@ -231,14 +334,39 @@ export abstract class AbstractHDWallet {
         return (this as any).createInstance(mnemonic);
     }
 
+    /**
+     * Abstract method to sign a transaction.
+     *
+     * @param {TransactionRequest} tx - The transaction request.
+     *
+     * @returns {Promise<string>} A promise that resolves to the signed transaction.
+     */
     abstract signTransaction(tx: TransactionRequest): Promise<string>;
 
+    /**
+     * Abstract method to send a transaction.
+     *
+     * @param {TransactionRequest} tx - The transaction request.
+     *
+     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+     */
     abstract sendTransaction(tx: TransactionRequest): Promise<TransactionResponse>;
 
+    /**
+     * Connects the wallet to a provider.
+     *
+     * @param {Provider} provider - The provider.
+     */
     public connect(provider: Provider): void {
         this.provider = provider;
     }
 
+    /**
+     * Validates the zone.
+     *
+     * @param {Zone} zone - The zone.
+     * @throws {Error} If the zone is invalid.
+     */
     protected validateZone(zone: Zone): void {
         if (!Object.values(Zone).includes(zone)) {
             throw new Error(`Invalid zone: ${zone}`);
@@ -254,7 +382,7 @@ export abstract class AbstractHDWallet {
      *
      * @param {string} addr - The address for which to derive the HD node.
      *
-     * @returns {HDNodeWallet} - The derived HD node wallet corresponding to the given address.
+     * @returns {HDNodeWallet} The derived HD node wallet corresponding to the given address.
      * @throws {Error} If the given address is not known to the wallet.
      * @throws {Error} If the account associated with the address is not found.
      */

@@ -37,14 +37,39 @@ import { TypedDataDomain, TypedDataField } from '../hash/index.js';
  * ```
  */
 export class QuaiHDWallet extends AbstractHDWallet {
+    /**
+     * The version of the wallet.
+     *
+     * @type {number}
+     * @static
+     */
     protected static _version: number = 1;
 
+    /**
+     * The coin type for the wallet.
+     *
+     * @type {AllowedCoinType}
+     * @static
+     */
     protected static _coinType: AllowedCoinType = 994;
 
+    /**
+     * Create a QuaiHDWallet instance.
+     *
+     * @param {HDNodeWallet} root - The root HD node wallet.
+     * @param {Provider} [provider] - The provider.
+     */
     private constructor(root: HDNodeWallet, provider?: Provider) {
         super(root, provider);
     }
 
+    /**
+     * Sign a transaction.
+     *
+     * @param {QuaiTransactionRequest} tx - The transaction request.
+     *
+     * @returns {Promise<string>} A promise that resolves to the signed transaction.
+     */
     public async signTransaction(tx: QuaiTransactionRequest): Promise<string> {
         const from = await resolveAddress(tx.from);
         const fromNode = this._getHDNodeForAddress(from);
@@ -52,6 +77,14 @@ export class QuaiHDWallet extends AbstractHDWallet {
         return signedTx;
     }
 
+    /**
+     * Send a transaction.
+     *
+     * @param {QuaiTransactionRequest} tx - The transaction request.
+     *
+     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+     * @throws {Error} If the provider is not set.
+     */
     public async sendTransaction(tx: QuaiTransactionRequest): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
@@ -62,6 +95,14 @@ export class QuaiHDWallet extends AbstractHDWallet {
         return await fromNodeConnected.sendTransaction(tx);
     }
 
+    /**
+     * Sign a message.
+     *
+     * @param {string} address - The address.
+     * @param {string | Uint8Array} message - The message to sign.
+     *
+     * @returns {Promise<string>} A promise that resolves to the signed message.
+     */
     public async signMessage(address: string, message: string | Uint8Array): Promise<string> {
         const addrNode = this._getHDNodeForAddress(address);
         return await addrNode.signMessage(message);
@@ -69,12 +110,6 @@ export class QuaiHDWallet extends AbstractHDWallet {
 
     /**
      * Deserializes the given serialized HD wallet data into an instance of QuaiHDWallet.
-     *
-     * This method performs the following steps:
-     *
-     * - Validates the serialized wallet data.
-     * - Creates a new wallet instance using the mnemonic phrase and derivation path.
-     * - Imports the addresses into the wallet instance.
      *
      * @async
      * @param {SerializedHDWallet} serialized - The serialized wallet data to be deserialized.
