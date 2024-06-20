@@ -32,9 +32,6 @@ export abstract class AbstractHDWallet {
 
     protected static _coinType?: AllowedCoinType;
 
-    // Map of account number to HDNodeWallet
-    protected _accounts: Map<number, HDNodeWallet> = new Map();
-
     // Map of addresses to address info
     protected _addresses: Map<string, NeuteredAddressInfo> = new Map();
 
@@ -59,12 +56,6 @@ export abstract class AbstractHDWallet {
         return (this.constructor as typeof AbstractHDWallet)._coinType!;
     }
 
-    // helper methods that adds an account HD node to the HD wallet following the BIP-44 standard.
-    protected addAccount(accountIndex: number): void {
-        const newNode = this._root.deriveChild(accountIndex);
-        this._accounts.set(accountIndex, newNode);
-    }
-
     protected deriveAddressNode(
         account: number,
         startingIndex: number,
@@ -82,9 +73,8 @@ export abstract class AbstractHDWallet {
             return isCorrectShard && isCorrectLedger;
         };
         // derive the address node
-        const accountNode = this._accounts.get(account);
         const changeIndex = isChange ? 1 : 0;
-        const changeNode = accountNode!.deriveChild(changeIndex);
+        const changeNode = this._root.deriveChild(account).deriveChild(changeIndex);
         let addrIndex: number = startingIndex;
         let addressNode: HDNodeWallet;
         do {
@@ -112,9 +102,6 @@ export abstract class AbstractHDWallet {
         addressIndex: number,
         isChange: boolean = false,
     ): NeuteredAddressInfo {
-        if (!this._accounts.has(account)) {
-            this.addAccount(account);
-        }
         // check if address already exists for the index
         this._addresses.forEach((addressInfo) => {
             if (addressInfo.index === addressIndex) {
@@ -135,9 +122,6 @@ export abstract class AbstractHDWallet {
 
     public getNextAddress(accountIndex: number, zone: Zone): NeuteredAddressInfo {
         this.validateZone(zone);
-        if (!this._accounts.has(accountIndex)) {
-            this.addAccount(accountIndex);
-        }
         const lastIndex = this.getLastAddressIndex(this._addresses, zone, accountIndex, false);
         const addressNode = this.deriveAddressNode(accountIndex, lastIndex + 1, zone);
 
@@ -240,14 +224,8 @@ export abstract class AbstractHDWallet {
             throw new Error(`Address ${addr} is not known to this wallet`);
         }
 
-        // derive a HD node for the from address using the index
-        const accountNode = this._accounts.get(addressInfo.account);
-        if (!accountNode) {
-            throw new Error(`Account ${addressInfo.account} not found`);
-        }
         const changeIndex = addressInfo.change ? 1 : 0;
-        const changeNode = accountNode.deriveChild(changeIndex);
-        return changeNode.deriveChild(addressInfo.index);
+        return this._root.deriveChild(addressInfo.account).deriveChild(changeIndex).deriveChild(addressInfo.index);
     }
 
     /**
