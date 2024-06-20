@@ -77,11 +77,7 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     public getNextChangeAddress(account: number, zone: Zone): NeuteredAddressInfo {
-        this.validateZone(zone);
-        const lastIndex = this.getLastAddressIndex(this._changeAddresses, zone, account, true);
-        const addressNode = this.deriveNextAddressNode(account, lastIndex + 1, zone, true);
-
-        return this.createAndStoreAddressInfo(addressNode, account, zone, true, this._changeAddresses);
+        return this._getNextAddress(account, zone, true, this._changeAddresses);
     }
 
     public importOutpoints(outpoints: OutpointInfo[]): void {
@@ -238,50 +234,38 @@ export class QiHDWallet extends AbstractHDWallet {
         let gapAddressesCount = 0;
         let changeGapAddressesCount = 0;
 
-        // helper function to handle the common logic for both gap and change addresses
-        const handleAddressScanning = async (
-            getAddressInfo: () => NeuteredAddressInfo,
-            addressesCount: number,
-            gapAddressesArray: NeuteredAddressInfo[],
-        ): Promise<number> => {
-            const addressInfo = getAddressInfo();
-            const outpoints = await this.getOutpointsByAddress(addressInfo.address);
-            if (outpoints.length === 0) {
-                addressesCount++;
-                gapAddressesArray.push(addressInfo);
-            } else {
-                addressesCount = 0;
-                gapAddressesArray = [];
-                const newOutpointsInfo = outpoints.map((outpoint) => ({
-                    outpoint,
-                    address: addressInfo.address,
-                    zone: zone,
-                }));
-                this._outpoints.push(...newOutpointsInfo);
-            }
-            return addressesCount;
-        };
-
-        // main loop to scan addresses up to the gap limit
         while (gapAddressesCount < QiHDWallet._GAP_LIMIT || changeGapAddressesCount < QiHDWallet._GAP_LIMIT) {
             [gapAddressesCount, changeGapAddressesCount] = await Promise.all([
                 gapAddressesCount < QiHDWallet._GAP_LIMIT
-                    ? handleAddressScanning(
-                          () => this.getNextAddress(account, zone),
-                          gapAddressesCount,
-                          this._gapAddresses,
-                      )
+                    ? this.scanAddress(zone, account, false, gapAddressesCount)
                     : gapAddressesCount,
-
                 changeGapAddressesCount < QiHDWallet._GAP_LIMIT
-                    ? handleAddressScanning(
-                          () => this.getNextChangeAddress(account, zone),
-                          changeGapAddressesCount,
-                          this._gapChangeAddresses,
-                      )
+                    ? this.scanAddress(zone, account, true, changeGapAddressesCount)
                     : changeGapAddressesCount,
             ]);
         }
+    }
+
+    private async scanAddress(zone: Zone, account: number, isChange: boolean, addressesCount: number): Promise<number> {
+        const addressMap = isChange ? this._changeAddresses : this._addresses;
+        const addressInfo = this._getNextAddress(account, zone, isChange, addressMap);
+        const outpoints = await this.getOutpointsByAddress(addressInfo.address);
+        if (outpoints.length > 0) {
+            this.importOutpoints(
+                outpoints.map((outpoint) => ({
+                    outpoint,
+                    address: addressInfo.address,
+                    zone,
+                    account,
+                })),
+            );
+            addressesCount = 0;
+            isChange ? (this._gapChangeAddresses = []) : (this._gapAddresses = []);
+        } else {
+            addressesCount++;
+            isChange ? this._gapChangeAddresses.push(addressInfo) : this._gapAddresses.push(addressInfo);
+        }
+        return addressesCount;
     }
 
     // getOutpointsByAddress queries the network node for the outpoints of the specified address
