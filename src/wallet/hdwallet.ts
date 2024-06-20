@@ -56,14 +56,31 @@ export abstract class AbstractHDWallet {
         return (this.constructor as typeof AbstractHDWallet)._coinType!;
     }
 
-    protected deriveAddressNode(
+    /**
+     * Derives the next valid address node for a specified account, starting index, and zone. The method ensures the
+     * derived address belongs to the correct shard and ledger, as defined by the Quai blockchain specifications.
+     *
+     * @param {number} account - The account number from which to derive the address node.
+     * @param {number} startingIndex - The index from which to start deriving addresses.
+     * @param {Zone} zone - The zone (shard) for which the address should be valid.
+     * @param {boolean} [isChange=false] - Whether to derive a change address (default is false). Default is `false`
+     *
+     * @returns {HDNodeWallet} - The derived HD node wallet containing a valid address for the specified zone.
+     * @throws {Error} If a valid address for the specified zone cannot be derived within the allowed attempts.
+     */
+    protected deriveNextAddressNode(
         account: number,
         startingIndex: number,
         zone: Zone,
         isChange: boolean = false,
     ): HDNodeWallet {
-        // helper method to check if derived address is valid for a given zone
-        const isValidAddressForZone = (address: string) => {
+        const changeIndex = isChange ? 1 : 0;
+        const changeNode = this._root.deriveChild(account).deriveChild(changeIndex);
+
+        let addrIndex = startingIndex;
+        let addressNode: HDNodeWallet;
+
+        const isValidAddressForZone = (address: string): boolean => {
             const addressZone = getZoneForAddress(address);
             if (!addressZone) {
                 return false;
@@ -72,23 +89,17 @@ export abstract class AbstractHDWallet {
             const isCorrectLedger = this.coinType() === 969 ? isQiAddress(address) : !isQiAddress(address);
             return isCorrectShard && isCorrectLedger;
         };
-        // derive the address node
-        const changeIndex = isChange ? 1 : 0;
-        const changeNode = this._root.deriveChild(account).deriveChild(changeIndex);
-        let addrIndex: number = startingIndex;
-        let addressNode: HDNodeWallet;
-        do {
-            addressNode = changeNode.deriveChild(addrIndex);
-            addrIndex++;
-            // put a hard limit on the number of addresses to derive
-            if (addrIndex - startingIndex > MAX_ADDRESS_DERIVATION_ATTEMPTS) {
-                throw new Error(
-                    `Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`,
-                );
-            }
-        } while (!isValidAddressForZone(addressNode.address));
 
-        return addressNode;
+        for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
+            addressNode = changeNode.deriveChild(addrIndex++);
+            if (isValidAddressForZone(addressNode.address)) {
+                return addressNode;
+            }
+        }
+
+        throw new Error(
+            `Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`,
+        );
     }
 
     public addAddress(account: number, addressIndex: number, isChange: boolean = false): NeuteredAddressInfo {
@@ -123,7 +134,7 @@ export abstract class AbstractHDWallet {
     public getNextAddress(accountIndex: number, zone: Zone): NeuteredAddressInfo {
         this.validateZone(zone);
         const lastIndex = this.getLastAddressIndex(this._addresses, zone, accountIndex, false);
-        const addressNode = this.deriveAddressNode(accountIndex, lastIndex + 1, zone);
+        const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone);
 
         return this.createAndStoreAddressInfo(addressNode, accountIndex, zone, false, this._addresses);
     }

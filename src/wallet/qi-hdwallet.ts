@@ -52,7 +52,7 @@ export class QiHDWallet extends AbstractHDWallet {
     public getNextChangeAddress(account: number, zone: Zone): NeuteredAddressInfo {
         this.validateZone(zone);
         const lastIndex = this.getLastAddressIndex(this._changeAddresses, zone, account, true);
-        const addressNode = this.deriveAddressNode(account, lastIndex + 1, zone, true);
+        const addressNode = this.deriveNextAddressNode(account, lastIndex + 1, zone, true);
 
         return this.createAndStoreAddressInfo(addressNode, account, zone, true, this._changeAddresses);
     }
