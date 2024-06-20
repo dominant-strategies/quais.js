@@ -76,6 +76,14 @@ export class QiHDWallet extends AbstractHDWallet {
         super(root, provider);
     }
 
+    /**
+     * Retrieves the next change address for the specified account and zone.
+     *
+     * @param {number} account - The index of the account for which to retrieve the next change address.
+     * @param {Zone} zone - The zone in which to retrieve the next change address.
+     *
+     * @returns {NeuteredAddressInfo} The next change neutered address information.
+     */
     public getNextChangeAddress(account: number, zone: Zone): NeuteredAddressInfo {
         return this._getNextAddress(account, zone, true, this._changeAddresses);
     }
@@ -204,9 +212,16 @@ export class QiHDWallet extends AbstractHDWallet {
         return addressNode.privateKey;
     }
 
-    // scan scans the specified zone for addresses with unspent outputs.
-    // Starting at index 0, tt will generate new addresses until
-    // the gap limit is reached for both gap and change addresses.
+    /**
+     * Scans the specified zone for addresses with unspent outputs. Starting at index 0, it will generate new addresses
+     * until the gap limit is reached for both gap and change addresses.
+     *
+     * @param {Zone} zone - The zone in which to scan for addresses.
+     * @param {number} [account=0] - The index of the account to scan. Defaults to 0. Default is `0`
+     *
+     * @returns {Promise<void>} A promise that resolves when the scan is complete.
+     * @throws {Error} If the zone is invalid.
+     */
     public async scan(zone: Zone, account: number = 0): Promise<void> {
         this.validateZone(zone);
         // flush the existing addresses and outpoints
@@ -219,15 +234,32 @@ export class QiHDWallet extends AbstractHDWallet {
         await this._scan(zone, account);
     }
 
-    // sync scans the specified zone for addresses with unspent outputs.
-    // Starting at the last address index, it will generate new addresses until
-    // the gap limit is reached for both gap and change addresses.
-    // If no account is specified, it will scan all accounts known to the wallet
+    /**
+     * Scans the specified zone for addresses with unspent outputs. Starting at the last address index, it will generate
+     * new addresses until the gap limit is reached for both gap and change addresses. If no account is specified, it
+     * will scan all accounts known to the wallet.
+     *
+     * @param {Zone} zone - The zone in which to sync addresses.
+     * @param {number} [account] - The index of the account to sync. If not specified, all accounts will be scanned.
+     *
+     * @returns {Promise<void>} A promise that resolves when the sync is complete.
+     * @throws {Error} If the zone is invalid.
+     */
     public async sync(zone: Zone, account?: number): Promise<void> {
         this.validateZone(zone);
         return this._scan(zone, account);
     }
 
+    /**
+     * Internal method to scan the specified zone for addresses with unspent outputs. This method handles the actual
+     * scanning logic, generating new addresses until the gap limit is reached for both gap and change addresses.
+     *
+     * @param {Zone} zone - The zone in which to scan for addresses.
+     * @param {number} [account=0] - The index of the account to scan. Defaults to 0. Default is `0`
+     *
+     * @returns {Promise<void>} A promise that resolves when the scan is complete.
+     * @throws {Error} If the provider is not set.
+     */
     private async _scan(zone: Zone, account: number = 0): Promise<void> {
         if (!this.provider) throw new Error('Provider not set');
 
@@ -246,6 +278,18 @@ export class QiHDWallet extends AbstractHDWallet {
         }
     }
 
+    /**
+     * Scans for the next address in the specified zone and account, checking for associated outpoints, and updates the
+     * address count and gap addresses accordingly.
+     *
+     * @param {Zone} zone - The zone in which the address is being scanned.
+     * @param {number} account - The index of the account for which the address is being scanned.
+     * @param {boolean} isChange - A flag indicating whether the address is a change address.
+     * @param {number} addressesCount - The current count of addresses scanned.
+     *
+     * @returns {Promise<number>} A promise that resolves to the updated address count.
+     * @throws {Error} If an error occurs during the address scanning or outpoints retrieval process.
+     */
     private async scanAddress(zone: Zone, account: number, isChange: boolean, addressesCount: number): Promise<number> {
         const addressMap = isChange ? this._changeAddresses : this._addresses;
         const addressInfo = this._getNextAddress(account, zone, isChange, addressMap);

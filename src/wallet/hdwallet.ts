@@ -65,7 +65,7 @@ export abstract class AbstractHDWallet {
      * @param {number} startingIndex - The index from which to start deriving addresses.
      * @param {Zone} zone - The zone (shard) for which the address should be valid.
      * @param {boolean} [isChange=false] - Whether to derive a change address (default is false). Default is `false`
-     *   Default is `false`
+     *   Default is `false` Default is `false`
      *
      * @returns {HDNodeWallet} - The derived HD node wallet containing a valid address for the specified zone.
      * @throws {Error} If a valid address for the specified zone cannot be derived within the allowed attempts.
@@ -133,10 +133,29 @@ export abstract class AbstractHDWallet {
         return this.createAndStoreAddressInfo(addressNode, account, zone, isChange, addressMap);
     }
 
+    /**
+     * Retrieves the next address for the specified account and zone.
+     *
+     * @param {number} account - The index of the account for which to retrieve the next address.
+     * @param {Zone} zone - The zone in which to retrieve the next address.
+     *
+     * @returns {NeuteredAddressInfo} The next neutered address information.
+     */
     public getNextAddress(account: number, zone: Zone): NeuteredAddressInfo {
         return this._getNextAddress(account, zone, false, this._addresses);
     }
 
+    /**
+     * Derives and returns the next address information for the specified account and zone.
+     *
+     * @param {number} accountIndex - The index of the account for which the address is being generated.
+     * @param {Zone} zone - The zone in which the address is to be used.
+     * @param {boolean} isChange - A flag indicating whether the address is a change address.
+     * @param {Map<string, NeuteredAddressInfo>} addressMap - A map storing the neutered address information.
+     *
+     * @returns {NeuteredAddressInfo} The derived neutered address information.
+     * @throws {Error} If the zone is invalid.
+     */
     protected _getNextAddress(
         accountIndex: number,
         zone: Zone,
