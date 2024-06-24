@@ -321,8 +321,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * until the gap limit is reached for both gap and change addresses.
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
-     * @param {number} [account=0] - The index of the account to scan. Defaults to 0. Default is `0` Default is `0`
-     *   Default is `0` Default is `0`
+     * @param {number} [account=0] - The index of the account to scan. Defaults to `0`. Default is `0`
      *
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the zone is invalid.
@@ -376,8 +375,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * scanning logic, generating new addresses until the gap limit is reached for both gap and change addresses.
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
-     * @param {number} [account=0] - The index of the account to scan. Defaults to 0. Default is `0` Default is `0`
-     *   Default is `0` Default is `0`
+     * @param {number} [account=0] - The index of the account to scan. Defaults to `0`. Default is `0`
      *
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the provider is not set.
