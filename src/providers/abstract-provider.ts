@@ -741,7 +741,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Get the latest Quai rate for a zone.
      *
      * @param {Zone} zone - The zone to get the rate for.
-     * @param {number} [amt=1] - The amount to get the rate for. Default is `1` Default is `1`
+     * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      *
      * @returns {Promise<bigint>} A promise that resolves to the latest Quai rate.
      */
@@ -755,7 +755,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @param {Zone} zone - The zone to get the rate for.
      * @param {BlockTag} blockTag - The block tag to get the rate at.
-     * @param {number} [amt=1] - The amount to get the rate for. Default is `1` Default is `1`
+     * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      *
      * @returns {Promise<bigint>} A promise that resolves to the Quai rate at the specified block.
      */
@@ -788,7 +788,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Get the latest Qi rate for a zone.
      *
      * @param {Zone} zone - The zone to get the rate for.
-     * @param {number} [amt=1] - The amount to get the rate for. Default is `1` Default is `1`
+     * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      *
      * @returns {Promise<bigint>} A promise that resolves to the latest Qi rate.
      */
@@ -802,7 +802,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @param {Zone} zone - The zone to get the rate for.
      * @param {BlockTag} blockTag - The block tag to get the rate at.
-     * @param {number} [amt=1] - The amount to get the rate for. Default is `1` Default is `1`
+     * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      *
      * @returns {Promise<bigint>} A promise that resolves to the Qi rate at the specified block.
      */
@@ -842,7 +842,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     /**
      * Shares multiple identical requests made during the same 250ms.
      *
-     * @ignore
      * @param {PerformActionRequest} req - The request to perform.
      *
      * @returns {Promise<T>} A promise that resolves to the result of the operation.
