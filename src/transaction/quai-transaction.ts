@@ -79,7 +79,9 @@ export interface QuaiTransactionLike extends TransactionLike {
 /**
  * Parses a signature from an array of fields.
  *
- * @param {Array<string>} fields - The fields to parse.
+ * @ignore
+ * @param {string[]} fields - The fields to parse.
+ *
  * @returns {Signature} The parsed signature.
  */
 export function _parseSignature(fields: Array<string>): Signature {
@@ -101,6 +103,7 @@ export function _parseSignature(fields: Array<string>): Signature {
 
 /**
  * Represents a Quai transaction.
+ *
  * @category Transaction
  * @todo Write documentation for this class.
  */
@@ -118,6 +121,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     /**
      * The `to` address for the transaction or `null` if the transaction is an `init` transaction.
+     *
      * @type {null | string}
      */
     get to(): null | string {
@@ -131,6 +135,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     /**
      * The permuted hash of the transaction as specified by
      * [QIP-0010](https://github.com/quai-network/qips/blob/master/qip-0010.md).
+     *
      * @type {null | string}
      * @throws {Error} If the transaction is not signed.
      */
@@ -166,6 +171,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     /**
      * The zone of the sender address
+     *
      * @type {Zone | undefined}
      */
     get originZone(): Zone | undefined {
@@ -175,6 +181,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     /**
      * The zone of the recipient address
+     *
      * @type {Zone | undefined}
      */
     get destZone(): Zone | undefined {
@@ -184,6 +191,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     /**
      * The transaction nonce.
+     *
      * @type {number}
      */
     get nonce(): number {
@@ -195,6 +203,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     /**
      * The gas limit.
+     *
      * @type {bigint}
      */
     get gasLimit(): bigint {
@@ -208,6 +217,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      * The gas price.
      *
      * On legacy networks this defines the fee that will be paid. On EIP-1559 networks, this should be `null`.
+     *
      * @type {null | bigint}
      */
     get gasPrice(): null | bigint {
@@ -220,6 +230,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     /**
      * The maximum priority fee per unit of gas to pay. On legacy networks this should be `null`.
+     *
      * @type {null | bigint}
      */
     get maxPriorityFeePerGas(): null | bigint {
@@ -235,6 +246,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     /**
      * The maximum total fee per unit of gas to pay. On legacy networks this should be `null`.
+     *
      * @type {null | bigint}
      */
     get maxFeePerGas(): null | bigint {
@@ -250,6 +262,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     /**
      * The transaction data. For `init` transactions this is the deployment code.
+     *
      * @type {string}
      */
     get data(): string {
@@ -261,6 +274,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     /**
      * The amount of ether to send in this transactions.
+     *
      * @type {bigint}
      */
     get value(): bigint {
@@ -275,6 +289,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      *
      * An access list permits discounted (but pre-paid) access to bytecode and state variable access within contract
      * execution.
+     *
      * @type {null | AccessList}
      */
     get accessList(): null | AccessList {
@@ -290,6 +305,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
 
     /**
      * Creates a new Transaction with default values.
+     *
      * @param {string} [from] - The sender address.
      */
     constructor(from?: string) {
@@ -385,7 +401,8 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     /**
      * Return a protobuf-friendly JSON object.
      *
-     * @param {boolean} [includeSignature=true] - Whether to include the signature.
+     * @param {boolean} [includeSignature=true] - Whether to include the signature. Default is `true`
+     *
      * @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
     toProtobuf(includeSignature: boolean = true): ProtoTransaction {
@@ -415,6 +432,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      * Create a **Transaction** from a serialized transaction or a Transaction-like object.
      *
      * @param {string | QuaiTransactionLike} tx - The transaction to decode.
+     *
      * @returns {QuaiTransaction} The decoded transaction.
      */
     static from(tx: string | QuaiTransactionLike): QuaiTransaction {
@@ -480,6 +498,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      * Create a **Transaction** from a ProtoTransaction object.
      *
      * @param {ProtoTransaction} protoTx - The transaction to decode.
+     *
      * @returns {QuaiTransaction} The decoded transaction.
      */
     static fromProto(protoTx: ProtoTransaction): QuaiTransaction {

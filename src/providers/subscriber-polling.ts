@@ -7,6 +7,7 @@ import type { EventFilter, OrphanFilter, ProviderEvent } from './provider.js';
  * Deep copies an object.
  *
  * @param {any} obj - The object to copy.
+ *
  * @returns {any} The copied object.
  */
 function copy(obj: any): any {
@@ -16,11 +17,12 @@ function copy(obj: any): any {
 /**
  * Return the polling subscriber for common events.
  *
+ * @category Providers
  * @param {AbstractProvider} provider - The provider to attach the subscriber to.
  * @param {ProviderEvent} event - The event to subscribe to.
+ *
  * @returns {Subscriber} The polling subscriber.
  * @throws {Error} If the event is unsupported.
- * @category Providers
  */
 export function getPollingSubscriber(provider: AbstractProvider, event: ProviderEvent): Subscriber {
     if (event === 'block') {
@@ -52,6 +54,7 @@ export class PollingBlockSubscriber implements Subscriber {
 
     /**
      * Create a new **PollingBlockSubscriber** attached to `provider`.
+     *
      * @ignore
      */
     constructor(provider: AbstractProvider) {
@@ -82,8 +85,8 @@ export class PollingBlockSubscriber implements Subscriber {
     /**
      * Polls for new blocks.
      *
-     * @returns {Promise<void>} A promise that resolves when polling is complete.
      * @ignore
+     * @returns {Promise<void>} A promise that resolves when polling is complete.
      */
     async #poll(): Promise<void> {
         try {
@@ -177,6 +180,7 @@ export class OnBlockSubscriber implements Subscriber {
 
     /**
      * Create a new **OnBlockSubscriber** attached to `provider`.
+     *
      * @ignore
      */
     constructor(provider: AbstractProvider) {
@@ -190,11 +194,14 @@ export class OnBlockSubscriber implements Subscriber {
     /**
      * Called on every new block.
      *
+     * @ignore
      * @param {number} blockNumber - The block number.
      * @param {AbstractProvider} provider - The provider.
+     *
      * @returns {Promise<void>} A promise that resolves when the poll is complete.
      * @throws {Error} If the method is not overridden by a subclass.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
         throw new Error('sub-classes must override this');
     }
@@ -229,6 +236,7 @@ export class OnBlockSubscriber implements Subscriber {
      *
      * @param {boolean} [dropWhilePaused] - Whether to drop the block number while paused.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     pause(dropWhilePaused?: boolean): void {
         this.stop();
     }
@@ -249,6 +257,7 @@ export class PollingOrphanSubscriber extends OnBlockSubscriber {
 
     /**
      * Create a new **PollingOrphanSubscriber** attached to `provider`, listening for `filter`.
+     *
      * @ignore
      */
     constructor(provider: AbstractProvider, filter: OrphanFilter) {
@@ -259,11 +268,14 @@ export class PollingOrphanSubscriber extends OnBlockSubscriber {
     /**
      * Polls for orphaned blocks.
      *
+     * @ignore
      * @param {number} blockNumber - The block number.
      * @param {AbstractProvider} provider - The provider.
+     *
      * @returns {Promise<void>} A promise that resolves when the poll is complete.
      * @throws {Error} If the method is not implemented.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
         throw new Error('@TODO');
         console.log(this.#filter);
@@ -280,6 +292,7 @@ export class PollingTransactionSubscriber extends OnBlockSubscriber {
 
     /**
      * Create a new **PollingTransactionSubscriber** attached to `provider`, listening for `hash`.
+     *
      * @ignore
      */
     constructor(provider: AbstractProvider, hash: string) {
@@ -290,10 +303,13 @@ export class PollingTransactionSubscriber extends OnBlockSubscriber {
     /**
      * Polls for the transaction receipt.
      *
+     * @ignore
      * @param {number} blockNumber - The block number.
      * @param {AbstractProvider} provider - The provider.
+     *
      * @returns {Promise<void>} A promise that resolves when the poll is complete.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
         const tx = await provider.getTransactionReceipt(this.#hash);
         if (tx) {
@@ -316,6 +332,7 @@ export class PollingEventSubscriber implements Subscriber {
 
     /**
      * Create a new **PollingEventSubscriber** attached to `provider`, listening for `filter`.
+     *
      * @ignore
      */
     constructor(provider: AbstractProvider, filter: EventFilter) {
@@ -329,9 +346,10 @@ export class PollingEventSubscriber implements Subscriber {
     /**
      * Polls for logs based on the filter.
      *
-     * @param {number} blockNumber - The block number.
-     * @returns {Promise<void>} A promise that resolves when the poll is complete.
      * @ignore
+     * @param {number} blockNumber - The block number.
+     *
+     * @returns {Promise<void>} A promise that resolves when the poll is complete.
      */
     async #poll(blockNumber: number): Promise<void> {
         // The initial block hasn't been determined yet

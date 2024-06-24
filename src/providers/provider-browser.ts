@@ -129,6 +129,7 @@ export class BrowserProvider extends JsonRpcApiProvider {
      * Sends a JSON-RPC payload.
      *
      * @ignore
+     * @ignore
      * @param {JsonRpcPayload | JsonRpcPayload[]} payload - The JSON-RPC payload.
      *
      * @returns {Promise<(JsonRpcResult | JsonRpcError)[]>} The result of the request.

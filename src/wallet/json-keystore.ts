@@ -358,6 +358,7 @@ function getEncryptKdfParams(options: EncryptOptions): ScryptParams {
 /**
  * Encrypts the keystore with the given key, KDF parameters, account, and options.
  *
+ * @ignore
  * @param {Uint8Array} key - The key to use for encryption.
  * @param {ScryptParams} kdf - The key derivation function parameters.
  * @param {KeystoreAccount} account - The account to encrypt.

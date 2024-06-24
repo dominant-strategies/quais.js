@@ -220,7 +220,7 @@ export class AbiCoder {
      * @param {(string | ParamType)[]} types - Array of parameter types.
      * @param {BytesLike} data - The ABI data to decode.
      * @param {boolean} [loose=false] - Enable loose decoding. Default is `false` Default is `false` Default is `false`
-     *   Default is `false`
+     *   Default is `false` Default is `false`
      *
      * @returns {Result} The decoded values.
      */
@@ -233,6 +233,7 @@ export class AbiCoder {
     /**
      * Set the default maximum inflation factor.
      *
+     * @ignore
      * @param {number} value - The new inflation factor.
      */
     static _setDefaultMaxInflation(value: number): void {

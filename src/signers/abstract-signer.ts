@@ -68,6 +68,9 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
      */
     abstract getAddress(): Promise<string>;
 
+    /**
+     * @ignore
+     */
     _getAddress(address: AddressLike): string | Promise<string> {
         return resolveAddress(address);
     }

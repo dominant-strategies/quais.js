@@ -34,6 +34,8 @@ export class WordlistOwl extends Wordlist {
 
     /**
      * The OWL-encoded data.
+     *
+     * @ignore
      */
     get _data(): string {
         return this.#data;

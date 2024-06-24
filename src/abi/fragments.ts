@@ -224,6 +224,9 @@ class TokenString {
         this.#offset = 0;
     }
 
+    /**
+     * @ignore
+     */
     #subTokenString(from: number = 0, to: number = 0): TokenString {
         return new TokenString(
             this.#tokens.slice(from, to).map((t) => {
@@ -815,6 +818,9 @@ export class ParamType {
         return process(this.type, value);
     }
 
+    /**
+     * @ignore
+     */
     #walkAsync(
         promises: Array<Promise<void>>,
         value: any,

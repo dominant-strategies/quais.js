@@ -320,7 +320,9 @@ export function toUtf8Bytes(str: string, form?: UnicodeNormalizationForm): Uint8
     return new Uint8Array(result);
 }
 
-//export
+/**
+ * @ignore
+ */
 function _toUtf8String(codePoints: Array<number>): string {
     return codePoints
         .map((codePoint) => {
