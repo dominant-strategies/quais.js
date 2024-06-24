@@ -1640,6 +1640,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * {@link AbstractProvider.pause | **Pausing**} the provider will pause any associated timers.
      *
      * @ignore
+     * @ignore
      * @param {() => void} _func - The function to execute.
      * @param {number} [timeout] - The time to wait before executing `func`.
      *
