@@ -1,22 +1,14 @@
-//! TODO: Fix this test
-/*
 import assert from 'assert';
 
 import { loadTests } from './utils.js';
 
+import { HDNodeWallet, HDNodeVoidWallet } from '../wallet/index.js';
 
-import {
-    getBytes, wordlists,
-    QuaiHDWallet, Mnemonic,
-    QiHDWallet,
-} from "../index.js";
+import { getBytes, wordlists, Mnemonic } from '../quais.js';
 
-import type { Wordlist } from "../wordlists/index.js";
+import type { Wordlist } from '../wordlists/index.js';
 
-import type { TestCaseMnemonic, TestCaseMnemonicNode } from "./types.js";
-
-// import type { HDWalletStatic } from "../wallet/hdwallet.js";
-
+import type { TestCaseMnemonic, TestCaseMnemonicNode } from './types.js';
 
 const decoder = new TextDecoder();
 function fromHex(hex: string): string {
@@ -33,21 +25,21 @@ type Test = {
     test: TestCaseMnemonic;
 };
 
-describe("Test HDWallets", function() {
-    function checkWallet(wallet: QuaiHDWallet | QiHDWallet, test: TestCaseMnemonicNode): void {
-        assert.equal(wallet.chainCode, test.chainCode, "chainCode");
-        assert.equal(wallet.depth, test.depth, "depth");
-        assert.equal(wallet.index, test.index, "index");
-        assert.equal(wallet.fingerprint, test.fingerprint, "fingerprint");
-        assert.equal(wallet.accountFingerprint, test.parentFingerprint, "parentFingerprint");
-        assert.equal(wallet.publicKey, test.publicKey, "publicKey");
+describe('Test HDWallets', function () {
+    function checkWallet(wallet: HDNodeWallet | HDNodeVoidWallet, test: TestCaseMnemonicNode): void {
+        assert.equal(wallet.chainCode, test.chainCode, 'chainCode');
+        assert.equal(wallet.depth, test.depth, 'depth');
+        assert.equal(wallet.index, test.index, 'index');
+        assert.equal(wallet.fingerprint, test.fingerprint, 'fingerprint');
+        assert.equal(wallet.parentFingerprint, test.parentFingerprint, 'parentFingerprint');
+        assert.equal(wallet.publicKey, test.publicKey, 'publicKey');
 
-        if (wallet instanceof QuaiHDWallet) {
-            assert.equal(wallet.extendedKey, test.xpriv, "xpriv");
-            assert.equal(wallet.privateKey, test.privateKey, "privateKey");
-            assert.equal(wallet.neuter().extendedKey, test.xpub, "xpub");
-        } else if (wallet instanceof QiHDWallet) {
-            assert.equal(wallet.extendedKey, test.xpub, "xpub");
+        if (wallet instanceof HDNodeWallet) {
+            assert.equal(wallet.extendedKey, test.xpriv, 'xpriv');
+            assert.equal(wallet.privateKey, test.privateKey, 'privateKey');
+            assert.equal(wallet.neuter().extendedKey, test.xpub, 'xpub');
+        } else if (wallet instanceof HDNodeVoidWallet) {
+            assert.equal(wallet.extendedKey, test.xpub, 'xpub');
         }
     }
 
@@ -90,10 +82,9 @@ describe("Test HDWallets", function() {
     for (const { test, checkMnemonic, phrase, password, wordlist } of checks) {
         it(`computes the HD keys by mnemonic: ${test.name}`, function () {
             for (const subtest of test.nodes) {
-                const WalletClass = QuaiHDWallet as typeof QuaiHDWallet & HDWalletStatic<QuaiHDWallet>;
-                const w = WalletClass.fromPhrase(phrase, password, subtest.path, wordlist);
-                assert.ok(w instanceof QuaiHDWallet, "instanceof QuaiHDWallet");
-                assert.equal(w.path, subtest.path, "path")
+                const w = HDNodeWallet.fromPhrase(phrase, subtest.path, password, wordlist);
+                assert.ok(w instanceof HDNodeWallet, 'instanceof HDNodeWallet');
+                assert.equal(w.path, subtest.path, 'path');
                 checkWallet(w, subtest);
                 assert.ok(!!w.mnemonic, 'has mnemonic');
                 checkMnemonic(w.mnemonic as Mnemonic);
@@ -102,12 +93,11 @@ describe("Test HDWallets", function() {
     }
 
     for (const { test } of checks) {
-        it(`computes the HD keys by entropy: ${ test.name }`, function() {
-            const WalletClass = QuaiHDWallet as typeof QuaiHDWallet & HDWalletStatic<QuaiHDWallet>;
-            const seedRoot = WalletClass.fromSeed(test.seed);
+        it(`computes the HD keys by entropy: ${test.name}`, function () {
+            const seedRoot = HDNodeWallet.fromSeed(test.seed);
             for (const subtest of test.nodes) {
                 const w = seedRoot.derivePath(subtest.path);
-                assert.ok(w instanceof QuaiHDWallet, 'instanceof QuaiHDWallet');
+                assert.ok(w instanceof HDNodeWallet, 'instanceof HDNodeWallet');
                 assert.equal(w.path, subtest.path, 'path');
                 checkWallet(w, subtest);
                 assert.equal(w.mnemonic, null);
@@ -118,41 +108,49 @@ describe("Test HDWallets", function() {
     for (const { test } of checks) {
         it(`computes the HD keys by enxtended private key: ${test.name}`, function () {
             for (const subtest of test.nodes) {
-                const w = QuaiHDWallet.fromExtendedKey(subtest.xpriv);
-                assert.ok(w instanceof QuaiHDWallet, 'instanceof QuaiHDWallet');
+                const w = HDNodeWallet.fromExtendedKey(subtest.xpriv);
+                assert.ok(w instanceof HDNodeWallet, 'instanceof HDNodeWallet');
                 checkWallet(w, subtest);
                 assert.equal(w.mnemonic, null);
             }
         });
     }
 
-    // ! TODO: Fix this test
-    // for (const { test, phrase, password, wordlist } of checks) {
-    //     it(`computes the neutered HD keys by paths: ${ test.name }`, function() {
-    //         const root = QuaiHDWallet.fromPhrase(phrase, "m", password, wordlist).neuter();
-    //         for (const subtest of test.nodes) {
-    //             if (subtest.path.indexOf("'") >= 0) {
-    //                 assert.throws(
-    //                     () => {
-    //                         const w = root.derivePath(subtest.path);
-    //                         console.log(w);
-    //                     },
-    //                     (error: any) => {
-    //                         return (
-    //                             error.code === 'UNSUPPORTED_OPERATION' &&
-    //                             error.message.match(/^cannot derive child of neutered node/) &&
-    //                             error.operation === 'deriveChild'
-    //                         );
-    //                     },
-    //                 );
-    //             } else {
-    //                 const w = root.derivePath(subtest.path);
-    //                 assert.ok(w instanceof HDNodeVoidWallet, 'instanceof HDNodeVoidWallet');
-    //                 assert.equal(w.path, subtest.path, 'path');
-    //                 checkWallet(w, subtest);
-    //             }
-    //         }
-    //     });
-    // }
+    for (const { test, phrase, password, wordlist } of checks) {
+        it(`computes the neutered HD keys by paths: ${test.name}`, function () {
+            const root = HDNodeWallet.fromPhrase(phrase, 'm', password, wordlist).neuter();
+            for (const subtest of test.nodes) {
+                if (subtest.path.indexOf("'") >= 0) {
+                    assert.throws(
+                        () => {
+                            const w = root.derivePath(subtest.path);
+                            console.log(w);
+                        },
+                        (error: any) => {
+                            return (
+                                error.code === 'UNSUPPORTED_OPERATION' &&
+                                error.message.match(/^cannot derive child of neutered node/) &&
+                                error.operation === 'deriveChild'
+                            );
+                        },
+                    );
+                } else {
+                    const w = root.derivePath(subtest.path);
+                    assert.ok(w instanceof HDNodeVoidWallet, 'instanceof HDNodeVoidWallet');
+                    assert.equal(w.path, subtest.path, 'path');
+                    checkWallet(w, subtest);
+                }
+            }
+        });
+    }
+
+    for (const { test } of checks) {
+        it(`computes the neutered HD keys by enxtended public key: ${test.name}`, function () {
+            for (const subtest of test.nodes) {
+                const w = HDNodeWallet.fromExtendedKey(subtest.xpub);
+                assert.ok(w instanceof HDNodeVoidWallet, 'instanceof HDNodeVoidWallet');
+                checkWallet(w, subtest);
+            }
+        });
+    }
 });
-*/
