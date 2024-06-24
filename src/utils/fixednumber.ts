@@ -240,7 +240,7 @@ export class FixedNumber {
     /**
      * This is a property so console.log shows a human-meaningful value.
      *
-     * @private
+     * @ignore
      */
     readonly _value!: string;
 
@@ -249,7 +249,7 @@ export class FixedNumber {
     //constructor(guard: any, value: bigint, format: _FixedFormat) {
 
     /**
-     * @private
+     * @ignore
      */
     constructor(guard: any, value: bigint, format: any) {
         assertPrivate(guard, _guard, 'FixedNumber');

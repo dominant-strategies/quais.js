@@ -71,19 +71,19 @@ interface SerializedQiHDWallet extends SerializedHDWallet {
  */
 export class QiHDWallet extends AbstractHDWallet {
     /**
-     * @private
+     * @ignore
      * @type {number}
      */
     protected static _version: number = 1;
 
     /**
-     * @private
+     * @ignore
      * @type {number}
      */
     protected static _GAP_LIMIT: number = 20;
 
     /**
-     * @private
+     * @ignore
      * @type {AllowedCoinType}
      */
     protected static _coinType: AllowedCoinType = 969;
@@ -91,7 +91,7 @@ export class QiHDWallet extends AbstractHDWallet {
     /**
      * Map of change addresses to address info.
      *
-     * @private
+     * @ignore
      * @type {Map<string, NeuteredAddressInfo>}
      */
     protected _changeAddresses: Map<string, NeuteredAddressInfo> = new Map();
@@ -99,7 +99,7 @@ export class QiHDWallet extends AbstractHDWallet {
     /**
      * Array of gap addresses.
      *
-     * @private
+     * @ignore
      * @type {NeuteredAddressInfo[]}
      */
     protected _gapChangeAddresses: NeuteredAddressInfo[] = [];
@@ -107,7 +107,7 @@ export class QiHDWallet extends AbstractHDWallet {
     /**
      * Array of gap change addresses.
      *
-     * @private
+     * @ignore
      * @type {NeuteredAddressInfo[]}
      */
     protected _gapAddresses: NeuteredAddressInfo[] = [];
@@ -115,13 +115,13 @@ export class QiHDWallet extends AbstractHDWallet {
     /**
      * Array of outpoint information.
      *
-     * @private
+     * @ignore
      * @type {OutpointInfo[]}
      */
     protected _outpoints: OutpointInfo[] = [];
 
     /**
-     * @private
+     * @ignore
      * @param {HDNodeWallet} root - The root HDNodeWallet.
      * @param {Provider} [provider] - The provider (optional).
      */
@@ -225,7 +225,7 @@ export class QiHDWallet extends AbstractHDWallet {
     /**
      * Returns a schnorr signature for the given message and private key.
      *
-     * @private
+     * @ignore
      * @param {TxInput} input - The transaction input.
      * @param {Uint8Array} hash - The hash of the message.
      *
@@ -240,7 +240,7 @@ export class QiHDWallet extends AbstractHDWallet {
     /**
      * Returns a MuSig signature for the given message and private keys corresponding to the input addresses.
      *
-     * @private
+     * @ignore
      * @param {QiTransaction} tx - The Qi transaction.
      * @param {Uint8Array} hash - The hash of the message.
      *
@@ -295,7 +295,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * 4. Derives the hierarchical deterministic (HD) node corresponding to the address.
      * 5. Returns the private key of the derived HD node.
      *
-     * @private
+     * @ignore
      * @param {TxInput} input - The transaction input containing the public key.
      *
      * @returns {string} The private key corresponding to the transaction input.
@@ -322,7 +322,7 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
      * @param {number} [account=0] - The index of the account to scan. Defaults to 0. Default is `0` Default is `0`
-     *   Default is `0`
+     *   Default is `0` Default is `0`
      *
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the zone is invalid.
@@ -377,7 +377,7 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
      * @param {number} [account=0] - The index of the account to scan. Defaults to 0. Default is `0` Default is `0`
-     *   Default is `0`
+     *   Default is `0` Default is `0`
      *
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the provider is not set.
@@ -437,7 +437,7 @@ export class QiHDWallet extends AbstractHDWallet {
     /**
      * Queries the network node for the outpoints of the specified address.
      *
-     * @private
+     * @ignore
      * @param {string} address - The address to query.
      *
      * @returns {Promise<Outpoint[]>} The outpoints for the address.
@@ -582,7 +582,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * - Checks if the account (if provided) exists in the wallet.
      * - Validates the Outpoint by ensuring that `Txhash`, `Index`, and `Denomination` are not null.
      *
-     * @private
+     * @ignore
      * @param {OutpointInfo[]} outpointInfo - An array of OutpointInfo objects to be validated.
      * @throws {Error} If any of the validations fail, an error is thrown with a descriptive message.
      */

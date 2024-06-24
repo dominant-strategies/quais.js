@@ -4,14 +4,16 @@ import { assertArgument } from '../utils/index.js';
 import { BaseWallet } from './base-wallet.js';
 import { QuaiHDWallet } from './quai-hdwallet.js';
 import {
-    decryptKeystoreJson, decryptKeystoreJsonSync,
-    encryptKeystoreJson, encryptKeystoreJsonSync,
-    isKeystoreJson
-} from "./json-keystore.js";
+    decryptKeystoreJson,
+    decryptKeystoreJsonSync,
+    encryptKeystoreJson,
+    encryptKeystoreJsonSync,
+    isKeystoreJson,
+} from './json-keystore.js';
 
-import type { ProgressCallback } from "../crypto/index.js";
-import type { Provider } from "../providers/index.js";
-import type { KeystoreAccount } from "./json-keystore.js";
+import type { ProgressCallback } from '../crypto/index.js';
+import type { Provider } from '../providers/index.js';
+import type { KeystoreAccount } from './json-keystore.js';
 
 /**
  * A **Wallet** manages a single private key which is used to sign transactions, messages and other common payloads.
@@ -42,6 +44,7 @@ export class Wallet extends BaseWallet {
      * Connects the wallet to a provider.
      *
      * @param {null | Provider} provider - The provider to connect to.
+     *
      * @returns {Wallet} The connected wallet.
      */
     connect(provider: null | Provider): Wallet {
@@ -55,6 +58,7 @@ export class Wallet extends BaseWallet {
      *
      * @param {Uint8Array | string} password - The password to encrypt the wallet with.
      * @param {ProgressCallback} [progressCallback] - An optional callback to keep the user informed.
+     *
      * @returns {Promise<string>} The encrypted JSON wallet.
      */
     async encrypt(password: Uint8Array | string, progressCallback?: ProgressCallback): Promise<string> {
@@ -72,6 +76,7 @@ export class Wallet extends BaseWallet {
      * duration.
      *
      * @param {Uint8Array | string} password - The password to encrypt the wallet with.
+     *
      * @returns {string} The encrypted JSON wallet.
      */
     encryptSync(password: Uint8Array | string): string {
@@ -82,12 +87,13 @@ export class Wallet extends BaseWallet {
     /**
      * Creates a wallet from a keystore account.
      *
-     * @private
+     * @ignore
      * @param {KeystoreAccount} account - The keystore account.
+     *
      * @returns {Wallet} The wallet instance.
      */
     static #fromAccount(account: KeystoreAccount): Wallet {
-        assertArgument(account, "invalid JSON wallet", "json", "[ REDACTED ]");
+        assertArgument(account, 'invalid JSON wallet', 'json', '[ REDACTED ]');
 
         const wallet = new Wallet(account.privateKey);
 
@@ -104,15 +110,20 @@ export class Wallet extends BaseWallet {
      * @param {string} json - The JSON data to decrypt.
      * @param {Uint8Array | string} password - The password to decrypt the JSON data.
      * @param {ProgressCallback} [progress] - An optional callback to keep the user informed.
+     *
      * @returns {Promise<QuaiHDWallet | Wallet>} The decrypted wallet.
      */
-    static async fromEncryptedJson(json: string, password: Uint8Array | string, progress?: ProgressCallback): Promise<Wallet> {
+    static async fromEncryptedJson(
+        json: string,
+        password: Uint8Array | string,
+        progress?: ProgressCallback,
+    ): Promise<Wallet> {
         let account: KeystoreAccount;
         if (isKeystoreJson(json)) {
             account = await decryptKeystoreJson(json, password, progress);
             return Wallet.#fromAccount(account);
-        } 
-        throw new Error("invalid JSON wallet");
+        }
+        throw new Error('invalid JSON wallet');
     }
 
     /**
@@ -123,6 +134,7 @@ export class Wallet extends BaseWallet {
      *
      * @param {string} json - The JSON data to decrypt.
      * @param {Uint8Array | string} password - The password to decrypt the JSON data.
+     *
      * @returns {QuaiHDWallet | Wallet} The decrypted wallet.
      */
     static fromEncryptedJsonSync(json: string, password: Uint8Array | string): QuaiHDWallet | Wallet {

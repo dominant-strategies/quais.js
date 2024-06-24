@@ -170,7 +170,7 @@ export class Signature {
     }
 
     /**
-     * @private
+     * @ignore
      */
     constructor(guard: any, r: string, s: string, v: 27 | 28) {
         assertPrivate(guard, _guard, 'Signature');
