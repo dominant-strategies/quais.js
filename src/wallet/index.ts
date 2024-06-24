@@ -31,4 +31,4 @@ export type { KeystoreAccount, EncryptOptions } from './json-keystore.js';
 
 export { QiHDWallet } from './qi-hdwallet.js';
 
-export { HDNodeVoidWallet } from "./hdnodewallet.js";
+export { HDNodeVoidWallet, HDNodeWallet } from './hdnodewallet.js';
