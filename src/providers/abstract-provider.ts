@@ -842,6 +842,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     /**
      * Shares multiple identical requests made during the same 250ms.
      *
+     * @ignore
      * @param {PerformActionRequest} req - The request to perform.
      *
      * @returns {Promise<T>} A promise that resolves to the result of the operation.
