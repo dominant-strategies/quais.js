@@ -829,7 +829,7 @@ export function assertNormalize(form: string): void {
 
 /**
  * Many classes use file-scoped values to guard the constructor, making it effectively private. This facilitates that
- * pattern by ensuring the `givenGaurd` matches the file-scoped `guard`, throwing if not, indicating the `className%% if
+ * pattern by ensuring the `givenGuard` matches the file-scoped `guard`, throwing if not, indicating the `className%% if
  * provided.
  *
  * @category Utils

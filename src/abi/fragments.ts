@@ -760,7 +760,7 @@ export class ParamType {
     }
 
     /**
-     * This provides a type gaurd ensuring that {@link arrayChildren | **arrayChildren**} and
+     * This provides a type guard ensuring that {@link arrayChildren | **arrayChildren**} and
      * {@link arrayLength | **arrayLength**} are non-null.
      *
      * @returns {boolean} True if this is an Array type.
@@ -770,7 +770,7 @@ export class ParamType {
     }
 
     /**
-     * This provides a type gaurd ensuring that {@link components | **components**} is non-null.
+     * This provides a type guard ensuring that {@link components | **components**} is non-null.
      *
      * @returns {boolean} True if this is a Tuple type.
      */
@@ -779,7 +779,7 @@ export class ParamType {
     }
 
     /**
-     * This provides a type gaurd ensuring that {@link indexed | **indexed**} is non-null.
+     * This provides a type guard ensuring that {@link indexed | **indexed**} is non-null.
      *
      * @returns {boolean} True if this is an Indexable type.
      */
