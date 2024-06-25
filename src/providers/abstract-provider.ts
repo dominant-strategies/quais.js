@@ -88,7 +88,6 @@ const BN_2 = BigInt(2);
  * Check if a value is a Promise.
  *
  * @param {any} value - The value to check.
- *
  * @returns {boolean} True if the value is a Promise, false otherwise.
  */
 function isPromise<T = any>(value: any): value is Promise<T> {
@@ -100,7 +99,6 @@ function isPromise<T = any>(value: any): value is Promise<T> {
  *
  * @param {string} prefix - The prefix for the tag.
  * @param {any} value - The value to include in the tag.
- *
  * @returns {string} The generated tag.
  */
 function getTag(prefix: string, value: any): string {
@@ -254,7 +252,6 @@ type Sub = {
  * Create a deep copy of a value.
  *
  * @param {T} value - The value to copy.
- *
  * @returns {T} The copied value.
  */
 function copy<T = any>(value: T): T {
@@ -265,7 +262,6 @@ function copy<T = any>(value: T): T {
  * Remove duplicates and sort an array of strings.
  *
  * @param {string[]} items - The array of strings.
- *
  * @returns {string[]} The concisified array.
  */
 function concisify(items: Array<string>): Array<string> {
@@ -669,7 +665,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Initialize the URL map with the provided URLs.
      *
      * @param {U} urls - The URLs to initialize the map with.
-     *
      * @returns {Promise<void>} A promise that resolves when the map is initialized.
      */
     async initUrlMap<U = string[] | FetchRequest>(urls: U): Promise<void> {
@@ -718,7 +713,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Get the zone from an address.
      *
      * @param {AddressLike} _address - The address to get the zone from.
-     *
      * @returns {Promise<Zone>} A promise that resolves to the zone.
      */
     async zoneFromAddress(_address: AddressLike): Promise<Zone> {
@@ -730,7 +724,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Get the shard from a hash.
      *
      * @param {string} hash - The hash to get the shard from.
-     *
      * @returns {Shard} The shard.
      */
     shardFromHash(hash: string): Shard {
@@ -742,7 +735,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @param {Zone} zone - The zone to get the rate for.
      * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
-     *
      * @returns {Promise<bigint>} A promise that resolves to the latest Quai rate.
      */
     async getLatestQuaiRate(zone: Zone, amt: number = 1): Promise<bigint> {
@@ -756,7 +748,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @param {Zone} zone - The zone to get the rate for.
      * @param {BlockTag} blockTag - The block tag to get the rate at.
      * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
-     *
      * @returns {Promise<bigint>} A promise that resolves to the Quai rate at the specified block.
      */
     async getQuaiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: number = 1): Promise<bigint> {
@@ -789,7 +780,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @param {Zone} zone - The zone to get the rate for.
      * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
-     *
      * @returns {Promise<bigint>} A promise that resolves to the latest Qi rate.
      */
     async getLatestQiRate(zone: Zone, amt: number = 1): Promise<bigint> {
@@ -803,7 +793,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @param {Zone} zone - The zone to get the rate for.
      * @param {BlockTag} blockTag - The block tag to get the rate at.
      * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
-     *
      * @returns {Promise<bigint>} A promise that resolves to the Qi rate at the specified block.
      */
     async getQiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: number = 1): Promise<bigint> {
@@ -844,7 +833,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @ignore
      * @param {PerformActionRequest} req - The request to perform.
-     *
      * @returns {Promise<T>} A promise that resolves to the result of the operation.
      */
     async #perform<T = any>(req: PerformActionRequest): Promise<T> {
@@ -880,7 +868,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @ignore
      * @param {BlockParams} value - The block to wrap.
      * @param {Network} network - The network the block was on.
-     *
      * @returns {Block} The wrapped block.
      */
     // @todo `network` is not used, remove or re-write
@@ -900,7 +887,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @ignore
      * @param {LogParams} value - The log to wrap.
      * @param {Network} network - The network the log was on.
-     *
      * @returns {Log} The wrapped log.
      */
     // @todo `network` is not used, remove or re-write
@@ -916,7 +902,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @ignore
      * @param {TransactionReceiptParams} value - The transaction receipt to wrap.
      * @param {Network} network - The network the transaction was on.
-     *
      * @returns {TransactionReceipt} The wrapped transaction receipt.
      */
     // @todo `network` is not used, remove or re-write
@@ -932,7 +917,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @ignore
      * @param {TransactionResponseParams} tx - The transaction response to wrap.
      * @param {Network} network - The network the transaction was on.
-     *
      * @returns {TransactionResponse} The wrapped transaction response.
      */
     // TODO: `newtork` is not used, remove or re-write
@@ -952,7 +936,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @ignore
      * @param {Shard} [shard] - The shard to use for the network detection.
-     *
      * @returns {Promise<Network>} A promise resolving to the network.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -970,7 +953,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @ignore
      * @param {PerformActionRequest} req - The request to perform.
-     *
      * @returns {Promise<T>} A promise resolving to the result of the operation.
      */
     async _perform<T = any>(req: PerformActionRequest): Promise<T> {
@@ -996,7 +978,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @ignore
      * @param {AddressLike} address - The address to normalize.
-     *
      * @returns {string | Promise<string>} The normalized address.
      */
     _getAddress(address: AddressLike): string | Promise<string> {
@@ -1010,7 +991,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @ignore
      * @param {Shard} [shard] - The shard to use for the block tag.
      * @param {BlockTag} [blockTag] - The block tag to normalize.
-     *
      * @returns {string | Promise<string>} A promise that resolves to a valid block tag.
      */
     _getBlockTag(shard?: Shard, blockTag?: BlockTag): string | Promise<string> {
@@ -1058,7 +1038,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @ignore
      * @param {Filter | FilterByBlockHash} filter - The filter to normalize.
-     *
      * @returns {PerformActionFilter | Promise<PerformActionFilter>} A promise that resolves to a valid filter.
      */
     _getFilter(filter: Filter | FilterByBlockHash): PerformActionFilter | Promise<PerformActionFilter> {
@@ -1160,7 +1139,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * @ignore
      * @param {PerformActionTransaction} _request - The transaction to normalize.
-     *
      * @returns {PerformActionTransaction | Promise<PerformActionTransaction>} A promise that resolves to a valid
      *   transaction.
      */
@@ -1643,7 +1621,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @ignore
      * @param {() => void} _func - The function to execute.
      * @param {number} [timeout] - The time to wait before executing `func`.
-     *
      * @returns {number} The ID of the timer.
      */
     _setTimeout(_func: () => void, timeout?: number): number {

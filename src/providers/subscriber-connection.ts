@@ -15,7 +15,6 @@ export interface ConnectionRpcProvider extends Provider {
      * @ignore
      * @param {any[]} param - The parameters for the subscription.
      * @param {function(any): void} processFunc - The function to process the result.
-     *
      * @returns {number} The subscription ID.
      */
     _subscribe(param: Array<any>, processFunc: (result: any) => void): number;
@@ -25,7 +24,6 @@ export interface ConnectionRpcProvider extends Provider {
      *
      * @ignore
      * @param {number} filterId - The subscription ID to unsubscribe.
-     *
      * @returns {void}
      */
     _unsubscribe(filterId: number): void;
@@ -98,7 +96,6 @@ export class BlockConnectionSubscriber implements Subscriber {
      * Pause the block connection subscription.
      *
      * @param {boolean} [dropWhilePaused=false] - Whether to drop blocks while paused. Default is `false`
-     *
      * @returns {void}
      */
     pause(dropWhilePaused?: boolean): void {

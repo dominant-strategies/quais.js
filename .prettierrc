@@ -6,7 +6,7 @@
     "plugins": ["prettier-plugin-jsdoc"],
 
     "jsdocCommentLineStrategy": "multiline",
-    "jsdocSeparateReturnsFromParam": true,
+    "jsdocSeparateReturnsFromParam": false,
     "jsdocPreferCodeFences": true,
     "tsdoc": true,
     "jsdocPrintWidth": 120

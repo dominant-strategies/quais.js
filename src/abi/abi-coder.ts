@@ -183,7 +183,6 @@ export class AbiCoder {
      * `false`.
      *
      * @param {(string | ParamType)[]} types - Array of parameter types to get default values for.
-     *
      * @returns {Result} The default values corresponding to the given types.
      */
     getDefaultValue(types: ReadonlyArray<string | ParamType>): Result {
@@ -197,7 +196,6 @@ export class AbiCoder {
      *
      * @param {(string | ParamType)[]} types - Array of parameter types.
      * @param {any[]} values - Array of values to encode.
-     *
      * @returns {string} The encoded data in hexadecimal format.
      */
     encode(types: ReadonlyArray<string | ParamType>, values: ReadonlyArray<any>): string {
@@ -219,9 +217,7 @@ export class AbiCoder {
      *
      * @param {(string | ParamType)[]} types - Array of parameter types.
      * @param {BytesLike} data - The ABI data to decode.
-     * @param {boolean} [loose=false] - Enable loose decoding. Default is `false` Default is `false` Default is `false`
-     *   Default is `false` Default is `false`
-     *
+     * @param {boolean} [loose=false] - Enable loose decoding. Default is `false`
      * @returns {Result} The decoded values.
      */
     decode(types: ReadonlyArray<string | ParamType>, data: BytesLike, loose?: boolean): Result {
@@ -266,7 +262,6 @@ export class AbiCoder {
      * @param {CallExceptionAction} action - The action that triggered the exception.
      * @param {Object} tx - The transaction information.
      * @param {BytesLike | null} data - The data associated with the call exception.
-     *
      * @returns {CallExceptionError} The corresponding call exception error.
      */
     static getBuiltinCallException(

@@ -81,7 +81,6 @@ export interface QuaiTransactionLike extends TransactionLike {
  *
  * @ignore
  * @param {string[]} fields - The fields to parse.
- *
  * @returns {Signature} The parsed signature.
  */
 export function _parseSignature(fields: Array<string>): Signature {
@@ -402,7 +401,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      * Return a protobuf-friendly JSON object.
      *
      * @param {boolean} [includeSignature=true] - Whether to include the signature. Default is `true`
-     *
      * @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
     toProtobuf(includeSignature: boolean = true): ProtoTransaction {
@@ -432,7 +430,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      * Create a **Transaction** from a serialized transaction or a Transaction-like object.
      *
      * @param {string | QuaiTransactionLike} tx - The transaction to decode.
-     *
      * @returns {QuaiTransaction} The decoded transaction.
      */
     static from(tx: string | QuaiTransactionLike): QuaiTransaction {
@@ -498,7 +495,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      * Create a **Transaction** from a ProtoTransaction object.
      *
      * @param {ProtoTransaction} protoTx - The transaction to decode.
-     *
      * @returns {QuaiTransaction} The decoded transaction.
      */
     static fromProto(protoTx: ProtoTransaction): QuaiTransaction {

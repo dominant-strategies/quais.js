@@ -134,7 +134,6 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @param {number} account - The index of the account for which to retrieve the next change address.
      * @param {Zone} zone - The zone in which to retrieve the next change address.
-     *
      * @returns {NeuteredAddressInfo} The next change neutered address information.
      */
     public getNextChangeAddress(account: number, zone: Zone): NeuteredAddressInfo {
@@ -155,7 +154,6 @@ export class QiHDWallet extends AbstractHDWallet {
      * Gets the outpoints for the specified zone.
      *
      * @param {Zone} zone - The zone.
-     *
      * @returns {OutpointInfo[]} The outpoints for the zone.
      */
     public getOutpoints(zone: Zone): OutpointInfo[] {
@@ -167,7 +165,6 @@ export class QiHDWallet extends AbstractHDWallet {
      * Signs a Qi transaction and returns the serialized transaction.
      *
      * @param {QiTransactionRequest} tx - The transaction to sign.
-     *
      * @returns {Promise<string>} The serialized transaction.
      * @throws {Error} If the UTXO transaction is invalid.
      */
@@ -194,7 +191,6 @@ export class QiHDWallet extends AbstractHDWallet {
      * Sends a Qi transaction.
      *
      * @param {QiTransactionRequest} tx - The transaction to send.
-     *
      * @returns {Promise<TransactionResponse>} The transaction response.
      * @throws {Error} If the provider is not set or if the transaction has no inputs.
      */
@@ -228,7 +224,6 @@ export class QiHDWallet extends AbstractHDWallet {
      * @ignore
      * @param {TxInput} input - The transaction input.
      * @param {Uint8Array} hash - The hash of the message.
-     *
      * @returns {string} The schnorr signature.
      */
     private createSchnorrSignature(input: TxInput, hash: Uint8Array): string {
@@ -243,7 +238,6 @@ export class QiHDWallet extends AbstractHDWallet {
      * @ignore
      * @param {QiTransaction} tx - The Qi transaction.
      * @param {Uint8Array} hash - The hash of the message.
-     *
      * @returns {string} The MuSig signature.
      */
     private createMuSigSignature(tx: QiTransaction, hash: Uint8Array): string {
@@ -297,7 +291,6 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @ignore
      * @param {TxInput} input - The transaction input containing the public key.
-     *
      * @returns {string} The private key corresponding to the transaction input.
      * @throws {Error} If the input does not contain a public key or if the address information cannot be found.
      */
@@ -322,7 +315,6 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
      * @param {number} [account=0] - The index of the account to scan. Defaults to `0`. Default is `0`
-     *
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the zone is invalid.
      */
@@ -345,7 +337,6 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @param {Zone} zone - The zone in which to sync addresses.
      * @param {number} [account] - The index of the account to sync. If not specified, all accounts will be scanned.
-     *
      * @returns {Promise<void>} A promise that resolves when the sync is complete.
      * @throws {Error} If the zone is invalid.
      */
@@ -376,7 +367,6 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
      * @param {number} [account=0] - The index of the account to scan. Defaults to `0`. Default is `0`
-     *
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the provider is not set.
      */
@@ -406,7 +396,6 @@ export class QiHDWallet extends AbstractHDWallet {
      * @param {number} account - The index of the account for which the address is being scanned.
      * @param {boolean} isChange - A flag indicating whether the address is a change address.
      * @param {number} addressesCount - The current count of addresses scanned.
-     *
      * @returns {Promise<number>} A promise that resolves to the updated address count.
      * @throws {Error} If an error occurs during the address scanning or outpoints retrieval process.
      */
@@ -437,7 +426,6 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @ignore
      * @param {string} address - The address to query.
-     *
      * @returns {Promise<Outpoint[]>} The outpoints for the address.
      * @throws {Error} If the query fails.
      */
@@ -457,7 +445,6 @@ export class QiHDWallet extends AbstractHDWallet {
      * Gets the change addresses for the specified zone.
      *
      * @param {Zone} zone - The zone.
-     *
      * @returns {NeuteredAddressInfo[]} The change addresses for the zone.
      */
     public getChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
@@ -470,7 +457,6 @@ export class QiHDWallet extends AbstractHDWallet {
      * Gets the gap addresses for the specified zone.
      *
      * @param {Zone} zone - The zone.
-     *
      * @returns {NeuteredAddressInfo[]} The gap addresses for the zone.
      */
     public getGapAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
@@ -483,7 +469,6 @@ export class QiHDWallet extends AbstractHDWallet {
      * Gets the gap change addresses for the specified zone.
      *
      * @param {Zone} zone - The zone.
-     *
      * @returns {NeuteredAddressInfo[]} The gap change addresses for the zone.
      */
     public getGapChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
@@ -497,7 +482,6 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @param {string} address - The address for which the message is to be signed.
      * @param {string | Uint8Array} message - The message to be signed, either as a string or Uint8Array.
-     *
      * @returns {Promise<string>} A promise that resolves to the signature of the message in hexadecimal string format.
      * @throws {Error} If the address does not correspond to a valid HD node or if signing fails.
      */
@@ -530,7 +514,6 @@ export class QiHDWallet extends AbstractHDWallet {
      * Deserializes a serialized QiHDWallet object and reconstructs the wallet instance.
      *
      * @param {SerializedQiHDWallet} serialized - The serialized object representing the state of a QiHDWallet.
-     *
      * @returns {Promise<QiHDWallet>} A promise that resolves to a reconstructed QiHDWallet instance.
      * @throws {Error} If the serialized data is invalid or if any addresses in the gap addresses or gap change
      *   addresses do not exist in the wallet.
