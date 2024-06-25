@@ -1,4 +1,4 @@
-import { AbstractHDWallet, NeuteredAddressInfo, SerializedHDWallet } from './hdwallet.js';
+import { AbstractHDWallet, NeuteredAddressInfo, SerializedHDWallet, _guard } from './hdwallet.js';
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress } from '../address/index.js';
@@ -125,8 +125,8 @@ export class QiHDWallet extends AbstractHDWallet {
      * @param {HDNodeWallet} root - The root HDNodeWallet.
      * @param {Provider} [provider] - The provider (optional).
      */
-    private constructor(root: HDNodeWallet, provider?: Provider) {
-        super(root, provider);
+    constructor(guard: any, root: HDNodeWallet, provider?: Provider) {
+        super(guard, root, provider);
     }
 
     /**
@@ -314,7 +314,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * until the gap limit is reached for both gap and change addresses.
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
-     * @param {number} [account=0] - The index of the account to scan. Defaults to `0`. Default is `0`
+     * @param {number} [account=0] - The index of the account to scan. Default is `0`.
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the zone is invalid.
      */
@@ -366,7 +366,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * scanning logic, generating new addresses until the gap limit is reached for both gap and change addresses.
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
-     * @param {number} [account=0] - The index of the account to scan. Defaults to `0`. Default is `0`
+     * @param {number} [account=0] - The index of the account to scan. Default is `0`
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the provider is not set.
      */
@@ -524,7 +524,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const mnemonic = Mnemonic.fromPhrase(serialized.phrase);
         const path = (this as any).parentPath(serialized.coinType);
         const root = HDNodeWallet.fromMnemonic(mnemonic, path);
-        const wallet = new this(root);
+        const wallet = new this(_guard, root);
 
         // import the addresses
         wallet.importSerializedAddresses(wallet._addresses, serialized.addresses);
