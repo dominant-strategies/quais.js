@@ -846,7 +846,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         const tag = getTag(req.method, req);
 
         let perform = this.#performCache.get(tag);
-        if (!perform) {
+        if (!perform || tag.includes('pending') || tag.includes('latest')) {
             perform = this._perform(req);
 
             this.#performCache.set(tag, perform);
