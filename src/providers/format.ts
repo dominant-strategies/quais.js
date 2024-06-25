@@ -329,7 +329,7 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
                 gasLimit: allowNull((value: any) => (value ? BigInt(value) : null), null),
                 to: allowNull(getAddress, null),
                 value: allowNull((value: any) => (value ? BigInt(value) : null), null),
-                nonce: allowNull((value: any) => (value ? parseInt(value, 16) : null), null),
+                nonce: allowNull((value: any) => (value ? parseInt(value, 10) : null), null),
                 creates: allowNull(getAddress, null),
                 chainId: allowNull((value: any) => (value ? BigInt(value) : null), null),
                 data: (value: any) => value,
