@@ -5,4 +5,4 @@
  *
  * @ignore
  */
-export const version: string = '1.0.0-alpha.3';
+export const version: string = '1.0.0-alpha.4';
