@@ -70,7 +70,6 @@ export abstract class AbstractHDWallet {
      * Returns the parent path for a given coin type.
      *
      * @param {number} coinType - The coin type.
-     *
      * @returns {string} The parent path.
      */
     protected static parentPath(coinType: number): string {
@@ -93,8 +92,7 @@ export abstract class AbstractHDWallet {
      * @param {number} account - The account number from which to derive the address node.
      * @param {number} startingIndex - The index from which to start deriving addresses.
      * @param {Zone} zone - The zone (shard) for which the address should be valid.
-     * @param {boolean} [isChange=false] - Whether to derive a change address (default is false) Default is `false`
-     *
+     * @param {boolean} [isChange=false] - Whether to derive a change address. Default is `false`
      * @returns {HDNodeWallet} - The derived HD node wallet containing a valid address for the specified zone.
      * @throws {Error} If a valid address for the specified zone cannot be derived within the allowed attempts.
      */
@@ -137,9 +135,7 @@ export abstract class AbstractHDWallet {
      *
      * @param {number} account - The account number.
      * @param {number} addressIndex - The address index.
-     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false` Default is
-     *   `false`
-     *
+     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false`
      * @returns {NeuteredAddressInfo} The added address info.
      */
     public addAddress(account: number, addressIndex: number, isChange: boolean = false): NeuteredAddressInfo {
@@ -152,9 +148,7 @@ export abstract class AbstractHDWallet {
      * @param {Map<string, NeuteredAddressInfo>} addressMap - The address map.
      * @param {number} account - The account number.
      * @param {number} addressIndex - The address index.
-     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false` Default is
-     *   `false`
-     *
+     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false`
      * @returns {NeuteredAddressInfo} The added address info.
      * @throws {Error} If the address for the index already exists.
      */
@@ -187,7 +181,6 @@ export abstract class AbstractHDWallet {
      *
      * @param {number} account - The index of the account for which to retrieve the next address.
      * @param {Zone} zone - The zone in which to retrieve the next address.
-     *
      * @returns {NeuteredAddressInfo} The next neutered address information.
      */
     public getNextAddress(account: number, zone: Zone): NeuteredAddressInfo {
@@ -201,7 +194,6 @@ export abstract class AbstractHDWallet {
      * @param {Zone} zone - The zone in which the address is to be used.
      * @param {boolean} isChange - A flag indicating whether the address is a change address.
      * @param {Map<string, NeuteredAddressInfo>} addressMap - A map storing the neutered address information.
-     *
      * @returns {NeuteredAddressInfo} The derived neutered address information.
      * @throws {Error} If the zone is invalid.
      */
@@ -221,7 +213,6 @@ export abstract class AbstractHDWallet {
      * Gets the address info for a given address.
      *
      * @param {string} address - The address.
-     *
      * @returns {NeuteredAddressInfo | null} The address info or null if not found.
      */
     public getAddressInfo(address: string): NeuteredAddressInfo | null {
@@ -236,7 +227,6 @@ export abstract class AbstractHDWallet {
      * Gets the addresses for a given account.
      *
      * @param {number} account - The account number.
-     *
      * @returns {NeuteredAddressInfo[]} The addresses for the account.
      */
     public getAddressesForAccount(account: number): NeuteredAddressInfo[] {
@@ -248,7 +238,6 @@ export abstract class AbstractHDWallet {
      * Gets the addresses for a given zone.
      *
      * @param {Zone} zone - The zone.
-     *
      * @returns {NeuteredAddressInfo[]} The addresses for the zone.
      */
     public getAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
@@ -262,7 +251,6 @@ export abstract class AbstractHDWallet {
      *
      * @param {new (root: HDNodeWallet) => T} this - The constructor of the HD wallet.
      * @param {Mnemonic} mnemonic - The mnemonic.
-     *
      * @returns {T} The created instance.
      */
     protected static createInstance<T extends AbstractHDWallet>(
@@ -279,7 +267,6 @@ export abstract class AbstractHDWallet {
      *
      * @param {new (root: HDNodeWallet) => T} this - The constructor of the HD wallet.
      * @param {Mnemonic} mnemonic - The mnemonic.
-     *
      * @returns {T} The created instance.
      */
     static fromMnemonic<T extends AbstractHDWallet>(
@@ -295,7 +282,6 @@ export abstract class AbstractHDWallet {
      * @param {new (root: HDNodeWallet) => T} this - The constructor of the HD wallet.
      * @param {string} [password] - The password.
      * @param {Wordlist} [wordlist] - The wordlist.
-     *
      * @returns {T} The created instance.
      */
     static createRandom<T extends AbstractHDWallet>(
@@ -320,7 +306,6 @@ export abstract class AbstractHDWallet {
      * @param {string} phrase - The phrase.
      * @param {string} [password] - The password.
      * @param {Wordlist} [wordlist] - The wordlist.
-     *
      * @returns {T} The created instance.
      */
     static fromPhrase<T extends AbstractHDWallet>(
@@ -343,7 +328,6 @@ export abstract class AbstractHDWallet {
      * Abstract method to sign a transaction.
      *
      * @param {TransactionRequest} tx - The transaction request.
-     *
      * @returns {Promise<string>} A promise that resolves to the signed transaction.
      */
     abstract signTransaction(tx: TransactionRequest): Promise<string>;
@@ -352,7 +336,6 @@ export abstract class AbstractHDWallet {
      * Abstract method to send a transaction.
      *
      * @param {TransactionRequest} tx - The transaction request.
-     *
      * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
      */
     abstract sendTransaction(tx: TransactionRequest): Promise<TransactionResponse>;
@@ -386,7 +369,6 @@ export abstract class AbstractHDWallet {
      * using the address index.
      *
      * @param {string} addr - The address for which to derive the HD node.
-     *
      * @returns {HDNodeWallet} The derived HD node wallet corresponding to the given address.
      * @throws {Error} If the given address is not known to the wallet.
      * @throws {Error} If the account associated with the address is not found.
@@ -406,7 +388,6 @@ export abstract class AbstractHDWallet {
      *
      * @param {string} address - The address for which the message is to be signed.
      * @param {string | Uint8Array} message - The message to be signed, either as a string or Uint8Array.
-     *
      * @returns {Promise<string>} A promise that resolves to the signature of the message in hexadecimal string format.
      * @throws {Error} If the method is not implemented in the subclass.
      */
@@ -433,7 +414,6 @@ export abstract class AbstractHDWallet {
      * in the subclass.
      *
      * @param {SerializedHDWallet} _serialized - The serialized object representing the state of an HD wallet.
-     *
      * @returns {AbstractHDWallet} An instance of AbstractHDWallet.
      * @throws {Error} This method must be implemented in the subclass.
      */
@@ -505,7 +485,6 @@ export abstract class AbstractHDWallet {
      * @param {number} account - The account number to filter the addresses by.
      * @param {boolean} isChange - A boolean indicating whether to filter for change addresses (true) or receiving
      *   addresses (false).
-     *
      * @returns {number} - The highest address index for the specified criteria, or -1 if no addresses match.
      * @protected
      */
@@ -535,7 +514,6 @@ export abstract class AbstractHDWallet {
      *   address (false).
      * @param {Map<string, NeuteredAddressInfo>} addressMap - The map to store the created NeuteredAddressInfo, with the
      *   address as the key.
-     *
      * @returns {NeuteredAddressInfo} - The created NeuteredAddressInfo object.
      * @protected
      */

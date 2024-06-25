@@ -11,6 +11,7 @@ import type { JsonRpcApiProvider } from './provider-jsonrpc.js';
  * Deep copies an object.
  *
  * @param {any} obj - The object to copy.
+ *
  * @returns {any} A deep copy of the object.
  */
 function copy(obj: any): any {
@@ -39,11 +40,10 @@ export class FilterIdSubscriber implements Subscriber {
     #hault: boolean;
 
     /**
-     * @ignore
-     * Creates a new **FilterIdSubscriber** which will use {@link FilterIdSubscriber._subscribe | **_subscribe**} and
-     * {@link FilterIdSubscriber._emitResults | **_emitResults**} to setup the subscription and provide the event to the
-     * `provider`.
-     *
+     * @ignore Creates a new **FilterIdSubscriber** which will use
+     *   {@link FilterIdSubscriber._subscribe | **_subscribe**} and
+     *   {@link FilterIdSubscriber._emitResults | **_emitResults**} to setup the subscription and provide the event to
+     *   the `provider`.
      * @param {JsonRpcApiProvider<any>} provider - The provider to use.
      */
     constructor(provider: JsonRpcApiProvider<any>) {
@@ -62,10 +62,13 @@ export class FilterIdSubscriber implements Subscriber {
     /**
      * Sub-classes **must** override this to begin the subscription.
      *
+     * @ignore
      * @param {JsonRpcApiProvider} provider - The provider to use.
+     *
      * @returns {Promise<string>} A promise that resolves to the subscription ID.
      * @throws {Error} If the method is not overridden.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _subscribe(provider: JsonRpcApiProvider): Promise<string> {
         throw new Error('subclasses must override this');
     }
@@ -73,11 +76,14 @@ export class FilterIdSubscriber implements Subscriber {
     /**
      * Sub-classes **must** override this to handle the events.
      *
+     * @ignore
      * @param {AbstractProvider} provider - The provider to use.
-     * @param {Array<any>} result - The results to handle.
+     * @param {any[]} result - The results to handle.
+     *
      * @returns {Promise<void>} A promise that resolves when the results are handled.
      * @throws {Error} If the method is not overridden.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _emitResults(provider: AbstractProvider, result: Array<any>): Promise<void> {
         throw new Error('subclasses must override this');
     }
@@ -85,10 +91,13 @@ export class FilterIdSubscriber implements Subscriber {
     /**
      * Sub-classes **must** override this to handle recovery on errors.
      *
+     * @ignore
      * @param {AbstractProvider} provider - The provider to use.
+     *
      * @returns {Subscriber} The recovered subscriber.
      * @throws {Error} If the method is not overridden.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _recover(provider: AbstractProvider): Subscriber {
         throw new Error('subclasses must override this');
     }
@@ -98,8 +107,10 @@ export class FilterIdSubscriber implements Subscriber {
      *
      * @ignore
      * @param {number} blockNumber - The block number to poll from.
+     *
      * @returns {Promise<void>} A promise that resolves when polling is complete.
      */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async #poll(blockNumber: number): Promise<void> {
         try {
             // Subscribe if necessary
@@ -217,9 +228,7 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
     #event: EventFilter;
 
     /**
-     * @ignore
-     * Creates a new **FilterIdEventSubscriber** attached to `provider` listening for `filter`.
-     *
+     * @ignore Creates a new **FilterIdEventSubscriber** attached to `provider` listening for `filter`.
      * @param {JsonRpcApiProvider<any>} provider - The provider to use.
      * @param {EventFilter} filter - The event filter to use.
      */
@@ -231,7 +240,9 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
     /**
      * Recovers the subscriber.
      *
+     * @ignore
      * @param {AbstractProvider<any>} provider - The provider to use.
+     *
      * @returns {Subscriber} The recovered subscriber.
      */
     _recover(provider: AbstractProvider<any>): Subscriber {
@@ -241,7 +252,9 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
     /**
      * Subscribes to the event filter.
      *
+     * @ignore
      * @param {JsonRpcApiProvider<any>} provider - The provider to use.
+     *
      * @returns {Promise<string>} A promise that resolves to the subscription ID.
      */
     async _subscribe(provider: JsonRpcApiProvider<any>): Promise<string> {
@@ -252,8 +265,10 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
     /**
      * Emits the results of the event filter.
      *
+     * @ignore
      * @param {JsonRpcApiProvider<any>} provider - The provider to use.
-     * @param {Array<any>} results - The results to emit.
+     * @param {any[]} results - The results to emit.
+     *
      * @returns {Promise<void>} A promise that resolves when the results are emitted.
      */
     async _emitResults(provider: JsonRpcApiProvider<any>, results: Array<any>): Promise<void> {
@@ -272,7 +287,9 @@ export class FilterIdPendingSubscriber extends FilterIdSubscriber {
     /**
      * Subscribes to the pending transactions filter.
      *
+     * @ignore
      * @param {JsonRpcApiProvider<any>} provider - The provider to use.
+     *
      * @returns {Promise<string>} A promise that resolves to the subscription ID.
      */
     async _subscribe(provider: JsonRpcApiProvider<any>): Promise<string> {
@@ -282,8 +299,10 @@ export class FilterIdPendingSubscriber extends FilterIdSubscriber {
     /**
      * Emits the results of the pending transactions filter.
      *
+     * @ignore
      * @param {JsonRpcApiProvider<any>} provider - The provider to use.
-     * @param {Array<any>} results - The results to emit.
+     * @param {any[]} results - The results to emit.
+     *
      * @returns {Promise<void>} A promise that resolves when the results are emitted.
      */
     async _emitResults(provider: JsonRpcApiProvider<any>, results: Array<any>): Promise<void> {

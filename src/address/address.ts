@@ -49,7 +49,7 @@ export function formatMixedCaseChecksumAddress(address: string): string {
  * is validated, and if the address fails its expected checksum an error is thrown.
  *
  * If you wish the checksum of `address` to be ignore, it should be converted to lower-case (i.e. `.toLowercase()`)
- * before being passed in. This should be a very rare situation though, that you wish to bypass the safegaurds in place
+ * before being passed in. This should be a very rare situation though, that you wish to bypass the safeguards in place
  * to protect against an address that has been incorrectly copied from another source.
  *
  * @category Address

@@ -25,6 +25,8 @@ export class WordlistOwlA extends WordlistOwl {
 
     /**
      * The OWLA-encoded accent data.
+     *
+     * @ignore
      */
     get _accent(): string {
         return this.#accent;
@@ -32,6 +34,8 @@ export class WordlistOwlA extends WordlistOwl {
 
     /**
      * Decode all the words for the wordlist.
+     *
+     * @ignore
      */
     _decodeWords(): Array<string> {
         return decodeOwlA(this._data, this._accent);

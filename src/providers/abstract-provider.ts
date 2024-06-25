@@ -5,12 +5,10 @@
  */
 
 /**
- * @todo Event coalescence
- * When we register an event with an async value (e.g. address is a Signer),
- * we need to add it immediately for the Event API, but also
- * need time to resolve the address. Upon resolving the address, we need to
- * migrate the listener to the static event. We also need to maintain a map
- * of Signer to address so we can sync respond to listenerCount.
+ * @todo Event coalescence When we register an event with an async value (e.g. address is a Signer), we need to add it
+ *   immediately for the Event API, but also need time to resolve the address. Upon resolving the address, we need to
+ *   migrate the listener to the static event. We also need to maintain a map of Signer to address so we can sync
+ *   respond to listenerCount.
  */
 
 import { computeAddress, resolveAddress } from '../address/index.js';
@@ -88,6 +86,7 @@ const BN_2 = BigInt(2);
 
 /**
  * Check if a value is a Promise.
+ *
  * @param {any} value - The value to check.
  * @returns {boolean} True if the value is a Promise, false otherwise.
  */
@@ -97,6 +96,7 @@ function isPromise<T = any>(value: any): value is Promise<T> {
 
 /**
  * Get a tag string based on a prefix and value.
+ *
  * @param {string} prefix - The prefix for the tag.
  * @param {any} value - The value to include in the tag.
  * @returns {string} The generated tag.
@@ -219,6 +219,7 @@ export class UnmanagedSubscriber implements Subscriber {
 
     /**
      * Create a new UnmanagedSubscriber with `name`.
+     *
      * @param {string} name - The name of the event.
      */
     constructor(name: string) {
@@ -249,6 +250,7 @@ type Sub = {
 
 /**
  * Create a deep copy of a value.
+ *
  * @param {T} value - The value to copy.
  * @returns {T} The copied value.
  */
@@ -258,8 +260,9 @@ function copy<T = any>(value: T): T {
 
 /**
  * Remove duplicates and sort an array of strings.
- * @param {Array<string>} items - The array of strings.
- * @returns {Array<string>} The concisified array.
+ *
+ * @param {string[]} items - The array of strings.
+ * @returns {string[]} The concisified array.
  */
 function concisify(items: Array<string>): Array<string> {
     items = Array.from(new Set(items).values());
@@ -356,6 +359,7 @@ async function getSubscription(_event: ProviderEvent, provider: AbstractProvider
 
 /**
  * Get the current time in milliseconds.
+ *
  * @returns {number} The current time in milliseconds.
  */
 function getTime(): number {
@@ -591,6 +595,9 @@ const defaultOptions = {
  * @category Providers
  */
 export class AbstractProvider<C = FetchRequest> implements Provider {
+    /**
+     * @ignore
+     */
     _urlMap: Map<Shard, C>;
     #connect: FetchRequest[];
     #subs: Map<string, Sub>;
@@ -656,6 +663,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      * Initialize the URL map with the provided URLs.
+     *
      * @param {U} urls - The URLs to initialize the map with.
      * @returns {Promise<void>} A promise that resolves when the map is initialized.
      */
@@ -694,6 +702,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      * Get the list of connected FetchRequests.
+     *
      * @returns {FetchRequest[]} The list of connected FetchRequests.
      */
     get connect(): FetchRequest[] {
@@ -702,6 +711,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      * Get the zone from an address.
+     *
      * @param {AddressLike} _address - The address to get the zone from.
      * @returns {Promise<Zone>} A promise that resolves to the zone.
      */
@@ -712,6 +722,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      * Get the shard from a hash.
+     *
      * @param {string} hash - The hash to get the shard from.
      * @returns {Shard} The shard.
      */
@@ -721,8 +732,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      * Get the latest Quai rate for a zone.
+     *
      * @param {Zone} zone - The zone to get the rate for.
-     * @param {number} [amt=1] - The amount to get the rate for.
+     * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      * @returns {Promise<bigint>} A promise that resolves to the latest Quai rate.
      */
     async getLatestQuaiRate(zone: Zone, amt: number = 1): Promise<bigint> {
@@ -732,9 +744,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      * Get the Quai rate at a specific block.
+     *
      * @param {Zone} zone - The zone to get the rate for.
      * @param {BlockTag} blockTag - The block tag to get the rate at.
-     * @param {number} [amt=1] - The amount to get the rate for.
+     * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      * @returns {Promise<bigint>} A promise that resolves to the Quai rate at the specified block.
      */
     async getQuaiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: number = 1): Promise<bigint> {
@@ -753,6 +766,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      * Get the protocol expansion number.
+     *
      * @returns {Promise<number>} A promise that resolves to the protocol expansion number.
      */
     async getProtocolExpansionNumber(): Promise<number> {
@@ -763,8 +777,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      * Get the latest Qi rate for a zone.
+     *
      * @param {Zone} zone - The zone to get the rate for.
-     * @param {number} [amt=1] - The amount to get the rate for.
+     * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      * @returns {Promise<bigint>} A promise that resolves to the latest Qi rate.
      */
     async getLatestQiRate(zone: Zone, amt: number = 1): Promise<bigint> {
@@ -774,9 +789,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      * Get the Qi rate at a specific block.
+     *
      * @param {Zone} zone - The zone to get the rate for.
      * @param {BlockTag} blockTag - The block tag to get the rate at.
-     * @param {number} [amt=1] - The amount to get the rate for.
+     * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      * @returns {Promise<bigint>} A promise that resolves to the Qi rate at the specified block.
      */
     async getQiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: number = 1): Promise<bigint> {
@@ -795,6 +811,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      * Get the polling interval.
+     *
      * @returns {number} The polling interval.
      */
     get pollingInterval(): number {
@@ -804,6 +821,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     /**
      * Returns `this`, to allow an **AbstractProvider** to implement the [Contract Runner](../classes/ContractRunner)
      * interface.
+     *
      * @returns {this} The provider instance.
      */
     get provider(): this {
@@ -812,6 +830,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     /**
      * Shares multiple identical requests made during the same 250ms.
+     *
+     * @ignore
      * @param {PerformActionRequest} req - The request to perform.
      * @returns {Promise<T>} A promise that resolves to the result of the operation.
      */
@@ -845,9 +865,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Provides the opportunity for a sub-class to wrap a block before returning it, to add additional properties or an
      * alternate sub-class of {@link Block | **Block**}.
      *
+     * @ignore
      * @param {BlockParams} value - The block to wrap.
      * @param {Network} network - The network the block was on.
-     *
      * @returns {Block} The wrapped block.
      */
     // @todo `network` is not used, remove or re-write
@@ -864,9 +884,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Provides the opportunity for a sub-class to wrap a log before returning it, to add additional properties or an
      * alternate sub-class of {@link Log | **Log**}.
      *
+     * @ignore
      * @param {LogParams} value - The log to wrap.
      * @param {Network} network - The network the log was on.
-     *
      * @returns {Log} The wrapped log.
      */
     // @todo `network` is not used, remove or re-write
@@ -879,9 +899,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Provides the opportunity for a sub-class to wrap a transaction receipt before returning it, to add additional
      * properties or an {@link TransactionReceipt | **TransactionReceipt**}.
      *
+     * @ignore
      * @param {TransactionReceiptParams} value - The transaction receipt to wrap.
      * @param {Network} network - The network the transaction was on.
-     *
      * @returns {TransactionReceipt} The wrapped transaction receipt.
      */
     // @todo `network` is not used, remove or re-write
@@ -894,9 +914,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Provides the opportunity for a sub-class to wrap a transaction response before returning it, to add additional
      * properties or an alternate sub-class of {@link TransactionResponse | **TransactionResponse**}.
      *
+     * @ignore
      * @param {TransactionResponseParams} tx - The transaction response to wrap.
      * @param {Network} network - The network the transaction was on.
-     *
      * @returns {TransactionResponse} The wrapped transaction response.
      */
     // TODO: `newtork` is not used, remove or re-write
@@ -914,8 +934,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * Sub-classes **must** override this.
      *
+     * @ignore
      * @param {Shard} [shard] - The shard to use for the network detection.
-     *
      * @returns {Promise<Network>} A promise resolving to the network.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -931,8 +951,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * Sub-classes **must** override this.
      *
+     * @ignore
      * @param {PerformActionRequest} req - The request to perform.
-     *
      * @returns {Promise<T>} A promise resolving to the result of the operation.
      */
     async _perform<T = any>(req: PerformActionRequest): Promise<T> {
@@ -956,8 +976,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Returns or resolves to the address for `address`, resolving {@link Addressable | **Addressable**} objects and
      * returning if already an address.
      *
+     * @ignore
      * @param {AddressLike} address - The address to normalize.
-     *
      * @returns {string | Promise<string>} The normalized address.
      */
     _getAddress(address: AddressLike): string | Promise<string> {
@@ -968,9 +988,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Returns or resolves to a valid block tag for `blockTag`, resolving negative values and returning if already a
      * valid block tag.
      *
+     * @ignore
      * @param {Shard} [shard] - The shard to use for the block tag.
      * @param {BlockTag} [blockTag] - The block tag to normalize.
-     *
      * @returns {string | Promise<string>} A promise that resolves to a valid block tag.
      */
     _getBlockTag(shard?: Shard, blockTag?: BlockTag): string | Promise<string> {
@@ -1016,8 +1036,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Returns or resolves to a filter for `filter`, resolving any {@link Addressable | **Addressable**} object and
      * returning if already a valid filter.
      *
+     * @ignore
      * @param {Filter | FilterByBlockHash} filter - The filter to normalize.
-     *
      * @returns {PerformActionFilter | Promise<PerformActionFilter>} A promise that resolves to a valid filter.
      */
     _getFilter(filter: Filter | FilterByBlockHash): PerformActionFilter | Promise<PerformActionFilter> {
@@ -1117,8 +1137,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Returns or resovles to a transaction for `request`, resolving any {@link Addressable | **Addressable**} and
      * returning if already a valid transaction.
      *
+     * @ignore
      * @param {PerformActionTransaction} _request - The transaction to normalize.
-     *
      * @returns {PerformActionTransaction | Promise<PerformActionTransaction>} A promise that resolves to a valid
      *   transaction.
      */
@@ -1506,6 +1526,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return params.map((p) => this._wrapLog(p, network));
     }
 
+    /**
+     * @ignore
+     */
     // TODO: unsupported, remove?
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _getProvider(chainId: number): AbstractProvider {
@@ -1594,9 +1617,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      *
      * {@link AbstractProvider.pause | **Pausing**} the provider will pause any associated timers.
      *
+     * @ignore
+     * @ignore
      * @param {() => void} _func - The function to execute.
      * @param {number} [timeout] - The time to wait before executing `func`.
-     *
      * @returns {number} The ID of the timer.
      */
     _setTimeout(_func: () => void, timeout?: number): number {
@@ -1622,6 +1646,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     /**
      * Perform `func` on each subscriber.
      *
+     * @ignore
      * @param {(s: Subscriber) => void} func - The function to perform.
      */
     _forEachSubscriber(func: (s: Subscriber) => void): void {
@@ -1633,6 +1658,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     /**
      * Sub-classes may override this to customize subscription implementations.
      *
+     * @ignore
      * @param {Subscription} sub - The subscription to get the subscriber for.
      */
     _getSubscriber(sub: Subscription): Subscriber {
@@ -1652,6 +1678,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * For example, this is used for providers when using the `quai_getFilterChanges` method, which can return null if
      * state filters are not supported by the backend, allowing the Subscriber to swap in a `PollingEventSubscriber`.
      *
+     * @ignore
      * @param {Subscriber} oldSub - The subscriber to replace.
      * @param {Subscriber} newSub - The new subscriber.
      * @todo PollingEventSubscriber is not longer exported, replace this link or
@@ -1949,4 +1976,3 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         }
     }
 }
-

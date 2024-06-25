@@ -17,7 +17,7 @@ import type { BigNumberish, BytesLike } from '../utils/index.js';
 
 import type { Result } from './coders/abstract-coder.js';
 
-const _gaurd = {};
+const _guard = {};
 
 function n(value: BigNumberish, width: number): Typed {
     let signed = false;
@@ -27,12 +27,12 @@ function n(value: BigNumberish, width: number): Typed {
     }
 
     // @TODO: Check range is valid for value
-    return new Typed(_gaurd, `${signed ? '' : 'u'}int${width}`, value, { signed, width });
+    return new Typed(_guard, `${signed ? '' : 'u'}int${width}`, value, { signed, width });
 }
 
 function b(value: BytesLike, size?: number): Typed {
     // @TODO: Check range is valid for value
-    return new Typed(_gaurd, `bytes${size ? size : ''}`, value, { size });
+    return new Typed(_guard, `bytes${size ? size : ''}`, value, { size });
 }
 
 // @TODO: Remove this in v7, it was replaced by TypedBigInt
@@ -135,11 +135,11 @@ export class Typed {
     /**
      * @ignore
      */
-    constructor(gaurd: any, type: string, value: any, options?: any) {
+    constructor(guard: any, type: string, value: any, options?: any) {
         if (options == null) {
             options = null;
         }
-        assertPrivate(_gaurd, gaurd, 'Typed');
+        assertPrivate(_guard, guard, 'Typed');
         defineProperties<Typed>(this, { _typedSymbol, type, value });
         this.#options = options;
 
@@ -258,7 +258,7 @@ export class Typed {
      * @param {any} value - The value to use.
      */
     static from(type: string, value: any): Typed {
-        return new Typed(_gaurd, type, value);
+        return new Typed(_guard, type, value);
     }
 
     /**
@@ -1347,7 +1347,7 @@ export class Typed {
      * @returns A new `address` type for `v`.
      */
     static address(v: string | Addressable): Typed {
-        return new Typed(_gaurd, 'address', v);
+        return new Typed(_guard, 'address', v);
     }
 
     /**
@@ -1358,7 +1358,7 @@ export class Typed {
      * @returns A new `bool` type for `v`.
      */
     static bool(v: any): Typed {
-        return new Typed(_gaurd, 'bool', !!v);
+        return new Typed(_guard, 'bool', !!v);
     }
 
     /**
@@ -1369,7 +1369,7 @@ export class Typed {
      * @returns A new `bytes` type for `v`.
      */
     static bytes(v: BytesLike): Typed {
-        return new Typed(_gaurd, 'bytes', v);
+        return new Typed(_guard, 'bytes', v);
     }
 
     /**
@@ -1380,7 +1380,7 @@ export class Typed {
      * @returns A new `string` type for `v`.
      */
     static string(v: string): Typed {
-        return new Typed(_gaurd, 'string', v);
+        return new Typed(_guard, 'string', v);
     }
 
     /**
@@ -1393,7 +1393,7 @@ export class Typed {
      */
     static array(v: Array<any | Typed>, dynamic?: null | boolean): Typed {
         throw new Error('not implemented yet');
-        return new Typed(_gaurd, 'array', v, dynamic);
+        return new Typed(_guard, 'array', v, dynamic);
     }
 
     /**
@@ -1406,7 +1406,7 @@ export class Typed {
      */
     static tuple(v: Array<any | Typed> | Record<string, any | Typed>, name?: string): Typed {
         throw new Error('not implemented yet');
-        return new Typed(_gaurd, 'tuple', v, name);
+        return new Typed(_guard, 'tuple', v, name);
     }
 
     /**
@@ -1417,7 +1417,7 @@ export class Typed {
      * @returns A new `overrides` type with the given properties.
      */
     static overrides(v: Record<string, any>): Typed {
-        return new Typed(_gaurd, 'overrides', Object.assign({}, v));
+        return new Typed(_guard, 'overrides', Object.assign({}, v));
     }
 
     /**

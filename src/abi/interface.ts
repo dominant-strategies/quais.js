@@ -333,7 +333,6 @@ export class Interface {
     #events: Map<string, EventFragment>;
     #functions: Map<string, FunctionFragment>;
     // #structs: Map<string, StructFragment>;
-
     #abiCoder: AbiCoder;
 
     /**
@@ -797,10 +796,16 @@ export class Interface {
         }
     }
 
+    /**
+     * @ignore
+     */
     _decodeParams(params: ReadonlyArray<ParamType>, data: BytesLike): Result {
         return this.#abiCoder.decode(params, data);
     }
 
+    /**
+     * @ignore
+     */
     _encodeParams(params: ReadonlyArray<ParamType>, values: ReadonlyArray<any>): string {
         return this.#abiCoder.encode(params, values);
     }
@@ -976,7 +981,7 @@ export class Interface {
         }
         return hexlify(this.#abiCoder.encode(fragment.outputs, values || []));
     }
-    
+
     // Create the filter for the event with search criteria (e.g. for quai_filterLog)
     encodeFilterTopics(
         fragment: EventFragment | string,

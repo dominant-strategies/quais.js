@@ -3,14 +3,17 @@ import type { Subscriber } from './abstract-provider.js';
 import type { Provider } from './provider.js';
 
 /**
+ * Interface for Connection RPC Provider.
+ *
  * @category Providers
  * @interface
- * @description Interface for Connection RPC Provider.
  */
 export interface ConnectionRpcProvider extends Provider {
     /**
      * Subscribe to a specific event.
-     * @param {Array<any>} param - The parameters for the subscription.
+     *
+     * @ignore
+     * @param {any[]} param - The parameters for the subscription.
      * @param {function(any): void} processFunc - The function to process the result.
      * @returns {number} The subscription ID.
      */
@@ -18,6 +21,8 @@ export interface ConnectionRpcProvider extends Provider {
 
     /**
      * Unsubscribe from a specific event.
+     *
+     * @ignore
      * @param {number} filterId - The subscription ID to unsubscribe.
      * @returns {void}
      */
@@ -25,10 +30,11 @@ export interface ConnectionRpcProvider extends Provider {
 }
 
 /**
+ * Class for subscribing to block connections.
+ *
  * @category Providers
  * @class
  * @implements {Subscriber}
- * @description Class for subscribing to block connections.
  */
 export class BlockConnectionSubscriber implements Subscriber {
     #provider: ConnectionRpcProvider;
@@ -38,7 +44,7 @@ export class BlockConnectionSubscriber implements Subscriber {
 
     /**
      * @ignore
-     * @constructor
+     * @class
      * @param {ConnectionRpcProvider} provider - The provider for the connection.
      */
     constructor(provider: ConnectionRpcProvider) {
@@ -50,6 +56,7 @@ export class BlockConnectionSubscriber implements Subscriber {
 
     /**
      * Start the block connection subscription.
+     *
      * @returns {void}
      */
     start(): void {
@@ -70,6 +77,7 @@ export class BlockConnectionSubscriber implements Subscriber {
 
     /**
      * Stop the block connection subscription.
+     *
      * @returns {void}
      */
     stop(): void {
@@ -86,7 +94,8 @@ export class BlockConnectionSubscriber implements Subscriber {
 
     /**
      * Pause the block connection subscription.
-     * @param {boolean} [dropWhilePaused=false] - Whether to drop blocks while paused.
+     *
+     * @param {boolean} [dropWhilePaused=false] - Whether to drop blocks while paused. Default is `false`
      * @returns {void}
      */
     pause(dropWhilePaused?: boolean): void {
@@ -98,6 +107,7 @@ export class BlockConnectionSubscriber implements Subscriber {
 
     /**
      * Resume the block connection subscription.
+     *
      * @returns {void}
      */
     resume(): void {

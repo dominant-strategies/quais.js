@@ -224,6 +224,9 @@ class TokenString {
         this.#offset = 0;
     }
 
+    /**
+     * @ignore
+     */
     #subTokenString(from: number = 0, to: number = 0): TokenString {
         return new TokenString(
             this.#tokens.slice(from, to).map((t) => {
@@ -642,7 +645,7 @@ export class ParamType {
     readonly arrayChildren!: null | ParamType;
 
     /**
-     * @private
+     * @ignore
      */
     constructor(
         guard: any,
@@ -757,7 +760,7 @@ export class ParamType {
     }
 
     /**
-     * This provides a type gaurd ensuring that {@link arrayChildren | **arrayChildren**} and
+     * This provides a type guard ensuring that {@link arrayChildren | **arrayChildren**} and
      * {@link arrayLength | **arrayLength**} are non-null.
      *
      * @returns {boolean} True if this is an Array type.
@@ -767,7 +770,7 @@ export class ParamType {
     }
 
     /**
-     * This provides a type gaurd ensuring that {@link components | **components**} is non-null.
+     * This provides a type guard ensuring that {@link components | **components**} is non-null.
      *
      * @returns {boolean} True if this is a Tuple type.
      */
@@ -776,7 +779,7 @@ export class ParamType {
     }
 
     /**
-     * This provides a type gaurd ensuring that {@link indexed | **indexed**} is non-null.
+     * This provides a type guard ensuring that {@link indexed | **indexed**} is non-null.
      *
      * @returns {boolean} True if this is an Indexable type.
      */
@@ -815,6 +818,9 @@ export class ParamType {
         return process(this.type, value);
     }
 
+    /**
+     * @ignore
+     */
     #walkAsync(
         promises: Array<Promise<void>>,
         value: any,
@@ -1035,7 +1041,7 @@ export abstract class Fragment {
     readonly inputs!: ReadonlyArray<ParamType>;
 
     /**
-     * @private
+     * @ignore
      */
     constructor(guard: any, type: FragmentType, inputs: ReadonlyArray<ParamType>) {
         assertPrivate(guard, _guard, 'Fragment');
@@ -1158,7 +1164,7 @@ export abstract class NamedFragment extends Fragment {
     readonly name!: string;
 
     /**
-     * @private
+     * @ignore
      */
     constructor(guard: any, type: FragmentType, name: string, inputs: ReadonlyArray<ParamType>) {
         super(guard, type, inputs);
@@ -1179,7 +1185,7 @@ function joinParams(format: FormatType, params: ReadonlyArray<ParamType>): strin
  */
 export class ErrorFragment extends NamedFragment {
     /**
-     * @private
+     * @ignore
      */
     constructor(guard: any, name: string, inputs: ReadonlyArray<ParamType>) {
         super(guard, 'error', name, inputs);
@@ -1257,7 +1263,7 @@ export class EventFragment extends NamedFragment {
     readonly anonymous!: boolean;
 
     /**
-     * @private
+     * @ignore
      */
     constructor(guard: any, name: string, inputs: ReadonlyArray<ParamType>, anonymous: boolean) {
         super(guard, 'event', name, inputs);
@@ -1364,7 +1370,7 @@ export class ConstructorFragment extends Fragment {
     readonly gas!: null | bigint;
 
     /**
-     * @private
+     * @ignore
      */
     constructor(
         guard: any,
@@ -1602,7 +1608,7 @@ export class FunctionFragment extends NamedFragment {
     readonly gas!: null | bigint;
 
     /**
-     * @private
+     * @ignore
      */
     constructor(
         guard: any,
@@ -1759,7 +1765,7 @@ export class FunctionFragment extends NamedFragment {
  */
 export class StructFragment extends NamedFragment {
     /**
-     * @private
+     * @ignore
      */
     constructor(guard: any, name: string, inputs: ReadonlyArray<ParamType>) {
         super(guard, 'struct', name, inputs);

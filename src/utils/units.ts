@@ -27,9 +27,7 @@ const names = ['wei', 'kwei', 'mwei', 'gwei', 'szabo', 'finney', 'ether'];
  *
  * @category Utils
  * @param {BigNumberish} value - The value to convert.
- * @param {string | Numeric} [unit=18] - The unit to convert to. Default is `18` Default is `18` Default is `18` Default
- *   is `18` Default is `18` Default is `18` Default is `18`
- *
+ * @param {string | Numeric} [unit=18] - The unit to convert to. Default is `18`
  * @returns {string} The converted value.
  * @throws {Error} If the unit is invalid.
  */
@@ -52,9 +50,7 @@ export function formatUnits(value: BigNumberish, unit?: string | Numeric): strin
  *
  * @category Utils
  * @param {string} value - The value to convert.
- * @param {string | Numeric} [unit=18] - The unit to convert from. Default is `18` Default is `18` Default is `18`
- *   Default is `18` Default is `18` Default is `18` Default is `18`
- *
+ * @param {string | Numeric} [unit=18] - The unit to convert from. Default is `18`
  * @returns {bigint} The converted value.
  * @throws {Error} If the unit is invalid.
  * @throws {Error} If the value is not a string.
@@ -79,7 +75,6 @@ export function parseUnits(value: string, unit?: string | Numeric): bigint {
  *
  * @category Utils
  * @param {BigNumberish} wei - The value to convert.
- *
  * @returns {string} The converted value.
  */
 export function formatQuai(wei: BigNumberish): string {
@@ -91,7 +86,6 @@ export function formatQuai(wei: BigNumberish): string {
  *
  * @category Utils
  * @param {BigNumberish} value - The value to convert.
- *
  * @returns {string} The converted value.
  */
 export function formatQi(value: BigNumberish): string {
@@ -103,7 +97,6 @@ export function formatQi(value: BigNumberish): string {
  *
  * @category Utils
  * @param {string} ether - The value to convert.
- *
  * @returns {bigint} The converted value.
  */
 export function parseQuai(ether: string): bigint {
@@ -115,7 +108,6 @@ export function parseQuai(ether: string): bigint {
  *
  * @category Utils
  * @param {string} value - The value to convert.
- *
  * @returns {bigint} The converted value.
  */
 export function parseQi(value: string): bigint {

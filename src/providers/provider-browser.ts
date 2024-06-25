@@ -9,15 +9,17 @@ import type { Networkish } from './network.js';
  * The interface to an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) provider, which is a standard used by most
  * injected providers, which the {@link BrowserProvider | **BrowserProvider**} accepts and exposes the API of.
  *
- * @interface
  * @category Providers
+ * @interface
  */
 export interface Eip1193Provider {
     /**
      * See [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) for details on this method.
+     *
      * @param {Object} request - The request object.
      * @param {string} request.method - The method name.
-     * @param {Array<any> | Record<string, any>} [request.params] - The parameters for the method.
+     * @param {any[] | Record<string, any>} [request.params] - The parameters for the method.
+     *
      * @returns {Promise<any>} The result of the request.
      */
     request(request: { method: string; params?: Array<any> | Record<string, any> }): Promise<any>;
@@ -27,13 +29,13 @@ export interface Eip1193Provider {
  * The possible additional events dispatched when using the `"debug"` event on a
  * {@link BrowserProvider | **BrowserProvider**}.
  *
+ * @category Providers
  * @property {string} action - The action type.
  * @property {Object} payload - The payload of the action.
  * @property {string} payload.method - The method name.
- * @property {Array<any>} payload.params - The parameters for the method.
+ * @property {any[]} payload.params - The parameters for the method.
  * @property {any} result - The result of the action.
  * @property {Error} error - The error object.
- * @category Providers
  */
 export type DebugEventBrowserProvider =
     | {
@@ -53,16 +55,17 @@ export type DebugEventBrowserProvider =
  * A **BrowserProvider** is intended to wrap an injected provider which adheres to the
  * [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) standard, which most (if not all) currently do.
  *
+ * @category Providers
  * @class
  * @extends JsonRpcApiProvider
- * @category Providers
  */
 export class BrowserProvider extends JsonRpcApiProvider {
     #request: (method: string, params: Array<any> | Record<string, any>) => Promise<any>;
 
     /**
      * Connect to the `ethereum` provider, optionally forcing the `network`.
-     * @constructor
+     *
+     * @class
      * @param {Eip1193Provider} ethereum - The EIP-1193 provider.
      * @param {Networkish} [network] - The network to connect to.
      */
@@ -89,7 +92,9 @@ export class BrowserProvider extends JsonRpcApiProvider {
 
     /**
      * Resolves to `true` if the provider manages the `address`.
+     *
      * @param {number | string} address - The address to check.
+     *
      * @returns {Promise<boolean>} Resolves to `true` if the provider manages the `address`.
      */
     async hasSigner(address: number | string): Promise<boolean> {
@@ -108,8 +113,10 @@ export class BrowserProvider extends JsonRpcApiProvider {
 
     /**
      * Sends a JSON-RPC request.
+     *
      * @param {string} method - The method name.
-     * @param {Array<any> | Record<string, any>} params - The parameters for the method.
+     * @param {any[] | Record<string, any>} params - The parameters for the method.
+     *
      * @returns {Promise<any>} The result of the request.
      */
     async send(method: string, params: Array<any> | Record<string, any>): Promise<any> {
@@ -120,9 +127,12 @@ export class BrowserProvider extends JsonRpcApiProvider {
 
     /**
      * Sends a JSON-RPC payload.
-     * @param {JsonRpcPayload | Array<JsonRpcPayload>} payload - The JSON-RPC payload.
-     * @returns {Promise<Array<JsonRpcResult | JsonRpcError>>} The result of the request.
-     * @private
+     *
+     * @ignore
+     * @ignore
+     * @param {JsonRpcPayload | JsonRpcPayload[]} payload - The JSON-RPC payload.
+     *
+     * @returns {Promise<(JsonRpcResult | JsonRpcError)[]>} The result of the request.
      */
     async _send(payload: JsonRpcPayload | Array<JsonRpcPayload>): Promise<Array<JsonRpcResult | JsonRpcError>> {
         assertArgument(!Array.isArray(payload), 'EIP-1193 does not support batch request', 'payload', payload);
@@ -142,8 +152,10 @@ export class BrowserProvider extends JsonRpcApiProvider {
 
     /**
      * Gets the RPC error.
+     *
      * @param {JsonRpcPayload} payload - The JSON-RPC payload.
      * @param {JsonRpcError} error - The JSON-RPC error.
+     *
      * @returns {Error} The RPC error.
      */
     getRpcError(payload: JsonRpcPayload, error: JsonRpcError): Error {
@@ -165,7 +177,9 @@ export class BrowserProvider extends JsonRpcApiProvider {
 
     /**
      * Gets the signer for the given address.
+     *
      * @param {number | string} [address] - The address to get the signer for.
+     *
      * @returns {Promise<JsonRpcSigner>} The signer for the address.
      */
     async getSigner(address?: number | string): Promise<JsonRpcSigner> {
@@ -185,4 +199,3 @@ export class BrowserProvider extends JsonRpcApiProvider {
         return await super.getSigner(address);
     }
 }
-

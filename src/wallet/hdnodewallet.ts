@@ -197,7 +197,6 @@ export class HDNodeWallet extends BaseWallet {
     readonly depth!: number;
 
     /**
-     * @private
      * @param {any} guard
      * @param {SigningKey} signingKey
      * @param {string} parentFingerprint
@@ -207,6 +206,7 @@ export class HDNodeWallet extends BaseWallet {
      * @param {number} depth
      * @param {null | Mnemonic} mnemonic
      * @param {null | Provider} provider
+     * @ignore
      */
     constructor(
         guard: any,
@@ -259,8 +259,8 @@ export class HDNodeWallet extends BaseWallet {
     }
 
     /**
-     * @private
      * @returns {KeystoreAccount}
+     * @ignore
      */
     #account(): KeystoreAccount {
         const account: KeystoreAccount = { address: this.address, privateKey: this.privateKey };
@@ -416,11 +416,12 @@ export class HDNodeWallet extends BaseWallet {
     }
 
     /**
-     * @private
+
      * @param {BytesLike} _seed
      * @param {null | Mnemonic} mnemonic
      *
      * @returns {HDNodeWallet}
+     * @ignore
      */
     static #fromSeed(_seed: BytesLike, mnemonic: null | Mnemonic): HDNodeWallet {
         assertArgument(isBytesLike(_seed), 'invalid seed', 'seed', '[REDACTED]');
@@ -629,7 +630,6 @@ export class HDNodeVoidWallet extends VoidSigner {
     readonly depth!: number;
 
     /**
-     * @private
      * @param {any} guard
      * @param {string} address
      * @param {string} publicKey
@@ -639,6 +639,7 @@ export class HDNodeVoidWallet extends VoidSigner {
      * @param {number} index
      * @param {number} depth
      * @param {null | Provider} provider
+     * @ignore
      */
     constructor(
         guard: any,

@@ -51,9 +51,10 @@ const Primitive = 'bigint,boolean,function,number,string,symbol'.split(/,/g);
 /**
  * Deeply copies a value.
  *
- * @param {T} value - The value to copy.
- * @returns {T} The copied value.
  * @ignore
+ * @param {T} value - The value to copy.
+ *
+ * @returns {T} The copied value.
  */
 function deepCopy<T = any>(value: T): T {
     if (value == null || Primitive.indexOf(typeof value) >= 0) {
@@ -85,9 +86,10 @@ function deepCopy<T = any>(value: T): T {
 /**
  * Stalls execution for a specified duration.
  *
- * @param {number} duration - The duration to stall in milliseconds.
- * @returns {Promise<void>} A promise that resolves after the duration.
  * @ignore
+ * @param {number} duration - The duration to stall in milliseconds.
+ *
+ * @returns {Promise<void>} A promise that resolves after the duration.
  */
 function stall(duration: number): Promise<void> {
     return new Promise((resolve) => {
@@ -161,7 +163,8 @@ export type JsonRpcError = {
 };
 
 /**
- * When subscribing to the `"debug"` event, the {@link Listener | **Listener**} will receive this object as the first parameter.
+ * When subscribing to the `"debug"` event, the {@link Listener | **Listener**} will receive this object as the first
+ * parameter.
  *
  * @category Providers
  * @todo Listener is no longer exported, either remove the link or rework the comment
@@ -332,6 +335,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * Connects the signer to a provider.
      *
      * @param {null | Provider} provider - The provider to connect to.
+     *
      * @returns {Signer} The connected signer.
      * @throws {Error} If the signer cannot be reconnected.
      */
@@ -354,9 +358,10 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
     /**
      * Populates a Quai transaction.
      *
-     * @param {QuaiTransactionRequest} tx - The transaction request.
-     * @returns {Promise<QuaiTransactionLike>} The populated transaction.
      * @ignore
+     * @param {QuaiTransactionRequest} tx - The transaction request.
+     *
+     * @returns {Promise<QuaiTransactionLike>} The populated transaction.
      */
     async populateQuaiTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionLike> {
         return (await this.populateCall(tx)) as QuaiTransactionLike;
@@ -365,9 +370,10 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
     /**
      * Sends an unchecked transaction.
      *
-     * @param {TransactionRequest} _tx - The transaction request.
-     * @returns {Promise<string>} The transaction hash.
      * @ignore
+     * @param {TransactionRequest} _tx - The transaction request.
+     *
+     * @returns {Promise<string>} The transaction hash.
      */
     async sendUncheckedTransaction(_tx: TransactionRequest): Promise<string> {
         const tx = deepCopy(_tx);
@@ -429,6 +435,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * Sends a transaction.
      *
      * @param {TransactionRequest} tx - The transaction request.
+     *
      * @returns {Promise<TransactionResponse>} The transaction response.
      * @throws {Error} If the transaction cannot be sent.
      */
@@ -510,6 +517,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * Signs a transaction.
      *
      * @param {TransactionRequest} _tx - The transaction request.
+     *
      * @returns {Promise<string>} The signed transaction.
      * @throws {Error} If the transaction cannot be signed.
      */
@@ -541,6 +549,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * Signs a message.
      *
      * @param {string | Uint8Array} _message - The message to sign.
+     *
      * @returns {Promise<string>} The signed message.
      */
     async signMessage(_message: string | Uint8Array): Promise<string> {
@@ -552,8 +561,9 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * Signs typed data.
      *
      * @param {TypedDataDomain} domain - The domain of the typed data.
-     * @param {Record<string, Array<TypedDataField>>} types - The types of the typed data.
+     * @param {Record<string, TypedDataField[]>} types - The types of the typed data.
      * @param {Record<string, any>} _value - The value of the typed data.
+     *
      * @returns {Promise<string>} The signed typed data.
      */
     async signTypedData(
@@ -573,6 +583,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * Unlocks the account.
      *
      * @param {string} password - The password to unlock the account.
+     *
      * @returns {Promise<boolean>} True if the account is unlocked, false otherwise.
      */
     async unlock(password: string): Promise<boolean> {
@@ -582,9 +593,10 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
     /**
      * Signs a message using the legacy method.
      *
-     * @param {string | Uint8Array} _message - The message to sign.
-     * @returns {Promise<string>} The signed message.
      * @ignore
+     * @param {string | Uint8Array} _message - The message to sign.
+     *
+     * @returns {Promise<string>} The signed message.
      */
     async _legacySignMessage(_message: string | Uint8Array): Promise<string> {
         const message = typeof _message === 'string' ? toUtf8Bytes(_message) : _message;
@@ -793,7 +805,9 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      *
      * Sub-classes can use this to inquire about configuration options.
      *
+     * @ignore
      * @param {keyof JsonRpcApiProviderOptions} key - The option key.
+     *
      * @returns {JsonRpcApiProviderOptions[key]} The option value.
      */
     _getOption<K extends keyof JsonRpcApiProviderOptions>(key: K): JsonRpcApiProviderOptions[K] {
@@ -804,6 +818,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * Gets the {@link Network | **Network**} this provider has committed to. On each call, the network is detected, and
      * if it has changed, the call will reject.
      *
+     * @ignore
      * @returns {Network} The network.
      * @throws {Error} If the network is not available yet.
      */
@@ -817,9 +832,11 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      *
      * Sub-classes **MUST** override this.
      *
-     * @param {JsonRpcPayload | Array<JsonRpcPayload>} payload - The JSON-RPC payload.
+     * @ignore
+     * @param {JsonRpcPayload | JsonRpcPayload[]} payload - The JSON-RPC payload.
      * @param {Shard} [shard] - The shard to send the request to.
-     * @returns {Promise<Array<JsonRpcResult | JsonRpcError>>} The JSON-RPC result.
+     *
+     * @returns {Promise<(JsonRpcResult | JsonRpcError)[]>} The JSON-RPC result.
      * @throws {Error} If the request fails.
      */
     abstract _send(
@@ -833,7 +850,9 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * Sub-classes may override this to modify behavior of actions, and should generally call `super._perform` as a
      * fallback.
      *
+     * @ignore
      * @param {PerformActionRequest} req - The request to perform.
+     *
      * @returns {Promise<any>} The result of the request.
      * @throws {Error} If the request fails.
      */
@@ -875,6 +894,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * Keep in mind that {@link JsonRpcApiProvider.send | **send**} may only be used once
      * {@link JsonRpcApiProvider.ready | **ready**}, otherwise the _send primitive must be used instead.
      *
+     * @ignore
      * @returns {Promise<Network>} The detected network.
      * @throws {Error} If network detection fails.
      */
@@ -991,8 +1011,8 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * Resolves once the {@link JsonRpcApiProvider._start | **_start**} has been called. This can be used in sub-classes
      * to defer sending data until the connection has been established.
      *
-     * @returns {Promise<void>} A promise that resolves once the provider is ready.
      * @ignore
+     * @returns {Promise<void>} A promise that resolves once the provider is ready.
      */
     async _waitUntilReady(): Promise<void> {
         if (this.#notReady == null) {
@@ -1006,9 +1026,10 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      *
      * Sub-classes may override this to modify the behavior of subscription management.
      *
-     * @param {Subscription} sub - The subscription to manage.
-     * @returns {Subscriber} The subscriber that will manage the subscription.
      * @ignore
+     * @param {Subscription} sub - The subscription to manage.
+     *
+     * @returns {Subscriber} The subscriber that will manage the subscription.
      */
     _getSubscriber(sub: Subscription): Subscriber {
         // Pending Filters aren't availble via polling
@@ -1042,10 +1063,11 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * Returns `tx` as a normalized JSON-RPC transaction request, which has all values hexlified and any numeric values
      * converted to Quantity values.
      *
+     * @ignore
      * @param {TransactionRequest} tx - The transaction to normalize.
+     *
      * @returns {JsonRpcTransactionRequest} The normalized transaction.
      * @throws {Error} If the transaction is invalid.
-     * @ignore
      */
     getRpcTransaction(tx: TransactionRequest): JsonRpcTransactionRequest {
         const result: JsonRpcTransactionRequest = {};
@@ -1093,10 +1115,11 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
     /**
      * Returns the request method and arguments required to perform `req`.
      *
+     * @ignore
      * @param {PerformActionRequest} req - The request to perform.
+     *
      * @returns {null | { method: string; args: any[] }} The method and arguments to use.
      * @throws {Error} If the request is not supported or invalid.
-     * @ignore
      */
     getRpcRequest(req: PerformActionRequest): null | { method: string; args: Array<any> } {
         switch (req.method) {
@@ -1238,10 +1261,11 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * Returns an quais-style Error for the given JSON-RPC error `payload`, coalescing the various strings and error
      * shapes that different nodes return, coercing them into a machine-readable standardized error.
      *
+     * @ignore
      * @param {JsonRpcPayload} payload - The payload that was sent.
      * @param {JsonRpcError} _error - The error that was received.
+     *
      * @returns {Error} The coalesced error.
-     * @ignore
      */
     getRpcError(payload: JsonRpcPayload, _error: JsonRpcError): Error {
         const { method } = payload;
@@ -1354,6 +1378,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * @param {string} method - The method to call.
      * @param {any[] | Record<string, any>} params - The parameters to pass to the method.
      * @param {Shard} shard - The shard to send the request to.
+     *
      * @returns {Promise<any>} A promise that resolves to the result of the method call.
      */
     send(method: string, params: Array<any> | Record<string, any>, shard?: Shard): Promise<any> {
@@ -1385,6 +1410,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * Returns a JsonRpcSigner for the given address.
      *
      * @param {number | string} [address] - The address or index of the account.
+     *
      * @returns {Promise<JsonRpcSigner>} A promise that resolves to the JsonRpcSigner.
      * @throws {Error} If the account is invalid.
      */
@@ -1423,7 +1449,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
     /**
      * Returns a list of JsonRpcSigners for all accounts.
      *
-     * @returns {Promise<Array<JsonRpcSigner>>} A promise that resolves to an array of JsonRpcSigners.
+     * @returns {Promise<JsonRpcSigner[]>} A promise that resolves to an array of JsonRpcSigners.
      */
     async listAccounts(): Promise<Array<JsonRpcSigner>> {
         const accounts: Array<string> = await this.send('quai_accounts', []);

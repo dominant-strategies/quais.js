@@ -34,6 +34,7 @@ export type BytesLike = DataHexString | Uint8Array;
  * @param {BytesLike} value - The value to convert.
  * @param {string} [name] - The name of the value for error context.
  * @param {boolean} [copy] - Whether to create a copy of the value.
+ *
  * @returns {Uint8Array} The converted Uint8Array.
  * @throws {Error} If the value is not a valid BytesLike.
  */
@@ -89,8 +90,8 @@ export function getBytesCopy(value: BytesLike, name?: string): Uint8Array {
 /**
  * Returns true if `value` is a valid {@link HexString | **HexString**}.
  *
- * If `length` is `true` or a number, it also checks that `value` is a valid
- * {@link DataHexString | **DataHexString**} of `length` (if a number) bytes of data (e.g. `0x1234` is 2 bytes).
+ * If `length` is `true` or a number, it also checks that `value` is a valid {@link DataHexString | **DataHexString**} of
+ * `length` (if a number) bytes of data (e.g. `0x1234` is 2 bytes).
  *
  * @category Utils
  * @param {any} value - The value to check.
@@ -223,6 +224,7 @@ export function stripZerosLeft(data: BytesLike): string {
  * @param {BytesLike} data - The data to pad.
  * @param {number} length - The length to pad to.
  * @param {boolean} left - Whether to pad on the left.
+ *
  * @returns {string} The padded data.
  * @throws {Error} If the padding exceeds data length.
  */
