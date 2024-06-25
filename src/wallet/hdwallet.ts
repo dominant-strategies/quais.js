@@ -3,7 +3,7 @@ import { Mnemonic } from './mnemonic.js';
 import { LangEn } from '../wordlists/lang-en.js';
 import type { Wordlist } from '../wordlists/index.js';
 import { randomBytes } from '../crypto/index.js';
-import { getZoneForAddress } from '../utils/index.js';
+import { getZoneForAddress, assertPrivate } from '../utils/index.js';
 import { isQiAddress } from '../address/index.js';
 import { Zone } from '../constants/index.js';
 import { TransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
@@ -36,6 +36,8 @@ export interface SerializedHDWallet {
  */
 const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
 
+export const _guard = {};
+
 /**
  * Abstract class representing a Hierarchical Deterministic (HD) wallet.
  */
@@ -58,7 +60,8 @@ export abstract class AbstractHDWallet {
      * @param {HDNodeWallet} root - The root node of the HD wallet.
      * @param {Provider} [provider] - The provider for the HD wallet.
      */
-    protected constructor(root: HDNodeWallet, provider?: Provider) {
+    constructor(guard: any, root: HDNodeWallet, provider?: Provider) {
+        assertPrivate(guard, _guard, 'AbstractHDWallet');
         this._root = root;
         this.provider = provider;
     }
@@ -90,8 +93,7 @@ export abstract class AbstractHDWallet {
      * @param {number} account - The account number from which to derive the address node.
      * @param {number} startingIndex - The index from which to start deriving addresses.
      * @param {Zone} zone - The zone (shard) for which the address should be valid.
-     * @param {boolean} [isChange=false] - Whether to derive a change address (default is false). Default is `false`
-     *   Default is `false` Default is `false`
+     * @param {boolean} [isChange=false] - Whether to derive a change address (default is false) Default is `false`
      *
      * @returns {HDNodeWallet} - The derived HD node wallet containing a valid address for the specified zone.
      * @throws {Error} If a valid address for the specified zone cannot be derived within the allowed attempts.
@@ -135,7 +137,8 @@ export abstract class AbstractHDWallet {
      *
      * @param {number} account - The account number.
      * @param {number} addressIndex - The address index.
-     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false`
+     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false` Default is
+     *   `false`
      *
      * @returns {NeuteredAddressInfo} The added address info.
      */
@@ -149,7 +152,8 @@ export abstract class AbstractHDWallet {
      * @param {Map<string, NeuteredAddressInfo>} addressMap - The address map.
      * @param {number} account - The account number.
      * @param {number} addressIndex - The address index.
-     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false`
+     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false` Default is
+     *   `false`
      *
      * @returns {NeuteredAddressInfo} The added address info.
      * @throws {Error} If the address for the index already exists.
@@ -262,12 +266,12 @@ export abstract class AbstractHDWallet {
      * @returns {T} The created instance.
      */
     protected static createInstance<T extends AbstractHDWallet>(
-        this: new (root: HDNodeWallet) => T,
+        this: new (guard: any, root: HDNodeWallet) => T,
         mnemonic: Mnemonic,
     ): T {
         const coinType = (this as any)._coinType;
         const root = HDNodeWallet.fromMnemonic(mnemonic, (this as any).parentPath(coinType));
-        return new this(root);
+        return new (this as any)(_guard, root);
     }
 
     /**
@@ -278,7 +282,10 @@ export abstract class AbstractHDWallet {
      *
      * @returns {T} The created instance.
      */
-    static fromMnemonic<T extends AbstractHDWallet>(this: new (root: HDNodeWallet) => T, mnemonic: Mnemonic): T {
+    static fromMnemonic<T extends AbstractHDWallet>(
+        this: new (guard: any, root: HDNodeWallet) => T,
+        mnemonic: Mnemonic,
+    ): T {
         return (this as any).createInstance(mnemonic);
     }
 
@@ -292,7 +299,7 @@ export abstract class AbstractHDWallet {
      * @returns {T} The created instance.
      */
     static createRandom<T extends AbstractHDWallet>(
-        this: new (root: HDNodeWallet) => T,
+        this: new (guard: any, root: HDNodeWallet) => T,
         password?: string,
         wordlist?: Wordlist,
     ): T {
@@ -317,7 +324,7 @@ export abstract class AbstractHDWallet {
      * @returns {T} The created instance.
      */
     static fromPhrase<T extends AbstractHDWallet>(
-        this: new (root: HDNodeWallet) => T,
+        this: new (guard: any, root: HDNodeWallet) => T,
         phrase: string,
         password?: string,
         wordlist?: Wordlist,

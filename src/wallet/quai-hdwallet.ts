@@ -1,4 +1,4 @@
-import { AbstractHDWallet } from './hdwallet.js';
+import { AbstractHDWallet, _guard } from './hdwallet.js';
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QuaiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { resolveAddress } from '../address/index.js';
@@ -59,8 +59,8 @@ export class QuaiHDWallet extends AbstractHDWallet {
      * @param {HDNodeWallet} root - The root HD node wallet.
      * @param {Provider} [provider] - The provider.
      */
-    private constructor(root: HDNodeWallet, provider?: Provider) {
-        super(root, provider);
+    constructor(guard: any, root: HDNodeWallet, provider?: Provider) {
+        super(guard, root, provider);
     }
 
     /**
@@ -125,7 +125,7 @@ export class QuaiHDWallet extends AbstractHDWallet {
         const mnemonic = Mnemonic.fromPhrase(serialized.phrase);
         const path = (this as any).parentPath(serialized.coinType);
         const root = HDNodeWallet.fromMnemonic(mnemonic, path);
-        const wallet = new this(root);
+        const wallet = new this(_guard, root);
 
         // import the addresses
         wallet.importSerializedAddresses(wallet._addresses, serialized.addresses);
