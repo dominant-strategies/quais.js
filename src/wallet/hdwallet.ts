@@ -86,6 +86,15 @@ export abstract class AbstractHDWallet {
     }
 
     /**
+     * Returns the extended public key of the root node of the HD wallet.
+     *
+     * @returns {string} The extended public key.
+     */
+    get xPub(): string {
+        return this._root.extendedKey;
+    }
+
+    /**
      * Derives the next valid address node for a specified account, starting index, and zone. The method ensures the
      * derived address belongs to the correct shard and ledger, as defined by the Quai blockchain specifications.
      *
@@ -221,6 +230,18 @@ export abstract class AbstractHDWallet {
             return null;
         }
         return addressInfo;
+    }
+
+    /**
+     * Returns the private key for a given address. This method should be used with caution as it exposes the private
+     * key to the user.
+     *
+     * @param {string} address - The address associated with the desired private key.
+     * @returns {string} The private key.
+     */
+    public getPrivateKey(address: string): string {
+        const hdNode = this._getHDNodeForAddress(address);
+        return hdNode.privateKey;
     }
 
     /**
