@@ -67,7 +67,7 @@ jobs:
       - name: Copy generated documentation
         run: |
           mkdir -p docs-repo/docs/content
-          cp -r docs/content* quais-docs/content/
+          cp -r docs/content/* quais-docs/content/
           cd quais-docs/scripts
           node updateNavigation.js
 
