@@ -89,6 +89,8 @@ export {
     id,
     hashMessage,
     verifyMessage,
+    ethHashMessage,
+    ethVerifyMessage,
     solidityPacked,
     solidityPackedKeccak256,
     solidityPackedSha256,
