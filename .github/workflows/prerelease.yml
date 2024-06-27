@@ -1,6 +1,23 @@
 name: Prerelease
 on: workflow_dispatch
 jobs:
+  get-branch:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.set-branch.outputs.branch }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.branch }}
+          ssh-key: ${{ secrets.GH_PAT }}
+      - name: Get Version
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+      - name: Store version in branch variable
+        id: set-branch
+        run: echo "branch=${{ env.VERSION }}" >> $GITHUB_OUTPUT
+
   call-common-workflow:
     uses: dominant-strategies/quai-cicd/.github/workflows/deploy-dev-common.yml@main
     with:
@@ -19,3 +36,69 @@ jobs:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY2 }}
       GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
       GH_GCP_TOKEN: ${{ secrets.GH_GCP_TOKEN }}
+
+  update-docs:
+    runs-on: ubuntu-latest
+    needs: [call-common-workflow, get-branch]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.branch }}
+          ssh-key: ${{ secrets.GH_PAT }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate documentation with TypeDoc
+        run: npx typedoc
+
+      - uses: actions/checkout@v3
+        with:
+          repository: dominant-strategies/quais-docs
+          ssh-key: ${{ secrets.GH_PAT }}
+          path: quais-docs
+
+      - name: Import GPG Key
+        if: ${{ inputs.update_version }}
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY2 }}
+          GPG_KEY_ID: ${{ secrets.GPG_KEY_ID }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" | gpg --import
+          git config --global user.signingkey $GPG_KEY_ID
+          git config --global commit.gpgsign true
+          # Configure Git with CI account details
+          git config --global user.name "ci-dominantstrategies"
+          git config --global user.email "ci@dominantstrategies.io"
+          
+          # Optionally, check that the GPG key is correctly configured for signing
+          gpg --list-keys "ci@dominantstrategies.io"
+
+      - name: generate docs content
+        run: npx typedoc
+
+      - name: Copy generated documentation
+        run: |
+          mkdir -p docs-repo/docs/content
+          cp -r docs/content/* quais-docs/content/
+          cd quais-docs/scripts
+          node updateNavigation.js
+
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          repository: quais-docs
+          branch: ${{ needs.get-branch.outputs.branch }}
+          create_branch: true
+          commit_user_name: ci-dominantstrategies
+          commit_user_email: ci@dominantstrategies.io
+        env:
+          HUSKY: 0
+
+      - name: Create Pull Request
+        run: |
+          PR_BRANCH=${{ needs.get-branch.outputs.branch }}
+          curl -u ci-dominantstrategies:${{ secrets.CI_PAT }} \
+            -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/dominant-strategies/quais-docs/pulls \
+            -d '{"title":"Update Documentation","head":"'"$PR_BRANCH"'","base":"main","body":"This PR updates the documentation."}'
