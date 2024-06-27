@@ -1,0 +1,35 @@
+---
+title: getNumber
+---
+
+```ts
+function getNumber(value, name?): number
+```
+
+Gets a //number// from `value`. If it is an invalid value for a //number//, then an ArgumentError will be thrown for
+`name`.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | [`BigNumberish`](/content/type-aliases/BigNumberish) | The value to convert. |
+| `name`? | `string` | The name of the value. |
+
+## Returns
+
+`number`
+
+The value.
+
+## Throws
+
+If the value is invalid.
+
+## Throws
+
+If the value is too large.
+
+## Source
+
+[utils/maths.ts:221](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/maths.ts#L221)

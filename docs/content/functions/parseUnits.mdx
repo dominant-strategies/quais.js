@@ -1,0 +1,35 @@
+---
+title: parseUnits
+---
+
+```ts
+function parseUnits(value, unit?): bigint
+```
+
+Converts the //decimal string// `value` to a BigInt, assuming `unit` decimal places. The `unit` may the number of
+decimal places or the name of a unit (e.g. `"gwei"` for 9 decimal places).
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | `string` | The value to convert. |
+| `unit`? | `string` \| [`Numeric`](/content/type-aliases/Numeric) | The unit to convert from. Default is `18` |
+
+## Returns
+
+`bigint`
+
+The converted value.
+
+## Throws
+
+If the unit is invalid.
+
+## Throws
+
+If the value is not a string.
+
+## Source
+
+[utils/units.ts:58](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/units.ts#L58)

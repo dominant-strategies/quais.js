@@ -1,0 +1,23 @@
+---
+title: FetchPreflightFunc
+---
+
+```ts
+type FetchPreflightFunc: (req) => Promise<FetchRequest>;
+```
+
+Called before any network request, allowing updated headers (e.g. Bearer tokens), etc.
+
+## Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `req` | [`FetchRequest`](/content/classes/FetchRequest) |
+
+## Returns
+
+`Promise`\<[`FetchRequest`](/content/classes/FetchRequest)\>
+
+## Source
+
+[utils/fetch.ts:52](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fetch.ts#L52)

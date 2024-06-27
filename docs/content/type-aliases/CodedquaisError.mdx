@@ -1,0 +1,19 @@
+---
+title: CodedquaisError
+---
+
+```ts
+type CodedquaisError<T>: T extends "UNKNOWN_ERROR" ? UnknownError : T extends "NOT_IMPLEMENTED" ? NotImplementedError : T extends "UNSUPPORTED_OPERATION" ? UnsupportedOperationError : T extends "NETWORK_ERROR" ? NetworkError : T extends "SERVER_ERROR" ? ServerError : T extends "TIMEOUT" ? TimeoutError : T extends "BAD_DATA" ? BadDataError : T extends "CANCELLED" ? CancelledError : T extends "BUFFER_OVERRUN" ? BufferOverrunError : T extends "NUMERIC_FAULT" ? NumericFaultError : ... extends ... ? ... : ...;
+```
+
+A conditional type that transforms the [**ErrorCode**](/content/type-aliases/ErrorCode) T into its quaisError type.
+
+## Type parameters
+
+| Type parameter |
+| :------ |
+| `T` |
+
+## Source
+
+[utils/errors.ts:585](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/errors.ts#L585)

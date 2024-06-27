@@ -1,0 +1,24 @@
+---
+title: FetchGatewayFunc
+---
+
+```ts
+type FetchGatewayFunc: (url, signal?) => Promise<FetchRequest | FetchResponse>;
+```
+
+Called on Gateway URLs.
+
+## Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `url` | `string` |
+| `signal`? | `FetchCancelSignal` |
+
+## Returns
+
+`Promise`\<[`FetchRequest`](/content/classes/FetchRequest) \| [`FetchResponse`](/content/classes/FetchResponse)\>
+
+## Source
+
+[utils/fetch.ts:73](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fetch.ts#L73)

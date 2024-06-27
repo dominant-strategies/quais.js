@@ -1,0 +1,249 @@
+---
+title: FewestCoinSelector
+---
+
+The FewestCoinSelector class provides a coin selection algorithm that selects the fewest UTXOs required to meet the
+target amount. This algorithm is useful for minimizing the size of the transaction and the fees associated with it.
+
+This class is a sub-class of AbstractCoinSelector | **AbstractCoinSelector** and implements the
+AbstractCoinSelector.performSelection | **performSelection** method to provide the actual coin selection
+logic.
+
+## Extends
+
+- `AbstractCoinSelector`
+
+## Constructors
+
+### new FewestCoinSelector()
+
+```ts
+new FewestCoinSelector(availableUXTOs?): FewestCoinSelector
+```
+
+Constructs a new AbstractCoinSelector instance with an empty UTXO array.
+
+#### Parameters
+
+| Parameter | Type | Default value | Description |
+| :------ | :------ | :------ | :------ |
+| `availableUXTOs`? | `UTXOEntry`[] | `[]` | The initial available UTXOs. |
+
+#### Returns
+
+[`FewestCoinSelector`](/content/classes/FewestCoinSelector)
+
+#### Inherited from
+
+`AbstractCoinSelector.constructor`
+
+#### Source
+
+[transaction/abstract-coinselector.ts:99](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-coinselector.ts#L99)
+
+## Accessors
+
+### availableUXTOs
+
+```ts
+get availableUXTOs(): UTXO[]
+```
+
+Gets the available UTXOs.
+
+```ts
+set availableUXTOs(value): void
+```
+
+Sets the available UTXOs.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | `UTXOLike`[] | The UTXOs to set. |
+
+#### Returns
+
+`UTXO`[]
+
+The available UTXOs.
+
+#### Source
+
+[transaction/abstract-coinselector.ts:47](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-coinselector.ts#L47)
+
+***
+
+### changeOutputs
+
+```ts
+get changeOutputs(): UTXO[]
+```
+
+Gets the change outputs.
+
+```ts
+set changeOutputs(value): void
+```
+
+Sets the change outputs.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | `UTXOLike`[] | The change outputs to set. |
+
+#### Returns
+
+`UTXO`[]
+
+The change outputs.
+
+#### Source
+
+[transaction/abstract-coinselector.ts:83](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-coinselector.ts#L83)
+
+***
+
+### spendOutputs
+
+```ts
+get spendOutputs(): UTXO[]
+```
+
+Gets the spend outputs.
+
+```ts
+set spendOutputs(value): void
+```
+
+Sets the spend outputs.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | `UTXOLike`[] | The spend outputs to set. |
+
+#### Returns
+
+`UTXO`[]
+
+The spend outputs.
+
+#### Source
+
+[transaction/abstract-coinselector.ts:67](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-coinselector.ts#L67)
+
+## Methods
+
+### performSelection()
+
+```ts
+performSelection(target): SelectedCoinsResult
+```
+
+The largest first coin selection algorithm.
+
+This algorithm selects the largest UTXOs first, and continues to select UTXOs until the target amount is reached.
+If the total value of the selected UTXOs is greater than the target amount, the remaining value is returned as a
+change output.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `target` | `SpendTarget` | The target amount to spend. |
+
+#### Returns
+
+`SelectedCoinsResult`
+
+The selected UTXOs and change outputs.
+
+#### Overrides
+
+`AbstractCoinSelector.performSelection`
+
+#### Source
+
+[transaction/coinselector-fewest.ts:27](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/coinselector-fewest.ts#L27)
+
+***
+
+### sortUTXOsByDenomination()
+
+```ts
+private sortUTXOsByDenomination(utxos, direction): UTXO[]
+```
+
+Sorts UTXOs by their denomination.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `utxos` | `UTXO`[] | The UTXOs to sort. |
+| `direction` | `"asc"` \| `"desc"` | The direction to sort ('asc' for ascending, 'desc' for descending). |
+
+#### Returns
+
+`UTXO`[]
+
+The sorted UTXOs.
+
+#### Source
+
+[transaction/coinselector-fewest.ts:149](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/coinselector-fewest.ts#L149)
+
+***
+
+### validateTarget()
+
+```ts
+private validateTarget(target): void
+```
+
+Validates the target amount.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `target` | `SpendTarget` | The target amount to validate. |
+
+#### Returns
+
+`void`
+
+#### Throws
+
+Will throw an error if the target amount is less than or equal to 0.
+
+#### Source
+
+[transaction/coinselector-fewest.ts:168](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/coinselector-fewest.ts#L168)
+
+***
+
+### validateUTXOs()
+
+```ts
+private validateUTXOs(): void
+```
+
+Validates the available UTXOs.
+
+#### Returns
+
+`void`
+
+#### Throws
+
+Will throw an error if there are no available UTXOs.
+
+#### Source
+
+[transaction/coinselector-fewest.ts:179](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/coinselector-fewest.ts#L179)

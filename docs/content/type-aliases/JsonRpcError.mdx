@@ -1,0 +1,60 @@
+---
+title: JsonRpcError
+---
+
+```ts
+type JsonRpcError: {
+  "error": {
+     "code": number;
+     "data": any;
+     "message": string;
+    };
+  "id": number;
+};
+```
+
+A JSON-RPC error, which are returned on failure from a JSON-RPC server.
+
+## Type declaration
+
+### error
+
+```ts
+error: {
+  "code": number;
+  "data": any;
+  "message": string;
+};
+```
+
+The response error.
+
+### error.code
+
+```ts
+code: number;
+```
+
+### error.data?
+
+```ts
+optional data: any;
+```
+
+### error.message?
+
+```ts
+optional message: string;
+```
+
+### id
+
+```ts
+id: number;
+```
+
+The response ID to match it to the relevant request.
+
+## Source
+
+[providers/provider-jsonrpc.ts:149](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L149)

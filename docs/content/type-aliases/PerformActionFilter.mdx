@@ -1,0 +1,24 @@
+---
+title: PerformActionFilter
+---
+
+```ts
+type PerformActionFilter: {
+  "address": string | string[];
+  "fromBlock": BlockTag;
+  "shard": Shard;
+  "toBlock": BlockTag;
+  "topics": (null | string | string[])[];
+ } | {
+  "address": string | string[];
+  "blockHash": string;
+  "shard": Shard;
+  "topics": (null | string | string[])[];
+};
+```
+
+A normalized filter used for [**PerformActionRequest**](/content/type-aliases/PerformActionRequest) objects.
+
+## Source
+
+[providers/abstract-provider.ts:374](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L374)

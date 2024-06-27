@@ -1,0 +1,150 @@
+---
+title: AbiCoder
+---
+
+The **AbiCoder** is a low-level class responsible for encoding JavaScript values into binary data and decoding binary
+data into JavaScript values.
+
+## Methods
+
+### decode()
+
+```ts
+decode(
+   types, 
+   data, 
+   loose?): Result
+```
+
+Decode the ABI data as the types into values.
+
+If loose decoding is enabled, then strict padding is not enforced. Some older versions of Solidity incorrectly
+padded event data emitted from `external` functions.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `types` | readonly (`string` \| [`ParamType`](/content/classes/ParamType))[] | Array of parameter types. |
+| `data` | [`BytesLike`](/content/type-aliases/BytesLike) | The ABI data to decode. |
+| `loose`? | `boolean` | Enable loose decoding. Default is `false` |
+
+#### Returns
+
+[`Result`](/content/classes/Result)
+
+The decoded values.
+
+#### Source
+
+[abi/abi-coder.ts:223](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/abi-coder.ts#L223)
+
+***
+
+### encode()
+
+```ts
+encode(types, values): string
+```
+
+Encode the values as the specified types into ABI data.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `types` | readonly (`string` \| [`ParamType`](/content/classes/ParamType))[] | Array of parameter types. |
+| `values` | readonly `any`[] | Array of values to encode. |
+
+#### Returns
+
+`string`
+
+The encoded data in hexadecimal format.
+
+#### Source
+
+[abi/abi-coder.ts:201](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/abi-coder.ts#L201)
+
+***
+
+### getDefaultValue()
+
+```ts
+getDefaultValue(types): Result
+```
+
+Get the default values for the given types. For example, a `uint` is by default `0` and `bool` is by default
+`false`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `types` | readonly (`string` \| [`ParamType`](/content/classes/ParamType))[] | Array of parameter types to get default values for. |
+
+#### Returns
+
+[`Result`](/content/classes/Result)
+
+The default values corresponding to the given types.
+
+#### Source
+
+[abi/abi-coder.ts:188](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/abi-coder.ts#L188)
+
+***
+
+### defaultAbiCoder()
+
+```ts
+static defaultAbiCoder(): AbiCoder
+```
+
+Returns the shared singleton instance of a default [**AbiCoder**](/content/classes/AbiCoder).
+
+On the first call, the instance is created internally.
+
+#### Returns
+
+[`AbiCoder`](/content/classes/AbiCoder)
+
+The default ABI coder instance.
+
+#### Source
+
+[abi/abi-coder.ts:252](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/abi-coder.ts#L252)
+
+***
+
+### getBuiltinCallException()
+
+```ts
+static getBuiltinCallException(
+   action, 
+   tx, 
+   data): CallExceptionError
+```
+
+Returns a quais-compatible [**CallExceptionError**](/content/interfaces/CallExceptionError) for the given result data.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `action` | [`CallExceptionAction`](/content/type-aliases/CallExceptionAction) | The action that triggered the exception. |
+| `tx` | `object` | The transaction information. |
+| `tx.data`? | `string` | - |
+| `tx.from`? | `null` \| `string` | - |
+| `tx.to`? | `null` \| `string` | - |
+| `data` | `null` \| [`BytesLike`](/content/type-aliases/BytesLike) | The data associated with the call exception. |
+
+#### Returns
+
+[`CallExceptionError`](/content/interfaces/CallExceptionError)
+
+The corresponding call exception error.
+
+#### Source
+
+[abi/abi-coder.ts:267](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/abi-coder.ts#L267)

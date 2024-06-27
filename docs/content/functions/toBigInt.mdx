@@ -1,0 +1,25 @@
+---
+title: toBigInt
+---
+
+```ts
+function toBigInt(value): bigint
+```
+
+Converts `value` to a BigInt. If `value` is a Uint8Array, it is treated as Big Endian data.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | `Uint8Array` \| [`BigNumberish`](/content/type-aliases/BigNumberish) | The value to convert. |
+
+## Returns
+
+`bigint`
+
+The value.
+
+## Source
+
+[utils/maths.ts:196](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/maths.ts#L196)

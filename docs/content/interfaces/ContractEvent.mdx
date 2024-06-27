@@ -1,0 +1,66 @@
+---
+title: ContractEvent
+---
+
+A Contract event on a Contract.
+
+## Type parameters
+
+| Type parameter | Value |
+| :------ | :------ |
+| `A` *extends* `any`[] | `any`[] |
+
+```ts
+interface ContractEvent(...args): DeferredTopicFilter
+```
+
+Create a deferred topic filter for the event.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| ...`args` | `ContractEventArgs`\<`A`\> | The arguments to create the filter with. |
+
+## Returns
+
+[`DeferredTopicFilter`](/content/interfaces/DeferredTopicFilter)
+
+The deferred topic filter.
+
+## Source
+
+[contract/types.ts:234](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/types.ts#L234)
+
+## Properties
+
+| Property | Type | Description |
+| :------ | :------ | :------ |
+| `fragment` | [`EventFragment`](/content/classes/EventFragment) | The fragment of the Contract event. This will throw on ambiguous method names. |
+| `name` | `string` | The name of the Contract event. |
+
+## Methods
+
+### getFragment()
+
+```ts
+getFragment(...args): EventFragment
+```
+
+Returns the fragment constrained by `args`. This can be used to resolve ambiguous event names.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| ...`args` | `ContractEventArgs`\<`A`\> | The arguments to constrain the fragment by. |
+
+#### Returns
+
+[`EventFragment`](/content/classes/EventFragment)
+
+The constrained fragment.
+
+#### Source
+
+[contract/types.ts:252](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/types.ts#L252)

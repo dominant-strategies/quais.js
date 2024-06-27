@@ -1,0 +1,36 @@
+---
+title: SignatureLike
+---
+
+```ts
+type SignatureLike: 
+  | Signature
+  | string
+  | {
+  "r": string;
+  "s": string;
+  "v": BigNumberish;
+  "yParity": 0 | 1;
+  "yParityAndS": string;
+ }
+  | {
+  "r": string;
+  "s": string;
+  "v": number;
+  "yParity": 0 | 1;
+  "yParityAndS": string;
+ }
+  | {
+  "r": string;
+  "s": string;
+  "v": BigNumberish;
+  "yParity": 0 | 1;
+  "yParityAndS": string;
+};
+```
+
+A SignatureLike
+
+## Source
+
+[crypto/signature.ts:35](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/signature.ts#L35)

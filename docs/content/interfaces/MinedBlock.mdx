@@ -1,0 +1,307 @@
+---
+title: MinedBlock
+---
+
+An Interface to indicate a [**Block**](/content/classes/Block) has been included in the blockchain. This asserts a Type Guard
+that necessary properties are non-null.
+
+Before a block is included, it is a //pending// block.
+
+## Extends
+
+- [`Block`](/content/classes/Block)
+
+## Properties
+
+| Property | Modifier | Type | Description | Inherited from |
+| :------ | :------ | :------ | :------ | :------ |
+| `provider` | `readonly` | [`Provider`](/content/interfaces/Provider) | The provider connected to the block used to fetch additional details if necessary. | [`Block`](/content/classes/Block).`provider` |
+
+## Accessors
+
+### date
+
+```ts
+get date(): null | Date
+```
+
+The [Date](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date) this block was
+included at.
+
+#### Returns
+
+`null` \| `Date`
+
+The date this block was included at, or null if the timestamp is not available.
+
+#### Source
+
+[providers/provider.ts:864](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L864)
+
+***
+
+### extTransactions
+
+```ts
+get extTransactions(): readonly string[]
+```
+
+Returns the list of extended transaction hashes, in the order they were executed within the block.
+
+#### Returns
+
+readonly `string`[]
+
+The list of extended transaction hashes.
+
+#### Source
+
+[providers/provider.ts:688](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L688)
+
+***
+
+### length
+
+```ts
+get length(): number
+```
+
+The number of transactions in this block.
+
+#### Returns
+
+`number`
+
+The number of transactions.
+
+#### Source
+
+[providers/provider.ts:854](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L854)
+
+***
+
+### prefetchedExtTransactions
+
+```ts
+get prefetchedExtTransactions(): TransactionResponse[]
+```
+
+Returns the complete extended transactions, in the order they were executed within the block.
+
+This is only available for blocks which prefetched transactions, by passing `true` to `prefetchTxs` into
+[**getBlock**](/content/interfaces/Provider#getblock).
+
+#### Throws
+
+If the transactions were not prefetched.
+
+#### Returns
+
+[`TransactionResponse`](/content/type-aliases/TransactionResponse)[]
+
+The list of prefetched extended transactions.
+
+#### Source
+
+[providers/provider.ts:736](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L736)
+
+***
+
+### prefetchedTransactions
+
+```ts
+get prefetchedTransactions(): TransactionResponse[]
+```
+
+Returns the complete transactions, in the order they were executed within the block.
+
+This is only available for blocks which prefetched transactions, by passing `true` to `prefetchTxs` into
+[**getBlock**](/content/interfaces/Provider#getblock).
+
+#### Throws
+
+If the transactions were not prefetched.
+
+#### Returns
+
+[`TransactionResponse`](/content/type-aliases/TransactionResponse)[]
+
+The list of prefetched transactions.
+
+#### Source
+
+[providers/provider.ts:706](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L706)
+
+***
+
+### transactions
+
+```ts
+get transactions(): readonly string[]
+```
+
+Returns the list of transaction hashes, in the order they were executed within the block.
+
+#### Returns
+
+readonly `string`[]
+
+The list of transaction hashes.
+
+#### Source
+
+[providers/provider.ts:674](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L674)
+
+## Methods
+
+### getExtTransaction()
+
+```ts
+getExtTransaction(indexOrHash): Promise<TransactionResponse>
+```
+
+Get the extended transaction at `index` within this block.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `indexOrHash` | `string` \| `number` | The index or hash of the extended transaction. |
+
+#### Returns
+
+`Promise`\<[`TransactionResponse`](/content/type-aliases/TransactionResponse)\>
+
+A promise resolving to the extended transaction.
+
+#### Inherited from
+
+[`Block`](/content/classes/Block).[`getExtTransaction`](/content/classes/Block#getexttransaction)
+
+#### Throws
+
+If the extended transaction is not found.
+
+#### Source
+
+[providers/provider.ts:923](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L923)
+
+***
+
+### getPrefetchedTransaction()
+
+```ts
+getPrefetchedTransaction(indexOrHash): TransactionResponse
+```
+
+If a **Block** was fetched with a request to include the transactions this will allow synchronous access to those
+transactions.
+
+If the transactions were not prefetched, this will throw.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `indexOrHash` | `string` \| `number` | The index or hash of the transaction. |
+
+#### Returns
+
+[`TransactionResponse`](/content/type-aliases/TransactionResponse)
+
+The transaction.
+
+#### Inherited from
+
+[`Block`](/content/classes/Block).[`getPrefetchedTransaction`](/content/classes/Block#getprefetchedtransaction)
+
+#### Throws
+
+If the transaction is not found.
+
+#### Source
+
+[providers/provider.ts:968](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L968)
+
+***
+
+### getTransaction()
+
+```ts
+getTransaction(indexOrHash): Promise<TransactionResponse>
+```
+
+Get the transaction at `index` within this block.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `indexOrHash` | `string` \| `number` | The index or hash of the transaction. |
+
+#### Returns
+
+`Promise`\<[`TransactionResponse`](/content/type-aliases/TransactionResponse)\>
+
+A promise resolving to the transaction.
+
+#### Inherited from
+
+[`Block`](/content/classes/Block).[`getTransaction`](/content/classes/Block#gettransaction)
+
+#### Throws
+
+If the transaction is not found.
+
+#### Source
+
+[providers/provider.ts:881](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L881)
+
+***
+
+### isMined()
+
+```ts
+isMined(): this is MinedBlock
+```
+
+Returns true if this block been mined. This provides a type guard for all properties on a
+[**MinedBlock**](/content/interfaces/MinedBlock).
+
+#### Returns
+
+`this is MinedBlock`
+
+True if the block has been mined.
+
+#### Inherited from
+
+[`Block`](/content/classes/Block).[`isMined`](/content/classes/Block#ismined)
+
+#### Source
+
+[providers/provider.ts:990](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L990)
+
+***
+
+### toJSON()
+
+```ts
+toJSON(): any
+```
+
+Returns a JSON-friendly value.
+
+#### Returns
+
+`any`
+
+The JSON-friendly value.
+
+#### Inherited from
+
+[`Block`](/content/classes/Block).[`toJSON`](/content/classes/Block#tojson)
+
+#### Source
+
+[providers/provider.ts:762](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L762)

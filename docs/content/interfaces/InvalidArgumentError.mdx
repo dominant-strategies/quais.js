@@ -1,0 +1,19 @@
+---
+title: InvalidArgumentError
+---
+
+This Error indicates an incorrect type or value was passed to a function or method.
+
+## Extends
+
+- [`quaisError`](/content/interfaces/quaisError)\<`"INVALID_ARGUMENT"`\>
+
+## Properties
+
+| Property | Type | Description | Inherited from |
+| :------ | :------ | :------ | :------ |
+| `argument` | `string` | The name of the argument. | - |
+| `code` | [`ErrorCode`](/content/type-aliases/ErrorCode) | The string error code. | [`quaisError`](/content/interfaces/quaisError).`code` |
+| `error?` | `Error` | Any related error. | [`quaisError`](/content/interfaces/quaisError).`error` |
+| `shortMessage` | `string` | A short message describing the error, with minimal additional details. | [`quaisError`](/content/interfaces/quaisError).`shortMessage` |
+| `value` | `any` | The value that was provided. | - |

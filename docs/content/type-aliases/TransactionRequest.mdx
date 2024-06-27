@@ -1,0 +1,16 @@
+---
+title: TransactionRequest
+---
+
+```ts
+type TransactionRequest: QuaiTransactionRequest | QiTransactionRequest;
+```
+
+A **TransactionRequest** is a transactions with potentially various properties not defined, or with less strict types
+for its values.
+
+This is used to pass to various operations, which will internally coerce any types and populate any necessary values.
+
+## Source
+
+[providers/provider.ts:176](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L176)

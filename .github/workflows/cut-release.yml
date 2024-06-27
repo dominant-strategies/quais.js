@@ -37,6 +37,7 @@ jobs:
       skip_deploy: true
       update_version: true
       include_chart: false
+      use_v: false
     secrets:
       GH_PAT: ${{ secrets.GH_PAT }}
       BUILD_ARGS: ''

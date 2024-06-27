@@ -1,0 +1,25 @@
+---
+title: isQuaiAddress
+---
+
+```ts
+function isQuaiAddress(address): boolean
+```
+
+Checks whether a given address is in the Quai ledger scope by checking the 9th bit of the address.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `address` | `string` | The address to check |
+
+## Returns
+
+`boolean`
+
+True if the address is in the Quai ledger scope, false otherwise.
+
+## Source
+
+[address/checks.ts:155](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/address/checks.ts#L155)

@@ -1,0 +1,27 @@
+---
+title: getBytes
+---
+
+```ts
+function getBytes(value, name?): Uint8Array
+```
+
+Get a typed Uint8Array for `value`. If already a Uint8Array the original `value` is returned; if a copy is required
+use [**getBytesCopy**](/content/functions/getBytesCopy).
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | [`BytesLike`](/content/type-aliases/BytesLike) | The value to convert to a Uint8Array. |
+| `name`? | `string` | The name of the value for error context. |
+
+## Returns
+
+`Uint8Array`
+
+The typed Uint8Array.
+
+## Source
+
+[utils/data.ts:72](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/data.ts#L72)

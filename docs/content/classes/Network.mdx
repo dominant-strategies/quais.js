@@ -1,0 +1,195 @@
+---
+title: Network
+---
+
+A **Network** provides access to a chain's properties and allows for plug-ins to extend functionality.
+
+## Constructors
+
+### new Network()
+
+```ts
+new Network(name, chainId): Network
+```
+
+Creates a new **Network** for `name` and `chainId`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `name` | `string` | The network name. |
+| `chainId` | [`BigNumberish`](/content/type-aliases/BigNumberish) | The network chain ID. |
+
+#### Returns
+
+[`Network`](/content/classes/Network)
+
+#### Source
+
+[providers/network.ts:46](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L46)
+
+## Accessors
+
+### chainId
+
+```ts
+get chainId(): bigint
+```
+
+The network chain ID.
+
+```ts
+set chainId(value): void
+```
+
+Sets the network chain ID.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | [`BigNumberish`](/content/type-aliases/BigNumberish) | The new network chain ID. |
+
+#### Returns
+
+`bigint`
+
+The network chain ID.
+
+#### Source
+
+[providers/network.ts:81](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L81)
+
+***
+
+### name
+
+```ts
+get name(): string
+```
+
+The network common name.
+
+This is the canonical name, as networks might have multiple names.
+
+```ts
+set name(value): void
+```
+
+Sets the network name.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | `string` | The new network name. |
+
+#### Returns
+
+`string`
+
+The network name.
+
+#### Source
+
+[providers/network.ts:65](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L65)
+
+## Methods
+
+### clone()
+
+```ts
+clone(): Network
+```
+
+Create a copy of this Network.
+
+#### Returns
+
+[`Network`](/content/classes/Network)
+
+A new Network instance.
+
+#### Source
+
+[providers/network.ts:145](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L145)
+
+***
+
+### toJSON()
+
+```ts
+toJSON(): any
+```
+
+Returns a JSON-compatible representation of a Network.
+
+#### Returns
+
+`any`
+
+The JSON representation of the network.
+
+#### Source
+
+[providers/network.ts:55](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L55)
+
+***
+
+### from()
+
+```ts
+static from(network?): Network
+```
+
+Returns a new Network for the `network` name or chainId.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `network`? | [`Networkish`](/content/type-aliases/Networkish) | The network to get. |
+
+#### Returns
+
+[`Network`](/content/classes/Network)
+
+The Network instance.
+
+#### Throws
+
+If the network is invalid.
+
+#### Source
+
+[providers/network.ts:157](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L157)
+
+***
+
+### register()
+
+```ts
+static register(nameOrChainId, networkFunc): void
+```
+
+Register `nameOrChainId` with a function which returns an instance of a Network representing that chain.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `nameOrChainId` | `string` \| `number` \| `bigint` | The name or chain ID to register. |
+| `networkFunc` | () => [`Network`](/content/classes/Network) | The function to create the Network. |
+
+#### Returns
+
+`void`
+
+#### Throws
+
+If a network is already registered for `nameOrChainId`.
+
+#### Source
+
+[providers/network.ts:209](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L209)

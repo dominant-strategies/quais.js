@@ -1,0 +1,440 @@
+---
+title: quais
+---
+
+# Quais Javascript SDK
+
+[![npm (tag)](https://img.shields.io/npm/v/quais)](https://www.npmjs.com/package/quais)
+![npm bundle size (version)](https://img.shields.io/bundlephobia/minzip/quais)
+![npm (downloads)](https://img.shields.io/npm/dm/quais)
+
+---
+
+**This library is still under development and not ready for production use.**
+
+A complete, compact and simple library for Quai and Qi, written
+in [TypeScript](https://www.typescriptlang.org).
+
+**Features**
+
+-   Keep your private keys in your client, **safe** and sound
+-   Import and export BIP 39 **mnemonic phrases** (12 word backup phrases) and **HD Wallets** (English as well as Czech, French, Italian, Japanese, Korean, Simplified Chinese, Spanish, Traditional Chinese)
+-   Meta-classes create JavaScript objects from any contract ABI, including **ABIv2** and **Human-Readable ABI**
+-   Connect to Quai nodes over [JSON-RPC](https://qu.ai/docs/develop/apis/json-rpc-api/), [quaiscan](https://quaiscan.io), or [Pelagus](https://pelaguswallet.io)
+-   **Small** (~136kb compressed; 460kb uncompressed)
+-   **Tree-shaking** focused; include only what you need during bundling
+-   **Complete** functionality for all your Quai desires
+-   Extensive documentation **coming soon**
+-   Large collection of **test cases** which are maintained and added to
+-   Fully written in **TypeScript**, with strict types for security and safety
+-   **MIT License** (including ALL dependencies); completely open source to do with as you please
+
+**Versions**
+
+-   [0.1.17](https://www.npmjs.com/package/quais/v/0.1.17): Full support for Quai Network's Iron Age Testnet.
+-   [1.0.0-alpha](https://www.npmjs.com/package/quais/v/1.0.0-alpha.4): Full support for Quai Network's Golden Age Testnet.
+
+## Keep Updated
+
+For advisories and important notices, follow [@quainetwork](https://twitter.com/quainetwork)
+on Twitter as well as watch this GitHub project.
+
+For more general news, discussions, and feedback, join the
+[Quai Developer Discord](https://discord.gg/s8y8asPwNC).
+
+## Installing
+
+**NodeJS**
+
+```
+/home/some_project> npm install quais
+```
+
+**Browser (ESM)**
+
+The bundled library is available in the `./dist/` folder in this repo.
+
+```
+<script type="module">
+    import { quais } from "./dist/quais.min.js";
+</script>
+```
+
+### Using Local Version as Dependency in Other Projects
+
+For developers looking to contribute to quais or integrate it into their projects with local modifications, setting up a local development environment is essential. This section guides you through the process of building quais and linking it to another project on your machine using npm link.
+
+**Prepare quais for Symbolic Linking**
+
+1. Clone the quais repository and navigate into it.
+
+    ```bash
+    git clone https://github.com/dominant-strategies/quais.js.git
+    cd quais.js
+    ```
+
+2. Install dependencies.
+
+    ```bash
+    npm install
+    ```
+
+3. Create a global symbolic link for quais. This makes the quais package available to link in any other project. Whenever a local change is made to quais that you want to test in another project, you must run this command again to update the symbolic link.
+
+    ```bash
+    npm run update-symlink
+    ```
+
+    _Caution - The `update-symlink` command updates the globally available symbolic link to the build of the current branch you are on when the command is run. This can potentially lead to incompatible version usage if quais is linked to multiple projects locally._
+
+**Linking quais to Another Project**
+
+After setting up quais for local development, you can link it to another project to test changes or develop features that depend on quais.
+
+1. Navigate to your project.
+    ```bash
+    cd path/to/your/project
+    ```
+2. Link the globally linked quais package to your project. This replaces the npm-installed quais package with the symlinked version.
+    ```bash
+    npm link quais
+    ```
+3. Build your project: Depending on your project's setup, you may need to rebuild it to ensure that the linked quais library is correctly integrated.
+   npm run build
+
+**Testing Changes**
+
+With quais linked to your project, any changes made to the quais library can be immediately tested within the context of your project. Remember to rebuild quais (`npm run update-symlink`) after making changes to ensure they are reflected in your project.
+
+**Reverting to the Published Package**
+
+If you need to revert back to the official quais package published on npm, you can unlink quais and reinstall the package.
+
+1. Unlink quais by removing the symlink.
+
+    ```bash
+    npm unlink quais
+    ```
+
+2. Reinstall quais: Install the quais package from npm to use the published version.
+    ```bash
+    npm install quais
+    ```
+
+## Documentation
+
+Documentation for the Quais SDK is under heavy development and will be updated often soon. In the meantime, please refer to the reference material below:
+
+-   [Quais Javascript SDK Documentation](https://dominantstrategies.mintlify.app/static)
+-   [Quai Network JSON RPC Docs](https://qu.ai/docs/develop/apis/json-rpc-api/)
+
+## Extension Packages
+
+The `quais` package only includes the most common and most core
+functionality to interact with Quai Network. There are many other
+packages designed to further enhance the functionality and experience.
+
+-   [QuaisPolling](https://npmjs.com/package/quais-polling) - A package to poll Quai Network for events and logs
+-   [MulticallProvider](https://github.com/ethers-io/ext-provider-multicall) - A Provider which bundles multiple call requests into a single `call` to reduce latency and backend request capacity
+
+## License
+
+MIT License (including **all** dependencies).
+
+## API Index
+
+### Address
+
+- [Addressable](/content/interfaces/Addressable)
+- [AddressLike](/content/type-aliases/AddressLike)
+- [computeAddress](/content/functions/computeAddress)
+- [getAddress](/content/functions/getAddress)
+- [getCreate2Address](/content/functions/getCreate2Address)
+- [getCreateAddress](/content/functions/getCreateAddress)
+- [isAddress](/content/functions/isAddress)
+- [isAddressable](/content/functions/isAddressable)
+- [isQiAddress](/content/functions/isQiAddress)
+- [isQuaiAddress](/content/functions/isQuaiAddress)
+- [recoverAddress](/content/functions/recoverAddress)
+- [resolveAddress](/content/functions/resolveAddress)
+- [validateAddress](/content/functions/validateAddress)
+
+### Application Binary Interface
+
+- [AbiCoder](/content/classes/AbiCoder)
+- [ConstructorFragment](/content/classes/ConstructorFragment)
+- [ErrorDescription](/content/classes/ErrorDescription)
+- [ErrorFragment](/content/classes/ErrorFragment)
+- [EventFragment](/content/classes/EventFragment)
+- [FallbackFragment](/content/classes/FallbackFragment)
+- [Fragment](/content/classes/Fragment)
+- [FunctionFragment](/content/classes/FunctionFragment)
+- [Indexed](/content/classes/Indexed)
+- [Interface](/content/classes/Interface)
+- [LogDescription](/content/classes/LogDescription)
+- [NamedFragment](/content/classes/NamedFragment)
+- [ParamType](/content/classes/ParamType)
+- [Result](/content/classes/Result)
+- [StructFragment](/content/classes/StructFragment)
+- [TransactionDescription](/content/classes/TransactionDescription)
+- [Typed](/content/classes/Typed)
+- [JsonFragment](/content/interfaces/JsonFragment)
+- [JsonFragmentType](/content/interfaces/JsonFragmentType)
+- [FormatType](/content/type-aliases/FormatType)
+- [FragmentType](/content/type-aliases/FragmentType)
+- [InterfaceAbi](/content/type-aliases/InterfaceAbi)
+- [ParamTypeWalkAsyncFunc](/content/type-aliases/ParamTypeWalkAsyncFunc)
+- [ParamTypeWalkFunc](/content/type-aliases/ParamTypeWalkFunc)
+- [checkResultErrors](/content/functions/checkResultErrors)
+
+### Constants
+
+- [Shard](/content/enumerations/Shard)
+- [Zone](/content/enumerations/Zone)
+- [MaxInt256](/content/variables/MaxInt256)
+- [MaxUint256](/content/variables/MaxUint256)
+- [MessagePrefix](/content/variables/MessagePrefix)
+- [MinInt256](/content/variables/MinInt256)
+- [N](/content/variables/N)
+- [WeiPerEther](/content/variables/WeiPerEther)
+- [ZeroAddress](/content/variables/ZeroAddress)
+- [ZeroHash](/content/variables/ZeroHash)
+- [quaisymbol](/content/variables/quaisymbol)
+
+### Contract
+
+- [BaseContract](/content/classes/BaseContract)
+- [Contract](/content/classes/Contract)
+- [ContractEventPayload](/content/classes/ContractEventPayload)
+- [ContractFactory](/content/classes/ContractFactory)
+- [ContractTransactionReceipt](/content/classes/ContractTransactionReceipt)
+- [ContractTransactionResponse](/content/classes/ContractTransactionResponse)
+- [ContractUnknownEventPayload](/content/classes/ContractUnknownEventPayload)
+- [EventLog](/content/classes/EventLog)
+- [UndecodedEventLog](/content/classes/UndecodedEventLog)
+- [BaseContractMethod](/content/interfaces/BaseContractMethod)
+- [ConstantContractMethod](/content/interfaces/ConstantContractMethod)
+- [ContractDeployTransaction](/content/interfaces/ContractDeployTransaction)
+- [ContractEvent](/content/interfaces/ContractEvent)
+- [ContractInterface](/content/interfaces/ContractInterface)
+- [ContractMethod](/content/interfaces/ContractMethod)
+- [ContractRunner](/content/interfaces/ContractRunner)
+- [ContractTransaction](/content/interfaces/ContractTransaction)
+- [DeferredTopicFilter](/content/interfaces/DeferredTopicFilter)
+- [Overrides](/content/interfaces/Overrides)
+- [WrappedFallback](/content/interfaces/WrappedFallback)
+- [ContractEventName](/content/type-aliases/ContractEventName)
+
+### Crypto
+
+- [Signature](/content/classes/Signature)
+- [SigningKey](/content/classes/SigningKey)
+- [ProgressCallback](/content/type-aliases/ProgressCallback)
+- [SignatureLike](/content/type-aliases/SignatureLike)
+- [computeHmac](/content/functions/computeHmac)
+- [keccak256](/content/functions/keccak256)
+- [lock](/content/functions/lock)
+- [pbkdf2](/content/functions/pbkdf2)
+- [randomBytes](/content/functions/randomBytes)
+- [ripemd160](/content/functions/ripemd160)
+- [scrypt](/content/functions/scrypt)
+- [scryptSync](/content/functions/scryptSync)
+- [sha256](/content/functions/sha256)
+- [sha512](/content/functions/sha512)
+
+### Encoding
+
+- [UnicodeNormalizationForm](/content/type-aliases/UnicodeNormalizationForm)
+- [Utf8ErrorFunc](/content/type-aliases/Utf8ErrorFunc)
+- [Utf8ErrorReason](/content/type-aliases/Utf8ErrorReason)
+- [decodeBase58](/content/functions/decodeBase58)
+- [decodeBase64](/content/functions/decodeBase64)
+- [decodeBytes32](/content/functions/decodeBytes32)
+- [encodeBase58](/content/functions/encodeBase58)
+- [encodeBase64](/content/functions/encodeBase64)
+- [encodeBytes32](/content/functions/encodeBytes32)
+- [toUtf8Bytes](/content/functions/toUtf8Bytes)
+- [toUtf8CodePoints](/content/functions/toUtf8CodePoints)
+- [toUtf8String](/content/functions/toUtf8String)
+
+### Hash
+
+- [TypedDataEncoder](/content/classes/TypedDataEncoder)
+- [TypedDataDomain](/content/interfaces/TypedDataDomain)
+- [TypedDataField](/content/interfaces/TypedDataField)
+- [ethHashMessage](/content/functions/ethHashMessage)
+- [ethVerifyMessage](/content/functions/ethVerifyMessage)
+- [hashMessage](/content/functions/hashMessage)
+- [id](/content/functions/id)
+- [solidityPacked](/content/functions/solidityPacked)
+- [solidityPackedKeccak256](/content/functions/solidityPackedKeccak256)
+- [solidityPackedSha256](/content/functions/solidityPackedSha256)
+- [verifyMessage](/content/functions/verifyMessage)
+- [verifyTypedData](/content/functions/verifyTypedData)
+
+### Providers
+
+- [AbstractProvider](/content/classes/AbstractProvider)
+- [Block](/content/classes/Block)
+- [BrowserProvider](/content/classes/BrowserProvider)
+- [FeeData](/content/classes/FeeData)
+- [JsonRpcApiProvider](/content/classes/JsonRpcApiProvider)
+- [JsonRpcProvider](/content/classes/JsonRpcProvider)
+- [JsonRpcSigner](/content/classes/JsonRpcSigner)
+- [Log](/content/classes/Log)
+- [Network](/content/classes/Network)
+- [SocketBlockSubscriber](/content/classes/SocketBlockSubscriber)
+- [SocketEventSubscriber](/content/classes/SocketEventSubscriber)
+- [SocketPendingSubscriber](/content/classes/SocketPendingSubscriber)
+- [SocketProvider](/content/classes/SocketProvider)
+- [SocketSubscriber](/content/classes/SocketSubscriber)
+- [TransactionReceipt](/content/classes/TransactionReceipt)
+- [UnmanagedSubscriber](/content/classes/UnmanagedSubscriber)
+- [WebSocketProvider](/content/classes/WebSocketProvider)
+- [BlockParams](/content/interfaces/BlockParams)
+- [Eip1193Provider](/content/interfaces/Eip1193Provider)
+- [EventFilter](/content/interfaces/EventFilter)
+- [Filter](/content/interfaces/Filter)
+- [FilterByBlockHash](/content/interfaces/FilterByBlockHash)
+- [LogParams](/content/interfaces/LogParams)
+- [MinedBlock](/content/interfaces/MinedBlock)
+- [Provider](/content/interfaces/Provider)
+- [Subscriber](/content/interfaces/Subscriber)
+- [TransactionReceiptParams](/content/interfaces/TransactionReceiptParams)
+- [WebSocketLike](/content/interfaces/WebSocketLike)
+- [BlockTag](/content/type-aliases/BlockTag)
+- [DebugEventBrowserProvider](/content/type-aliases/DebugEventBrowserProvider)
+- [JsonRpcApiProviderOptions](/content/type-aliases/JsonRpcApiProviderOptions)
+- [JsonRpcError](/content/type-aliases/JsonRpcError)
+- [JsonRpcPayload](/content/type-aliases/JsonRpcPayload)
+- [JsonRpcResult](/content/type-aliases/JsonRpcResult)
+- [MinedTransactionResponse](/content/type-aliases/MinedTransactionResponse)
+- [Networkish](/content/type-aliases/Networkish)
+- [OrphanFilter](/content/type-aliases/OrphanFilter)
+- [PerformActionFilter](/content/type-aliases/PerformActionFilter)
+- [PerformActionRequest](/content/type-aliases/PerformActionRequest)
+- [PerformActionTransaction](/content/type-aliases/PerformActionTransaction)
+- [PreparedTransactionRequest](/content/type-aliases/PreparedTransactionRequest)
+- [ProviderEvent](/content/type-aliases/ProviderEvent)
+- [Subscription](/content/type-aliases/Subscription)
+- [TopicFilter](/content/type-aliases/TopicFilter)
+- [TransactionRequest](/content/type-aliases/TransactionRequest)
+- [TransactionResponse](/content/type-aliases/TransactionResponse)
+- [TransactionResponseParams](/content/type-aliases/TransactionResponseParams)
+- [WebSocketCreator](/content/type-aliases/WebSocketCreator)
+- [copyRequest](/content/functions/copyRequest)
+
+### Signers
+
+- [AbstractSigner](/content/classes/AbstractSigner)
+- [VoidSigner](/content/classes/VoidSigner)
+- [Signer](/content/interfaces/Signer)
+
+### Transaction
+
+- [FewestCoinSelector](/content/classes/FewestCoinSelector)
+- [QiTransaction](/content/classes/QiTransaction)
+- [QuaiTransaction](/content/classes/QuaiTransaction)
+- [TransactionLike](/content/interfaces/TransactionLike)
+- [AccessList](/content/type-aliases/AccessList)
+- [AccessListEntry](/content/type-aliases/AccessListEntry)
+- [AccessListish](/content/type-aliases/AccessListish)
+- [accessListify](/content/functions/accessListify)
+
+### Utils
+
+- [EventPayload](/content/classes/EventPayload)
+- [FetchRequest](/content/classes/FetchRequest)
+- [FetchResponse](/content/classes/FetchResponse)
+- [FixedNumber](/content/classes/FixedNumber)
+- [ActionRejectedError](/content/interfaces/ActionRejectedError)
+- [BadDataError](/content/interfaces/BadDataError)
+- [BufferOverrunError](/content/interfaces/BufferOverrunError)
+- [CallExceptionError](/content/interfaces/CallExceptionError)
+- [CancelledError](/content/interfaces/CancelledError)
+- [EventEmitterable](/content/interfaces/EventEmitterable)
+- [InsufficientFundsError](/content/interfaces/InsufficientFundsError)
+- [InvalidArgumentError](/content/interfaces/InvalidArgumentError)
+- [MissingArgumentError](/content/interfaces/MissingArgumentError)
+- [NetworkError](/content/interfaces/NetworkError)
+- [NonceExpiredError](/content/interfaces/NonceExpiredError)
+- [NotImplementedError](/content/interfaces/NotImplementedError)
+- [NumericFaultError](/content/interfaces/NumericFaultError)
+- [ReplacementUnderpricedError](/content/interfaces/ReplacementUnderpricedError)
+- [ServerError](/content/interfaces/ServerError)
+- [TimeoutError](/content/interfaces/TimeoutError)
+- [TransactionReplacedError](/content/interfaces/TransactionReplacedError)
+- [UnexpectedArgumentError](/content/interfaces/UnexpectedArgumentError)
+- [UnknownError](/content/interfaces/UnknownError)
+- [UnsupportedOperationError](/content/interfaces/UnsupportedOperationError)
+- [quaisError](/content/interfaces/quaisError)
+- [BigNumberish](/content/type-aliases/BigNumberish)
+- [BytesLike](/content/type-aliases/BytesLike)
+- [CallExceptionAction](/content/type-aliases/CallExceptionAction)
+- [CallExceptionTransaction](/content/type-aliases/CallExceptionTransaction)
+- [CodedquaisError](/content/type-aliases/CodedquaisError)
+- [ErrorCode](/content/type-aliases/ErrorCode)
+- [FetchGatewayFunc](/content/type-aliases/FetchGatewayFunc)
+- [FetchGetUrlFunc](/content/type-aliases/FetchGetUrlFunc)
+- [FetchPreflightFunc](/content/type-aliases/FetchPreflightFunc)
+- [FetchProcessFunc](/content/type-aliases/FetchProcessFunc)
+- [FetchRetryFunc](/content/type-aliases/FetchRetryFunc)
+- [FixedFormat](/content/type-aliases/FixedFormat)
+- [GetUrlResponse](/content/type-aliases/GetUrlResponse)
+- [Listener](/content/type-aliases/Listener)
+- [Numeric](/content/type-aliases/Numeric)
+- [concat](/content/functions/concat)
+- [dataLength](/content/functions/dataLength)
+- [dataSlice](/content/functions/dataSlice)
+- [formatQuai](/content/functions/formatQuai)
+- [formatUnits](/content/functions/formatUnits)
+- [fromTwos](/content/functions/fromTwos)
+- [getAddressDetails](/content/functions/getAddressDetails)
+- [getBigInt](/content/functions/getBigInt)
+- [getBytes](/content/functions/getBytes)
+- [getBytesCopy](/content/functions/getBytesCopy)
+- [getNumber](/content/functions/getNumber)
+- [getTxType](/content/functions/getTxType)
+- [getUint](/content/functions/getUint)
+- [getZoneForAddress](/content/functions/getZoneForAddress)
+- [hexlify](/content/functions/hexlify)
+- [isBytesLike](/content/functions/isBytesLike)
+- [isCallException](/content/functions/isCallException)
+- [isError](/content/functions/isError)
+- [isHexString](/content/functions/isHexString)
+- [mask](/content/functions/mask)
+- [parseQuai](/content/functions/parseQuai)
+- [parseUnits](/content/functions/parseUnits)
+- [stripZerosLeft](/content/functions/stripZerosLeft)
+- [toBeArray](/content/functions/toBeArray)
+- [toBeHex](/content/functions/toBeHex)
+- [toBigInt](/content/functions/toBigInt)
+- [toNumber](/content/functions/toNumber)
+- [toQuantity](/content/functions/toQuantity)
+- [toTwos](/content/functions/toTwos)
+- [uuidV4](/content/functions/uuidV4)
+- [zeroPadBytes](/content/functions/zeroPadBytes)
+- [zeroPadValue](/content/functions/zeroPadValue)
+
+### Wallet
+
+- [Mnemonic](/content/classes/Mnemonic)
+- [QiHDWallet](/content/classes/QiHDWallet)
+- [QuaiHDWallet](/content/classes/QuaiHDWallet)
+- [Wallet](/content/classes/Wallet)
+- [EncryptOptions](/content/type-aliases/EncryptOptions)
+- [KeystoreAccount](/content/type-aliases/KeystoreAccount)
+- [decryptKeystoreJson](/content/functions/decryptKeystoreJson)
+- [decryptKeystoreJsonSync](/content/functions/decryptKeystoreJsonSync)
+- [encryptKeystoreJson](/content/functions/encryptKeystoreJson)
+- [encryptKeystoreJsonSync](/content/functions/encryptKeystoreJsonSync)
+- [isKeystoreJson](/content/functions/isKeystoreJson)
+
+### Wordlists
+
+- [LangEn](/content/classes/LangEn)
+- [LangEs](/content/classes/LangEs)
+- [Wordlist](/content/classes/Wordlist)
+- [WordlistOwl](/content/classes/WordlistOwl)
+- [WordlistOwlA](/content/classes/WordlistOwlA)
+- [wordlists](/content/variables/wordlists)

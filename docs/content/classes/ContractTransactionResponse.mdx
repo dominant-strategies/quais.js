@@ -1,0 +1,295 @@
+---
+title: ContractTransactionResponse
+---
+
+A **ContractTransactionResponse** will return a [**ContractTransactionReceipt**](/content/classes/ContractTransactionReceipt)
+when waited on.
+
+## Extends
+
+- `QuaiTransactionResponse`
+
+## Properties
+
+| Property | Modifier | Type | Description | Inherited from |
+| :------ | :------ | :------ | :------ | :------ |
+| `accessList` | `readonly` | `null` \| [`AccessList`](/content/type-aliases/AccessList) | The [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) access list for transaction types that support it,<br />otherwise `null`. | `QuaiTransactionResponse.accessList` |
+| `blockHash` | `readonly` | `null` \| `string` | The blockHash of the block that this transaction was included in.<br /><br />This is `null` for pending transactions. | `QuaiTransactionResponse.blockHash` |
+| `blockNumber` | `readonly` | `null` \| `number` | The block number of the block that this transaction was included in.<br /><br />This is `null` for pending transactions. | `QuaiTransactionResponse.blockNumber` |
+| `chainId` | `readonly` | `bigint` | The chain ID. | `QuaiTransactionResponse.chainId` |
+| `data` | `readonly` | `string` | The data. | `QuaiTransactionResponse.data` |
+| `from` | `readonly` | `string` | The sender of this transaction. It is implicitly computed from the transaction pre-image hash (as the digest) and<br />the [**signature** ](/content/classes/ContractTransactionResponse) using ecrecover. | `QuaiTransactionResponse.from` |
+| `gasLimit` | `readonly` | `bigint` | The maximum units of gas this transaction can consume. If execution exceeds this, the entries transaction is<br />reverted and the sender is charged for the full amount, despite not state changes being made. | `QuaiTransactionResponse.gasLimit` |
+| `hash` | `readonly` | `string` | The transaction hash. | `QuaiTransactionResponse.hash` |
+| `index` | `readonly` | `bigint` | The index within the block that this transaction resides at. | `QuaiTransactionResponse.index` |
+| `maxFeePerGas` | `readonly` | `null` \| `bigint` | The maximum fee (per unit of gas) to allow this transaction to charge the sender. | `QuaiTransactionResponse.maxFeePerGas` |
+| `maxPriorityFeePerGas` | `readonly` | `null` \| `bigint` | The maximum priority fee (per unit of gas) to allow a validator to charge the sender. This is inclusive of the<br />QuaiTransactionResponse.maxFeePerGas \| **maxFeePerGas**. | `QuaiTransactionResponse.maxPriorityFeePerGas` |
+| `nonce` | `readonly` | `number` | The nonce, which is used to prevent replay attacks and offer a method to ensure transactions from a given sender<br />are explicitly ordered.<br /><br />When sending a transaction, this must be equal to the number of transactions ever sent by<br />[**from** ](/content/classes/ContractTransactionResponse). | `QuaiTransactionResponse.nonce` |
+| `provider` | `readonly` | [`Provider`](/content/interfaces/Provider) | The provider this is connected to, which will influence how its methods will resolve its async inspection<br />methods. | `QuaiTransactionResponse.provider` |
+| `signature` | `readonly` | [`Signature`](/content/classes/Signature) | The signature. | `QuaiTransactionResponse.signature` |
+| `to` | `readonly` | `null` \| `string` | The receiver of this transaction.<br /><br />If `null`, then the transaction is an initcode transaction. This means the result of executing the<br />[**data** ](/content/classes/ContractTransactionResponse) will be deployed as a new contract on chain (assuming it does not<br />revert) and the address may be computed using [getCreateAddress](../functions/getCreateAddress). | `QuaiTransactionResponse.to` |
+| `type` | `readonly` | `number` | The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) transaction envelope type. This is `0` for legacy<br />transactions types. | `QuaiTransactionResponse.type` |
+| `value` | `readonly` | `bigint` | The value, in wei. Use [formatEther](../functions/formatEther) to format this value as ether. | `QuaiTransactionResponse.value` |
+
+## Methods
+
+### confirmations()
+
+```ts
+confirmations(): Promise<number>
+```
+
+Resolve to the number of confirmations this transaction has.
+
+#### Returns
+
+`Promise`\<`number`\>
+
+A promise resolving to the number of confirmations.
+
+#### Inherited from
+
+`QuaiTransactionResponse.confirmations`
+
+#### Throws
+
+If the block is not found.
+
+#### Source
+
+[providers/provider.ts:1738](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1738)
+
+***
+
+### getBlock()
+
+```ts
+getBlock(shard): Promise<null | Block>
+```
+
+Resolves to the Block that this transaction was included in.
+
+This will return null if the transaction has not been included yet.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `shard` | [`Shard`](/content/enumerations/Shard) | The shard to fetch the block from. |
+
+#### Returns
+
+`Promise`\<`null` \| [`Block`](/content/classes/Block)\>
+
+A promise resolving to the block.
+
+#### Inherited from
+
+`QuaiTransactionResponse.getBlock`
+
+#### Source
+
+[providers/provider.ts:1699](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1699)
+
+***
+
+### getTransaction()
+
+```ts
+getTransaction(): Promise<null | QuaiTransactionResponse>
+```
+
+Resolves to this transaction being re-requested from the provider. This can be used if you have an unmined
+transaction and wish to get an up-to-date populated instance.
+
+#### Returns
+
+`Promise`\<`null` \| `QuaiTransactionResponse`\>
+
+A promise resolving to the transaction, or null if not found.
+
+#### Inherited from
+
+`QuaiTransactionResponse.getTransaction`
+
+#### Source
+
+[providers/provider.ts:1723](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1723)
+
+***
+
+### isMined()
+
+```ts
+isMined(): this is QuaiMinedTransactionResponse
+```
+
+Returns `true` if this transaction has been included.
+
+This is effective only as of the time the TransactionResponse was instantiated. To get up-to-date information,
+use QuaiTransactionResponse.getTransaction | **getTransaction**.
+
+This provides a Type Guard that this transaction will have non-null property values for properties that are null
+for unmined transactions.
+
+#### Returns
+
+`this is QuaiMinedTransactionResponse`
+
+True if the transaction has been mined.
+
+#### Inherited from
+
+`QuaiTransactionResponse.isMined`
+
+#### Throws
+
+If the transaction was replaced, repriced, or cancelled.
+
+#### Source
+
+[providers/provider.ts:1997](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1997)
+
+***
+
+### removedEvent()
+
+```ts
+removedEvent(): OrphanFilter
+```
+
+Returns a filter which can be used to listen for orphan events that evict this transaction.
+
+#### Returns
+
+[`OrphanFilter`](/content/type-aliases/OrphanFilter)
+
+The orphan filter.
+
+#### Inherited from
+
+`QuaiTransactionResponse.removedEvent`
+
+#### Source
+
+[providers/provider.ts:2006](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L2006)
+
+***
+
+### reorderedEvent()
+
+```ts
+reorderedEvent(other?): OrphanFilter
+```
+
+Returns a filter which can be used to listen for orphan events that re-order this event against `other`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `other`? | [`TransactionResponse`](/content/type-aliases/TransactionResponse) | The other transaction to compare against. |
+
+#### Returns
+
+[`OrphanFilter`](/content/type-aliases/OrphanFilter)
+
+The orphan filter.
+
+#### Inherited from
+
+`QuaiTransactionResponse.reorderedEvent`
+
+#### Source
+
+[providers/provider.ts:2020](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L2020)
+
+***
+
+### replaceableTransaction()
+
+```ts
+replaceableTransaction(startBlock): QuaiTransactionResponse
+```
+
+Returns a new TransactionResponse instance which has the ability to detect (and throw an error) if the
+transaction is replaced, which will begin scanning at `startBlock`.
+
+This should generally not be used by developers and is intended primarily for internal use. Setting an incorrect
+`startBlock` can have devastating performance consequences if used incorrectly.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `startBlock` | `number` | The block number to start scanning for replacements. |
+
+#### Returns
+
+`QuaiTransactionResponse`
+
+The replaceable transaction.
+
+#### Inherited from
+
+`QuaiTransactionResponse.replaceableTransaction`
+
+#### Source
+
+[providers/provider.ts:2043](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L2043)
+
+***
+
+### toJSON()
+
+```ts
+toJSON(): any
+```
+
+Returns a JSON-compatible representation of this transaction.
+
+#### Returns
+
+`any`
+
+#### Inherited from
+
+`QuaiTransactionResponse.toJSON`
+
+#### Source
+
+[providers/provider.ts:1665](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1665)
+
+***
+
+### wait()
+
+```ts
+wait(confirms?): Promise<null | ContractTransactionReceipt>
+```
+
+Resolves once this transaction has been mined and has `confirms` blocks including it (default: `1`) with an
+optional `timeout`.
+
+This can resolve to `null` only if `confirms` is `0` and the transaction has not been mined, otherwise this will
+wait until enough confirmations have completed.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `confirms`? | `number` | The number of confirmations to wait for. |
+
+#### Returns
+
+`Promise`\<`null` \| [`ContractTransactionReceipt`](/content/classes/ContractTransactionReceipt)\>
+
+The transaction receipt, or `null` if `confirms` is `0`.
+
+#### Overrides
+
+`QuaiTransactionResponse.wait`
+
+#### Source
+
+[contract/wrappers.ts:142](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/wrappers.ts#L142)

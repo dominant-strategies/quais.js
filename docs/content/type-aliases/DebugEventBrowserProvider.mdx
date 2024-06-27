@@ -1,0 +1,26 @@
+---
+title: DebugEventBrowserProvider
+---
+
+```ts
+type DebugEventBrowserProvider: {
+  "action": "sendEip1193Payload";
+  "payload": {
+     "method": string;
+     "params": any[];
+    };
+ } | {
+  "action": "receiveEip1193Result";
+  "result": any;
+ } | {
+  "action": "receiveEip1193Error";
+  "error": Error;
+};
+```
+
+The possible additional events dispatched when using the `"debug"` event on a
+[**BrowserProvider**](/content/classes/BrowserProvider).
+
+## Source
+
+[providers/provider-browser.ts:40](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-browser.ts#L40)

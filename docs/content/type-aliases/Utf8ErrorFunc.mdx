@@ -1,0 +1,42 @@
+---
+title: Utf8ErrorFunc
+---
+
+```ts
+type Utf8ErrorFunc: (reason, offset, bytes, output, badCodepoint?) => number;
+```
+
+A callback that can be used with [**toUtf8String**](/content/functions/toUtf8String) to analysis or recovery from invalid UTF-8
+data.
+
+Parsing UTF-8 data is done through a simple Finite-State Machine (FSM) which calls the `Utf8ErrorFunc` if a fault is
+detected.
+
+The `reason` indicates where in the FSM execution the fault occurred and the `offset` indicates where the input
+failed.
+
+The `bytes` represents the raw UTF-8 data that was provided and `output` is the current array of UTF-8 code-points,
+which may be updated by the `Utf8ErrorFunc`.
+
+The value of the `badCodepoint` depends on the `reason`. See [**Utf8ErrorReason**](/content/type-aliases/Utf8ErrorReason) for
+details.
+
+The function should return the number of bytes that should be skipped when control resumes to the FSM.
+
+## Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `reason` | [`Utf8ErrorReason`](/content/type-aliases/Utf8ErrorReason) |
+| `offset` | `number` |
+| `bytes` | `Uint8Array` |
+| `output` | `number`[] |
+| `badCodepoint`? | `number` |
+
+## Returns
+
+`number`
+
+## Source
+
+[encoding/utf8.ts:74](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/encoding/utf8.ts#L74)

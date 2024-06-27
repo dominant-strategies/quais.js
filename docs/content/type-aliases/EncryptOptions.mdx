@@ -1,0 +1,91 @@
+---
+title: EncryptOptions
+---
+
+```ts
+type EncryptOptions: {
+  "client": string;
+  "entropy": BytesLike;
+  "iv": BytesLike;
+  "progressCallback": ProgressCallback;
+  "salt": BytesLike;
+  "scrypt": {
+     "N": number;
+     "p": number;
+     "r": number;
+    };
+  "uuid": string;
+};
+```
+
+The parameters to use when encrypting a JSON Keystore Wallet.
+
+## Type declaration
+
+### client?
+
+```ts
+optional client: string;
+```
+
+### entropy?
+
+```ts
+optional entropy: BytesLike;
+```
+
+### iv?
+
+```ts
+optional iv: BytesLike;
+```
+
+### progressCallback?
+
+```ts
+optional progressCallback: ProgressCallback;
+```
+
+### salt?
+
+```ts
+optional salt: BytesLike;
+```
+
+### scrypt?
+
+```ts
+optional scrypt: {
+  "N": number;
+  "p": number;
+  "r": number;
+};
+```
+
+### scrypt.N?
+
+```ts
+optional N: number;
+```
+
+### scrypt.p?
+
+```ts
+optional p: number;
+```
+
+### scrypt.r?
+
+```ts
+optional r: number;
+```
+
+### uuid?
+
+```ts
+optional uuid: string;
+```
+
+## Source
+
+[wallet/json-keystore.ts:43](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/json-keystore.ts#L43)

@@ -1,0 +1,36 @@
+---
+title: dataSlice
+---
+
+```ts
+function dataSlice(
+   data, 
+   start?, 
+   end?): string
+```
+
+Returns a DataHexString | **DataHexString** by slicing `data` from the `start` offset to the `end` offset.
+
+By default `start` is 0 and `end` is the length of `data`.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `data` | [`BytesLike`](/content/type-aliases/BytesLike) | The data to slice. |
+| `start`? | `number` | The start offset. |
+| `end`? | `number` | The end offset. |
+
+## Returns
+
+`string`
+
+The sliced data.
+
+## Throws
+
+If the end offset is beyond the data bounds.
+
+## Source
+
+[utils/data.ts:191](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/data.ts#L191)

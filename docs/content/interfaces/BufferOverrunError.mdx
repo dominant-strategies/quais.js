@@ -1,0 +1,23 @@
+---
+title: BufferOverrunError
+---
+
+This Error indicates an attempt was made to read outside the bounds of protected data.
+
+Most operations in quais are protected by bounds checks, to mitigate exploits when parsing data.
+
+## Extends
+
+- [`quaisError`](/content/interfaces/quaisError)\<`"BUFFER_OVERRUN"`\>
+
+## Properties
+
+| Property | Type | Description | Inherited from |
+| :------ | :------ | :------ | :------ |
+| `buffer` | `Uint8Array` | The buffer that was overrun. | - |
+| `code` | [`ErrorCode`](/content/type-aliases/ErrorCode) | The string error code. | [`quaisError`](/content/interfaces/quaisError).`code` |
+| `error?` | `Error` | Any related error. | [`quaisError`](/content/interfaces/quaisError).`error` |
+| `info?` | `Record`\<`string`, `any`\> | Additional info regarding the error that may be useful.<br /><br />This is generally helpful mostly for human-based debugging. | [`quaisError`](/content/interfaces/quaisError).`info` |
+| `length` | `number` | The length of the buffer. | - |
+| `offset` | `number` | The offset that was requested. | - |
+| `shortMessage` | `string` | A short message describing the error, with minimal additional details. | [`quaisError`](/content/interfaces/quaisError).`shortMessage` |

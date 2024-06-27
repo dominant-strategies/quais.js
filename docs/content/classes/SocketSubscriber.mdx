@@ -1,0 +1,184 @@
+---
+title: SocketSubscriber
+---
+
+A **SocketSubscriber** uses a socket transport to handle events and should use
+[**_emit**](/content/classes/SocketSubscriber#_emit) to manage the events.
+
+- A sub-class MUST call the `_start()` method once connected
+- A sub-class MUST override the `_write(string)` method
+- A sub-class MUST call `_processMessage(string)` for each message
+
+## Extended by
+
+- [`SocketBlockSubscriber`](/content/classes/SocketBlockSubscriber)
+- [`SocketEventSubscriber`](/content/classes/SocketEventSubscriber)
+- [`SocketPendingSubscriber`](/content/classes/SocketPendingSubscriber)
+
+## Implements
+
+- [`Subscriber`](/content/interfaces/Subscriber)
+
+## Constructors
+
+### new SocketSubscriber()
+
+```ts
+new SocketSubscriber(provider, filter): SocketSubscriber
+```
+
+Creates a new **SocketSubscriber** attached to `provider` listening to `filter`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `provider` | [`SocketProvider`](/content/classes/SocketProvider) | The socket provider. |
+| `filter` | `any`[] | The filter. |
+
+#### Returns
+
+[`SocketSubscriber`](/content/classes/SocketSubscriber)
+
+#### Source
+
+[providers/provider-socket.ts:61](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L61)
+
+## Accessors
+
+### filter
+
+```ts
+get filter(): any[]
+```
+
+The filter.
+
+#### Returns
+
+`any`[]
+
+#### Source
+
+[providers/provider-socket.ts:46](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L46)
+
+## Methods
+
+### \_emit()
+
+```ts
+_emit(provider, message): Promise<void>
+```
+
+Sub-classes **must** override this to emit the events on the provider.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `provider` | [`SocketProvider`](/content/classes/SocketProvider) | The socket provider. |
+| `message` | `any` | The message to emit. |
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Abstract
+
+#### Source
+
+[providers/provider-socket.ts:148](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L148)
+
+***
+
+### pause()
+
+```ts
+pause(dropWhilePaused?): void
+```
+
+Pause the subscriber.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `dropWhilePaused`? | `boolean` | Whether to drop logs while paused. |
+
+#### Returns
+
+`void`
+
+#### Implementation of
+
+[`Subscriber`](/content/interfaces/Subscriber).[`pause`](/content/interfaces/Subscriber#pause)
+
+#### Source
+
+[providers/provider-socket.ts:94](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L94)
+
+***
+
+### resume()
+
+```ts
+resume(): void
+```
+
+Resume the subscriber.
+
+#### Returns
+
+`void`
+
+#### Implementation of
+
+[`Subscriber`](/content/interfaces/Subscriber).[`resume`](/content/interfaces/Subscriber#resume)
+
+#### Source
+
+[providers/provider-socket.ts:107](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L107)
+
+***
+
+### start()
+
+```ts
+start(): void
+```
+
+Start the subscriber.
+
+#### Returns
+
+`void`
+
+#### Implementation of
+
+[`Subscriber`](/content/interfaces/Subscriber).[`start`](/content/interfaces/Subscriber#start)
+
+#### Source
+
+[providers/provider-socket.ts:72](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L72)
+
+***
+
+### stop()
+
+```ts
+stop(): void
+```
+
+Stop the subscriber.
+
+#### Returns
+
+`void`
+
+#### Implementation of
+
+[`Subscriber`](/content/interfaces/Subscriber).[`stop`](/content/interfaces/Subscriber#stop)
+
+#### Source
+
+[providers/provider-socket.ts:82](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L82)

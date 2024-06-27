@@ -1,0 +1,29 @@
+---
+title: ethVerifyMessage
+---
+
+```ts
+function ethVerifyMessage(message, sig): string
+```
+
+Return the address of the private key that produced the signature `sig` during signing for `message`.
+
+This is the same as `verifyMessage` except it uses `EthMessagePrefix` instead of `MessagePrefix` and is available for
+broader compatibility with EVM signing practices.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `message` | `string` \| `Uint8Array` | The message that was signed. |
+| `sig` | [`SignatureLike`](/content/type-aliases/SignatureLike) | The signature to verify. |
+
+## Returns
+
+`string`
+
+The address of the signer.
+
+## Source
+
+[hash/message.ts:97](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/message.ts#L97)

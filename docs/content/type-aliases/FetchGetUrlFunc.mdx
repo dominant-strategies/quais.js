@@ -1,0 +1,26 @@
+---
+title: FetchGetUrlFunc
+---
+
+```ts
+type FetchGetUrlFunc: (req, signal?) => Promise<GetUrlResponse>;
+```
+
+Used to perform a fetch; use this to override the underlying network fetch layer. In NodeJS, the default uses the
+"http" and "https" libraries and in the browser `fetch` is used. If you wish to use Axios, this is how you would
+register it.
+
+## Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `req` | [`FetchRequest`](/content/classes/FetchRequest) |
+| `signal`? | `FetchCancelSignal` |
+
+## Returns
+
+`Promise`\<[`GetUrlResponse`](/content/type-aliases/GetUrlResponse)\>
+
+## Source
+
+[utils/fetch.ts:82](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fetch.ts#L82)

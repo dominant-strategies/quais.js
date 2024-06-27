@@ -1,0 +1,30 @@
+---
+title: Addressable
+---
+
+An interface for objects which have an address, and can resolve it asyncronously.
+
+This allows objects such as [Signer](Signer) or [Contract](../classes/Contract) to be used most places an address can
+be, for example getting the [balance](../interfaces/Provider#getBalance).
+
+## Extended by
+
+- [`Signer`](/content/interfaces/Signer)
+
+## Methods
+
+### getAddress()
+
+```ts
+getAddress(): Promise<string>
+```
+
+Get the object address.
+
+#### Returns
+
+`Promise`\<`string`\>
+
+#### Source
+
+[address/index.ts:24](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/address/index.ts#L24)

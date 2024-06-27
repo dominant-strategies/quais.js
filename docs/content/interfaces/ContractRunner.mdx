@@ -1,0 +1,25 @@
+---
+title: ContractRunner
+---
+
+A **ContractRunner** is a generic interface which defines an object capable of interacting with a Contract on the
+network.
+
+The more operations supported, the more utility it is capable of.
+
+The most common ContractRunners are [Providers](../classes/Provider) which enable read-only access and
+[Signers](../classes/Signer) which enable write-access.
+
+## Extended by
+
+- [`Provider`](/content/interfaces/Provider)
+- [`Signer`](/content/interfaces/Signer)
+
+## Properties
+
+| Property | Type | Description |
+| :------ | :------ | :------ |
+| `call?` | (`tx`: `QuaiTransactionRequest`) => `Promise`\<`string`\> | Required for pure, view or static calls to contracts. |
+| `estimateGas?` | (`tx`: [`TransactionRequest`](/content/type-aliases/TransactionRequest)) => `Promise`\<`bigint`\> | Required to estimate gas. |
+| `provider` | `null` \| [`Provider`](/content/interfaces/Provider) | The provider used for necessary state querying operations.<br /><br />This can also point to the **ContractRunner** itself, in the case of an<br />[AbstractProvider](../classes/AbstractProvider). |
+| `sendTransaction?` | (`tx`: [`TransactionRequest`](/content/type-aliases/TransactionRequest)) => `Promise`\<[`TransactionResponse`](/content/type-aliases/TransactionResponse)\> | Required for state mutating calls |

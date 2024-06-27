@@ -1,0 +1,36 @@
+---
+title: solidityPackedSha256
+---
+
+```ts
+function solidityPackedSha256(types, values): string
+```
+
+Computes the [Non-Standard Packed
+Mode](https://docs.soliditylang.org/en/v0.8.14/abi-spec.html#non-standard-packed-mode) [sha256](../functions/sha256)
+hash of `values` respectively to their `types`.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `types` | readonly `string`[] | The types of the values. |
+| `values` | readonly `any`[] | The values to hash. |
+
+## Returns
+
+`string`
+
+The hash of the packed values.
+
+## Example
+
+```ts
+addr = '0x8ba1f109551bd432803012645ac136ddd64dba72';
+solidityPackedSha256(['address', 'uint'], [addr, 45]);
+//_result:
+```
+
+## Source
+
+[hash/solidity.ts:169](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/solidity.ts#L169)

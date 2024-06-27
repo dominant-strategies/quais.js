@@ -1,0 +1,70 @@
+---
+title: isError
+---
+
+```ts
+function isError<K, T>(error, code): error is T
+```
+
+Returns true if the `error` matches an error thrown by quais that matches the error `code`.
+
+In TypeScript environments, this can be used to check that `error` matches an quaisError type, which means the
+expected properties will be set.
+
+## Type parameters
+
+| Type parameter |
+| :------ |
+| `K` *extends* [`ErrorCode`](/content/type-aliases/ErrorCode) |
+| `T` *extends* 
+  \| [`UnknownError`](/content/interfaces/UnknownError)
+  \| [`InvalidArgumentError`](/content/interfaces/InvalidArgumentError)
+  \| [`BadDataError`](/content/interfaces/BadDataError)
+  \| [`NotImplementedError`](/content/interfaces/NotImplementedError)
+  \| [`UnsupportedOperationError`](/content/interfaces/UnsupportedOperationError)
+  \| [`NetworkError`](/content/interfaces/NetworkError)
+  \| [`ServerError`](/content/interfaces/ServerError)
+  \| [`TimeoutError`](/content/interfaces/TimeoutError)
+  \| [`CancelledError`](/content/interfaces/CancelledError)
+  \| [`BufferOverrunError`](/content/interfaces/BufferOverrunError)
+  \| [`NumericFaultError`](/content/interfaces/NumericFaultError)
+  \| [`MissingArgumentError`](/content/interfaces/MissingArgumentError)
+  \| [`UnexpectedArgumentError`](/content/interfaces/UnexpectedArgumentError)
+  \| [`CallExceptionError`](/content/interfaces/CallExceptionError)
+  \| [`InsufficientFundsError`](/content/interfaces/InsufficientFundsError)
+  \| [`NonceExpiredError`](/content/interfaces/NonceExpiredError)
+  \| [`ReplacementUnderpricedError`](/content/interfaces/ReplacementUnderpricedError)
+  \| [`TransactionReplacedError`](/content/interfaces/TransactionReplacedError)
+  \| [`ActionRejectedError`](/content/interfaces/ActionRejectedError) |
+
+## Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `error` | `any` |
+| `code` | `K` |
+
+## Returns
+
+`error is T`
+
+## Example
+
+```ts
+try {
+    // code....
+} catch (e) {
+    if (isError(e, 'CALL_EXCEPTION')) {
+        // The Type Guard has validated this object
+        console.log(e.data);
+    }
+}
+```
+
+## See
+
+[ErrorCodes](api:ErrorCode)
+
+## Source
+
+[utils/errors.ts:647](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/errors.ts#L647)

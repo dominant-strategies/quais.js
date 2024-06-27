@@ -1,0 +1,26 @@
+---
+title: recoverAddress
+---
+
+```ts
+function recoverAddress(digest, signature): string
+```
+
+Returns the recovered address for the private key that was used to sign `digest` that resulted in `signature`.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `digest` | [`BytesLike`](/content/type-aliases/BytesLike) | The digest of the message. |
+| `signature` | [`SignatureLike`](/content/type-aliases/SignatureLike) | The signature. |
+
+## Returns
+
+`string`
+
+The address.
+
+## Source
+
+[address/address.ts:129](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/address/address.ts#L129)

@@ -1,0 +1,53 @@
+---
+title: pbkdf2
+---
+
+```ts
+function pbkdf2(
+   _password, 
+   _salt, 
+   iterations, 
+   keylen, 
+   algo): string
+```
+
+Return the [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2) for `keylen` bytes for `password` using the `salt` and
+using `iterations` of `algo`.
+
+This PBKDF is outdated and should not be used in new projects, but is required to decrypt older files.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `_password` | [`BytesLike`](/content/type-aliases/BytesLike) | The password to use. |
+| `_salt` | [`BytesLike`](/content/type-aliases/BytesLike) | The salt to use. |
+| `iterations` | `number` | The number of iterations to use. |
+| `keylen` | `number` | The length of the key to generate. |
+| `algo` | `"sha256"` \| `"sha512"` | The algorithm to use. |
+
+## Returns
+
+`string`
+
+The key derived from the password.
+
+## Example
+
+```ts
+// The password must be converted to bytes, and it is generally
+// best practices to ensure the string has been normalized. Many
+// formats explicitly indicate the normalization form to use.
+password = 'hello';
+passwordBytes = toUtf8Bytes(password, 'NFKC');
+
+salt = id('some-salt');
+
+// Compute the PBKDF2
+pbkdf2(passwordBytes, salt, 1024, 16, 'sha256');
+//_result:
+```
+
+## Source
+
+[crypto/pbkdf2.ts:57](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/pbkdf2.ts#L57)

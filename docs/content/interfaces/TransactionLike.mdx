@@ -1,0 +1,14 @@
+---
+title: TransactionLike
+---
+
+A **TransactionLike** is a JSON representation of a transaction.
+
+## Properties
+
+| Property | Type | Description |
+| :------ | :------ | :------ |
+| `chainId?` | `null` \| [`BigNumberish`](/content/type-aliases/BigNumberish) | The chain ID the transaction is valid on. |
+| `hash?` | `null` \| `string` | The hash of the transaction. |
+| `signature?` | `null` \| [`SignatureLike`](/content/type-aliases/SignatureLike) | The signature for the transaction |
+| `type` | `null` \| `number` | The type. |

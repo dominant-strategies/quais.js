@@ -1,0 +1,107 @@
+---
+title: Result
+---
+
+A [**Result**](/content/classes/Result) is a sub-class of Array, which allows accessing any of its values either positionally by
+its index or, if keys are provided by its name.
+
+## Extends
+
+- `Array`\<`any`\>
+
+## Methods
+
+### getValue()
+
+```ts
+getValue(name): any
+```
+
+Returns the value for `name`.
+
+Since it is possible to have a key whose name conflicts with a method on a [**Result**](/content/classes/Result) or its
+superclass Array, or any JavaScript keyword, this ensures all named values are still accessible by name.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `name` | `string` | The name of the value to retrieve. |
+
+#### Returns
+
+`any`
+
+The value for `name`.
+
+#### Source
+
+[abi/coders/abstract-coder.ts:270](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/coders/abstract-coder.ts#L270)
+
+***
+
+### toArray()
+
+```ts
+toArray(): any[]
+```
+
+Returns the Result as a normal Array.
+
+This will throw if there are any outstanding deferred errors.
+
+#### Returns
+
+`any`[]
+
+#### Source
+
+[abi/coders/abstract-coder.ts:149](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/coders/abstract-coder.ts#L149)
+
+***
+
+### toObject()
+
+```ts
+toObject(): Record<string, any>
+```
+
+Returns the Result as an Object with each name-value pair.
+
+This will throw if any value is unnamed, or if there are any outstanding deferred errors.
+
+#### Returns
+
+`Record`\<`string`, `any`\>
+
+#### Source
+
+[abi/coders/abstract-coder.ts:165](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/coders/abstract-coder.ts#L165)
+
+***
+
+### fromItems()
+
+```ts
+static fromItems(items, keys?): Result
+```
+
+Creates a new [**Result**](/content/classes/Result) for `items` with each entry also accessible by its corresponding name in
+`keys`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `items` | `any`[] | The items to include in the Result. |
+| `keys`? | (`null` \| `string`)[] | The names for each item in `items`. |
+
+#### Returns
+
+[`Result`](/content/classes/Result)
+
+The new Result.
+
+#### Source
+
+[abi/coders/abstract-coder.ts:294](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/coders/abstract-coder.ts#L294)

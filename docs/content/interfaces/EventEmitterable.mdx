@@ -1,0 +1,239 @@
+---
+title: EventEmitterable
+---
+
+An **EventEmitterable** behaves similar to an EventEmitter except provides async access to its methods.
+
+An EventEmitter implements the observer pattern.
+
+## Extended by
+
+- [`Provider`](/content/interfaces/Provider)
+
+## Type parameters
+
+| Type parameter |
+| :------ |
+| `T` |
+
+## Methods
+
+### addListener()
+
+```ts
+addListener(event, listener): Promise<EventEmitterable<T>>
+```
+
+Alias for [**on**](/content/interfaces/EventEmitterable#on).
+
+#### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `event` | `T` |
+| `listener` | [`Listener`](/content/type-aliases/Listener) |
+
+#### Returns
+
+`Promise`\<[`EventEmitterable`](/content/interfaces/EventEmitterable)\<`T`\>\>
+
+#### Source
+
+[utils/events.ts:60](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L60)
+
+***
+
+### emit()
+
+```ts
+emit(event, ...args): Promise<boolean>
+```
+
+Triggers each listener for `event` with the `args`.
+
+#### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `event` | `T` |
+| ...`args` | `any`[] |
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+#### Source
+
+[utils/events.ts:35](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L35)
+
+***
+
+### listenerCount()
+
+```ts
+listenerCount(event?): Promise<number>
+```
+
+Resolves to the number of listeners for `event`.
+
+#### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `event`? | `T` |
+
+#### Returns
+
+`Promise`\<`number`\>
+
+#### Source
+
+[utils/events.ts:40](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L40)
+
+***
+
+### listeners()
+
+```ts
+listeners(event?): Promise<Listener[]>
+```
+
+Resolves to the listeners for `event`.
+
+#### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `event`? | `T` |
+
+#### Returns
+
+`Promise`\<[`Listener`](/content/type-aliases/Listener)[]\>
+
+#### Source
+
+[utils/events.ts:45](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L45)
+
+***
+
+### off()
+
+```ts
+off(event, listener?): Promise<EventEmitterable<T>>
+```
+
+Unregister the `listener` for `event`. If `listener` is unspecified, all listeners are unregistered.
+
+#### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `event` | `T` |
+| `listener`? | [`Listener`](/content/type-aliases/Listener) |
+
+#### Returns
+
+`Promise`\<[`EventEmitterable`](/content/interfaces/EventEmitterable)\<`T`\>\>
+
+#### Source
+
+[utils/events.ts:50](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L50)
+
+***
+
+### on()
+
+```ts
+on(event, listener): Promise<EventEmitterable<T>>
+```
+
+Registers a `listener` that is called whenever the `event` occurs until unregistered.
+
+#### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `event` | `T` |
+| `listener` | [`Listener`](/content/type-aliases/Listener) |
+
+#### Returns
+
+`Promise`\<[`EventEmitterable`](/content/interfaces/EventEmitterable)\<`T`\>\>
+
+#### Source
+
+[utils/events.ts:25](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L25)
+
+***
+
+### once()
+
+```ts
+once(event, listener): Promise<EventEmitterable<T>>
+```
+
+Registers a `listener` that is called the next time `event` occurs.
+
+#### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `event` | `T` |
+| `listener` | [`Listener`](/content/type-aliases/Listener) |
+
+#### Returns
+
+`Promise`\<[`EventEmitterable`](/content/interfaces/EventEmitterable)\<`T`\>\>
+
+#### Source
+
+[utils/events.ts:30](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L30)
+
+***
+
+### removeAllListeners()
+
+```ts
+removeAllListeners(event?): Promise<EventEmitterable<T>>
+```
+
+Unregister all listeners for `event`.
+
+#### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `event`? | `T` |
+
+#### Returns
+
+`Promise`\<[`EventEmitterable`](/content/interfaces/EventEmitterable)\<`T`\>\>
+
+#### Source
+
+[utils/events.ts:55](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L55)
+
+***
+
+### removeListener()
+
+```ts
+removeListener(event, listener): Promise<EventEmitterable<T>>
+```
+
+Alias for [**off**](/content/interfaces/EventEmitterable#off).
+
+#### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `event` | `T` |
+| `listener` | [`Listener`](/content/type-aliases/Listener) |
+
+#### Returns
+
+`Promise`\<[`EventEmitterable`](/content/interfaces/EventEmitterable)\<`T`\>\>
+
+#### Source
+
+[utils/events.ts:65](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L65)

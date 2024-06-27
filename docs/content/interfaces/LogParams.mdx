@@ -1,0 +1,19 @@
+---
+title: LogParams
+---
+
+A **LogParams** encodes the minimal required properties for a formatted log.
+
+## Properties
+
+| Property | Type | Description |
+| :------ | :------ | :------ |
+| `address` | `string` | The address of the contract that emitted this log. |
+| `blockHash` | `string` | The block hash of the block that included the transaction for this log. |
+| `blockNumber` | `number` | The block number of the block that included the transaction for this log. |
+| `data` | `string` | The data emitted with this log. |
+| `index` | `number` | The index of this log. |
+| `removed` | `boolean` | Whether this log was removed due to the transaction it was included in being removed dur to an orphaned block. |
+| `topics` | readonly `string`[] | The topics emitted with this log. |
+| `transactionHash` | `string` | The transaction hash for the transaxction the log occurred in. |
+| `transactionIndex` | `number` | The transaction index of this log. |

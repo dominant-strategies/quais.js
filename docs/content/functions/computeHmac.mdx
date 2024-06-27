@@ -1,0 +1,45 @@
+---
+title: computeHmac
+---
+
+```ts
+function computeHmac(
+   algorithm, 
+   _key, 
+   _data): string
+```
+
+Return the HMAC for `data` using the `key` key with the underlying `algo` used for compression.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `algorithm` | `"sha256"` \| `"sha512"` | The algorithm to use for compression. |
+| `_key` | [`BytesLike`](/content/type-aliases/BytesLike) | The key to use for the HMAC. |
+| `_data` | [`BytesLike`](/content/type-aliases/BytesLike) | The data to authenticate. |
+
+## Returns
+
+`string`
+
+The HMAC of the data.
+
+## Example
+
+```js
+key = id('some-secret');
+
+// Compute the HMAC
+computeHmac('sha256', key, '0x1337');
+//_result:
+
+// To compute the HMAC of UTF-8 data, the data must be
+// converted to UTF-8 bytes
+computeHmac('sha256', key, toUtf8Bytes('Hello World'));
+//_result:
+```
+
+## Source
+
+[crypto/hmac.ts:44](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/hmac.ts#L44)

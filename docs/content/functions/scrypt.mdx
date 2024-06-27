@@ -1,0 +1,68 @@
+---
+title: scrypt
+---
+
+```ts
+function scrypt(
+   _passwd, 
+   _salt, 
+   N, 
+   r, 
+   p, 
+   dkLen, 
+progress?): Promise<string>
+```
+
+The [scrypt PBKDF](https://en.wikipedia.org/wiki/Scrypt) uses a memory and cpu hard method of derivation to increase
+the resource cost to brute-force a password for a given key.
+
+This means this algorithm is intentionally slow, and can be tuned to become slower. As computation and memory speed
+improve over time, increasing the difficulty maintains the cost of an attacker.
+
+For example, if a target time of 5 seconds is used, a legitimate user which knows their password requires only 5
+seconds to unlock their account. A 6 character password has 68 billion possibilities, which would require an attacker
+to invest over 10,000 years of CPU time. This is of course a crude example (as password generally aren't random), but
+demonstrates to value of imposing large costs to decryption.
+
+For this reason, if building a UI which involved decrypting or encrypting datsa using scrypt, it is recommended to
+use a [**ProgressCallback**](../types-aliases/ProgressCallback) (as event short periods can seem lik an eternity if
+the UI freezes). Including the phrase //"decrypting"// in the UI can also help, assuring the user their waiting is
+for a good reason.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `_passwd` | [`BytesLike`](/content/type-aliases/BytesLike) | The password to use. |
+| `_salt` | [`BytesLike`](/content/type-aliases/BytesLike) | The salt to use. |
+| `N` | `number` | The CPU/memory cost parameter. |
+| `r` | `number` | The block size parameter. |
+| `p` | `number` | The parallelization parameter. |
+| `dkLen` | `number` | The length of the key to generate. |
+| `progress`? | [`ProgressCallback`](/content/type-aliases/ProgressCallback) | A callback to update the progress. |
+
+## Returns
+
+`Promise`\<`string`\>
+
+The key derived from the password.
+
+## Example
+
+```ts
+// The password must be converted to bytes, and it is generally
+// best practices to ensure the string has been normalized. Many
+// formats explicitly indicate the normalization form to use.
+password = 'hello';
+passwordBytes = toUtf8Bytes(password, 'NFKC');
+
+salt = id('some-salt');
+
+// Compute the scrypt
+scrypt(passwordBytes, salt, 1024, 8, 1, 16);
+//_result:
+```
+
+## Source
+
+[crypto/scrypt.ts:90](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/scrypt.ts#L90)

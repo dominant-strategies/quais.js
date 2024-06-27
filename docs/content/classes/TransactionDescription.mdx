@@ -1,0 +1,17 @@
+---
+title: TransactionDescription
+---
+
+When using the [**Interface.parseTransaction**](/content/classes/Interface#parsetransaction) to automatically match a
+transaction data to its function for parsing, a **TransactionDescription** is returned.
+
+## Properties
+
+| Property | Modifier | Type | Description |
+| :------ | :------ | :------ | :------ |
+| `args` | `readonly` | [`Result`](/content/classes/Result) | The arguments passed to the Function from the transaction `data`. |
+| `fragment` | `readonly` | [`FunctionFragment`](/content/classes/FunctionFragment) | The matching fragment from the transaction `data`. |
+| `name` | `readonly` | `string` | The name of the Function from the transaction `data`. |
+| `selector` | `readonly` | `string` | The selector for the Function from the transaction `data`. |
+| `signature` | `readonly` | `string` | The full Function signature from the transaction `data`. |
+| `value` | `readonly` | `bigint` | The `value` (in wei) from the transaction. |

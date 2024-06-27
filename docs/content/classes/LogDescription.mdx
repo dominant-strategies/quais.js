@@ -1,0 +1,16 @@
+---
+title: LogDescription
+---
+
+When using the [**Interface.parseLog**](/content/classes/Interface#parselog) to automatically match a Log to its event for
+parsing, a **LogDescription** is returned.
+
+## Properties
+
+| Property | Modifier | Type | Description |
+| :------ | :------ | :------ | :------ |
+| `args` | `readonly` | [`Result`](/content/classes/Result) | The arguments passed into the Event with `emit`. |
+| `fragment` | `readonly` | [`EventFragment`](/content/classes/EventFragment) | The matching fragment for the `topic0`. |
+| `name` | `readonly` | `string` | The name of the Event. |
+| `signature` | `readonly` | `string` | The full Event signature. |
+| `topic` | `readonly` | `string` | The topic hash for the Event. |
