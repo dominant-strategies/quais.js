@@ -254,3 +254,82 @@ export interface TestCaseWordlist {
     locale: string;
     content: string;
 }
+
+/////////////////////////////
+// zones
+
+export enum Zone {
+    Cyprus1 = '0x00',
+    Cyprus2 = '0x01',
+    Cyprus3 = '0x02',
+    Paxos1 = '0x10',
+    Paxos2 = '0x11',
+    Paxos3 = '0x12',
+    Hydra1 = '0x20',
+    Hydra2 = '0x21',
+    Hydra3 = '0x22',
+}
+
+/////////////////////////////
+// HDWallets
+
+export interface addressInfo {
+    pubKey: string;
+    address: string;
+    account: number;
+    index: number;
+    change: boolean;
+    zone: Zone;
+}
+
+export interface TestCaseQuaiSerialization {
+    name: string;
+    mnemonic: string;
+    zone: Zone;
+    account: number;
+    totalAddresses: number;
+    serialized: {
+        version: number;
+        phrase: string;
+        coinType: number;
+        addresses: Array<addressInfo>;
+    };
+}
+
+export interface TestCaseQuaiTransaction {
+    name: string;
+    mnemonic: string;
+    zone: Zone;
+    account: number;
+    transaction: TestCaseTransactionTx;
+    privateKey: string;
+    signed: string;
+}
+
+export interface TestCaseQuaiAddresses {
+    name: string;
+    mnemonic: string;
+    params: Array<{
+        account: number;
+        zone: Zone;
+    }>;
+    expectedAddresses: Array<addressInfo>;
+}
+
+export interface TestCaseQuaiTypedData {
+    name: string;
+    mnemonic: string;
+    domain: TestCaseTypedDataDomain;
+    types: Record<string, Array<TestCaseTypedDataType>>;
+    data: any;
+    digest: string;
+    signature: string;
+}
+
+export interface TestCaseQuaiMessageSign {
+    name: string;
+    mnemonic: string;
+    message: string;
+    digest: string;
+    signature: string;
+}
