@@ -1,4 +1,4 @@
-name: Deploy to Garden
+name: Prerelease
 on: workflow_dispatch
 jobs:
   call-common-workflow:
