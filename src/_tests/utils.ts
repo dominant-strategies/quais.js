@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
+import { Zone } from './types.js';
 
 // Find the package root (based on the nyc output/ folder)
 const root = (function () {
@@ -137,3 +138,28 @@ export class Stats {
 
 export const stats = new Stats(_guard);
 */
+
+export function convertToZone(zoneString: string): Zone {
+    switch (zoneString) {
+        case '0x00':
+            return Zone.Cyprus1;
+        case '0x01':
+            return Zone.Cyprus2;
+        case '0x02':
+            return Zone.Cyprus3;
+        case '0x10':
+            return Zone.Paxos1;
+        case '0x11':
+            return Zone.Paxos2;
+        case '0x12':
+            return Zone.Paxos3;
+        case '0x20':
+            return Zone.Hydra1;
+        case '0x21':
+            return Zone.Hydra2;
+        case '0x22':
+            return Zone.Hydra3;
+        default:
+            throw new Error(`Invalid zone string: ${zoneString}`);
+    }
+}
