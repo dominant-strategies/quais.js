@@ -108,3 +108,23 @@ jobs:
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/dominant-strategies/quais-docs/pulls \
             -d '{"title":"Update Documentation","head":"'"$PR_BRANCH"'","base":"main","body":"This PR updates the documentation."}'
+
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.GH_PAT }}" > ~/.ssh/id_key
+          chmod 600 ~/.ssh/id_key
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_key
+
+      - name: Create Pull Request
+        run: |
+          PR_BRANCH=${{ needs.get-branch.outputs.branch }}
+          gh pr create --title "Update Documentation" --body "This PR updates the documentation." --head $PR_BRANCH --base main
+
+      - name: Remove SSH key
+        run: |
+          rm ~/.ssh/id_key
+          rm ~/.ssh/known_hosts
+          
