@@ -1,0 +1,26 @@
+---
+title: isBytesLike
+---
+
+```ts
+function isBytesLike(value): value is BytesLike
+```
+
+Returns true if `value` is a valid representation of arbitrary data (i.e. a valid
+DataHexString | **DataHexString** or a Uint8Array).
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | `any` | The value to check. |
+
+## Returns
+
+`value is BytesLike`
+
+True if the value is a valid DataHexString | **DataHexString**.
+
+## Source
+
+[utils/data.ts:126](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/data.ts#L126)

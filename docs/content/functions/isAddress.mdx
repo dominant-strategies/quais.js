@@ -1,0 +1,37 @@
+---
+title: isAddress
+---
+
+```ts
+function isAddress(value): value is string
+```
+
+Returns true if `value` is a valid address.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | `any` | The value to check. |
+
+## Returns
+
+`value is string`
+
+True if the value is a valid address.
+
+## Example
+
+```js
+// Valid address
+isAddress('0x8ba1f109551bD432803012645Ac136ddd64DBA72');
+//_result:
+
+// Invalid checksum
+isAddress('0x8Ba1f109551bD432803012645Ac136ddd64DBa72');
+//_result:
+```
+
+## Source
+
+[address/checks.ts:52](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/address/checks.ts#L52)

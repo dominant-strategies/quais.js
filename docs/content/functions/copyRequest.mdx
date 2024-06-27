@@ -1,0 +1,29 @@
+---
+title: copyRequest
+---
+
+```ts
+function copyRequest(req): PreparedTransactionRequest
+```
+
+Returns a copy of `req` with all properties coerced to their strict types.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `req` | [`TransactionRequest`](/content/type-aliases/TransactionRequest) | The transaction request to copy. |
+
+## Returns
+
+[`PreparedTransactionRequest`](/content/type-aliases/PreparedTransactionRequest)
+
+The prepared transaction request.
+
+## Throws
+
+If the request is invalid.
+
+## Source
+
+[providers/provider.ts:410](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L410)

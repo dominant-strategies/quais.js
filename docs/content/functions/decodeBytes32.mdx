@@ -1,0 +1,29 @@
+---
+title: decodeBytes32
+---
+
+```ts
+function decodeBytes32(_bytes): string
+```
+
+Decodes a Bytes32-encoded string into a regular string. This is used to decode ABI-encoded data.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `_bytes` | [`BytesLike`](/content/type-aliases/BytesLike) | The Bytes32-encoded data. |
+
+## Returns
+
+`string`
+
+The decoded string.
+
+## Throws
+
+If the input is not exactly 32 bytes long or lacks a null terminator.
+
+## Source
+
+[encoding/bytes32.ts:43](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/encoding/bytes32.ts#L43)

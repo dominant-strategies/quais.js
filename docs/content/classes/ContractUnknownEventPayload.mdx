@@ -1,0 +1,110 @@
+---
+title: ContractUnknownEventPayload
+---
+
+A **ContractUnknownEventPayload** is included as the last parameter to Contract Events when the event does not match
+any events in the ABI.
+
+## Extends
+
+- [`EventPayload`](/content/classes/EventPayload)\<[`ContractEventName`](/content/type-aliases/ContractEventName)\>
+
+## Extended by
+
+- [`ContractEventPayload`](/content/classes/ContractEventPayload)
+
+## Properties
+
+| Property | Modifier | Type | Description | Inherited from |
+| :------ | :------ | :------ | :------ | :------ |
+| `emitter` | `readonly` | [`EventEmitterable`](/content/interfaces/EventEmitterable)\<[`ContractEventName`](/content/type-aliases/ContractEventName)\> | The **EventEmitterable**. | [`EventPayload`](/content/classes/EventPayload).`emitter` |
+| `filter` | `readonly` | [`ContractEventName`](/content/type-aliases/ContractEventName) | The event filter. | [`EventPayload`](/content/classes/EventPayload).`filter` |
+| `log` | `readonly` | [`Log`](/content/classes/Log) | The log with no matching events. | - |
+
+## Methods
+
+### getBlock()
+
+```ts
+getBlock(shard): Promise<Block>
+```
+
+Resolves to the block the event occured in.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `shard` | [`Shard`](/content/enumerations/Shard) | The shard to get the block from. |
+
+#### Returns
+
+`Promise`\<[`Block`](/content/classes/Block)\>
+
+A promise resolving to the block the event occured in.
+
+#### Source
+
+[contract/wrappers.ts:178](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/wrappers.ts#L178)
+
+***
+
+### getTransaction()
+
+```ts
+getTransaction(): Promise<TransactionResponse>
+```
+
+Resolves to the transaction the event occured in.
+
+#### Returns
+
+`Promise`\<[`TransactionResponse`](/content/type-aliases/TransactionResponse)\>
+
+A promise resolving to the transaction the event occured in.
+
+#### Source
+
+[contract/wrappers.ts:187](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/wrappers.ts#L187)
+
+***
+
+### getTransactionReceipt()
+
+```ts
+getTransactionReceipt(): Promise<TransactionReceipt>
+```
+
+Resolves to the transaction receipt the event occured in.
+
+#### Returns
+
+`Promise`\<[`TransactionReceipt`](/content/classes/TransactionReceipt)\>
+
+A promise resolving to the transaction receipt the event occured in.
+
+#### Source
+
+[contract/wrappers.ts:196](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/wrappers.ts#L196)
+
+***
+
+### removeListener()
+
+```ts
+removeListener(): Promise<void>
+```
+
+Unregister the triggered listener for future events.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Inherited from
+
+[`EventPayload`](/content/classes/EventPayload).[`removeListener`](/content/classes/EventPayload#removelistener)
+
+#### Source
+
+[utils/events.ts:99](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L99)

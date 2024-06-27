@@ -1,0 +1,563 @@
+---
+title: Contract
+---
+
+A [**BaseContract**](/content/classes/BaseContract) with no type guards on its methods or events.
+
+## Extends
+
+- [`BaseContract`](/content/classes/BaseContract)\<`this`\> & `Omit`\<[`ContractInterface`](/content/interfaces/ContractInterface), keyof [`BaseContract`](/content/classes/BaseContract)\>
+
+## Properties
+
+| Property | Modifier | Type | Description | Inherited from |
+| :------ | :------ | :------ | :------ | :------ |
+| `fallback` | `readonly` | `null` \| [`WrappedFallback`](/content/interfaces/WrappedFallback) | The fallback or receive function if any. | `_ContractBase().fallback` |
+| `filters` | `readonly` | `Record`\<`string`, [`ContractEvent`](/content/interfaces/ContractEvent)\<`any`[]\>\> | All the Events available on this contract. | `_ContractBase().filters` |
+| `interface` | `readonly` | [`Interface`](/content/classes/Interface) | The contract Interface. | `_ContractBase().interface` |
+| `runner` | `readonly` | `null` \| [`ContractRunner`](/content/interfaces/ContractRunner) | The connected runner. This is generally a [**Provider**](../interfaces/Provider) or a<br />[**Signer**](../interfaces/Signer), which dictates what operations are supported.<br /><br />For example, a **Contract** connected to a [**Provider**](../interfaces/Provider) may only execute read-only<br />operations. | `_ContractBase().runner` |
+| `target` | `readonly` | `string` \| [`Addressable`](/content/interfaces/Addressable) | The target to connect to.<br /><br />This can be an address or any [Addressable](../interfaces/Addressable), such as another contract. To get the<br />resolved address, use the `getAddress` method. | `_ContractBase().target` |
+
+## Methods
+
+### addListener()
+
+```ts
+addListener(event, listener): Promise<Contract>
+```
+
+Alias for [**on**](/content/classes/BaseContract#on).
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `event` | [`ContractEventName`](/content/type-aliases/ContractEventName) | The event to listen for. |
+| `listener` | [`Listener`](/content/type-aliases/Listener) | The listener to call when the event is emitted. |
+
+#### Returns
+
+`Promise`\<[`Contract`](/content/classes/Contract)\>
+
+#### Inherited from
+
+`_ContractBase().addListener`
+
+#### Source
+
+[contract/contract.ts:1466](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1466)
+
+***
+
+### attach()
+
+```ts
+attach(target): BaseContract
+```
+
+Return a new Contract instance with the same ABI and runner, but a different `target`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `target` | `string` \| [`Addressable`](/content/interfaces/Addressable) | The target to connect to. |
+
+#### Returns
+
+[`BaseContract`](/content/classes/BaseContract)
+
+The new contract instance.
+
+#### Inherited from
+
+`_ContractBase().attach`
+
+#### Source
+
+[contract/contract.ts:1134](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1134)
+
+***
+
+### connect()
+
+```ts
+connect(runner): BaseContract
+```
+
+Return a new Contract instance with the same target and ABI, but a different `runner`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `runner` | `null` \| [`ContractRunner`](/content/interfaces/ContractRunner) | The runner to use. |
+
+#### Returns
+
+[`BaseContract`](/content/classes/BaseContract)
+
+The new contract instance.
+
+#### Inherited from
+
+`_ContractBase().connect`
+
+#### Source
+
+[contract/contract.ts:1124](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1124)
+
+***
+
+### deploymentTransaction()
+
+```ts
+deploymentTransaction(): null | ContractTransactionResponse
+```
+
+Return the transaction used to deploy this contract.
+
+This is only available if this instance was returned from a [**ContractFactor**](../classes/ContractFactory).
+
+#### Returns
+
+`null` \| [`ContractTransactionResponse`](/content/classes/ContractTransactionResponse)
+
+The transaction used to deploy this contract or `null`.
+
+#### Inherited from
+
+`_ContractBase().deploymentTransaction`
+
+#### Source
+
+[contract/contract.ts:1215](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1215)
+
+***
+
+### emit()
+
+```ts
+emit(event, ...args): Promise<boolean>
+```
+
+Emit an `event` calling all listeners with `args`.
+
+Resolves to `true` if any listeners were called.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `event` | [`ContractEventName`](/content/type-aliases/ContractEventName) | The event to emit. |
+| ...`args` | `any`[] | The arguments to pass to the listeners. |
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+`true` if any listeners were called.
+
+#### Inherited from
+
+`_ContractBase().emit`
+
+#### Source
+
+[contract/contract.ts:1351](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1351)
+
+***
+
+### getAddress()
+
+```ts
+getAddress(): Promise<string>
+```
+
+Return the resolved address of this Contract.
+
+#### Returns
+
+`Promise`\<`string`\>
+
+The resolved address.
+
+#### Inherited from
+
+`_ContractBase().getAddress`
+
+#### Source
+
+[contract/contract.ts:1143](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1143)
+
+***
+
+### getDeployedCode()
+
+```ts
+getDeployedCode(): Promise<null | string>
+```
+
+Return the deployed bytecode or null if no bytecode is found.
+
+#### Returns
+
+`Promise`\<`null` \| `string`\>
+
+The deployed bytecode or null.
+
+#### Inherited from
+
+`_ContractBase().getDeployedCode`
+
+#### Throws
+
+If the runner does not support .provider.
+
+#### Source
+
+[contract/contract.ts:1153](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1153)
+
+***
+
+### getEvent()
+
+```ts
+getEvent(key): ContractEvent<any[]>
+```
+
+Return the event for a given name. This is useful when a contract event name conflicts with a JavaScript name
+such as `prototype` or when using a Contract programatically.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `key` | `string` \| [`EventFragment`](/content/classes/EventFragment) | The name of the event to return. |
+
+#### Returns
+
+[`ContractEvent`](/content/interfaces/ContractEvent)\<`any`[]\>
+
+The event for the given name.
+
+#### Inherited from
+
+`_ContractBase().getEvent`
+
+#### Source
+
+[contract/contract.ts:1243](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1243)
+
+***
+
+### getFunction()
+
+```ts
+getFunction<T>(key): T
+```
+
+Return the function for a given name. This is useful when a contract method name conflicts with a JavaScript name
+such as `prototype` or when using a Contract programatically.
+
+#### Type parameters
+
+| Type parameter | Value |
+| :------ | :------ |
+| `T` *extends* [`ContractMethod`](/content/interfaces/ContractMethod)\<`any`[], `any`, `any`, `T`\> | [`ContractMethod`](/content/interfaces/ContractMethod)\<`any`[], `any`, `any`\> |
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `key` | `string` \| [`FunctionFragment`](/content/classes/FunctionFragment) | The name of the function to return. |
+
+#### Returns
+
+`T`
+
+The function for the given name.
+
+#### Inherited from
+
+`_ContractBase().getFunction`
+
+#### Source
+
+[contract/contract.ts:1227](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1227)
+
+***
+
+### listenerCount()
+
+```ts
+listenerCount(event?): Promise<number>
+```
+
+Resolves to the number of listeners of `event` or the total number of listeners if unspecified.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `event`? | [`ContractEventName`](/content/type-aliases/ContractEventName) | The event to count listeners for. |
+
+#### Returns
+
+`Promise`\<`number`\>
+
+The number of listeners.
+
+#### Inherited from
+
+`_ContractBase().listenerCount`
+
+#### Source
+
+[contract/contract.ts:1362](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1362)
+
+***
+
+### listeners()
+
+```ts
+listeners(event?): Promise<Listener[]>
+```
+
+Resolves to the listeners subscribed to `event` or all listeners if unspecified.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `event`? | [`ContractEventName`](/content/type-aliases/ContractEventName) | The event to get listeners for. |
+
+#### Returns
+
+`Promise`\<[`Listener`](/content/type-aliases/Listener)[]\>
+
+The listeners.
+
+#### Inherited from
+
+`_ContractBase().listeners`
+
+#### Source
+
+[contract/contract.ts:1387](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1387)
+
+***
+
+### off()
+
+```ts
+off(event, listener?): Promise<Contract>
+```
+
+Remove the `listener` from the listeners for `event` or remove all listeners if unspecified.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `event` | [`ContractEventName`](/content/type-aliases/ContractEventName) | The event to remove the listener from. |
+| `listener`? | [`Listener`](/content/type-aliases/Listener) | The listener to remove. |
+
+#### Returns
+
+`Promise`\<[`Contract`](/content/classes/Contract)\>
+
+This contract instance.
+
+#### Inherited from
+
+`_ContractBase().off`
+
+#### Source
+
+[contract/contract.ts:1413](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1413)
+
+***
+
+### on()
+
+```ts
+on(event, listener): Promise<Contract>
+```
+
+Add an event `listener` for the `event`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `event` | [`ContractEventName`](/content/type-aliases/ContractEventName) | The event to listen for. |
+| `listener` | [`Listener`](/content/type-aliases/Listener) | The listener to call when the event is emitted. |
+
+#### Returns
+
+`Promise`\<[`Contract`](/content/classes/Contract)\>
+
+This contract instance.
+
+#### Inherited from
+
+`_ContractBase().on`
+
+#### Source
+
+[contract/contract.ts:1321](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1321)
+
+***
+
+### once()
+
+```ts
+once(event, listener): Promise<Contract>
+```
+
+Add an event `listener` for the `event`, but remove the listener after it is fired once.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `event` | [`ContractEventName`](/content/type-aliases/ContractEventName) | The event to listen for. |
+| `listener` | [`Listener`](/content/type-aliases/Listener) | The listener to call when the event is emitted. |
+
+#### Returns
+
+`Promise`\<[`Contract`](/content/classes/Contract)\>
+
+#### Inherited from
+
+`_ContractBase().once`
+
+#### Source
+
+[contract/contract.ts:1334](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1334)
+
+***
+
+### queryFilter()
+
+```ts
+queryFilter(
+   zone, 
+   event, 
+   fromBlock?, 
+toBlock?): Promise<(EventLog | Log)[]>
+```
+
+Provide historic access to event data for `event` in the range `fromBlock` (default: `0`) to `toBlock` (default:
+`"latest"`) inclusive.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `zone` | [`Zone`](/content/enumerations/Zone) | The zone to query. |
+| `event` | [`ContractEventName`](/content/type-aliases/ContractEventName) | The event to query. |
+| `fromBlock`? | [`BlockTag`](/content/type-aliases/BlockTag) | The block to start querying from. |
+| `toBlock`? | [`BlockTag`](/content/type-aliases/BlockTag) | The block to stop querying at. |
+
+#### Returns
+
+`Promise`\<([`EventLog`](/content/classes/EventLog) \| [`Log`](/content/classes/Log))[]\>
+
+An array of event logs.
+
+#### Inherited from
+
+`_ContractBase().queryFilter`
+
+#### Source
+
+[contract/contract.ts:1270](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1270)
+
+***
+
+### removeAllListeners()
+
+```ts
+removeAllListeners(event?): Promise<Contract>
+```
+
+Remove all the listeners for `event` or remove all listeners if unspecified.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `event`? | [`ContractEventName`](/content/type-aliases/ContractEventName) | The event to remove the listeners from. |
+
+#### Returns
+
+`Promise`\<[`Contract`](/content/classes/Contract)\>
+
+This contract instance.
+
+#### Inherited from
+
+`_ContractBase().removeAllListeners`
+
+#### Source
+
+[contract/contract.ts:1441](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1441)
+
+***
+
+### removeListener()
+
+```ts
+removeListener(event, listener): Promise<Contract>
+```
+
+Alias for [**off**](/content/classes/BaseContract#off).
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `event` | [`ContractEventName`](/content/type-aliases/ContractEventName) | The event to remove the listener from. |
+| `listener` | [`Listener`](/content/type-aliases/Listener) | The listener to remove. |
+
+#### Returns
+
+`Promise`\<[`Contract`](/content/classes/Contract)\>
+
+#### Inherited from
+
+`_ContractBase().removeListener`
+
+#### Source
+
+[contract/contract.ts:1476](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1476)
+
+***
+
+### waitForDeployment()
+
+```ts
+waitForDeployment(): Promise<Contract>
+```
+
+Resolve to this Contract once the bytecode has been deployed, or resolve immediately if already deployed.
+
+#### Returns
+
+`Promise`\<[`Contract`](/content/classes/Contract)\>
+
+The contract instance.
+
+#### Inherited from
+
+`_ContractBase().waitForDeployment`
+
+#### Throws
+
+If the contract runner does not support .provider.
+
+#### Source
+
+[contract/contract.ts:1172](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/contract.ts#L1172)

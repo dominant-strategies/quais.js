@@ -1,0 +1,31 @@
+---
+title: DeferredTopicFilter
+---
+
+When creating a filter using the `contract.filters`, this is returned.
+
+## Properties
+
+| Property | Type | Description |
+| :------ | :------ | :------ |
+| `fragment` | [`EventFragment`](/content/classes/EventFragment) | The fragment of the event. |
+
+## Methods
+
+### getTopicFilter()
+
+```ts
+getTopicFilter(): Promise<TopicFilter>
+```
+
+Get the topic filter.
+
+#### Returns
+
+`Promise`\<[`TopicFilter`](/content/type-aliases/TopicFilter)\>
+
+A promise resolving to the topic filter.
+
+#### Source
+
+[contract/types.ts:54](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/types.ts#L54)

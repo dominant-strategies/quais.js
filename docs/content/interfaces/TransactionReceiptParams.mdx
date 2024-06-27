@@ -1,0 +1,25 @@
+---
+title: TransactionReceiptParams
+---
+
+A **TransactionReceiptParams** encodes the minimal required properties for a formatted transaction receipt.
+
+## Properties
+
+| Property | Type | Description |
+| :------ | :------ | :------ |
+| `blockHash` | `string` | The block hash of the block that included this transaction. |
+| `blockNumber` | `number` | The block number of the block that included this transaction. |
+| `contractAddress` | `null` \| `string` | If the transaction was directly deploying a contract, the [**to**](/content/interfaces/TransactionReceiptParams) will be<br />null, the `data` will be initcode and if successful, this will be the address of the contract deployed. |
+| `cumulativeGasUsed` | `bigint` | The total amount of gas consumed during the entire block up to and including this transaction. |
+| `effectiveGasPrice?` | `null` \| `bigint` | The actual gas price per gas charged for this transaction. |
+| `from` | `string` | The sender of the transaction. |
+| `gasPrice?` | `null` \| `bigint` | The actual gas price per gas charged for this transaction. |
+| `gasUsed` | `bigint` | The amount of gas consumed executing this transaciton. |
+| `hash` | `string` | The transaction hash. |
+| `index` | `number` | The transaction index. |
+| `logs` | readonly [`LogParams`](/content/interfaces/LogParams)[] | The logs emitted during the execution of this transaction. |
+| `logsBloom` | `string` | The bloom filter for the logs emitted during execution of this transaction. |
+| `status` | `null` \| `number` | The status of the transaction execution. If `1` then the the transaction returned success, if `0` then the<br />transaction was reverted. For pre-byzantium blocks, this is usually null, but some nodes may have backfilled this<br />data. |
+| `to` | `null` \| `string` | The target of the transaction. If null, the transaction was trying to deploy a transaction with the `data` as the<br />initi=code. |
+| `type` | `number` | The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) envelope type. |

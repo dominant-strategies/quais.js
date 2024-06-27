@@ -1,0 +1,417 @@
+---
+title: Wallet
+---
+
+A **Wallet** manages a single private key which is used to sign transactions, messages and other common payloads.
+
+This class is generally the main entry point for developers that wish to use a private key directly, as it can create
+instances from a large variety of common sources, including raw private key,
+[BIP-39](https://en.bitcoin.it/wiki/BIP_0039) mnemonics and encrypted JSON wallets.
+
+## Extends
+
+- `BaseWallet`
+
+## Constructors
+
+### new Wallet()
+
+```ts
+new Wallet(key, provider?): Wallet
+```
+
+Create a new wallet for the private `key`, optionally connected to `provider`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `key` | `string` \| [`SigningKey`](/content/classes/SigningKey) | The private key. |
+| `provider`? | `null` \| [`Provider`](/content/interfaces/Provider) | The provider to connect to. |
+
+#### Returns
+
+[`Wallet`](/content/classes/Wallet)
+
+#### Overrides
+
+`BaseWallet.constructor`
+
+#### Source
+
+[wallet/wallet.ts:34](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/wallet.ts#L34)
+
+## Properties
+
+| Property | Modifier | Type | Description | Inherited from |
+| :------ | :------ | :------ | :------ | :------ |
+| `#address` | `private` | `string` | The wallet address. | `BaseWallet.#address` |
+| `#signingKey` | `private` | [`SigningKey`](/content/classes/SigningKey) | The signing key used for signing payloads. | `BaseWallet.#signingKey` |
+| `provider` | `readonly` | `null` \| [`Provider`](/content/interfaces/Provider) | The provider this signer is connected to. | `BaseWallet.provider` |
+
+## Accessors
+
+### address
+
+```ts
+get address(): string
+```
+
+The address of this wallet.
+
+#### Returns
+
+`string`
+
+#### Source
+
+[wallet/base-wallet.ts:69](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L69)
+
+***
+
+### privateKey
+
+```ts
+get privateKey(): string
+```
+
+The private key for this wallet.
+
+#### Returns
+
+`string`
+
+#### Source
+
+[wallet/base-wallet.ts:87](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L87)
+
+***
+
+### signingKey
+
+```ts
+get signingKey(): SigningKey
+```
+
+The [**SigningKey**](/content/classes/SigningKey) used for signing payloads.
+
+#### Returns
+
+[`SigningKey`](/content/classes/SigningKey)
+
+#### Source
+
+[wallet/base-wallet.ts:78](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L78)
+
+## Methods
+
+### connect()
+
+```ts
+connect(provider): Wallet
+```
+
+Connects the wallet to a provider.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `provider` | `null` \| [`Provider`](/content/interfaces/Provider) | The provider to connect to. |
+
+#### Returns
+
+[`Wallet`](/content/classes/Wallet)
+
+The connected wallet.
+
+#### Overrides
+
+`BaseWallet.connect`
+
+#### Source
+
+[wallet/wallet.ts:50](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/wallet.ts#L50)
+
+***
+
+### encrypt()
+
+```ts
+encrypt(password, progressCallback?): Promise<string>
+```
+
+Resolves to a [JSON Keystore Wallet](json-wallets) encrypted with `password`.
+
+If `progressCallback` is specified, it will receive periodic updates as the encryption process progresses.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `password` | `string` \| `Uint8Array` | The password to encrypt the wallet with. |
+| `progressCallback`? | [`ProgressCallback`](/content/type-aliases/ProgressCallback) | An optional callback to keep the user informed. |
+
+#### Returns
+
+`Promise`\<`string`\>
+
+The encrypted JSON wallet.
+
+#### Source
+
+[wallet/wallet.ts:64](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/wallet.ts#L64)
+
+***
+
+### encryptSync()
+
+```ts
+encryptSync(password): string
+```
+
+Returns a [JSON Keystore Wallet](json-wallets) encrypted with `password`.
+
+It is preferred to use the [async version](encrypt) instead, which allows a
+[**ProgressCallback**](/content/type-aliases/ProgressCallback) to keep the user informed.
+
+This method will block the event loop (freezing all UI) until it is complete, which may be a non-trivial
+duration.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `password` | `string` \| `Uint8Array` | The password to encrypt the wallet with. |
+
+#### Returns
+
+`string`
+
+The encrypted JSON wallet.
+
+#### Source
+
+[wallet/wallet.ts:82](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/wallet.ts#L82)
+
+***
+
+### getAddress()
+
+```ts
+getAddress(_zone?): Promise<string>
+```
+
+Returns the address of this wallet.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `_zone`? | `string` | The zone (optional). |
+
+#### Returns
+
+`Promise`\<`string`\>
+
+The wallet address.
+
+#### Inherited from
+
+`BaseWallet.getAddress`
+
+#### Source
+
+[wallet/base-wallet.ts:99](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L99)
+
+***
+
+### signMessage()
+
+```ts
+signMessage(message): Promise<string>
+```
+
+Signs a message.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `message` | `string` \| `Uint8Array` | The message to sign. |
+
+#### Returns
+
+`Promise`\<`string`\>
+
+The signed message.
+
+#### Inherited from
+
+`BaseWallet.signMessage`
+
+#### Async
+
+#### Source
+
+[wallet/base-wallet.ts:157](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L157)
+
+***
+
+### signMessageSync()
+
+```ts
+signMessageSync(message): string
+```
+
+Returns the signature for `message` signed with this wallet.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `message` | `string` \| `Uint8Array` | The message to sign. |
+
+#### Returns
+
+`string`
+
+The serialized signature.
+
+#### Inherited from
+
+`BaseWallet.signMessageSync`
+
+#### Source
+
+[wallet/base-wallet.ts:169](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L169)
+
+***
+
+### signTransaction()
+
+```ts
+signTransaction(tx): Promise<string>
+```
+
+Signs a transaction.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `tx` | `QuaiTransactionRequest` | The transaction request. |
+
+#### Returns
+
+`Promise`\<`string`\>
+
+The signed transaction.
+
+#### Inherited from
+
+`BaseWallet.signTransaction`
+
+#### Source
+
+[wallet/base-wallet.ts:119](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L119)
+
+***
+
+### signTypedData()
+
+```ts
+signTypedData(
+   domain, 
+   types, 
+value): Promise<string>
+```
+
+Signs typed data.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `domain` | [`TypedDataDomain`](/content/interfaces/TypedDataDomain) | The domain of the typed data. |
+| `types` | `Record`\<`string`, [`TypedDataField`](/content/interfaces/TypedDataField)[]\> | The types of the typed data. |
+| `value` | `Record`\<`string`, `any`\> | The value of the typed data. |
+
+#### Returns
+
+`Promise`\<`string`\>
+
+The signed typed data.
+
+#### Inherited from
+
+`BaseWallet.signTypedData`
+
+#### Async
+
+#### Source
+
+[wallet/base-wallet.ts:182](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L182)
+
+***
+
+### fromEncryptedJson()
+
+```ts
+static fromEncryptedJson(
+   json, 
+   password, 
+progress?): Promise<Wallet>
+```
+
+Creates (asynchronously) a **Wallet** by decrypting the `json` with `password`.
+
+If `progress` is provided, it is called periodically during decryption so that any UI can be updated.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `json` | `string` | The JSON data to decrypt. |
+| `password` | `string` \| `Uint8Array` | The password to decrypt the JSON data. |
+| `progress`? | [`ProgressCallback`](/content/type-aliases/ProgressCallback) | An optional callback to keep the user informed. |
+
+#### Returns
+
+`Promise`\<[`Wallet`](/content/classes/Wallet)\>
+
+The decrypted wallet.
+
+#### Source
+
+[wallet/wallet.ts:116](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/wallet.ts#L116)
+
+***
+
+### fromEncryptedJsonSync()
+
+```ts
+static fromEncryptedJsonSync(json, password): QuaiHDWallet | Wallet
+```
+
+Creates a **Wallet** by decrypting the `json` with `password`.
+
+The [**fromEncryptedJson**](/content/classes/Wallet#fromencryptedjson) method is preferred, as this method will lock up and
+freeze the UI during decryption, which may take some time.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `json` | `string` | The JSON data to decrypt. |
+| `password` | `string` \| `Uint8Array` | The password to decrypt the JSON data. |
+
+#### Returns
+
+[`QuaiHDWallet`](/content/classes/QuaiHDWallet) \| [`Wallet`](/content/classes/Wallet)
+
+The decrypted wallet.
+
+#### Source
+
+[wallet/wallet.ts:140](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/wallet.ts#L140)

@@ -1,0 +1,49 @@
+---
+title: resolveAddress
+---
+
+```ts
+function resolveAddress(target): string | Promise<string>
+```
+
+Resolves to an address for the `target`, which may be any supported address type, an
+[**Addressable**](../interfaces/Addressable) or a Promise which resolves to an address.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `target` | [`AddressLike`](/content/type-aliases/AddressLike) | The target to resolve to an address. |
+
+## Returns
+
+`string` \| `Promise`\<`string`\>
+
+The resolved address.
+
+## Example
+
+```js
+addr = '0x6B175474E89094C44Da98b954EedeAC495271d0F';
+
+// Addresses are return synchronously
+resolveAddress(addr, provider);
+//_result:
+
+// Address promises are resolved asynchronously
+resolveAddress(Promise.resolve(addr));
+//_result:
+
+// Addressable objects are resolved asynchronously
+contract = new Contract(addr, []);
+resolveAddress(contract, provider);
+//_result:
+```
+
+## Todo
+
+Revise this method as UnconfiguredNameError has been removed
+
+## Source
+
+[address/checks.ts:98](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/address/checks.ts#L98)

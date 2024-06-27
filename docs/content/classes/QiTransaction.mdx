@@ -1,0 +1,540 @@
+---
+title: QiTransaction
+---
+
+Class representing a QiTransaction.
+
+## Implements
+
+## Extends
+
+- `AbstractTransaction`\<`string`\>
+
+## Implements
+
+- `QiTransactionLike`
+
+## Constructors
+
+### new QiTransaction()
+
+```ts
+new QiTransaction(): QiTransaction
+```
+
+Creates a new Transaction with default values.
+
+#### Returns
+
+[`QiTransaction`](/content/classes/QiTransaction)
+
+#### Overrides
+
+`AbstractTransaction<string>.constructor`
+
+#### Source
+
+[transaction/qi-transaction.ts:144](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/qi-transaction.ts#L144)
+
+## Accessors
+
+### chainId
+
+```ts
+get chainId(): bigint
+```
+
+The chain ID this transaction is valid on.
+
+#### Returns
+
+`bigint`
+
+#### Source
+
+[transaction/abstract-transaction.ts:263](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L263)
+
+***
+
+### destZone
+
+```ts
+get destZone(): undefined | Zone
+```
+
+Get the zone of the recipient address.
+
+#### Returns
+
+`undefined` \| [`Zone`](/content/enumerations/Zone)
+
+The destination zone.
+
+#### Source
+
+[transaction/qi-transaction.ts:136](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/qi-transaction.ts#L136)
+
+***
+
+### digest
+
+```ts
+get digest(): string
+```
+
+The pre-image hash of this transaction.
+
+This is the digest that a [Signer](../interfaces/Signer) must sign to authorize this transaction.
+
+#### Returns
+
+`string`
+
+#### Source
+
+[transaction/abstract-transaction.ts:298](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L298)
+
+***
+
+### hash
+
+```ts
+get hash(): null | string
+```
+
+Get the permuted hash of the transaction as specified by QIP-0010.
+
+#### See
+
+[QIP0010](https://github.com/quai-network/qips/blob/master/qip-0010.md)
+
+#### Throws
+
+If the transaction has no inputs or outputs, or if cross-zone & cross-ledger transactions are not supported.
+
+#### Returns
+
+`null` \| `string`
+
+The transaction hash.
+
+#### Source
+
+[transaction/qi-transaction.ts:84](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/qi-transaction.ts#L84)
+
+***
+
+### isExternal
+
+```ts
+get isExternal(): boolean
+```
+
+Check if the transaction is external.
+
+#### Returns
+
+`boolean`
+
+True if the transaction is external.
+
+#### Source
+
+[transaction/abstract-transaction.ts:400](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L400)
+
+***
+
+### originZone
+
+```ts
+get originZone(): undefined | Zone
+```
+
+Get the zone of the sender address.
+
+#### Returns
+
+`undefined` \| [`Zone`](/content/enumerations/Zone)
+
+The origin zone.
+
+#### Source
+
+[transaction/qi-transaction.ts:125](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/qi-transaction.ts#L125)
+
+***
+
+### serialized
+
+```ts
+get serialized(): string
+```
+
+The serialized transaction.
+
+This throws if the transaction is unsigned. For the pre-image, use
+[**unsignedSerialized** ](/content/classes/QiTransaction#unsignedserialized).
+
+#### Returns
+
+`string`
+
+#### Source
+
+[transaction/abstract-transaction.ts:324](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L324)
+
+***
+
+### signature
+
+```ts
+get signature(): S
+```
+
+If signed, the signature for this transaction.
+
+#### Returns
+
+`S`
+
+#### Source
+
+[transaction/abstract-transaction.ts:273](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L273)
+
+***
+
+### txInputs
+
+```ts
+get txInputs(): TxInput[]
+```
+
+Get transaction inputs.
+
+```ts
+set txInputs(value): void
+```
+
+Set transaction inputs.
+
+#### Throws
+
+If the value is not an array.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | `null` \| `TxInput`[] | The transaction inputs. |
+
+#### Returns
+
+`TxInput`[]
+
+The transaction inputs.
+
+#### Source
+
+[transaction/qi-transaction.ts:42](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/qi-transaction.ts#L42)
+
+***
+
+### txOutputs
+
+```ts
+get txOutputs(): TxOutput[]
+```
+
+Get transaction outputs.
+
+```ts
+set txOutputs(value): void
+```
+
+Set transaction outputs.
+
+#### Throws
+
+If the value is not an array.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | `null` \| `TxOutput`[] | The transaction outputs. |
+
+#### Returns
+
+`TxOutput`[]
+
+The transaction outputs.
+
+#### Source
+
+[transaction/qi-transaction.ts:62](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/qi-transaction.ts#L62)
+
+***
+
+### type
+
+```ts
+get type(): null | number
+```
+
+The transaction type.
+
+If null, the type will be automatically inferred based on explicit properties.
+
+#### Returns
+
+`null` \| `number`
+
+#### Source
+
+[transaction/abstract-transaction.ts:223](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L223)
+
+***
+
+### typeName
+
+```ts
+get typeName(): null | string
+```
+
+The name of the transaction type.
+
+#### Returns
+
+`null` \| `string`
+
+#### Source
+
+[transaction/abstract-transaction.ts:247](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L247)
+
+***
+
+### unsignedSerialized
+
+```ts
+get unsignedSerialized(): string
+```
+
+The transaction pre-image.
+
+The hash of this is the digest which needs to be signed to authorize this transaction.
+
+#### Returns
+
+`string`
+
+#### Source
+
+[transaction/abstract-transaction.ts:339](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L339)
+
+## Methods
+
+### clone()
+
+```ts
+clone(): QiTransaction
+```
+
+Create a copy of this transaction.
+
+#### Returns
+
+[`QiTransaction`](/content/classes/QiTransaction)
+
+The cloned transaction.
+
+#### Overrides
+
+`AbstractTransaction.clone`
+
+#### Source
+
+[transaction/qi-transaction.ts:173](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/qi-transaction.ts#L173)
+
+***
+
+### inferType()
+
+```ts
+inferType(): number
+```
+
+Return the most "likely" type; currently the highest supported transaction type.
+
+#### Returns
+
+`number`
+
+The inferred transaction type.
+
+#### Inherited from
+
+`AbstractTransaction.inferType`
+
+#### Source
+
+[transaction/abstract-transaction.ts:348](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L348)
+
+***
+
+### inferTypes()
+
+```ts
+inferTypes(): number[]
+```
+
+Validates the explicit properties and returns a list of compatible transaction types.
+
+#### Returns
+
+`number`[]
+
+The compatible transaction types.
+
+#### Overrides
+
+`AbstractTransaction.inferTypes`
+
+#### Source
+
+[transaction/qi-transaction.ts:154](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/qi-transaction.ts#L154)
+
+***
+
+### isSigned()
+
+```ts
+isSigned(): this is AbstractTransaction<string> & Object
+```
+
+Returns true if signed.
+
+This provides a Type Guard that properties requiring a signed transaction are non-null.
+
+#### Returns
+
+`this is AbstractTransaction<string> & Object`
+
+Indicates if the transaction is signed.
+
+#### Inherited from
+
+`AbstractTransaction.isSigned`
+
+#### Source
+
+[transaction/abstract-transaction.ts:309](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L309)
+
+***
+
+### toJSON()
+
+```ts
+toJSON(): TransactionLike
+```
+
+Return a JSON-friendly object.
+
+#### Returns
+
+[`TransactionLike`](/content/interfaces/TransactionLike)
+
+The JSON-friendly object.
+
+#### Overrides
+
+`AbstractTransaction.toJSON`
+
+#### Source
+
+[transaction/qi-transaction.ts:181](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/qi-transaction.ts#L181)
+
+***
+
+### toProtobuf()
+
+```ts
+toProtobuf(includeSignature?): ProtoTransaction
+```
+
+Return a protobuf-friendly JSON object.
+
+#### Parameters
+
+| Parameter | Type | Default value | Description |
+| :------ | :------ | :------ | :------ |
+| `includeSignature`? | `boolean` | `true` | Whether to include the signature. |
+
+#### Returns
+
+`ProtoTransaction`
+
+The protobuf-friendly JSON object.
+
+#### Overrides
+
+`AbstractTransaction.toProtobuf`
+
+#### Source
+
+[transaction/qi-transaction.ts:204](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/qi-transaction.ts#L204)
+
+***
+
+### from()
+
+```ts
+static from(tx): QiTransaction
+```
+
+Create a Transaction from a serialized transaction or a Transaction-like object.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `tx` | `string` \| `QiTransactionLike` | The transaction to decode. |
+
+#### Returns
+
+[`QiTransaction`](/content/classes/QiTransaction)
+
+The decoded transaction.
+
+#### Throws
+
+If the transaction is unsigned and defines a hash.
+
+#### Source
+
+[transaction/qi-transaction.ts:238](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/qi-transaction.ts#L238)
+
+***
+
+### fromProto()
+
+```ts
+static fromProto(protoTx): QiTransaction
+```
+
+Create a Transaction from a ProtoTransaction object.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `protoTx` | `ProtoTransaction` | The transaction to decode. |
+
+#### Returns
+
+[`QiTransaction`](/content/classes/QiTransaction)
+
+The decoded transaction.
+
+#### Source
+
+[transaction/qi-transaction.ts:273](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/qi-transaction.ts#L273)

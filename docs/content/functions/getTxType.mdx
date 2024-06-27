@@ -1,0 +1,28 @@
+---
+title: getTxType
+---
+
+```ts
+function getTxType(from, to): number
+```
+
+Determines the transaction type based on the sender and recipient addresses. The function checks if both addresses
+are UTXO addresses, in which case it returns 2. If only the sender address is a UTXO address, it returns 1.
+Otherwise, it returns 0.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `from` | `null` \| `string` | The sender address. If null, the function returns 0. |
+| `to` | `null` \| `string` | The recipient address. If null, the function returns 0. |
+
+## Returns
+
+`number`
+
+The transaction type based on the addresses.
+
+## Source
+
+[utils/shards.ts:49](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/shards.ts#L49)

@@ -1,0 +1,24 @@
+---
+title: FormatType
+---
+
+```ts
+type FormatType: "sighash" | "minimal" | "full" | "json";
+```
+
+The format to serialize the output as.
+
+**`sighash`** - the bare formatting, used to compute the selector or topic hash; this format cannot be reversed (as
+it discards `indexed`) so cannot by used to export an [Interface](../classes/Interface).
+
+**`minimal`** - Human-Readable ABI with minimal spacing and without names, so it is compact, but will result in
+Result objects that cannot be accessed by name.
+
+**`full`** - Full Human-Readable ABI, with readable spacing and names intact; this is generally the recommended
+format.
+
+**`json`** - The [ABI JSON Specification](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#json).
+
+## Source
+
+[abi/fragments.ts:117](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/fragments.ts#L117)

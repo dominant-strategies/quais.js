@@ -1,0 +1,100 @@
+---
+title: ErrorCode
+---
+
+```ts
+type ErrorCode: 
+  | "UNKNOWN_ERROR"
+  | "NOT_IMPLEMENTED"
+  | "UNSUPPORTED_OPERATION"
+  | "NETWORK_ERROR"
+  | "SERVER_ERROR"
+  | "TIMEOUT"
+  | "BAD_DATA"
+  | "CANCELLED"
+  | "BUFFER_OVERRUN"
+  | "NUMERIC_FAULT"
+  | "INVALID_ARGUMENT"
+  | "MISSING_ARGUMENT"
+  | "UNEXPECTED_ARGUMENT"
+  | "VALUE_MISMATCH"
+  | "CALL_EXCEPTION"
+  | "INSUFFICIENT_FUNDS"
+  | "NONCE_EXPIRED"
+  | "REPLACEMENT_UNDERPRICED"
+  | "TRANSACTION_REPLACED"
+  | "UNCONFIGURED_NAME"
+  | "OFFCHAIN_FAULT"
+  | "ACTION_REJECTED";
+```
+
+All errors emitted by quais have an **ErrorCode** to help identify and coalesce errors to simplify programmatic
+analysis.
+
+Each **ErrorCode** is the `code` proerty of a coresponding [**quaisError**](/content/interfaces/quaisError).
+
+**Generic Errors**
+
+**`"UNKNOWN_ERROR"`** - see [**UnknownError**](/content/interfaces/UnknownError)
+
+**`"NOT_IMPLEMENTED"`** - see [**NotImplementedError**](/content/interfaces/NotImplementedError)
+
+**`"UNSUPPORTED_OPERATION"`** - see [**UnsupportedOperationError**](/content/interfaces/UnsupportedOperationError)
+
+**`"NETWORK_ERROR"`** - see [**NetworkError**](/content/interfaces/NetworkError)
+
+**`"SERVER_ERROR"`** - see [**ServerError**](/content/interfaces/ServerError)
+
+**`"TIMEOUT"`** - see [**TimeoutError**](/content/interfaces/TimeoutError)
+
+**`"BAD_DATA"`** - see [**BadDataError**](/content/interfaces/BadDataError)
+
+**`"CANCELLED"`** - see [**CancelledError**](/content/interfaces/CancelledError)
+
+**Operational Errors**
+
+**`"BUFFER_OVERRUN"`** - see [**BufferOverrunError**](/content/interfaces/BufferOverrunError)
+
+**`"NUMERIC_FAULT"`** - see [**NumericFaultError**](/content/interfaces/NumericFaultError)
+
+**Argument Errors**
+
+**`"INVALID_ARGUMENT"`** - see [**InvalidArgumentError**](/content/interfaces/InvalidArgumentError)
+
+**`"MISSING_ARGUMENT"`** - see [**MissingArgumentError**](/content/interfaces/MissingArgumentError)
+
+**`"UNEXPECTED_ARGUMENT"`** - see [**UnexpectedArgumentError**](/content/interfaces/UnexpectedArgumentError)
+
+**`"VALUE_MISMATCH"`** - //unused//
+
+**Blockchain Errors**
+
+**`"CALL_EXCEPTION"`** - see [**CallExceptionError**](/content/interfaces/CallExceptionError)
+
+**`"INSUFFICIENT_FUNDS"`** - see [**InsufficientFundsError**](/content/interfaces/InsufficientFundsError)
+
+**`"NONCE_EXPIRED"`** - see[**NonceExpiredError**](/content/interfaces/NonceExpiredError)
+
+**`"REPLACEMENT_UNDERPRICED"`** - see [**ReplacementUnderpricedError**](/content/interfaces/ReplacementUnderpricedError)
+
+**`"TRANSACTION_REPLACED"`** - see [**TransactionReplacedError**](/content/interfaces/TransactionReplacedError)
+
+**`"UNCONFIGURED_NAME"`** - see {link UnconfiguredNameError | **UnconfiguredNameError**}
+
+## Todo
+
+- Revise as UnconfiguredNameError has been removed
+
+  **`"OFFCHAIN_FAULT"`** - see {link OffchainFaultError | **OffchainFaultError**}
+
+## Todo
+
+- Revise as OffchainFaultError has been removed
+
+  **User Interaction Errors**
+
+  **`"ACTION_REJECTED"`** - see [**ActionRejectedError**](/content/interfaces/ActionRejectedError)
+
+## Source
+
+[utils/errors.ts:132](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/errors.ts#L132)

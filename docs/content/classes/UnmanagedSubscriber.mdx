@@ -1,0 +1,70 @@
+---
+title: UnmanagedSubscriber
+---
+
+An **UnmanagedSubscriber** is useful for events which do not require any additional management, such as `"debug"`
+which only requires emit in synchronous event loop triggered calls.
+
+## Implements
+
+- [`Subscriber`](/content/interfaces/Subscriber)
+
+## Constructors
+
+### new UnmanagedSubscriber()
+
+```ts
+new UnmanagedSubscriber(name): UnmanagedSubscriber
+```
+
+Create a new UnmanagedSubscriber with `name`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `name` | `string` | The name of the event. |
+
+#### Returns
+
+[`UnmanagedSubscriber`](/content/classes/UnmanagedSubscriber)
+
+#### Source
+
+[providers/abstract-provider.ts:225](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L225)
+
+## Properties
+
+| Property | Type | Description |
+| :------ | :------ | :------ |
+| `name` | `string` | The name of the event. |
+
+## Methods
+
+### pause()
+
+```ts
+pause(dropWhilePaused?): void
+```
+
+#### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `dropWhilePaused`? | `boolean` |
+
+#### Returns
+
+`void`
+
+#### Implementation of
+
+[`Subscriber`](/content/interfaces/Subscriber).[`pause`](/content/interfaces/Subscriber#pause)
+
+#### Todo
+
+`dropWhilePaused` is not used, remove or re-write
+
+#### Source
+
+[providers/abstract-provider.ts:236](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L236)

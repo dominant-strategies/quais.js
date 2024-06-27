@@ -1,0 +1,29 @@
+---
+title: ContractEventName
+---
+
+```ts
+type ContractEventName: string | ContractEvent | TopicFilter | DeferredTopicFilter;
+```
+
+The name for an event used for subscribing to Contract events.
+
+**`string`** - An event by name. The event must be non-ambiguous. The parameters will be dereferenced when passed
+into the listener.
+
+[**ContractEvent**](/content/interfaces/ContractEvent) - A filter from the `contract.filters`, which will pass only the
+EventPayload as a single parameter, which includes a `.signature` property that can be used to further filter the
+event.
+
+[**TopicFilter**](/content/type-aliases/TopicFilter) - A filter defined using the standard Ethereum API which provides the specific
+topic hash or topic hashes to watch for along with any additional values to filter by. This will only pass a single
+parameter to the listener, the EventPayload which will include additional details to refine by, such as the event
+name and signature.
+
+[**DeferredTopicFilter**](/content/interfaces/DeferredTopicFilter) - A filter created by calling a
+[**ContractEvent**](/content/interfaces/ContractEvent) with parameters, which will create a filter for a specific event signautre
+and dereference each parameter when calling the listener.
+
+## Source
+
+[contract/types.ts:33](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/types.ts#L33)

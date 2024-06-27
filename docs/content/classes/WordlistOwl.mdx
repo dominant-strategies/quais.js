@@ -1,0 +1,136 @@
+---
+title: WordlistOwl
+---
+
+An OWL format Wordlist is an encoding method that exploits the general locality of alphabetically sorted words to
+achieve a simple but effective means of compression.
+
+This class is generally not useful to most developers as it is used mainly internally to keep Wordlists for languages
+based on ASCII-7 small.
+
+If necessary, there are tools within the `generation/` folder to create the necessary data.
+
+## Extends
+
+- [`Wordlist`](/content/classes/Wordlist)
+
+## Extended by
+
+- [`LangEn`](/content/classes/LangEn)
+- [`WordlistOwlA`](/content/classes/WordlistOwlA)
+
+## Constructors
+
+### new WordlistOwl()
+
+```ts
+new WordlistOwl(
+   locale, 
+   data, 
+   checksum): WordlistOwl
+```
+
+Creates a new Wordlist for `locale` using the OWL `data` and validated against the `checksum`.
+
+#### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `locale` | `string` |
+| `data` | `string` |
+| `checksum` | `string` |
+
+#### Returns
+
+[`WordlistOwl`](/content/classes/WordlistOwl)
+
+#### Overrides
+
+[`Wordlist`](/content/classes/Wordlist).[`constructor`](/content/classes/Wordlist#constructors)
+
+#### Source
+
+[wordlists/wordlist-owl.ts:28](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wordlists/wordlist-owl.ts#L28)
+
+## Methods
+
+### \_decodeWords()
+
+```ts
+_decodeWords(): string[]
+```
+
+Decode all the words for the wordlist.
+
+#### Returns
+
+`string`[]
+
+#### Source
+
+[wordlists/wordlist-owl.ts:47](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wordlists/wordlist-owl.ts#L47)
+
+***
+
+### join()
+
+```ts
+join(words): string
+```
+
+Sub-classes may override this to provider a language-specific method for joining `words` into a phrase.
+
+By default, `words` are joined by a single space.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `words` | `string`[] | The words to join. |
+
+#### Returns
+
+`string`
+
+The joined phrase.
+
+#### Inherited from
+
+[`Wordlist`](/content/classes/Wordlist).[`join`](/content/classes/Wordlist#join)
+
+#### Source
+
+[wordlists/wordlist.ts:47](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wordlists/wordlist.ts#L47)
+
+***
+
+### split()
+
+```ts
+split(phrase): string[]
+```
+
+Sub-classes may override this to provide a language-specific method for spliting `phrase` into individual words.
+
+By default, `phrase` is split using any sequences of white-space as defined by regular expressions (i.e.
+`/\s+/`).
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `phrase` | `string` | The phrase to split. |
+
+#### Returns
+
+`string`[]
+
+The split words in the phrase.
+
+#### Inherited from
+
+[`Wordlist`](/content/classes/Wordlist).[`split`](/content/classes/Wordlist#split)
+
+#### Source
+
+[wordlists/wordlist.ts:34](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wordlists/wordlist.ts#L34)

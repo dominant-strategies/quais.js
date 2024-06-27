@@ -1,0 +1,52 @@
+---
+title: JsonRpcPayload
+---
+
+```ts
+type JsonRpcPayload: {
+  "id": number;
+  "jsonrpc": "2.0";
+  "method": string;
+  "params": any[] | Record<string, any>;
+};
+```
+
+A JSON-RPC payload, which are sent to a JSON-RPC server.
+
+## Type declaration
+
+### id
+
+```ts
+id: number;
+```
+
+The JSON-RPC request ID.
+
+### jsonrpc
+
+```ts
+jsonrpc: "2.0";
+```
+
+A required constant in the JSON-RPC specification.
+
+### method
+
+```ts
+method: string;
+```
+
+The JSON-RPC request method.
+
+### params
+
+```ts
+params: any[] | Record<string, any>;
+```
+
+The JSON-RPC request parameters.
+
+## Source
+
+[providers/provider-jsonrpc.ts:105](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L105)

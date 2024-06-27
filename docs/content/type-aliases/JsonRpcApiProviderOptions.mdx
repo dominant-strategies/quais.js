@@ -1,0 +1,73 @@
+---
+title: JsonRpcApiProviderOptions
+---
+
+```ts
+type JsonRpcApiProviderOptions: {
+  "batchMaxCount": number;
+  "batchMaxSize": number;
+  "batchStallTime": number;
+  "cacheTimeout": number;
+  "staticNetwork": null | Network | boolean;
+};
+```
+
+Options for configuring a [**JsonRpcApiProvider**](/content/classes/JsonRpcApiProvider). Much of this is targeted towards
+sub-classes, which often will not expose any of these options to their consumers.
+
+**`polling`** - use the polling strategy is used immediately for events; otherwise, attempt to use filters and fall
+back onto polling (default: `false`)
+
+**`staticNetwork`** - do not request chain ID on requests to validate the underlying chain has not changed (default:
+`null`)
+
+This should **ONLY** be used if it is **certain** that the network cannot change, such as when using INFURA (since
+the URL dictates the network). If the network is assumed static and it does change, this can have tragic
+consequences. For example, this **CANNOT** be used with MetaMask, since the used can select a new network from the
+drop-down at any time.
+
+**`batchStallTime`** - how long (ms) to aggregate requests into a single batch. `0` indicates batching will only
+encompass the current event loop. If `batchMaxCount = 1`, this is ignored. (default: `10`)
+
+**`batchMaxSize`** - target maximum size (bytes) to allow per batch request (default: 1Mb)
+
+**`batchMaxCount`** - maximum number of requests to allow in a batch. If `batchMaxCount = 1`, then batching is
+disabled. (default: `100`)
+
+**`cacheTimeout`** - passed as AbstractProviderOptions | **AbstractProviderOptions**.
+
+## Type declaration
+
+### batchMaxCount?
+
+```ts
+optional batchMaxCount: number;
+```
+
+### batchMaxSize?
+
+```ts
+optional batchMaxSize: number;
+```
+
+### batchStallTime?
+
+```ts
+optional batchStallTime: number;
+```
+
+### cacheTimeout?
+
+```ts
+optional cacheTimeout: number;
+```
+
+### staticNetwork?
+
+```ts
+optional staticNetwork: null | Network | boolean;
+```
+
+## Source
+
+[providers/provider-jsonrpc.ts:213](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L213)

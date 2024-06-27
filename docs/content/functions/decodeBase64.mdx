@@ -1,0 +1,41 @@
+---
+title: decodeBase64
+---
+
+```ts
+function decodeBase64(value): Uint8Array
+```
+
+Decodes the base-64 encoded `value`.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | `string` | The base-64 encoded value. |
+
+## Returns
+
+`Uint8Array`
+
+The decoded binary data.
+
+## Example
+
+```ts
+// The decoded value is always binary data...
+result = decodeBase64('SGVsbG8gV29ybGQhIQ==');
+//_result:
+
+// ...use toUtf8String to convert it to a string.
+toUtf8String(result);
+//_result:
+
+// Decoding binary data
+decodeBase64('EjQ=');
+//_result:
+```
+
+## Source
+
+[encoding/base64.ts:34](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/encoding/base64.ts#L34)

@@ -1,0 +1,26 @@
+---
+title: Networkish
+---
+
+```ts
+type Networkish: 
+  | Network
+  | number
+  | bigint
+  | string
+  | {
+  "chainId": number;
+  "name": string;
+};
+```
+
+A Networkish can be used to allude to a Network, by specifying:
+
+- A [Network](/content/classes/Network) object
+- A well-known (or registered) network name
+- A well-known (or registered) chain ID
+- An object with sufficient details to describe a network
+
+## Source
+
+[providers/network.ts:20](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L20)

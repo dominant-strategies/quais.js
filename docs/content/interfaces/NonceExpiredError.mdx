@@ -1,0 +1,19 @@
+---
+title: NonceExpiredError
+---
+
+The sending account has already used this nonce in a transaction that has been included.
+
+## Extends
+
+- [`quaisError`](/content/interfaces/quaisError)\<`"NONCE_EXPIRED"`\>
+
+## Properties
+
+| Property | Type | Description | Inherited from |
+| :------ | :------ | :------ | :------ |
+| `code` | [`ErrorCode`](/content/type-aliases/ErrorCode) | The string error code. | [`quaisError`](/content/interfaces/quaisError).`code` |
+| `error?` | `Error` | Any related error. | [`quaisError`](/content/interfaces/quaisError).`error` |
+| `info?` | `Record`\<`string`, `any`\> | Additional info regarding the error that may be useful.<br /><br />This is generally helpful mostly for human-based debugging. | [`quaisError`](/content/interfaces/quaisError).`info` |
+| `shortMessage` | `string` | A short message describing the error, with minimal additional details. | [`quaisError`](/content/interfaces/quaisError).`shortMessage` |
+| `transaction` | [`TransactionRequest`](/content/type-aliases/TransactionRequest) | The transaction. | - |

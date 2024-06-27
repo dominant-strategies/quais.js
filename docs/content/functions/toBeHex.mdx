@@ -1,0 +1,30 @@
+---
+title: toBeHex
+---
+
+```ts
+function toBeHex(_value, _width?): string
+```
+
+Converts `value` to a Big Endian hexstring, optionally padded to `width` bytes.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `_value` | [`BigNumberish`](/content/type-aliases/BigNumberish) | The value to convert. |
+| `_width`? | [`Numeric`](/content/type-aliases/Numeric) | The width of the value in bytes. |
+
+## Returns
+
+`string`
+
+The hexstring.
+
+## Throws
+
+If the value exceeds the width.
+
+## Source
+
+[utils/maths.ts:267](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/maths.ts#L267)

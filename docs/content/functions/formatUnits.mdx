@@ -1,0 +1,31 @@
+---
+title: formatUnits
+---
+
+```ts
+function formatUnits(value, unit?): string
+```
+
+Converts `value` into a //decimal string//, assuming `unit` decimal places. The `unit` may be the number of decimal
+places or the name of a unit (e.g. `"gwei"` for 9 decimal places).
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | [`BigNumberish`](/content/type-aliases/BigNumberish) | The value to convert. |
+| `unit`? | `string` \| [`Numeric`](/content/type-aliases/Numeric) | The unit to convert to. Default is `18` |
+
+## Returns
+
+`string`
+
+The converted value.
+
+## Throws
+
+If the unit is invalid.
+
+## Source
+
+[utils/units.ts:34](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/units.ts#L34)

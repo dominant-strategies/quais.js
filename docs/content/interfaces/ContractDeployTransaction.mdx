@@ -1,0 +1,27 @@
+---
+title: ContractDeployTransaction
+---
+
+A deployment transaction for a contract.
+
+## Extends
+
+- `Omit`\<[`ContractTransaction`](/content/interfaces/ContractTransaction), `"to"`\>
+
+## Properties
+
+| Property | Type | Description | Inherited from |
+| :------ | :------ | :------ | :------ |
+| `accessList?` | [`AccessList`](/content/type-aliases/AccessList) | The [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) access list. Storage slots included in the access list<br />are //warmed// by pre-loading them, so their initial cost to fetch is guaranteed, but then each additional access<br />is cheaper. | `Omit.accessList` |
+| `blockTag?` | [`BlockTag`](/content/type-aliases/BlockTag) | When using `call` or `estimateGas`, this allows a specific block to be queried. Many backends do not support this<br />and when unsupported errors are silently squelched and `"latest"` is used. | `Omit.blockTag` |
+| `chainId?` | `bigint` | The chain ID for the network this transaction is valid on. | `Omit.chainId` |
+| `customData?` | `any` | A custom object, which can be passed along for network-specific values. | `Omit.customData` |
+| `data` | `string` | The transaction data. | `Omit.data` |
+| `from` | `string` | The from address, if any. | `Omit.from` |
+| `gasLimit?` | `bigint` | The maximum amount of gas to allow this transaction to consume. | `Omit.gasLimit` |
+| `gasPrice?` | `bigint` | The gas price to use for legacy transactions or transactions on legacy networks.<br /><br />Most of the time the `max*FeePerGas` is preferred. | `Omit.gasPrice` |
+| `maxFeePerGas?` | `bigint` | The [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) maximum total fee to pay per gas. The actual value used<br />is protocol enforced to be the block's base fee. | `Omit.maxFeePerGas` |
+| `maxPriorityFeePerGas?` | `bigint` | The [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) maximum priority fee to pay per gas. | `Omit.maxPriorityFeePerGas` |
+| `nonce?` | `number` | The nonce of the transaction, used to prevent replay attacks. | `Omit.nonce` |
+| `type?` | `number` | The transaction type. | `Omit.type` |
+| `value?` | `bigint` | The transaction value (in wei). | `Omit.value` |

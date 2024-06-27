@@ -1,0 +1,62 @@
+---
+title: FeeData
+---
+
+A **FeeData** wraps all the fee-related values associated with the network.
+
+## Constructors
+
+### new FeeData()
+
+```ts
+new FeeData(
+   gasPrice?, 
+   maxFeePerGas?, 
+   maxPriorityFeePerGas?): FeeData
+```
+
+Creates a new FeeData for `gasPrice`, `maxFeePerGas` and `maxPriorityFeePerGas`.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `gasPrice`? | `null` \| `bigint` | The gas price. |
+| `maxFeePerGas`? | `null` \| `bigint` | The maximum fee per gas. |
+| `maxPriorityFeePerGas`? | `null` \| `bigint` | The maximum priority fee per gas. |
+
+#### Returns
+
+[`FeeData`](/content/classes/FeeData)
+
+#### Source
+
+[providers/provider.ts:124](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L124)
+
+## Properties
+
+| Property | Modifier | Type | Description |
+| :------ | :------ | :------ | :------ |
+| `gasPrice` | `readonly` | `null` \| `bigint` | The gas price for legacy networks. |
+| `maxFeePerGas` | `readonly` | `null` \| `bigint` | The maximum fee to pay per gas.<br /><br />The base fee per gas is defined by the network and based on congestion, increasing the cost during times of heavy<br />load and lowering when less busy.<br /><br />The actual fee per gas will be the base fee for the block and the priority fee, up to the max fee per gas.<br /><br />This will be `null` on legacy networks (i.e. [pre-EIP-1559](https://eips.ethereum.org/EIPS/eip-1559)) |
+| `maxPriorityFeePerGas` | `readonly` | `null` \| `bigint` | The additional amount to pay per gas to encourage a validator to include the transaction.<br /><br />The purpose of this is to compensate the validator for the adjusted risk for including a given transaction.<br /><br />This will be `null` on legacy networks (i.e. [pre-EIP-1559](https://eips.ethereum.org/EIPS/eip-1559)) |
+
+## Methods
+
+### toJSON()
+
+```ts
+toJSON(): any
+```
+
+Returns a JSON-friendly value.
+
+#### Returns
+
+`any`
+
+The JSON-friendly value.
+
+#### Source
+
+[providers/provider.ts:137](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L137)

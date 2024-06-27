@@ -1,0 +1,44 @@
+---
+title: GetUrlResponse
+---
+
+```ts
+type GetUrlResponse: {
+  "body": null | Uint8Array;
+  "headers": Record<string, string>;
+  "statusCode": number;
+  "statusMessage": string;
+};
+```
+
+An environment's implementation of `getUrl` must return this type.
+
+## Type declaration
+
+### body
+
+```ts
+body: null | Uint8Array;
+```
+
+### headers
+
+```ts
+headers: Record<string, string>;
+```
+
+### statusCode
+
+```ts
+statusCode: number;
+```
+
+### statusMessage
+
+```ts
+statusMessage: string;
+```
+
+## Source
+
+[utils/fetch.ts:29](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fetch.ts#L29)

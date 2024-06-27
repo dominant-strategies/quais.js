@@ -1,0 +1,25 @@
+---
+title: FetchRetryFunc
+---
+
+```ts
+type FetchRetryFunc: (req, resp, attempt) => Promise<boolean>;
+```
+
+Called prior to each retry; return true to retry, false to abort.
+
+## Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `req` | [`FetchRequest`](/content/classes/FetchRequest) |
+| `resp` | [`FetchResponse`](/content/classes/FetchResponse) |
+| `attempt` | `number` |
+
+## Returns
+
+`Promise`\<`boolean`\>
+
+## Source
+
+[utils/fetch.ts:66](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fetch.ts#L66)

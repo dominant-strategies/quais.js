@@ -1,0 +1,41 @@
+---
+title: getCreateAddress
+---
+
+```ts
+function getCreateAddress(tx): string
+```
+
+Returns the address that would result from a `CREATE` for `tx`.
+
+This can be used to compute the address a contract will be deployed to by an EOA when sending a deployment
+transaction (i.e. when the `to` address is `null`).
+
+This can also be used to compute the address a contract will be deployed to by a contract, by using the contract's
+address as the `to` and the contract's nonce.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `tx` | `object` | The transaction object. |
+| `tx.from` | `string` | The address of the sender. |
+| `tx.nonce` | [`BigNumberish`](/content/type-aliases/BigNumberish) | - |
+
+## Returns
+
+`string`
+
+## Example
+
+```js
+from = '0x8ba1f109551bD432803012645Ac136ddd64DBA72';
+nonce = 5;
+
+getCreateAddress({ from, nonce });
+//_result:
+```
+
+## Source
+
+[address/contract-address.ts:42](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/address/contract-address.ts#L42)

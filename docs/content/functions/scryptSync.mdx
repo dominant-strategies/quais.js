@@ -1,0 +1,55 @@
+---
+title: scryptSync
+---
+
+```ts
+function scryptSync(
+   _passwd, 
+   _salt, 
+   N, 
+   r, 
+   p, 
+   dkLen): string
+```
+
+Provides a synchronous variant of [**scrypt**](/content/functions/scrypt).
+
+This will completely lock up and freeze the UI in a browser and will prevent any event loop from progressing. For
+this reason, it is preferred to use the [async variant](scrypt).
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `_passwd` | [`BytesLike`](/content/type-aliases/BytesLike) | The password to use. |
+| `_salt` | [`BytesLike`](/content/type-aliases/BytesLike) | The salt to use. |
+| `N` | `number` | The CPU/memory cost parameter. |
+| `r` | `number` | The block size parameter. |
+| `p` | `number` | The parallelization parameter. |
+| `dkLen` | `number` | The length of the key to generate. |
+
+## Returns
+
+`string`
+
+The key derived from the password.
+
+## Example
+
+```ts
+// The password must be converted to bytes, and it is generally
+// best practices to ensure the string has been normalized. Many
+// formats explicitly indicate the normalization form to use.
+password = 'hello';
+passwordBytes = toUtf8Bytes(password, 'NFKC');
+
+salt = id('some-salt');
+
+// Compute the scrypt
+scryptSync(passwordBytes, salt, 1024, 8, 1, 16);
+//_result:
+```
+
+## Source
+
+[crypto/scrypt.ts:157](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/scrypt.ts#L157)

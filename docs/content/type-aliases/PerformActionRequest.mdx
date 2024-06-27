@@ -1,0 +1,135 @@
+---
+title: PerformActionRequest
+---
+
+```ts
+type PerformActionRequest: 
+  | {
+  "method": "broadcastTransaction";
+  "signedTransaction": string;
+  "zone": Zone;
+ }
+  | {
+  "blockTag": BlockTag;
+  "method": "call";
+  "transaction": PerformActionTransaction;
+  "zone": Zone;
+ }
+  | {
+  "method": "chainId";
+  "zone": Zone;
+ }
+  | {
+  "method": "estimateGas";
+  "transaction": PerformActionTransaction;
+  "zone": Zone;
+ }
+  | {
+  "address": string;
+  "blockTag": BlockTag;
+  "method": "getBalance";
+  "zone": Zone;
+ }
+  | {
+  "address": string;
+  "method": "getOutpointsByAddress";
+  "zone": Zone;
+ }
+  | {
+  "blockTag": BlockTag;
+  "includeTransactions": boolean;
+  "method": "getBlock";
+  "shard": Shard;
+ }
+  | {
+  "blockHash": string;
+  "includeTransactions": boolean;
+  "method": "getBlock";
+  "shard": Shard;
+ }
+  | {
+  "method": "getBlockNumber";
+  "shard": Shard;
+ }
+  | {
+  "address": string;
+  "blockTag": BlockTag;
+  "method": "getCode";
+  "zone": Zone;
+ }
+  | {
+  "method": "getGasPrice";
+  "txType": boolean;
+  "zone": Zone;
+ }
+  | {
+  "filter": PerformActionFilter;
+  "method": "getLogs";
+  "zone": Zone;
+ }
+  | {
+  "method": "getMaxPriorityFeePerGas";
+  "zone": Zone;
+ }
+  | {
+  "address": string;
+  "blockTag": BlockTag;
+  "method": "getStorage";
+  "position": bigint;
+  "zone": Zone;
+ }
+  | {
+  "hash": string;
+  "method": "getTransaction";
+  "zone": Zone;
+ }
+  | {
+  "address": string;
+  "blockTag": BlockTag;
+  "method": "getTransactionCount";
+  "zone": Zone;
+ }
+  | {
+  "hash": string;
+  "method": "getTransactionReceipt";
+  "zone": Zone;
+ }
+  | {
+  "hash": string;
+  "method": "getTransactionResult";
+  "zone": Zone;
+ }
+  | {
+  "method": "getRunningLocations";
+  "shard": Shard;
+ }
+  | {
+  "method": "getProtocolTrieExpansionCount";
+  "shard": Shard;
+ }
+  | {
+  "amt": number;
+  "blockTag": BlockTag;
+  "method": "getQiRateAtBlock";
+  "zone": Zone;
+ }
+  | {
+  "amt": number;
+  "blockTag": BlockTag;
+  "method": "getQuaiRateAtBlock";
+  "zone": Zone;
+ }
+  | {
+  "method": "getProtocolExpansionNumber";
+ }
+  | {
+  "method": "getPendingHeader";
+};
+```
+
+The [**AbstractProvider**](/content/classes/AbstractProvider) methods will normalize all values and pass this type to
+AbstractProvider._perform | **AbstractProvider._perform**.
+
+## Source
+
+[providers/abstract-provider.ts:438](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L438)

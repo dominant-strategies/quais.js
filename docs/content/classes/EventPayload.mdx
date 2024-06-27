@@ -1,0 +1,74 @@
+---
+title: EventPayload
+---
+
+When an [**EventEmitterable**](/content/interfaces/EventEmitterable) triggers a [[Listener]], the callback always ahas one
+additional argument passed, which is an **EventPayload**.
+
+## Todo
+
+Listener is no longer exported, need to revise comment or remove link
+
+## Extended by
+
+- [`ContractUnknownEventPayload`](/content/classes/ContractUnknownEventPayload)
+
+## Type parameters
+
+| Type parameter |
+| :------ |
+| `T` |
+
+## Constructors
+
+### new EventPayload()
+
+```ts
+new EventPayload<T>(
+   emitter, 
+   listener, 
+filter): EventPayload<T>
+```
+
+Create a new **EventPayload** for `emitter` with the `listener` and for `filter`.
+
+#### Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `emitter` | [`EventEmitterable`](/content/interfaces/EventEmitterable)\<`T`\> |
+| `listener` | `null` \| [`Listener`](/content/type-aliases/Listener) |
+| `filter` | `T` |
+
+#### Returns
+
+[`EventPayload`](/content/classes/EventPayload)\<`T`\>
+
+#### Source
+
+[utils/events.ts:91](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L91)
+
+## Properties
+
+| Property | Modifier | Type | Description |
+| :------ | :------ | :------ | :------ |
+| `emitter` | `readonly` | [`EventEmitterable`](/content/interfaces/EventEmitterable)\<`T`\> | The **EventEmitterable**. |
+| `filter` | `readonly` | `T` | The event filter. |
+
+## Methods
+
+### removeListener()
+
+```ts
+removeListener(): Promise<void>
+```
+
+Unregister the triggered listener for future events.
+
+#### Returns
+
+`Promise`\<`void`\>
+
+#### Source
+
+[utils/events.ts:99](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L99)

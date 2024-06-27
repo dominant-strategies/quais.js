@@ -1,0 +1,95 @@
+---
+title: Subscriber
+---
+
+A **Subscriber** manages a subscription.
+
+Only developers sub-classing [**AbstractProvider**](/content/classes/AbstractProvider) will care about this, if they are
+modifying a low-level feature of how subscriptions operate.
+
+## Properties
+
+| Property | Type | Description |
+| :------ | :------ | :------ |
+| `pollingInterval?` | `number` | The frequency (in ms) to poll for events, if polling is used by the subscriber.<br /><br />For non-polling subscribers, this must return `undefined`. |
+
+## Methods
+
+### pause()
+
+```ts
+pause(dropWhilePaused?): void
+```
+
+Called when the subscription should pause.
+
+If `dropWhilePaused`, events that occur while paused should not be emitted
+[**Subscriber.resume**](/content/interfaces/Subscriber#resume).
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `dropWhilePaused`? | `boolean` | If `true`, events that occur while paused |
+
+#### Returns
+
+`void`
+
+#### Source
+
+[providers/abstract-provider.ts:193](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L193)
+
+***
+
+### resume()
+
+```ts
+resume(): void
+```
+
+Resume a paused subscriber.
+
+#### Returns
+
+`void`
+
+#### Source
+
+[providers/abstract-provider.ts:198](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L198)
+
+***
+
+### start()
+
+```ts
+start(): void
+```
+
+Called initially when a subscriber is added the first time.
+
+#### Returns
+
+`void`
+
+#### Source
+
+[providers/abstract-provider.ts:178](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L178)
+
+***
+
+### stop()
+
+```ts
+stop(): void
+```
+
+Called when there are no more subscribers to the event.
+
+#### Returns
+
+`void`
+
+#### Source
+
+[providers/abstract-provider.ts:183](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L183)

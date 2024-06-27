@@ -1,0 +1,34 @@
+---
+title: JsonRpcResult
+---
+
+```ts
+type JsonRpcResult: {
+  "id": number;
+  "result": any;
+};
+```
+
+A JSON-RPC result, which are returned on success from a JSON-RPC server.
+
+## Type declaration
+
+### id
+
+```ts
+id: number;
+```
+
+The response ID to match it to the relevant request.
+
+### result
+
+```ts
+result: any;
+```
+
+The response result.
+
+## Source
+
+[providers/provider-jsonrpc.ts:132](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L132)

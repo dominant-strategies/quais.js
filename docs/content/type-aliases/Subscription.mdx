@@ -1,0 +1,38 @@
+---
+title: Subscription
+---
+
+```ts
+type Subscription: {
+  "tag": string;
+  "type":   | "block"
+     | "close"
+     | "debug"
+     | "error"
+     | "finalized"
+     | "network"
+     | "pending"
+     | "safe";
+ } | {
+  "hash": string;
+  "tag": string;
+  "type": "transaction";
+ } | {
+  "filter": EventFilter;
+  "tag": string;
+  "type": "event";
+ } | {
+  "filter": OrphanFilter;
+  "tag": string;
+  "type": "orphan";
+};
+```
+
+The value passed to the AbstractProvider._getSubscriber | **AbstractProvider._getSubscriber** method.
+
+Only developers sub-classing [**AbstractProvider**](/content/classes/AbstractProvider) will care about this, if they are
+modifying a low-level feature of how subscriptions operate.
+
+## Source
+
+[providers/abstract-provider.ts:145](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L145)

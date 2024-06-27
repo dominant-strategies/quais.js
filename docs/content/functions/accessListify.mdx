@@ -1,0 +1,29 @@
+---
+title: accessListify
+---
+
+```ts
+function accessListify(value): AccessList
+```
+
+Returns an [**AccessList**](/content/type-aliases/AccessList) from any quasi-supported access-list structure.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | [`AccessListish`](/content/type-aliases/AccessListish) | The value to convert to an access list. |
+
+## Returns
+
+[`AccessList`](/content/type-aliases/AccessList)
+
+The access list.
+
+## Throws
+
+If the value is not a valid access list.
+
+## Source
+
+[transaction/accesslist.ts:33](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/accesslist.ts#L33)

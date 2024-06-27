@@ -1,0 +1,26 @@
+---
+title: getBigInt
+---
+
+```ts
+function getBigInt(value, name?): bigint
+```
+
+Gets a BigInt from `value`. If it is an invalid value for a BigInt, then an ArgumentError will be thrown for `name`.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | [`BigNumberish`](/content/type-aliases/BigNumberish) | The value to convert. |
+| `name`? | `string` | The name of the value. |
+
+## Returns
+
+`bigint`
+
+The value.
+
+## Source
+
+[utils/maths.ts:124](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/maths.ts#L124)

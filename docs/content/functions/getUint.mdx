@@ -1,0 +1,30 @@
+---
+title: getUint
+---
+
+```ts
+function getUint(value, name?): bigint
+```
+
+Returns `value` as a bigint, validating it is valid as a bigint value and that it is positive.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `value` | [`BigNumberish`](/content/type-aliases/BigNumberish) | The value to convert. |
+| `name`? | `string` | The name of the value. |
+
+## Returns
+
+`bigint`
+
+The value.
+
+## Throws
+
+If the value is negative.
+
+## Source
+
+[utils/maths.ts:176](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/maths.ts#L176)

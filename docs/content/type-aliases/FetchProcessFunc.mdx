@@ -1,0 +1,24 @@
+---
+title: FetchProcessFunc
+---
+
+```ts
+type FetchProcessFunc: (req, resp) => Promise<FetchResponse>;
+```
+
+Called on the response, allowing client-based throttling logic or post-processing.
+
+## Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `req` | [`FetchRequest`](/content/classes/FetchRequest) |
+| `resp` | [`FetchResponse`](/content/classes/FetchResponse) |
+
+## Returns
+
+`Promise`\<[`FetchResponse`](/content/classes/FetchResponse)\>
+
+## Source
+
+[utils/fetch.ts:59](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fetch.ts#L59)

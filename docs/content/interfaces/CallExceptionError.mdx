@@ -1,0 +1,25 @@
+---
+title: CallExceptionError
+---
+
+This **Error** indicates a transaction reverted.
+
+## Extends
+
+- [`quaisError`](/content/interfaces/quaisError)\<`"CALL_EXCEPTION"`\>
+
+## Properties
+
+| Property | Type | Description | Inherited from |
+| :------ | :------ | :------ | :------ |
+| `action` | [`CallExceptionAction`](/content/type-aliases/CallExceptionAction) | The action being performed when the revert was encountered. | - |
+| `code` | [`ErrorCode`](/content/type-aliases/ErrorCode) | The string error code. | [`quaisError`](/content/interfaces/quaisError).`code` |
+| `data` | `null` \| `string` | The revert data returned. | - |
+| `error?` | `Error` | Any related error. | [`quaisError`](/content/interfaces/quaisError).`error` |
+| `info?` | `Record`\<`string`, `any`\> | Additional info regarding the error that may be useful.<br /><br />This is generally helpful mostly for human-based debugging. | [`quaisError`](/content/interfaces/quaisError).`info` |
+| `invocation` | `null` \| \{ `"args"`: `any`[]; `"method"`: `string`; `"signature"`: `string`; \} | The contract invocation details, if available. | - |
+| `reason` | `null` \| `string` | A human-readable representation of data, if possible. | - |
+| `receipt?` | [`TransactionReceipt`](/content/classes/TransactionReceipt) | If the error occurred in a transaction that was mined (with a status of `0`), this is the receipt. | - |
+| `revert` | `null` \| \{ `"args"`: `any`[]; `"name"`: `string`; `"signature"`: `string`; \} | The built-in or custom revert error, if available | - |
+| `shortMessage` | `string` | A short message describing the error, with minimal additional details. | [`quaisError`](/content/interfaces/quaisError).`shortMessage` |
+| `transaction` | [`CallExceptionTransaction`](/content/type-aliases/CallExceptionTransaction) | The transaction that triggered the exception. | - |

@@ -1,0 +1,34 @@
+---
+title: Eip1193Provider
+---
+
+The interface to an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) provider, which is a standard used by most
+injected providers, which the [**BrowserProvider**](/content/classes/BrowserProvider) accepts and exposes the API of.
+
+## Methods
+
+### request()
+
+```ts
+request(request): Promise<any>
+```
+
+See [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) for details on this method.
+
+#### Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `request` | `object` | The request object. |
+| `request.method` | `string` | The method name. |
+| `request.params`? | `any`[] \| `Record`\<`string`, `any`\> | The parameters for the method. |
+
+#### Returns
+
+`Promise`\<`any`\>
+
+The result of the request.
+
+#### Source
+
+[providers/provider-browser.ts:25](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-browser.ts#L25)

@@ -1,0 +1,38 @@
+---
+title: sha256
+---
+
+```ts
+function sha256(_data): string
+```
+
+Compute the cryptographic SHA2-256 hash of `data`.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `_data` | [`BytesLike`](/content/type-aliases/BytesLike) | The data to hash. |
+
+## Returns
+
+`string`
+
+The hash of the data.
+
+## Example
+
+```ts
+sha256('0x');
+//_result:
+
+sha256('0x1337');
+//_result:
+
+sha256(new Uint8Array([0x13, 0x37]));
+//_result:
+```
+
+## Source
+
+[crypto/sha2.ts:42](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/sha2.ts#L42)

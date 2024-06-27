@@ -1,0 +1,45 @@
+---
+title: encodeBase64
+---
+
+```ts
+function encodeBase64(data): string
+```
+
+Encodes `data` as a base-64 encoded string.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `data` | [`BytesLike`](/content/type-aliases/BytesLike) | The data to encode. |
+
+## Returns
+
+`string`
+
+The base-64 encoded string.
+
+## Example
+
+```ts
+// Encoding binary data as a hexstring
+encodeBase64('0x1234');
+//_result:
+
+// Encoding binary data as a Uint8Array
+encodeBase64(new Uint8Array([0x12, 0x34]));
+//_result:
+
+// The input MUST be data...
+encodeBase64('Hello World!!');
+//_error:
+
+// ...use toUtf8Bytes for this.
+encodeBase64(toUtf8Bytes('Hello World!!'));
+//_result:
+```
+
+## Source
+
+[encoding/base64.ts:66](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/encoding/base64.ts#L66)

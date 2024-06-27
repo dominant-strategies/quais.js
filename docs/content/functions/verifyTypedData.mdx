@@ -1,0 +1,32 @@
+---
+title: verifyTypedData
+---
+
+```ts
+function verifyTypedData(
+   domain, 
+   types, 
+   value, 
+   signature): string
+```
+
+Compute the address used to sign the typed data for the `signature`.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `domain` | [`TypedDataDomain`](/content/interfaces/TypedDataDomain) | The domain of the typed data. |
+| `types` | `Record`\<`string`, [`TypedDataField`](/content/interfaces/TypedDataField)[]\> | The types of the typed data. |
+| `value` | `Record`\<`string`, `any`\> | The value of the typed data. |
+| `signature` | [`SignatureLike`](/content/type-aliases/SignatureLike) | The signature to verify. |
+
+## Returns
+
+`string`
+
+The address that signed the typed data.
+
+## Source
+
+[hash/typed-data.ts:726](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L726)

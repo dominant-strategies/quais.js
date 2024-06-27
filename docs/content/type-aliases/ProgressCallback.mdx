@@ -1,0 +1,25 @@
+---
+title: ProgressCallback
+---
+
+```ts
+type ProgressCallback: (percent) => void;
+```
+
+A callback during long-running operations to update any UI or provide programatic access to the progress.
+
+The `percent` is a value between `0` and `1`.
+
+## Parameters
+
+| Parameter | Type |
+| :------ | :------ |
+| `percent` | `number` |
+
+## Returns
+
+`void`
+
+## Source
+
+[crypto/scrypt.ts:14](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/scrypt.ts#L14)

@@ -1,0 +1,23 @@
+---
+title: TransactionReplacedError
+---
+
+A pending transaction was replaced by another.
+
+## Extends
+
+- [`quaisError`](/content/interfaces/quaisError)\<`"TRANSACTION_REPLACED"`\>
+
+## Properties
+
+| Property | Type | Description | Inherited from |
+| :------ | :------ | :------ | :------ |
+| `cancelled` | `boolean` | If the transaction was cancelled, such that the original effects of the transaction cannot be assured. | - |
+| `code` | [`ErrorCode`](/content/type-aliases/ErrorCode) | The string error code. | [`quaisError`](/content/interfaces/quaisError).`code` |
+| `error?` | `Error` | Any related error. | [`quaisError`](/content/interfaces/quaisError).`error` |
+| `hash` | `string` | The hash of the replaced transaction. | - |
+| `info?` | `Record`\<`string`, `any`\> | Additional info regarding the error that may be useful.<br /><br />This is generally helpful mostly for human-based debugging. | [`quaisError`](/content/interfaces/quaisError).`info` |
+| `reason` | `"cancelled"` \| `"replaced"` \| `"repriced"` | The reason the transaction was replaced. | - |
+| `receipt` | [`TransactionReceipt`](/content/classes/TransactionReceipt) | The receipt of the transaction that replace the transaction. | - |
+| `replacement` | [`TransactionResponse`](/content/type-aliases/TransactionResponse) | The transaction that replaced the transaction. | - |
+| `shortMessage` | `string` | A short message describing the error, with minimal additional details. | [`quaisError`](/content/interfaces/quaisError).`shortMessage` |

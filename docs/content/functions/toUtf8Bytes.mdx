@@ -1,0 +1,32 @@
+---
+title: toUtf8Bytes
+---
+
+```ts
+function toUtf8Bytes(str, form?): Uint8Array
+```
+
+Returns the UTF-8 byte representation of `str`.
+
+If `form` is specified, the string is normalized.
+
+## Parameters
+
+| Parameter | Type | Description |
+| :------ | :------ | :------ |
+| `str` | `string` | The string to convert. |
+| `form`? | [`UnicodeNormalizationForm`](/content/type-aliases/UnicodeNormalizationForm) | The normalization form to use. |
+
+## Returns
+
+`Uint8Array`
+
+The UTF-8 byte representation.
+
+## Throws
+
+If the UTF-8 conversion fails.
+
+## Source
+
+[encoding/utf8.ts:286](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/encoding/utf8.ts#L286)
