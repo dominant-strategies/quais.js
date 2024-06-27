@@ -134,6 +134,7 @@ class MyReporter {
             this.log(
                 `    [ <red+>fail(${ this._errors.length }): <red>${ escapeColor(test.title) } - <normal>${ escapeColor(error.message) } ]`
             );
+            this.log(escapeColor(error.stack || error.toString()));
 
         }).once(EVENT_RUN_END, () => {
             this.flush(true);
@@ -143,7 +144,7 @@ class MyReporter {
                 this._errors.forEach(({ test, error }, index) => {
                     this.log("<cyan+>---------------------");
                     this.log(`<red+>ERROR ${ index + 1 }: <red>${ escapeColor(test.title) }`);
-                    this.log(escapeColor(error.toString()));
+                    this.log(escapeColor(error.Stack || error.toString()));
                 });
                 this.log("<cyan+>=====================");
             }
