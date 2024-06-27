@@ -74,8 +74,18 @@ jobs:
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           repository: quais-docs
-          branch: main
+          branch: ${{ needs.call-common-workflow.outputs.branch }}
+          create_branch: true
           commit_user_name: ci-dominantstrategies
           commit_user_email: ci@dominantstrategies.io
         env:
           HUSKY: 0
+
+      - name: Create Pull Request
+        run: |
+          PR_BRANCH=${{ needs.call-common-workflow.outputs.branch }}
+          curl -u ci-dominantstrategies:${{ secrets.GH_PAT }} \
+            -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/dominant-strategies/quais-docs/pulls \
+            -d '{"title":"Update Documentation","head":"'"$PR_BRANCH"'","base":"main","body":"This PR updates the documentation."}'
