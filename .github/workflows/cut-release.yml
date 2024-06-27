@@ -19,7 +19,7 @@ jobs:
       - name: Get Version
         run: |
           VERSION=$(jq -r '.version' package.json)
-          echo "VERSION=$(echo $VERSION | sed 's/\.[0-9]*$//')" >> $GITHUB_ENV
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
       - name: Store version in branch variable
         id: set-branch
         run: echo "branch=${{ env.VERSION }}" >> $GITHUB_OUTPUT
@@ -103,7 +103,7 @@ jobs:
       - name: Create Pull Request
         run: |
           PR_BRANCH=${{ needs.get-branch.outputs.branch }}
-          curl -u ci-dominantstrategies:${{ secrets.GH_PAT }} \
+          curl -u github-actions:${{ secrets.GITHUB_TOKEN }} \
             -X POST \
             -H "Accept: application/vnd.github.v3+json" \
             https://api.github.com/repos/dominant-strategies/quais-docs/pulls \
