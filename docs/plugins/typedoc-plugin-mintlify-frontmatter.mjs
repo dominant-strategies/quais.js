@@ -13,8 +13,12 @@ export function load(app) {
          * @param {import('typedoc-plugin-markdown').MarkdownPageEvent} page
          */
         (page) => {
+            const iconLetter = page.url.charAt(0);
+            const icon = 'square-' + iconLetter;
             page.frontmatter = {
                 title: page.model?.name,
+                icon: icon,
+                iconType: "solid",
                 ...page.frontmatter,
             };
         },
