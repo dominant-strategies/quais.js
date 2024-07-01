@@ -205,7 +205,6 @@ function stringify(value) {
  * @param {string} message - The error message.
  * @param {ErrorCode} code - The error code.
  * @param {ErrorInfo<T>} [info] - Additional properties for the error.
- *
  * @returns {T} The new error.
  */
 function makeError(message, code, info) {
