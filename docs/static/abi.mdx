@@ -1,6 +1,8 @@
 ---
 title: Application Binary Interfaces
+sidebarTitle: abi
 description: 'Implement smart contracts through their Application Binary Interface (ABI).'
+icon: 'bars'
 ---
 
 When interacting with any application, whether it is on Quai Network, over the internet or within a compiled application on a computer all information is stored and sent as binary data which is just a sequence of bytes.
@@ -50,3 +52,49 @@ For example, the event `Transfer(address indexed from, address indexed to, uint 
 When deploying a transaction, the data provided is treated as **initcode**, which executes the data as normal EVM bytecode, which returns a sequence of bytes, but instead of that sequence of bytes being treated as data that result is instead the bytecode to install as the bytecode of the contract.
 
 The bytecode produced by Solidity is designed to have all constructor parameters encoded normally and concatenated to the bytecode and provided as the `data` to a transaction with no `to` address.
+
+## Classes
+
+|                                                                   |                                                                    |
+| :---------------------------------------------------------------- | :----------------------------------------------------------------- |
+| [ConstructorFragment](/content/classes/ConstructorFragment)       | A fragment of a contract ABI that represents a constructor.        |
+| [ErrorDescription](/content/classes/ErrorDescription)             | A description of an error in a contract ABI.                       |
+| [ErrorFragment](/content/classes/ErrorFragment)                   | A fragment of a contract ABI that represents an error.             |
+| [EventFragment](/content/classes/EventFragment)                   | A fragment of a contract ABI that represents an event.             |
+| [FallbackFragment](/content/classes/FallbackFragment)             | A fragment of a contract ABI that represents a fallback function.  |
+| [Fragment](/content/classes/Fragment)                             | A fragment of a contract ABI.                                      |
+| [FunctionFragment](/content/classes/FunctionFragment)             | A fragment of a contract ABI that represents a function.           |
+| [Indexed](/content/classes/Indexed)                               | A fragment of a contract ABI that represents an indexed parameter. |
+| [Interface](/content/classes/Interface)                           | An interface ABI.                                                  |
+| [LogDescription](/content/classes/LogDescription)                 | A description of a log in a contract ABI.                          |
+| [NamedFragment](/content/classes/NamedFragment)                   | A fragment of a contract ABI that has a name.                      |
+| [ParamType](/content/classes/ParamType)                           | A fragment of a contract ABI that represents a parameter type.     |
+| [Result](/content/classes/Result)                                 | A fragment of a contract ABI that represents a result.             |
+| [StructFragment](/content/classes/StructFragment)                 | A fragment of a contract ABI that represents a struct.             |
+| [TransactionDescription](/content/classes/TransactionDescription) | A description of a transaction in a contract ABI.                  |
+| [Typed](/content/classes/Typed)                                   | A fragment of a contract ABI that represents a typed parameter.    |
+
+## Interfaces
+
+|                                                          |                                                        |
+| :------------------------------------------------------- | :----------------------------------------------------- |
+| [JsonFragment](/content/interfaces/JsonFragment)         | A JSON representation of a contract ABI fragment.      |
+| [JsonFragmentType](/content/interfaces/JsonFragmentType) | A JSON representation of a contract ABI fragment type. |
+
+## Types
+
+|                                                                        |                                                                    |
+| :--------------------------------------------------------------------- | :----------------------------------------------------------------- |
+| [FormatType](/content/type-aliases/FormatType)                         | A type that represents a format.                                   |
+| [FragmentType](/content/type-aliases/FragmentType)                     | A type that represents a fragment.                                 |
+| [InterfaceAbi](/content/type-aliases/InterfaceAbi)                     | A type that represents an interface ABI.                           |
+| [ParamTypeWalkAsyncFunc](/content/type-aliases/ParamTypeWalkAsyncFunc) | A type that represents an async function to walk a parameter type. |
+| [ParamTypeWalkFunc](/content/type-aliases/ParamTypeWalkFunc)           | A type that represents a function to walk a parameter type.        |
+
+## Functions
+
+|                                                               |                                    |
+| :------------------------------------------------------------ | :--------------------------------- |
+| [checkResultErrors](/content/functions/checkResultErrors)     | Check if a result contains errors. |
+| [decodeBytes32String](/content/functions/decodeBytes32String) | Decode a bytes32 string.           |
+| [encodeBytes32String](/content/functions/encodeBytes32String) | Encode a string as bytes32.        |
