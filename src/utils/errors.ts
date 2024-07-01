@@ -116,18 +116,9 @@ function stringify(value: any): any {
  *
  * **`"TRANSACTION_REPLACED"`** - see {@link TransactionReplacedError | **TransactionReplacedError**}
  *
- * **`"UNCONFIGURED_NAME"`** - see {link UnconfiguredNameError | **UnconfiguredNameError**}
+ * **User Interaction Errors**
  *
- * @category Utils
- * @todo - Revise as UnconfiguredNameError has been removed
- *
- *   **`"OFFCHAIN_FAULT"`** - see {link OffchainFaultError | **OffchainFaultError**}
- *
- * @todo - Revise as OffchainFaultError has been removed
- *
- *   **User Interaction Errors**
- *
- *   **`"ACTION_REJECTED"`** - see {@link ActionRejectedError | **ActionRejectedError**}
+ * **`"ACTION_REJECTED"`** - see {@link ActionRejectedError | **ActionRejectedError**}
  */
 export type ErrorCode =
     // Generic Errors
@@ -669,7 +660,6 @@ export function isCallException(error: any): error is CallExceptionError {
  * @param {string} message - The error message.
  * @param {ErrorCode} code - The error code.
  * @param {ErrorInfo<T>} [info] - Additional properties for the error.
- *
  * @returns {T} The new error.
  */
 export function makeError<K extends ErrorCode, T extends CodedquaisError<K>>(
