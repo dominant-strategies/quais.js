@@ -1,10 +1,40 @@
 ---
 title: Wallets
+sidebarTitle: Wallets
 description: 'A combination of generalized and low-level wallet tools.'
+icon: 'wallet'
 ---
 
 When interacting with either Qi or Quai, it is necessary to use a private key authenticate actions by signing a payload.
 
-Wallets are the simplest way to expose the concept of an Externally Owner Account (EOA) or UTXO account as it wraps a private key and supports high-level methods to sign common types of interaction and send transactions.
+**Wallets are the simplest way** to expose the concept of an Externally Owner Account (EOA) or UTXO account as it wraps a private key and supports high-level methods to sign common types of interaction and send transactions.
 
-The class most developers will want to use is Wallet, which can load a private key directly or from any common wallet format.
+The class most developers will want to use is Wallet, **which can load a private key directly or from any common wallet format**.
+
+## Classes
+
+|                                                       |                                                                      |
+| ----------------------------------------------------- | -------------------------------------------------------------------- |
+| [BaseWallet](/content/classes/BaseWallet)             | An abstract wallet class.                                            |
+| [HDNodeVoidWallet](/content/classes/HDNodeVoidWallet) | A Hierarchical Deterministic wallet that does not sign transactions. |
+| [Mnemonic](/content/classes/Mnemonic)                 | A mnemonic wallet.                                                   |
+| [QiHDWallet](/content/classes/QiHDWallet)             | A Hierarchical Deterministic wallet for the Qi network.              |
+| [QuaiHDWallet](/content/classes/QuaiHDWallet)         | A Hierarchical Deterministic wallet for the Quai network.            |
+| [Wallet](/content/classes/Wallet)                     | A wallet that can sign transactions.                                 |
+
+## Types
+
+|                                                          |                                       |
+| -------------------------------------------------------- | ------------------------------------- |
+| [EncryptOptions](/content/type-aliases/EncryptOptions)   | Options for encrypting a private key. |
+| [KeystoreAccount](/content/type-aliases/KeystoreAccount) | A keystore account.                   |
+
+## Functions
+
+|                                                                       |                                               |
+| --------------------------------------------------------------------- | --------------------------------------------- |
+| [decryptKeystoreJson](/content/functions/decryptKeystoreJson)         | Decrypt a keystore JSON object.               |
+| [decryptKeystoreJsonSync](/content/functions/decryptKeystoreJsonSync) | Decrypt a keystore JSON object synchronously. |
+| [encryptKeystoreJson](/content/functions/encryptKeystoreJson)         | Encrypt a keystore JSON object.               |
+| [encryptKeystoreJsonSync](/content/functions/encryptKeystoreJsonSync) | Encrypt a keystore JSON object synchronously. |
+| [isKeystoreJson](/content/functions/isKeystoreJson)                   | Check if a JSON object is a keystore.         |
