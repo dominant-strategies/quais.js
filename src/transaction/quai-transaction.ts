@@ -144,11 +144,11 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         if (!this.originZone) {
             throw new Error('Invalid Zone for from address');
         }
-        if (!(this.from && this.to)) {
-            throw new Error('Missing from or to address');
+        if (!this.from) {
+            throw new Error('Missing from address');
         }
 
-        const isSameLedger = isQuaiAddress(this.from) === isQuaiAddress(this.to);
+        const isSameLedger = !this.to || isQuaiAddress(this.from) === isQuaiAddress(this.to);
         if (this.isExternal && !isSameLedger) {
             throw new Error('Cross-zone & cross-ledger transactions are not supported');
         }
