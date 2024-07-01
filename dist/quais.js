@@ -172,7 +172,6 @@ function isCallException(error) {
  * @param {string} message - The error message.
  * @param {ErrorCode} code - The error code.
  * @param {ErrorInfo<T>} [info] - Additional properties for the error.
- *
  * @returns {T} The new error.
  */
 function makeError(message, code, info) {
@@ -19147,10 +19146,10 @@ class QuaiTransaction extends AbstractTransaction {
         if (!this.originZone) {
             throw new Error('Invalid Zone for from address');
         }
-        if (!(this.from && this.to)) {
-            throw new Error('Missing from or to address');
+        if (!this.from) {
+            throw new Error('Missing from address');
         }
-        const isSameLedger = isQuaiAddress(this.from) === isQuaiAddress(this.to);
+        const isSameLedger = !this.to || isQuaiAddress(this.from) === isQuaiAddress(this.to);
         if (this.isExternal && !isSameLedger) {
             throw new Error('Cross-zone & cross-ledger transactions are not supported');
         }
