@@ -273,6 +273,18 @@ export enum Zone {
 /////////////////////////////
 // HDWallets
 
+export interface addrParams {
+    account: number;
+    zone: Zone;
+}
+export type TestAddresses = Array<{
+    addressParams: {
+        account: number;
+        zone: Zone;
+    };
+    expectedAddress: addressInfo;
+}>;
+
 export interface addressInfo {
     pubKey: string;
     address: string;
@@ -332,4 +344,67 @@ export interface TestCaseQuaiMessageSign {
     message: string;
     digest: string;
     signature: string;
+}
+
+export interface TestCaseQiAddresses {
+    name: string;
+    mnemonic: string;
+    addresses: TestAddresses;
+    changeAddresses: TestAddresses;
+}
+
+export interface TxInput {
+    txhash: string;
+    index: number;
+    pubkey: string;
+}
+
+export interface TxOutput {
+    address: string;
+    denomination: number;
+}
+export interface outpointInfo {
+    outpoint: {
+        txhash: string;
+        index: number;
+        denomination: number;
+    };
+    address: string;
+    zone: Zone;
+}
+
+export interface TestCaseQiTransaction {
+    name: string;
+    mnemonic: string;
+    params: Array<addrParams>;
+    outpoints: Array<outpointInfo>;
+    transaction: {
+        chainId: number;
+        txInputs: Array<TxInput>;
+        txOutputs: Array<TxOutput>;
+    };
+    signed: string;
+}
+
+export interface TestCaseQiSerialization {
+    name: string;
+    mnemonic: string;
+    params: Array<addrParams>;
+    outpoints: Array<outpointInfo>;
+    serialized: {
+        version: number;
+        phrase: string;
+        coinType: number;
+        addresses: Array<addressInfo>;
+        changeAddresses: Array<addressInfo>;
+        gapAddresses: Array<addressInfo>;
+        changeGapAddresses: Array<addressInfo>;
+        outpoints: Array<outpointInfo>;
+    };
+}
+
+export interface TestCaseQiSignMessage {
+    name: string;
+    mnemonic: string;
+    message: string;
 }
