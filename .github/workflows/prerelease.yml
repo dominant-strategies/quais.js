@@ -77,10 +77,10 @@ jobs:
       - name: generate docs content
         run: npx typedoc
 
-      - name: Copy generated documentation
+     - name: Copy generated documentation
         run: |
-          mkdir -p docs-repo/docs/content
-          cp -r docs/content/* quais-docs/content/
+          mkdir -p quais-docs/sdk/content
+          cp -r docs/content/* quais-docs/sdk/content/
           cd quais-docs/scripts
           node updateNavigation.js
 
