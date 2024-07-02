@@ -15,7 +15,7 @@ export function load(app) {
         }
         const formattedNavigation = navigation.map((group) => ({
             group: group.title,
-            pages: (group.children || []).map((child) => `content/${child.url.replace('.mdx', '')}`),
+            pages: (group.children || []).map((child) => `sdk/content/${child.url.replace('.mdx', '')}`),
         }));
         fs.writeFileSync('./docs/content/navigation.json', JSON.stringify(formattedNavigation, null, 2));
     });
