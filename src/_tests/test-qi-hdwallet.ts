@@ -9,7 +9,7 @@ import {
     TestCaseQiSignMessage,
     TestCaseQiTransaction,
     TestCaseQiSerialization,
-    addressInfo,
+    AddressInfo,
     TxInput,
     TxOutput,
     Zone,
@@ -23,16 +23,16 @@ describe('QiHDWallet: Test address generation and retrieval', function () {
         const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
         const qiWallet = QiHDWallet.fromMnemonic(mnemonic);
         it(`tests addresses generation and retrieval: ${test.name}`, function () {
-            const generatedAddresses: addressInfo[] = [];
-            for (const { addressParams, expectedAddress } of test.addresses) {
-                const addrInfo = qiWallet.getNextAddress(addressParams.account, addressParams.zone);
+            const generatedAddresses: AddressInfo[] = [];
+            for (const { params, expectedAddress } of test.addresses) {
+                const addrInfo = qiWallet.getNextAddress(params.account, params.zone);
                 assert.deepEqual(addrInfo, expectedAddress);
                 generatedAddresses.push(addrInfo);
 
                 const retrievedAddrInfo = qiWallet.getAddressInfo(expectedAddress.address);
                 assert.deepEqual(retrievedAddrInfo, expectedAddress);
 
-                const accountMap = new Map<number, addressInfo[]>();
+                const accountMap = new Map<number, AddressInfo[]>();
                 for (const addrInfo of generatedAddresses) {
                     if (!accountMap.has(addrInfo.account)) {
                         accountMap.set(addrInfo.account, []);
@@ -44,7 +44,7 @@ describe('QiHDWallet: Test address generation and retrieval', function () {
                     assert.deepEqual(retrievedAddresses, expectedAddresses);
                 }
 
-                const zoneMap = new Map<string, addressInfo[]>();
+                const zoneMap = new Map<string, AddressInfo[]>();
                 for (const addrInfo of generatedAddresses) {
                     if (!zoneMap.has(addrInfo.zone)) {
                         zoneMap.set(addrInfo.zone, []);
@@ -59,8 +59,8 @@ describe('QiHDWallet: Test address generation and retrieval', function () {
             }
         });
         it(`tests change addresses generation and retrieval: ${test.name}`, function () {
-            for (const { addressParams, expectedAddress } of test.changeAddresses) {
-                const addrInfo = qiWallet.getNextChangeAddress(addressParams.account, addressParams.zone);
+            for (const { params, expectedAddress } of test.changeAddresses) {
+                const addrInfo = qiWallet.getNextChangeAddress(params.account, params.zone);
                 assert.deepEqual(addrInfo, expectedAddress);
             }
         });
