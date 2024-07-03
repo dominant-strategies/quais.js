@@ -273,19 +273,16 @@ export enum Zone {
 /////////////////////////////
 // HDWallets
 
-export interface addrParams {
+export interface AddrParams {
     account: number;
     zone: Zone;
 }
 export type TestAddresses = Array<{
-    addressParams: {
-        account: number;
-        zone: Zone;
-    };
-    expectedAddress: addressInfo;
+    params: AddrParams;
+    expectedAddress: AddressInfo;
 }>;
 
-export interface addressInfo {
+export interface AddressInfo {
     pubKey: string;
     address: string;
     account: number;
@@ -297,22 +294,19 @@ export interface addressInfo {
 export interface TestCaseQuaiSerialization {
     name: string;
     mnemonic: string;
-    zone: Zone;
-    account: number;
-    totalAddresses: number;
+    params: Array<AddrParams>;
     serialized: {
         version: number;
         phrase: string;
         coinType: number;
-        addresses: Array<addressInfo>;
+        addresses: Array<AddressInfo>;
     };
 }
 
 export interface TestCaseQuaiTransaction {
     name: string;
     mnemonic: string;
-    zone: Zone;
-    account: number;
+    params: AddrParams;
     transaction: TestCaseTransactionTx;
     privateKey: string;
     signed: string;
@@ -321,11 +315,7 @@ export interface TestCaseQuaiTransaction {
 export interface TestCaseQuaiAddresses {
     name: string;
     mnemonic: string;
-    params: Array<{
-        account: number;
-        zone: Zone;
-    }>;
-    expectedAddresses: Array<addressInfo>;
+    addresses: TestAddresses;
 }
 
 export interface TestCaseQuaiTypedData {
@@ -376,7 +366,7 @@ export interface outpointInfo {
 export interface TestCaseQiTransaction {
     name: string;
     mnemonic: string;
-    params: Array<addrParams>;
+    params: Array<AddrParams>;
     outpoints: Array<outpointInfo>;
     transaction: {
         chainId: number;
@@ -389,16 +379,16 @@ export interface TestCaseQiTransaction {
 export interface TestCaseQiSerialization {
     name: string;
     mnemonic: string;
-    params: Array<addrParams>;
+    params: Array<AddrParams>;
     outpoints: Array<outpointInfo>;
     serialized: {
         version: number;
         phrase: string;
         coinType: number;
-        addresses: Array<addressInfo>;
-        changeAddresses: Array<addressInfo>;
-        gapAddresses: Array<addressInfo>;
-        changeGapAddresses: Array<addressInfo>;
+        addresses: Array<AddressInfo>;
+        changeAddresses: Array<AddressInfo>;
+        gapAddresses: Array<AddressInfo>;
+        changeGapAddresses: Array<AddressInfo>;
         outpoints: Array<outpointInfo>;
     };
 }
