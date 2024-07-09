@@ -159,8 +159,6 @@ const _formatWoBodyHeader = object({
     interlinkRootHash: formatHash,
     manifestHash: arrayOf(formatHash),
     miner: allowNull(getAddress),
-    // mixHash: formatHash,
-    // nonce: formatData,
     number: arrayOf(getNumber),
     parentDeltaS: arrayOf(getBigInt),
     parentEntropy: arrayOf(getBigInt),
