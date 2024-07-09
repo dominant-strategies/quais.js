@@ -198,6 +198,18 @@ const _formatWoHeader = object({
     txHash: formatHash,
 });
 
+const _formatUncle = object({
+    difficulty: getBigInt,
+    headerHash: formatHash,
+    location: formatData,
+    mixHash: formatHash,
+    nonce: formatData,
+    number: getNumber,
+    parentHash: formatHash,
+    time: getBigInt,
+    txHash: formatHash,
+});
+
 const _formatBlock = object({
     extTransactions: arrayOf(formatHash),
     interlinkHashes: arrayOf(formatHash),
@@ -206,7 +218,7 @@ const _formatBlock = object({
     subManifest: arrayOf(formatData),
     totalEntropy: getBigInt,
     transactions: arrayOf(formatHash),
-    uncles: arrayOf(formatHash),
+    uncles: arrayOf(_formatUncle),
     woBody: _formatWoBody,
     woHeader: _formatWoHeader,
 });
