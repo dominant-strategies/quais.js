@@ -326,7 +326,7 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
 
     let result: TransactionResponseParams;
 
-    if (transactionType === 0x0) {
+    if (transactionType === 0x1) {
         // QuaiTransactionResponseParams
         result = object(
             {
