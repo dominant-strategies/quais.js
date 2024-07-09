@@ -217,7 +217,13 @@ const _formatBlock = object({
     size: getBigInt,
     subManifest: arrayOf(formatData),
     totalEntropy: getBigInt,
-    transactions: arrayOf(formatHash),
+    // transactions: arrayOf(formatHash),
+    transactions: arrayOf((tx: any) => {
+        if (typeof tx === 'string') {
+            return formatHash(tx);
+        }
+        return formatTransactionResponse(tx);
+    }),
     uncles: arrayOf(_formatUncle),
     woBody: _formatWoBody,
     woHeader: _formatWoHeader,
