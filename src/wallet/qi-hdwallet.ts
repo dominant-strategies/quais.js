@@ -60,7 +60,7 @@ interface SerializedQiHDWallet extends SerializedHDWallet {
  * import { QiHDWallet, Zone } from 'quais';
  *
  * const wallet = new QiHDWallet();
- * const cyrpus1Address = wallet.getNextAddress(0, Zone.Cyrpus1); // get the first address in the Cyrpus1 zone
+ * const cyrpus1Address = await wallet.getNextAddress(0, Zone.Cyrpus1); // get the first address in the Cyrpus1 zone
  * await wallet.sendTransaction({ txInputs: [...], txOutputs: [...] }); // send a transaction
  * const serializedWallet = wallet.serialize(); // serialize current (account/address) state of the wallet
  * .
@@ -130,13 +130,24 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     /**
-     * Retrieves the next change address for the specified account and zone.
+     * Promise that resolves to the next change address for the specified account and zone.
+     *
+     * @param {number} account - The index of the account for which to retrieve the next change address.
+     * @param {Zone} zone - The zone in which to retrieve the next change address.
+     * @returns {Promise<NeuteredAddressInfo>} The next change neutered address information.
+     */
+    public async getNextChangeAddress(account: number, zone: Zone): Promise<NeuteredAddressInfo> {
+        return Promise.resolve(this._getNextAddress(account, zone, true, this._changeAddresses));
+    }
+
+    /**
+     * Synchronously retrieves the next change address for the specified account and zone.
      *
      * @param {number} account - The index of the account for which to retrieve the next change address.
      * @param {Zone} zone - The zone in which to retrieve the next change address.
      * @returns {NeuteredAddressInfo} The next change neutered address information.
      */
-    public getNextChangeAddress(account: number, zone: Zone): NeuteredAddressInfo {
+    public getNextChangeAddressSync(account: number, zone: Zone): NeuteredAddressInfo {
         return this._getNextAddress(account, zone, true, this._changeAddresses);
     }
 
@@ -314,7 +325,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * until the gap limit is reached for both gap and change addresses.
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
-     * @param {number} [account=0] - The index of the account to scan. Default is `0`.
+     * @param {number} [account=0] - The index of the account to scan. Default is `0`
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the zone is invalid.
      */

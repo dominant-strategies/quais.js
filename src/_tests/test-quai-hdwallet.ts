@@ -24,7 +24,7 @@ describe('Test address generation and retrieval', function () {
         it(`tests addresses generation and retrieval: ${test.name}`, function () {
             const generatedAddresses: AddressInfo[] = [];
             for (const { params, expectedAddress } of test.addresses) {
-                const addrInfo = quaiWallet.getNextAddress(params.account, params.zone);
+                const addrInfo = quaiWallet.getNextAddressSync(params.account, params.zone);
                 assert.deepEqual(addrInfo, expectedAddress);
                 generatedAddresses.push(addrInfo);
 
@@ -66,7 +66,7 @@ describe('Test transaction signing', function () {
         it(`tests signing an EIP-155 transaction: ${test.name}`, async function () {
             const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
             const quaiWallet = QuaiHDWallet.fromMnemonic(mnemonic);
-            quaiWallet.getNextAddress(test.params.account, test.params.zone);
+            quaiWallet.getNextAddressSync(test.params.account, test.params.zone);
             const txData = test.transaction;
             const signed = await quaiWallet.signTransaction(txData);
             assert.equal(signed, test.signed, 'signed');
@@ -82,7 +82,7 @@ describe('Test serialization and deserialization of QuaiHDWallet', function () {
         let serialized: any;
         it(`tests serialization QuaiHDWallet: ${test.name}`, async function () {
             for (const param of test.params) {
-                quaiWallet.getNextAddress(param.account, param.zone);
+                quaiWallet.getNextAddressSync(param.account, param.zone);
             }
             serialized = quaiWallet.serialize();
             assert.deepEqual(serialized, test.serialized);
@@ -101,7 +101,7 @@ describe('Test Typed-Data Signing (EIP-712)', function () {
         it(`tests signing typed-data: ${test.name}`, async function () {
             const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
             const quaiWallet = QuaiHDWallet.fromMnemonic(mnemonic);
-            const addrInfo = quaiWallet.getNextAddress(0, Zone.Cyprus1);
+            const addrInfo = quaiWallet.getNextAddressSync(0, Zone.Cyprus1);
             const sig = await quaiWallet.signTypedData(addrInfo.address, test.domain, test.types, test.data);
             assert.equal(sig, test.signature, 'signature');
             const signerAddress = recoverAddress(test.digest, sig);
@@ -116,7 +116,7 @@ describe('Test sign message', function () {
         it(`tests signing personal message: ${test.name}`, async function () {
             const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
             const quaiWallet = QuaiHDWallet.fromMnemonic(mnemonic);
-            const addrInfo = quaiWallet.getNextAddress(0, Zone.Cyprus1);
+            const addrInfo = quaiWallet.getNextAddressSync(0, Zone.Cyprus1);
             const sig = await quaiWallet.signMessage(addrInfo.address, test.message);
             assert.equal(sig, test.signature, 'signature');
             const signerAddress = recoverAddress(test.digest, sig);

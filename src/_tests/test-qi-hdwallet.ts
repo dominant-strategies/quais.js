@@ -25,7 +25,7 @@ describe('QiHDWallet: Test address generation and retrieval', function () {
         it(`tests addresses generation and retrieval: ${test.name}`, function () {
             const generatedAddresses: AddressInfo[] = [];
             for (const { params, expectedAddress } of test.addresses) {
-                const addrInfo = qiWallet.getNextAddress(params.account, params.zone);
+                const addrInfo = qiWallet.getNextAddressSync(params.account, params.zone);
                 assert.deepEqual(addrInfo, expectedAddress);
                 generatedAddresses.push(addrInfo);
 
@@ -60,7 +60,7 @@ describe('QiHDWallet: Test address generation and retrieval', function () {
         });
         it(`tests change addresses generation and retrieval: ${test.name}`, function () {
             for (const { params, expectedAddress } of test.changeAddresses) {
-                const addrInfo = qiWallet.getNextChangeAddress(params.account, params.zone);
+                const addrInfo = qiWallet.getNextChangeAddressSync(params.account, params.zone);
                 assert.deepEqual(addrInfo, expectedAddress);
             }
         });
@@ -76,8 +76,8 @@ describe('QiHDWallet: Test serialization and deserialization of QiHDWallet', fun
         let serialized: any;
         it(`tests serialization QuaiHDWallet: ${test.name}`, async function () {
             for (const param of test.params) {
-                qiWallet.getNextAddress(param.account, param.zone);
-                qiWallet.getNextChangeAddress(param.account, param.zone);
+                qiWallet.getNextAddressSync(param.account, param.zone);
+                qiWallet.getNextChangeAddressSync(param.account, param.zone);
             }
             qiWallet.importOutpoints(test.outpoints);
             serialized = qiWallet.serialize();
@@ -98,7 +98,7 @@ describe('QiHDWallet: Test transaction signing', function () {
             const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
             const qiWallet = QiHDWallet.fromMnemonic(mnemonic);
             for (const param of test.params) {
-                qiWallet.getNextAddress(param.account, param.zone);
+                qiWallet.getNextAddressSync(param.account, param.zone);
             }
             qiWallet.importOutpoints(test.outpoints);
             const qiTx = createQiTransaction(
@@ -130,7 +130,7 @@ describe('QiHDWallet: Test sign personal menssage', function () {
         it(`tests signing personal message: ${test.name}`, async function () {
             const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
             const qiWallet = QiHDWallet.fromMnemonic(mnemonic);
-            const addrInfo = qiWallet.getNextAddress(0, Zone.Cyprus1);
+            const addrInfo = qiWallet.getNextAddressSync(0, Zone.Cyprus1);
             const signature = await qiWallet.signMessage(addrInfo.address, test.message);
             const digest = keccak_256(test.message);
             const verified = verifySchnorrSignature(signature, digest, addrInfo.pubKey);
