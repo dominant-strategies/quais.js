@@ -366,15 +366,12 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
         // Compute the signature
         if (value.signature) {
             result.signature = Signature.from(value.signature);
-        } else {
-            result.signature = Signature.from(value);
-        }
-
-        // Some backends omit ChainId on legacy transactions, but we can compute it
-        if (result.chainId == null) {
-            const chainId = result.signature.legacyChainId;
-            if (chainId != null) {
-                result.chainId = chainId;
+            // Some backends omit ChainId on legacy transactions, but we can compute it
+            if (result.chainId == null) {
+                const chainId = result.signature.legacyChainId;
+                if (chainId != null) {
+                    result.chainId = chainId;
+                }
             }
         }
 
