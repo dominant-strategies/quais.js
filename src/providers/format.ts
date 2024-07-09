@@ -159,8 +159,8 @@ const _formatWoBodyHeader = object({
     interlinkRootHash: formatHash,
     manifestHash: arrayOf(formatHash),
     miner: allowNull(getAddress),
-    mixHash: formatHash,
-    nonce: formatData,
+    // mixHash: formatHash,
+    // nonce: formatData,
     number: arrayOf(getNumber),
     parentDeltaS: arrayOf(getBigInt),
     parentEntropy: arrayOf(getBigInt),
@@ -412,16 +412,38 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
 
 const _formatTxInput = object(
     {
-        txhash: formatHash,
-        index: getNumber,
+        txhash: formatTxHash,
+        index: formatIndex,
         pubkey: hexlify,
     },
     {
-        txhash: ['previous_out_point', 'hash', 'value'],
-        index: ['previous_out_point', 'index'],
-        pubkey: ['pub_key'],
+        txhash: ['PreviousOutPoint', 'TxHash'],
+        index: ['PreviousOutPoint', 'Index'],
+        pubkey: ['PubKey'],
     },
 );
+
+function extractTxHash(value: any): string {
+    if (value && value.TxHash) {
+        return value.TxHash;
+    }
+    throw new Error('Invalid PreviousOutPoint');
+}
+
+function formatTxHash(value: any): string {
+    return formatHash(extractTxHash(value));
+}
+
+function extractIndex(value: any): number {
+    if (value && value.Index !== undefined) {
+        return value.Index;
+    }
+    throw new Error('Invalid PreviousOutPoint');
+}
+
+function formatIndex(value: any): number {
+    return getNumber(extractIndex(value));
+}
 
 const _formatTxOutput = object({
     address: (addr: string) => hexlify(getAddress(addr)),
