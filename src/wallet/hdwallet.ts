@@ -186,13 +186,24 @@ export abstract class AbstractHDWallet {
     }
 
     /**
-     * Retrieves the next address for the specified account and zone.
+     * Promise that resolves to the next address for the specified account and zone.
+     *
+     * @param {number} account - The index of the account for which to retrieve the next address.
+     * @param {Zone} zone - The zone in which to retrieve the next address.
+     * @returns {Promise<NeuteredAddressInfo>} The next neutered address information.
+     */
+    public async getNextAddress(account: number, zone: Zone): Promise<NeuteredAddressInfo> {
+        return Promise.resolve(this._getNextAddress(account, zone, false, this._addresses));
+    }
+
+    /**
+     * Synchronously retrieves the next address for the specified account and zone.
      *
      * @param {number} account - The index of the account for which to retrieve the next address.
      * @param {Zone} zone - The zone in which to retrieve the next address.
      * @returns {NeuteredAddressInfo} The next neutered address information.
      */
-    public getNextAddress(account: number, zone: Zone): NeuteredAddressInfo {
+    public getNextAddressSync(account: number, zone: Zone): NeuteredAddressInfo {
         return this._getNextAddress(account, zone, false, this._addresses);
     }
 

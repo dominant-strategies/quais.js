@@ -27,7 +27,7 @@ import { TypedDataDomain, TypedDataField } from '../hash/index.js';
  * import { QuaiHDWallet, Zone } from 'quais';
  *
  * const wallet = new QuaiHDWallet();
- * const cyrpus1Address = wallet.getNextAddress(0, Zone.Cyrpus1); // get the first address in the Cyrpus1 zone
+ * const cyrpus1Address = await wallet.getNextAddress(0, Zone.Cyrpus1); // get the first address in the Cyrpus1 zone
  * await wallet.sendTransaction({ from: address, to: '0x...', value: 100 }); // send a transaction
  * const serializedWallet = wallet.serialize(); // serialize current (account/address) state of the wallet
  * .
@@ -67,7 +67,6 @@ export class QuaiHDWallet extends AbstractHDWallet {
      * Sign a transaction.
      *
      * @param {QuaiTransactionRequest} tx - The transaction request.
-     *
      * @returns {Promise<string>} A promise that resolves to the signed transaction.
      */
     public async signTransaction(tx: QuaiTransactionRequest): Promise<string> {
@@ -81,7 +80,6 @@ export class QuaiHDWallet extends AbstractHDWallet {
      * Send a transaction.
      *
      * @param {QuaiTransactionRequest} tx - The transaction request.
-     *
      * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
      * @throws {Error} If the provider is not set.
      */
@@ -100,7 +98,6 @@ export class QuaiHDWallet extends AbstractHDWallet {
      *
      * @param {string} address - The address.
      * @param {string | Uint8Array} message - The message to sign.
-     *
      * @returns {Promise<string>} A promise that resolves to the signed message.
      */
     public async signMessage(address: string, message: string | Uint8Array): Promise<string> {
@@ -113,7 +110,6 @@ export class QuaiHDWallet extends AbstractHDWallet {
      *
      * @async
      * @param {SerializedHDWallet} serialized - The serialized wallet data to be deserialized.
-     *
      * @returns {Promise<QuaiHDWallet>} A promise that resolves to an instance of QuaiHDWallet.
      * @throws {Error} If validation of the serialized wallet data fails or if deserialization fails.
      * @public
@@ -141,7 +137,6 @@ export class QuaiHDWallet extends AbstractHDWallet {
      * @param {Record<string, TypedDataField[]>} types - The types of the data to be signed, mapping each data type name
      *   to its fields.
      * @param {Record<string, unknown>} value - The actual data to be signed.
-     *
      * @returns {Promise<string>} A promise that resolves to the signed data in string format.
      * @throws {Error} If the address does not correspond to a valid HD node or if signing fails.
      */
