@@ -18646,8 +18646,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         interlinkRootHash: formatHash,
         manifestHash: arrayOf(formatHash),
         miner: allowNull(getAddress),
-        mixHash: formatHash,
-        nonce: formatData,
         number: arrayOf(getNumber),
         parentDeltaS: arrayOf(getBigInt),
         parentEntropy: arrayOf(getBigInt),
@@ -18663,13 +18661,25 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         uncledS: getBigInt,
         utxoRoot: formatHash,
     });
+    const _formatUncle = object({
+        coinbase: getAddress,
+        difficulty: getBigInt,
+        headerHash: formatHash,
+        location: formatData,
+        mixHash: formatHash,
+        nonce: formatData,
+        number: getNumber,
+        parentHash: formatHash,
+        time: getBigInt,
+        txHash: formatHash,
+    });
     const _formatWoBody = object({
         extTransactions: arrayOf(formatTransactionResponse),
         header: _formatWoBodyHeader,
         interlinkHashes: arrayOf(formatHash),
         manifest: arrayOf(formatHash),
         transactions: arrayOf(formatTransactionResponse),
-        uncles: arrayOf(formatHash),
+        uncles: arrayOf(_formatUncle),
     });
     const _formatWoHeader = object({
         difficulty: formatData,
@@ -18683,14 +18693,24 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         txHash: formatHash,
     });
     const _formatBlock = object({
-        extTransactions: arrayOf(formatHash),
+        extTransactions: arrayOf((tx) => {
+            if (typeof tx === 'string') {
+                return formatHash(tx);
+            }
+            return formatTransactionResponse(tx);
+        }),
         interlinkHashes: arrayOf(formatHash),
         order: getNumber,
         size: getBigInt,
         subManifest: arrayOf(formatData),
         totalEntropy: getBigInt,
-        transactions: arrayOf(formatHash),
-        uncles: arrayOf(formatHash),
+        transactions: arrayOf((tx) => {
+            if (typeof tx === 'string') {
+                return formatHash(tx);
+            }
+            return formatTransactionResponse(tx);
+        }),
+        uncles: arrayOf(_formatUncle),
         woBody: _formatWoBody,
         woHeader: _formatWoHeader,
     });
@@ -18773,7 +18793,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         // Determine if it is a Quai or Qi transaction based on the type
         const transactionType = parseInt(value.type, 16);
         let result;
-        if (transactionType === 0x0) {
+        if (transactionType === 0x0 || transactionType === 0x1) {
             // QuaiTransactionResponseParams
             result = object({
                 hash: formatHash,
@@ -18787,7 +18807,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 blockHash: allowNull(formatHash, null),
                 blockNumber: allowNull((value) => (value ? parseInt(value, 16) : null), null),
                 index: allowNull((value) => (value ? BigInt(value) : null), null),
-                from: getAddress,
+                from: allowNull(getAddress, null),
+                sender: allowNull(getAddress, null),
                 maxPriorityFeePerGas: allowNull((value) => (value ? BigInt(value) : null)),
                 maxFeePerGas: allowNull((value) => (value ? BigInt(value) : null)),
                 gasLimit: allowNull((value) => (value ? BigInt(value) : null), null),
@@ -18809,15 +18830,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // Compute the signature
             if (value.signature) {
                 result.signature = Signature.from(value.signature);
-            }
-            else {
-                result.signature = Signature.from(value);
-            }
-            // Some backends omit ChainId on legacy transactions, but we can compute it
-            if (result.chainId == null) {
-                const chainId = result.signature.legacyChainId;
-                if (chainId != null) {
-                    result.chainId = chainId;
+                // Some backends omit ChainId on legacy transactions, but we can compute it
+                if (result.chainId == null) {
+                    const chainId = result.signature.legacyChainId;
+                    if (chainId != null) {
+                        result.chainId = chainId;
+                    }
                 }
             }
             // 0x0000... should actually be null
@@ -18855,14 +18873,32 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         return result;
     }
     const _formatTxInput = object({
-        txhash: formatHash,
-        index: getNumber,
+        txhash: formatTxHash,
+        index: formatIndex,
         pubkey: hexlify,
     }, {
-        txhash: ['previous_out_point', 'hash', 'value'],
-        index: ['previous_out_point', 'index'],
-        pubkey: ['pub_key'],
+        txhash: ['PreviousOutPoint', 'TxHash'],
+        index: ['PreviousOutPoint', 'Index'],
+        pubkey: ['PubKey'],
     });
+    function extractTxHash(value) {
+        if (value && value.TxHash) {
+            return value.TxHash;
+        }
+        throw new Error('Invalid PreviousOutPoint');
+    }
+    function formatTxHash(value) {
+        return formatHash(extractTxHash(value));
+    }
+    function extractIndex(value) {
+        if (value && value.Index !== undefined) {
+            return value.Index;
+        }
+        throw new Error('Invalid PreviousOutPoint');
+    }
+    function formatIndex(value) {
+        return getNumber(extractIndex(value));
+    }
     const _formatTxOutput = object({
         address: (addr) => hexlify(getAddress(addr)),
         denomination: getNumber,
@@ -24861,13 +24897,23 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return this.createAndStoreAddressInfo(addressNode, account, zone, isChange, addressMap);
         }
         /**
-         * Retrieves the next address for the specified account and zone.
+         * Promise that resolves to the next address for the specified account and zone.
+         *
+         * @param {number} account - The index of the account for which to retrieve the next address.
+         * @param {Zone} zone - The zone in which to retrieve the next address.
+         * @returns {Promise<NeuteredAddressInfo>} The next neutered address information.
+         */
+        async getNextAddress(account, zone) {
+            return Promise.resolve(this._getNextAddress(account, zone, false, this._addresses));
+        }
+        /**
+         * Synchronously retrieves the next address for the specified account and zone.
          *
          * @param {number} account - The index of the account for which to retrieve the next address.
          * @param {Zone} zone - The zone in which to retrieve the next address.
          * @returns {NeuteredAddressInfo} The next neutered address information.
          */
-        getNextAddress(account, zone) {
+        getNextAddressSync(account, zone) {
             return this._getNextAddress(account, zone, false, this._addresses);
         }
         /**
@@ -25166,7 +25212,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * import { QuaiHDWallet, Zone } from 'quais';
      *
      * const wallet = new QuaiHDWallet();
-     * const cyrpus1Address = wallet.getNextAddress(0, Zone.Cyrpus1); // get the first address in the Cyrpus1 zone
+     * const cyrpus1Address = await wallet.getNextAddress(0, Zone.Cyrpus1); // get the first address in the Cyrpus1 zone
      * await wallet.sendTransaction({ from: address, to: '0x...', value: 100 }); // send a transaction
      * const serializedWallet = wallet.serialize(); // serialize current (account/address) state of the wallet
      * .
@@ -25203,7 +25249,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Sign a transaction.
          *
          * @param {QuaiTransactionRequest} tx - The transaction request.
-         *
          * @returns {Promise<string>} A promise that resolves to the signed transaction.
          */
         async signTransaction(tx) {
@@ -25216,7 +25261,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Send a transaction.
          *
          * @param {QuaiTransactionRequest} tx - The transaction request.
-         *
          * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
          * @throws {Error} If the provider is not set.
          */
@@ -25234,7 +25278,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @param {string} address - The address.
          * @param {string | Uint8Array} message - The message to sign.
-         *
          * @returns {Promise<string>} A promise that resolves to the signed message.
          */
         async signMessage(address, message) {
@@ -25246,7 +25289,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @async
          * @param {SerializedHDWallet} serialized - The serialized wallet data to be deserialized.
-         *
          * @returns {Promise<QuaiHDWallet>} A promise that resolves to an instance of QuaiHDWallet.
          * @throws {Error} If validation of the serialized wallet data fails or if deserialization fails.
          * @public
@@ -25271,7 +25313,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {Record<string, TypedDataField[]>} types - The types of the data to be signed, mapping each data type name
          *   to its fields.
          * @param {Record<string, unknown>} value - The actual data to be signed.
-         *
          * @returns {Promise<string>} A promise that resolves to the signed data in string format.
          * @throws {Error} If the address does not correspond to a valid HD node or if signing fails.
          */
@@ -25829,7 +25870,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * import { QiHDWallet, Zone } from 'quais';
      *
      * const wallet = new QiHDWallet();
-     * const cyrpus1Address = wallet.getNextAddress(0, Zone.Cyrpus1); // get the first address in the Cyrpus1 zone
+     * const cyrpus1Address = await wallet.getNextAddress(0, Zone.Cyrpus1); // get the first address in the Cyrpus1 zone
      * await wallet.sendTransaction({ txInputs: [...], txOutputs: [...] }); // send a transaction
      * const serializedWallet = wallet.serialize(); // serialize current (account/address) state of the wallet
      * .
@@ -25891,13 +25932,23 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             super(guard, root, provider);
         }
         /**
-         * Retrieves the next change address for the specified account and zone.
+         * Promise that resolves to the next change address for the specified account and zone.
+         *
+         * @param {number} account - The index of the account for which to retrieve the next change address.
+         * @param {Zone} zone - The zone in which to retrieve the next change address.
+         * @returns {Promise<NeuteredAddressInfo>} The next change neutered address information.
+         */
+        async getNextChangeAddress(account, zone) {
+            return Promise.resolve(this._getNextAddress(account, zone, true, this._changeAddresses));
+        }
+        /**
+         * Synchronously retrieves the next change address for the specified account and zone.
          *
          * @param {number} account - The index of the account for which to retrieve the next change address.
          * @param {Zone} zone - The zone in which to retrieve the next change address.
          * @returns {NeuteredAddressInfo} The next change neutered address information.
          */
-        getNextChangeAddress(account, zone) {
+        getNextChangeAddressSync(account, zone) {
             return this._getNextAddress(account, zone, true, this._changeAddresses);
         }
         /**
@@ -26054,7 +26105,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * until the gap limit is reached for both gap and change addresses.
          *
          * @param {Zone} zone - The zone in which to scan for addresses.
-         * @param {number} [account=0] - The index of the account to scan. Default is `0`.
+         * @param {number} [account=0] - The index of the account to scan. Default is `0`
          * @returns {Promise<void>} A promise that resolves when the scan is complete.
          * @throws {Error} If the zone is invalid.
          */
