@@ -210,7 +210,12 @@ const _formatWoHeader = object({
 });
 
 const _formatBlock = object({
-    extTransactions: arrayOf(formatHash),
+    extTransactions: arrayOf((tx: any) => {
+        if (typeof tx === 'string') {
+            return formatHash(tx);
+        }
+        return formatTransactionResponse(tx);
+    }),
     interlinkHashes: arrayOf(formatHash),
     order: getNumber,
     size: getBigInt,
