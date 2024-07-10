@@ -175,13 +175,26 @@ const _formatWoBodyHeader = object({
     utxoRoot: formatHash,
 });
 
+const _formatUncle = object({
+    coinbase: getAddress,
+    difficulty: getBigInt,
+    headerHash: formatHash,
+    location: formatData,
+    mixHash: formatHash,
+    nonce: formatData,
+    number: getNumber,
+    parentHash: formatHash,
+    time: getBigInt,
+    txHash: formatHash,
+});
+
 const _formatWoBody = object({
     extTransactions: arrayOf(formatTransactionResponse),
     header: _formatWoBodyHeader,
     interlinkHashes: arrayOf(formatHash),
     manifest: arrayOf(formatHash),
     transactions: arrayOf(formatTransactionResponse),
-    uncles: arrayOf(formatHash),
+    uncles: arrayOf(_formatUncle),
 });
 
 const _formatWoHeader = object({
@@ -196,18 +209,6 @@ const _formatWoHeader = object({
     txHash: formatHash,
 });
 
-const _formatUncle = object({
-    difficulty: getBigInt,
-    headerHash: formatHash,
-    location: formatData,
-    mixHash: formatHash,
-    nonce: formatData,
-    number: getNumber,
-    parentHash: formatHash,
-    time: getBigInt,
-    txHash: formatHash,
-});
-
 const _formatBlock = object({
     extTransactions: arrayOf(formatHash),
     interlinkHashes: arrayOf(formatHash),
@@ -215,7 +216,6 @@ const _formatBlock = object({
     size: getBigInt,
     subManifest: arrayOf(formatData),
     totalEntropy: getBigInt,
-    // transactions: arrayOf(formatHash),
     transactions: arrayOf((tx: any) => {
         if (typeof tx === 'string') {
             return formatHash(tx);
@@ -324,7 +324,7 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
 
     let result: TransactionResponseParams;
 
-    if (transactionType === 0x1) {
+    if (transactionType === 0x0 || transactionType === 0x1) {
         // QuaiTransactionResponseParams
         result = object(
             {
