@@ -9,17 +9,20 @@ import { Zone } from '../constants/index.js';
 
 /**
  * Interface representing a QiTransaction.
+ *
  * @category Transaction
  */
 export interface QiTransactionLike extends TransactionLike {
     /**
      * Transaction inputs.
+     *
      * @type {TxInput[] | null}
      */
     txInputs?: null | TxInput[];
 
     /**
      * Transaction outputs.
+     *
      * @type {TxOutput[] | null}
      */
     txOutputs?: null | TxOutput[];
@@ -27,6 +30,7 @@ export interface QiTransactionLike extends TransactionLike {
 
 /**
  * Class representing a QiTransaction.
+ *
  * @category Transaction
  * @extends {AbstractTransaction<string>}
  * @implements {QiTransactionLike}
@@ -37,6 +41,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Get transaction inputs.
+     *
      * @returns {TxInput[]} The transaction inputs.
      */
     get txInputs(): TxInput[] {
@@ -45,6 +50,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Set transaction inputs.
+     *
      * @param {TxInput[] | null} value - The transaction inputs.
      * @throws {Error} If the value is not an array.
      */
@@ -57,6 +63,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Get transaction outputs.
+     *
      * @returns {TxOutput[]} The transaction outputs.
      */
     get txOutputs(): TxOutput[] {
@@ -65,6 +72,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Set transaction outputs.
+     *
      * @param {TxOutput[] | null} value - The transaction outputs.
      * @throws {Error} If the value is not an array.
      */
@@ -77,9 +85,11 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Get the permuted hash of the transaction as specified by QIP-0010.
-     * @see {@link [QIP0010](https://github.com/quai-network/qips/blob/master/qip-0010.md)}
+     *
      * @returns {string | null} The transaction hash.
-     * @throws {Error} If the transaction has no inputs or outputs, or if cross-zone & cross-ledger transactions are not supported.
+     * @throws {Error} If the transaction has no inputs or outputs, or if cross-zone & cross-ledger transactions are not
+     *   supported.
+     * @see {@link [QIP0010](https://github.com/quai-network/qips/blob/master/qip-0010.md)}
      */
     get hash(): null | string {
         if (this.signature == null) {
@@ -120,6 +130,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Get the zone of the sender address.
+     *
      * @returns {Zone | undefined} The origin zone.
      */
     get originZone(): Zone | undefined {
@@ -131,6 +142,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Get the zone of the recipient address.
+     *
      * @returns {Zone | undefined} The destination zone.
      */
     get destZone(): Zone | undefined {
@@ -149,6 +161,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Validates the explicit properties and returns a list of compatible transaction types.
+     *
      * @returns {number[]} The compatible transaction types.
      */
     inferTypes(): Array<number> {
@@ -168,6 +181,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Create a copy of this transaction.
+     *
      * @returns {QiTransaction} The cloned transaction.
      */
     clone(): QiTransaction {
@@ -176,6 +190,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Return a JSON-friendly object.
+     *
      * @returns {QiTransactionLike} The JSON-friendly object.
      */
     toJSON(): TransactionLike {
@@ -198,7 +213,8 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Return a protobuf-friendly JSON object.
-     * @param {boolean} [includeSignature=true] - Whether to include the signature.
+     *
+     * @param {boolean} [includeSignature=true] - Whether to include the signature. Default is `true`
      * @returns {ProtoTransaction} The protobuf-friendly JSON object.
      */
     toProtobuf(includeSignature: boolean = true): ProtoTransaction {
@@ -231,6 +247,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Create a Transaction from a serialized transaction or a Transaction-like object.
+     *
      * @param {string | QiTransactionLike} tx - The transaction to decode.
      * @returns {QiTransaction} The decoded transaction.
      * @throws {Error} If the transaction is unsigned and defines a hash.
@@ -248,7 +265,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         if (tx.chainId != null) {
             result.chainId = tx.chainId;
         }
-        if (tx.signature != null) {
+        if (tx.signature != null && tx.signature !== '') {
             result.signature = tx.signature as string;
         }
         if (tx.txInputs != null) {
@@ -267,6 +284,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
     /**
      * Create a Transaction from a ProtoTransaction object.
+     *
      * @param {ProtoTransaction} protoTx - The transaction to decode.
      * @returns {QiTransaction} The decoded transaction.
      */
