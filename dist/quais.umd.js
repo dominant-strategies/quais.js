@@ -7282,6 +7282,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         Zone["Hydra2"] = "0x21";
         Zone["Hydra3"] = "0x22";
     })(exports.Zone || (exports.Zone = {}));
+    exports.Ledger = void 0;
+    (function (Ledger) {
+        Ledger[Ledger["Quai"] = 0] = "Quai";
+        Ledger[Ledger["Qi"] = 1] = "Qi";
+    })(exports.Ledger || (exports.Ledger = {}));
     function zoneFromBytes(zone) {
         switch (zone) {
             case '0x00':
@@ -7384,7 +7389,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Utils
      * @param {string} address - The blockchain address to be analyzed. The address should start with "0x" followed by the
      *   hexadecimal representation.
-     *
      * @returns {Object | null} An object containing the shard information, or null if no
      */
     function getZoneForAddress(address) {
@@ -7402,12 +7406,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Utils
      * @param {string} address - The blockchain address to be analyzed, expected to start with "0x" followed by its
      *   hexadecimal representation.
-     *
      * @returns {Object | null} An object containing the zone and UTXO information, or null if no address is found.
      */
     function getAddressDetails(address) {
-        const isUTXO = (parseInt(address.substring(4, 5), 16) & 0x1) === 1;
-        return { zone: toZone(address.substring(0, 4)), isUTXO };
+        const isQiLedger = (parseInt(address.substring(4, 5), 16) & 0x1) === exports.Ledger.Qi;
+        return { zone: toZone(address.substring(0, 4)), ledger: isQiLedger ? exports.Ledger.Qi : exports.Ledger.Quai };
     }
     /**
      * Determines the transaction type based on the sender and recipient addresses. The function checks if both addresses
@@ -7417,7 +7420,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Utils
      * @param {string | null} from - The sender address. If null, the function returns 0.
      * @param {string | null} to - The recipient address. If null, the function returns 0.
-     *
      * @returns {number} The transaction type based on the addresses.
      */
     function getTxType(from, to) {
@@ -18906,6 +18908,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
 
     /**
      * Class representing a QiTransaction.
+     *
      * @category Transaction
      * @extends {AbstractTransaction<string>}
      * @implements {QiTransactionLike}
@@ -18915,6 +18918,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         #txOutputs;
         /**
          * Get transaction inputs.
+         *
          * @returns {TxInput[]} The transaction inputs.
          */
         get txInputs() {
@@ -18922,6 +18926,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Set transaction inputs.
+         *
          * @param {TxInput[] | null} value - The transaction inputs.
          * @throws {Error} If the value is not an array.
          */
@@ -18933,6 +18938,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Get transaction outputs.
+         *
          * @returns {TxOutput[]} The transaction outputs.
          */
         get txOutputs() {
@@ -18940,6 +18946,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Set transaction outputs.
+         *
          * @param {TxOutput[] | null} value - The transaction outputs.
          * @throws {Error} If the value is not an array.
          */
@@ -18951,9 +18958,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Get the permuted hash of the transaction as specified by QIP-0010.
-         * @see {@link [QIP0010](https://github.com/quai-network/qips/blob/master/qip-0010.md)}
+         *
          * @returns {string | null} The transaction hash.
-         * @throws {Error} If the transaction has no inputs or outputs, or if cross-zone & cross-ledger transactions are not supported.
+         * @throws {Error} If the transaction has no inputs or outputs, or if cross-zone & cross-ledger transactions are not
+         *   supported.
+         * @see {@link [QIP0010](https://github.com/quai-network/qips/blob/master/qip-0010.md)}
          */
         get hash() {
             if (this.signature == null) {
@@ -18983,6 +18992,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Get the zone of the sender address.
+         *
          * @returns {Zone | undefined} The origin zone.
          */
         get originZone() {
@@ -18992,6 +19002,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Get the zone of the recipient address.
+         *
          * @returns {Zone | undefined} The destination zone.
          */
         get destZone() {
@@ -19008,6 +19019,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Validates the explicit properties and returns a list of compatible transaction types.
+         *
          * @returns {number[]} The compatible transaction types.
          */
         inferTypes() {
@@ -19024,6 +19036,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Create a copy of this transaction.
+         *
          * @returns {QiTransaction} The cloned transaction.
          */
         clone() {
@@ -19031,6 +19044,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Return a JSON-friendly object.
+         *
          * @returns {QiTransactionLike} The JSON-friendly object.
          */
         toJSON() {
@@ -19051,7 +19065,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Return a protobuf-friendly JSON object.
-         * @param {boolean} [includeSignature=true] - Whether to include the signature.
+         *
+         * @param {boolean} [includeSignature=true] - Whether to include the signature. Default is `true`
          * @returns {ProtoTransaction} The protobuf-friendly JSON object.
          */
         toProtobuf(includeSignature = true) {
@@ -19081,6 +19096,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Create a Transaction from a serialized transaction or a Transaction-like object.
+         *
          * @param {string | QiTransactionLike} tx - The transaction to decode.
          * @returns {QiTransaction} The decoded transaction.
          * @throws {Error} If the transaction is unsigned and defines a hash.
@@ -19097,7 +19113,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (tx.chainId != null) {
                 result.chainId = tx.chainId;
             }
-            if (tx.signature != null) {
+            if (tx.signature != null && tx.signature !== '') {
                 result.signature = tx.signature;
             }
             if (tx.txInputs != null) {
@@ -19113,6 +19129,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Create a Transaction from a ProtoTransaction object.
+         *
          * @param {ProtoTransaction} protoTx - The transaction to decode.
          * @returns {QiTransaction} The decoded transaction.
          */
@@ -19480,7 +19497,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (tx.maxFeePerGas != null) {
                 result.maxFeePerGas = tx.maxFeePerGas;
             }
-            if (tx.data != null) {
+            if (tx.data != null && tx.data !== '') {
                 result.data = tx.data;
             }
             if (tx.value != null) {
@@ -26415,7 +26432,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Resolves to the transaction to deploy the contract, passing `args` into the constructor.
          *
          * @param {ContractMethods<A>} args - The arguments to the constructor.
-         *
          * @returns {Promise<ContractDeployTransaction>} A promise resolving to the deployment transaction.
          */
         async getDeployTransaction(...args) {
@@ -26442,7 +26458,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * transactions to it.
          *
          * @param {ContractMethods<A>} args - The arguments to the constructor.
-         *
          * @returns {Promise<
          *     BaseContract & { deploymentTransaction(): ContractTransactionResponse } & Omit<I, keyof BaseContract>
          * >}
@@ -26458,7 +26473,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 tx.from = this.runner.address;
             }
             const grindedTx = await this.grindContractAddress(tx);
-            console.log('grindedTx', grindedTx);
             const sentTx = await this.runner.sendTransaction(grindedTx);
             const address = getStatic(this.constructor, 'getContractAddress')?.(tx);
             return new BaseContract(address, this.interface, this.runner, sentTx);
@@ -26492,7 +26506,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new **ContractFactory** with the same ABI and bytecode, but connected to `runner`.
          *
          * @param {ContractRunner} runner - The runner to connect to.
-         *
          * @returns {ContractFactory<A, I>} A new ContractFactory.
          */
         connect(runner) {
@@ -26503,7 +26516,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @param {any} output - The Solidity JSON output.
          * @param {ContractRunner} runner - The runner to connect to.
-         *
          * @returns {ContractFactory<A, I>} A new ContractFactory.
          */
         static fromSolidity(output, runner) {
@@ -28093,7 +28105,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * Deep copies an object.
      *
      * @param {any} obj - The object to copy.
-     *
      * @returns {any} The copied object.
      */
     function copy$1(obj) {
@@ -28127,7 +28138,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @ignore
          * @param {number} blockNumber - The block number.
-         *
          * @returns {Promise<void>} A promise that resolves when the poll is complete.
          */
         async #poll(blockNumber) {
@@ -28488,7 +28498,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @ignore
      * @param {T} value - The value to copy.
-     *
      * @returns {T} The copied value.
      */
     function deepCopy(value) {
@@ -28515,7 +28524,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @ignore
      * @param {number} duration - The duration to stall in milliseconds.
-     *
      * @returns {Promise<void>} A promise that resolves after the duration.
      */
     function stall(duration) {
@@ -28553,7 +28561,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Connects the signer to a provider.
          *
          * @param {null | Provider} provider - The provider to connect to.
-         *
          * @returns {Signer} The connected signer.
          * @throws {Error} If the signer cannot be reconnected.
          */
@@ -28576,7 +28583,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @ignore
          * @param {QuaiTransactionRequest} tx - The transaction request.
-         *
          * @returns {Promise<QuaiTransactionLike>} The populated transaction.
          */
         async populateQuaiTransaction(tx) {
@@ -28587,7 +28593,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @ignore
          * @param {TransactionRequest} _tx - The transaction request.
-         *
          * @returns {Promise<string>} The transaction hash.
          */
         async sendUncheckedTransaction(_tx) {
@@ -28633,7 +28638,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Sends a transaction.
          *
          * @param {TransactionRequest} tx - The transaction request.
-         *
          * @returns {Promise<TransactionResponse>} The transaction response.
          * @throws {Error} If the transaction cannot be sent.
          */
@@ -28703,7 +28707,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Signs a transaction.
          *
          * @param {TransactionRequest} _tx - The transaction request.
-         *
          * @returns {Promise<string>} The signed transaction.
          * @throws {Error} If the transaction cannot be signed.
          */
@@ -28730,7 +28733,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Signs a message.
          *
          * @param {string | Uint8Array} _message - The message to sign.
-         *
          * @returns {Promise<string>} The signed message.
          */
         async signMessage(_message) {
@@ -28743,7 +28745,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {TypedDataDomain} domain - The domain of the typed data.
          * @param {Record<string, TypedDataField[]>} types - The types of the typed data.
          * @param {Record<string, any>} _value - The value of the typed data.
-         *
          * @returns {Promise<string>} The signed typed data.
          */
         async signTypedData(domain, types, _value) {
@@ -28757,7 +28758,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Unlocks the account.
          *
          * @param {string} password - The password to unlock the account.
-         *
          * @returns {Promise<boolean>} True if the account is unlocked, false otherwise.
          */
         async unlock(password) {
@@ -28768,7 +28768,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @ignore
          * @param {string | Uint8Array} _message - The message to sign.
-         *
          * @returns {Promise<string>} The signed message.
          */
         async _legacySignMessage(_message) {
@@ -28932,7 +28931,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @ignore
          * @param {keyof JsonRpcApiProviderOptions} key - The option key.
-         *
          * @returns {JsonRpcApiProviderOptions[key]} The option value.
          */
         _getOption(key) {
@@ -28958,7 +28956,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @ignore
          * @param {PerformActionRequest} req - The request to perform.
-         *
          * @returns {Promise<any>} The result of the request.
          * @throws {Error} If the request fails.
          */
@@ -29073,8 +29070,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.#notReady.resolve();
             this.#notReady = null;
             (async () => {
-                // Bootstrap the network
-                while (this.#network == null && !this.destroyed) {
+                let retries = 0;
+                const maxRetries = 5;
+                while (this.#network == null && !this.destroyed && retries < maxRetries) {
                     try {
                         this.#network = await this._detectNetwork();
                     }
@@ -29088,7 +29086,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                             info: { error },
                         }));
                         await stall(1000);
+                        retries++;
                     }
+                }
+                if (retries >= maxRetries) {
+                    throw new Error('Failed to detect network after maximum retries');
                 }
                 // Start dispatching requests
                 this.#scheduleDrain();
@@ -29114,7 +29116,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @ignore
          * @param {Subscription} sub - The subscription to manage.
-         *
          * @returns {Subscriber} The subscriber that will manage the subscription.
          */
         _getSubscriber(sub) {
@@ -29146,7 +29147,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @ignore
          * @param {TransactionRequest} tx - The transaction to normalize.
-         *
          * @returns {JsonRpcTransactionRequest} The normalized transaction.
          * @throws {Error} If the transaction is invalid.
          */
@@ -29195,7 +29195,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @ignore
          * @param {PerformActionRequest} req - The request to perform.
-         *
          * @returns {null | { method: string; args: any[] }} The method and arguments to use.
          * @throws {Error} If the request is not supported or invalid.
          */
@@ -29321,7 +29320,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @ignore
          * @param {JsonRpcPayload} payload - The payload that was sent.
          * @param {JsonRpcError} _error - The error that was received.
-         *
          * @returns {Error} The coalesced error.
          */
         getRpcError(payload, _error) {
@@ -29412,7 +29410,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {string} method - The method to call.
          * @param {any[] | Record<string, any>} params - The parameters to pass to the method.
          * @param {Shard} shard - The shard to send the request to.
-         *
          * @returns {Promise<any>} A promise that resolves to the result of the method call.
          */
         send(method, params, shard) {
@@ -29438,7 +29435,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Returns a JsonRpcSigner for the given address.
          *
          * @param {number | string} [address] - The address or index of the account.
-         *
          * @returns {Promise<JsonRpcSigner>} A promise that resolves to the JsonRpcSigner.
          * @throws {Error} If the account is invalid.
          */
@@ -30205,10 +30201,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             };
         }
         /**
-         * Wait until the shard is ready.
+         * Wait until the shard is ready. Max wait time is ~8 seconds.
          *
          * @param {Shard} shard - The shard identifier.
-         *
          * @returns {Promise<void>} A promise that resolves when the shard is ready.
          * @throws {Error} If the shard is not ready within the timeout period.
          */
@@ -30216,7 +30211,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             let count = 0;
             while (!this.readyMap.get(shard)) {
                 await new Promise((resolve) => setTimeout(resolve, Math.pow(2, count)));
-                if (count > 7) {
+                if (count > 11) {
                     throw new Error('Timeout waiting for shard to be ready');
                 }
                 count++;
@@ -30227,7 +30222,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @ignore
          * @param {U} urls - The URLs or WebSocket object or creator.
-         *
          * @returns {Promise<void>} A promise that resolves when the URL map is initialized.
          */
         async initUrlMap(urls) {
@@ -30282,7 +30276,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @ignore
          * @param {string} message - The message to send.
          * @param {Shard} [shard] - The shard identifier.
-         *
          * @returns {Promise<void>} A promise that resolves when the message is sent.
          * @throws {Error} If the WebSocket is closed or the shard is not found.
          */
@@ -30484,6 +30477,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         JsonRpcSigner: JsonRpcSigner,
         LangEn: LangEn,
         LangEs: LangEs,
+        get Ledger () { return exports.Ledger; },
         Log: Log,
         LogDescription: LogDescription,
         MaxInt256: MaxInt256,
