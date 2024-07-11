@@ -274,6 +274,7 @@ export class PollingOrphanSubscriber extends OnBlockSubscriber {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
         throw new Error('@TODO');
+        console.log(this.#filter);
     }
 }
 
