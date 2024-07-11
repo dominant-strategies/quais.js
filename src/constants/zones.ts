@@ -17,6 +17,11 @@ export enum Zone {
     Hydra3 = '0x22',
 }
 
+export enum Ledger {
+    Quai = 0,
+    Qi = 1,
+}
+
 function zoneFromBytes(zone: string): Zone {
     switch (zone) {
         case '0x00':
