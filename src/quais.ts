@@ -50,6 +50,7 @@ export {
     ZeroHash,
     quaisymbol,
     MessagePrefix,
+    Ledger,
     Zone,
     Shard,
 } from './constants/index.js';

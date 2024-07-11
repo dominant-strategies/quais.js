@@ -7,7 +7,6 @@ import type { EventFilter, OrphanFilter, ProviderEvent } from './provider.js';
  * Deep copies an object.
  *
  * @param {any} obj - The object to copy.
- *
  * @returns {any} The copied object.
  */
 function copy(obj: any): any {
@@ -20,7 +19,6 @@ function copy(obj: any): any {
  * @category Providers
  * @param {AbstractProvider} provider - The provider to attach the subscriber to.
  * @param {ProviderEvent} event - The event to subscribe to.
- *
  * @returns {Subscriber} The polling subscriber.
  * @throws {Error} If the event is unsupported.
  */
@@ -197,7 +195,6 @@ export class OnBlockSubscriber implements Subscriber {
      * @ignore
      * @param {number} blockNumber - The block number.
      * @param {AbstractProvider} provider - The provider.
-     *
      * @returns {Promise<void>} A promise that resolves when the poll is complete.
      * @throws {Error} If the method is not overridden by a subclass.
      */
@@ -271,7 +268,6 @@ export class PollingOrphanSubscriber extends OnBlockSubscriber {
      * @ignore
      * @param {number} blockNumber - The block number.
      * @param {AbstractProvider} provider - The provider.
-     *
      * @returns {Promise<void>} A promise that resolves when the poll is complete.
      * @throws {Error} If the method is not implemented.
      */
@@ -306,7 +302,6 @@ export class PollingTransactionSubscriber extends OnBlockSubscriber {
      * @ignore
      * @param {number} blockNumber - The block number.
      * @param {AbstractProvider} provider - The provider.
-     *
      * @returns {Promise<void>} A promise that resolves when the poll is complete.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -348,7 +343,6 @@ export class PollingEventSubscriber implements Subscriber {
      *
      * @ignore
      * @param {number} blockNumber - The block number.
-     *
      * @returns {Promise<void>} A promise that resolves when the poll is complete.
      */
     async #poll(blockNumber: number): Promise<void> {

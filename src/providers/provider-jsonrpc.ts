@@ -53,7 +53,6 @@ const Primitive = 'bigint,boolean,function,number,string,symbol'.split(/,/g);
  *
  * @ignore
  * @param {T} value - The value to copy.
- *
  * @returns {T} The copied value.
  */
 function deepCopy<T = any>(value: T): T {
@@ -88,7 +87,6 @@ function deepCopy<T = any>(value: T): T {
  *
  * @ignore
  * @param {number} duration - The duration to stall in milliseconds.
- *
  * @returns {Promise<void>} A promise that resolves after the duration.
  */
 function stall(duration: number): Promise<void> {
@@ -335,7 +333,6 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * Connects the signer to a provider.
      *
      * @param {null | Provider} provider - The provider to connect to.
-     *
      * @returns {Signer} The connected signer.
      * @throws {Error} If the signer cannot be reconnected.
      */
@@ -360,7 +357,6 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      *
      * @ignore
      * @param {QuaiTransactionRequest} tx - The transaction request.
-     *
      * @returns {Promise<QuaiTransactionLike>} The populated transaction.
      */
     async populateQuaiTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionLike> {
@@ -372,7 +368,6 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      *
      * @ignore
      * @param {TransactionRequest} _tx - The transaction request.
-     *
      * @returns {Promise<string>} The transaction hash.
      */
     async sendUncheckedTransaction(_tx: TransactionRequest): Promise<string> {
@@ -435,7 +430,6 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * Sends a transaction.
      *
      * @param {TransactionRequest} tx - The transaction request.
-     *
      * @returns {Promise<TransactionResponse>} The transaction response.
      * @throws {Error} If the transaction cannot be sent.
      */
@@ -517,7 +511,6 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * Signs a transaction.
      *
      * @param {TransactionRequest} _tx - The transaction request.
-     *
      * @returns {Promise<string>} The signed transaction.
      * @throws {Error} If the transaction cannot be signed.
      */
@@ -549,7 +542,6 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * Signs a message.
      *
      * @param {string | Uint8Array} _message - The message to sign.
-     *
      * @returns {Promise<string>} The signed message.
      */
     async signMessage(_message: string | Uint8Array): Promise<string> {
@@ -563,7 +555,6 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * @param {TypedDataDomain} domain - The domain of the typed data.
      * @param {Record<string, TypedDataField[]>} types - The types of the typed data.
      * @param {Record<string, any>} _value - The value of the typed data.
-     *
      * @returns {Promise<string>} The signed typed data.
      */
     async signTypedData(
@@ -583,7 +574,6 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * Unlocks the account.
      *
      * @param {string} password - The password to unlock the account.
-     *
      * @returns {Promise<boolean>} True if the account is unlocked, false otherwise.
      */
     async unlock(password: string): Promise<boolean> {
@@ -595,7 +585,6 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      *
      * @ignore
      * @param {string | Uint8Array} _message - The message to sign.
-     *
      * @returns {Promise<string>} The signed message.
      */
     async _legacySignMessage(_message: string | Uint8Array): Promise<string> {
@@ -807,7 +796,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      *
      * @ignore
      * @param {keyof JsonRpcApiProviderOptions} key - The option key.
-     *
      * @returns {JsonRpcApiProviderOptions[key]} The option value.
      */
     _getOption<K extends keyof JsonRpcApiProviderOptions>(key: K): JsonRpcApiProviderOptions[K] {
@@ -835,7 +823,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * @ignore
      * @param {JsonRpcPayload | JsonRpcPayload[]} payload - The JSON-RPC payload.
      * @param {Shard} [shard] - The shard to send the request to.
-     *
      * @returns {Promise<(JsonRpcResult | JsonRpcError)[]>} The JSON-RPC result.
      * @throws {Error} If the request fails.
      */
@@ -852,7 +839,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      *
      * @ignore
      * @param {PerformActionRequest} req - The request to perform.
-     *
      * @returns {Promise<any>} The result of the request.
      * @throws {Error} If the request fails.
      */
@@ -980,8 +966,9 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
         this.#notReady = null;
 
         (async () => {
-            // Bootstrap the network
-            while (this.#network == null && !this.destroyed) {
+            let retries = 0;
+            const maxRetries = 5;
+            while (this.#network == null && !this.destroyed && retries < maxRetries) {
                 try {
                     this.#network = await this._detectNetwork();
                 } catch (error) {
@@ -999,7 +986,11 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                         }),
                     );
                     await stall(1000);
+                    retries++;
                 }
+            }
+            if (retries >= maxRetries) {
+                throw new Error('Failed to detect network after maximum retries');
             }
 
             // Start dispatching requests
@@ -1028,7 +1019,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      *
      * @ignore
      * @param {Subscription} sub - The subscription to manage.
-     *
      * @returns {Subscriber} The subscriber that will manage the subscription.
      */
     _getSubscriber(sub: Subscription): Subscriber {
@@ -1065,7 +1055,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      *
      * @ignore
      * @param {TransactionRequest} tx - The transaction to normalize.
-     *
      * @returns {JsonRpcTransactionRequest} The normalized transaction.
      * @throws {Error} If the transaction is invalid.
      */
@@ -1117,7 +1106,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      *
      * @ignore
      * @param {PerformActionRequest} req - The request to perform.
-     *
      * @returns {null | { method: string; args: any[] }} The method and arguments to use.
      * @throws {Error} If the request is not supported or invalid.
      */
@@ -1264,7 +1252,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * @ignore
      * @param {JsonRpcPayload} payload - The payload that was sent.
      * @param {JsonRpcError} _error - The error that was received.
-     *
      * @returns {Error} The coalesced error.
      */
     getRpcError(payload: JsonRpcPayload, _error: JsonRpcError): Error {
@@ -1378,7 +1365,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * @param {string} method - The method to call.
      * @param {any[] | Record<string, any>} params - The parameters to pass to the method.
      * @param {Shard} shard - The shard to send the request to.
-     *
      * @returns {Promise<any>} A promise that resolves to the result of the method call.
      */
     send(method: string, params: Array<any> | Record<string, any>, shard?: Shard): Promise<any> {
@@ -1410,7 +1396,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * Returns a JsonRpcSigner for the given address.
      *
      * @param {number | string} [address] - The address or index of the account.
-     *
      * @returns {Promise<JsonRpcSigner>} A promise that resolves to the JsonRpcSigner.
      * @throws {Error} If the account is invalid.
      */
