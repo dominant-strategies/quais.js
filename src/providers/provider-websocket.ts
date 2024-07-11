@@ -108,10 +108,9 @@ export class WebSocketProvider extends SocketProvider {
     }
 
     /**
-     * Wait until the shard is ready.
+     * Wait until the shard is ready. Max wait time is ~8 seconds.
      *
      * @param {Shard} shard - The shard identifier.
-     *
      * @returns {Promise<void>} A promise that resolves when the shard is ready.
      * @throws {Error} If the shard is not ready within the timeout period.
      */
@@ -119,7 +118,7 @@ export class WebSocketProvider extends SocketProvider {
         let count = 0;
         while (!this.readyMap.get(shard)) {
             await new Promise((resolve) => setTimeout(resolve, Math.pow(2, count)));
-            if (count > 7) {
+            if (count > 11) {
                 throw new Error('Timeout waiting for shard to be ready');
             }
             count++;
@@ -131,7 +130,6 @@ export class WebSocketProvider extends SocketProvider {
      *
      * @ignore
      * @param {U} urls - The URLs or WebSocket object or creator.
-     *
      * @returns {Promise<void>} A promise that resolves when the URL map is initialized.
      */
     async initUrlMap<U = string[] | WebSocketLike | WebSocketCreator>(urls: U) {
@@ -189,7 +187,6 @@ export class WebSocketProvider extends SocketProvider {
      * @ignore
      * @param {string} message - The message to send.
      * @param {Shard} [shard] - The shard identifier.
-     *
      * @returns {Promise<void>} A promise that resolves when the message is sent.
      * @throws {Error} If the WebSocket is closed or the shard is not found.
      */
