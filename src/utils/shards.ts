@@ -1,5 +1,6 @@
-import { toZone, Zone } from '../constants/zones.js';
+import { Ledger, toZone, Zone } from '../constants/zones.js';
 import { isQiAddress } from '../quais.js';
+
 /**
  * Retrieves the shard information for a given address based on its byte prefix. The function parses the address to
  * extract its byte prefix, then filters the ShardData to find a matching shard entry. If no matching shard is found, it
@@ -8,7 +9,6 @@ import { isQiAddress } from '../quais.js';
  * @category Utils
  * @param {string} address - The blockchain address to be analyzed. The address should start with "0x" followed by the
  *   hexadecimal representation.
- *
  * @returns {Object | null} An object containing the shard information, or null if no
  */
 export function getZoneForAddress(address: string): Zone | null {
@@ -19,6 +19,11 @@ export function getZoneForAddress(address: string): Zone | null {
     }
 }
 
+type AddressDetails = {
+    zone: Zone;
+    ledger: Ledger;
+};
+
 /**
  * Extracts both zone and UTXO information from a given blockchain address. This function first determines the address's
  * zone by its byte prefix, then checks the 9th bit of the address to ascertain if it's a UTXO or non-UTXO address.
@@ -26,13 +31,12 @@ export function getZoneForAddress(address: string): Zone | null {
  * @category Utils
  * @param {string} address - The blockchain address to be analyzed, expected to start with "0x" followed by its
  *   hexadecimal representation.
- *
  * @returns {Object | null} An object containing the zone and UTXO information, or null if no address is found.
  */
-export function getAddressDetails(address: string): { zone: Zone; isUTXO: boolean } | null {
-    const isUTXO = (parseInt(address.substring(4, 5), 16) & 0x1) === 1;
+export function getAddressDetails(address: string): AddressDetails | null {
+    const isQiLedger = (parseInt(address.substring(4, 5), 16) & 0x1) === Ledger.Qi;
 
-    return { zone: toZone(address.substring(0, 4)), isUTXO };
+    return { zone: toZone(address.substring(0, 4)), ledger: isQiLedger ? Ledger.Qi : Ledger.Quai };
 }
 
 /**
@@ -43,7 +47,6 @@ export function getAddressDetails(address: string): { zone: Zone; isUTXO: boolea
  * @category Utils
  * @param {string | null} from - The sender address. If null, the function returns 0.
  * @param {string | null} to - The recipient address. If null, the function returns 0.
- *
  * @returns {number} The transaction type based on the addresses.
  */
 export function getTxType(from: string | null, to: string | null): number {

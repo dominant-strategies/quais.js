@@ -7,7 +7,7 @@ import type { InterfaceAbi } from '../abi/index.js';
 import { validateAddress } from '../address/index.js';
 import type { Addressable } from '../address/index.js';
 import type { BytesLike } from '../utils/index.js';
-import { getZoneForAddress,  } from '../utils/index.js';
+import { getZoneForAddress } from '../utils/index.js';
 import type { ContractInterface, ContractMethodArgs, ContractDeployTransaction, ContractRunner } from './types.js';
 import type { ContractTransactionResponse } from './wrappers.js';
 import { Wallet } from '../wallet/index.js';
@@ -80,7 +80,6 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
      * Resolves to the transaction to deploy the contract, passing `args` into the constructor.
      *
      * @param {ContractMethods<A>} args - The arguments to the constructor.
-     *
      * @returns {Promise<ContractDeployTransaction>} A promise resolving to the deployment transaction.
      */
     async getDeployTransaction(...args: ContractMethodArgs<A>): Promise<ContractDeployTransaction> {
@@ -114,7 +113,6 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
      * transactions to it.
      *
      * @param {ContractMethods<A>} args - The arguments to the constructor.
-     *
      * @returns {Promise<
      *     BaseContract & { deploymentTransaction(): ContractTransactionResponse } & Omit<I, keyof BaseContract>
      * >}
@@ -139,7 +137,6 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
             tx.from = this.runner.address;
         }
         const grindedTx = await this.grindContractAddress(tx);
-        console.log('grindedTx', grindedTx);
         const sentTx = await this.runner.sendTransaction(grindedTx);
         const address = getStatic<(tx: ContractDeployTransaction) => string>(
             this.constructor,
@@ -188,7 +185,6 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
      * Return a new **ContractFactory** with the same ABI and bytecode, but connected to `runner`.
      *
      * @param {ContractRunner} runner - The runner to connect to.
-     *
      * @returns {ContractFactory<A, I>} A new ContractFactory.
      */
     connect(runner: null | ContractRunner): ContractFactory<A, I> {
@@ -200,7 +196,6 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
      *
      * @param {any} output - The Solidity JSON output.
      * @param {ContractRunner} runner - The runner to connect to.
-     *
      * @returns {ContractFactory<A, I>} A new ContractFactory.
      */
     static fromSolidity<A extends Array<any> = Array<any>, I = ContractInterface>(
