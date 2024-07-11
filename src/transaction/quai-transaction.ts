@@ -458,7 +458,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         if (tx.maxFeePerGas != null) {
             result.maxFeePerGas = tx.maxFeePerGas;
         }
-        if (tx.data != null) {
+        if (tx.data != null && tx.data !== '') {
             result.data = tx.data;
         }
         if (tx.value != null) {
