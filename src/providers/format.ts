@@ -176,7 +176,7 @@ const _formatWoBodyHeader = object({
 });
 
 const _formatUncle = object({
-    coinbase: getAddress,
+    coinbase: allowNull(getAddress),
     difficulty: getBigInt,
     headerHash: formatHash,
     location: formatData,
