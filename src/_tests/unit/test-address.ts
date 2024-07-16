@@ -84,13 +84,12 @@ describe('computes ICAP address', function () {
     }
 });
 
-// TODO: make getCreateAddress match go-quai's implementation to get this to pass
 describe('computes create address', function () {
     const tests = loadTests<TestCaseCreate>('create');
     for (const { sender, creates } of tests) {
-        for (const { name, nonce, address } of creates) {
+        for (const { name, nonce, data, address } of creates) {
             it(`computes the create address: ${name}`, function () {
-                assert.equal(getCreateAddress({ from: sender, nonce }), address);
+                assert.equal(getCreateAddress({ from: sender, nonce, data }), address);
             });
         }
     }

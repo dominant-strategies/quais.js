@@ -40,6 +40,7 @@ export type TestCaseCreate = {
     creates: Array<{
         name: string;
         nonce: number;
+        data: string;
         address: string;
     }>;
 };
