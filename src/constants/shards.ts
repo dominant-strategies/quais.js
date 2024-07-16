@@ -25,6 +25,14 @@ export enum Shard {
 
 function shardFromBytes(shard: string): Shard {
     switch (shard) {
+        case '0x':
+            return Shard.Prime;
+        case '0x0':
+            return Shard.Cyprus;
+        case '0x1':
+            return Shard.Paxos;
+        case '0x2':
+            return Shard.Hydra;
         case '0x00':
             return Shard.Cyprus1;
         case '0x01':

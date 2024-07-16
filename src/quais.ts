@@ -52,7 +52,9 @@ export {
     MessagePrefix,
     Ledger,
     Zone,
+    toZone,
     Shard,
+    toShard,
 } from './constants/index.js';
 
 // CONTRACT
