@@ -1,14 +1,5 @@
 import { keccak256 } from '../crypto/index.js';
-import {
-    concat,
-    dataSlice,
-    getBigInt,
-    getBytes,
-    assertArgument,
-    zeroPadValue,
-    toBeHex,
-    toBigInt,
-} from '../utils/index.js';
+import { concat, dataSlice, getBigInt, getBytes, assertArgument } from '../utils/index.js';
 
 import { getAddress } from './address.js';
 
@@ -38,13 +29,20 @@ import type { BigNumberish, BytesLike } from '../utils/index.js';
  *
  * @param {object} tx - The transaction object.
  * @param {string} tx.from - The address of the sender.
+ * @param {BigNumberish} tx.nonce - The nonce of the sender.
+ * @param {string} [tx.data] - The data of the transaction.
  */
-export function getCreateAddress(tx: { from: string; nonce: BigNumberish }): string {
+export function getCreateAddress(tx: { from: string; nonce: BigNumberish; data: string | null }): string {
     const from = getAddress(tx.from);
     const nonce = getBigInt(tx.nonce, 'tx.nonce');
-    const nonceBytes = zeroPadValue(toBeHex(toBigInt(nonce)), 8);
 
-    return getAddress(dataSlice(keccak256(concat([getAddress(from), nonceBytes])), 12));
+    const nonceBytes = bigEndianNonce(nonce);
+    const fromBytes = getBytes(from);
+    const codeBytes = tx.data ? getBytes(tx.data) : new Uint8Array();
+
+    const concatenated = new Uint8Array([...fromBytes, ...nonceBytes, ...codeBytes]);
+    const hash = keccak256(concatenated);
+    return getAddress(dataSlice(hash, 12));
 }
 
 /**
@@ -76,7 +74,6 @@ export function getCreateAddress(tx: { from: string; nonce: BigNumberish }): str
  * @param {string} _from - The address of the sender.
  * @param {BytesLike} _salt - The salt value.
  * @param {BytesLike} _initCodeHash - The hash of the init code.
- *
  * @returns {string} The computed address.
  * @throws {Error} If the salt is not exactly 32 bytes long.
  * @throws {Error} If the initCodeHash is not exactly 32 bytes long.
@@ -91,4 +88,12 @@ export function getCreate2Address(_from: string, _salt: BytesLike, _initCodeHash
     assertArgument(initCodeHash.length === 32, 'initCodeHash must be 32 bytes', 'initCodeHash', _initCodeHash);
 
     return getAddress(dataSlice(keccak256(concat(['0xff', from, salt, initCodeHash])), 12));
+}
+
+// Helper function to convert a BigInt nonce to a big-endian byte array
+function bigEndianNonce(nonce: bigint): Uint8Array {
+    const buffer = new ArrayBuffer(8);
+    const view = new DataView(buffer);
+    view.setBigUint64(0, nonce, false);
+    return new Uint8Array(buffer);
 }
