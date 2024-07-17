@@ -96,7 +96,7 @@ describe('Test serialization and deserialization of QuaiHDWallet', function () {
 });
 
 describe('Test Typed-Data Signing (EIP-712)', function () {
-    const tests = loadTests<TestCaseQuaiTypedData>('typed-data');
+    const tests = loadTests<TestCaseQuaiTypedData>('sign-typed-data');
     for (const test of tests) {
         it(`tests signing typed-data: ${test.name}`, async function () {
             const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
