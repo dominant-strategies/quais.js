@@ -1,19 +1,21 @@
 ---
 title: ContractDeployTransaction
+icon: square-i
+iconType: solid
 ---
 
 A deployment transaction for a contract.
 
 ## Extends
 
-- `Omit`\<[`ContractTransaction`](/content/interfaces/ContractTransaction), `"to"`\>
+- `Omit`\<[`ContractTransaction`](/sdk/content/interfaces/ContractTransaction), `"to"`\>
 
 ## Properties
 
 | Property | Type | Description | Inherited from |
 | :------ | :------ | :------ | :------ |
-| `accessList?` | [`AccessList`](/content/type-aliases/AccessList) | The [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) access list. Storage slots included in the access list<br />are //warmed// by pre-loading them, so their initial cost to fetch is guaranteed, but then each additional access<br />is cheaper. | `Omit.accessList` |
-| `blockTag?` | [`BlockTag`](/content/type-aliases/BlockTag) | When using `call` or `estimateGas`, this allows a specific block to be queried. Many backends do not support this<br />and when unsupported errors are silently squelched and `"latest"` is used. | `Omit.blockTag` |
+| `accessList?` | [`AccessList`](/sdk/content/type-aliases/AccessList) | The [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) access list. Storage slots included in the access list<br />are //warmed// by pre-loading them, so their initial cost to fetch is guaranteed, but then each additional access<br />is cheaper. | `Omit.accessList` |
+| `blockTag?` | [`BlockTag`](/sdk/content/type-aliases/BlockTag) | When using `call` or `estimateGas`, this allows a specific block to be queried. Many backends do not support this<br />and when unsupported errors are silently squelched and `"latest"` is used. | `Omit.blockTag` |
 | `chainId?` | `bigint` | The chain ID for the network this transaction is valid on. | `Omit.chainId` |
 | `customData?` | `any` | A custom object, which can be passed along for network-specific values. | `Omit.customData` |
 | `data` | `string` | The transaction data. | `Omit.data` |

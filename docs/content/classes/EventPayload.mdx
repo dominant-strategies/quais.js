@@ -1,8 +1,10 @@
 ---
 title: EventPayload
+icon: square-c
+iconType: solid
 ---
 
-When an [**EventEmitterable**](/content/interfaces/EventEmitterable) triggers a [[Listener]], the callback always ahas one
+When an [**EventEmitterable**](/sdk/content/interfaces/EventEmitterable) triggers a [[Listener]], the callback always ahas one
 additional argument passed, which is an **EventPayload**.
 
 ## Todo
@@ -11,7 +13,7 @@ Listener is no longer exported, need to revise comment or remove link
 
 ## Extended by
 
-- [`ContractUnknownEventPayload`](/content/classes/ContractUnknownEventPayload)
+- [`ContractUnknownEventPayload`](/sdk/content/classes/ContractUnknownEventPayload)
 
 ## Type parameters
 
@@ -36,23 +38,23 @@ Create a new **EventPayload** for `emitter` with the `listener` and for `filter`
 
 | Parameter | Type |
 | :------ | :------ |
-| `emitter` | [`EventEmitterable`](/content/interfaces/EventEmitterable)\<`T`\> |
-| `listener` | `null` \| [`Listener`](/content/type-aliases/Listener) |
+| `emitter` | [`EventEmitterable`](/sdk/content/interfaces/EventEmitterable)\<`T`\> |
+| `listener` | `null` \| [`Listener`](/sdk/content/type-aliases/Listener) |
 | `filter` | `T` |
 
 #### Returns
 
-[`EventPayload`](/content/classes/EventPayload)\<`T`\>
+[`EventPayload`](/sdk/content/classes/EventPayload)\<`T`\>
 
 #### Source
 
-[utils/events.ts:91](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L91)
+[utils/events.ts:91](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/events.ts#L91)
 
 ## Properties
 
 | Property | Modifier | Type | Description |
 | :------ | :------ | :------ | :------ |
-| `emitter` | `readonly` | [`EventEmitterable`](/content/interfaces/EventEmitterable)\<`T`\> | The **EventEmitterable**. |
+| `emitter` | `readonly` | [`EventEmitterable`](/sdk/content/interfaces/EventEmitterable)\<`T`\> | The **EventEmitterable**. |
 | `filter` | `readonly` | `T` | The event filter. |
 
 ## Methods
@@ -71,4 +73,4 @@ Unregister the triggered listener for future events.
 
 #### Source
 
-[utils/events.ts:99](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L99)
+[utils/events.ts:99](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/events.ts#L99)

@@ -1,5 +1,7 @@
 ---
 title: checkResultErrors
+icon: square-f
+iconType: solid
 ---
 
 ```ts
@@ -9,19 +11,19 @@ function checkResultErrors(result): {
  }[]
 ```
 
-Returns all errors found in a [**Result**](/content/classes/Result).
+Returns all errors found in a [**Result**](/sdk/content/classes/Result).
 
-Since certain errors encountered when creating a [**Result**](/content/classes/Result) do not impact the ability to continue
+Since certain errors encountered when creating a [**Result**](/sdk/content/classes/Result) do not impact the ability to continue
 parsing data, they are deferred until they are actually accessed. Hence a faulty string in an Event that is never
 used does not impact the program flow.
 
-However, sometimes it may be useful to access, identify or validate correctness of a [**Result**](/content/classes/Result).
+However, sometimes it may be useful to access, identify or validate correctness of a [**Result**](/sdk/content/classes/Result).
 
 ## Parameters
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `result` | [`Result`](/content/classes/Result) | The Result to check for errors. |
+| `result` | [`Result`](/sdk/content/classes/Result) | The Result to check for errors. |
 
 ## Returns
 
@@ -34,4 +36,4 @@ An array of objects with the path to the error and the error itself.
 
 ## Source
 
-[abi/coders/abstract-coder.ts:313](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/coders/abstract-coder.ts#L313)
+[abi/coders/abstract-coder.ts:313](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/abi/coders/abstract-coder.ts#L313)

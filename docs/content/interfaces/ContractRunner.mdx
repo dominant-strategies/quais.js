@@ -1,5 +1,7 @@
 ---
 title: ContractRunner
+icon: square-i
+iconType: solid
 ---
 
 A **ContractRunner** is a generic interface which defines an object capable of interacting with a Contract on the
@@ -12,14 +14,14 @@ The most common ContractRunners are [Providers](../classes/Provider) which enabl
 
 ## Extended by
 
-- [`Provider`](/content/interfaces/Provider)
-- [`Signer`](/content/interfaces/Signer)
+- [`Provider`](/sdk/content/interfaces/Provider)
+- [`Signer`](/sdk/content/interfaces/Signer)
 
 ## Properties
 
 | Property | Type | Description |
 | :------ | :------ | :------ |
 | `call?` | (`tx`: `QuaiTransactionRequest`) => `Promise`\<`string`\> | Required for pure, view or static calls to contracts. |
-| `estimateGas?` | (`tx`: [`TransactionRequest`](/content/type-aliases/TransactionRequest)) => `Promise`\<`bigint`\> | Required to estimate gas. |
-| `provider` | `null` \| [`Provider`](/content/interfaces/Provider) | The provider used for necessary state querying operations.<br /><br />This can also point to the **ContractRunner** itself, in the case of an<br />[AbstractProvider](../classes/AbstractProvider). |
-| `sendTransaction?` | (`tx`: [`TransactionRequest`](/content/type-aliases/TransactionRequest)) => `Promise`\<[`TransactionResponse`](/content/type-aliases/TransactionResponse)\> | Required for state mutating calls |
+| `estimateGas?` | (`tx`: [`TransactionRequest`](/sdk/content/type-aliases/TransactionRequest)) => `Promise`\<`bigint`\> | Required to estimate gas. |
+| `provider` | `null` \| [`Provider`](/sdk/content/interfaces/Provider) | The provider used for necessary state querying operations.<br /><br />This can also point to the **ContractRunner** itself, in the case of an<br />[AbstractProvider](../classes/AbstractProvider). |
+| `sendTransaction?` | (`tx`: [`TransactionRequest`](/sdk/content/type-aliases/TransactionRequest)) => `Promise`\<[`TransactionResponse`](/sdk/content/type-aliases/TransactionResponse)\> | Required for state mutating calls |

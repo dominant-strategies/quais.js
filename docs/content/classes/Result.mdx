@@ -1,8 +1,10 @@
 ---
 title: Result
+icon: square-c
+iconType: solid
 ---
 
-A [**Result**](/content/classes/Result) is a sub-class of Array, which allows accessing any of its values either positionally by
+A [**Result**](/sdk/content/classes/Result) is a sub-class of Array, which allows accessing any of its values either positionally by
 its index or, if keys are provided by its name.
 
 ## Extends
@@ -19,7 +21,7 @@ getValue(name): any
 
 Returns the value for `name`.
 
-Since it is possible to have a key whose name conflicts with a method on a [**Result**](/content/classes/Result) or its
+Since it is possible to have a key whose name conflicts with a method on a [**Result**](/sdk/content/classes/Result) or its
 superclass Array, or any JavaScript keyword, this ensures all named values are still accessible by name.
 
 #### Parameters
@@ -36,7 +38,7 @@ The value for `name`.
 
 #### Source
 
-[abi/coders/abstract-coder.ts:270](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/coders/abstract-coder.ts#L270)
+[abi/coders/abstract-coder.ts:270](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/abi/coders/abstract-coder.ts#L270)
 
 ***
 
@@ -56,7 +58,7 @@ This will throw if there are any outstanding deferred errors.
 
 #### Source
 
-[abi/coders/abstract-coder.ts:149](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/coders/abstract-coder.ts#L149)
+[abi/coders/abstract-coder.ts:149](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/abi/coders/abstract-coder.ts#L149)
 
 ***
 
@@ -76,7 +78,7 @@ This will throw if any value is unnamed, or if there are any outstanding deferre
 
 #### Source
 
-[abi/coders/abstract-coder.ts:165](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/coders/abstract-coder.ts#L165)
+[abi/coders/abstract-coder.ts:165](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/abi/coders/abstract-coder.ts#L165)
 
 ***
 
@@ -86,7 +88,7 @@ This will throw if any value is unnamed, or if there are any outstanding deferre
 static fromItems(items, keys?): Result
 ```
 
-Creates a new [**Result**](/content/classes/Result) for `items` with each entry also accessible by its corresponding name in
+Creates a new [**Result**](/sdk/content/classes/Result) for `items` with each entry also accessible by its corresponding name in
 `keys`.
 
 #### Parameters
@@ -98,10 +100,10 @@ Creates a new [**Result**](/content/classes/Result) for `items` with each entry 
 
 #### Returns
 
-[`Result`](/content/classes/Result)
+[`Result`](/sdk/content/classes/Result)
 
 The new Result.
 
 #### Source
 
-[abi/coders/abstract-coder.ts:294](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/abi/coders/abstract-coder.ts#L294)
+[abi/coders/abstract-coder.ts:294](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/abi/coders/abstract-coder.ts#L294)

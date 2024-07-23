@@ -1,5 +1,7 @@
 ---
 title: JsonRpcApiProvider
+icon: square-c
+iconType: solid
 ---
 
 The JsonRpcApiProvider is an abstract class and **MUST** be sub-classed.
@@ -13,19 +15,19 @@ Sub-classing Notes:
 
 ## Extends
 
-- [`AbstractProvider`](/content/classes/AbstractProvider)\<`C`\>
+- [`AbstractProvider`](/sdk/content/classes/AbstractProvider)\<`C`\>
 
 ## Extended by
 
-- [`JsonRpcProvider`](/content/classes/JsonRpcProvider)
-- [`BrowserProvider`](/content/classes/BrowserProvider)
-- [`SocketProvider`](/content/classes/SocketProvider)
+- [`JsonRpcProvider`](/sdk/content/classes/JsonRpcProvider)
+- [`BrowserProvider`](/sdk/content/classes/BrowserProvider)
+- [`SocketProvider`](/sdk/content/classes/SocketProvider)
 
 ## Type parameters
 
 | Type parameter | Value |
 | :------ | :------ |
-| `C` | [`FetchRequest`](/content/classes/FetchRequest) |
+| `C` | [`FetchRequest`](/sdk/content/classes/FetchRequest) |
 
 ## Constructors
 
@@ -41,20 +43,20 @@ Creates a new JsonRpcApiProvider instance.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `network`? | [`Networkish`](/content/type-aliases/Networkish) | The network to connect to. |
-| `options`? | [`JsonRpcApiProviderOptions`](/content/type-aliases/JsonRpcApiProviderOptions) | The options for the provider. |
+| `network`? | [`Networkish`](/sdk/content/type-aliases/Networkish) | The network to connect to. |
+| `options`? | [`JsonRpcApiProviderOptions`](/sdk/content/type-aliases/JsonRpcApiProviderOptions) | The options for the provider. |
 
 #### Returns
 
-[`JsonRpcApiProvider`](/content/classes/JsonRpcApiProvider)\<`C`\>
+[`JsonRpcApiProvider`](/sdk/content/classes/JsonRpcApiProvider)\<`C`\>
 
 #### Overrides
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`constructor`](/content/classes/AbstractProvider#constructors)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`constructor`](/sdk/content/classes/AbstractProvider#constructors)
 
 #### Source
 
-[providers/provider-jsonrpc.ts:760](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L760)
+[providers/provider-jsonrpc.ts:749](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L749)
 
 ## Accessors
 
@@ -68,13 +70,13 @@ Get the list of connected FetchRequests.
 
 #### Returns
 
-[`FetchRequest`](/content/classes/FetchRequest)[]
+[`FetchRequest`](/sdk/content/classes/FetchRequest)[]
 
 The list of connected FetchRequests.
 
 #### Source
 
-[providers/abstract-provider.ts:708](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L708)
+[providers/abstract-provider.ts:708](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L708)
 
 ***
 
@@ -84,7 +86,7 @@ The list of connected FetchRequests.
 get destroyed(): boolean
 ```
 
-If this provider has been destroyed using the [**destroy**](/content/classes/AbstractProvider#destroy) method.
+If this provider has been destroyed using the [**destroy**](/sdk/content/classes/AbstractProvider#destroy) method.
 
 Once destroyed, all resources are reclaimed, internal event loops and timers are cleaned up and no further
 requests may be sent to the provider.
@@ -95,7 +97,7 @@ requests may be sent to the provider.
 
 #### Source
 
-[providers/abstract-provider.ts:1875](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L1875)
+[providers/abstract-provider.ts:1875](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L1875)
 
 ***
 
@@ -121,7 +123,7 @@ Whether the provider is paused.
 
 #### Source
 
-[providers/abstract-provider.ts:1907](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L1907)
+[providers/abstract-provider.ts:1907](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L1907)
 
 ***
 
@@ -141,7 +143,7 @@ The polling interval.
 
 #### Source
 
-[providers/abstract-provider.ts:817](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L817)
+[providers/abstract-provider.ts:817](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L817)
 
 ***
 
@@ -162,7 +164,7 @@ The provider instance.
 
 #### Source
 
-[providers/abstract-provider.ts:827](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L827)
+[providers/abstract-provider.ts:827](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L827)
 
 ***
 
@@ -182,7 +184,7 @@ True if the provider is ready.
 
 #### Source
 
-[providers/provider-jsonrpc.ts:1058](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L1058)
+[providers/provider-jsonrpc.ts:1048](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L1048)
 
 ## Methods
 
@@ -206,11 +208,11 @@ Clear a timer created using the AbstractProvider._setTimeout | **_setTimeout** m
 
 #### Inherited from
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`_clearTimeout`](/content/classes/AbstractProvider#_cleartimeout)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`_clearTimeout`](/sdk/content/classes/AbstractProvider#_cleartimeout)
 
 #### Source
 
-[providers/abstract-provider.ts:1603](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L1603)
+[providers/abstract-provider.ts:1603](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L1603)
 
 ***
 
@@ -228,11 +230,11 @@ Destroys the provider, stopping all processing and canceling all pending request
 
 #### Overrides
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`destroy`](/content/classes/AbstractProvider#destroy)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`destroy`](/sdk/content/classes/AbstractProvider#destroy)
 
 #### Source
 
-[providers/provider-jsonrpc.ts:1462](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L1462)
+[providers/provider-jsonrpc.ts:1447](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L1447)
 
 ***
 
@@ -248,7 +250,7 @@ Get the latest Qi rate for a zone.
 
 | Parameter | Type | Default value | Description |
 | :------ | :------ | :------ | :------ |
-| `zone` | [`Zone`](/content/enumerations/Zone) | `undefined` | The zone to get the rate for. |
+| `zone` | [`Zone`](/sdk/content/enumerations/Zone) | `undefined` | The zone to get the rate for. |
 | `amt`? | `number` | `1` | The amount to get the rate for. Default is `1` |
 
 #### Returns
@@ -259,11 +261,11 @@ A promise that resolves to the latest Qi rate.
 
 #### Inherited from
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`getLatestQiRate`](/content/classes/AbstractProvider#getlatestqirate)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`getLatestQiRate`](/sdk/content/classes/AbstractProvider#getlatestqirate)
 
 #### Source
 
-[providers/abstract-provider.ts:785](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L785)
+[providers/abstract-provider.ts:785](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L785)
 
 ***
 
@@ -279,7 +281,7 @@ Get the latest Quai rate for a zone.
 
 | Parameter | Type | Default value | Description |
 | :------ | :------ | :------ | :------ |
-| `zone` | [`Zone`](/content/enumerations/Zone) | `undefined` | The zone to get the rate for. |
+| `zone` | [`Zone`](/sdk/content/enumerations/Zone) | `undefined` | The zone to get the rate for. |
 | `amt`? | `number` | `1` | The amount to get the rate for. Default is `1` |
 
 #### Returns
@@ -290,11 +292,11 @@ A promise that resolves to the latest Quai rate.
 
 #### Inherited from
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`getLatestQuaiRate`](/content/classes/AbstractProvider#getlatestquairate)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`getLatestQuaiRate`](/sdk/content/classes/AbstractProvider#getlatestquairate)
 
 #### Source
 
-[providers/abstract-provider.ts:740](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L740)
+[providers/abstract-provider.ts:740](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L740)
 
 ***
 
@@ -314,11 +316,11 @@ A promise that resolves to the protocol expansion number.
 
 #### Inherited from
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`getProtocolExpansionNumber`](/content/classes/AbstractProvider#getprotocolexpansionnumber)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`getProtocolExpansionNumber`](/sdk/content/classes/AbstractProvider#getprotocolexpansionnumber)
 
 #### Source
 
-[providers/abstract-provider.ts:772](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L772)
+[providers/abstract-provider.ts:772](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L772)
 
 ***
 
@@ -337,8 +339,8 @@ Get the Qi rate at a specific block.
 
 | Parameter | Type | Default value | Description |
 | :------ | :------ | :------ | :------ |
-| `zone` | [`Zone`](/content/enumerations/Zone) | `undefined` | The zone to get the rate for. |
-| `blockTag` | [`BlockTag`](/content/type-aliases/BlockTag) | `undefined` | The block tag to get the rate at. |
+| `zone` | [`Zone`](/sdk/content/enumerations/Zone) | `undefined` | The zone to get the rate for. |
+| `blockTag` | [`BlockTag`](/sdk/content/type-aliases/BlockTag) | `undefined` | The block tag to get the rate at. |
 | `amt`? | `number` | `1` | The amount to get the rate for. Default is `1` |
 
 #### Returns
@@ -349,11 +351,11 @@ A promise that resolves to the Qi rate at the specified block.
 
 #### Inherited from
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`getQiRateAtBlock`](/content/classes/AbstractProvider#getqirateatblock)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`getQiRateAtBlock`](/sdk/content/classes/AbstractProvider#getqirateatblock)
 
 #### Source
 
-[providers/abstract-provider.ts:798](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L798)
+[providers/abstract-provider.ts:798](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L798)
 
 ***
 
@@ -372,8 +374,8 @@ Get the Quai rate at a specific block.
 
 | Parameter | Type | Default value | Description |
 | :------ | :------ | :------ | :------ |
-| `zone` | [`Zone`](/content/enumerations/Zone) | `undefined` | The zone to get the rate for. |
-| `blockTag` | [`BlockTag`](/content/type-aliases/BlockTag) | `undefined` | The block tag to get the rate at. |
+| `zone` | [`Zone`](/sdk/content/enumerations/Zone) | `undefined` | The zone to get the rate for. |
+| `blockTag` | [`BlockTag`](/sdk/content/type-aliases/BlockTag) | `undefined` | The block tag to get the rate at. |
 | `amt`? | `number` | `1` | The amount to get the rate for. Default is `1` |
 
 #### Returns
@@ -384,11 +386,11 @@ A promise that resolves to the Quai rate at the specified block.
 
 #### Inherited from
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`getQuaiRateAtBlock`](/content/classes/AbstractProvider#getquairateatblock)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`getQuaiRateAtBlock`](/sdk/content/classes/AbstractProvider#getquairateatblock)
 
 #### Source
 
-[providers/abstract-provider.ts:753](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L753)
+[providers/abstract-provider.ts:753](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L753)
 
 ***
 
@@ -408,7 +410,7 @@ Returns a JsonRpcSigner for the given address.
 
 #### Returns
 
-`Promise`\<[`JsonRpcSigner`](/content/classes/JsonRpcSigner)\>
+`Promise`\<[`JsonRpcSigner`](/sdk/content/classes/JsonRpcSigner)\>
 
 A promise that resolves to the JsonRpcSigner.
 
@@ -418,7 +420,7 @@ If the account is invalid.
 
 #### Source
 
-[providers/provider-jsonrpc.ts:1417](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L1417)
+[providers/provider-jsonrpc.ts:1402](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L1402)
 
 ***
 
@@ -434,7 +436,7 @@ Initialize the URL map with the provided URLs.
 
 | Type parameter | Value |
 | :------ | :------ |
-| `U` | `string`[] \| [`FetchRequest`](/content/classes/FetchRequest) |
+| `U` | `string`[] \| [`FetchRequest`](/sdk/content/classes/FetchRequest) |
 
 #### Parameters
 
@@ -450,11 +452,11 @@ A promise that resolves when the map is initialized.
 
 #### Inherited from
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`initUrlMap`](/content/classes/AbstractProvider#initurlmap)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`initUrlMap`](/sdk/content/classes/AbstractProvider#initurlmap)
 
 #### Source
 
-[providers/abstract-provider.ts:670](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L670)
+[providers/abstract-provider.ts:670](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L670)
 
 ***
 
@@ -468,13 +470,13 @@ Returns a list of JsonRpcSigners for all accounts.
 
 #### Returns
 
-`Promise`\<[`JsonRpcSigner`](/content/classes/JsonRpcSigner)[]\>
+`Promise`\<[`JsonRpcSigner`](/sdk/content/classes/JsonRpcSigner)[]\>
 
 A promise that resolves to an array of JsonRpcSigners.
 
 #### Source
 
-[providers/provider-jsonrpc.ts:1454](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L1454)
+[providers/provider-jsonrpc.ts:1439](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L1439)
 
 ***
 
@@ -499,11 +501,11 @@ will be emitted once the provider is unpaused.
 
 #### Inherited from
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`pause`](/content/classes/AbstractProvider#pause)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`pause`](/sdk/content/classes/AbstractProvider#pause)
 
 #### Source
 
-[providers/abstract-provider.ts:1928](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L1928)
+[providers/abstract-provider.ts:1928](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L1928)
 
 ***
 
@@ -521,11 +523,11 @@ Resume the provider.
 
 #### Inherited from
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`resume`](/content/classes/AbstractProvider#resume)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`resume`](/sdk/content/classes/AbstractProvider#resume)
 
 #### Source
 
-[providers/abstract-provider.ts:1957](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L1957)
+[providers/abstract-provider.ts:1957](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L1957)
 
 ***
 
@@ -552,7 +554,7 @@ force the options values in the call to the constructor to modify this method's 
 | :------ | :------ | :------ |
 | `method` | `string` | The method to call. |
 | `params` | `any`[] \| `Record`\<`string`, `any`\> | The parameters to pass to the method. |
-| `shard`? | [`Shard`](/content/enumerations/Shard) | The shard to send the request to. |
+| `shard`? | [`Shard`](/sdk/content/enumerations/Shard) | The shard to send the request to. |
 
 #### Returns
 
@@ -562,7 +564,7 @@ A promise that resolves to the result of the method call.
 
 #### Source
 
-[providers/provider-jsonrpc.ts:1384](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L1384)
+[providers/provider-jsonrpc.ts:1370](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L1370)
 
 ***
 
@@ -582,17 +584,17 @@ Get the shard from a hash.
 
 #### Returns
 
-[`Shard`](/content/enumerations/Shard)
+[`Shard`](/sdk/content/enumerations/Shard)
 
 The shard.
 
 #### Inherited from
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`shardFromHash`](/content/classes/AbstractProvider#shardfromhash)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`shardFromHash`](/sdk/content/classes/AbstractProvider#shardfromhash)
 
 #### Source
 
-[providers/abstract-provider.ts:729](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L729)
+[providers/abstract-provider.ts:729](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L729)
 
 ***
 
@@ -608,18 +610,18 @@ Get the zone from an address.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `_address` | [`AddressLike`](/content/type-aliases/AddressLike) | The address to get the zone from. |
+| `_address` | [`AddressLike`](/sdk/content/type-aliases/AddressLike) | The address to get the zone from. |
 
 #### Returns
 
-`Promise`\<[`Zone`](/content/enumerations/Zone)\>
+`Promise`\<[`Zone`](/sdk/content/enumerations/Zone)\>
 
 A promise that resolves to the zone.
 
 #### Inherited from
 
-[`AbstractProvider`](/content/classes/AbstractProvider).[`zoneFromAddress`](/content/classes/AbstractProvider#zonefromaddress)
+[`AbstractProvider`](/sdk/content/classes/AbstractProvider).[`zoneFromAddress`](/sdk/content/classes/AbstractProvider#zonefromaddress)
 
 #### Source
 
-[providers/abstract-provider.ts:718](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/abstract-provider.ts#L718)
+[providers/abstract-provider.ts:718](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/abstract-provider.ts#L718)
