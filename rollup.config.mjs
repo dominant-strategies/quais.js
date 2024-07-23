@@ -1,5 +1,11 @@
-
 import { nodeResolve } from '@rollup/plugin-node-resolve';
+
+function onwarn(warning) {
+  const ignoreCodes = [ 'CIRCULAR_DEPENDENCY', 'THIS_IS_UNDEFINED' ];
+  if (!ignoreCodes.includes(warning.code)) {
+      console.error(`(!) ${warning.message}`);
+  }
+}
 
 function getConfig(opts) {
   if (opts == null) { opts = { }; }
@@ -16,10 +22,15 @@ function getConfig(opts) {
       banner: "const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 'undefined' ? window: typeof global !== 'undefined' ? global: typeof self !== 'undefined' ? self: {});",
       name: (opts.name || undefined),
       format: (opts.format || "esm"),
-      sourcemap: true
+      sourcemap: true,
+      globals: {
+        'google-protobuf': 'pb_1'
+      }
     },
+    external: ['google-protobuf'],
     context: "__$G",
     treeshake: true,
+    onwarn,
     plugins: [ nodeResolve({
         exportConditions,
         mainFields,
@@ -34,11 +45,16 @@ export default [
   getConfig({ browser: true, suffix: ".umd", format: "umd", name: "quais" }),
   {
     input: "./lib/esm/wordlists/wordlists-extra.js",
+    onwarn,
     output: {
       file: "./dist/wordlists-extra.js",
       format: "esm",
-      sourcemap: true
+      sourcemap: true,
+      globals: {
+        'google-protobuf': 'pb_1'
+      }
     },
+    external: ['google-protobuf'],
     treeshake: true,
     plugins: [ nodeResolve({
       exportConditions: [ "default", "module", "import" ],
