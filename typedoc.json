@@ -31,7 +31,7 @@
     "expandObjects": true,
     "parametersFormat": "table", // readability
     "propertiesFormat": "table", // readability
-    "publicPath": "/content/", // format links for mintlify
+    "publicPath": "/sdk/content/", // format links for mintlify
     "navigation": {
         "includeCategories": true,
         "includeGroups": false
