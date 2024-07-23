@@ -1,5 +1,7 @@
 ---
 title: quaisError
+icon: square-i
+iconType: solid
 ---
 
 All errors in quais include properties to assist in machine-readable errors.
@@ -10,37 +12,37 @@ All errors in quais include properties to assist in machine-readable errors.
 
 ## Extended by
 
-- [`UnknownError`](/content/interfaces/UnknownError)
-- [`NotImplementedError`](/content/interfaces/NotImplementedError)
-- [`UnsupportedOperationError`](/content/interfaces/UnsupportedOperationError)
-- [`NetworkError`](/content/interfaces/NetworkError)
-- [`ServerError`](/content/interfaces/ServerError)
-- [`TimeoutError`](/content/interfaces/TimeoutError)
-- [`BadDataError`](/content/interfaces/BadDataError)
-- [`CancelledError`](/content/interfaces/CancelledError)
-- [`BufferOverrunError`](/content/interfaces/BufferOverrunError)
-- [`NumericFaultError`](/content/interfaces/NumericFaultError)
-- [`InvalidArgumentError`](/content/interfaces/InvalidArgumentError)
-- [`MissingArgumentError`](/content/interfaces/MissingArgumentError)
-- [`UnexpectedArgumentError`](/content/interfaces/UnexpectedArgumentError)
-- [`CallExceptionError`](/content/interfaces/CallExceptionError)
-- [`InsufficientFundsError`](/content/interfaces/InsufficientFundsError)
-- [`NonceExpiredError`](/content/interfaces/NonceExpiredError)
-- [`ReplacementUnderpricedError`](/content/interfaces/ReplacementUnderpricedError)
-- [`TransactionReplacedError`](/content/interfaces/TransactionReplacedError)
-- [`ActionRejectedError`](/content/interfaces/ActionRejectedError)
+- [`UnknownError`](/sdk/content/interfaces/UnknownError)
+- [`NotImplementedError`](/sdk/content/interfaces/NotImplementedError)
+- [`UnsupportedOperationError`](/sdk/content/interfaces/UnsupportedOperationError)
+- [`NetworkError`](/sdk/content/interfaces/NetworkError)
+- [`ServerError`](/sdk/content/interfaces/ServerError)
+- [`TimeoutError`](/sdk/content/interfaces/TimeoutError)
+- [`BadDataError`](/sdk/content/interfaces/BadDataError)
+- [`CancelledError`](/sdk/content/interfaces/CancelledError)
+- [`BufferOverrunError`](/sdk/content/interfaces/BufferOverrunError)
+- [`NumericFaultError`](/sdk/content/interfaces/NumericFaultError)
+- [`InvalidArgumentError`](/sdk/content/interfaces/InvalidArgumentError)
+- [`MissingArgumentError`](/sdk/content/interfaces/MissingArgumentError)
+- [`UnexpectedArgumentError`](/sdk/content/interfaces/UnexpectedArgumentError)
+- [`CallExceptionError`](/sdk/content/interfaces/CallExceptionError)
+- [`InsufficientFundsError`](/sdk/content/interfaces/InsufficientFundsError)
+- [`NonceExpiredError`](/sdk/content/interfaces/NonceExpiredError)
+- [`ReplacementUnderpricedError`](/sdk/content/interfaces/ReplacementUnderpricedError)
+- [`TransactionReplacedError`](/sdk/content/interfaces/TransactionReplacedError)
+- [`ActionRejectedError`](/sdk/content/interfaces/ActionRejectedError)
 
 ## Type parameters
 
 | Type parameter | Value |
 | :------ | :------ |
-| `T` *extends* [`ErrorCode`](/content/type-aliases/ErrorCode) | [`ErrorCode`](/content/type-aliases/ErrorCode) |
+| `T` *extends* [`ErrorCode`](/sdk/content/type-aliases/ErrorCode) | [`ErrorCode`](/sdk/content/type-aliases/ErrorCode) |
 
 ## Properties
 
 | Property | Type | Description |
 | :------ | :------ | :------ |
-| `code` | [`ErrorCode`](/content/type-aliases/ErrorCode) | The string error code. |
+| `code` | [`ErrorCode`](/sdk/content/type-aliases/ErrorCode) | The string error code. |
 | `error?` | `Error` | Any related error. |
 | `info?` | `Record`\<`string`, `any`\> | Additional info regarding the error that may be useful.<br /><br />This is generally helpful mostly for human-based debugging. |
 | `shortMessage` | `string` | A short message describing the error, with minimal additional details. |

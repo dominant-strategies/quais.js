@@ -1,24 +1,26 @@
 ---
 title: AbstractSigner
+icon: square-c
+iconType: solid
 ---
 
-An **AbstractSigner** includes most of teh functionality required to get a [**Signer**](/content/interfaces/Signer) working as
+An **AbstractSigner** includes most of teh functionality required to get a [**Signer**](/sdk/content/interfaces/Signer) working as
 expected, but requires a few Signer-specific methods be overridden.
 
 ## Extended by
 
-- [`JsonRpcSigner`](/content/classes/JsonRpcSigner)
-- [`VoidSigner`](/content/classes/VoidSigner)
+- [`JsonRpcSigner`](/sdk/content/classes/JsonRpcSigner)
+- [`VoidSigner`](/sdk/content/classes/VoidSigner)
 
 ## Type parameters
 
 | Type parameter | Value |
 | :------ | :------ |
-| `P` *extends* `null` \| [`Provider`](/content/interfaces/Provider) | `null` \| [`Provider`](/content/interfaces/Provider) |
+| `P` *extends* `null` \| [`Provider`](/sdk/content/interfaces/Provider) | `null` \| [`Provider`](/sdk/content/interfaces/Provider) |
 
 ## Implements
 
-- [`Signer`](/content/interfaces/Signer)
+- [`Signer`](/sdk/content/interfaces/Signer)
 
 ## Constructors
 
@@ -38,11 +40,11 @@ Creates a new Signer connected to `provider`.
 
 #### Returns
 
-[`AbstractSigner`](/content/classes/AbstractSigner)\<`P`\>
+[`AbstractSigner`](/sdk/content/classes/AbstractSigner)\<`P`\>
 
 #### Source
 
-[signers/abstract-signer.ts:62](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/signers/abstract-signer.ts#L62)
+[signers/abstract-signer.ts:62](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/signers/abstract-signer.ts#L62)
 
 ## Properties
 
@@ -67,21 +69,21 @@ transferrable.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `provider` | `null` \| [`Provider`](/content/interfaces/Provider) | The provider to connect to. |
+| `provider` | `null` \| [`Provider`](/sdk/content/interfaces/Provider) | The provider to connect to. |
 
 #### Returns
 
-[`Signer`](/content/interfaces/Signer)
+[`Signer`](/sdk/content/interfaces/Signer)
 
 The connected signer.
 
 #### Implementation of
 
-[`Signer`](/content/interfaces/Signer).[`connect`](/content/interfaces/Signer#connect)
+[`Signer`](/sdk/content/interfaces/Signer).[`connect`](/sdk/content/interfaces/Signer#connect)
 
 #### Source
 
-[signers/abstract-signer.ts:92](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/signers/abstract-signer.ts#L92)
+[signers/abstract-signer.ts:92](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/signers/abstract-signer.ts#L92)
 
 ***
 
@@ -99,8 +101,8 @@ Resolves to the Signer address.
 
 #### Implementation of
 
-[`Signer`](/content/interfaces/Signer).[`getAddress`](/content/interfaces/Signer#getaddress)
+[`Signer`](/sdk/content/interfaces/Signer).[`getAddress`](/sdk/content/interfaces/Signer#getaddress)
 
 #### Source
 
-[signers/abstract-signer.ts:69](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/signers/abstract-signer.ts#L69)
+[signers/abstract-signer.ts:69](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/signers/abstract-signer.ts#L69)

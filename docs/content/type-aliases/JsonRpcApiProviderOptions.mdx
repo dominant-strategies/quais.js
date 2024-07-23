@@ -1,5 +1,7 @@
 ---
 title: JsonRpcApiProviderOptions
+icon: square-t
+iconType: solid
 ---
 
 ```ts
@@ -12,7 +14,7 @@ type JsonRpcApiProviderOptions: {
 };
 ```
 
-Options for configuring a [**JsonRpcApiProvider**](/content/classes/JsonRpcApiProvider). Much of this is targeted towards
+Options for configuring a [**JsonRpcApiProvider**](/sdk/content/classes/JsonRpcApiProvider). Much of this is targeted towards
 sub-classes, which often will not expose any of these options to their consumers.
 
 **`polling`** - use the polling strategy is used immediately for events; otherwise, attempt to use filters and fall
@@ -70,4 +72,4 @@ optional staticNetwork: null | Network | boolean;
 
 ## Source
 
-[providers/provider-jsonrpc.ts:213](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L213)
+[providers/provider-jsonrpc.ts:211](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L211)

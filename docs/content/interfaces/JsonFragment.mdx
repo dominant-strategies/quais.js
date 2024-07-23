@@ -1,5 +1,7 @@
 ---
 title: JsonFragment
+icon: square-i
+iconType: solid
 ---
 
 A fragment for a method, event or error in a [JSON ABI
@@ -12,9 +14,9 @@ format](https://docs.soliditylang.org/en/v0.8.19/abi-spec.html#json)
 | `anonymous?` | `readonly` | `boolean` | If the event is anonymous. |
 | `constant?` | `readonly` | `boolean` | If the function is constant. |
 | `gas?` | `readonly` | `string` | The gas limit to use when sending a transaction for this function. |
-| `inputs?` | `readonly` | readonly [`JsonFragmentType`](/content/interfaces/JsonFragmentType)[] | The input parameters. |
+| `inputs?` | `readonly` | readonly [`JsonFragmentType`](/sdk/content/interfaces/JsonFragmentType)[] | The input parameters. |
 | `name?` | `readonly` | `string` | The name of the error, event, function, etc. |
-| `outputs?` | `readonly` | readonly [`JsonFragmentType`](/content/interfaces/JsonFragmentType)[] | The output parameters. |
+| `outputs?` | `readonly` | readonly [`JsonFragmentType`](/sdk/content/interfaces/JsonFragmentType)[] | The output parameters. |
 | `payable?` | `readonly` | `boolean` | If the function is payable. |
 | `stateMutability?` | `readonly` | `string` | The mutability state of the function. |
 | `type?` | `readonly` | `string` | The type of the fragment (e.g. `event`, `"function"`, etc.) |
