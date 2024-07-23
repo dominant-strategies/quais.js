@@ -1,5 +1,7 @@
 ---
 title: TypedDataEncoder
+icon: square-c
+iconType: solid
 ---
 
 A **TypedDataEncode** prepares and encodes [EIP-712](https://eips.ethereum.org/EIPS/eip-712) payloads for signed
@@ -21,27 +23,27 @@ Create a new **TypedDataEncoder** for `types`.
 
 This performs all necessary checking that types are valid and do not violate the
 [EIP-712](https://eips.ethereum.org/EIPS/eip-712) structural constraints as well as computes the
-[**primaryType**](/content/classes/TypedDataEncoder).
+[**primaryType**](/sdk/content/classes/TypedDataEncoder).
 
 #### Parameters
 
 | Parameter | Type |
 | :------ | :------ |
-| `types` | `Record`\<`string`, [`TypedDataField`](/content/interfaces/TypedDataField)[]\> |
+| `types` | `Record`\<`string`, [`TypedDataField`](/sdk/content/interfaces/TypedDataField)[]\> |
 
 #### Returns
 
-[`TypedDataEncoder`](/content/classes/TypedDataEncoder)
+[`TypedDataEncoder`](/sdk/content/classes/TypedDataEncoder)
 
 #### Source
 
-[hash/typed-data.ts:260](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L260)
+[hash/typed-data.ts:260](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L260)
 
 ## Properties
 
 | Property | Modifier | Type | Description |
 | :------ | :------ | :------ | :------ |
-| `primaryType` | `readonly` | `string` | The primary type for the structured [**types**](/content/classes/TypedDataEncoder#types).<br /><br />This is derived automatically from the [**types**](/content/classes/TypedDataEncoder#types), since no recursion is possible, once the DAG for<br />the types is consturcted internally, the primary type must be the only remaining type with no parent nodes. |
+| `primaryType` | `readonly` | `string` | The primary type for the structured [**types**](/sdk/content/classes/TypedDataEncoder#types).<br /><br />This is derived automatically from the [**types**](/sdk/content/classes/TypedDataEncoder#types), since no recursion is possible, once the DAG for<br />the types is consturcted internally, the primary type must be the only remaining type with no parent nodes. |
 
 ## Accessors
 
@@ -55,11 +57,11 @@ The types.
 
 #### Returns
 
-`Record`\<`string`, [`TypedDataField`](/content/interfaces/TypedDataField)[]\>
+`Record`\<`string`, [`TypedDataField`](/sdk/content/interfaces/TypedDataField)[]\>
 
 #### Source
 
-[hash/typed-data.ts:245](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L245)
+[hash/typed-data.ts:245](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L245)
 
 ## Methods
 
@@ -69,7 +71,7 @@ The types.
 encode(value): string
 ```
 
-Return the fulled encoded `value` for the [**types**](/content/classes/TypedDataEncoder#types).
+Return the fulled encoded `value` for the [**types**](/sdk/content/classes/TypedDataEncoder#types).
 
 #### Parameters
 
@@ -85,7 +87,7 @@ The encoded value.
 
 #### Source
 
-[hash/typed-data.ts:471](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L471)
+[hash/typed-data.ts:471](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L471)
 
 ***
 
@@ -112,7 +114,7 @@ The encoded value.
 
 #### Source
 
-[hash/typed-data.ts:448](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L448)
+[hash/typed-data.ts:448](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L448)
 
 ***
 
@@ -138,7 +140,7 @@ The full type.
 
 #### Source
 
-[hash/typed-data.ts:434](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L434)
+[hash/typed-data.ts:434](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L434)
 
 ***
 
@@ -174,7 +176,7 @@ The encoder for the type.
 
 #### Source
 
-[hash/typed-data.ts:367](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L367)
+[hash/typed-data.ts:367](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L367)
 
 ***
 
@@ -184,7 +186,7 @@ The encoder for the type.
 hash(value): string
 ```
 
-Return the hash of the fully encoded `value` for the [**types**](/content/classes/TypedDataEncoder#types).
+Return the hash of the fully encoded `value` for the [**types**](/sdk/content/classes/TypedDataEncoder#types).
 
 #### Parameters
 
@@ -200,7 +202,7 @@ The hash of the value.
 
 #### Source
 
-[hash/typed-data.ts:482](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L482)
+[hash/typed-data.ts:482](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L482)
 
 ***
 
@@ -227,7 +229,7 @@ The hash of the value.
 
 #### Source
 
-[hash/typed-data.ts:460](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L460)
+[hash/typed-data.ts:460](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L460)
 
 ***
 
@@ -257,7 +259,7 @@ The result of the callback.
 
 #### Source
 
-[hash/typed-data.ts:536](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L536)
+[hash/typed-data.ts:536](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L536)
 
 ***
 
@@ -276,8 +278,8 @@ Return the fully encoded [EIP-712](https://eips.ethereum.org/EIPS/eip-712) `valu
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `domain` | [`TypedDataDomain`](/content/interfaces/TypedDataDomain) | The domain to use. |
-| `types` | `Record`\<`string`, [`TypedDataField`](/content/interfaces/TypedDataField)[]\> | The types to encode. |
+| `domain` | [`TypedDataDomain`](/sdk/content/interfaces/TypedDataDomain) | The domain to use. |
+| `types` | `Record`\<`string`, [`TypedDataField`](/sdk/content/interfaces/TypedDataField)[]\> | The types to encode. |
 | `value` | `Record`\<`string`, `any`\> | The value to encode. |
 
 #### Returns
@@ -288,7 +290,7 @@ The encoded value.
 
 #### Source
 
-[hash/typed-data.ts:612](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L612)
+[hash/typed-data.ts:612](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L612)
 
 ***
 
@@ -304,11 +306,11 @@ Create a new **TypedDataEncoder** for `types`.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `types` | `Record`\<`string`, [`TypedDataField`](/content/interfaces/TypedDataField)[]\> | The types to encode. |
+| `types` | `Record`\<`string`, [`TypedDataField`](/sdk/content/interfaces/TypedDataField)[]\> | The types to encode. |
 
 #### Returns
 
-[`TypedDataEncoder`](/content/classes/TypedDataEncoder)
+[`TypedDataEncoder`](/sdk/content/classes/TypedDataEncoder)
 
 The encoder for the types.
 
@@ -318,7 +320,7 @@ If the types are invalid.
 
 #### Source
 
-[hash/typed-data.ts:548](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L548)
+[hash/typed-data.ts:548](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L548)
 
 ***
 
@@ -338,8 +340,8 @@ Returns the JSON-encoded payload expected by nodes which implement the JSON-RPC
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `domain` | [`TypedDataDomain`](/content/interfaces/TypedDataDomain) | The domain to use. |
-| `types` | `Record`\<`string`, [`TypedDataField`](/content/interfaces/TypedDataField)[]\> | The types to encode. |
+| `domain` | [`TypedDataDomain`](/sdk/content/interfaces/TypedDataDomain) | The domain to use. |
+| `types` | `Record`\<`string`, [`TypedDataField`](/sdk/content/interfaces/TypedDataField)[]\> | The types to encode. |
 | `value` | `Record`\<`string`, `any`\> | The value to encode. |
 
 #### Returns
@@ -350,7 +352,7 @@ The JSON-encoded payload.
 
 #### Source
 
-[hash/typed-data.ts:648](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L648)
+[hash/typed-data.ts:648](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L648)
 
 ***
 
@@ -366,7 +368,7 @@ Return the primary type for `types`.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `types` | `Record`\<`string`, [`TypedDataField`](/content/interfaces/TypedDataField)[]\> | The types to get the primary type for. |
+| `types` | `Record`\<`string`, [`TypedDataField`](/sdk/content/interfaces/TypedDataField)[]\> | The types to get the primary type for. |
 
 #### Returns
 
@@ -380,7 +382,7 @@ If the types are invalid.
 
 #### Source
 
-[hash/typed-data.ts:560](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L560)
+[hash/typed-data.ts:560](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L560)
 
 ***
 
@@ -400,8 +402,8 @@ Return the hash of the fully encoded [EIP-712](https://eips.ethereum.org/EIPS/ei
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `domain` | [`TypedDataDomain`](/content/interfaces/TypedDataDomain) | The domain to use. |
-| `types` | `Record`\<`string`, [`TypedDataField`](/content/interfaces/TypedDataField)[]\> | The types to hash. |
+| `domain` | [`TypedDataDomain`](/sdk/content/interfaces/TypedDataDomain) | The domain to use. |
+| `types` | `Record`\<`string`, [`TypedDataField`](/sdk/content/interfaces/TypedDataField)[]\> | The types to hash. |
 | `value` | `Record`\<`string`, `any`\> | The value to hash. |
 
 #### Returns
@@ -412,7 +414,7 @@ The hash of the value.
 
 #### Source
 
-[hash/typed-data.ts:630](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L630)
+[hash/typed-data.ts:630](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L630)
 
 ***
 
@@ -428,7 +430,7 @@ Return the domain hash for `domain`.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `domain` | [`TypedDataDomain`](/content/interfaces/TypedDataDomain) | The domain to hash. |
+| `domain` | [`TypedDataDomain`](/sdk/content/interfaces/TypedDataDomain) | The domain to hash. |
 
 #### Returns
 
@@ -442,7 +444,7 @@ If the domain is invalid.
 
 #### Source
 
-[hash/typed-data.ts:585](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L585)
+[hash/typed-data.ts:585](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L585)
 
 ***
 
@@ -462,7 +464,7 @@ Return the hashed struct for `value` using `types` and `name`.
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
 | `name` | `string` | The name of the type. |
-| `types` | `Record`\<`string`, [`TypedDataField`](/content/interfaces/TypedDataField)[]\> | The types to hash. |
+| `types` | `Record`\<`string`, [`TypedDataField`](/sdk/content/interfaces/TypedDataField)[]\> | The types to hash. |
 | `value` | `Record`\<`string`, `any`\> | The value to hash. |
 
 #### Returns
@@ -473,4 +475,4 @@ The hash of the value.
 
 #### Source
 
-[hash/typed-data.ts:573](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/hash/typed-data.ts#L573)
+[hash/typed-data.ts:573](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/hash/typed-data.ts#L573)

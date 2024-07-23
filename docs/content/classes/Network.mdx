@@ -1,5 +1,7 @@
 ---
 title: Network
+icon: square-c
+iconType: solid
 ---
 
 A **Network** provides access to a chain's properties and allows for plug-ins to extend functionality.
@@ -19,15 +21,15 @@ Creates a new **Network** for `name` and `chainId`.
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
 | `name` | `string` | The network name. |
-| `chainId` | [`BigNumberish`](/content/type-aliases/BigNumberish) | The network chain ID. |
+| `chainId` | [`BigNumberish`](/sdk/content/type-aliases/BigNumberish) | The network chain ID. |
 
 #### Returns
 
-[`Network`](/content/classes/Network)
+[`Network`](/sdk/content/classes/Network)
 
 #### Source
 
-[providers/network.ts:46](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L46)
+[providers/network.ts:46](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/network.ts#L46)
 
 ## Accessors
 
@@ -49,7 +51,7 @@ Sets the network chain ID.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `value` | [`BigNumberish`](/content/type-aliases/BigNumberish) | The new network chain ID. |
+| `value` | [`BigNumberish`](/sdk/content/type-aliases/BigNumberish) | The new network chain ID. |
 
 #### Returns
 
@@ -59,7 +61,7 @@ The network chain ID.
 
 #### Source
 
-[providers/network.ts:81](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L81)
+[providers/network.ts:81](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/network.ts#L81)
 
 ***
 
@@ -93,7 +95,7 @@ The network name.
 
 #### Source
 
-[providers/network.ts:65](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L65)
+[providers/network.ts:65](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/network.ts#L65)
 
 ## Methods
 
@@ -107,13 +109,13 @@ Create a copy of this Network.
 
 #### Returns
 
-[`Network`](/content/classes/Network)
+[`Network`](/sdk/content/classes/Network)
 
 A new Network instance.
 
 #### Source
 
-[providers/network.ts:145](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L145)
+[providers/network.ts:145](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/network.ts#L145)
 
 ***
 
@@ -133,7 +135,7 @@ The JSON representation of the network.
 
 #### Source
 
-[providers/network.ts:55](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L55)
+[providers/network.ts:55](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/network.ts#L55)
 
 ***
 
@@ -149,11 +151,11 @@ Returns a new Network for the `network` name or chainId.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `network`? | [`Networkish`](/content/type-aliases/Networkish) | The network to get. |
+| `network`? | [`Networkish`](/sdk/content/type-aliases/Networkish) | The network to get. |
 
 #### Returns
 
-[`Network`](/content/classes/Network)
+[`Network`](/sdk/content/classes/Network)
 
 The Network instance.
 
@@ -163,7 +165,7 @@ If the network is invalid.
 
 #### Source
 
-[providers/network.ts:157](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L157)
+[providers/network.ts:157](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/network.ts#L157)
 
 ***
 
@@ -180,7 +182,7 @@ Register `nameOrChainId` with a function which returns an instance of a Network 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
 | `nameOrChainId` | `string` \| `number` \| `bigint` | The name or chain ID to register. |
-| `networkFunc` | () => [`Network`](/content/classes/Network) | The function to create the Network. |
+| `networkFunc` | () => [`Network`](/sdk/content/classes/Network) | The function to create the Network. |
 
 #### Returns
 
@@ -192,4 +194,4 @@ If a network is already registered for `nameOrChainId`.
 
 #### Source
 
-[providers/network.ts:209](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/network.ts#L209)
+[providers/network.ts:209](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/network.ts#L209)

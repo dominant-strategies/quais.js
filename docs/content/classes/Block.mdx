@@ -1,16 +1,18 @@
 ---
 title: Block
+icon: square-c
+iconType: solid
 ---
 
 A **Block** represents the data associated with a full block on Ethereum.
 
 ## Extended by
 
-- [`MinedBlock`](/content/interfaces/MinedBlock)
+- [`MinedBlock`](/sdk/content/interfaces/MinedBlock)
 
 ## Implements
 
-- [`BlockParams`](/content/interfaces/BlockParams)
+- [`BlockParams`](/sdk/content/interfaces/BlockParams)
 - `Iterable`\<`string`\>
 
 ## Constructors
@@ -29,22 +31,22 @@ This should generally not be necessary as the unless implementing a low-level li
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `block` | [`BlockParams`](/content/interfaces/BlockParams) | The block parameters. |
-| `provider` | [`Provider`](/content/interfaces/Provider) | The provider. |
+| `block` | [`BlockParams`](/sdk/content/interfaces/BlockParams) | The block parameters. |
+| `provider` | [`Provider`](/sdk/content/interfaces/Provider) | The provider. |
 
 #### Returns
 
-[`Block`](/content/classes/Block)
+[`Block`](/sdk/content/classes/Block)
 
 #### Source
 
-[providers/provider.ts:643](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L643)
+[providers/provider.ts:643](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L643)
 
 ## Properties
 
 | Property | Modifier | Type | Description |
 | :------ | :------ | :------ | :------ |
-| `provider` | `readonly` | [`Provider`](/content/interfaces/Provider) | The provider connected to the block used to fetch additional details if necessary. |
+| `provider` | `readonly` | [`Provider`](/sdk/content/interfaces/Provider) | The provider connected to the block used to fetch additional details if necessary. |
 
 ## Accessors
 
@@ -65,7 +67,7 @@ The date this block was included at, or null if the timestamp is not available.
 
 #### Source
 
-[providers/provider.ts:864](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L864)
+[providers/provider.ts:864](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L864)
 
 ***
 
@@ -85,7 +87,7 @@ The list of extended transaction hashes.
 
 #### Source
 
-[providers/provider.ts:688](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L688)
+[providers/provider.ts:688](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L688)
 
 ***
 
@@ -105,7 +107,7 @@ The number of transactions.
 
 #### Source
 
-[providers/provider.ts:854](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L854)
+[providers/provider.ts:854](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L854)
 
 ***
 
@@ -118,7 +120,7 @@ get prefetchedExtTransactions(): TransactionResponse[]
 Returns the complete extended transactions, in the order they were executed within the block.
 
 This is only available for blocks which prefetched transactions, by passing `true` to `prefetchTxs` into
-[**getBlock**](/content/interfaces/Provider#getblock).
+[**getBlock**](/sdk/content/interfaces/Provider#getblock).
 
 #### Throws
 
@@ -126,13 +128,13 @@ If the transactions were not prefetched.
 
 #### Returns
 
-[`TransactionResponse`](/content/type-aliases/TransactionResponse)[]
+[`TransactionResponse`](/sdk/content/type-aliases/TransactionResponse)[]
 
 The list of prefetched extended transactions.
 
 #### Source
 
-[providers/provider.ts:736](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L736)
+[providers/provider.ts:736](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L736)
 
 ***
 
@@ -145,7 +147,7 @@ get prefetchedTransactions(): TransactionResponse[]
 Returns the complete transactions, in the order they were executed within the block.
 
 This is only available for blocks which prefetched transactions, by passing `true` to `prefetchTxs` into
-[**getBlock**](/content/interfaces/Provider#getblock).
+[**getBlock**](/sdk/content/interfaces/Provider#getblock).
 
 #### Throws
 
@@ -153,13 +155,13 @@ If the transactions were not prefetched.
 
 #### Returns
 
-[`TransactionResponse`](/content/type-aliases/TransactionResponse)[]
+[`TransactionResponse`](/sdk/content/type-aliases/TransactionResponse)[]
 
 The list of prefetched transactions.
 
 #### Source
 
-[providers/provider.ts:706](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L706)
+[providers/provider.ts:706](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L706)
 
 ***
 
@@ -179,7 +181,7 @@ The list of transaction hashes.
 
 #### Source
 
-[providers/provider.ts:674](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L674)
+[providers/provider.ts:674](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L674)
 
 ## Methods
 
@@ -199,7 +201,7 @@ Get the extended transaction at `index` within this block.
 
 #### Returns
 
-`Promise`\<[`TransactionResponse`](/content/type-aliases/TransactionResponse)\>
+`Promise`\<[`TransactionResponse`](/sdk/content/type-aliases/TransactionResponse)\>
 
 A promise resolving to the extended transaction.
 
@@ -209,7 +211,7 @@ If the extended transaction is not found.
 
 #### Source
 
-[providers/provider.ts:923](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L923)
+[providers/provider.ts:923](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L923)
 
 ***
 
@@ -232,7 +234,7 @@ If the transactions were not prefetched, this will throw.
 
 #### Returns
 
-[`TransactionResponse`](/content/type-aliases/TransactionResponse)
+[`TransactionResponse`](/sdk/content/type-aliases/TransactionResponse)
 
 The transaction.
 
@@ -242,7 +244,7 @@ If the transaction is not found.
 
 #### Source
 
-[providers/provider.ts:968](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L968)
+[providers/provider.ts:968](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L968)
 
 ***
 
@@ -262,7 +264,7 @@ Get the transaction at `index` within this block.
 
 #### Returns
 
-`Promise`\<[`TransactionResponse`](/content/type-aliases/TransactionResponse)\>
+`Promise`\<[`TransactionResponse`](/sdk/content/type-aliases/TransactionResponse)\>
 
 A promise resolving to the transaction.
 
@@ -272,7 +274,7 @@ If the transaction is not found.
 
 #### Source
 
-[providers/provider.ts:881](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L881)
+[providers/provider.ts:881](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L881)
 
 ***
 
@@ -283,7 +285,7 @@ isMined(): this is MinedBlock
 ```
 
 Returns true if this block been mined. This provides a type guard for all properties on a
-[**MinedBlock**](/content/interfaces/MinedBlock).
+[**MinedBlock**](/sdk/content/interfaces/MinedBlock).
 
 #### Returns
 
@@ -293,7 +295,7 @@ True if the block has been mined.
 
 #### Source
 
-[providers/provider.ts:990](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L990)
+[providers/provider.ts:990](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L990)
 
 ***
 
@@ -313,4 +315,4 @@ The JSON-friendly value.
 
 #### Source
 
-[providers/provider.ts:762](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L762)
+[providers/provider.ts:762](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L762)

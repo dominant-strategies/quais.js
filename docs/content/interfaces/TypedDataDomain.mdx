@@ -1,5 +1,7 @@
 ---
 title: TypedDataDomain
+icon: square-i
+iconType: solid
 ---
 
 The domain for an [EIP-712](https://eips.ethereum.org/EIPS/eip-712) payload.
@@ -8,8 +10,8 @@ The domain for an [EIP-712](https://eips.ethereum.org/EIPS/eip-712) payload.
 
 | Property | Type | Description |
 | :------ | :------ | :------ |
-| `chainId?` | `null` \| [`BigNumberish`](/content/type-aliases/BigNumberish) | The chain ID of the signing domain. |
+| `chainId?` | `null` \| [`BigNumberish`](/sdk/content/type-aliases/BigNumberish) | The chain ID of the signing domain. |
 | `name?` | `null` \| `string` | The human-readable name of the signing domain. |
-| `salt?` | `null` \| [`BytesLike`](/content/type-aliases/BytesLike) | A salt used for purposes decided by the specific domain. |
+| `salt?` | `null` \| [`BytesLike`](/sdk/content/type-aliases/BytesLike) | A salt used for purposes decided by the specific domain. |
 | `verifyingContract?` | `null` \| `string` | The the address of the contract that will verify the signature. |
 | `version?` | `null` \| `string` | The major version of the signing domain. |

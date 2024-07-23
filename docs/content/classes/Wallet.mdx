@@ -1,5 +1,7 @@
 ---
 title: Wallet
+icon: square-c
+iconType: solid
 ---
 
 A **Wallet** manages a single private key which is used to sign transactions, messages and other common payloads.
@@ -26,12 +28,12 @@ Create a new wallet for the private `key`, optionally connected to `provider`.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `key` | `string` \| [`SigningKey`](/content/classes/SigningKey) | The private key. |
-| `provider`? | `null` \| [`Provider`](/content/interfaces/Provider) | The provider to connect to. |
+| `key` | `string` \| [`SigningKey`](/sdk/content/classes/SigningKey) | The private key. |
+| `provider`? | `null` \| [`Provider`](/sdk/content/interfaces/Provider) | The provider to connect to. |
 
 #### Returns
 
-[`Wallet`](/content/classes/Wallet)
+[`Wallet`](/sdk/content/classes/Wallet)
 
 #### Overrides
 
@@ -39,15 +41,15 @@ Create a new wallet for the private `key`, optionally connected to `provider`.
 
 #### Source
 
-[wallet/wallet.ts:34](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/wallet.ts#L34)
+[wallet/wallet.ts:34](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/wallet.ts#L34)
 
 ## Properties
 
 | Property | Modifier | Type | Description | Inherited from |
 | :------ | :------ | :------ | :------ | :------ |
 | `#address` | `private` | `string` | The wallet address. | `BaseWallet.#address` |
-| `#signingKey` | `private` | [`SigningKey`](/content/classes/SigningKey) | The signing key used for signing payloads. | `BaseWallet.#signingKey` |
-| `provider` | `readonly` | `null` \| [`Provider`](/content/interfaces/Provider) | The provider this signer is connected to. | `BaseWallet.provider` |
+| `#signingKey` | `private` | [`SigningKey`](/sdk/content/classes/SigningKey) | The signing key used for signing payloads. | `BaseWallet.#signingKey` |
+| `provider` | `readonly` | `null` \| [`Provider`](/sdk/content/interfaces/Provider) | The provider this signer is connected to. | `BaseWallet.provider` |
 
 ## Accessors
 
@@ -65,7 +67,7 @@ The address of this wallet.
 
 #### Source
 
-[wallet/base-wallet.ts:69](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L69)
+[wallet/base-wallet.ts:69](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/base-wallet.ts#L69)
 
 ***
 
@@ -83,7 +85,7 @@ The private key for this wallet.
 
 #### Source
 
-[wallet/base-wallet.ts:87](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L87)
+[wallet/base-wallet.ts:87](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/base-wallet.ts#L87)
 
 ***
 
@@ -93,15 +95,15 @@ The private key for this wallet.
 get signingKey(): SigningKey
 ```
 
-The [**SigningKey**](/content/classes/SigningKey) used for signing payloads.
+The [**SigningKey**](/sdk/content/classes/SigningKey) used for signing payloads.
 
 #### Returns
 
-[`SigningKey`](/content/classes/SigningKey)
+[`SigningKey`](/sdk/content/classes/SigningKey)
 
 #### Source
 
-[wallet/base-wallet.ts:78](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L78)
+[wallet/base-wallet.ts:78](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/base-wallet.ts#L78)
 
 ## Methods
 
@@ -117,11 +119,11 @@ Connects the wallet to a provider.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `provider` | `null` \| [`Provider`](/content/interfaces/Provider) | The provider to connect to. |
+| `provider` | `null` \| [`Provider`](/sdk/content/interfaces/Provider) | The provider to connect to. |
 
 #### Returns
 
-[`Wallet`](/content/classes/Wallet)
+[`Wallet`](/sdk/content/classes/Wallet)
 
 The connected wallet.
 
@@ -131,7 +133,7 @@ The connected wallet.
 
 #### Source
 
-[wallet/wallet.ts:50](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/wallet.ts#L50)
+[wallet/wallet.ts:50](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/wallet.ts#L50)
 
 ***
 
@@ -150,7 +152,7 @@ If `progressCallback` is specified, it will receive periodic updates as the encr
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
 | `password` | `string` \| `Uint8Array` | The password to encrypt the wallet with. |
-| `progressCallback`? | [`ProgressCallback`](/content/type-aliases/ProgressCallback) | An optional callback to keep the user informed. |
+| `progressCallback`? | [`ProgressCallback`](/sdk/content/type-aliases/ProgressCallback) | An optional callback to keep the user informed. |
 
 #### Returns
 
@@ -160,7 +162,7 @@ The encrypted JSON wallet.
 
 #### Source
 
-[wallet/wallet.ts:64](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/wallet.ts#L64)
+[wallet/wallet.ts:64](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/wallet.ts#L64)
 
 ***
 
@@ -173,7 +175,7 @@ encryptSync(password): string
 Returns a [JSON Keystore Wallet](json-wallets) encrypted with `password`.
 
 It is preferred to use the [async version](encrypt) instead, which allows a
-[**ProgressCallback**](/content/type-aliases/ProgressCallback) to keep the user informed.
+[**ProgressCallback**](/sdk/content/type-aliases/ProgressCallback) to keep the user informed.
 
 This method will block the event loop (freezing all UI) until it is complete, which may be a non-trivial
 duration.
@@ -192,7 +194,7 @@ The encrypted JSON wallet.
 
 #### Source
 
-[wallet/wallet.ts:82](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/wallet.ts#L82)
+[wallet/wallet.ts:82](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/wallet.ts#L82)
 
 ***
 
@@ -222,7 +224,7 @@ The wallet address.
 
 #### Source
 
-[wallet/base-wallet.ts:99](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L99)
+[wallet/base-wallet.ts:99](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/base-wallet.ts#L99)
 
 ***
 
@@ -254,7 +256,7 @@ The signed message.
 
 #### Source
 
-[wallet/base-wallet.ts:157](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L157)
+[wallet/base-wallet.ts:157](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/base-wallet.ts#L157)
 
 ***
 
@@ -284,7 +286,7 @@ The serialized signature.
 
 #### Source
 
-[wallet/base-wallet.ts:169](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L169)
+[wallet/base-wallet.ts:169](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/base-wallet.ts#L169)
 
 ***
 
@@ -314,7 +316,7 @@ The signed transaction.
 
 #### Source
 
-[wallet/base-wallet.ts:119](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L119)
+[wallet/base-wallet.ts:119](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/base-wallet.ts#L119)
 
 ***
 
@@ -333,8 +335,8 @@ Signs typed data.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `domain` | [`TypedDataDomain`](/content/interfaces/TypedDataDomain) | The domain of the typed data. |
-| `types` | `Record`\<`string`, [`TypedDataField`](/content/interfaces/TypedDataField)[]\> | The types of the typed data. |
+| `domain` | [`TypedDataDomain`](/sdk/content/interfaces/TypedDataDomain) | The domain of the typed data. |
+| `types` | `Record`\<`string`, [`TypedDataField`](/sdk/content/interfaces/TypedDataField)[]\> | The types of the typed data. |
 | `value` | `Record`\<`string`, `any`\> | The value of the typed data. |
 
 #### Returns
@@ -351,7 +353,7 @@ The signed typed data.
 
 #### Source
 
-[wallet/base-wallet.ts:182](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/base-wallet.ts#L182)
+[wallet/base-wallet.ts:182](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/base-wallet.ts#L182)
 
 ***
 
@@ -374,17 +376,17 @@ If `progress` is provided, it is called periodically during decryption so that a
 | :------ | :------ | :------ |
 | `json` | `string` | The JSON data to decrypt. |
 | `password` | `string` \| `Uint8Array` | The password to decrypt the JSON data. |
-| `progress`? | [`ProgressCallback`](/content/type-aliases/ProgressCallback) | An optional callback to keep the user informed. |
+| `progress`? | [`ProgressCallback`](/sdk/content/type-aliases/ProgressCallback) | An optional callback to keep the user informed. |
 
 #### Returns
 
-`Promise`\<[`Wallet`](/content/classes/Wallet)\>
+`Promise`\<[`Wallet`](/sdk/content/classes/Wallet)\>
 
 The decrypted wallet.
 
 #### Source
 
-[wallet/wallet.ts:116](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/wallet.ts#L116)
+[wallet/wallet.ts:116](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/wallet.ts#L116)
 
 ***
 
@@ -396,7 +398,7 @@ static fromEncryptedJsonSync(json, password): QuaiHDWallet | Wallet
 
 Creates a **Wallet** by decrypting the `json` with `password`.
 
-The [**fromEncryptedJson**](/content/classes/Wallet#fromencryptedjson) method is preferred, as this method will lock up and
+The [**fromEncryptedJson**](/sdk/content/classes/Wallet#fromencryptedjson) method is preferred, as this method will lock up and
 freeze the UI during decryption, which may take some time.
 
 #### Parameters
@@ -408,10 +410,10 @@ freeze the UI during decryption, which may take some time.
 
 #### Returns
 
-[`QuaiHDWallet`](/content/classes/QuaiHDWallet) \| [`Wallet`](/content/classes/Wallet)
+[`QuaiHDWallet`](/sdk/content/classes/QuaiHDWallet) \| [`Wallet`](/sdk/content/classes/Wallet)
 
 The decrypted wallet.
 
 #### Source
 
-[wallet/wallet.ts:140](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/wallet/wallet.ts#L140)
+[wallet/wallet.ts:140](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/wallet/wallet.ts#L140)

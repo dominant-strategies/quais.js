@@ -1,20 +1,22 @@
 ---
 title: MissingArgumentError
+icon: square-i
+iconType: solid
 ---
 
 This Error indicates there were too few arguments were provided.
 
 ## Extends
 
-- [`quaisError`](/content/interfaces/quaisError)\<`"MISSING_ARGUMENT"`\>
+- [`quaisError`](/sdk/content/interfaces/quaisError)\<`"MISSING_ARGUMENT"`\>
 
 ## Properties
 
 | Property | Type | Description | Inherited from |
 | :------ | :------ | :------ | :------ |
-| `code` | [`ErrorCode`](/content/type-aliases/ErrorCode) | The string error code. | [`quaisError`](/content/interfaces/quaisError).`code` |
+| `code` | [`ErrorCode`](/sdk/content/type-aliases/ErrorCode) | The string error code. | [`quaisError`](/sdk/content/interfaces/quaisError).`code` |
 | `count` | `number` | The number of arguments received. | - |
-| `error?` | `Error` | Any related error. | [`quaisError`](/content/interfaces/quaisError).`error` |
+| `error?` | `Error` | Any related error. | [`quaisError`](/sdk/content/interfaces/quaisError).`error` |
 | `expectedCount` | `number` | The number of arguments expected. | - |
-| `info?` | `Record`\<`string`, `any`\> | Additional info regarding the error that may be useful.<br /><br />This is generally helpful mostly for human-based debugging. | [`quaisError`](/content/interfaces/quaisError).`info` |
-| `shortMessage` | `string` | A short message describing the error, with minimal additional details. | [`quaisError`](/content/interfaces/quaisError).`shortMessage` |
+| `info?` | `Record`\<`string`, `any`\> | Additional info regarding the error that may be useful.<br /><br />This is generally helpful mostly for human-based debugging. | [`quaisError`](/sdk/content/interfaces/quaisError).`info` |
+| `shortMessage` | `string` | A short message describing the error, with minimal additional details. | [`quaisError`](/sdk/content/interfaces/quaisError).`shortMessage` |

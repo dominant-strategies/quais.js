@@ -1,12 +1,14 @@
 ---
 title: JsonRpcSigner
+icon: square-c
+iconType: solid
 ---
 
 A signer that uses JSON-RPC to sign transactions and messages.
 
 ## Extends
 
-- [`AbstractSigner`](/content/classes/AbstractSigner)\<[`JsonRpcApiProvider`](/content/classes/JsonRpcApiProvider)\>
+- [`AbstractSigner`](/sdk/content/classes/AbstractSigner)\<[`JsonRpcApiProvider`](/sdk/content/classes/JsonRpcApiProvider)\>
 
 ## Constructors
 
@@ -22,26 +24,26 @@ Creates a new JsonRpcSigner instance.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `provider` | [`JsonRpcApiProvider`](/content/classes/JsonRpcApiProvider)\<`any`\> | The JSON-RPC provider. |
+| `provider` | [`JsonRpcApiProvider`](/sdk/content/classes/JsonRpcApiProvider)\<`any`\> | The JSON-RPC provider. |
 | `address` | `string` | The address of the signer. |
 
 #### Returns
 
-[`JsonRpcSigner`](/content/classes/JsonRpcSigner)
+[`JsonRpcSigner`](/sdk/content/classes/JsonRpcSigner)
 
 #### Overrides
 
-[`AbstractSigner`](/content/classes/AbstractSigner).[`constructor`](/content/classes/AbstractSigner#constructors)
+[`AbstractSigner`](/sdk/content/classes/AbstractSigner).[`constructor`](/sdk/content/classes/AbstractSigner#constructors)
 
 #### Source
 
-[providers/provider-jsonrpc.ts:328](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L328)
+[providers/provider-jsonrpc.ts:326](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L326)
 
 ## Properties
 
 | Property | Modifier | Type | Description | Inherited from |
 | :------ | :------ | :------ | :------ | :------ |
-| `provider` | `readonly` | [`JsonRpcApiProvider`](/content/classes/JsonRpcApiProvider)\<[`FetchRequest`](/content/classes/FetchRequest)\> | The provider this signer is connected to. | [`AbstractSigner`](/content/classes/AbstractSigner).`provider` |
+| `provider` | `readonly` | [`JsonRpcApiProvider`](/sdk/content/classes/JsonRpcApiProvider)\<[`FetchRequest`](/sdk/content/classes/FetchRequest)\> | The provider this signer is connected to. | [`AbstractSigner`](/sdk/content/classes/AbstractSigner).`provider` |
 
 ## Methods
 
@@ -57,17 +59,17 @@ Connects the signer to a provider.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `provider` | `null` \| [`Provider`](/content/interfaces/Provider) | The provider to connect to. |
+| `provider` | `null` \| [`Provider`](/sdk/content/interfaces/Provider) | The provider to connect to. |
 
 #### Returns
 
-[`Signer`](/content/interfaces/Signer)
+[`Signer`](/sdk/content/interfaces/Signer)
 
 The connected signer.
 
 #### Overrides
 
-[`AbstractSigner`](/content/classes/AbstractSigner).[`connect`](/content/classes/AbstractSigner#connect)
+[`AbstractSigner`](/sdk/content/classes/AbstractSigner).[`connect`](/sdk/content/classes/AbstractSigner#connect)
 
 #### Throws
 
@@ -75,7 +77,7 @@ If the signer cannot be reconnected.
 
 #### Source
 
-[providers/provider-jsonrpc.ts:343](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L343)
+[providers/provider-jsonrpc.ts:340](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L340)
 
 ***
 
@@ -95,11 +97,11 @@ The address of the signer.
 
 #### Overrides
 
-[`AbstractSigner`](/content/classes/AbstractSigner).[`getAddress`](/content/classes/AbstractSigner#getaddress)
+[`AbstractSigner`](/sdk/content/classes/AbstractSigner).[`getAddress`](/sdk/content/classes/AbstractSigner#getaddress)
 
 #### Source
 
-[providers/provider-jsonrpc.ts:354](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L354)
+[providers/provider-jsonrpc.ts:351](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L351)
 
 ***
 
@@ -115,11 +117,11 @@ Sends a transaction.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `tx` | [`TransactionRequest`](/content/type-aliases/TransactionRequest) | The transaction request. |
+| `tx` | [`TransactionRequest`](/sdk/content/type-aliases/TransactionRequest) | The transaction request. |
 
 #### Returns
 
-`Promise`\<[`TransactionResponse`](/content/type-aliases/TransactionResponse)\>
+`Promise`\<[`TransactionResponse`](/sdk/content/type-aliases/TransactionResponse)\>
 
 The transaction response.
 
@@ -133,7 +135,7 @@ If the transaction cannot be sent.
 
 #### Source
 
-[providers/provider-jsonrpc.ts:442](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L442)
+[providers/provider-jsonrpc.ts:436](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L436)
 
 ***
 
@@ -163,7 +165,7 @@ The signed message.
 
 #### Source
 
-[providers/provider-jsonrpc.ts:555](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L555)
+[providers/provider-jsonrpc.ts:547](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L547)
 
 ***
 
@@ -179,7 +181,7 @@ Signs a transaction.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `_tx` | [`TransactionRequest`](/content/type-aliases/TransactionRequest) | The transaction request. |
+| `_tx` | [`TransactionRequest`](/sdk/content/type-aliases/TransactionRequest) | The transaction request. |
 
 #### Returns
 
@@ -197,7 +199,7 @@ If the transaction cannot be signed.
 
 #### Source
 
-[providers/provider-jsonrpc.ts:524](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L524)
+[providers/provider-jsonrpc.ts:517](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L517)
 
 ***
 
@@ -216,8 +218,8 @@ Signs typed data.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `domain` | [`TypedDataDomain`](/content/interfaces/TypedDataDomain) | The domain of the typed data. |
-| `types` | `Record`\<`string`, [`TypedDataField`](/content/interfaces/TypedDataField)[]\> | The types of the typed data. |
+| `domain` | [`TypedDataDomain`](/sdk/content/interfaces/TypedDataDomain) | The domain of the typed data. |
+| `types` | `Record`\<`string`, [`TypedDataField`](/sdk/content/interfaces/TypedDataField)[]\> | The types of the typed data. |
 | `_value` | `Record`\<`string`, `any`\> | The value of the typed data. |
 
 #### Returns
@@ -232,7 +234,7 @@ The signed typed data.
 
 #### Source
 
-[providers/provider-jsonrpc.ts:569](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L569)
+[providers/provider-jsonrpc.ts:560](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L560)
 
 ***
 
@@ -258,4 +260,4 @@ True if the account is unlocked, false otherwise.
 
 #### Source
 
-[providers/provider-jsonrpc.ts:589](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-jsonrpc.ts#L589)
+[providers/provider-jsonrpc.ts:579](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-jsonrpc.ts#L579)
