@@ -1,9 +1,11 @@
 ---
 title: SocketSubscriber
+icon: square-c
+iconType: solid
 ---
 
 A **SocketSubscriber** uses a socket transport to handle events and should use
-[**_emit**](/content/classes/SocketSubscriber#_emit) to manage the events.
+[**_emit**](/sdk/content/classes/SocketSubscriber#_emit) to manage the events.
 
 - A sub-class MUST call the `_start()` method once connected
 - A sub-class MUST override the `_write(string)` method
@@ -11,13 +13,13 @@ A **SocketSubscriber** uses a socket transport to handle events and should use
 
 ## Extended by
 
-- [`SocketBlockSubscriber`](/content/classes/SocketBlockSubscriber)
-- [`SocketEventSubscriber`](/content/classes/SocketEventSubscriber)
-- [`SocketPendingSubscriber`](/content/classes/SocketPendingSubscriber)
+- [`SocketBlockSubscriber`](/sdk/content/classes/SocketBlockSubscriber)
+- [`SocketEventSubscriber`](/sdk/content/classes/SocketEventSubscriber)
+- [`SocketPendingSubscriber`](/sdk/content/classes/SocketPendingSubscriber)
 
 ## Implements
 
-- [`Subscriber`](/content/interfaces/Subscriber)
+- [`Subscriber`](/sdk/content/interfaces/Subscriber)
 
 ## Constructors
 
@@ -33,16 +35,16 @@ Creates a new **SocketSubscriber** attached to `provider` listening to `filter`.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `provider` | [`SocketProvider`](/content/classes/SocketProvider) | The socket provider. |
+| `provider` | [`SocketProvider`](/sdk/content/classes/SocketProvider) | The socket provider. |
 | `filter` | `any`[] | The filter. |
 
 #### Returns
 
-[`SocketSubscriber`](/content/classes/SocketSubscriber)
+[`SocketSubscriber`](/sdk/content/classes/SocketSubscriber)
 
 #### Source
 
-[providers/provider-socket.ts:61](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L61)
+[providers/provider-socket.ts:61](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-socket.ts#L61)
 
 ## Accessors
 
@@ -60,7 +62,7 @@ The filter.
 
 #### Source
 
-[providers/provider-socket.ts:46](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L46)
+[providers/provider-socket.ts:46](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-socket.ts#L46)
 
 ## Methods
 
@@ -76,7 +78,7 @@ Sub-classes **must** override this to emit the events on the provider.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `provider` | [`SocketProvider`](/content/classes/SocketProvider) | The socket provider. |
+| `provider` | [`SocketProvider`](/sdk/content/classes/SocketProvider) | The socket provider. |
 | `message` | `any` | The message to emit. |
 
 #### Returns
@@ -87,7 +89,7 @@ Sub-classes **must** override this to emit the events on the provider.
 
 #### Source
 
-[providers/provider-socket.ts:148](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L148)
+[providers/provider-socket.ts:148](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-socket.ts#L148)
 
 ***
 
@@ -111,11 +113,11 @@ Pause the subscriber.
 
 #### Implementation of
 
-[`Subscriber`](/content/interfaces/Subscriber).[`pause`](/content/interfaces/Subscriber#pause)
+[`Subscriber`](/sdk/content/interfaces/Subscriber).[`pause`](/sdk/content/interfaces/Subscriber#pause)
 
 #### Source
 
-[providers/provider-socket.ts:94](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L94)
+[providers/provider-socket.ts:94](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-socket.ts#L94)
 
 ***
 
@@ -133,11 +135,11 @@ Resume the subscriber.
 
 #### Implementation of
 
-[`Subscriber`](/content/interfaces/Subscriber).[`resume`](/content/interfaces/Subscriber#resume)
+[`Subscriber`](/sdk/content/interfaces/Subscriber).[`resume`](/sdk/content/interfaces/Subscriber#resume)
 
 #### Source
 
-[providers/provider-socket.ts:107](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L107)
+[providers/provider-socket.ts:107](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-socket.ts#L107)
 
 ***
 
@@ -155,11 +157,11 @@ Start the subscriber.
 
 #### Implementation of
 
-[`Subscriber`](/content/interfaces/Subscriber).[`start`](/content/interfaces/Subscriber#start)
+[`Subscriber`](/sdk/content/interfaces/Subscriber).[`start`](/sdk/content/interfaces/Subscriber#start)
 
 #### Source
 
-[providers/provider-socket.ts:72](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L72)
+[providers/provider-socket.ts:72](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-socket.ts#L72)
 
 ***
 
@@ -177,8 +179,8 @@ Stop the subscriber.
 
 #### Implementation of
 
-[`Subscriber`](/content/interfaces/Subscriber).[`stop`](/content/interfaces/Subscriber#stop)
+[`Subscriber`](/sdk/content/interfaces/Subscriber).[`stop`](/sdk/content/interfaces/Subscriber#stop)
 
 #### Source
 
-[providers/provider-socket.ts:82](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider-socket.ts#L82)
+[providers/provider-socket.ts:82](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider-socket.ts#L82)

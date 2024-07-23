@@ -1,5 +1,7 @@
 ---
 title: QuaiTransaction
+icon: square-c
+iconType: solid
 ---
 
 Represents a Quai transaction.
@@ -10,7 +12,7 @@ Write documentation for this class.
 
 ## Extends
 
-- `AbstractTransaction`\<[`Signature`](/content/classes/Signature)\>
+- `AbstractTransaction`\<[`Signature`](/sdk/content/classes/Signature)\>
 
 ## Implements
 
@@ -34,7 +36,7 @@ Creates a new Transaction with default values.
 
 #### Returns
 
-[`QuaiTransaction`](/content/classes/QuaiTransaction)
+[`QuaiTransaction`](/sdk/content/classes/QuaiTransaction)
 
 #### Overrides
 
@@ -42,7 +44,7 @@ Creates a new Transaction with default values.
 
 #### Source
 
-[transaction/quai-transaction.ts:310](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L310)
+[transaction/quai-transaction.ts:310](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L310)
 
 ## Accessors
 
@@ -59,11 +61,11 @@ execution.
 
 #### Returns
 
-`null` \| [`AccessList`](/content/type-aliases/AccessList)
+`null` \| [`AccessList`](/sdk/content/type-aliases/AccessList)
 
 #### Source
 
-[transaction/quai-transaction.ts:294](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L294)
+[transaction/quai-transaction.ts:294](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L294)
 
 ***
 
@@ -81,7 +83,7 @@ The chain ID this transaction is valid on.
 
 #### Source
 
-[transaction/abstract-transaction.ts:263](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L263)
+[transaction/abstract-transaction.ts:263](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/abstract-transaction.ts#L263)
 
 ***
 
@@ -99,7 +101,7 @@ The transaction data. For `init` transactions this is the deployment code.
 
 #### Source
 
-[transaction/quai-transaction.ts:267](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L267)
+[transaction/quai-transaction.ts:267](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L267)
 
 ***
 
@@ -113,11 +115,11 @@ The zone of the recipient address
 
 #### Returns
 
-`undefined` \| [`Zone`](/content/enumerations/Zone)
+`undefined` \| [`Zone`](/sdk/content/enumerations/Zone)
 
 #### Source
 
-[transaction/quai-transaction.ts:186](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L186)
+[transaction/quai-transaction.ts:186](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L186)
 
 ***
 
@@ -137,7 +139,7 @@ This is the digest that a [Signer](../interfaces/Signer) must sign to authorize 
 
 #### Source
 
-[transaction/abstract-transaction.ts:298](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L298)
+[transaction/abstract-transaction.ts:298](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/abstract-transaction.ts#L298)
 
 ***
 
@@ -155,7 +157,7 @@ The gas limit.
 
 #### Source
 
-[transaction/quai-transaction.ts:208](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L208)
+[transaction/quai-transaction.ts:208](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L208)
 
 ***
 
@@ -175,7 +177,7 @@ On legacy networks this defines the fee that will be paid. On EIP-1559 networks,
 
 #### Source
 
-[transaction/quai-transaction.ts:222](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L222)
+[transaction/quai-transaction.ts:222](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L222)
 
 ***
 
@@ -198,7 +200,7 @@ If the transaction is not signed.
 
 #### Source
 
-[transaction/quai-transaction.ts:141](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L141)
+[transaction/quai-transaction.ts:141](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L141)
 
 ***
 
@@ -218,7 +220,7 @@ True if the transaction is external.
 
 #### Source
 
-[transaction/abstract-transaction.ts:400](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L400)
+[transaction/abstract-transaction.ts:400](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/abstract-transaction.ts#L400)
 
 ***
 
@@ -236,7 +238,7 @@ The maximum total fee per unit of gas to pay. On legacy networks this should be 
 
 #### Source
 
-[transaction/quai-transaction.ts:251](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L251)
+[transaction/quai-transaction.ts:251](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L251)
 
 ***
 
@@ -254,7 +256,7 @@ The maximum priority fee per unit of gas to pay. On legacy networks this should 
 
 #### Source
 
-[transaction/quai-transaction.ts:235](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L235)
+[transaction/quai-transaction.ts:235](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L235)
 
 ***
 
@@ -272,7 +274,7 @@ The transaction nonce.
 
 #### Source
 
-[transaction/quai-transaction.ts:196](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L196)
+[transaction/quai-transaction.ts:196](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L196)
 
 ***
 
@@ -286,11 +288,11 @@ The zone of the sender address
 
 #### Returns
 
-`undefined` \| [`Zone`](/content/enumerations/Zone)
+`undefined` \| [`Zone`](/sdk/content/enumerations/Zone)
 
 #### Source
 
-[transaction/quai-transaction.ts:176](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L176)
+[transaction/quai-transaction.ts:176](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L176)
 
 ***
 
@@ -303,7 +305,7 @@ get serialized(): string
 The serialized transaction.
 
 This throws if the transaction is unsigned. For the pre-image, use
-[**unsignedSerialized** ](/content/classes/QiTransaction#unsignedserialized).
+[**unsignedSerialized** ](/sdk/content/classes/QiTransaction#unsignedserialized).
 
 #### Returns
 
@@ -311,7 +313,7 @@ This throws if the transaction is unsigned. For the pre-image, use
 
 #### Source
 
-[transaction/abstract-transaction.ts:324](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L324)
+[transaction/abstract-transaction.ts:324](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/abstract-transaction.ts#L324)
 
 ***
 
@@ -329,7 +331,7 @@ If signed, the signature for this transaction.
 
 #### Source
 
-[transaction/abstract-transaction.ts:273](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L273)
+[transaction/abstract-transaction.ts:273](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/abstract-transaction.ts#L273)
 
 ***
 
@@ -347,7 +349,7 @@ The `to` address for the transaction or `null` if the transaction is an `init` t
 
 #### Source
 
-[transaction/quai-transaction.ts:126](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L126)
+[transaction/quai-transaction.ts:126](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L126)
 
 ***
 
@@ -367,7 +369,7 @@ If null, the type will be automatically inferred based on explicit properties.
 
 #### Source
 
-[transaction/abstract-transaction.ts:223](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L223)
+[transaction/abstract-transaction.ts:223](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/abstract-transaction.ts#L223)
 
 ***
 
@@ -385,7 +387,7 @@ The name of the transaction type.
 
 #### Source
 
-[transaction/abstract-transaction.ts:247](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L247)
+[transaction/abstract-transaction.ts:247](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/abstract-transaction.ts#L247)
 
 ***
 
@@ -405,7 +407,7 @@ The hash of this is the digest which needs to be signed to authorize this transa
 
 #### Source
 
-[transaction/abstract-transaction.ts:339](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L339)
+[transaction/abstract-transaction.ts:339](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/abstract-transaction.ts#L339)
 
 ***
 
@@ -423,7 +425,7 @@ The amount of ether to send in this transactions.
 
 #### Source
 
-[transaction/quai-transaction.ts:279](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L279)
+[transaction/quai-transaction.ts:279](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L279)
 
 ## Methods
 
@@ -437,7 +439,7 @@ Create a copy of this transaction.
 
 #### Returns
 
-[`QuaiTransaction`](/content/classes/QuaiTransaction)
+[`QuaiTransaction`](/sdk/content/classes/QuaiTransaction)
 
 The cloned transaction.
 
@@ -447,7 +449,7 @@ The cloned transaction.
 
 #### Source
 
-[transaction/quai-transaction.ts:365](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L365)
+[transaction/quai-transaction.ts:365](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L365)
 
 ***
 
@@ -471,7 +473,7 @@ The inferred transaction type.
 
 #### Source
 
-[transaction/abstract-transaction.ts:348](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L348)
+[transaction/abstract-transaction.ts:348](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/abstract-transaction.ts#L348)
 
 ***
 
@@ -495,7 +497,7 @@ The compatible transaction types.
 
 #### Source
 
-[transaction/quai-transaction.ts:329](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L329)
+[transaction/quai-transaction.ts:329](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L329)
 
 ***
 
@@ -521,7 +523,7 @@ Indicates if the transaction is signed.
 
 #### Source
 
-[transaction/abstract-transaction.ts:309](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/abstract-transaction.ts#L309)
+[transaction/abstract-transaction.ts:309](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/abstract-transaction.ts#L309)
 
 ***
 
@@ -545,7 +547,7 @@ The JSON-friendly object.
 
 #### Source
 
-[transaction/quai-transaction.ts:374](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L374)
+[transaction/quai-transaction.ts:374](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L374)
 
 ***
 
@@ -575,7 +577,7 @@ The protobuf-friendly JSON object.
 
 #### Source
 
-[transaction/quai-transaction.ts:406](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L406)
+[transaction/quai-transaction.ts:406](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L406)
 
 ***
 
@@ -595,13 +597,13 @@ Create a **Transaction** from a serialized transaction or a Transaction-like obj
 
 #### Returns
 
-[`QuaiTransaction`](/content/classes/QuaiTransaction)
+[`QuaiTransaction`](/sdk/content/classes/QuaiTransaction)
 
 The decoded transaction.
 
 #### Source
 
-[transaction/quai-transaction.ts:435](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L435)
+[transaction/quai-transaction.ts:435](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L435)
 
 ***
 
@@ -621,10 +623,10 @@ Create a **Transaction** from a ProtoTransaction object.
 
 #### Returns
 
-[`QuaiTransaction`](/content/classes/QuaiTransaction)
+[`QuaiTransaction`](/sdk/content/classes/QuaiTransaction)
 
 The decoded transaction.
 
 #### Source
 
-[transaction/quai-transaction.ts:500](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/transaction/quai-transaction.ts#L500)
+[transaction/quai-transaction.ts:500](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/transaction/quai-transaction.ts#L500)

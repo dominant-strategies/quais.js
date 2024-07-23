@@ -1,8 +1,10 @@
 ---
 title: FixedNumber
+icon: square-c
+iconType: solid
 ---
 
-A FixedNumber represents a value over its [**FixedFormat**](/content/type-aliases/FixedFormat) arithmetic field.
+A FixedNumber represents a value over its [**FixedFormat**](/sdk/content/type-aliases/FixedFormat) arithmetic field.
 
 A FixedNumber can be used to perform math, losslessly, on values which have decmial places.
 
@@ -51,7 +53,7 @@ The number of decimal places in the fixed-point arithment field.
 
 #### Source
 
-[utils/fixednumber.ts:285](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L285)
+[utils/fixednumber.ts:285](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L285)
 
 ***
 
@@ -69,7 +71,7 @@ If true, negative values are permitted, otherwise only positive values and zero 
 
 #### Source
 
-[utils/fixednumber.ts:271](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L271)
+[utils/fixednumber.ts:271](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L271)
 
 ***
 
@@ -79,7 +81,7 @@ If true, negative values are permitted, otherwise only positive values and zero 
 get value(): bigint
 ```
 
-The value as an integer, based on the smallest unit the [**decimals**](/content/classes/FixedNumber#decimals) allow.
+The value as an integer, based on the smallest unit the [**decimals**](/sdk/content/classes/FixedNumber#decimals) allow.
 
 #### Returns
 
@@ -87,7 +89,7 @@ The value as an integer, based on the smallest unit the [**decimals**](/content/
 
 #### Source
 
-[utils/fixednumber.ts:292](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L292)
+[utils/fixednumber.ts:292](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L292)
 
 ***
 
@@ -105,7 +107,7 @@ The number of bits available to store the value.
 
 #### Source
 
-[utils/fixednumber.ts:278](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L278)
+[utils/fixednumber.ts:278](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L278)
 
 ## Methods
 
@@ -115,24 +117,24 @@ The number of bits available to store the value.
 add(other): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) with the result of `this` added to `other`. A
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the result of `this` added to `other`. A
 [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs.
 
 #### Parameters
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to add to `this`. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to add to `this`. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The result of the addition.
 
 #### Source
 
-[utils/fixednumber.ts:329](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L329)
+[utils/fixednumber.ts:329](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L329)
 
 ***
 
@@ -142,23 +144,23 @@ The result of the addition.
 addUnsafe(other): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) with the result of `this` added to `other`, ignoring overflow.
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the result of `this` added to `other`, ignoring overflow.
 
 #### Parameters
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to add to `this`. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to add to `this`. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The result of the addition.
 
 #### Source
 
-[utils/fixednumber.ts:317](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L317)
+[utils/fixednumber.ts:317](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L317)
 
 ***
 
@@ -168,20 +170,20 @@ The result of the addition.
 ceiling(): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) which is the smallest **integer** that is greater than or
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) which is the smallest **integer** that is greater than or
 equal to `this`.
 
 The decimal component of the result will always be `0`.
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The ceiling value.
 
 #### Source
 
-[utils/fixednumber.ts:584](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L584)
+[utils/fixednumber.ts:584](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L584)
 
 ***
 
@@ -200,7 +202,7 @@ implies both are equal.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to compare to `this`. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to compare to `this`. |
 
 #### Returns
 
@@ -210,7 +212,7 @@ The comparison result.
 
 #### Source
 
-[utils/fixednumber.ts:482](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L482)
+[utils/fixednumber.ts:482](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L482)
 
 ***
 
@@ -220,24 +222,24 @@ The comparison result.
 div(other): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) with the result of `this` divided by `other`, ignoring
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the result of `this` divided by `other`, ignoring
 underflow (precision loss). A [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs.
 
 #### Parameters
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to divide `this` by. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to divide `this` by. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The result of the division.
 
 #### Source
 
-[utils/fixednumber.ts:443](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L443)
+[utils/fixednumber.ts:443](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L443)
 
 ***
 
@@ -247,18 +249,18 @@ The result of the division.
 divSignal(other): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) with the result of `this` divided by `other`. A
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the result of `this` divided by `other`. A
 [NumericFaultError](../interfaces/NumericFaultError) is thrown if underflow (precision loss) occurs.
 
 #### Parameters
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to divide `this` by. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to divide `this` by. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The result of the division.
 
@@ -268,7 +270,7 @@ Thrown if underflow occurs.
 
 #### Source
 
-[utils/fixednumber.ts:456](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L456)
+[utils/fixednumber.ts:456](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L456)
 
 ***
 
@@ -278,24 +280,24 @@ Thrown if underflow occurs.
 divUnsafe(other): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) with the result of `this` divided by `other`, ignoring
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the result of `this` divided by `other`, ignoring
 underflow (precision loss). A [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs.
 
 #### Parameters
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to divide `this` by. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to divide `this` by. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The result of the division.
 
 #### Source
 
-[utils/fixednumber.ts:431](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L431)
+[utils/fixednumber.ts:431](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L431)
 
 ***
 
@@ -311,7 +313,7 @@ Returns true if `other` is equal to `this`.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to compare to `this`. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to compare to `this`. |
 
 #### Returns
 
@@ -321,7 +323,7 @@ True if `other` is equal to `this`.
 
 #### Source
 
-[utils/fixednumber.ts:511](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L511)
+[utils/fixednumber.ts:511](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L511)
 
 ***
 
@@ -331,20 +333,20 @@ True if `other` is equal to `this`.
 floor(): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) which is the largest **integer** that is less than or equal to
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) which is the largest **integer** that is less than or equal to
 `this`.
 
 The decimal component of the result will always be `0`.
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The floored value.
 
 #### Source
 
-[utils/fixednumber.ts:567](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L567)
+[utils/fixednumber.ts:567](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L567)
 
 ***
 
@@ -360,7 +362,7 @@ Returns true if `other` is greater than to `this`.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to compare to `this`. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to compare to `this`. |
 
 #### Returns
 
@@ -370,7 +372,7 @@ True if `other` is greater than to `this`.
 
 #### Source
 
-[utils/fixednumber.ts:544](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L544)
+[utils/fixednumber.ts:544](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L544)
 
 ***
 
@@ -386,7 +388,7 @@ Returns true if `other` is greater than or equal to `this`.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to compare to `this`. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to compare to `this`. |
 
 #### Returns
 
@@ -396,7 +398,7 @@ True if `other` is greater than or equal to `this`.
 
 #### Source
 
-[utils/fixednumber.ts:555](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L555)
+[utils/fixednumber.ts:555](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L555)
 
 ***
 
@@ -416,7 +418,7 @@ True if `this` is less than `0`.
 
 #### Source
 
-[utils/fixednumber.ts:637](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L637)
+[utils/fixednumber.ts:637](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L637)
 
 ***
 
@@ -436,7 +438,7 @@ True if `this` is equal to `0`.
 
 #### Source
 
-[utils/fixednumber.ts:628](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L628)
+[utils/fixednumber.ts:628](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L628)
 
 ***
 
@@ -452,7 +454,7 @@ Returns true if `other` is less than to `this`.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to compare to `this`. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to compare to `this`. |
 
 #### Returns
 
@@ -462,7 +464,7 @@ True if `other` is less than to `this`.
 
 #### Source
 
-[utils/fixednumber.ts:522](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L522)
+[utils/fixednumber.ts:522](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L522)
 
 ***
 
@@ -478,7 +480,7 @@ Returns true if `other` is less than or equal to `this`.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to compare to `this`. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to compare to `this`. |
 
 #### Returns
 
@@ -488,7 +490,7 @@ True if `other` is less than or equal to `this`.
 
 #### Source
 
-[utils/fixednumber.ts:533](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L533)
+[utils/fixednumber.ts:533](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L533)
 
 ***
 
@@ -498,24 +500,24 @@ True if `other` is less than or equal to `this`.
 mul(other): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) with the result of `this` multiplied by `other`. A
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the result of `this` multiplied by `other`. A
 [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs.
 
 #### Parameters
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to multiply `this` by. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to multiply `this` by. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The result of the multiplication.
 
 #### Source
 
-[utils/fixednumber.ts:387](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L387)
+[utils/fixednumber.ts:387](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L387)
 
 ***
 
@@ -525,7 +527,7 @@ The result of the multiplication.
 mulSignal(other): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) with the result of `this` multiplied by `other`. A
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the result of `this` multiplied by `other`. A
 [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs or if underflow (precision
 loss) occurs.
 
@@ -533,11 +535,11 @@ loss) occurs.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to multiply `this` by. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to multiply `this` by. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The result of the multiplication.
 
@@ -551,7 +553,7 @@ Thrown if division by 0 occurs.
 
 #### Source
 
-[utils/fixednumber.ts:402](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L402)
+[utils/fixednumber.ts:402](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L402)
 
 ***
 
@@ -561,24 +563,24 @@ Thrown if division by 0 occurs.
 mulUnsafe(other): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) with the result of `this` multiplied by `other`, ignoring
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the result of `this` multiplied by `other`, ignoring
 overflow and underflow (precision loss).
 
 #### Parameters
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to multiply `this` by. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to multiply `this` by. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The result of the multiplication.
 
 #### Source
 
-[utils/fixednumber.ts:375](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L375)
+[utils/fixednumber.ts:375](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L375)
 
 ***
 
@@ -588,7 +590,7 @@ The result of the multiplication.
 round(decimals?): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) with the decimal component rounded up on ties at `decimals`
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the decimal component rounded up on ties at `decimals`
 places.
 
 #### Parameters
@@ -599,13 +601,13 @@ places.
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The rounded value.
 
 #### Source
 
-[utils/fixednumber.ts:601](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L601)
+[utils/fixednumber.ts:601](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L601)
 
 ***
 
@@ -615,24 +617,24 @@ The rounded value.
 sub(other): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) with the result of `other` subtracted from `this`. A
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the result of `other` subtracted from `this`. A
 [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs.
 
 #### Parameters
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to subtract from `this`. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to subtract from `this`. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The result of the subtraction.
 
 #### Source
 
-[utils/fixednumber.ts:358](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L358)
+[utils/fixednumber.ts:358](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L358)
 
 ***
 
@@ -642,24 +644,24 @@ The result of the subtraction.
 subUnsafe(other): FixedNumber
 ```
 
-Returns a new [**FixedNumber**](/content/classes/FixedNumber) with the result of `other` subtracted from `this`, ignoring
+Returns a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the result of `other` subtracted from `this`, ignoring
 overflow.
 
 #### Parameters
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`FixedNumber`](/content/classes/FixedNumber) | The value to subtract from `this`. |
+| `other` | [`FixedNumber`](/sdk/content/classes/FixedNumber) | The value to subtract from `this`. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The result of the subtraction.
 
 #### Source
 
-[utils/fixednumber.ts:346](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L346)
+[utils/fixednumber.ts:346](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L346)
 
 ***
 
@@ -669,7 +671,7 @@ The result of the subtraction.
 toFormat(format): FixedNumber
 ```
 
-Return a new [**FixedNumber**](/content/classes/FixedNumber) with the same value but has had its field set to `format`.
+Return a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the same value but has had its field set to `format`.
 
 This will throw if the value cannot fit into `format`.
 
@@ -677,15 +679,15 @@ This will throw if the value cannot fit into `format`.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `format` | [`FixedFormat`](/content/type-aliases/FixedFormat) | The new format for the value. |
+| `format` | [`FixedFormat`](/sdk/content/type-aliases/FixedFormat) | The new format for the value. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 #### Source
 
-[utils/fixednumber.ts:669](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L669)
+[utils/fixednumber.ts:669](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L669)
 
 ***
 
@@ -705,7 +707,7 @@ The string representation.
 
 #### Source
 
-[utils/fixednumber.ts:646](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L646)
+[utils/fixednumber.ts:646](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L646)
 
 ***
 
@@ -728,7 +730,7 @@ The float approximation.
 
 #### Source
 
-[utils/fixednumber.ts:658](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L658)
+[utils/fixednumber.ts:658](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L658)
 
 ***
 
@@ -738,7 +740,7 @@ The float approximation.
 static fromBytes(_value, _format?): FixedNumber
 ```
 
-Creates a new [**FixedNumber**](/content/classes/FixedNumber) with the big-endian representation `value` with `format`.
+Creates a new [**FixedNumber**](/sdk/content/classes/FixedNumber) with the big-endian representation `value` with `format`.
 
 This will throw a [NumericFaultError](../interfaces/NumericFaultError) if `value` cannot fit in `format` due to
 overflow.
@@ -747,18 +749,18 @@ overflow.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `_value` | [`BytesLike`](/content/type-aliases/BytesLike) | The big-endian representation of the value. |
-| `_format`? | [`FixedFormat`](/content/type-aliases/FixedFormat) | The format for the FixedNumber. |
+| `_value` | [`BytesLike`](/sdk/content/type-aliases/BytesLike) | The big-endian representation of the value. |
+| `_format`? | [`FixedFormat`](/sdk/content/type-aliases/FixedFormat) | The format for the FixedNumber. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The FixedNumber for `value`.
 
 #### Source
 
-[utils/fixednumber.ts:766](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L766)
+[utils/fixednumber.ts:766](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L766)
 
 ***
 
@@ -768,7 +770,7 @@ The FixedNumber for `value`.
 static fromString(_value, _format?): FixedNumber
 ```
 
-Creates a new [**FixedNumber**](/content/classes/FixedNumber) for `value` with `format`.
+Creates a new [**FixedNumber**](/sdk/content/classes/FixedNumber) for `value` with `format`.
 
 This will throw a [NumericFaultError](../interfaces/NumericFaultError) if `value` cannot fit in `format`, either
 due to overflow or underflow (precision loss).
@@ -778,17 +780,17 @@ due to overflow or underflow (precision loss).
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
 | `_value` | `string` | The value to create a FixedNumber for. |
-| `_format`? | [`FixedFormat`](/content/type-aliases/FixedFormat) | The format for the FixedNumber. |
+| `_format`? | [`FixedFormat`](/sdk/content/type-aliases/FixedFormat) | The format for the FixedNumber. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The FixedNumber for `value`.
 
 #### Source
 
-[utils/fixednumber.ts:719](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L719)
+[utils/fixednumber.ts:719](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L719)
 
 ***
 
@@ -801,7 +803,7 @@ static fromValue(
    _format?): FixedNumber
 ```
 
-Creates a new [**FixedNumber**](/content/classes/FixedNumber) for `value` divided by `decimal` places with `format`.
+Creates a new [**FixedNumber**](/sdk/content/classes/FixedNumber) for `value` divided by `decimal` places with `format`.
 
 This will throw a [NumericFaultError](../interfaces/NumericFaultError) if `value` (once adjusted for `decimals`)
 cannot fit in `format`, either due to overflow or underflow (precision loss).
@@ -810,16 +812,16 @@ cannot fit in `format`, either due to overflow or underflow (precision loss).
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `_value` | [`BigNumberish`](/content/type-aliases/BigNumberish) | The value to create a FixedNumber for. |
-| `_decimals`? | [`Numeric`](/content/type-aliases/Numeric) | The number of decimal places in `value`. |
-| `_format`? | [`FixedFormat`](/content/type-aliases/FixedFormat) | The format for the FixedNumber. |
+| `_value` | [`BigNumberish`](/sdk/content/type-aliases/BigNumberish) | The value to create a FixedNumber for. |
+| `_decimals`? | [`Numeric`](/sdk/content/type-aliases/Numeric) | The number of decimal places in `value`. |
+| `_format`? | [`FixedFormat`](/sdk/content/type-aliases/FixedFormat) | The format for the FixedNumber. |
 
 #### Returns
 
-[`FixedNumber`](/content/classes/FixedNumber)
+[`FixedNumber`](/sdk/content/classes/FixedNumber)
 
 The FixedNumber for `value`.
 
 #### Source
 
-[utils/fixednumber.ts:685](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/fixednumber.ts#L685)
+[utils/fixednumber.ts:685](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/fixednumber.ts#L685)

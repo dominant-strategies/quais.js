@@ -1,5 +1,7 @@
 ---
 title: scryptSync
+icon: square-f
+iconType: solid
 ---
 
 ```ts
@@ -12,7 +14,7 @@ function scryptSync(
    dkLen): string
 ```
 
-Provides a synchronous variant of [**scrypt**](/content/functions/scrypt).
+Provides a synchronous variant of [**scrypt**](/sdk/content/functions/scrypt).
 
 This will completely lock up and freeze the UI in a browser and will prevent any event loop from progressing. For
 this reason, it is preferred to use the [async variant](scrypt).
@@ -21,8 +23,8 @@ this reason, it is preferred to use the [async variant](scrypt).
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `_passwd` | [`BytesLike`](/content/type-aliases/BytesLike) | The password to use. |
-| `_salt` | [`BytesLike`](/content/type-aliases/BytesLike) | The salt to use. |
+| `_passwd` | [`BytesLike`](/sdk/content/type-aliases/BytesLike) | The password to use. |
+| `_salt` | [`BytesLike`](/sdk/content/type-aliases/BytesLike) | The salt to use. |
 | `N` | `number` | The CPU/memory cost parameter. |
 | `r` | `number` | The block size parameter. |
 | `p` | `number` | The parallelization parameter. |
@@ -52,4 +54,4 @@ scryptSync(passwordBytes, salt, 1024, 8, 1, 16);
 
 ## Source
 
-[crypto/scrypt.ts:157](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/scrypt.ts#L157)
+[crypto/scrypt.ts:157](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/crypto/scrypt.ts#L157)

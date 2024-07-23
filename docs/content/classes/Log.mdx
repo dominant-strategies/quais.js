@@ -1,5 +1,7 @@
 ---
 title: Log
+icon: square-c
+iconType: solid
 ---
 
 A **Log** in Ethereum represents an event that has been included in a transaction using the `LOG*` opcodes, which are
@@ -7,26 +9,26 @@ most commonly used by Solidity's emit for announcing events.
 
 ## Extended by
 
-- [`EventLog`](/content/classes/EventLog)
-- [`UndecodedEventLog`](/content/classes/UndecodedEventLog)
+- [`EventLog`](/sdk/content/classes/EventLog)
+- [`UndecodedEventLog`](/sdk/content/classes/UndecodedEventLog)
 
 ## Implements
 
-- [`LogParams`](/content/interfaces/LogParams)
+- [`LogParams`](/sdk/content/interfaces/LogParams)
 
 ## Properties
 
 | Property | Modifier | Type | Description |
 | :------ | :------ | :------ | :------ |
 | `address` | `readonly` | `string` | The address of the contract that emitted this log. |
-| `blockHash` | `readonly` | `string` | The block hash of the block this log occurred in. Use the [**Log.getBlock**](/content/classes/Log#getblock) to get the<br />[**Block**](/content/classes/Block). |
-| `blockNumber` | `readonly` | `number` | The block number of the block this log occurred in. It is preferred to use the Block.hash \| **Block.hash**<br />when fetching the related [**Block**](/content/classes/Block), since in the case of an orphaned block, the block at that<br />height may have changed. |
+| `blockHash` | `readonly` | `string` | The block hash of the block this log occurred in. Use the [**Log.getBlock**](/sdk/content/classes/Log#getblock) to get the<br />[**Block**](/sdk/content/classes/Block). |
+| `blockNumber` | `readonly` | `number` | The block number of the block this log occurred in. It is preferred to use the Block.hash \| **Block.hash**<br />when fetching the related [**Block**](/sdk/content/classes/Block), since in the case of an orphaned block, the block at that<br />height may have changed. |
 | `data` | `readonly` | `string` | The data included in this log when it was emitted. |
 | `index` | `readonly` | `number` | The index within the block this log occurred at. This is generally not useful to developers, but can be used with<br />the various roots to proof inclusion within a block. |
-| `provider` | `readonly` | [`Provider`](/content/interfaces/Provider) | The provider connected to the log used to fetch additional details if necessary. |
+| `provider` | `readonly` | [`Provider`](/sdk/content/interfaces/Provider) | The provider connected to the log used to fetch additional details if necessary. |
 | `removed` | `readonly` | `boolean` | If the **Log** represents a block that was removed due to an orphaned block, this will be true.<br /><br />This can only happen within an orphan event listener. |
-| `topics` | `readonly` | readonly `string`[] | The indexed topics included in this log when it was emitted.<br /><br />All topics are included in the bloom filters, so they can be efficiently filtered using the<br />[**Provider.getLogs**](/content/interfaces/Provider#getlogs) method. |
-| `transactionHash` | `readonly` | `string` | The transaction hash of the transaction this log occurred in. Use the<br />[**Log.getTransaction**](/content/classes/Log#gettransaction) to get the<br />[**TransactionResponse](/content/type-aliases/TransactionResponse). |
+| `topics` | `readonly` | readonly `string`[] | The indexed topics included in this log when it was emitted.<br /><br />All topics are included in the bloom filters, so they can be efficiently filtered using the<br />[**Provider.getLogs**](/sdk/content/interfaces/Provider#getlogs) method. |
+| `transactionHash` | `readonly` | `string` | The transaction hash of the transaction this log occurred in. Use the<br />[**Log.getTransaction**](/sdk/content/classes/Log#gettransaction) to get the<br />[**TransactionResponse](/sdk/content/type-aliases/TransactionResponse). |
 | `transactionIndex` | `readonly` | `number` | The index within the transaction of this log. |
 
 ## Methods
@@ -43,17 +45,17 @@ Returns the block that this log occurred in.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `shard` | [`Shard`](/content/enumerations/Shard) | The shard to fetch the block from. |
+| `shard` | [`Shard`](/sdk/content/enumerations/Shard) | The shard to fetch the block from. |
 
 #### Returns
 
-`Promise`\<[`Block`](/content/classes/Block)\>
+`Promise`\<[`Block`](/sdk/content/classes/Block)\>
 
 A promise resolving to the block.
 
 #### Source
 
-[providers/provider.ts:1131](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1131)
+[providers/provider.ts:1131](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1131)
 
 ***
 
@@ -67,13 +69,13 @@ Returns the transaction that this log occurred in.
 
 #### Returns
 
-`Promise`\<[`TransactionResponse`](/content/type-aliases/TransactionResponse)\>
+`Promise`\<[`TransactionResponse`](/sdk/content/type-aliases/TransactionResponse)\>
 
 A promise resolving to the transaction.
 
 #### Source
 
-[providers/provider.ts:1142](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1142)
+[providers/provider.ts:1142](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1142)
 
 ***
 
@@ -87,13 +89,13 @@ Returns the transaction receipt fot the transaction that this log occurred in.
 
 #### Returns
 
-`Promise`\<[`TransactionReceipt`](/content/classes/TransactionReceipt)\>
+`Promise`\<[`TransactionReceipt`](/sdk/content/classes/TransactionReceipt)\>
 
 A promise resolving to the transaction receipt.
 
 #### Source
 
-[providers/provider.ts:1153](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1153)
+[providers/provider.ts:1153](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1153)
 
 ***
 
@@ -111,4 +113,4 @@ Returns a JSON-compatible object.
 
 #### Source
 
-[providers/provider.ts:1106](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1106)
+[providers/provider.ts:1106](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1106)

@@ -1,5 +1,7 @@
 ---
 title: ContractTransaction
+icon: square-i
+iconType: solid
 ---
 
 When populating a transaction this type is returned.
@@ -12,8 +14,8 @@ When populating a transaction this type is returned.
 
 | Property | Type | Description | Overrides | Inherited from |
 | :------ | :------ | :------ | :------ | :------ |
-| `accessList?` | [`AccessList`](/content/type-aliases/AccessList) | The [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) access list. Storage slots included in the access list<br />are //warmed// by pre-loading them, so their initial cost to fetch is guaranteed, but then each additional access<br />is cheaper. | `QuaiPreparedTransactionRequest.accessList` | `QuaiPreparedTransactionRequest.accessList` |
-| `blockTag?` | [`BlockTag`](/content/type-aliases/BlockTag) | When using `call` or `estimateGas`, this allows a specific block to be queried. Many backends do not support this<br />and when unsupported errors are silently squelched and `"latest"` is used. | `QuaiPreparedTransactionRequest.blockTag` | `QuaiPreparedTransactionRequest.blockTag` |
+| `accessList?` | [`AccessList`](/sdk/content/type-aliases/AccessList) | The [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) access list. Storage slots included in the access list<br />are //warmed// by pre-loading them, so their initial cost to fetch is guaranteed, but then each additional access<br />is cheaper. | `QuaiPreparedTransactionRequest.accessList` | `QuaiPreparedTransactionRequest.accessList` |
+| `blockTag?` | [`BlockTag`](/sdk/content/type-aliases/BlockTag) | When using `call` or `estimateGas`, this allows a specific block to be queried. Many backends do not support this<br />and when unsupported errors are silently squelched and `"latest"` is used. | `QuaiPreparedTransactionRequest.blockTag` | `QuaiPreparedTransactionRequest.blockTag` |
 | `chainId?` | `bigint` | The chain ID for the network this transaction is valid on. | `QuaiPreparedTransactionRequest.chainId` | `QuaiPreparedTransactionRequest.chainId` |
 | `customData?` | `any` | A custom object, which can be passed along for network-specific values. | `QuaiPreparedTransactionRequest.customData` | `QuaiPreparedTransactionRequest.customData` |
 | `data` | `string` | The transaction data. | `QuaiPreparedTransactionRequest.data` | `QuaiPreparedTransactionRequest.data` |

@@ -1,5 +1,7 @@
 ---
 title: ContractUnknownEventPayload
+icon: square-c
+iconType: solid
 ---
 
 A **ContractUnknownEventPayload** is included as the last parameter to Contract Events when the event does not match
@@ -7,19 +9,19 @@ any events in the ABI.
 
 ## Extends
 
-- [`EventPayload`](/content/classes/EventPayload)\<[`ContractEventName`](/content/type-aliases/ContractEventName)\>
+- [`EventPayload`](/sdk/content/classes/EventPayload)\<[`ContractEventName`](/sdk/content/type-aliases/ContractEventName)\>
 
 ## Extended by
 
-- [`ContractEventPayload`](/content/classes/ContractEventPayload)
+- [`ContractEventPayload`](/sdk/content/classes/ContractEventPayload)
 
 ## Properties
 
 | Property | Modifier | Type | Description | Inherited from |
 | :------ | :------ | :------ | :------ | :------ |
-| `emitter` | `readonly` | [`EventEmitterable`](/content/interfaces/EventEmitterable)\<[`ContractEventName`](/content/type-aliases/ContractEventName)\> | The **EventEmitterable**. | [`EventPayload`](/content/classes/EventPayload).`emitter` |
-| `filter` | `readonly` | [`ContractEventName`](/content/type-aliases/ContractEventName) | The event filter. | [`EventPayload`](/content/classes/EventPayload).`filter` |
-| `log` | `readonly` | [`Log`](/content/classes/Log) | The log with no matching events. | - |
+| `emitter` | `readonly` | [`EventEmitterable`](/sdk/content/interfaces/EventEmitterable)\<[`ContractEventName`](/sdk/content/type-aliases/ContractEventName)\> | The **EventEmitterable**. | [`EventPayload`](/sdk/content/classes/EventPayload).`emitter` |
+| `filter` | `readonly` | [`ContractEventName`](/sdk/content/type-aliases/ContractEventName) | The event filter. | [`EventPayload`](/sdk/content/classes/EventPayload).`filter` |
+| `log` | `readonly` | [`Log`](/sdk/content/classes/Log) | The log with no matching events. | - |
 
 ## Methods
 
@@ -35,17 +37,17 @@ Resolves to the block the event occured in.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `shard` | [`Shard`](/content/enumerations/Shard) | The shard to get the block from. |
+| `shard` | [`Shard`](/sdk/content/enumerations/Shard) | The shard to get the block from. |
 
 #### Returns
 
-`Promise`\<[`Block`](/content/classes/Block)\>
+`Promise`\<[`Block`](/sdk/content/classes/Block)\>
 
 A promise resolving to the block the event occured in.
 
 #### Source
 
-[contract/wrappers.ts:178](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/wrappers.ts#L178)
+[contract/wrappers.ts:178](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/contract/wrappers.ts#L178)
 
 ***
 
@@ -59,13 +61,13 @@ Resolves to the transaction the event occured in.
 
 #### Returns
 
-`Promise`\<[`TransactionResponse`](/content/type-aliases/TransactionResponse)\>
+`Promise`\<[`TransactionResponse`](/sdk/content/type-aliases/TransactionResponse)\>
 
 A promise resolving to the transaction the event occured in.
 
 #### Source
 
-[contract/wrappers.ts:187](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/wrappers.ts#L187)
+[contract/wrappers.ts:187](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/contract/wrappers.ts#L187)
 
 ***
 
@@ -79,13 +81,13 @@ Resolves to the transaction receipt the event occured in.
 
 #### Returns
 
-`Promise`\<[`TransactionReceipt`](/content/classes/TransactionReceipt)\>
+`Promise`\<[`TransactionReceipt`](/sdk/content/classes/TransactionReceipt)\>
 
 A promise resolving to the transaction receipt the event occured in.
 
 #### Source
 
-[contract/wrappers.ts:196](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/wrappers.ts#L196)
+[contract/wrappers.ts:196](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/contract/wrappers.ts#L196)
 
 ***
 
@@ -103,8 +105,8 @@ Unregister the triggered listener for future events.
 
 #### Inherited from
 
-[`EventPayload`](/content/classes/EventPayload).[`removeListener`](/content/classes/EventPayload#removelistener)
+[`EventPayload`](/sdk/content/classes/EventPayload).[`removeListener`](/sdk/content/classes/EventPayload#removelistener)
 
 #### Source
 
-[utils/events.ts:99](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/utils/events.ts#L99)
+[utils/events.ts:99](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/utils/events.ts#L99)

@@ -1,8 +1,10 @@
 ---
 title: ContractTransactionResponse
+icon: square-c
+iconType: solid
 ---
 
-A **ContractTransactionResponse** will return a [**ContractTransactionReceipt**](/content/classes/ContractTransactionReceipt)
+A **ContractTransactionResponse** will return a [**ContractTransactionReceipt**](/sdk/content/classes/ContractTransactionReceipt)
 when waited on.
 
 ## Extends
@@ -13,21 +15,21 @@ when waited on.
 
 | Property | Modifier | Type | Description | Inherited from |
 | :------ | :------ | :------ | :------ | :------ |
-| `accessList` | `readonly` | `null` \| [`AccessList`](/content/type-aliases/AccessList) | The [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) access list for transaction types that support it,<br />otherwise `null`. | `QuaiTransactionResponse.accessList` |
+| `accessList` | `readonly` | `null` \| [`AccessList`](/sdk/content/type-aliases/AccessList) | The [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) access list for transaction types that support it,<br />otherwise `null`. | `QuaiTransactionResponse.accessList` |
 | `blockHash` | `readonly` | `null` \| `string` | The blockHash of the block that this transaction was included in.<br /><br />This is `null` for pending transactions. | `QuaiTransactionResponse.blockHash` |
 | `blockNumber` | `readonly` | `null` \| `number` | The block number of the block that this transaction was included in.<br /><br />This is `null` for pending transactions. | `QuaiTransactionResponse.blockNumber` |
 | `chainId` | `readonly` | `bigint` | The chain ID. | `QuaiTransactionResponse.chainId` |
 | `data` | `readonly` | `string` | The data. | `QuaiTransactionResponse.data` |
-| `from` | `readonly` | `string` | The sender of this transaction. It is implicitly computed from the transaction pre-image hash (as the digest) and<br />the [**signature** ](/content/classes/ContractTransactionResponse) using ecrecover. | `QuaiTransactionResponse.from` |
+| `from` | `readonly` | `string` | The sender of this transaction. It is implicitly computed from the transaction pre-image hash (as the digest) and<br />the [**signature** ](/sdk/content/classes/ContractTransactionResponse) using ecrecover. | `QuaiTransactionResponse.from` |
 | `gasLimit` | `readonly` | `bigint` | The maximum units of gas this transaction can consume. If execution exceeds this, the entries transaction is<br />reverted and the sender is charged for the full amount, despite not state changes being made. | `QuaiTransactionResponse.gasLimit` |
 | `hash` | `readonly` | `string` | The transaction hash. | `QuaiTransactionResponse.hash` |
 | `index` | `readonly` | `bigint` | The index within the block that this transaction resides at. | `QuaiTransactionResponse.index` |
 | `maxFeePerGas` | `readonly` | `null` \| `bigint` | The maximum fee (per unit of gas) to allow this transaction to charge the sender. | `QuaiTransactionResponse.maxFeePerGas` |
 | `maxPriorityFeePerGas` | `readonly` | `null` \| `bigint` | The maximum priority fee (per unit of gas) to allow a validator to charge the sender. This is inclusive of the<br />QuaiTransactionResponse.maxFeePerGas \| **maxFeePerGas**. | `QuaiTransactionResponse.maxPriorityFeePerGas` |
-| `nonce` | `readonly` | `number` | The nonce, which is used to prevent replay attacks and offer a method to ensure transactions from a given sender<br />are explicitly ordered.<br /><br />When sending a transaction, this must be equal to the number of transactions ever sent by<br />[**from** ](/content/classes/ContractTransactionResponse). | `QuaiTransactionResponse.nonce` |
-| `provider` | `readonly` | [`Provider`](/content/interfaces/Provider) | The provider this is connected to, which will influence how its methods will resolve its async inspection<br />methods. | `QuaiTransactionResponse.provider` |
-| `signature` | `readonly` | [`Signature`](/content/classes/Signature) | The signature. | `QuaiTransactionResponse.signature` |
-| `to` | `readonly` | `null` \| `string` | The receiver of this transaction.<br /><br />If `null`, then the transaction is an initcode transaction. This means the result of executing the<br />[**data** ](/content/classes/ContractTransactionResponse) will be deployed as a new contract on chain (assuming it does not<br />revert) and the address may be computed using [getCreateAddress](../functions/getCreateAddress). | `QuaiTransactionResponse.to` |
+| `nonce` | `readonly` | `number` | The nonce, which is used to prevent replay attacks and offer a method to ensure transactions from a given sender<br />are explicitly ordered.<br /><br />When sending a transaction, this must be equal to the number of transactions ever sent by<br />[**from** ](/sdk/content/classes/ContractTransactionResponse). | `QuaiTransactionResponse.nonce` |
+| `provider` | `readonly` | [`Provider`](/sdk/content/interfaces/Provider) | The provider this is connected to, which will influence how its methods will resolve its async inspection<br />methods. | `QuaiTransactionResponse.provider` |
+| `signature` | `readonly` | [`Signature`](/sdk/content/classes/Signature) | The signature. | `QuaiTransactionResponse.signature` |
+| `to` | `readonly` | `null` \| `string` | The receiver of this transaction.<br /><br />If `null`, then the transaction is an initcode transaction. This means the result of executing the<br />[**data** ](/sdk/content/classes/ContractTransactionResponse) will be deployed as a new contract on chain (assuming it does not<br />revert) and the address may be computed using [getCreateAddress](../functions/getCreateAddress). | `QuaiTransactionResponse.to` |
 | `type` | `readonly` | `number` | The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) transaction envelope type. This is `0` for legacy<br />transactions types. | `QuaiTransactionResponse.type` |
 | `value` | `readonly` | `bigint` | The value, in wei. Use [formatEther](../functions/formatEther) to format this value as ether. | `QuaiTransactionResponse.value` |
 
@@ -57,7 +59,7 @@ If the block is not found.
 
 #### Source
 
-[providers/provider.ts:1738](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1738)
+[providers/provider.ts:1738](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1738)
 
 ***
 
@@ -75,11 +77,11 @@ This will return null if the transaction has not been included yet.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `shard` | [`Shard`](/content/enumerations/Shard) | The shard to fetch the block from. |
+| `shard` | [`Shard`](/sdk/content/enumerations/Shard) | The shard to fetch the block from. |
 
 #### Returns
 
-`Promise`\<`null` \| [`Block`](/content/classes/Block)\>
+`Promise`\<`null` \| [`Block`](/sdk/content/classes/Block)\>
 
 A promise resolving to the block.
 
@@ -89,7 +91,7 @@ A promise resolving to the block.
 
 #### Source
 
-[providers/provider.ts:1699](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1699)
+[providers/provider.ts:1699](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1699)
 
 ***
 
@@ -114,7 +116,7 @@ A promise resolving to the transaction, or null if not found.
 
 #### Source
 
-[providers/provider.ts:1723](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1723)
+[providers/provider.ts:1723](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1723)
 
 ***
 
@@ -148,7 +150,7 @@ If the transaction was replaced, repriced, or cancelled.
 
 #### Source
 
-[providers/provider.ts:1997](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1997)
+[providers/provider.ts:1997](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1997)
 
 ***
 
@@ -162,7 +164,7 @@ Returns a filter which can be used to listen for orphan events that evict this t
 
 #### Returns
 
-[`OrphanFilter`](/content/type-aliases/OrphanFilter)
+[`OrphanFilter`](/sdk/content/type-aliases/OrphanFilter)
 
 The orphan filter.
 
@@ -172,7 +174,7 @@ The orphan filter.
 
 #### Source
 
-[providers/provider.ts:2006](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L2006)
+[providers/provider.ts:2006](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L2006)
 
 ***
 
@@ -188,11 +190,11 @@ Returns a filter which can be used to listen for orphan events that re-order thi
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other`? | [`TransactionResponse`](/content/type-aliases/TransactionResponse) | The other transaction to compare against. |
+| `other`? | [`TransactionResponse`](/sdk/content/type-aliases/TransactionResponse) | The other transaction to compare against. |
 
 #### Returns
 
-[`OrphanFilter`](/content/type-aliases/OrphanFilter)
+[`OrphanFilter`](/sdk/content/type-aliases/OrphanFilter)
 
 The orphan filter.
 
@@ -202,7 +204,7 @@ The orphan filter.
 
 #### Source
 
-[providers/provider.ts:2020](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L2020)
+[providers/provider.ts:2020](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L2020)
 
 ***
 
@@ -236,7 +238,7 @@ The replaceable transaction.
 
 #### Source
 
-[providers/provider.ts:2043](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L2043)
+[providers/provider.ts:2043](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L2043)
 
 ***
 
@@ -258,7 +260,7 @@ Returns a JSON-compatible representation of this transaction.
 
 #### Source
 
-[providers/provider.ts:1665](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1665)
+[providers/provider.ts:1665](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1665)
 
 ***
 
@@ -282,7 +284,7 @@ wait until enough confirmations have completed.
 
 #### Returns
 
-`Promise`\<`null` \| [`ContractTransactionReceipt`](/content/classes/ContractTransactionReceipt)\>
+`Promise`\<`null` \| [`ContractTransactionReceipt`](/sdk/content/classes/ContractTransactionReceipt)\>
 
 The transaction receipt, or `null` if `confirms` is `0`.
 
@@ -292,4 +294,4 @@ The transaction receipt, or `null` if `confirms` is `0`.
 
 #### Source
 
-[contract/wrappers.ts:142](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/wrappers.ts#L142)
+[contract/wrappers.ts:142](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/contract/wrappers.ts#L142)

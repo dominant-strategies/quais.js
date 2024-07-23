@@ -1,5 +1,7 @@
 ---
 title: toUtf8String
+icon: square-f
+iconType: solid
 ---
 
 ```ts
@@ -9,14 +11,14 @@ function toUtf8String(bytes, onError?): string
 Returns the string represented by the UTF-8 data `bytes`.
 
 When `onError` function is specified, it is called on UTF-8 errors allowing recovery using the
-[**Utf8ErrorFunc**](/content/type-aliases/Utf8ErrorFunc) API. (default: [error](Utf8ErrorFuncs))
+[**Utf8ErrorFunc**](/sdk/content/type-aliases/Utf8ErrorFunc) API. (default: [error](Utf8ErrorFuncs))
 
 ## Parameters
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `bytes` | [`BytesLike`](/content/type-aliases/BytesLike) | The UTF-8 data to convert. |
-| `onError`? | [`Utf8ErrorFunc`](/content/type-aliases/Utf8ErrorFunc) | The error handling function. |
+| `bytes` | [`BytesLike`](/sdk/content/type-aliases/BytesLike) | The UTF-8 data to convert. |
+| `onError`? | [`Utf8ErrorFunc`](/sdk/content/type-aliases/Utf8ErrorFunc) | The error handling function. |
 
 ## Returns
 
@@ -26,4 +28,4 @@ The string.
 
 ## Source
 
-[encoding/utf8.ts:350](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/encoding/utf8.ts#L350)
+[encoding/utf8.ts:350](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/encoding/utf8.ts#L350)

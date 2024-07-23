@@ -1,32 +1,34 @@
 ---
 title: ContractTransactionReceipt
+icon: square-c
+iconType: solid
 ---
 
-A **ContractTransactionReceipt** includes the parsed logs from a [**TransactionReceipt**](/content/classes/TransactionReceipt).
+A **ContractTransactionReceipt** includes the parsed logs from a [**TransactionReceipt**](/sdk/content/classes/TransactionReceipt).
 
 ## Extends
 
-- [`TransactionReceipt`](/content/classes/TransactionReceipt)
+- [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt)
 
 ## Properties
 
 | Property | Modifier | Type | Description | Inherited from |
 | :------ | :------ | :------ | :------ | :------ |
-| `#logs` | `private` | readonly [`Log`](/content/classes/Log)[] | The root hash of this transaction.<br /><br />This is no present and was only included in pre-byzantium blocks, but could be used to validate certain parts of<br />the receipt. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`#logs` |
-| `blockHash` | `readonly` | `string` | The block hash of the [**Block**](/content/classes/Block) this transaction was included in. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`blockHash` |
-| `blockNumber` | `readonly` | `number` | The block number of the [**Block**](/content/classes/Block) this transaction was included in. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`blockNumber` |
-| `contractAddress` | `readonly` | `null` \| `string` | The address of the contract if the transaction was directly responsible for deploying one.<br /><br />This is non-null **only** if the `to` is empty and the `data` was successfully executed as initcode. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`contractAddress` |
-| `cumulativeGasUsed` | `readonly` | `bigint` | The amount of gas used by all transactions within the block for this and all transactions with a lower `index`.<br /><br />This is generally not useful for developers but can be used to validate certain aspects of execution. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`cumulativeGasUsed` |
-| `from` | `readonly` | `string` | The sender of the transaction. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`from` |
-| `gasPrice` | `readonly` | `bigint` | The actual gas price used during execution.<br /><br />Due to the complexity of [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) this value can only be caluclated<br />after the transaction has been mined, snce the base fee is protocol-enforced. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`gasPrice` |
-| `gasUsed` | `readonly` | `bigint` | The actual amount of gas used by this transaction.<br /><br />When creating a transaction, the amount of gas that will be used can only be approximated, but the sender must<br />pay the gas fee for the entire gas limit. After the transaction, the difference is refunded. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`gasUsed` |
-| `hash` | `readonly` | `string` | The transaction hash. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`hash` |
-| `index` | `readonly` | `number` | The index of this transaction within the block transactions. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`index` |
-| `logsBloom` | `readonly` | `string` | The bloom filter bytes that represent all logs that occurred within this transaction. This is generally not<br />useful for most developers, but can be used to validate the included logs. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`logsBloom` |
-| `provider` | `readonly` | [`Provider`](/content/interfaces/Provider) | The provider connected to the log used to fetch additional details if necessary. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`provider` |
-| `status` | `readonly` | `null` \| `number` | The status of this transaction, indicating success (i.e. `1`) or a revert (i.e. `0`).<br /><br />This is available in post-byzantium blocks, but some backends may backfill this value. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`status` |
-| `to` | `readonly` | `null` \| `string` | The address the transaction was sent to. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`to` |
-| `type` | `readonly` | `number` | The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) transaction type. | [`TransactionReceipt`](/content/classes/TransactionReceipt).`type` |
+| `#logs` | `private` | readonly [`Log`](/sdk/content/classes/Log)[] | The root hash of this transaction.<br /><br />This is no present and was only included in pre-byzantium blocks, but could be used to validate certain parts of<br />the receipt. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`#logs` |
+| `blockHash` | `readonly` | `string` | The block hash of the [**Block**](/sdk/content/classes/Block) this transaction was included in. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`blockHash` |
+| `blockNumber` | `readonly` | `number` | The block number of the [**Block**](/sdk/content/classes/Block) this transaction was included in. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`blockNumber` |
+| `contractAddress` | `readonly` | `null` \| `string` | The address of the contract if the transaction was directly responsible for deploying one.<br /><br />This is non-null **only** if the `to` is empty and the `data` was successfully executed as initcode. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`contractAddress` |
+| `cumulativeGasUsed` | `readonly` | `bigint` | The amount of gas used by all transactions within the block for this and all transactions with a lower `index`.<br /><br />This is generally not useful for developers but can be used to validate certain aspects of execution. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`cumulativeGasUsed` |
+| `from` | `readonly` | `string` | The sender of the transaction. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`from` |
+| `gasPrice` | `readonly` | `bigint` | The actual gas price used during execution.<br /><br />Due to the complexity of [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) this value can only be caluclated<br />after the transaction has been mined, snce the base fee is protocol-enforced. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`gasPrice` |
+| `gasUsed` | `readonly` | `bigint` | The actual amount of gas used by this transaction.<br /><br />When creating a transaction, the amount of gas that will be used can only be approximated, but the sender must<br />pay the gas fee for the entire gas limit. After the transaction, the difference is refunded. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`gasUsed` |
+| `hash` | `readonly` | `string` | The transaction hash. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`hash` |
+| `index` | `readonly` | `number` | The index of this transaction within the block transactions. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`index` |
+| `logsBloom` | `readonly` | `string` | The bloom filter bytes that represent all logs that occurred within this transaction. This is generally not<br />useful for most developers, but can be used to validate the included logs. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`logsBloom` |
+| `provider` | `readonly` | [`Provider`](/sdk/content/interfaces/Provider) | The provider connected to the log used to fetch additional details if necessary. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`provider` |
+| `status` | `readonly` | `null` \| `number` | The status of this transaction, indicating success (i.e. `1`) or a revert (i.e. `0`).<br /><br />This is available in post-byzantium blocks, but some backends may backfill this value. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`status` |
+| `to` | `readonly` | `null` \| `string` | The address the transaction was sent to. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`to` |
+| `type` | `readonly` | `number` | The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) transaction type. | [`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).`type` |
 
 ## Accessors
 
@@ -44,7 +46,7 @@ The total fee for this transaction, in wei.
 
 #### Source
 
-[providers/provider.ts:1381](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1381)
+[providers/provider.ts:1381](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1381)
 
 ***
 
@@ -54,15 +56,15 @@ The total fee for this transaction, in wei.
 get logs(): (EventLog | Log)[]
 ```
 
-The parsed logs for any [**Log**](/content/classes/Log) which has a matching event in the Contract ABI.
+The parsed logs for any [**Log**](/sdk/content/classes/Log) which has a matching event in the Contract ABI.
 
 #### Returns
 
-([`EventLog`](/content/classes/EventLog) \| [`Log`](/content/classes/Log))[]
+([`EventLog`](/sdk/content/classes/EventLog) \| [`Log`](/sdk/content/classes/Log))[]
 
 #### Source
 
-[contract/wrappers.ts:98](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/contract/wrappers.ts#L98)
+[contract/wrappers.ts:98](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/contract/wrappers.ts#L98)
 
 ## Methods
 
@@ -82,7 +84,7 @@ A promise resolving to the number of confirmations.
 
 #### Inherited from
 
-[`TransactionReceipt`](/content/classes/TransactionReceipt).[`confirmations`](/content/classes/TransactionReceipt#confirmations)
+[`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).[`confirmations`](/sdk/content/classes/TransactionReceipt#confirmations)
 
 #### Throws
 
@@ -90,7 +92,7 @@ If the block is not found.
 
 #### Source
 
-[providers/provider.ts:1433](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1433)
+[providers/provider.ts:1433](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1433)
 
 ***
 
@@ -106,17 +108,17 @@ Resolves to the block this transaction occurred in.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `shard` | [`Shard`](/content/enumerations/Shard) | The shard to fetch the block from. |
+| `shard` | [`Shard`](/sdk/content/enumerations/Shard) | The shard to fetch the block from. |
 
 #### Returns
 
-`Promise`\<[`Block`](/content/classes/Block)\>
+`Promise`\<[`Block`](/sdk/content/classes/Block)\>
 
 A promise resolving to the block.
 
 #### Inherited from
 
-[`TransactionReceipt`](/content/classes/TransactionReceipt).[`getBlock`](/content/classes/TransactionReceipt#getblock)
+[`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).[`getBlock`](/sdk/content/classes/TransactionReceipt#getblock)
 
 #### Throws
 
@@ -124,7 +126,7 @@ If the block is not found.
 
 #### Source
 
-[providers/provider.ts:1393](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1393)
+[providers/provider.ts:1393](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1393)
 
 ***
 
@@ -146,7 +148,7 @@ A promise resolving to the return value of the transaction.
 
 #### Inherited from
 
-[`TransactionReceipt`](/content/classes/TransactionReceipt).[`getResult`](/content/classes/TransactionReceipt#getresult)
+[`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).[`getResult`](/sdk/content/classes/TransactionReceipt#getresult)
 
 #### Throws
 
@@ -154,7 +156,7 @@ If the transaction is not found.
 
 #### Source
 
-[providers/provider.ts:1423](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1423)
+[providers/provider.ts:1423](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1423)
 
 ***
 
@@ -168,13 +170,13 @@ Resolves to the transaction this transaction occurred in.
 
 #### Returns
 
-`Promise`\<[`TransactionResponse`](/content/type-aliases/TransactionResponse)\>
+`Promise`\<[`TransactionResponse`](/sdk/content/type-aliases/TransactionResponse)\>
 
 A promise resolving to the transaction.
 
 #### Inherited from
 
-[`TransactionReceipt`](/content/classes/TransactionReceipt).[`getTransaction`](/content/classes/TransactionReceipt#gettransaction)
+[`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).[`getTransaction`](/sdk/content/classes/TransactionReceipt#gettransaction)
 
 #### Throws
 
@@ -182,7 +184,7 @@ If the transaction is not found.
 
 #### Source
 
-[providers/provider.ts:1407](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1407)
+[providers/provider.ts:1407](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1407)
 
 ***
 
@@ -200,8 +202,8 @@ Returns a JSON-compatible representation.
 
 #### Inherited from
 
-[`TransactionReceipt`](/content/classes/TransactionReceipt).[`toJSON`](/content/classes/TransactionReceipt#tojson)
+[`TransactionReceipt`](/sdk/content/classes/TransactionReceipt).[`toJSON`](/sdk/content/classes/TransactionReceipt#tojson)
 
 #### Source
 
-[providers/provider.ts:1327](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/providers/provider.ts#L1327)
+[providers/provider.ts:1327](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/providers/provider.ts#L1327)

@@ -1,5 +1,7 @@
 ---
 title: SigningKey
+icon: square-c
+iconType: solid
 ---
 
 A **SigningKey** provides high-level access to the elliptic curve cryptography (ECC) operations and key management.
@@ -18,15 +20,15 @@ Creates a new **SigningKey** for `privateKey`.
 
 | Parameter | Type |
 | :------ | :------ |
-| `privateKey` | [`BytesLike`](/content/type-aliases/BytesLike) |
+| `privateKey` | [`BytesLike`](/sdk/content/type-aliases/BytesLike) |
 
 #### Returns
 
-[`SigningKey`](/content/classes/SigningKey)
+[`SigningKey`](/sdk/content/classes/SigningKey)
 
 #### Source
 
-[crypto/signing-key.ts:26](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/signing-key.ts#L26)
+[crypto/signing-key.ts:26](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/crypto/signing-key.ts#L26)
 
 ## Accessors
 
@@ -47,7 +49,7 @@ hexadecimal nibbles)
 
 #### Source
 
-[crypto/signing-key.ts:54](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/signing-key.ts#L54)
+[crypto/signing-key.ts:54](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/crypto/signing-key.ts#L54)
 
 ***
 
@@ -65,7 +67,7 @@ The private key.
 
 #### Source
 
-[crypto/signing-key.ts:34](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/signing-key.ts#L34)
+[crypto/signing-key.ts:34](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/crypto/signing-key.ts#L34)
 
 ***
 
@@ -86,7 +88,7 @@ nibbles).
 
 #### Source
 
-[crypto/signing-key.ts:44](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/signing-key.ts#L44)
+[crypto/signing-key.ts:44](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/crypto/signing-key.ts#L44)
 
 ## Methods
 
@@ -107,7 +109,7 @@ Best practice is usually to use a cryptographic hash on the returned value befor
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `other` | [`BytesLike`](/content/type-aliases/BytesLike) | The other key to compute the shared secret with. |
+| `other` | [`BytesLike`](/sdk/content/type-aliases/BytesLike) | The other key to compute the shared secret with. |
 
 #### Returns
 
@@ -132,7 +134,7 @@ sign2.computeSharedSecret(sign1.publicKey);
 
 #### Source
 
-[crypto/signing-key.ts:107](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/signing-key.ts#L107)
+[crypto/signing-key.ts:107](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/crypto/signing-key.ts#L107)
 
 ***
 
@@ -148,11 +150,11 @@ Return the signature of the signed `digest`.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `digest` | [`BytesLike`](/content/type-aliases/BytesLike) | The data to sign. |
+| `digest` | [`BytesLike`](/sdk/content/type-aliases/BytesLike) | The data to sign. |
 
 #### Returns
 
-[`Signature`](/content/classes/Signature)
+[`Signature`](/sdk/content/classes/Signature)
 
 The signature of the data.
 
@@ -162,7 +164,7 @@ If the digest is not 32 bytes long.
 
 #### Source
 
-[crypto/signing-key.ts:66](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/signing-key.ts#L66)
+[crypto/signing-key.ts:66](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/crypto/signing-key.ts#L66)
 
 ***
 
@@ -187,8 +189,8 @@ public keys and chain codes.
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `p0` | [`BytesLike`](/content/type-aliases/BytesLike) | The first point to add. |
-| `p1` | [`BytesLike`](/content/type-aliases/BytesLike) | The second point to add. |
+| `p0` | [`BytesLike`](/sdk/content/type-aliases/BytesLike) | The first point to add. |
+| `p1` | [`BytesLike`](/sdk/content/type-aliases/BytesLike) | The second point to add. |
 | `compressed`? | `boolean` | Whether to return the compressed public key. |
 
 #### Returns
@@ -199,7 +201,7 @@ The sum of the points.
 
 #### Source
 
-[crypto/signing-key.ts:218](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/signing-key.ts#L218)
+[crypto/signing-key.ts:218](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/crypto/signing-key.ts#L218)
 
 ***
 
@@ -217,7 +219,7 @@ The `key` may be any type of key, a raw public key, a compressed/uncompressed pu
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `key` | [`BytesLike`](/content/type-aliases/BytesLike) | The key to compute the public key for. |
+| `key` | [`BytesLike`](/sdk/content/type-aliases/BytesLike) | The key to compute the public key for. |
 | `compressed`? | `boolean` | Whether to return the compressed public key. |
 
 #### Returns
@@ -250,7 +252,7 @@ SigningKey.computePublicKey(sign.publicKey, true);
 
 #### Source
 
-[crypto/signing-key.ts:144](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/signing-key.ts#L144)
+[crypto/signing-key.ts:144](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/crypto/signing-key.ts#L144)
 
 ***
 
@@ -266,8 +268,8 @@ Returns the public key for the private key which produced the `signature` for th
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
-| `digest` | [`BytesLike`](/content/type-aliases/BytesLike) | The data that was signed. |
-| `signature` | [`SignatureLike`](/content/type-aliases/SignatureLike) | The signature of the data. |
+| `digest` | [`BytesLike`](/sdk/content/type-aliases/BytesLike) | The data that was signed. |
+| `signature` | [`SignatureLike`](/sdk/content/type-aliases/SignatureLike) | The signature of the data. |
 
 #### Returns
 
@@ -293,4 +295,4 @@ SigningKey.recoverPublicKey(digest, sig);
 
 #### Source
 
-[crypto/signing-key.ts:189](https://github.com/dominant-strategies/quais-6.js/blob/755bfc2a1f4b5e928682c06a8fa45128a878e1f4/src/crypto/signing-key.ts#L189)
+[crypto/signing-key.ts:189](https://github.com/dominant-strategies/quais-6.js/blob/e281b3ca939b91260332b67ef4ba6e8b0a3d4134/src/crypto/signing-key.ts#L189)
