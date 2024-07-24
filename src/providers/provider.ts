@@ -22,6 +22,7 @@ import type { Network } from './network.js';
 import type { Outpoint } from '../transaction/utxo.js';
 import type { TxInput, TxOutput } from '../transaction/utxo.js';
 import type { Zone, Shard } from '../constants/index.js';
+import type { txpoolContentResponse, txpoolInspectResponse } from './txpool.js';
 
 const BN_0 = BigInt(0);
 
@@ -700,7 +701,7 @@ export class Block implements BlockParams, Iterable<string> {
      * This is only available for blocks which prefetched transactions, by passing `true` to `prefetchTxs` into
      * {@link Provider.getBlock | **getBlock**}.
      *
-     * @returns {Array<TransactionResponse>} The list of prefetched transactions.
+     * @returns {TransactionResponse[]} The list of prefetched transactions.
      * @throws {Error} If the transactions were not prefetched.
      */
     get prefetchedTransactions(): Array<TransactionResponse> {
@@ -730,7 +731,7 @@ export class Block implements BlockParams, Iterable<string> {
      * This is only available for blocks which prefetched transactions, by passing `true` to `prefetchTxs` into
      * {@link Provider.getBlock | **getBlock**}.
      *
-     * @returns {Array<TransactionResponse>} The list of prefetched extended transactions.
+     * @returns {TransactionResponse[]} The list of prefetched extended transactions.
      * @throws {Error} If the transactions were not prefetched.
      */
     get prefetchedExtTransactions(): Array<TransactionResponse> {
@@ -874,7 +875,6 @@ export class Block implements BlockParams, Iterable<string> {
      * Get the transaction at `index` within this block.
      *
      * @param {number | string} indexOrHash - The index or hash of the transaction.
-     *
      * @returns {Promise<TransactionResponse>} A promise resolving to the transaction.
      * @throws {Error} If the transaction is not found.
      */
@@ -916,7 +916,6 @@ export class Block implements BlockParams, Iterable<string> {
      * Get the extended transaction at `index` within this block.
      *
      * @param {number | string} indexOrHash - The index or hash of the extended transaction.
-     *
      * @returns {Promise<TransactionResponse>} A promise resolving to the extended transaction.
      * @throws {Error} If the extended transaction is not found.
      */
@@ -961,7 +960,6 @@ export class Block implements BlockParams, Iterable<string> {
      * If the transactions were not prefetched, this will throw.
      *
      * @param {number | string} indexOrHash - The index or hash of the transaction.
-     *
      * @returns {TransactionResponse} The transaction.
      * @throws {Error} If the transaction is not found.
      */
@@ -1125,7 +1123,6 @@ export class Log implements LogParams {
      * Returns the block that this log occurred in.
      *
      * @param {Shard} shard - The shard to fetch the block from.
-     *
      * @returns {Promise<Block>} A promise resolving to the block.
      */
     async getBlock(shard: Shard): Promise<Block> {
@@ -1386,7 +1383,6 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
      * Resolves to the block this transaction occurred in.
      *
      * @param {Shard} shard - The shard to fetch the block from.
-     *
      * @returns {Promise<Block>} A promise resolving to the block.
      * @throws {Error} If the block is not found.
      */
@@ -1693,7 +1689,6 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
      * This will return null if the transaction has not been included yet.
      *
      * @param {Shard} shard - The shard to fetch the block from.
-     *
      * @returns {null | Promise<Block>} A promise resolving to the block.
      */
     async getBlock(shard: Shard): Promise<null | Block> {
@@ -1764,7 +1759,6 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
      *
      * @param {number} [_confirms] - The number of confirmations to wait for.
      * @param {number} [_timeout] - The number of milliseconds to wait before rejecting.
-     *
      * @returns {Promise<null | TransactionReceipt>} A promise resolving to the transaction receipt.
      * @throws {Error} If the transaction was replaced, repriced, or cancelled.
      */
@@ -2014,7 +2008,6 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
      * Returns a filter which can be used to listen for orphan events that re-order this event against `other`.
      *
      * @param {TransactionResponse} [other] - The other transaction to compare against.
-     *
      * @returns {OrphanFilter} The orphan filter.
      */
     reorderedEvent(other?: TransactionResponse): OrphanFilter {
@@ -2037,7 +2030,6 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
      * `startBlock` can have devastating performance consequences if used incorrectly.
      *
      * @param {number} startBlock - The block number to start scanning for replacements.
-     *
      * @returns {QuaiTransactionResponse} The replaceable transaction.
      */
     replaceableTransaction(startBlock: number): QuaiTransactionResponse {
@@ -2154,7 +2146,6 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
      * This will return null if the transaction has not been included yet.
      *
      * @param {Shard} shard - The shard to fetch the block from.
-     *
      * @returns {null | Promise<Block>} A promise resolving to the block or null if not found.
      */
     async getBlock(shard: Shard): Promise<null | Block> {
@@ -2247,7 +2238,6 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
      * Returns a filter which can be used to listen for orphan events that re-order this event against `other`.
      *
      * @param {TransactionResponse} [other] - The other transaction to compare against.
-     *
      * @returns {OrphanFilter} The orphan filter.
      */
     reorderedEvent(other?: TransactionResponse): OrphanFilter {
@@ -2270,7 +2260,6 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
      * `startBlock` can have devastating performance consequences if used incorrectly.
      *
      * @param {number} startBlock - The block number to start scanning for replacements.
-     *
      * @returns {QiTransactionResponse} The replaceable transaction.
      */
     replaceableTransaction(startBlock: number): QiTransactionResponse {
@@ -2488,7 +2477,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * Get the current block number.
      *
      * @param {Shard} shard - The shard to fetch the block number from.
-     *
      * @returns {Promise<number>} A promise resolving to the block number.
      */
     getBlockNumber(shard: Shard): Promise<number>;
@@ -2497,7 +2485,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * Get the connected {@link Network | **Network**}.
      *
      * @param {Shard} shard - The shard to fetch the network from.
-     *
      * @returns {Promise<Network>} A promise resolving to the network.
      */
     getNetwork(shard?: Shard): Promise<Network>;
@@ -2506,7 +2493,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * Get the best guess at the recommended {@link FeeData | **FeeData**}.
      *
      * @param {Zone} zone - The shard to fetch the fee data from.
-     *
      * @returns {Promise<FeeData>} A promise resolving to the fee data.
      */
     getFeeData(zone: Zone): Promise<FeeData>;
@@ -2527,7 +2513,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *
      * @param {AddressLike} address - The address to fetch the balance for.
      * @param {BlockTag} [blockTag] - The block tag to fetch the balance from.
-     *
      * @returns {Promise<bigint>} A promise resolving to the balance.
      * @note On nodes without archive access enabled, the `blockTag` may be
      *  **silently ignored** by the node, which may cause issues if relied on.
@@ -2538,7 +2523,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * Get the UTXO entries for `address`.
      *
      * @param {AddressLike} address - The address to fetch the UTXO entries for.
-     *
      * @returns {Promise<Outpoint[]>} A promise resolving to the UTXO entries.
      * @note On nodes without archive access enabled, the `blockTag` may be
      *  **silently ignored** by the node, which may cause issues if relied on.
@@ -2552,7 +2536,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *
      * @param {AddressLike} address - The address to fetch the transaction count for.
      * @param {BlockTag} [blockTag] - The block tag to fetch the transaction count from.
-     *
      * @returns {Promise<number>} A promise resolving to the transaction count.
      * @note On nodes without archive access enabled, the `blockTag` may be
      *  **silently ignored** by the node, which may cause issues if relied on.
@@ -2564,7 +2547,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *
      * @param {AddressLike} address - The address to fetch the code for.
      * @param {BlockTag} [blockTag] - The block tag to fetch the code from.
-     *
      * @returns {Promise<string>} A promise resolving to the code stored at the address.
      * @note On nodes without archive access enabled, the `blockTag` may be
      *  **silently ignored** by the node, which may cause issues if relied on.
@@ -2577,7 +2559,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * @param {AddressLike} address - The address to fetch the storage from.
      * @param {BigNumberish} position - The position to fetch the storage from.
      * @param {BlockTag} [blockTag] - The block tag to fetch the storage from.
-     *
      * @returns {Promise<string>} A promise resolving to the storage value.
      * @note On nodes without archive access enabled, the `blockTag` may be
      *  **silently ignored** by the node, which may cause issues if relied on.
@@ -2591,7 +2572,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * Estimates the amount of gas required to executre `tx`.
      *
      * @param {TransactionRequest} tx - The transaction to estimate the gas for.
-     *
      * @returns {Promise<bigint>} A promise resolving to the estimated gas.
      * @throws {Error} If the transaction execution reverts.
      */
@@ -2602,7 +2582,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * [CallExceptionError](../interfaces/CallExceptionError) which includes the revert data.
      *
      * @param {TransactionRequest} tx - The transaction to simulate.
-     *
      * @returns {Promise<string>} A promise resolving to the result of the execution.
      * @throws {Error} If the transaction execution reverts.
      */
@@ -2615,7 +2594,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * @param {Zone} zone - The zone to broadcast the transaction to.
      * @param {string} signedTx - The signed transaction to broadcast.
      * @param {AddressLike} [from] - The address that signed the transaction.
-     *
      * @returns {Promise<TransactionResponse>} A promise resolving to the transaction response.
      * @throws {Error} If the transaction is invalid or the transaction is replaced.
      */
@@ -2633,7 +2611,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * @param {Shard} shard - The shard to fetch the block from.
      * @param {BlockTag | string} blockHashOrBlockTag - The block hash or block tag to fetch.
      * @param {boolean} [prefetchTxs] - If true, prefetch the transactions.
-     *
      * @returns {Promise<null | Block>} A promise resolving to the block or null if not found.
      * @throws {Error} If the block is not found.
      */
@@ -2645,7 +2622,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * If the transaction is unknown or on pruning nodes which discard old transactions this resolves to `null`.
      *
      * @param {string} hash - The transaction hash to fetch.
-     *
      * @returns {Promise<null | TransactionResponse>} A promise resolving to the transaction or null if not found.
      */
     getTransaction(hash: string): Promise<null | TransactionResponse>;
@@ -2657,7 +2633,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * resolves to `null`.
      *
      * @param {string} hash - The transaction hash to fetch the receipt for.
-     *
      * @returns {Promise<null | TransactionReceipt>} A promise resolving to the transaction receipt or null if not
      *   found.
      */
@@ -2669,7 +2644,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * This is only supported on nodes with archive access and with the necessary debug APIs enabled.
      *
      * @param {string} hash - The transaction hash to fetch the result for.
-     *
      * @returns {Promise<null | string>} A promise resolving to the result or null if not found.
      */
     getTransactionResult(hash: string): Promise<null | string>;
@@ -2681,7 +2655,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * Resolves to the list of Logs that match `filter`
      *
      * @param {Filter} filter - The filter to apply.
-     *
      * @returns {Promise<Log[]>} A promise resolving to the logs.
      */
     getLogs(filter: Filter | FilterByBlockHash): Promise<Array<Log>>;
@@ -2692,7 +2665,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * @param {string} hash - The transaction hash to wait for.
      * @param {number} [confirms] - The number of confirmations to wait for.
      * @param {number} [timeout] - The number of milliseconds to wait before timing out.
-     *
      * @returns {Promise<null | TransactionReceipt>} A promise resolving to the transaction receipt or null if not
      *   found.
      */
@@ -2705,7 +2677,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      *
      * @param {Shard} shard - The shard to fetch the block from.
      * @param {BlockTag} [blockTag] - The block tag to fetch.
-     *
      * @returns {Promise<Block>} A promise resolving to the block.
      */
     waitForBlock(shard: Shard, blockTag?: BlockTag): Promise<Block>;
@@ -2716,6 +2687,18 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * @returns {Promise<number>} A promise resolving to the current network size.
      */
     getProtocolExpansionNumber(): Promise<number>;
+
+    /**
+     * Resolves to the current content of the transaction pool.
+     *
+     * @returns {Promise<txpoolContentResponse>} A promise resolving to the transaction pool content.
+     */
+    getTxPoolContent(zone: Zone): Promise<txpoolContentResponse>;
+
+    /**
+     * Resolves to the current content of the transaction pool.
+     *
+     * @returns {Promise<txpoolInspectResponse>} A promise resolving to the transaction pool inspect.
+     */
+    txPoolInspect(zone: Zone): Promise<txpoolInspectResponse>;
 }
-
-
