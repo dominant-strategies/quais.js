@@ -31,6 +31,7 @@ import {
     resolveProperties,
 } from '../utils/index.js';
 import { decodeProtoTransaction } from '../encoding/index.js';
+import type { txpoolContentResponse, txpoolInspectResponse } from './txpool.js';
 
 import { formatBlock, formatLog, formatTransactionReceipt, formatTransactionResponse } from './format.js';
 import { Network } from './network.js';
@@ -556,6 +557,14 @@ export type PerformActionRequest =
       }
     | {
           method: 'getPendingHeader';
+      }
+    | {
+          method: 'getTxPoolContent';
+          zone: Zone;
+      }
+    | {
+          method: 'txPoolInspect';
+          zone: Zone;
       };
 
 type _PerformAccountRequest =
@@ -1401,6 +1410,14 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     async getPendingHeader(): Promise<WorkObjectLike> {
         return await this.#perform({ method: 'getPendingHeader' });
+    }
+
+    async getTxPoolContent(zone: Zone): Promise<txpoolContentResponse> {
+        return await this.#perform({ method: 'getTxPoolContent', zone: zone });
+    }
+
+    async txPoolInspect(zone: Zone): Promise<txpoolInspectResponse> {
+        return await this.#perform({ method: 'txPoolInspect', zone: zone });
     }
 
     // Write

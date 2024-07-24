@@ -1240,6 +1240,12 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
             case 'getLogs':
                 return { method: 'quai_getLogs', args: [req.filter] };
+
+            case 'getTxPoolContent':
+                return { method: 'txpool_content', args: [] };
+
+            case 'txPoolInspect':
+                return { method: 'txpool_inspect', args: [] };
         }
 
         return null;
