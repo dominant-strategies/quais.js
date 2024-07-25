@@ -78,6 +78,13 @@ import { WorkObjectLike } from '../transaction/work-object.js';
 import { QiTransaction, QuaiTransaction } from '../transaction/index.js';
 import { QuaiTransactionResponseParams } from './formatting.js';
 
+import {
+    PollingBlockSubscriber,
+    PollingEventSubscriber,
+    PollingOrphanSubscriber,
+    PollingTransactionSubscriber,
+} from './subscriber-polling.js';
+
 type Timer = ReturnType<typeof setTimeout>;
 
 /**
@@ -1684,9 +1691,23 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             case 'error':
             case 'network':
                 return new UnmanagedSubscriber(sub.type);
+            case 'block': {
+                const subscriber = new PollingBlockSubscriber(this as AbstractProvider);
+                subscriber.pollingInterval = this.pollingInterval;
+                return subscriber;
+            }
+            //! TODO: implement this for quais
+            // case "safe": case "finalized":
+            //     return new PollingBlockTagSubscriber(this, sub.type);
+            case 'event':
+                return new PollingEventSubscriber(this as AbstractProvider, sub.filter);
+            case 'transaction':
+                return new PollingTransactionSubscriber(this as AbstractProvider, sub.hash);
+            case 'orphan':
+                return new PollingOrphanSubscriber(this as AbstractProvider, sub.filter);
         }
 
-        throw new Error('HTTP polling not supported. This method should be implemented by subclasses.');
+        throw new Error(`unsupported event: ${sub.type}`);
     }
 
     /**
