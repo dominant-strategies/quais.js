@@ -41,13 +41,12 @@ const BN_0 = BigInt(0);
 export type BlockTag = BigNumberish | string;
 
 import {
+    BlockHeaderParams,
     BlockParams,
     LogParams,
     QiTransactionResponseParams,
     QuaiTransactionResponseParams,
     TransactionReceiptParams,
-    WoBodyHeaderParams,
-    WoBodyParams,
     WoHeaderParams,
 } from './formatting.js';
 import { WorkObjectLike } from '../transaction/work-object.js';
@@ -473,39 +472,11 @@ export function copyRequest(req: TransactionRequest): PreparedTransactionRequest
 export interface MinedBlock extends Block {}
 
 /**
- * Represents the body of a work object.
+ * Represents the header of a block.
  *
  * @category Providers
  */
-export class WoBody implements WoBodyParams {
-    readonly extTransactions!: Array<string | QuaiTransactionResponseParams>;
-    readonly header: WoBodyHeader;
-    readonly interlinkHashes: Array<string>;
-    readonly manifest: Array<string>;
-    readonly transactions!: Array<string | QuaiTransactionResponseParams>;
-    readonly uncles!: Array<string>;
-
-    /**
-     * Creates a new WoBody instance.
-     *
-     * @param {WoBodyParams} params - The parameters for the WoBody.
-     */
-    constructor(params: WoBodyParams) {
-        this.extTransactions = params.extTransactions;
-        this.header = new WoBodyHeader(params.header);
-        this.interlinkHashes = params.interlinkHashes;
-        this.manifest = params.manifest;
-        this.transactions = params.transactions;
-        this.uncles = params.uncles;
-    }
-}
-
-/**
- * Represents the header of a work object body.
- *
- * @category Providers
- */
-export class WoBodyHeader implements WoBodyHeaderParams {
+export class BlockHeader implements BlockHeaderParams {
     readonly baseFeePerGas!: null | bigint;
     readonly efficiencyScore: bigint;
     readonly etxEligibleSlices: string;
@@ -520,9 +491,6 @@ export class WoBodyHeader implements WoBodyHeaderParams {
     readonly hash!: null | string;
     readonly interlinkRootHash: string;
     readonly manifestHash!: Array<string>;
-    readonly miner!: string;
-    readonly mixHash!: string;
-    readonly nonce!: string;
     readonly number!: Array<string>;
     readonly parentDeltaS!: Array<bigint>;
     readonly parentEntropy!: Array<bigint>;
@@ -538,12 +506,7 @@ export class WoBodyHeader implements WoBodyHeaderParams {
     readonly uncledS: bigint;
     readonly utxoRoot!: string;
 
-    /**
-     * Creates a new WoBodyHeader instance.
-     *
-     * @param {WoBodyHeaderParams} params - The parameters for the WoBodyHeader.
-     */
-    constructor(params: WoBodyHeaderParams) {
+    constructor(params: BlockHeaderParams) {
         this.baseFeePerGas = params.baseFeePerGas;
         this.efficiencyScore = params.efficiencyScore;
         this.etxEligibleSlices = params.etxEligibleSlices;
@@ -558,9 +521,6 @@ export class WoBodyHeader implements WoBodyHeaderParams {
         this.hash = params.hash;
         this.interlinkRootHash = params.interlinkRootHash;
         this.manifestHash = params.manifestHash;
-        this.miner = params.miner;
-        this.mixHash = params.mixHash;
-        this.nonce = params.nonce;
         this.number = params.number;
         this.parentDeltaS = params.parentDeltaS;
         this.parentEntropy = params.parentEntropy;
@@ -575,6 +535,39 @@ export class WoBodyHeader implements WoBodyHeaderParams {
         this.transactionsRoot = params.transactionsRoot;
         this.uncledS = params.uncledS;
         this.utxoRoot = params.utxoRoot;
+    }
+
+    toJSON(): BlockHeaderParams {
+        return {
+            baseFeePerGas: this.baseFeePerGas,
+            efficiencyScore: this.efficiencyScore,
+            etxEligibleSlices: this.etxEligibleSlices,
+            etxSetRoot: this.etxSetRoot,
+            evmRoot: this.evmRoot,
+            expansionNumber: this.expansionNumber,
+            extRollupRoot: this.extRollupRoot,
+            extTransactionsRoot: this.extTransactionsRoot,
+            extraData: this.extraData,
+            gasLimit: this.gasLimit,
+            gasUsed: this.gasUsed,
+            hash: this.hash,
+            interlinkRootHash: this.interlinkRootHash,
+            manifestHash: this.manifestHash,
+            number: this.number,
+            parentDeltaS: this.parentDeltaS,
+            parentEntropy: this.parentEntropy,
+            parentHash: this.parentHash,
+            parentUncledS: this.parentUncledS,
+            parentUncledSubDeltaS: this.parentUncledSubDeltaS,
+            primeTerminus: this.primeTerminus,
+            receiptsRoot: this.receiptsRoot,
+            sha3Uncles: this.sha3Uncles,
+            size: this.size,
+            thresholdCount: this.thresholdCount,
+            transactionsRoot: this.transactionsRoot,
+            uncledS: this.uncledS,
+            utxoRoot: this.utxoRoot,
+        };
     }
 }
 
@@ -610,6 +603,20 @@ export class WoHeader implements WoHeaderParams {
         this.time = params.time;
         this.txHash = params.txHash;
     }
+
+    toJSON(): WoHeaderParams {
+        return {
+            difficulty: this.difficulty,
+            headerHash: this.headerHash,
+            location: this.location,
+            mixHash: this.mixHash,
+            nonce: this.nonce,
+            number: this.number,
+            parentHash: this.parentHash,
+            time: this.time,
+            txHash: this.txHash,
+        };
+    }
 }
 
 /**
@@ -619,6 +626,8 @@ export class WoHeader implements WoHeaderParams {
  */
 export class Block implements BlockParams, Iterable<string> {
     readonly #extTransactions!: Array<string | QuaiTransactionResponse>;
+    readonly hash: string;
+    readonly header: BlockHeader;
     readonly interlinkHashes: Array<string>; // New parameter
     readonly order!: number;
     readonly size!: bigint;
@@ -626,8 +635,8 @@ export class Block implements BlockParams, Iterable<string> {
     readonly totalEntropy!: bigint;
     readonly #transactions!: Array<string | QuaiTransactionResponse>;
     readonly uncles!: Array<string> | null;
-    readonly woBody: WoBody; // New nested parameter structure
     readonly woHeader: WoHeader; // New nested parameter structure
+
     /**
      * The provider connected to the block used to fetch additional details if necessary.
      */
@@ -656,13 +665,14 @@ export class Block implements BlockParams, Iterable<string> {
             return tx;
         });
 
+        this.hash = block.hash;
+        this.header = new BlockHeader(block.header);
         this.interlinkHashes = block.interlinkHashes;
         this.order = block.order;
         this.size = block.size;
         this.subManifest = block.subManifest;
         this.totalEntropy = block.totalEntropy;
         this.uncles = block.uncles;
-        this.woBody = new WoBody(block.woBody);
         this.woHeader = new WoHeader(block.woHeader);
         this.provider = provider;
     }
@@ -761,7 +771,7 @@ export class Block implements BlockParams, Iterable<string> {
      * @returns {any} The JSON-friendly value.
      */
     toJSON(): any {
-        const { interlinkHashes, order, size, subManifest, totalEntropy, uncles, woBody, woHeader } = this;
+        const { hash, header, interlinkHashes, order, size, subManifest, totalEntropy, uncles, woHeader } = this;
 
         // Using getters to retrieve the transactions and extTransactions
         const transactions = this.transactions;
@@ -769,63 +779,15 @@ export class Block implements BlockParams, Iterable<string> {
 
         return {
             _type: 'Block',
+            hash,
+            header: header.toJSON(),
             interlinkHashes,
             order,
             size: toJson(size),
             subManifest,
             totalEntropy: toJson(totalEntropy),
             uncles,
-            woBody: {
-                extTransactions: woBody.extTransactions,
-                header: {
-                    baseFeePerGas: toJson(woBody.header.baseFeePerGas),
-                    efficiencyScore: toJson(woBody.header.efficiencyScore),
-                    etxEligibleSlices: woBody.header.etxEligibleSlices,
-                    etxSetRoot: woBody.header.etxSetRoot,
-                    evmRoot: woBody.header.evmRoot,
-                    expansionNumber: woBody.header.expansionNumber,
-                    extRollupRoot: woBody.header.extRollupRoot,
-                    extTransactionsRoot: woBody.header.extTransactionsRoot,
-                    extraData: woBody.header.extraData,
-                    gasLimit: toJson(woBody.header.gasLimit),
-                    gasUsed: toJson(woBody.header.gasUsed),
-                    hash: woBody.header.hash,
-                    interlinkRootHash: woBody.header.interlinkRootHash,
-                    manifestHash: woBody.header.manifestHash,
-                    miner: woBody.header.miner,
-                    mixHash: woBody.header.mixHash,
-                    nonce: woBody.header.nonce,
-                    number: woBody.header.number,
-                    parentDeltaS: woBody.header.parentDeltaS.map((val) => toJson(val)),
-                    parentEntropy: woBody.header.parentEntropy.map((val) => toJson(val)),
-                    parentHash: woBody.header.parentHash,
-                    parentUncledS: woBody.header.parentUncledS.map((val) => toJson(val)),
-                    parentUncledSubDeltaS: woBody.header.parentUncledSubDeltaS.map((val) => toJson(val)),
-                    primeTerminus: woBody.header.primeTerminus,
-                    receiptsRoot: woBody.header.receiptsRoot,
-                    sha3Uncles: woBody.header.sha3Uncles,
-                    size: toJson(woBody.header.size),
-                    thresholdCount: toJson(woBody.header.thresholdCount),
-                    transactionsRoot: woBody.header.transactionsRoot,
-                    uncledS: toJson(woBody.header.uncledS),
-                    utxoRoot: woBody.header.utxoRoot,
-                },
-                interlinkHashes: woBody.interlinkHashes,
-                manifest: woBody.manifest,
-                transactions: woBody.transactions,
-                uncles: woBody.uncles,
-            },
-            woHeader: {
-                difficulty: woHeader.difficulty,
-                headerHash: woHeader.headerHash,
-                location: woHeader.location,
-                mixHash: woHeader.mixHash,
-                nonce: woHeader.nonce,
-                number: woHeader.number,
-                parentHash: woHeader.parentHash,
-                time: woHeader.time,
-                txHash: woHeader.txHash,
-            },
+            woHeader: woHeader.toJSON(),
             transactions, // Includes the transaction hashes or full transactions based on the prefetched data
             extTransactions, // Includes the extended transaction hashes or full transactions based on the prefetched data
         };
@@ -986,7 +948,7 @@ export class Block implements BlockParams, Iterable<string> {
      * @returns {boolean} True if the block has been mined.
      */
     isMined(): this is MinedBlock {
-        return !!this.woBody.header.hash;
+        return !!this.header.hash;
     }
 
     /**
@@ -997,7 +959,7 @@ export class Block implements BlockParams, Iterable<string> {
             throw new Error('');
         }
         return createOrphanedBlockFilter({
-            hash: this.woBody.header.hash!,
+            hash: this.header.hash!,
             number: parseInt(this.woHeader.number!, 16),
         });
     }

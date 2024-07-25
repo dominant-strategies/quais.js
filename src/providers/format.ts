@@ -143,7 +143,7 @@ export function formatLog(value: any): LogParams {
     return _formatLog(value);
 }
 
-const _formatWoBodyHeader = object({
+const _formatHeader = object({
     baseFeePerGas: getBigInt,
     efficiencyScore: getBigInt,
     etxEligibleSlices: formatHash,
@@ -158,7 +158,6 @@ const _formatWoBodyHeader = object({
     hash: formatHash,
     interlinkRootHash: formatHash,
     manifestHash: arrayOf(formatHash),
-    miner: allowNull(getAddress),
     number: arrayOf(getNumber),
     parentDeltaS: arrayOf(getBigInt),
     parentEntropy: arrayOf(getBigInt),
@@ -184,27 +183,22 @@ const _formatUncle = object({
     nonce: formatData,
     number: getNumber,
     parentHash: formatHash,
+    primeTerminusNumber: getNumber,
     time: getBigInt,
     txHash: formatHash,
-});
-
-const _formatWoBody = object({
-    extTransactions: arrayOf(formatTransactionResponse),
-    header: _formatWoBodyHeader,
-    interlinkHashes: arrayOf(formatHash),
-    manifest: arrayOf(formatHash),
-    transactions: arrayOf(formatTransactionResponse),
-    uncles: arrayOf(_formatUncle),
+    workShare: formatBoolean,
 });
 
 const _formatWoHeader = object({
-    difficulty: formatData,
+    coinbase: getAddress,
+    difficulty: getNumber,
     headerHash: formatHash,
     location: formatData,
     mixHash: formatHash,
     nonce: formatData,
-    number: formatData,
+    number: getNumber,
     parentHash: formatHash,
+    primeTerminusNumber: getNumber,
     time: formatData,
     txHash: formatHash,
 });
@@ -216,6 +210,8 @@ const _formatBlock = object({
         }
         return formatTransactionResponse(tx);
     }),
+    hash: formatHash,
+    header: _formatHeader,
     interlinkHashes: arrayOf(formatHash),
     order: getNumber,
     size: getBigInt,
@@ -227,8 +223,7 @@ const _formatBlock = object({
         }
         return formatTransactionResponse(tx);
     }),
-    uncles: arrayOf(_formatUncle),
-    woBody: _formatWoBody,
+    uncles: allowNull(arrayOf(_formatUncle), []),
     woHeader: _formatWoHeader,
 });
 
