@@ -11,6 +11,8 @@ import type { AccessList, TxInput, TxOutput } from '../transaction/index.js';
  */
 export interface BlockParams {
     extTransactions: ReadonlyArray<string | QuaiTransactionResponseParams>;
+    hash: string;
+    header: BlockHeaderParams;
     interlinkHashes: Array<string>; // New parameter
     order: number;
     size: bigint;
@@ -18,20 +20,10 @@ export interface BlockParams {
     totalEntropy: bigint;
     transactions: ReadonlyArray<string | QuaiTransactionResponseParams>;
     uncles: Array<string> | null;
-    woBody: WoBodyParams; // New nested parameter structure
     woHeader: WoHeaderParams; // New nested parameter structure
 }
 
-export interface WoBodyParams {
-    extTransactions: Array<string | QuaiTransactionResponseParams>;
-    header: WoBodyHeaderParams;
-    interlinkHashes: Array<string>;
-    manifest: Array<string>;
-    transactions: Array<string | QuaiTransactionResponseParams>;
-    uncles: Array<string>;
-}
-
-export interface WoBodyHeaderParams {
+export interface BlockHeaderParams {
     baseFeePerGas: null | bigint;
     efficiencyScore: bigint;
     etxEligibleSlices: string;
@@ -46,9 +38,6 @@ export interface WoBodyHeaderParams {
     hash: null | string;
     interlinkRootHash: string;
     manifestHash: Array<string>;
-    miner: string;
-    mixHash: string;
-    nonce: string;
     number: Array<string>;
     parentDeltaS: Array<bigint>;
     parentEntropy: Array<bigint>;
