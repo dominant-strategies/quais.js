@@ -207,6 +207,39 @@ describe('Test Provider Block operations', function () {
         const rpcBlock = await fetchRPCBlock('0xA');
         block = {
             extTransactions: rpcBlock.extTransactions,
+            hash: rpcBlock.hash,
+            header: {
+                baseFeePerGas: BigInt(rpcBlock.header.baseFeePerGas),
+                efficiencyScore: BigInt(rpcBlock.header.efficiencyScore),
+                etxEligibleSlices: rpcBlock.header.etxEligibleSlices,
+                etxSetRoot: rpcBlock.header.etxSetRoot,
+                evmRoot: rpcBlock.header.evmRoot,
+                expansionNumber: Number(rpcBlock.header.expansionNumber),
+                extRollupRoot: rpcBlock.header.extRollupRoot,
+                extTransactionsRoot: rpcBlock.header.extTransactionsRoot,
+                extraData: rpcBlock.header.extraData,
+                gasLimit: BigInt(rpcBlock.header.gasLimit),
+                gasUsed: BigInt(rpcBlock.header.gasUsed),
+                hash: rpcBlock.header.hash,
+                interlinkRootHash: rpcBlock.header.interlinkRootHash,
+                manifestHash: rpcBlock.header.manifestHash,
+                number: rpcBlock.header.number.map((stringNumber: string) => Number(stringNumber)),
+                parentDeltaS: rpcBlock.header.parentDeltaS.map((delta: string) => BigInt(delta)),
+                parentEntropy: rpcBlock.header.parentEntropy.map((entropy: string) => BigInt(entropy)),
+                parentHash: rpcBlock.header.parentHash,
+                parentUncledS: rpcBlock.header.parentUncledS.map((uncled: string | null) =>
+                    uncled ? BigInt(uncled) : null,
+                ),
+                parentUncledSubDeltaS: rpcBlock.header.parentUncledSubDeltaS.map((delta: string) => BigInt(delta)),
+                primeTerminus: rpcBlock.header.primeTerminus,
+                receiptsRoot: rpcBlock.header.receiptsRoot,
+                sha3Uncles: rpcBlock.header.sha3Uncles,
+                size: BigInt(rpcBlock.header.size),
+                thresholdCount: BigInt(rpcBlock.header.thresholdCount),
+                transactionsRoot: rpcBlock.header.transactionsRoot,
+                uncledS: BigInt(rpcBlock.header.uncledS),
+                utxoRoot: rpcBlock.header.utxoRoot,
+            },
             interlinkHashes: rpcBlock.interlinkHashes,
             order: rpcBlock.order,
             size: BigInt(rpcBlock.size),
@@ -214,50 +247,6 @@ describe('Test Provider Block operations', function () {
             totalEntropy: BigInt(rpcBlock.totalEntropy),
             transactions: rpcBlock.transactions,
             uncles: rpcBlock.uncles,
-            woBody: {
-                extTransactions: rpcBlock.woBody.extTransactions,
-                header: {
-                    baseFeePerGas: BigInt(rpcBlock.woBody.header.baseFeePerGas),
-                    efficiencyScore: BigInt(rpcBlock.woBody.header.efficiencyScore),
-                    etxEligibleSlices: rpcBlock.woBody.header.etxEligibleSlices,
-                    etxSetRoot: rpcBlock.woBody.header.etxSetRoot,
-                    evmRoot: rpcBlock.woBody.header.evmRoot,
-                    expansionNumber: Number(rpcBlock.woBody.header.expansionNumber),
-                    extRollupRoot: rpcBlock.woBody.header.extRollupRoot,
-                    extTransactionsRoot: rpcBlock.woBody.header.extTransactionsRoot,
-                    extraData: rpcBlock.woBody.header.extraData,
-                    gasLimit: BigInt(rpcBlock.woBody.header.gasLimit),
-                    gasUsed: BigInt(rpcBlock.woBody.header.gasUsed),
-                    hash: rpcBlock.woBody.header.hash,
-                    interlinkRootHash: rpcBlock.woBody.header.interlinkRootHash,
-                    manifestHash: rpcBlock.woBody.header.manifestHash,
-                    miner: rpcBlock.woBody.header.miner,
-                    mixHash: rpcBlock.woBody.header.mixHash,
-                    nonce: rpcBlock.woBody.header.nonce,
-                    number: rpcBlock.woBody.header.number.map((stringNumber: string) => Number(stringNumber)),
-                    parentDeltaS: rpcBlock.woBody.header.parentDeltaS.map((delta: string) => BigInt(delta)),
-                    parentEntropy: rpcBlock.woBody.header.parentEntropy.map((entropy: string) => BigInt(entropy)),
-                    parentHash: rpcBlock.woBody.header.parentHash,
-                    parentUncledS: rpcBlock.woBody.header.parentUncledS.map((uncled: string | null) =>
-                        uncled ? BigInt(uncled) : null,
-                    ),
-                    parentUncledSubDeltaS: rpcBlock.woBody.header.parentUncledSubDeltaS.map((delta: string) =>
-                        BigInt(delta),
-                    ),
-                    primeTerminus: rpcBlock.woBody.header.primeTerminus,
-                    receiptsRoot: rpcBlock.woBody.header.receiptsRoot,
-                    sha3Uncles: rpcBlock.woBody.header.sha3Uncles,
-                    size: BigInt(rpcBlock.woBody.header.size),
-                    thresholdCount: BigInt(rpcBlock.woBody.header.thresholdCount),
-                    transactionsRoot: rpcBlock.woBody.header.transactionsRoot,
-                    uncledS: BigInt(rpcBlock.woBody.header.uncledS),
-                    utxoRoot: rpcBlock.woBody.header.utxoRoot,
-                },
-                interlinkHashes: rpcBlock.woBody.interlinkHashes,
-                manifest: rpcBlock.woBody.manifest,
-                transactions: rpcBlock.woBody.transactions,
-                uncles: rpcBlock.woBody.uncles,
-            },
             woHeader: {
                 difficulty: rpcBlock.woHeader.difficulty,
                 headerHash: rpcBlock.woHeader.headerHash,
@@ -286,8 +275,8 @@ describe('Test Provider Block operations', function () {
     });
 
     it('should fetch block by hash', async function () {
-        assert.ok(block.woBody.header.hash != null, 'block.hash != null');
-        const responseBlock = (await providerC1.getBlock(Shard.Paxos2, block.woBody.header.hash)) as quais.Block;
+        assert.ok(block.hash != null, 'block.hash != null');
+        const responseBlock = (await providerC1.getBlock(Shard.Paxos2, block.hash)) as quais.Block;
         assert.ok(responseBlock != null, 'block != null');
         // TODO: `provider` is not used, remove?
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
