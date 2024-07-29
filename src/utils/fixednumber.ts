@@ -202,24 +202,24 @@ function toString(val: bigint, decimals: number) {
  * 10 raised to the power of `decimals`.
  *
  * If operations are performed that cause a value to grow too high (close to positive infinity) or too low (close to
- * negative infinity), the value is said to //overflow//.
+ * negative infinity), the value is said to overflow.
  *
  * For example, an 8-bit signed value, with 0 decimals may only be within the range `-128` to `127`; so `-128 - 1` will
  * overflow and become `127`. Likewise, `127 + 1` will overflow and become `-127`.
  *
- * Many operation have a normal and //unsafe// variant. The normal variant will throw a
- * [NumericFaultError](../interfaces/NumericFaultError) on any overflow, while the //unsafe// variant will silently
- * allow overflow, corrupting its value value.
+ * Many operation have a normal and unsafe variant. The normal variant will throw a
+ * [NumericFaultError](../interfaces/NumericFaultError) on any overflow, while the unsafe variant will silently allow
+ * overflow, corrupting its value value.
  *
  * If operations are performed that cause a value to become too small (close to zero), the value loses precison and is
- * said to //underflow//.
+ * said to underflow.
  *
  * For example, an value with 1 decimal place may store a number as small as `0.1`, but the value of `0.1 / 2` is
  * `0.05`, which cannot fit into 1 decimal place, so underflow occurs which means precision is lost and the value
  * becomes `0`.
  *
- * Some operations have a normal and //signalling// variant. The normal variant will silently ignore underflow, while
- * the //signalling// variant will thow a [NumericFaultError](../interfaces/NumericFaultError) on underflow.
+ * Some operations have a normal and signalling variant. The normal variant will silently ignore underflow, while the
+ * signalling variant will thow a [NumericFaultError](../interfaces/NumericFaultError) on underflow.
  *
  * @category Utils
  */
@@ -246,7 +246,7 @@ export class FixedNumber {
 
     // Use this when changing this file to get some typing info,
     // but then switch to any to mask the internal type
-    //constructor(guard: any, value: bigint, format: _FixedFormat) {
+    // constructor(guard: any, value: bigint, format: _FixedFormat) {
 
     /**
      * @ignore
@@ -311,7 +311,6 @@ export class FixedNumber {
      * Returns a new {@link FixedNumber | **FixedNumber**} with the result of `this` added to `other`, ignoring overflow.
      *
      * @param {FixedNumber} other - The value to add to `this`.
-     *
      * @returns {FixedNumber} The result of the addition.
      */
     addUnsafe(other: FixedNumber): FixedNumber {
@@ -323,7 +322,6 @@ export class FixedNumber {
      * [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs.
      *
      * @param {FixedNumber} other - The value to add to `this`.
-     *
      * @returns {FixedNumber} The result of the addition.
      */
     add(other: FixedNumber): FixedNumber {
@@ -340,7 +338,6 @@ export class FixedNumber {
      * overflow.
      *
      * @param {FixedNumber} other - The value to subtract from `this`.
-     *
      * @returns {FixedNumber} The result of the subtraction.
      */
     subUnsafe(other: FixedNumber): FixedNumber {
@@ -352,7 +349,6 @@ export class FixedNumber {
      * [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs.
      *
      * @param {FixedNumber} other - The value to subtract from `this`.
-     *
      * @returns {FixedNumber} The result of the subtraction.
      */
     sub(other: FixedNumber): FixedNumber {
@@ -369,7 +365,6 @@ export class FixedNumber {
      * overflow and underflow (precision loss).
      *
      * @param {FixedNumber} other - The value to multiply `this` by.
-     *
      * @returns {FixedNumber} The result of the multiplication.
      */
     mulUnsafe(other: FixedNumber): FixedNumber {
@@ -381,7 +376,6 @@ export class FixedNumber {
      * [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs.
      *
      * @param {FixedNumber} other - The value to multiply `this` by.
-     *
      * @returns {FixedNumber} The result of the multiplication.
      */
     mul(other: FixedNumber): FixedNumber {
@@ -394,7 +388,6 @@ export class FixedNumber {
      * loss) occurs.
      *
      * @param {FixedNumber} other - The value to multiply `this` by.
-     *
      * @returns {FixedNumber} The result of the multiplication.
      * @throws {NumericFaultError} Thrown if overflow or underflow occurs.
      * @throws {NumericFaultError} Thrown if division by 0 occurs.
@@ -425,7 +418,6 @@ export class FixedNumber {
      * underflow (precision loss). A [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs.
      *
      * @param {FixedNumber} other - The value to divide `this` by.
-     *
      * @returns {FixedNumber} The result of the division.
      */
     divUnsafe(other: FixedNumber): FixedNumber {
@@ -437,7 +429,6 @@ export class FixedNumber {
      * underflow (precision loss). A [NumericFaultError](../interfaces/NumericFaultError) is thrown if overflow occurs.
      *
      * @param {FixedNumber} other - The value to divide `this` by.
-     *
      * @returns {FixedNumber} The result of the division.
      */
     div(other: FixedNumber): FixedNumber {
@@ -449,7 +440,6 @@ export class FixedNumber {
      * [NumericFaultError](../interfaces/NumericFaultError) is thrown if underflow (precision loss) occurs.
      *
      * @param {FixedNumber} other - The value to divide `this` by.
-     *
      * @returns {FixedNumber} The result of the division.
      * @throws {NumericFaultError} Thrown if underflow occurs.
      */
@@ -476,7 +466,6 @@ export class FixedNumber {
      * implies both are equal.
      *
      * @param {FixedNumber} other - The value to compare to `this`.
-     *
      * @returns {number} The comparison result.
      */
     cmp(other: FixedNumber): number {
@@ -505,7 +494,6 @@ export class FixedNumber {
      * Returns true if `other` is equal to `this`.
      *
      * @param {FixedNumber} other - The value to compare to `this`.
-     *
      * @returns {boolean} True if `other` is equal to `this`.
      */
     eq(other: FixedNumber): boolean {
@@ -516,7 +504,6 @@ export class FixedNumber {
      * Returns true if `other` is less than to `this`.
      *
      * @param {FixedNumber} other - The value to compare to `this`.
-     *
      * @returns {boolean} True if `other` is less than to `this`.
      */
     lt(other: FixedNumber): boolean {
@@ -527,7 +514,6 @@ export class FixedNumber {
      * Returns true if `other` is less than or equal to `this`.
      *
      * @param {FixedNumber} other - The value to compare to `this`.
-     *
      * @returns {boolean} True if `other` is less than or equal to `this`.
      */
     lte(other: FixedNumber): boolean {
@@ -538,7 +524,6 @@ export class FixedNumber {
      * Returns true if `other` is greater than to `this`.
      *
      * @param {FixedNumber} other - The value to compare to `this`.
-     *
      * @returns {boolean} True if `other` is greater than to `this`.
      */
     gt(other: FixedNumber): boolean {
@@ -549,7 +534,6 @@ export class FixedNumber {
      * Returns true if `other` is greater than or equal to `this`.
      *
      * @param {FixedNumber} other - The value to compare to `this`.
-     *
      * @returns {boolean} True if `other` is greater than or equal to `this`.
      */
     gte(other: FixedNumber): boolean {
@@ -595,7 +579,6 @@ export class FixedNumber {
      * places.
      *
      * @param {number} [decimals] - The number of decimal places to round to.
-     *
      * @returns {FixedNumber} The rounded value.
      */
     round(decimals?: number): FixedNumber {
@@ -679,7 +662,6 @@ export class FixedNumber {
      * @param {BigNumberish} _value - The value to create a FixedNumber for.
      * @param {Numeric} [_decimals] - The number of decimal places in `value`.
      * @param {FixedFormat} [_format] - The format for the FixedNumber.
-     *
      * @returns {FixedNumber} The FixedNumber for `value`.
      */
     static fromValue(_value: BigNumberish, _decimals?: Numeric, _format?: FixedFormat): FixedNumber {
@@ -713,7 +695,6 @@ export class FixedNumber {
      *
      * @param {BigNumberish} _value - The value to create a FixedNumber for.
      * @param {FixedFormat} [_format] - The format for the FixedNumber.
-     *
      * @returns {FixedNumber} The FixedNumber for `value`.
      */
     static fromString(_value: string, _format?: FixedFormat): FixedNumber {
@@ -760,7 +741,6 @@ export class FixedNumber {
      *
      * @param {BytesLike} _value - The big-endian representation of the value.
      * @param {FixedFormat} [_format] - The format for the FixedNumber.
-     *
      * @returns {FixedNumber} The FixedNumber for `value`.
      */
     static fromBytes(_value: BytesLike, _format?: FixedFormat): FixedNumber {

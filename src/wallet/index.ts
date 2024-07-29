@@ -1,8 +1,8 @@
 /**
  * When interacting with Ethereum, it is necessary to use a private key authenticate actions by signing a payload.
  *
- * Wallets are the simplest way to expose the concept of an //Externally Owner Account// (EOA) as it wraps a private key
- * and supports high-level methods to sign common types of interaction and send transactions.
+ * Wallets are the simplest way to expose the concept of an Externally Owner Account (EOA) as it wraps a private key and
+ * supports high-level methods to sign common types of interaction and send transactions.
  *
  * The class most developers will want to use is [Wallet](../classes/Wallet), which can load a private key directly or
  * from any common wallet format.

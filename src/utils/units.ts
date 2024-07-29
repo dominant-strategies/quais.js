@@ -10,8 +10,7 @@
  * This creates a clear distinction, between values to be used by code (integers) and values used for display logic to
  * users (decimals).
  *
- * The native unit in Ethereum, //ether// is divisible to 18 decimal places, where each individual unit is called a
- * //wei//.
+ * The native unit in Ethereum, ether is divisible to 18 decimal places, where each individual unit is called a wei.
  */
 import { assertArgument } from './errors.js';
 import { FixedNumber } from './fixednumber.js';
@@ -22,7 +21,7 @@ import type { BigNumberish, Numeric } from './index.js';
 const names = ['wei', 'kwei', 'mwei', 'gwei', 'szabo', 'finney', 'ether'];
 
 /**
- * Converts `value` into a //decimal string//, assuming `unit` decimal places. The `unit` may be the number of decimal
+ * Converts `value` into a decimal string, assuming `unit` decimal places. The `unit` may be the number of decimal
  * places or the name of a unit (e.g. `"gwei"` for 9 decimal places).
  *
  * @category Utils
@@ -45,8 +44,8 @@ export function formatUnits(value: BigNumberish, unit?: string | Numeric): strin
 }
 
 /**
- * Converts the //decimal string// `value` to a BigInt, assuming `unit` decimal places. The `unit` may the number of
- * decimal places or the name of a unit (e.g. `"gwei"` for 9 decimal places).
+ * Converts the decimal string `value` to a BigInt, assuming `unit` decimal places. The `unit` may the number of decimal
+ * places or the name of a unit (e.g. `"gwei"` for 9 decimal places).
  *
  * @category Utils
  * @param {string} value - The value to convert.
@@ -71,7 +70,7 @@ export function parseUnits(value: string, unit?: string | Numeric): bigint {
 }
 
 /**
- * Converts `value` into a //decimal string// using 18 decimal places.
+ * Converts `value` into a decimal string sing 18 decimal places.
  *
  * @category Utils
  * @param {BigNumberish} wei - The value to convert.
@@ -82,7 +81,7 @@ export function formatQuai(wei: BigNumberish): string {
 }
 
 /**
- * Converts `value` into a //decimal string// using 3 decimal places.
+ * Converts `value` into a decimal string using 3 decimal places.
  *
  * @category Utils
  * @param {BigNumberish} value - The value to convert.
@@ -93,7 +92,7 @@ export function formatQi(value: BigNumberish): string {
 }
 
 /**
- * Converts the //decimal string// `quai` to a BigInt, using 18 decimal places.
+ * Converts the decimal string `quai` to a BigInt, using 18 decimal places.
  *
  * @category Utils
  * @param {string} ether - The value to convert.
@@ -104,7 +103,7 @@ export function parseQuai(ether: string): bigint {
 }
 
 /**
- * Converts `value` into a //decimal string// using 3 decimal places.
+ * Converts `value` into a decimal string using 3 decimal places.
  *
  * @category Utils
  * @param {string} value - The value to convert.
