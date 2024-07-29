@@ -43,7 +43,6 @@ let __pbkdf2 = _pbkdf2;
  *
  * // Compute the PBKDF2
  * pbkdf2(passwordBytes, salt, 1024, 16, 'sha256');
- * //_result:
  * ```
  *
  * @param {BytesLike} _password - The password to use.
@@ -51,7 +50,6 @@ let __pbkdf2 = _pbkdf2;
  * @param {number} iterations - The number of iterations to use.
  * @param {number} keylen - The length of the key to generate.
  * @param {'sha256' | 'sha512'} algo - The algorithm to use.
- *
  * @returns {string} The key derived from the password.
  */
 export function pbkdf2(

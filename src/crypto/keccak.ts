@@ -27,22 +27,17 @@ let __keccak256: (data: Uint8Array) => BytesLike = _keccak256;
  *
  * ```ts
  * keccak256('0x');
- * //_result:
  *
  * keccak256('0x1337');
- * //_result:
  *
  * keccak256(new Uint8Array([0x13, 0x37]));
- * //_result:
  *
  * // Strings are assumed to be DataHexString, otherwise it will
  * // throw. To hash UTF-8 data, see the note above.
  * keccak256('Hello World');
- * //_error:
  * ```
  *
  * @param {BytesLike} _data - The data to hash.
- *
  * @returns DataHexstring
  * @returns {string} The hash of the data.
  */

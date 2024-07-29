@@ -59,7 +59,6 @@ export class SigningKey {
      * Return the signature of the signed `digest`.
      *
      * @param {BytesLike} digest - The data to sign.
-     *
      * @returns {Signature} The signature of the data.
      * @throws {Error} If the digest is not 32 bytes long.
      */
@@ -93,15 +92,12 @@ export class SigningKey {
      *
      * // Notice that privA.computeSharedSecret(pubB)...
      * sign1.computeSharedSecret(sign2.publicKey);
-     * //_result:
      *
      * // ...is equal to privB.computeSharedSecret(pubA).
      * sign2.computeSharedSecret(sign1.publicKey);
-     * //_result:
      * ```
      *
      * @param {BytesLike} other - The other key to compute the shared secret with.
-     *
      * @returns {string} The shared secret.
      */
     computeSharedSecret(other: BytesLike): string {
@@ -121,24 +117,19 @@ export class SigningKey {
      *
      * // Compute the uncompressed public key for a private key
      * SigningKey.computePublicKey(sign.privateKey);
-     * //_result:
      *
      * // Compute the compressed public key for a private key
      * SigningKey.computePublicKey(sign.privateKey, true);
-     * //_result:
      *
      * // Compute the uncompressed public key
      * SigningKey.computePublicKey(sign.publicKey, false);
-     * //_result:
      *
      * // Compute the Compressed a public key
      * SigningKey.computePublicKey(sign.publicKey, true);
-     * //_result:
      * ```
      *
      * @param {BytesLike} key - The key to compute the public key for.
      * @param {boolean} [compressed] - Whether to return the compressed public key.
-     *
      * @returns {string} The public key.
      */
     static computePublicKey(key: BytesLike, compressed?: boolean): string {
@@ -174,16 +165,13 @@ export class SigningKey {
      *
      * // Notice the signer public key...
      * key.publicKey;
-     * //_result:
      *
      * // ...is equal to the recovered public key
      * SigningKey.recoverPublicKey(digest, sig);
-     * //_result:
      * ```
      *
      * @param {BytesLike} digest - The data that was signed.
      * @param {SignatureLike} signature - The signature of the data.
-     *
      * @returns {string} The public key.
      */
     static recoverPublicKey(digest: BytesLike, signature: SignatureLike): string {
@@ -212,7 +200,6 @@ export class SigningKey {
      * @param {BytesLike} p0 - The first point to add.
      * @param {BytesLike} p1 - The second point to add.
      * @param {boolean} [compressed] - Whether to return the compressed public key.
-     *
      * @returns {string} The sum of the points.
      */
     static addPoints(p0: BytesLike, p1: BytesLike, compressed?: boolean): string {

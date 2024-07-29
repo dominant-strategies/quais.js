@@ -13,12 +13,10 @@ import type { Addressable, AddressLike } from './index.js';
  * ```js
  * // Wallets and AbstractSigner sub-classes
  * isAddressable(Wallet.createRandom());
- * //_result:
  *
  * // Contracts
  * contract = new Contract('0x643aA0A61eADCC9Cc202D1915D942d35D005400C', [], provider);
  * isAddressable(contract);
- * //_result:
  * ```
  *
  * @param {any} value - The value to check.
@@ -37,11 +35,9 @@ export function isAddressable(value: any): value is Addressable {
  * ```js
  * // Valid address
  * isAddress('0x8ba1f109551bD432803012645Ac136ddd64DBA72');
- * //_result:
  *
  * // Invalid checksum
  * isAddress('0x8Ba1f109551bD432803012645Ac136ddd64DBa72');
- * //_result:
  * ```
  *
  * @param {any} value - The value to check.
@@ -76,16 +72,13 @@ async function checkAddress(target: any, promise: Promise<null | string>): Promi
  *
  * // Addresses are return synchronously
  * resolveAddress(addr, provider);
- * //_result:
  *
  * // Address promises are resolved asynchronously
  * resolveAddress(Promise.resolve(addr));
- * //_result:
  *
  * // Addressable objects are resolved asynchronously
  * contract = new Contract(addr, []);
  * resolveAddress(contract, provider);
- * //_result:
  * ```
  *
  * @param {AddressLike} target - The target to resolve to an address.

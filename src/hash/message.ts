@@ -21,20 +21,16 @@ import { EthMessagePrefix } from '../constants/strings.js';
  *
  * ```ts
  * hashMessage('Hello World');
- * //_result:
  *
  * // Hashes the SIX (6) string characters, i.e.
  * // [ "0", "x", "4", "2", "4", "3" ]
  * hashMessage('0x4243');
- * //_result:
  *
  * // Hashes the TWO (2) bytes [ 0x42, 0x43 ]...
  * hashMessage(getBytes('0x4243'));
- * //_result:
  *
  * // ...which is equal to using data
  * hashMessage(new Uint8Array([0x42, 0x43]));
- * //_result:
  * ```
  *
  * @param {Uint8Array | string} message - The message to hash.
