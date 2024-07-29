@@ -5,10 +5,8 @@ import * as Proto from './protoc/proto_block.js';
 
 /**
  * @category Encoding
- * @param {ProtoTransaction} protoTx - Write variable description
- *
- * @returns {string} Write return description
- * @todo Write documentation for this function.
+ * @param {ProtoTransaction} protoTx - The signed constructed transaction
+ * @returns {string} - The Protobuf encoded transaction
  */
 export function encodeProtoTransaction(protoTx: ProtoTransaction): string {
     const tx = Proto.block.ProtoTransaction.fromObject(protoTx as any);
@@ -17,10 +15,8 @@ export function encodeProtoTransaction(protoTx: ProtoTransaction): string {
 
 /**
  * @category Encoding
- * @param {ProtoWorkObject} protoWo - Write variable description
- *
- * @returns {string} Write return description
- * @todo Write documentation for this function.
+ * @param {ProtoWorkObject} protoWo - The constructed WorkObject
+ * @returns {string} - The Protobuf encoded WorkObject
  */
 export function encodeProtoWorkObject(protoWo: ProtoWorkObject): string {
     const wo = Proto.block.ProtoWorkObject.fromObject(protoWo as any);

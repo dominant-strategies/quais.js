@@ -161,11 +161,9 @@ export type JsonRpcError = {
 };
 
 /**
- * When subscribing to the `"debug"` event, the {@link Listener | **Listener**} will receive this object as the first
- * parameter.
+ * When subscribing to the `"debug"` event, the Listener will receive this object as the first parameter.
  *
  * @category Providers
- * @todo Listener is no longer exported, either remove the link or rework the comment
  */
 export type DebugEventJsonRpcApiProvider =
     | {
