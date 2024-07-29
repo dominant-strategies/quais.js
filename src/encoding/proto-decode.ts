@@ -4,10 +4,8 @@ import * as Proto from './protoc/proto_block.js';
 
 /**
  * @category Encoding
- * @param {Uint8Array} bytes - Write variable description
- *
- * @returns {ProtoTransaction} Write return description
- * @todo Write documentation for this function.
+ * @param {Uint8Array} bytes - The Protobuf encoded transaction
+ * @returns {ProtoTransaction} - The decoded transaction
  */
 export function decodeProtoTransaction(bytes: Uint8Array): ProtoTransaction {
     const tx = Proto.block.ProtoTransaction.deserialize(bytes);
@@ -20,10 +18,8 @@ export function decodeProtoTransaction(bytes: Uint8Array): ProtoTransaction {
 
 /**
  * @category Encoding
- * @param {Uint8Array} bytes - Write variable description
- *
- * @returns {ProtoWorkObject} Write return description
- * @todo Write documentation for this function.
+ * @param {Uint8Array} bytes - The Protobuf encoded work object
+ * @returns {ProtoWorkObject} - The decoded work object
  */
 export function decodeProtoWorkObject(bytes: Uint8Array): ProtoWorkObject {
     const wo = Proto.block.ProtoWorkObject.deserialize(bytes);

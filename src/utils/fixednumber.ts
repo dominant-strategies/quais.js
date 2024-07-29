@@ -34,25 +34,6 @@ function getTens(decimals: number): bigint {
 }
 
 /**
- * A description of a fixed-point arithmetic field.
- *
- * When specifying the fixed format, the values override the default of a `fixed128x18`, which implies a signed 128-bit
- * value with 18 decimals of precision.
- *
- * The alias `fixed` and `ufixed` can be used for `fixed128x18` and `ufixed128x18` respectively.
- *
- * When a fixed format string begins with a `u`, it indicates the field is unsigned, so any negative values will
- * overflow. The first number indicates the bit-width and the second number indicates the decimal precision.
- *
- * When a `number` is used for a fixed format, it indicates the number of decimal places, and the default width and
- * signed-ness will be used.
- *
- * The bit-width must be byte aligned and the decimals can be at most 80.
- *
- * @todo This comment is seemingly unused, remove if not needed
- */
-
-/**
  * Returns a new FixedFormat for `value`.
  *
  * If `value` is specified as a `number`, the bit-width is 128 bits and `value` is used for the `decimals`.

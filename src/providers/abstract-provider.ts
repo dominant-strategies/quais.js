@@ -5,10 +5,10 @@
  */
 
 /**
- * @todo Event coalescence When we register an event with an async value (e.g. address is a Signer), we need to add it
- *   immediately for the Event API, but also need time to resolve the address. Upon resolving the address, we need to
- *   migrate the listener to the static event. We also need to maintain a map of Signer to address so we can sync
- *   respond to listenerCount.
+ * Event coalescence When we register an event with an async value (e.g. address is a Signer), we need to add it
+ * immediately for the Event API, but also need time to resolve the address. Upon resolving the address, we need to
+ * migrate the listener to the static event. We also need to maintain a map of Signer to address so we can sync respond
+ * to listenerCount.
  */
 
 import { computeAddress, resolveAddress } from '../address/index.js';
@@ -237,9 +237,7 @@ export class UnmanagedSubscriber implements Subscriber {
     start(): void {}
     stop(): void {}
 
-    /**
-     * @todo `dropWhilePaused` is not used, remove or re-write
-     */
+    // todo `dropWhilePaused` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     pause(dropWhilePaused?: boolean): void {}
     resume(): void {}
@@ -278,9 +276,7 @@ function concisify(items: Array<string>): Array<string> {
     return items;
 }
 
-/**
- * @todo `provider` is not used, remove or re-write
- */
+// todo `provider` is not used, remove or re-write
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function getSubscription(_event: ProviderEvent, provider: AbstractProvider<any>): Promise<Subscription> {
     if (_event == null) {
@@ -403,8 +399,8 @@ export type PerformActionTransaction = QuaiPerformActionTransaction | QiPerformA
 
 /**
  * @category Providers
- * @todo Write documentation for this interface
  */
+// todo: write docs for this
 export interface QuaiPerformActionTransaction extends QuaiPreparedTransactionRequest {
     /**
      * The `to` address of the transaction.
@@ -421,8 +417,8 @@ export interface QuaiPerformActionTransaction extends QuaiPreparedTransactionReq
 
 /**
  * @category Providers
- * @todo Write documentation for this interface
  */
+// todo: write docs for this
 export interface QiPerformActionTransaction extends QiPreparedTransactionRequest {
     /**
      * The `inputs` of the UTXO transaction.
@@ -1719,7 +1715,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @ignore
      * @param {Subscriber} oldSub - The subscriber to replace.
      * @param {Subscriber} newSub - The new subscriber.
-     * @todo PollingEventSubscriber is not longer exported, replace this link or
      */
     _recoverSubscriber(oldSub: Subscriber, newSub: Subscriber): void {
         for (const sub of this.#subs.values()) {

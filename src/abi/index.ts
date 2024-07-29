@@ -3,8 +3,6 @@
  * decoded, and how to decode events and errors.
  *
  * See [About ABIs](docs-abi) for more details how they are used.
- *
- * @todo LINK TO: [[docs-abi]] (abi.wrm file)
  */
 
 export { AbiCoder } from './abi-coder.js';
