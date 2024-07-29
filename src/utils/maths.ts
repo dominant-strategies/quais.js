@@ -36,7 +36,6 @@ const maxValue = 0x1fffffffffffff;
  * @category Utils
  * @param {BigNumberish} _value - The value to convert.
  * @param {Numeric} _width - The width of the value in bits.
- *
  * @returns {bigint} The value.
  * @throws {Error} If the value is too large for the width.
  */
@@ -67,7 +66,6 @@ export function fromTwos(_value: BigNumberish, _width: Numeric): bigint {
  * @category Utils
  * @param {BigNumberish} _value - The value to convert.
  * @param {Numeric} _width - The width of the value in bits.
- *
  * @returns {bigint} The value.
  * @throws {Error} If the value is too large for the width.
  */
@@ -103,7 +101,6 @@ export function toTwos(_value: BigNumberish, _width: Numeric): bigint {
  * @category Utils
  * @param {BigNumberish} _value - The value to mask.
  * @param {Numeric} _bits - The number of bits to mask.
- *
  * @returns {bigint} The masked value.
  */
 export function mask(_value: BigNumberish, _bits: Numeric): bigint {
@@ -118,7 +115,6 @@ export function mask(_value: BigNumberish, _bits: Numeric): bigint {
  * @category Utils
  * @param {BigNumberish} value - The value to convert.
  * @param {string} name - The name of the value.
- *
  * @returns {bigint} The value.
  */
 export function getBigInt(value: BigNumberish, name?: string): bigint {
@@ -150,7 +146,6 @@ export function getBigInt(value: BigNumberish, name?: string): bigint {
  *
  * @category Utils
  * @param {BigNumberish} value - The value to convert.
- *
  * @returns {bigint} The absolute value.
  */
 export function bigIntAbs(value: BigNumberish): bigint {
@@ -169,7 +164,6 @@ export function bigIntAbs(value: BigNumberish): bigint {
  * @category Utils
  * @param {BigNumberish} value - The value to convert.
  * @param {string} name - The name of the value.
- *
  * @returns {bigint} The value.
  * @throws {Error} If the value is negative.
  */
@@ -190,7 +184,6 @@ const Nibbles = '0123456789abcdef';
  *
  * @category Utils
  * @param {BigNumberish | Uint8Array} value - The value to convert.
- *
  * @returns {bigint} The value.
  */
 export function toBigInt(value: BigNumberish | Uint8Array): bigint {
@@ -207,13 +200,11 @@ export function toBigInt(value: BigNumberish | Uint8Array): bigint {
 }
 
 /**
- * Gets a //number// from `value`. If it is an invalid value for a //number//, then an ArgumentError will be thrown for
- * `name`.
+ * Gets a number from `value`. If it is an invalid value for a number, then an ArgumentError will be thrown for `name`.
  *
  * @category Utils
  * @param {BigNumberish} value - The value to convert.
  * @param {string} name - The name of the value.
- *
  * @returns {number} The value.
  * @throws {Error} If the value is invalid.
  * @throws {Error} If the value is too large.
@@ -246,7 +237,6 @@ export function getNumber(value: BigNumberish, name?: string): number {
  *
  * @category Utils
  * @param {BigNumberish | Uint8Array} value - The value to convert.
- *
  * @returns {number} The value.
  * @throws {Error} If the value is not safe to convert to a number.
  */
@@ -260,7 +250,6 @@ export function toNumber(value: BigNumberish | Uint8Array): number {
  * @category Utils
  * @param {BigNumberish} _value - The value to convert.
  * @param {Numeric} _width - The width of the value in bytes.
- *
  * @returns {string} The hexstring.
  * @throws {Error} If the value exceeds the width.
  */
@@ -296,7 +285,6 @@ export function toBeHex(_value: BigNumberish, _width?: Numeric): string {
  *
  * @category Utils
  * @param {BigNumberish} _value - The value to convert.
- *
  * @returns {Uint8Array} The value.
  */
 export function toBeArray(_value: BigNumberish): Uint8Array {
@@ -321,14 +309,13 @@ export function toBeArray(_value: BigNumberish): Uint8Array {
 }
 
 /**
- * Returns a `HexString` for `value` safe to use as a //Quantity//.
+ * Returns a `HexString` for `value` safe to use as a Quantity.
  *
- * A //Quantity// does not have and leading 0 values unless the value is the literal value `0x0`. This is most commonly
- * used for JSSON-RPC numeric values.
+ * A Quantity does not have and leading 0 values unless the value is the literal value `0x0`. This is most commonly used
+ * for JSSON-RPC numeric values.
  *
  * @category Utils
  * @param {BigNumberish | Uint8Array} value - The value to convert.
- *
  * @returns {string} The quantity.
  */
 export function toQuantity(value: BytesLike | BigNumberish): string {

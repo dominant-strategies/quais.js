@@ -21,10 +21,9 @@ export interface Signer extends Addressable, ContractRunner {
     provider: null | Provider;
 
     /**
-     * Returns a new instance of this Signer connected to //provider// or detached from any Provider if null.
+     * Returns a new instance of this Signer connected to provider or detached from any Provider if null.
      *
      * @param {null | Provider} provider - The Provider to connect to.
-     *
      * @returns {Signer} A new instance of this Signer.
      * @throws {Error} If the Signer cannot be connected to the Provider.
      */
@@ -46,7 +45,6 @@ export interface Signer extends Addressable, ContractRunner {
      *
      * @param blockTag - The blocktag to base the transaction count on, keep in mind many nodes do not honour this value
      *   and silently ignore it [default: `"latest"`]
-     *
      * @returns {Promise<number>} The next nonce.
      */
     getNonce(blockTag?: BlockTag): Promise<number>;
@@ -61,7 +59,6 @@ export interface Signer extends Addressable, ContractRunner {
      * - If `from` is specified , check that it matches this Signer
      *
      * @param {TransactionRequest} tx - The call to prepare
-     *
      * @returns {Promise<TransactionLike>} A promise resolving to the prepared transaction.
      */
     populateCall(tx: TransactionRequest): Promise<TransactionLike>;
@@ -78,7 +75,6 @@ export interface Signer extends Addressable, ContractRunner {
      *   EIP-1559, etc)
      *
      * @param {TransactionRequest} tx - The transaction to prepare.
-     *
      * @returns {Promise<TransactionLike>} A promise resolving to the prepared transaction.
      * @throws {Error} If the transaction is invalid.
      * @note Some Signer implementations may skip populating properties that
@@ -91,7 +87,7 @@ export interface Signer extends Addressable, ContractRunner {
     // Execution
 
     /**
-     * Estimates the required gas required to execute //tx// on the Blockchain. This will be the expected amount a
+     * Estimates the required gas required to execute tx on the Blockchain. This will be the expected amount a
      * transaction will require as its `gasLimit` to successfully run all the necessary computations and store the
      * needed state that the transaction intends.
      *
@@ -99,7 +95,6 @@ export interface Signer extends Addressable, ContractRunner {
      * transaction gas requirements.
      *
      * @param {TransactionRequest} tx - The transaction to estimate gas for.
-     *
      * @returns {Promise<bigint>} A promise resolving to the estimated gas.
      * @throws UNPREDICTABLE_GAS_LIMIT A transaction that is believed by the node to likely fail will throw an error
      *   during gas estimation. This could indicate that it will actually fail or that the circumstances are simply too
@@ -109,14 +104,13 @@ export interface Signer extends Addressable, ContractRunner {
     estimateGas(tx: TransactionRequest): Promise<bigint>;
 
     /**
-     * Evaluates the //tx// by running it against the current Blockchain state. This cannot change state and has no cost
-     * in ether, as it is effectively simulating execution.
+     * Evaluates th tx by running it against the current Blockchain state. This cannot change state and has no cost in
+     * ether, as it is effectively simulating execution.
      *
      * This can be used to have the Blockchain perform computations based on its state (e.g. running a Contract's
      * getters) or to simulate the effect of a transaction before actually performing an operation.
      *
      * @param {TransactionRequest} tx - The transaction to call.
-     *
      * @returns {Promise<string>} A promise resolving to the result of the call.
      */
     call(tx: TransactionRequest): Promise<string>;
@@ -129,7 +123,6 @@ export interface Signer extends Addressable, ContractRunner {
      * transaction.
      *
      * @param {TransactionRequest} tx - The transaction to sign.
-     *
      * @returns {Promise<string>} A promise resolving to the signed transaction.
      * @throws {Error} If the transaction is invalid.
      */
@@ -140,7 +133,6 @@ export interface Signer extends Addressable, ContractRunner {
      * properties for the transaction to be valid have been popualted first.
      *
      * @param {TransactionRequest} tx - The transaction to send.
-     *
      * @returns {Promise<TransactionResponse>} A promise resolving to the transaction response.
      * @throws {Error} If the transaction is invalid.
      */
@@ -155,7 +147,6 @@ export interface Signer extends Addressable, ContractRunner {
      * To sign that example as two bytes, the Uint8Array should be used (i.e. `new Uint8Array([ 0x12, 0x34 ])`).
      *
      * @param {string | Uint8Array} message - The message to sign.
-     *
      * @returns {Promise<string>} A promise resolving to the signed message.
      * @throws {Error} If the message is invalid.
      */
@@ -167,7 +158,6 @@ export interface Signer extends Addressable, ContractRunner {
      * @param {TypedDataDomain} domain - The domain of the typed data.
      * @param {Record<string, TypedDataField[]>} types - The types of the typed data.
      * @param {Record<string, any>} value - The value of the typed data.
-     *
      * @returns {Promise<string>} A promise resolving to the signed typed data.
      */
     signTypedData(

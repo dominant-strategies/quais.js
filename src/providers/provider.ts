@@ -240,8 +240,8 @@ export interface QuaiTransactionRequest {
 
     /**
      * The [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) access list. Storage slots included in the access list
-     * are //warmed// by pre-loading them, so their initial cost to fetch is guaranteed, but then each additional access
-     * is cheaper.
+     * are warmed by pre-loading them, so their initial cost to fetch is guaranteed, but then each additional access is
+     * cheaper.
      */
     accessList?: null | AccessListish;
 
@@ -356,8 +356,8 @@ export interface QuaiPreparedTransactionRequest {
 
     /**
      * The [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) access list. Storage slots included in the access list
-     * are //warmed// by pre-loading them, so their initial cost to fetch is guaranteed, but then each additional access
-     * is cheaper.
+     * are warmed by pre-loading them, so their initial cost to fetch is guaranteed, but then each additional access is
+     * cheaper.
      */
     accessList?: AccessList;
 
@@ -465,7 +465,7 @@ export function copyRequest(req: TransactionRequest): PreparedTransactionRequest
  * An Interface to indicate a {@link Block | **Block**} has been included in the blockchain. This asserts a Type Guard
  * that necessary properties are non-null.
  *
- * Before a block is included, it is a //pending// block.
+ * Before a block is included, it is a pending block.
  *
  * @category Providers
  */
