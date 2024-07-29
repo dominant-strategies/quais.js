@@ -150,6 +150,7 @@ export type ErrorCode =
     | 'UNCONFIGURED_NAME'
     | 'OFFCHAIN_FAULT'
     | 'TRANSACTION_NOT_FOUND'
+    | 'TRANSACTION_ALREADY_KNOWN'
 
     // User Interaction
     | 'ACTION_REJECTED';
@@ -574,6 +575,13 @@ export interface ActionRejectedError extends quaisError<'ACTION_REJECTED'> {
  */
 export interface TransactionNotFoundError extends quaisError<'TRANSACTION_NOT_FOUND'> {}
 
+/**
+ * This Error indicates the sent transaction is already known to the node.
+ *
+ * @category Utils
+ */
+export interface TransactionAlreadyKnown extends quaisError<'TRANSACTION_ALREADY_KNOWN'> {}
+
 // Coding; converts an ErrorCode its Typed Error
 
 /**
@@ -621,7 +629,9 @@ export type CodedquaisError<T> = T extends 'UNKNOWN_ERROR'
                                         ? ActionRejectedError
                                         : T extends 'TRANSACTION_NOT_FOUND'
                                           ? TransactionNotFoundError
-                                          : never;
+                                          : T extends 'TRANSACTION_ALREADY_KNOWN'
+                                            ? TransactionAlreadyKnown
+                                            : never;
 
 /**
  * Returns true if the `error` matches an error thrown by quais that matches the error `code`.

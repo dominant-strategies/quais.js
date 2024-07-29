@@ -1344,6 +1344,10 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                     info: { transaction, info: { error } },
                 });
             }
+
+            if (message.match(/already known/i)) {
+                return makeError('transaction already known', 'TRANSACTION_ALREADY_KNOWN', { info: { error } });
+            }
         }
 
         let unsupported = !!message.match(/the method .* does not exist/i);
