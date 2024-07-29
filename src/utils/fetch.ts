@@ -121,7 +121,6 @@ async function dataGatewayFunc(url: string, signal?: FetchCancelSignal): Promise
  *
  * @category Utils
  * @param {string} baseUrl - The base URL of the IPFS gateway.
- *
  * @returns {FetchGatewayFunc} The gateway function.
  */
 function getIpfsGatewayFunc(baseUrl: string): FetchGatewayFunc {
@@ -251,7 +250,7 @@ export class FetchRequest implements Iterable<[key: string, value: string]> {
     }
 
     /**
-     * The fetch body, if any, to send as the request body. //(default: null)//
+     * The fetch body, if any, to send as the request body. (default: null)
      *
      * When setting a body, the intrinsic `Content-Type` is automatically set and will be used if **not overridden** by
      * setting a custom header.
@@ -347,7 +346,6 @@ export class FetchRequest implements Iterable<[key: string, value: string]> {
      * Get the header for `key`, ignoring case.
      *
      * @param {string} key - The header key to retrieve.
-     *
      * @returns {string} The header value.
      */
     getHeader(key: string): string {
@@ -411,7 +409,7 @@ export class FetchRequest implements Iterable<[key: string, value: string]> {
     }
 
     /**
-     * Enable and request gzip-encoded responses. The response will automatically be decompressed. //(default: true)//
+     * Enable and request gzip-encoded responses. The response will automatically be decompressed. (default: true)
      */
     get allowGzip(): boolean {
         return this.#gzip;
@@ -421,7 +419,7 @@ export class FetchRequest implements Iterable<[key: string, value: string]> {
     }
 
     /**
-     * Allow `Authentication` credentials to be sent over insecure channels. //(default: false)//
+     * Allow `Authentication` credentials to be sent over insecure channels. (default: false)
      */
     get allowInsecureAuthentication(): boolean {
         return !!this.#allowInsecure;
@@ -431,7 +429,7 @@ export class FetchRequest implements Iterable<[key: string, value: string]> {
     }
 
     /**
-     * The timeout (in milliseconds) to wait for a complete response. //(default: 5 minutes)//
+     * The timeout (in milliseconds) to wait for a complete response. (default: 5 minutes)
      */
     get timeout(): number {
         return this.#timeout;
@@ -671,7 +669,6 @@ export class FetchRequest implements Iterable<[key: string, value: string]> {
      * Returns a new {@link FetchRequest | **FetchRequest**} that represents the redirection to `location`.
      *
      * @param {string} location - The location to redirect to.
-     *
      * @returns {FetchRequest} The new request.
      */
     redirect(location: string): FetchRequest {
@@ -757,7 +754,6 @@ export class FetchRequest implements Iterable<[key: string, value: string]> {
      * Get the current Gateway function for `scheme`.
      *
      * @param {string} scheme - The scheme to get the gateway for.
-     *
      * @returns {FetchGatewayFunc | null} The gateway function, or null if not found.
      */
     static getGateway(scheme: string): null | FetchGatewayFunc {
@@ -812,7 +808,6 @@ export class FetchRequest implements Iterable<[key: string, value: string]> {
      * fetching HTTP content.
      *
      * @param {Record<string, any>} [options] - The options to use when creating the getUrl function.
-     *
      * @returns {FetchGetUrlFunc} The getUrl function.
      * @throws {Error} If the gateways are locked.
      */
@@ -840,7 +835,6 @@ export class FetchRequest implements Iterable<[key: string, value: string]> {
      * The default IPFS gateway used internally is `"https:/\/gateway.ipfs.io/ipfs/"`.
      *
      * @param {string} baseUrl - The base URL of the IPFS gateway.
-     *
      * @returns {FetchGatewayFunc} The gateway function.
      */
     static createIpfsGatewayFunc(baseUrl: string): FetchGatewayFunc {
@@ -977,7 +971,6 @@ export class FetchResponse implements Iterable<[key: string, value: string]> {
      *
      * @param {string} [message] - The error message to use.
      * @param {Error} [error] - The error to use.
-     *
      * @returns {FetchResponse} The error response.
      */
     makeServerError(message?: string, error?: Error): FetchResponse {
@@ -1019,7 +1012,6 @@ export class FetchResponse implements Iterable<[key: string, value: string]> {
      * Get the header value for `key`, ignoring case.
      *
      * @param {string} key - The header key to retrieve.
-     *
      * @returns {string} The header value.
      */
     getHeader(key: string): string {
