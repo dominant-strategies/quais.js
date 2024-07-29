@@ -4,9 +4,9 @@ import type { BigNumberish } from '../utils/index.js';
 
 /**
  * Represents an a spendable transaction outpoint.
+ *
+ * @ignore
  * @category Transaction
- * @todo Write documentation for this type.
- * @todo If not used, replace with `ignore`
  */
 export type Outpoint = {
     txhash: string;
@@ -16,8 +16,9 @@ export type Outpoint = {
 
 /**
  * Represents a UTXO entry.
- * @category Transaction
+ *
  * @ignore
+ * @category Transaction
  */
 export interface UTXOEntry {
     denomination: null | bigint;
@@ -26,8 +27,9 @@ export interface UTXOEntry {
 
 /**
  * Represents a UTXO-like object.
- * @category Transaction
+ *
  * @ignore
+ * @category Transaction
  */
 export interface UTXOLike extends UTXOEntry {
     txhash?: null | string;
@@ -36,6 +38,7 @@ export interface UTXOLike extends UTXOEntry {
 
 /**
  * Represents a Qi transaction input.
+ *
  * @category Transaction
  */
 export type TxInput = {
@@ -46,6 +49,7 @@ export type TxInput = {
 
 /**
  * Represents a Qi transaction output.
+ *
  * @category Transaction
  */
 export type TxOutput = {
@@ -55,6 +59,7 @@ export type TxOutput = {
 
 /**
  * List of supported Qi denominations.
+ *
  * @category Transaction
  */
 export const denominations: bigint[] = [
@@ -79,6 +84,7 @@ export const denominations: bigint[] = [
 
 /**
  * Checks if the provided denomination is valid.
+ *
  * @category Transaction
  * @param {bigint} denomination - The denomination to check.
  * @returns {boolean} True if the denomination is valid, false otherwise.
@@ -89,11 +95,12 @@ function isValidDenomination(denomination: bigint): boolean {
 
 /**
  * Handles conversion of string to bigint, specifically for transaction parameters.
+ *
+ * @ignore
  * @category Transaction
  * @param {string} value - The value to convert.
  * @param {string} param - The parameter name.
  * @returns {bigint} The converted value.
- * @ignore
  */
 function handleBigInt(value: string, param: string): bigint {
     if (value === '0x') {
@@ -104,6 +111,7 @@ function handleBigInt(value: string, param: string): bigint {
 
 /**
  * Given a value, returns an array of supported denominations that sum to the value.
+ *
  * @category Transaction
  * @param {bigint} value - The value to denominate.
  * @returns {bigint[]} An array of denominations that sum to the value.
@@ -137,6 +145,7 @@ export function denominate(value: bigint): bigint[] {
 
 /**
  * Represents a UTXO (Unspent Transaction Output).
+ *
  * @category Transaction
  * @implements {UTXOLike}
  */
@@ -148,6 +157,7 @@ export class UTXO implements UTXOLike {
 
     /**
      * Gets the transaction hash.
+     *
      * @returns {null | string} The transaction hash.
      */
     get txhash(): null | string {
@@ -156,6 +166,7 @@ export class UTXO implements UTXOLike {
 
     /**
      * Sets the transaction hash.
+     *
      * @param {null | string} value - The transaction hash.
      */
     set txhash(value: null | string) {
@@ -164,6 +175,7 @@ export class UTXO implements UTXOLike {
 
     /**
      * Gets the index.
+     *
      * @returns {null | number} The index.
      */
     get index(): null | number {
@@ -172,6 +184,7 @@ export class UTXO implements UTXOLike {
 
     /**
      * Sets the index.
+     *
      * @param {null | number} value - The index.
      */
     set index(value: null | number) {
@@ -180,6 +193,7 @@ export class UTXO implements UTXOLike {
 
     /**
      * Gets the address.
+     *
      * @returns {string} The address.
      */
     get address(): string {
@@ -188,6 +202,7 @@ export class UTXO implements UTXOLike {
 
     /**
      * Sets the address.
+     *
      * @param {string} value - The address.
      * @throws {Error} If the address is invalid.
      */
@@ -198,6 +213,7 @@ export class UTXO implements UTXOLike {
 
     /**
      * Gets the denomination.
+     *
      * @returns {null | bigint} The denomination.
      */
     get denomination(): null | bigint {
@@ -206,6 +222,7 @@ export class UTXO implements UTXOLike {
 
     /**
      * Sets the denomination.
+     *
      * @param {null | BigNumberish} value - The denomination.
      * @throws {Error} If the denomination value is invalid.
      */
@@ -235,6 +252,7 @@ export class UTXO implements UTXOLike {
 
     /**
      * Converts the UTXO instance to a JSON object.
+     *
      * @returns {any} A JSON representation of the UTXO instance.
      */
     toJSON(): any {
@@ -248,6 +266,7 @@ export class UTXO implements UTXOLike {
 
     /**
      * Creates a UTXO instance from a UTXOLike object.
+     *
      * @param {UTXOLike} utxo - The UTXOLike object to convert.
      * @returns {UTXO} The UTXO instance.
      */

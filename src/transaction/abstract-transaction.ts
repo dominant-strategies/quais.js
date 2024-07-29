@@ -34,8 +34,9 @@ export interface TransactionLike {
 }
 
 /**
+ * A **ProtoTransaction** is a JSON representation of a either a Quai or Qi transaction.
+ *
  * @category Transaction
- * @todo Write documentation for this interface.
  */
 export interface ProtoTransaction {
     /**
@@ -135,8 +136,9 @@ export interface ProtoTransaction {
 }
 
 /**
+ * A **ProtoTxOutput** is a JSON representation of a Qi UTXO transaction output.
+ *
  * @category Transaction
- * @todo Write documentation for this type.
  */
 export type ProtoTxOutput = {
     /**
@@ -151,8 +153,9 @@ export type ProtoTxOutput = {
 };
 
 /**
+ * A **ProtoTxInput** is a JSON representation of a Qi UTXO transaction input.
+ *
  * @category Transaction
- * @todo Write documentation for this type.
  */
 export type ProtoTxInput = {
     /**
@@ -177,8 +180,9 @@ export type ProtoTxInput = {
 };
 
 /**
+ * A **ProtoAccessList** is a JSON representation of an access list.
+ *
  * @category Transaction
- * @todo Write documentation for this interface.
  */
 export interface ProtoAccessList {
     /**
@@ -188,8 +192,9 @@ export interface ProtoAccessList {
 }
 
 /**
+ * A **ProtoAccessTuple** is a JSON representation of an access tuple.
+ *
  * @category Transaction
- * @todo Write documentation for this interface.
  */
 export interface ProtoAccessTuple {
     /**
@@ -206,9 +211,8 @@ export interface ProtoAccessTuple {
 type allowedSignatureTypes = Signature | string;
 
 /**
- * An **AbstractTransaction** describes the common operations to be executed on Quai and Qi ledgers
- * by an Externally Owned Account (EOA). This class must be subclassed by concrete implementations
- * of transactions on each ledger.
+ * An **AbstractTransaction** describes the common operations to be executed on Quai and Qi ledgers by an Externally
+ * Owned Account (EOA). This class must be subclassed by concrete implementations of transactions on each ledger.
  */
 export abstract class AbstractTransaction<S extends allowedSignatureTypes> implements TransactionLike {
     protected _type: number | null;
