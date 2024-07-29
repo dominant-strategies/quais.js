@@ -149,6 +149,7 @@ export type ErrorCode =
     | 'TRANSACTION_REPLACED'
     | 'UNCONFIGURED_NAME'
     | 'OFFCHAIN_FAULT'
+    | 'TRANSACTION_NOT_FOUND'
 
     // User Interaction
     | 'ACTION_REJECTED';
@@ -566,6 +567,13 @@ export interface ActionRejectedError extends quaisError<'ACTION_REJECTED'> {
     reason: 'expired' | 'rejected' | 'pending';
 }
 
+/**
+ * This Error indicates the requested transaction was not found by the node.
+ *
+ * @category Utils
+ */
+export interface TransactionNotFoundError extends quaisError<'TRANSACTION_NOT_FOUND'> {}
+
 // Coding; converts an ErrorCode its Typed Error
 
 /**
@@ -611,7 +619,9 @@ export type CodedquaisError<T> = T extends 'UNKNOWN_ERROR'
                                       ? TransactionReplacedError
                                       : T extends 'ACTION_REJECTED'
                                         ? ActionRejectedError
-                                        : never;
+                                        : T extends 'TRANSACTION_NOT_FOUND'
+                                          ? TransactionNotFoundError
+                                          : never;
 
 /**
  * Returns true if the `error` matches an error thrown by quais that matches the error `code`.
