@@ -101,12 +101,10 @@ function _pack(type: string, value: any, isArray?: boolean): Uint8Array {
  * ```ts
  * addr = '0x8ba1f109551bd432803012645ac136ddd64dba72';
  * solidityPacked(['address', 'uint'], [addr, 45]);
- * //_result:
  * ```
  *
  * @param {string[]} types - The types of the values.
  * @param {ReadonlyArray<any>} values - The values to pack.
- *
  * @returns {string} The packed values.
  */
 export function solidityPacked(types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
@@ -135,12 +133,10 @@ export function solidityPacked(types: ReadonlyArray<string>, values: ReadonlyArr
  * ```ts
  * addr = '0x8ba1f109551bd432803012645ac136ddd64dba72';
  * solidityPackedKeccak256(['address', 'uint'], [addr, 45]);
- * //_result:
  * ```
  *
  * @param {ReadonlyArray<string>} types - The types of the values.
  * @param {ReadonlyArray<any>} values - The values to hash.
- *
  * @returns {string} The hash of the packed values.
  */
 export function solidityPackedKeccak256(types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {
@@ -158,12 +154,10 @@ export function solidityPackedKeccak256(types: ReadonlyArray<string>, values: Re
  * ```ts
  * addr = '0x8ba1f109551bd432803012645ac136ddd64dba72';
  * solidityPackedSha256(['address', 'uint'], [addr, 45]);
- * //_result:
  * ```
  *
  * @param {ReadonlyArray<string>} types - The types of the values.
  * @param {ReadonlyArray<any>} values - The values to hash.
- *
  * @returns {string} The hash of the packed values.
  */
 export function solidityPackedSha256(types: ReadonlyArray<string>, values: ReadonlyArray<any>): string {

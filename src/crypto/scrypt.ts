@@ -74,7 +74,6 @@ let __scryptSync: (passwd: Uint8Array, salt: Uint8Array, N: number, r: number, p
  *
  * // Compute the scrypt
  * scrypt(passwordBytes, salt, 1024, 8, 1, 16);
- * //_result:
  * ```
  *
  * @param {BytesLike} _passwd - The password to use.
@@ -84,7 +83,6 @@ let __scryptSync: (passwd: Uint8Array, salt: Uint8Array, N: number, r: number, p
  * @param {number} p - The parallelization parameter.
  * @param {number} dkLen - The length of the key to generate.
  * @param {ProgressCallback} [progress] - A callback to update the progress.
- *
  * @returns {Promise<string>} The key derived from the password.
  */
 export async function scrypt(
@@ -142,7 +140,6 @@ Object.freeze(scrypt);
  *
  * // Compute the scrypt
  * scryptSync(passwordBytes, salt, 1024, 8, 1, 16);
- * //_result:
  * ```
  *
  * @param {BytesLike} _passwd - The password to use.
@@ -151,7 +148,6 @@ Object.freeze(scrypt);
  * @param {number} r - The block size parameter.
  * @param {number} p - The parallelization parameter.
  * @param {number} dkLen - The length of the key to generate.
- *
  * @returns {string} The key derived from the password.
  */
 export function scryptSync(
