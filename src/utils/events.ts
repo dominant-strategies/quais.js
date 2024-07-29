@@ -66,11 +66,10 @@ export interface EventEmitterable<T> {
 }
 
 /**
- * When an {@link EventEmitterable | **EventEmitterable**} triggers a [[Listener]], the callback always ahas one
- * additional argument passed, which is an **EventPayload**.
+ * When an {@link EventEmitterable | **EventEmitterable**} triggers a Listener, the callback always ahas one additional
+ * argument passed, which is an **EventPayload**.
  *
  * @category Utils
- * @todo Listener is no longer exported, need to revise comment or remove link
  */
 export class EventPayload<T> {
     /**

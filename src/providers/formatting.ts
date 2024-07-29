@@ -126,71 +126,73 @@ export interface LogParams {
 
 /**
  * @category Providers
- * @todo Write documentation for this interface.
+ *
+ *   **EtxParams** encodes the minimal required properties for a formatted etx.
  */
 export interface EtxParams {
     /**
-     * @todo Write documentation for this property.
+     * The transaction type for this etx. Etxs are always type 1.
      */
     type: number;
 
     /**
-     * @todo Write documentation for this property.
+     * The nonce of the etx, used for replay protection.
      */
     nonce: number;
 
     /**
-     * @todo Write documentation for this property.
+     * The actual gas price per gas charged for this etx.
      */
     gasPrice: null | bigint;
 
     /**
-     * @todo Write documentation for this property.
+     * The maximum priority fee to allow a producer to claim.
      */
     maxPriorityFeePerGas: bigint;
 
     /**
-     * @todo Write documentation for this property.
+     * The maximum fee that will be paid.
      */
     maxFeePerGas: bigint;
 
     /**
-     * @todo Write documentation for this property.
+     * The gas supplied for this etx.
      */
     gas: bigint;
 
     /**
-     * @todo Write documentation for this property.
+     * The etx value (in wei).
      */
     value: bigint;
 
     /**
-     * @todo Write documentation for this property.
+     * The input data for this etx.
      */
     input: string;
 
     /**
-     * @todo Write documentation for this property.
+     * The target of the transaction. If `null`, the `data` is initcode and this transaction is a deployment
+     * transaction.
      */
     to: null | string;
 
     /**
-     * @todo Write documentation for this property.
+     * The etx access list.
      */
     accessList: null | AccessList;
 
     /**
-     * @todo Write documentation for this property.
+     * The chain ID this etx is valid on.
      */
     chainId: null | bigint;
 
     /**
-     * @todo Write documentation for this property.
+     * The sender of the etx.
      */
     from: null | string;
 
     /**
-     * @todo Write documentation for this property.
+     * The hash of the transaction.
      */
     hash: string;
 }
@@ -286,8 +288,10 @@ export interface TransactionReceiptParams {
 }
 
 /**
+ * A **TransactionResponseParams** encodes the minimal required properties for a formatted transaction response for
+ * either a Qi or Quai transaction.
+ *
  * @category Providers
- * @todo Write documentation for this type.
  */
 export type TransactionResponseParams = QuaiTransactionResponseParams | QiTransactionResponseParams;
 
@@ -295,7 +299,7 @@ export type TransactionResponseParams = QuaiTransactionResponseParams | QiTransa
 // Transaction Response
 
 /**
- * A **TransactionResponseParams** encodes the minimal required properties for a formatted transaction response.
+ * A **TransactionResponseParams** encodes the minimal required properties for a formatted Quai transaction response.
  *
  * @category Providers
  */
@@ -320,6 +324,9 @@ export interface QuaiTransactionResponseParams {
      */
     index: bigint;
 
+    /**
+     * The transaction type. Quai transactions are always type 0.
+     */
     type: number;
 
     /**
@@ -381,8 +388,9 @@ export interface QuaiTransactionResponseParams {
 }
 
 /**
+ * A **TransactionResponseParams** encodes the minimal required properties for a formatted Qi transaction response.
+ *
  * @category Providers
- * @todo Write documentation for this interface.
  */
 export interface QiTransactionResponseParams {
     /**
@@ -406,7 +414,7 @@ export interface QiTransactionResponseParams {
     index: bigint;
 
     /**
-     * @todo Write documentation for this property.
+     * The transaction type. Qi transactions are always type 2.
      */
     type: number;
 

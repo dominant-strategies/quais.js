@@ -21,8 +21,9 @@ import { ProtoTransaction } from './abstract-transaction.js';
 import { Zone } from '../constants/index.js';
 
 /**
+ * A **QuaiTransactionLike** is a JSON representation of a Quai transaction.
+ *
  * @category Transaction
- * @todo Write documentation for this interface.
  */
 export interface QuaiTransactionLike extends TransactionLike {
     /**
@@ -104,7 +105,6 @@ export function _parseSignature(fields: Array<string>): Signature {
  * Represents a Quai transaction.
  *
  * @category Transaction
- * @todo Write documentation for this class.
  */
 export class QuaiTransaction extends AbstractTransaction<Signature> implements QuaiTransactionLike {
     #to: null | string;

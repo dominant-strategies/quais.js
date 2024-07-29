@@ -176,12 +176,14 @@ export function addressFromTransactionRequest(tx: TransactionRequest): AddressLi
 export type TransactionRequest = QuaiTransactionRequest | QiTransactionRequest;
 
 /**
+ * A **QuaiTransactionRequest** is a Quai transaction with potentially various properties not defined, or with less
+ * strict types for its values.
+ *
  * @category Providers
- * @todo Write documentation for this interface
  */
 export interface QuaiTransactionRequest {
     /**
-     * The transaction type.
+     * The transaction type. Quai transactions are always type 0.
      */
     type?: null | number;
 
@@ -258,8 +260,10 @@ export interface QuaiTransactionRequest {
 }
 
 /**
+ * A **QiTransactionRequest** is a Qi UTXO transaction with potentially various properties not defined, or with less
+ * strict types for its values.
+ *
  * @category Providers
- * @todo Write documentation for this interface
  */
 export interface QiTransactionRequest {
     /**
@@ -292,8 +296,9 @@ export interface QiTransactionRequest {
 export type PreparedTransactionRequest = QuaiPreparedTransactionRequest | QiPreparedTransactionRequest;
 
 /**
+ * A **QuaiPreparedTransactionRequest** is a Quai transaction with potentially all properties strictly enforced.
+ *
  * @category Providers
- * @todo Write documentation for this interface
  */
 export interface QuaiPreparedTransactionRequest {
     /**
@@ -374,8 +379,9 @@ export interface QuaiPreparedTransactionRequest {
 }
 
 /**
+ * A **QiPreparedTransactionRequest** is a Qi UTXO transaction with all properties strictly enforced.
+ *
  * @category Providers
- * @todo Write documentation for this interface
  */
 export interface QiPreparedTransactionRequest {
     /**
@@ -1423,8 +1429,9 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
 export type MinedTransactionResponse = QuaiMinedTransactionResponse | QiMinedTransactionResponse;
 
 /**
+ * A **QuaiMinedTransactionResponse** is an interface representing Quai a transaction which has been mined.
+ *
  * @category Providers
- * @todo Write documentation for this interface
  */
 export interface QuaiMinedTransactionResponse extends QuaiTransactionResponse {
     /**
@@ -1444,8 +1451,9 @@ export interface QuaiMinedTransactionResponse extends QuaiTransactionResponse {
 }
 
 /**
+ * A **QiMinedTransactionResponse** is an interface representing Qi a transaction which has been mined.
+ *
  * @category Providers
- * @todo Write documentation for this interface
  */
 export interface QiMinedTransactionResponse extends QiTransactionResponse {
     /**
@@ -1465,14 +1473,16 @@ export interface QiMinedTransactionResponse extends QiTransactionResponse {
 }
 
 /**
+ * A **TransactionResponse** is an interface representing either a Quai or Qi transaction that has been mined into a
+ * block.
+ *
  * @category Providers
- * @todo Write documentation for this interface
  */
 export type TransactionResponse = QuaiTransactionResponse | QiTransactionResponse;
 
 /**
- * A **TransactionResponse** includes all properties about a transaction that was sent to the network, which may or may
- * not be included in a block.
+ * A **QuaiTransactionResponse** includes all properties about a Quai transaction that was sent to the network, which
+ * may or may not be included in a block.
  *
  * The {@link TransactionResponse.isMined | **TransactionResponse.isMined**} can be used to check if the transaction has
  * been mined as well as type guard that the otherwise possibly `null` properties are defined.
@@ -2003,8 +2013,13 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
 }
 
 /**
+ * A **QiTransactionResponse** includes all properties about a Qi transaction that was sent to the network, which may or
+ * may not be included in a block.
+ *
+ * The {@link TransactionResponse.isMined | **TransactionResponse.isMined**} can be used to check if the transaction has
+ * been mined as well as type guard that the otherwise possibly `null` properties are defined.
+ *
  * @category Providers
- * @todo Write documentation for this interface
  */
 export class QiTransactionResponse implements QiTransactionLike, QiTransactionResponseParams {
     /**

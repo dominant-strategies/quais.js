@@ -22,7 +22,6 @@ import type { Addressable, AddressLike } from './index.js';
  * ```
  *
  * @param {any} value - The value to check.
- *
  * @returns {boolean} True if the value is an Addressable.
  */
 export function isAddressable(value: any): value is Addressable {
@@ -46,7 +45,6 @@ export function isAddressable(value: any): value is Addressable {
  * ```
  *
  * @param {any} value - The value to check.
- *
  * @returns {boolean} True if the value is a valid address.
  */
 export function isAddress(value: any): value is string {
@@ -91,9 +89,7 @@ async function checkAddress(target: any, promise: Promise<null | string>): Promi
  * ```
  *
  * @param {AddressLike} target - The target to resolve to an address.
- *
  * @returns {string | Promise<string>} The resolved address.
- * @todo Revise this method as UnconfiguredNameError has been removed
  */
 export function resolveAddress(target: AddressLike): string | Promise<string> {
     if (typeof target === 'string') {
@@ -114,7 +110,6 @@ export function resolveAddress(target: AddressLike): string | Promise<string> {
  *
  * @category Address
  * @param address - The address to validate.
- *
  * @returns True if the address is a valid mixed case checksummed address.
  */
 export function validateAddress(address: string): void {
@@ -133,7 +128,6 @@ export function validateAddress(address: string): void {
  *
  * @category Address
  * @param {string} address - The address to check
- *
  * @returns {boolean} True if the address is in the Qi ledger scope, false otherwise.
  */
 export function isQiAddress(address: string): boolean {
@@ -149,7 +143,6 @@ export function isQiAddress(address: string): boolean {
  *
  * @category Address
  * @param {string} address - The address to check
- *
  * @returns {boolean} True if the address is in the Quai ledger scope, false otherwise.
  */
 export function isQuaiAddress(address: string): boolean {
