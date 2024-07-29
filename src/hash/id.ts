@@ -11,11 +11,9 @@ import { toUtf8Bytes } from '../encoding/index.js';
  *
  * ```ts
  * id('hello world');
- * //_result:
  * ```
  *
  * @param {string} value - The string to hash.
- *
  * @returns {string} The 32-byte identifier.
  */
 export function id(value: string): string {

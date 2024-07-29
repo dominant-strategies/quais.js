@@ -27,18 +27,15 @@ let __computeHmac = _computeHmac;
  *
  * // Compute the HMAC
  * computeHmac('sha256', key, '0x1337');
- * //_result:
  *
  * // To compute the HMAC of UTF-8 data, the data must be
  * // converted to UTF-8 bytes
  * computeHmac('sha256', key, toUtf8Bytes('Hello World'));
- * //_result:
  * ```
  *
  * @param {'sha256' | 'sha512'} algorithm - The algorithm to use for compression.
  * @param {BytesLike} _key - The key to use for the HMAC.
  * @param {BytesLike} _data - The data to authenticate.
- *
  * @returns {string} The HMAC of the data.
  */
 export function computeHmac(algorithm: 'sha256' | 'sha512', _key: BytesLike, _data: BytesLike): string {

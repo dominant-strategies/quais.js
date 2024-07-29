@@ -26,17 +26,13 @@ let locked256 = false,
  *
  * ```ts
  * sha256('0x');
- * //_result:
  *
  * sha256('0x1337');
- * //_result:
  *
  * sha256(new Uint8Array([0x13, 0x37]));
- * //_result:
  * ```
  *
  * @param {BytesLike} _data - The data to hash.
- *
  * @returns {string} The hash of the data.
  */
 export function sha256(_data: BytesLike): string {
@@ -63,17 +59,13 @@ Object.freeze(sha256);
  *
  * ```ts
  * sha512('0x');
- * //_result:
  *
  * sha512('0x1337');
- * //_result:
  *
  * sha512(new Uint8Array([0x13, 0x37]));
- * //_result:
  * ```
  *
  * @param {BytesLike} _data - The data to hash.
- *
  * @returns {string} The hash of the data.
  */
 export function sha512(_data: BytesLike): string {
