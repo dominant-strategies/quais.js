@@ -102,8 +102,6 @@ function stringify(value: any): any {
  *
  * **`"UNEXPECTED_ARGUMENT"`** - see {@link UnexpectedArgumentError | **UnexpectedArgumentError**}
  *
- * **`"VALUE_MISMATCH"`** - //unused//
- *
  * **Blockchain Errors**
  *
  * **`"CALL_EXCEPTION"`** - see {@link CallExceptionError | **CallExceptionError**}
