@@ -1291,6 +1291,10 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
         const message = JSON.stringify(spelunkMessage(error));
 
+        if (method === 'quai_getTransactionByHash' && error.message && error.message.match(/transaction not found/i)) {
+            return makeError('transaction not found', 'TRANSACTION_NOT_FOUND', { info: { payload, error } });
+        }
+
         if (typeof error.message === 'string' && error.message.match(/user denied|quais-user-denied/i)) {
             const actionMap: Record<
                 string,
