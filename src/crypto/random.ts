@@ -21,11 +21,9 @@ let __randomBytes = _randomBytes;
  *
  * ```ts
  * randomBytes(8);
- * //_result:
  * ```
  *
  * @param {number} length - The number of bytes to generate.
- *
  * @returns {Uint8Array} The random bytes.
  */
 export function randomBytes(length: number): Uint8Array {

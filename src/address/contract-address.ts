@@ -24,7 +24,6 @@ import type { BigNumberish, BytesLike } from '../utils/index.js';
  * nonce = 5;
  *
  * getCreateAddress({ from, nonce });
- * //_result:
  * ```
  *
  * @param {object} tx - The transaction object.
@@ -68,7 +67,6 @@ export function getCreateAddress(tx: { from: string; nonce: BigNumberish; data: 
  * initCodeHash = keccak256(initCode);
  *
  * getCreate2Address(from, salt, initCodeHash);
- * //_result:
  * ```
  *
  * @param {string} _from - The address of the sender.

@@ -58,12 +58,10 @@ export function formatMixedCaseChecksumAddress(address: string): string {
  * ```js
  * // Adds the checksum (via upper-casing specific letters)
  * getAddress('0x8ba1f109551bd432803012645ac136ddd64dba72');
- * //_result:
  *
  * // Throws an error if an address contains mixed case,
  * // but the checksum fails
  * getAddress('0x8Ba1f109551bD432803012645Ac136ddd64DBA72');
- * //_error:
  * ```
  */
 export function getAddress(address: string): string {
@@ -104,7 +102,6 @@ export function getContractAddress(from: string, nonce: BigNumberish, data: Byte
  *
  * @category Address
  * @param {string | SigningKey} key - The key to compute the address for.
- *
  * @returns {string} The address.
  */
 export function computeAddress(key: string | SigningKey): string {
@@ -123,7 +120,6 @@ export function computeAddress(key: string | SigningKey): string {
  * @category Address
  * @param {BytesLike} digest - The digest of the message.
  * @param {SignatureLike} signature - The signature.
- *
  * @returns {string} The address.
  */
 export function recoverAddress(digest: BytesLike, signature: SignatureLike): string {

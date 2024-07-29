@@ -20,17 +20,13 @@ let __ripemd160: (data: Uint8Array) => BytesLike = _ripemd160;
  *
  * ```ts
  * ripemd160('0x');
- * //_result:
  *
  * ripemd160('0x1337');
- * //_result:
  *
  * ripemd160(new Uint8Array([0x13, 0x37]));
- * //_result:
  * ```
  *
  * @param {BytesLike} _data - The data to hash.
- *
  * @returns DataHexstring
  * @returns {string} The hash of the data.
  */
