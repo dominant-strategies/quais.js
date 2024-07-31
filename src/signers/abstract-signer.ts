@@ -86,7 +86,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
      * transferrable.
      *
      * @param {Provider} provider - The provider to connect to.
-     *
      * @returns {Signer} The connected signer.
      */
     abstract connect(provider: null | Provider): Signer;
@@ -145,7 +144,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
                 pop.maxFeePerGas = feeData.maxFeePerGas;
             }
             if (pop.maxPriorityFeePerGas == null) {
-                pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+                pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas || 10n;
             }
         }
         //@TOOD: Don't await all over the place; save them up for
