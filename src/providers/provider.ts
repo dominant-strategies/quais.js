@@ -53,6 +53,7 @@ import { WorkObjectLike } from '../transaction/work-object.js';
 import { QiTransactionLike } from '../transaction/qi-transaction.js';
 import { QuaiTransactionLike } from '../transaction/quai-transaction.js';
 import { toShard, toZone } from '../constants/index.js';
+import { getZoneFromNodeLocation, getZoneForAddress } from '../utils/shards.js';
 
 /**
  * Get the value if it is not null or undefined.
@@ -1135,6 +1136,7 @@ export class Log implements LogParams {
 export function zoneFromHash(hash: string): Zone {
     return toZone(hash.slice(0, 4));
 }
+
 /**
  * A **TransactionReceipt** includes additional information about a transaction that is only available after it has been
  * mined.
@@ -2328,6 +2330,8 @@ function createRemovedLogFilter(log: {
 //////////////////////
 // EventFilter
 
+export type NodeLocation = number[];
+
 /**
  * A **TopicFilter** provides a struture to define bloom-filter queries.
  *
@@ -2350,6 +2354,7 @@ export type TopicFilter = Array<null | string | Array<string>>;
 export interface EventFilter {
     address?: AddressLike | Array<AddressLike>;
     topics?: TopicFilter;
+    nodeLocation?: NodeLocation;
 }
 
 /**
@@ -2367,8 +2372,6 @@ export interface Filter extends EventFilter {
      * The end block for the filter (inclusive).
      */
     toBlock?: BlockTag;
-
-    shard: Shard;
 }
 
 /**
@@ -2381,7 +2384,28 @@ export interface FilterByBlockHash extends EventFilter {
      * The blockhash of the specific block for the filter.
      */
     blockHash?: string;
-    shard: Shard;
+    zone: Zone;
+}
+
+export function getZoneFromEventFilter(filter: EventFilter): Zone | null {
+    let zone: Zone | null = null;
+    if (filter.nodeLocation) {
+        zone = getZoneFromNodeLocation(filter.nodeLocation);
+    } else if (filter.address) {
+        let address: string;
+        if (Array.isArray(filter.address)) {
+            address = filter.address[0] as string;
+        } else {
+            address = filter.address as string;
+        }
+        const addressZone = getZoneForAddress(address);
+        if (addressZone) {
+            zone = toZone(addressZone);
+        } else {
+            return null;
+        }
+    }
+    return zone;
 }
 
 //////////////////////
@@ -2464,7 +2488,7 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * @param {Shard} shard - The shard to fetch the network from.
      * @returns {Promise<Network>} A promise resolving to the network.
      */
-    getNetwork(shard?: Shard): Promise<Network>;
+    getNetwork(): Promise<Network>;
 
     /**
      * Get the best guess at the recommended {@link FeeData | **FeeData**}.

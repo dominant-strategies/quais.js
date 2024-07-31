@@ -7,7 +7,7 @@ import type { EventFilter } from './provider.js';
 import type { JsonRpcApiProviderOptions, JsonRpcError, JsonRpcPayload, JsonRpcResult } from './provider-jsonrpc.js';
 import type { Networkish } from './network.js';
 import type { WebSocketLike } from './provider-websocket.js';
-import { Shard } from '../constants/index.js';
+import { Shard, Zone } from '../constants/index.js';
 
 /**
  * @property {string} method - The method name.
@@ -51,6 +51,7 @@ export class SocketSubscriber implements Subscriber {
     #paused: null | boolean;
 
     #emitPromise: null | Promise<void>;
+    protected zone: Zone;
 
     /**
      * Creates a new **SocketSubscriber** attached to `provider` listening to `filter`.
@@ -58,12 +59,13 @@ export class SocketSubscriber implements Subscriber {
      * @param {SocketProvider} provider - The socket provider.
      * @param {any[]} filter - The filter.
      */
-    constructor(provider: SocketProvider, filter: Array<any>) {
+    constructor(provider: SocketProvider, filter: Array<any>, zone: Zone) {
         this.#provider = provider;
         this.#filter = JSON.stringify(filter);
         this.#filterId = null;
         this.#paused = null;
         this.#emitPromise = null;
+        this.zone = zone;
     }
 
     /**
@@ -141,7 +143,6 @@ export class SocketSubscriber implements Subscriber {
      * @abstract
      * @param {SocketProvider} provider - The socket provider.
      * @param {any} message - The message to emit.
-     *
      * @returns {Promise<void>}
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -162,8 +163,8 @@ export class SocketBlockSubscriber extends SocketSubscriber {
      * @ignore
      * @param {SocketProvider} provider - The socket provider.
      */
-    constructor(provider: SocketProvider) {
-        super(provider, ['newHeads']);
+    constructor(provider: SocketProvider, zone: Zone) {
+        super(provider, ['newHeads'], zone);
     }
 
     /**
@@ -172,11 +173,10 @@ export class SocketBlockSubscriber extends SocketSubscriber {
      * @ignore
      * @param {SocketProvider} provider - The socket provider.
      * @param {any} message - The message to emit.
-     *
      * @returns {Promise<void>}
      */
     async _emit(provider: SocketProvider, message: any): Promise<void> {
-        provider.emit('block', parseInt(message.number));
+        provider.emit('block', this.zone, parseInt(message.number));
     }
 }
 
@@ -192,8 +192,8 @@ export class SocketPendingSubscriber extends SocketSubscriber {
      * @ignore
      * @param {SocketProvider} provider - The socket provider.
      */
-    constructor(provider: SocketProvider) {
-        super(provider, ['newPendingTransactions']);
+    constructor(provider: SocketProvider, zone: Zone) {
+        super(provider, ['newPendingTransactions'], zone);
     }
 
     /**
@@ -202,7 +202,6 @@ export class SocketPendingSubscriber extends SocketSubscriber {
      * @ignore
      * @param {SocketProvider} provider - The socket provider.
      * @param {any} message - The message to emit.
-     *
      * @returns {Promise<void>}
      */
     async _emit(provider: SocketProvider, message: any): Promise<void> {
@@ -234,8 +233,8 @@ export class SocketEventSubscriber extends SocketSubscriber {
      * @param {SocketProvider} provider - The socket provider.
      * @param {EventFilter} filter - The event filter.
      */
-    constructor(provider: SocketProvider, filter: EventFilter) {
-        super(provider, ['logs', filter]);
+    constructor(provider: SocketProvider, filter: EventFilter, zone: Zone) {
+        super(provider, ['logs', filter], zone);
         this.#logFilter = JSON.stringify(filter);
     }
 
@@ -245,11 +244,10 @@ export class SocketEventSubscriber extends SocketSubscriber {
      * @ignore
      * @param {SocketProvider} provider - The socket provider.
      * @param {any} message - The message to emit.
-     *
      * @returns {Promise<void>}
      */
     async _emit(provider: SocketProvider, message: any): Promise<void> {
-        provider.emit(this.logFilter, provider._wrapLog(message, provider._network));
+        provider.emit(this.logFilter, this.zone, provider._wrapLog(message, provider._network));
     }
 }
 
@@ -310,7 +308,6 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
      *
      * @ignore
      * @param {Subscription} sub - The subscription.
-     *
      * @returns {Subscriber} The subscriber.
      */
     _getSubscriber(sub: Subscription): Subscriber {
@@ -318,11 +315,11 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
             case 'close':
                 return new UnmanagedSubscriber('close');
             case 'block':
-                return new SocketBlockSubscriber(this);
+                return new SocketBlockSubscriber(this, sub.zone);
             case 'pending':
-                return new SocketPendingSubscriber(this);
+                return new SocketPendingSubscriber(this, sub.zone);
             case 'event':
-                return new SocketEventSubscriber(this, sub.filter);
+                return new SocketEventSubscriber(this, sub.filter, sub.zone);
             case 'orphan':
                 // Handled auto-matically within AbstractProvider
                 // when the log.removed = true
@@ -358,7 +355,6 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
      * @ignore
      * @param {JsonRpcPayload | JsonRpcPayload[]} payload - The payload to send.
      * @param {Shard} [shard] - The shard.
-     *
      * @returns {Promise<(JsonRpcResult | JsonRpcError)[]>} The result or error.
      */
     async _send(
@@ -398,6 +394,7 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
             if (callback == null) {
                 this.emit(
                     'error',
+                    undefined,
                     makeError('received result for unknown id', 'UNKNOWN_ERROR', {
                         reasonCode: 'UNKNOWN_ID',
                         result,
@@ -424,6 +421,7 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
         } else {
             this.emit(
                 'error',
+                undefined,
                 makeError('received unexpected message', 'UNKNOWN_ERROR', {
                     reasonCode: 'UNEXPECTED_MESSAGE',
                     result,
@@ -439,7 +437,6 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
      * @ignore
      * @param {string} message - The message to send.
      * @param {Shard} [shard] - The shard.
-     *
      * @returns {Promise<void>}
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

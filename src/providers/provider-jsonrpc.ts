@@ -38,11 +38,12 @@ import type { TransactionLike, TxInput, TxOutput } from '../transaction/index.js
 import type { PerformActionRequest, Subscriber, Subscription } from './abstract-provider.js';
 import type { Networkish } from './network.js';
 import type { Provider, QuaiTransactionRequest, TransactionRequest, TransactionResponse } from './provider.js';
-import { Shard, toShard } from '../constants/index.js';
+import { Shard, toShard, toZone, Zone } from '../constants/index.js';
 import { TypedDataDomain, TypedDataEncoder, TypedDataField } from '../hash/index.js';
 import { AbstractSigner, Signer } from '../signers/index.js';
 import { toUtf8Bytes } from '../encoding/index.js';
 import { addressFromTransactionRequest } from './provider.js';
+import { zoneFromHash } from './provider';
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -462,7 +463,8 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
                     if (
                         isError(error, 'CANCELLED') ||
                         isError(error, 'BAD_DATA') ||
-                        isError(error, 'NETWORK_ERROR' || isError(error, 'UNSUPPORTED_OPERATION'))
+                        isError(error, 'NETWORK_ERROR') ||
+                        isError(error, 'UNSUPPORTED_OPERATION')
                     ) {
                         if (error.info == null) {
                             error.info = {};
@@ -490,6 +492,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
                     // it is likely an intermittent service error
                     this.provider.emit(
                         'error',
+                        zoneFromHash(hash),
                         makeError('failed to fetch transation after sending (will try again)', 'UNKNOWN_ERROR', {
                             error,
                         }),
@@ -679,21 +682,23 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                     await Promise.all(
                         Array.from(payloadMap).map(async ([key, value]) => {
                             const payload = value.length === 1 ? value[0] : value;
-                            const shard = key ? toShard(key) : undefined;
+                            const shard = key ? toShard(key) : Shard.Prime;
+                            const zone = shard.length < 4 ? undefined : toZone(shard);
 
-                            this.emit('debug', { action: 'sendRpcPayload', payload });
+                            this.emit('debug', zone, { action: 'sendRpcPayload', payload });
 
                             rawResult.push(await this._send(payload, shard));
 
-                            this.emit('debug', { action: 'receiveRpcResult', payload });
+                            this.emit('debug', zone, { action: 'receiveRpcResult', payload });
                         }),
                     );
 
                     const result: Array<JsonRpcResult | JsonRpcError> = rawResult.flat();
 
+                    let lastZone: Zone | undefined;
                     try {
                         // Process results in batch order
-                        for (const { resolve, reject, payload } of batch) {
+                        for (const { resolve, reject, payload, shard } of batch) {
                             if (this.destroyed) {
                                 reject(
                                     makeError('provider destroyed; cancelled request', 'UNSUPPORTED_OPERATION', {
@@ -701,6 +706,12 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                                     }),
                                 );
                                 continue;
+                            }
+
+                            if (shard) {
+                                lastZone = shard.length < 4 ? undefined : toZone(shard);
+                            } else {
+                                lastZone = undefined;
                             }
 
                             // Find the matching result
@@ -711,7 +722,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                                     value: result,
                                     info: { payload },
                                 });
-                                this.emit('error', error);
+                                this.emit('error', lastZone, error);
                                 reject(error);
                                 continue;
                             }
@@ -726,7 +737,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                             resolve(resp.result);
                         }
                     } catch (error: any) {
-                        this.emit('debug', { action: 'receiveRpcError', error });
+                        this.emit('debug', lastZone, { action: 'receiveRpcError', error });
 
                         for (const { reject } of batch) {
                             // @TODO: augment the error with the payload
@@ -922,7 +933,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                 jsonrpc: '2.0',
             };
 
-            this.emit('debug', { action: 'sendRpcPayload', payload });
+            this.emit('debug', undefined, { action: 'sendRpcPayload', payload });
 
             let result: JsonRpcResult | JsonRpcError;
             try {
@@ -930,11 +941,11 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                 this.#pendingDetectNetwork = null;
             } catch (error) {
                 this.#pendingDetectNetwork = null;
-                this.emit('debug', { action: 'receiveRpcError', error });
+                this.emit('debug', undefined, { action: 'receiveRpcError', error });
                 throw error;
             }
 
-            this.emit('debug', { action: 'receiveRpcResult', result });
+            this.emit('debug', undefined, { action: 'receiveRpcResult', result });
 
             if ('result' in result) {
                 return Network.from(getBigInt(result.result));
@@ -978,6 +989,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                     );
                     this.emit(
                         'error',
+                        undefined,
                         makeError('failed to bootstrap network detection', 'NETWORK_ERROR', {
                             event: 'initial-network-discovery',
                             info: { error },
@@ -1022,7 +1034,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
     _getSubscriber(sub: Subscription): Subscriber {
         // Pending Filters aren't availble via polling
         if (sub.type === 'pending') {
-            return new FilterIdPendingSubscriber(this);
+            return new FilterIdPendingSubscriber(this, sub.zone!);
         }
 
         if (sub.type === 'event') {

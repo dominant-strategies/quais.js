@@ -1,5 +1,6 @@
 import { Ledger, toZone, Zone } from '../constants/zones.js';
-import { isQiAddress } from '../quais.js';
+import { NodeLocation } from '../providers/provider.js';
+import { isQiAddress } from '../address/checks.js';
 
 /**
  * Retrieves the shard information for a given address based on its byte prefix. The function parses the address to
@@ -62,4 +63,29 @@ export function getTxType(from: string | null, to: string | null): number {
         default:
             return 0;
     }
+}
+
+/**
+ * Location of a chain within the Quai hierarchy
+ *
+ * Prime = [] region[0] = [0] zone[1,2] = [1, 2]
+ *
+ * @param shard - The shard to get the location for
+ * @returns The location of the chain within the Quai hierarchy
+ */
+export function getNodeLocationFromZone(zone: Zone): NodeLocation {
+    const zoneId = zone.slice(2);
+    if (zoneId.length > 2) {
+        throw new Error('Invalid zone');
+    } else if (zoneId.length === 0) {
+        return [];
+    }
+    return zoneId.split('').map(Number);
+}
+
+export function getZoneFromNodeLocation(location: NodeLocation): Zone {
+    if (location.length > 2) {
+        throw new Error('Invalid location');
+    }
+    return toZone(`0x${location.join('')}`);
 }

@@ -1,3 +1,4 @@
+import { Zone } from '../constants/zones.js';
 import { getNumber } from '../utils/index.js';
 import type { Subscriber } from './abstract-provider.js';
 import type { Provider } from './provider.js';
@@ -41,17 +42,19 @@ export class BlockConnectionSubscriber implements Subscriber {
     #blockNumber: number;
     #running: boolean;
     #filterId: null | number;
+    #zone: Zone;
 
     /**
      * @ignore
      * @class
      * @param {ConnectionRpcProvider} provider - The provider for the connection.
      */
-    constructor(provider: ConnectionRpcProvider) {
+    constructor(provider: ConnectionRpcProvider, zone: Zone) {
         this.#provider = provider;
         this.#blockNumber = -2;
         this.#running = false;
         this.#filterId = null;
+        this.#zone = zone;
     }
 
     /**
@@ -69,7 +72,7 @@ export class BlockConnectionSubscriber implements Subscriber {
             const blockNumber = getNumber(result.number);
             const initial = this.#blockNumber === -2 ? blockNumber : this.#blockNumber + 1;
             for (let b = initial; b <= blockNumber; b++) {
-                this.#provider.emit('block', b);
+                this.#provider.emit('block', this.#zone, b);
             }
             this.#blockNumber = blockNumber;
         });

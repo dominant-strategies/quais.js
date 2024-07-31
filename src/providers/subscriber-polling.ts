@@ -1,7 +1,10 @@
+import { toZone, Zone } from '../constants/index.js';
+import { toShard } from '../constants/shards.js';
 import { assert, isHexString } from '../utils/index.js';
+import { getZoneFromNodeLocation } from '../utils/shards.js';
+import { getZoneFromEventFilter, type EventFilter, type OrphanFilter, type ProviderEvent } from './provider.js';
 
 import type { AbstractProvider, Subscriber } from './abstract-provider.js';
-import type { EventFilter, OrphanFilter, ProviderEvent } from './provider.js';
 
 /**
  * Deep copies an object.
@@ -22,12 +25,13 @@ function copy(obj: any): any {
  * @returns {Subscriber} The polling subscriber.
  * @throws {Error} If the event is unsupported.
  */
-export function getPollingSubscriber(provider: AbstractProvider, event: ProviderEvent): Subscriber {
+export function getPollingSubscriber(provider: AbstractProvider, event: ProviderEvent, zone: Zone): Subscriber {
     if (event === 'block') {
-        return new PollingBlockSubscriber(provider);
+        return new PollingBlockSubscriber(provider, zone);
     }
+
     if (isHexString(event, 32)) {
-        return new PollingTransactionSubscriber(provider, event);
+        return new PollingTransactionSubscriber(provider, event, zone);
     }
 
     assert(false, 'unsupported polling event', 'UNSUPPORTED_OPERATION', {
@@ -45,6 +49,7 @@ export class PollingBlockSubscriber implements Subscriber {
     #provider: AbstractProvider;
     #poller: null | number;
     #interval: number;
+    #zone: Zone;
 
     // The most recent block we have scanned for events. The value -2
     // indicates we still need to fetch an initial block number
@@ -55,8 +60,9 @@ export class PollingBlockSubscriber implements Subscriber {
      *
      * @ignore
      */
-    constructor(provider: AbstractProvider) {
+    constructor(provider: AbstractProvider, zone: Zone) {
         this.#provider = provider;
+        this.#zone = zone;
         this.#poller = null;
         this.#interval = 4000;
         this.#blockNumber = -2;
@@ -88,7 +94,7 @@ export class PollingBlockSubscriber implements Subscriber {
      */
     async #poll(): Promise<void> {
         try {
-            const blockNumber = await this.#provider.getBlockNumber();
+            const blockNumber = await this.#provider.getBlockNumber(toShard(this.#zone));
 
             // Bootstrap poll to setup our initial block number
             if (this.#blockNumber === -2) {
@@ -105,7 +111,7 @@ export class PollingBlockSubscriber implements Subscriber {
                         return;
                     }
 
-                    await this.#provider.emit('block', b);
+                    await this.#provider.emit('block', this.#zone, b);
                 }
 
                 this.#blockNumber = blockNumber;
@@ -175,14 +181,16 @@ export class OnBlockSubscriber implements Subscriber {
     #provider: AbstractProvider;
     #poll: (b: number) => void;
     #running: boolean;
+    #zone: Zone;
 
     /**
      * Create a new **OnBlockSubscriber** attached to `provider`.
      *
      * @ignore
      */
-    constructor(provider: AbstractProvider) {
+    constructor(provider: AbstractProvider, zone: Zone) {
         this.#provider = provider;
+        this.#zone = zone;
         this.#running = false;
         this.#poll = (blockNumber: number) => {
             this._poll(blockNumber, this.#provider);
@@ -213,7 +221,7 @@ export class OnBlockSubscriber implements Subscriber {
         this.#running = true;
 
         this.#poll(-2);
-        this.#provider.on('block', this.#poll);
+        this.#provider.on('block', this.#poll, this.#zone);
     }
 
     /**
@@ -225,7 +233,7 @@ export class OnBlockSubscriber implements Subscriber {
         }
         this.#running = false;
 
-        this.#provider.off('block', this.#poll);
+        this.#provider.off('block', this.#poll, this.#zone);
     }
 
     /**
@@ -257,8 +265,8 @@ export class PollingOrphanSubscriber extends OnBlockSubscriber {
      *
      * @ignore
      */
-    constructor(provider: AbstractProvider, filter: OrphanFilter) {
-        super(provider);
+    constructor(provider: AbstractProvider, filter: OrphanFilter, zone: Zone) {
+        super(provider, zone);
         this.#filter = copy(filter);
     }
 
@@ -291,8 +299,8 @@ export class PollingTransactionSubscriber extends OnBlockSubscriber {
      *
      * @ignore
      */
-    constructor(provider: AbstractProvider, hash: string) {
-        super(provider);
+    constructor(provider: AbstractProvider, hash: string, zone: Zone) {
+        super(provider, zone);
         this.#hash = hash;
     }
 
@@ -308,7 +316,7 @@ export class PollingTransactionSubscriber extends OnBlockSubscriber {
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
         const tx = await provider.getTransactionReceipt(this.#hash);
         if (tx) {
-            provider.emit(this.#hash, tx);
+            provider.emit(this.#hash, toZone(this.#hash.slice(0, 4)), tx);
         }
     }
 }
@@ -324,6 +332,7 @@ export class PollingEventSubscriber implements Subscriber {
     #poller: (b: number) => void;
     #running: boolean;
     #blockNumber: number;
+    #zone: Zone;
 
     /**
      * Create a new **PollingEventSubscriber** attached to `provider`, listening for `filter`.
@@ -336,6 +345,12 @@ export class PollingEventSubscriber implements Subscriber {
         this.#poller = this.#poll.bind(this);
         this.#running = false;
         this.#blockNumber = -2;
+        const zone = getZoneFromEventFilter(this.#filter);
+        if (zone) {
+            this.#zone = zone;
+        } else {
+            throw new Error('Unable to determine zone for event filter');
+        }
     }
 
     /**
@@ -367,7 +382,7 @@ export class PollingEventSubscriber implements Subscriber {
         }
 
         for (const log of logs) {
-            this.#provider.emit(this.#filter, log);
+            this.#provider.emit(this.#filter, getZoneFromNodeLocation(this.#filter.nodeLocation!), log);
 
             // Only advance the block number when logs were found to
             // account for networks (like BNB and Polygon) which may
@@ -386,11 +401,11 @@ export class PollingEventSubscriber implements Subscriber {
         this.#running = true;
 
         if (this.#blockNumber === -2) {
-            this.#provider.getBlockNumber().then((blockNumber) => {
+            this.#provider.getBlockNumber(toShard(this.#zone)).then((blockNumber) => {
                 this.#blockNumber = blockNumber;
             });
         }
-        this.#provider.on('block', this.#poller);
+        this.#provider.on('block', this.#poller, this.#zone);
     }
 
     /**
@@ -402,7 +417,7 @@ export class PollingEventSubscriber implements Subscriber {
         }
         this.#running = false;
 
-        this.#provider.off('block', this.#poller);
+        this.#provider.off('block', this.#poller, this.#zone);
     }
 
     /**
