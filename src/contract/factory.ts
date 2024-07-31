@@ -102,7 +102,8 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         const resolvedArgs = await resolveArgs(this.runner, fragment.inputs, args);
 
         const data = concat([this.bytecode, this.interface.encodeDeploy(resolvedArgs)]);
-        return Object.assign({}, args.pop().from, { data });
+        const from = args.pop()?.from || undefined;
+        return Object.assign({}, from, { data });
     }
 
     /**
