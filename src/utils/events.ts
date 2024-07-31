@@ -2,6 +2,7 @@
  * Events allow for applications to use the observer pattern, which allows subscribing and publishing events, outside
  * the normal execution paths.
  */
+import { Zone } from '../constants/zones.js';
 import { defineProperties } from './properties.js';
 
 /**
@@ -22,17 +23,17 @@ export interface EventEmitterable<T> {
     /**
      * Registers a `listener` that is called whenever the `event` occurs until unregistered.
      */
-    on(event: T, listener: Listener): Promise<this>;
+    on(event: T, listener: Listener, zone?: Zone): Promise<this>;
 
     /**
      * Registers a `listener` that is called the next time `event` occurs.
      */
-    once(event: T, listener: Listener): Promise<this>;
+    once(event: T, listener: Listener, zone?: Zone): Promise<this>;
 
     /**
      * Triggers each listener for `event` with the `args`.
      */
-    emit(event: T, ...args: Array<any>): Promise<boolean>;
+    emit(event: T, zone?: Zone, ...args: Array<any>): Promise<boolean>;
 
     /**
      * Resolves to the number of listeners for `event`.
@@ -47,7 +48,7 @@ export interface EventEmitterable<T> {
     /**
      * Unregister the `listener` for `event`. If `listener` is unspecified, all listeners are unregistered.
      */
-    off(event: T, listener?: Listener): Promise<this>;
+    off(event: T, listener?: Listener, zone?: Zone): Promise<this>;
 
     /**
      * Unregister all listeners for `event`.
@@ -57,12 +58,12 @@ export interface EventEmitterable<T> {
     /**
      * Alias for {@link EventEmitterable.on | **on**}.
      */
-    addListener(event: T, listener: Listener): Promise<this>;
+    addListener(event: T, listener: Listener, zone?: Zone): Promise<this>;
 
     /**
      * Alias for {@link EventEmitterable.off | **off**}.
      */
-    removeListener(event: T, listener: Listener): Promise<this>;
+    removeListener(event: T, listener: Listener, zone?: Zone): Promise<this>;
 }
 
 /**
