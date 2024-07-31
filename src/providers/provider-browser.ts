@@ -1,5 +1,4 @@
 import { assertArgument } from '../utils/index.js';
-
 import { JsonRpcApiProvider, JsonRpcSigner } from './provider-jsonrpc.js';
 
 import type { JsonRpcError, JsonRpcPayload, JsonRpcResult } from './provider-jsonrpc.js';
@@ -19,7 +18,6 @@ export interface Eip1193Provider {
      * @param {Object} request - The request object.
      * @param {string} request.method - The method name.
      * @param {any[] | Record<string, any>} [request.params] - The parameters for the method.
-     *
      * @returns {Promise<any>} The result of the request.
      */
     request(request: { method: string; params?: Array<any> | Record<string, any> }): Promise<any>;
@@ -74,17 +72,17 @@ export class BrowserProvider extends JsonRpcApiProvider {
 
         this.#request = async (method: string, params: Array<any> | Record<string, any>) => {
             const payload = { method, params };
-            this.emit('debug', { action: 'sendEip1193Request', payload });
+            this.emit('debug', undefined, { action: 'sendEip1193Request', payload });
             try {
                 const result = await ethereum.request(payload);
-                this.emit('debug', { action: 'receiveEip1193Result', result });
+                this.emit('debug', undefined, { action: 'receiveEip1193Result', result });
                 return result;
             } catch (e: any) {
                 const error = new Error(e.message);
                 (<any>error).code = e.code;
                 (<any>error).data = e.data;
                 (<any>error).payload = payload;
-                this.emit('debug', { action: 'receiveEip1193Error', error });
+                this.emit('debug', undefined, { action: 'receiveEip1193Error', error });
                 throw error;
             }
         };
@@ -94,7 +92,6 @@ export class BrowserProvider extends JsonRpcApiProvider {
      * Resolves to `true` if the provider manages the `address`.
      *
      * @param {number | string} address - The address to check.
-     *
      * @returns {Promise<boolean>} Resolves to `true` if the provider manages the `address`.
      */
     async hasSigner(address: number | string): Promise<boolean> {
@@ -116,7 +113,6 @@ export class BrowserProvider extends JsonRpcApiProvider {
      *
      * @param {string} method - The method name.
      * @param {any[] | Record<string, any>} params - The parameters for the method.
-     *
      * @returns {Promise<any>} The result of the request.
      */
     async send(method: string, params: Array<any> | Record<string, any>): Promise<any> {
@@ -131,7 +127,6 @@ export class BrowserProvider extends JsonRpcApiProvider {
      * @ignore
      * @ignore
      * @param {JsonRpcPayload | JsonRpcPayload[]} payload - The JSON-RPC payload.
-     *
      * @returns {Promise<(JsonRpcResult | JsonRpcError)[]>} The result of the request.
      */
     async _send(payload: JsonRpcPayload | Array<JsonRpcPayload>): Promise<Array<JsonRpcResult | JsonRpcError>> {
@@ -155,7 +150,6 @@ export class BrowserProvider extends JsonRpcApiProvider {
      *
      * @param {JsonRpcPayload} payload - The JSON-RPC payload.
      * @param {JsonRpcError} error - The JSON-RPC error.
-     *
      * @returns {Error} The RPC error.
      */
     getRpcError(payload: JsonRpcPayload, error: JsonRpcError): Error {
@@ -179,7 +173,6 @@ export class BrowserProvider extends JsonRpcApiProvider {
      * Gets the signer for the given address.
      *
      * @param {number | string} [address] - The address to get the signer for.
-     *
      * @returns {Promise<JsonRpcSigner>} The signer for the address.
      */
     async getSigner(address?: number | string): Promise<JsonRpcSigner> {

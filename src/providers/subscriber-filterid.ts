@@ -4,14 +4,14 @@ import { PollingEventSubscriber } from './subscriber-polling.js';
 
 import type { AbstractProvider, Subscriber } from './abstract-provider.js';
 import type { Network } from './network.js';
-import type { EventFilter } from './provider.js';
+import { getZoneFromEventFilter, type EventFilter } from './provider.js';
 import type { JsonRpcApiProvider } from './provider-jsonrpc.js';
+import { Zone } from '../constants/index.js';
 
 /**
  * Deep copies an object.
  *
  * @param {any} obj - The object to copy.
- *
  * @returns {any} A deep copy of the object.
  */
 function copy(obj: any): any {
@@ -39,14 +39,15 @@ export class FilterIdSubscriber implements Subscriber {
 
     #hault: boolean;
 
+    protected zone: Zone;
+
     /**
-     * @ignore Creates a new **FilterIdSubscriber** which will use
-     *   {@link FilterIdSubscriber._subscribe | **_subscribe**} and
-     *   {@link FilterIdSubscriber._emitResults | **_emitResults**} to setup the subscription and provide the event to
-     *   the `provider`.
+     * @ignore Creates A new **FilterIdSubscriber** which will use {@link FilterIdSubscriber._subscribe | **_subscribe**}
+     *   and {@link FilterIdSubscriber._emitResults | **_emitResults**} to setup the subscription and provide the event
+     *   to the `provider`.
      * @param {JsonRpcApiProvider<any>} provider - The provider to use.
      */
-    constructor(provider: JsonRpcApiProvider<any>) {
+    constructor(provider: JsonRpcApiProvider<any>, zone: Zone) {
         this.#provider = provider;
 
         this.#filterIdPromise = null;
@@ -57,6 +58,8 @@ export class FilterIdSubscriber implements Subscriber {
         this.#network = null;
 
         this.#hault = false;
+
+        this.zone = zone;
     }
 
     /**
@@ -64,7 +67,6 @@ export class FilterIdSubscriber implements Subscriber {
      *
      * @ignore
      * @param {JsonRpcApiProvider} provider - The provider to use.
-     *
      * @returns {Promise<string>} A promise that resolves to the subscription ID.
      * @throws {Error} If the method is not overridden.
      */
@@ -79,7 +81,6 @@ export class FilterIdSubscriber implements Subscriber {
      * @ignore
      * @param {AbstractProvider} provider - The provider to use.
      * @param {any[]} result - The results to handle.
-     *
      * @returns {Promise<void>} A promise that resolves when the results are handled.
      * @throws {Error} If the method is not overridden.
      */
@@ -93,7 +94,6 @@ export class FilterIdSubscriber implements Subscriber {
      *
      * @ignore
      * @param {AbstractProvider} provider - The provider to use.
-     *
      * @returns {Subscriber} The recovered subscriber.
      * @throws {Error} If the method is not overridden.
      */
@@ -107,7 +107,6 @@ export class FilterIdSubscriber implements Subscriber {
      *
      * @ignore
      * @param {number} blockNumber - The block number to poll from.
-     *
      * @returns {Promise<void>} A promise that resolves when polling is complete.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -155,7 +154,7 @@ export class FilterIdSubscriber implements Subscriber {
             console.log('@TODO', error);
         }
 
-        this.#provider.once('block', this.#poller);
+        this.#provider.once('block', this.#poller, this.zone);
     }
 
     /**
@@ -196,7 +195,7 @@ export class FilterIdSubscriber implements Subscriber {
 
         this.#hault = true;
         this.#teardown();
-        this.#provider.off('block', this.#poller);
+        this.#provider.off('block', this.#poller, this.zone);
     }
 
     /**
@@ -208,7 +207,7 @@ export class FilterIdSubscriber implements Subscriber {
         if (dropWhilePaused) {
             this.#teardown();
         }
-        this.#provider.off('block', this.#poller);
+        this.#provider.off('block', this.#poller, this.zone);
     }
 
     /**
@@ -228,12 +227,16 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
     #event: EventFilter;
 
     /**
-     * @ignore Creates a new **FilterIdEventSubscriber** attached to `provider` listening for `filter`.
+     * @ignore Creates A new **FilterIdEventSubscriber** attached to `provider` listening for `filter`.
      * @param {JsonRpcApiProvider<any>} provider - The provider to use.
      * @param {EventFilter} filter - The event filter to use.
      */
     constructor(provider: JsonRpcApiProvider<any>, filter: EventFilter) {
-        super(provider);
+        const zone = getZoneFromEventFilter(filter);
+        if (zone == null) {
+            throw new Error('Unable to determine zone for event filter');
+        }
+        super(provider, zone);
         this.#event = copy(filter);
     }
 
@@ -242,7 +245,6 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
      *
      * @ignore
      * @param {AbstractProvider<any>} provider - The provider to use.
-     *
      * @returns {Subscriber} The recovered subscriber.
      */
     _recover(provider: AbstractProvider<any>): Subscriber {
@@ -254,7 +256,6 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
      *
      * @ignore
      * @param {JsonRpcApiProvider<any>} provider - The provider to use.
-     *
      * @returns {Promise<string>} A promise that resolves to the subscription ID.
      */
     async _subscribe(provider: JsonRpcApiProvider<any>): Promise<string> {
@@ -268,12 +269,11 @@ export class FilterIdEventSubscriber extends FilterIdSubscriber {
      * @ignore
      * @param {JsonRpcApiProvider<any>} provider - The provider to use.
      * @param {any[]} results - The results to emit.
-     *
      * @returns {Promise<void>} A promise that resolves when the results are emitted.
      */
     async _emitResults(provider: JsonRpcApiProvider<any>, results: Array<any>): Promise<void> {
         for (const result of results) {
-            provider.emit(this.#event, provider._wrapLog(result, provider._network));
+            provider.emit(this.#event, this.zone, provider._wrapLog(result, provider._network));
         }
     }
 }
@@ -289,7 +289,6 @@ export class FilterIdPendingSubscriber extends FilterIdSubscriber {
      *
      * @ignore
      * @param {JsonRpcApiProvider<any>} provider - The provider to use.
-     *
      * @returns {Promise<string>} A promise that resolves to the subscription ID.
      */
     async _subscribe(provider: JsonRpcApiProvider<any>): Promise<string> {
@@ -302,12 +301,11 @@ export class FilterIdPendingSubscriber extends FilterIdSubscriber {
      * @ignore
      * @param {JsonRpcApiProvider<any>} provider - The provider to use.
      * @param {any[]} results - The results to emit.
-     *
      * @returns {Promise<void>} A promise that resolves when the results are emitted.
      */
     async _emitResults(provider: JsonRpcApiProvider<any>, results: Array<any>): Promise<void> {
         for (const result of results) {
-            provider.emit('pending', result);
+            provider.emit('pending', this.zone, result);
         }
     }
 }

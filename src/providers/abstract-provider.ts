@@ -69,6 +69,7 @@ import type {
     EventFilter,
     Filter,
     FilterByBlockHash,
+    NodeLocation,
     OrphanFilter,
     Provider,
     ProviderEvent,
@@ -84,6 +85,8 @@ import {
     PollingOrphanSubscriber,
     PollingTransactionSubscriber,
 } from './subscriber-polling.js';
+import { getNodeLocationFromZone, getZoneFromNodeLocation } from '../utils/shards.js';
+import { formatMixedCaseChecksumAddress } from '../address/address';
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -152,23 +155,32 @@ function getTag(prefix: string, value: any): string {
  */
 export type Subscription =
     | {
-          type: 'block' | 'close' | 'debug' | 'error' | 'finalized' | 'network' | 'pending' | 'safe';
+          type: 'close' | 'debug' | 'error' | 'finalized' | 'network' | 'safe';
           tag: string;
+          zone?: Zone;
+      }
+    | {
+          type: 'block' | 'pending';
+          tag: string;
+          zone: Zone;
       }
     | {
           type: 'transaction';
           tag: string;
           hash: string;
+          zone: Zone;
       }
     | {
           type: 'event';
           tag: string;
           filter: EventFilter;
+          zone: Zone;
       }
     | {
           type: 'orphan';
           tag: string;
           filter: OrphanFilter;
+          zone: Zone;
       };
 
 /**
@@ -252,6 +264,7 @@ type Sub = {
     // tracked in subscriber
     started: boolean;
     subscriber: Subscriber;
+    zone: Zone;
 };
 
 /**
@@ -278,7 +291,7 @@ function concisify(items: Array<string>): Array<string> {
 
 // todo `provider` is not used, remove or re-write
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function getSubscription(_event: ProviderEvent, provider: AbstractProvider<any>): Promise<Subscription> {
+async function getSubscription(_event: ProviderEvent, zone?: Zone): Promise<Subscription> {
     if (_event == null) {
         throw new Error('invalid event');
     }
@@ -289,13 +302,19 @@ async function getSubscription(_event: ProviderEvent, provider: AbstractProvider
     }
 
     if (typeof _event === 'string') {
+        if (_event === 'debug') {
+            return { type: _event, tag: _event };
+        }
         switch (_event) {
             case 'block':
-            case 'debug':
+            case 'pending':
+                if (!zone) {
+                    throw new Error('zone is required for block and pending events');
+                }
+                return { type: 'block', tag: _event, zone };
             case 'error':
             case 'finalized':
             case 'network':
-            case 'pending':
             case 'safe': {
                 return { type: _event, tag: _event };
             }
@@ -304,19 +323,33 @@ async function getSubscription(_event: ProviderEvent, provider: AbstractProvider
 
     if (isHexString(_event, 32)) {
         const hash = _event.toLowerCase();
-        return { type: 'transaction', tag: getTag('tx', { hash }), hash };
+        zone = toZone(hash.slice(0, 4));
+        return { type: 'transaction', tag: getTag('tx', { hash }), hash, zone };
     }
 
     if ((<any>_event).orphan) {
         const event = <OrphanFilter>_event;
+        if (!zone) {
+            const hash =
+                (<{ hash: string }>event).hash ||
+                (<{ tx: { hash: string } }>event).tx.hash ||
+                (<{ other: { hash: string } }>event).other?.hash ||
+                (<{ log: { transactionHash: string } }>event).log.transactionHash ||
+                null;
+            if (hash == null) {
+                throw new Error('orphan event must specify a hash');
+            }
+            zone = toZone(hash.slice(0, 4));
+        }
+
         // @todo Should lowercase and whatnot things here instead of copy...
-        return { type: 'orphan', tag: getTag('orphan', event), filter: copy(event) };
+        return { type: 'orphan', tag: getTag('orphan', event), filter: copy(event), zone };
     }
 
     if ((<any>_event).address || (<any>_event).topics) {
         const event = <EventFilter>_event;
 
-        const filter: any = {
+        const filter: EventFilter = {
             topics: (event.topics || []).map((t) => {
                 if (t == null) {
                     return null;
@@ -327,18 +360,20 @@ async function getSubscription(_event: ProviderEvent, provider: AbstractProvider
                 return t.toLowerCase();
             }),
         };
-
+        if (event.nodeLocation) {
+            filter.nodeLocation = event.nodeLocation;
+        }
         if (event.address) {
             const addresses: Array<string> = [];
             const promises: Array<Promise<void>> = [];
 
             const addAddress = (addr: AddressLike) => {
                 if (isHexString(addr)) {
-                    addresses.push(addr);
+                    addresses.push(formatMixedCaseChecksumAddress(addr));
                 } else {
                     promises.push(
                         (async () => {
-                            addresses.push(await resolveAddress(addr));
+                            addresses.push(formatMixedCaseChecksumAddress(await resolveAddress(addr)));
                         })(),
                     );
                 }
@@ -352,10 +387,21 @@ async function getSubscription(_event: ProviderEvent, provider: AbstractProvider
             if (promises.length) {
                 await Promise.all(promises);
             }
+            if (!zone) {
+                zone = toZone(addresses[0].slice(0, 4));
+            }
             filter.address = concisify(addresses.map((a) => a.toLowerCase()));
+
+            if (!filter.nodeLocation) {
+                filter.nodeLocation = getNodeLocationFromZone(zone);
+            }
+        } else {
+            if (!zone) {
+                throw new Error('zone is required for event');
+            }
         }
 
-        return { filter, tag: getTag('event', filter), type: 'event' };
+        return { filter, tag: getTag('event', filter), type: 'event', zone };
     }
 
     assertArgument(false, 'unknown ProviderEvent', 'event', _event);
@@ -381,13 +427,13 @@ export type PerformActionFilter =
           topics?: Array<null | string | Array<string>>;
           fromBlock?: BlockTag;
           toBlock?: BlockTag;
-          shard: Shard;
+          nodeLocation: NodeLocation;
       }
     | {
           address?: string | Array<string>;
           topics?: Array<null | string | Array<string>>;
           blockHash?: string;
-          shard: Shard;
+          nodeLocation: NodeLocation;
       };
 
 /**
@@ -650,7 +696,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             this.#anyNetwork = false;
             this.#networkPromise = Promise.resolve(network);
             setTimeout(() => {
-                this.emit('network', network, null);
+                this.emit('network', undefined, network, null);
             }, 0);
         } else {
             this.#anyNetwork = false;
@@ -740,6 +786,16 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      */
     shardFromHash(hash: string): Shard {
         return toShard(hash.slice(0, 4));
+    }
+
+    /**
+     * Get the zone from a hash.
+     *
+     * @param {string} hash - The hash to get the zone from.
+     * @returns {Zone} The zone.
+     */
+    zoneFromHash(hash: string): Zone {
+        return toZone(hash.slice(0, 4));
     }
 
     /**
@@ -951,7 +1007,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @returns {Promise<Network>} A promise resolving to the network.
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _detectNetwork(shard?: Shard): Promise<Network> {
+    _detectNetwork(): Promise<Network> {
         assert(false, 'sub-classes must implement this', 'UNSUPPORTED_OPERATION', {
             operation: '_detectNetwork',
         });
@@ -976,7 +1032,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     // State
 
-    async getBlockNumber(shard?: Shard): Promise<number> {
+    async getBlockNumber(shard: Shard): Promise<number> {
         const blockNumber = getNumber(await this.#perform({ method: 'getBlockNumber', shard: shard }), '%response');
         if (this.#lastBlockNumber >= 0) {
             this.#lastBlockNumber = blockNumber;
@@ -1005,7 +1061,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @param {BlockTag} [blockTag] - The block tag to normalize.
      * @returns {string | Promise<string>} A promise that resolves to a valid block tag.
      */
-    _getBlockTag(shard?: Shard, blockTag?: BlockTag): string | Promise<string> {
+    _getBlockTag(shard: Shard, blockTag?: BlockTag): string | Promise<string> {
         if (blockTag == null) {
             return 'latest';
         }
@@ -1066,7 +1122,12 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
         const blockHash = 'blockHash' in filter ? filter.blockHash : undefined;
 
-        const resolve = (_address: Array<string>, fromBlock?: string, toBlock?: string, shard?: Shard) => {
+        const resolve = (
+            _address: Array<string>,
+            fromBlock?: string,
+            toBlock?: string,
+            nodeLocation?: NodeLocation,
+        ) => {
             let address: undefined | string | Array<string> = undefined;
             switch (_address.length) {
                 case 0:
@@ -1101,8 +1162,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             if (blockHash) {
                 filter.blockHash = blockHash;
             }
-            if (shard) {
-                filter.shard = shard;
+            if (nodeLocation) {
+                filter.nodeLocation = nodeLocation;
             }
 
             return filter;
@@ -1120,29 +1181,34 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             }
         }
 
+        const zone = getZoneFromNodeLocation(filter.nodeLocation!);
+
         let fromBlock: undefined | string | Promise<string> = undefined;
         if ('fromBlock' in filter) {
-            fromBlock = this._getBlockTag(filter.shard, filter.fromBlock);
+            fromBlock = this._getBlockTag(toShard(zone), filter.fromBlock);
         }
 
         let toBlock: undefined | string | Promise<string> = undefined;
         if ('toBlock' in filter) {
-            toBlock = this._getBlockTag(filter.shard, filter.toBlock);
+            toBlock = this._getBlockTag(toShard(zone), filter.toBlock);
         }
 
-        const shard = filter.shard;
+        let nodeLocation: NodeLocation | undefined = undefined;
+        if (filter.nodeLocation) {
+            nodeLocation = filter.nodeLocation;
+        }
 
         if (
             address.filter((a) => typeof a !== 'string').length ||
             (fromBlock != null && typeof fromBlock !== 'string') ||
             (toBlock != null && typeof toBlock !== 'string')
         ) {
-            return Promise.all([Promise.all(address), fromBlock, toBlock, shard]).then((result) => {
-                return resolve(result[0], result[1], result[2]);
+            return Promise.all([Promise.all(address), fromBlock, toBlock, nodeLocation]).then((result) => {
+                return resolve(result[0], result[1], result[2], result[3]);
             });
         }
 
-        return resolve(<Array<string>>address, fromBlock, toBlock, shard);
+        return resolve(<Array<string>>address, fromBlock, toBlock, nodeLocation);
     }
 
     /**
@@ -1190,10 +1256,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         });
 
         if (request.blockTag != null) {
-            const blockTag = this._getBlockTag(
-                request.chainId ? toShard(request.chainId.toString()) : undefined,
-                request.blockTag,
-            );
+            const blockTag = this._getBlockTag(toShard(request.chainId!.toString()), request.blockTag);
             if (isPromise(blockTag)) {
                 promises.push(
                     (async function () {
@@ -1215,14 +1278,14 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return request;
     }
 
-    async getNetwork(shard: Shard = Shard.Prime): Promise<Network> {
+    async getNetwork(): Promise<Network> {
         // No explicit network was set and this is our first time
         if (this.#networkPromise == null) {
             // Detect the current network (shared with all calls)
             const detectNetwork = (async () => {
                 try {
-                    const network = await this._detectNetwork(shard);
-                    this.emit('network', network, null);
+                    const network = await this._detectNetwork();
+                    this.emit('network', undefined, network, null);
                     return network;
                 } catch (error) {
                     if (this.#networkPromise === detectNetwork!) {
@@ -1240,13 +1303,13 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
         const [expected, actual] = await Promise.all([
             networkPromise, // Possibly an explicit Network
-            this._detectNetwork(shard), // The actual connected network
+            this._detectNetwork(), // The actual connected network
         ]);
 
         if (expected.chainId !== actual.chainId) {
             if (this.#anyNetwork) {
                 // The "any" network can change, so notify listeners
-                this.emit('network', actual, expected);
+                this.emit('network', undefined, actual, expected);
 
                 // Update the network if something else hasn't already changed it
                 if (this.#networkPromise === networkPromise) {
@@ -1536,11 +1599,14 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         if (isPromise(filter)) {
             filter = await filter;
         }
-        const zone = toZone(filter.shard);
 
         const { network, params } = await resolveProperties({
             network: this.getNetwork(),
-            params: this.#perform<Array<LogParams>>({ method: 'getLogs', filter, zone: zone }),
+            params: this.#perform<Array<LogParams>>({
+                method: 'getLogs',
+                filter,
+                zone: getZoneFromNodeLocation(filter.nodeLocation),
+            }),
         });
 
         return params.map((p) => this._wrapLog(p, network));
@@ -1562,7 +1628,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         _confirms?: null | number,
         timeout?: null | number,
     ): Promise<null | TransactionReceipt> {
-        const shard = this.shardFromHash(hash);
+        const zone = this.zoneFromHash(hash);
         const confirms = _confirms != null ? _confirms : 1;
         if (confirms === 0) {
             return this.getTransactionReceipt(hash);
@@ -1589,7 +1655,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                 } catch (error) {
                     console.log('Error occured while waiting for transaction:', error);
                 }
-                this.once('block', listener);
+                this.once('block', listener, zone);
             };
 
             if (timeout != null) {
@@ -1598,12 +1664,12 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                         return;
                     }
                     timer = null;
-                    this.off('block', listener);
+                    this.off('block', listener, zone);
                     reject(makeError('timeout', 'TIMEOUT', { reason: 'timeout' }));
                 }, timeout);
             }
 
-            listener(await this.getBlockNumber(shard));
+            listener(await this.getBlockNumber(toShard(zone)));
         });
     }
 
@@ -1688,7 +1754,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             case 'network':
                 return new UnmanagedSubscriber(sub.type);
             case 'block': {
-                const subscriber = new PollingBlockSubscriber(this as AbstractProvider);
+                const subscriber = new PollingBlockSubscriber(this as AbstractProvider, sub.zone);
                 subscriber.pollingInterval = this.pollingInterval;
                 return subscriber;
             }
@@ -1698,9 +1764,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             case 'event':
                 return new PollingEventSubscriber(this as AbstractProvider, sub.filter);
             case 'transaction':
-                return new PollingTransactionSubscriber(this as AbstractProvider, sub.hash);
+                return new PollingTransactionSubscriber(this as AbstractProvider, sub.hash, sub.zone);
             case 'orphan':
-                return new PollingOrphanSubscriber(this as AbstractProvider, sub.filter);
+                return new PollingOrphanSubscriber(this as AbstractProvider, sub.filter, sub.zone);
         }
 
         throw new Error(`unsupported event: ${sub.type}`);
@@ -1734,18 +1800,18 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         }
     }
 
-    async #hasSub(event: ProviderEvent, emitArgs?: Array<any>): Promise<null | Sub> {
-        let sub = await getSubscription(event, this);
+    async #hasSub(event: ProviderEvent, emitArgs?: Array<any>, zone?: Zone): Promise<null | Sub> {
+        let sub = await getSubscription(event, zone);
         // This is a log that is removing an existing log; we actually want
         // to emit an orphan event for the removed log
         if (sub.type === 'event' && emitArgs && emitArgs.length > 0 && emitArgs[0].removed === true) {
-            sub = await getSubscription({ orphan: 'drop-log', log: emitArgs[0] }, this);
+            sub = await getSubscription({ orphan: 'drop-log', log: emitArgs[0] }, zone);
         }
         return this.#subs.get(sub.tag) || null;
     }
 
-    async #getSub(event: ProviderEvent): Promise<Sub> {
-        const subscription = await getSubscription(event, this);
+    async #getSub(event: ProviderEvent, zone?: Zone): Promise<Sub> {
+        const subscription = await getSubscription(event, zone);
 
         // Prevent tampering with our tag in any subclass' _getSubscriber
         const tag = subscription.tag;
@@ -1756,15 +1822,15 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
             const addressableMap = new WeakMap();
             const nameMap = new Map();
-            sub = { subscriber, tag, addressableMap, nameMap, started: false, listeners: [] };
+            sub = { subscriber, tag, addressableMap, nameMap, started: false, listeners: [], zone: subscription.zone! };
             this.#subs.set(tag, sub);
         }
 
         return sub;
     }
 
-    async on(event: ProviderEvent, listener: Listener): Promise<this> {
-        const sub = await this.#getSub(event);
+    async on(event: ProviderEvent, listener: Listener, zone?: Zone): Promise<this> {
+        const sub = await this.#getSub(event, zone);
         sub.listeners.push({ listener, once: false });
         if (!sub.started) {
             sub.subscriber.start();
@@ -1776,8 +1842,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return this;
     }
 
-    async once(event: ProviderEvent, listener: Listener): Promise<this> {
-        const sub = await this.#getSub(event);
+    async once(event: ProviderEvent, listener: Listener, zone?: Zone): Promise<this> {
+        const sub = await this.#getSub(event, zone);
         sub.listeners.push({ listener, once: true });
         if (!sub.started) {
             sub.subscriber.start();
@@ -1789,8 +1855,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return this;
     }
 
-    async emit(event: ProviderEvent, ...args: Array<any>): Promise<boolean> {
-        const sub = await this.#hasSub(event, args);
+    async emit(event: ProviderEvent, zone?: Zone, ...args: Array<any>): Promise<boolean> {
+        const sub = await this.#hasSub(event, args, zone);
         // If there is not subscription or if a recent emit removed
         // the last of them (which also deleted the sub) do nothing
         if (!sub || sub.listeners.length === 0) {
@@ -1848,8 +1914,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return result;
     }
 
-    async off(event: ProviderEvent, listener?: Listener): Promise<this> {
-        const sub = await this.#hasSub(event);
+    async off(event: ProviderEvent, listener?: Listener, zone?: Zone): Promise<this> {
+        const sub = await this.#hasSub(event, [], zone);
         if (!sub) {
             return this;
         }
@@ -1890,13 +1956,13 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     // Alias for "on"
-    async addListener(event: ProviderEvent, listener: Listener): Promise<this> {
-        return await this.on(event, listener);
+    async addListener(event: ProviderEvent, listener: Listener, zone?: Zone): Promise<this> {
+        return await this.on(event, listener, zone);
     }
 
     // Alias for "off"
-    async removeListener(event: ProviderEvent, listener: Listener): Promise<this> {
-        return this.off(event, listener);
+    async removeListener(event: ProviderEvent, listener: Listener, zone?: Zone): Promise<this> {
+        return this.off(event, listener, zone);
     }
 
     /**
