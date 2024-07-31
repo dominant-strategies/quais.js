@@ -11,7 +11,6 @@ import { getZoneForAddress } from '../utils/index.js';
 import type { ContractInterface, ContractMethodArgs, ContractDeployTransaction, ContractRunner } from './types.js';
 import type { ContractTransactionResponse } from './wrappers.js';
 import { Wallet } from '../wallet/index.js';
-import { randomBytes } from '../crypto/index.js';
 import { getContractAddress, isQiAddress } from '../address/index.js';
 import { getStatic } from '../utils/properties.js';
 import { QuaiTransactionRequest } from '../providers/provider.js';
@@ -167,15 +166,17 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         const toShard = getZoneForAddress(sender);
         let i = 0;
         const startingData = tx.data;
-        while (i < 10000) {
+        const salt = new Uint8Array(32);
+        while (i < 1000) {
+            new DataView(salt.buffer).setBigUint64(16, BigInt(i), false); // Place i in last 8 bytes
+            tx.data = hexlify(concat([String(startingData), salt]));
+            
             const contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
             const contractShard = getZoneForAddress(contractAddress);
             const utxo = isQiAddress(contractAddress);
             if (contractShard === toShard && !utxo) {
                 return tx;
             }
-            const salt = randomBytes(32);
-            tx.data = hexlify(concat([String(startingData), salt]));
             i++;
         }
         return tx;
