@@ -209,10 +209,10 @@ export class QiHDWallet extends AbstractHDWallet {
         if (!this.provider) {
             throw new Error('Provider is not set');
         }
-        if (!tx.inputs || tx.inputs.length === 0) {
+        if (!tx.txInputs || tx.txInputs.length === 0) {
             throw new Error('Transaction has no inputs');
         }
-        const input = tx.inputs[0];
+        const input = tx.txInputs[0];
         const address = computeAddress(input.pubkey);
         const shard = getZoneForAddress(address);
         if (!shard) {
@@ -220,7 +220,7 @@ export class QiHDWallet extends AbstractHDWallet {
         }
 
         // verify all inputs are from the same shard
-        if (tx.inputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
+        if (tx.txInputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
             throw new Error('All inputs must be from the same shard');
         }
 
