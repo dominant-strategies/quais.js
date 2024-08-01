@@ -161,27 +161,32 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         if (tx.nonce == null && tx.from) {
             tx.nonce = await this.runner?.provider?.getTransactionCount(tx.from);
         }
-
+    
         const sender = String(tx.from);
         const toShard = getZoneForAddress(sender);
         let i = 0;
         const startingData = tx.data;
-        const salt = new Uint8Array(32);
+        const salt = new Uint8Array(4);
+        
+        // Initialize salt with the lower 32 bits of the nonce
+        new DataView(salt.buffer).setUint32(0, Number(tx.nonce) & 0xFFFFFFFF, false);
         while (i < 1000) {
-            new DataView(salt.buffer).setBigUint64(16, BigInt(i), false); // Place i in last 8 bytes
             tx.data = hexlify(concat([String(startingData), salt]));
-            
             const contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
             const contractShard = getZoneForAddress(contractAddress);
             const utxo = isQiAddress(contractAddress);
             if (contractShard === toShard && !utxo) {
                 return tx;
             }
+        
+            // Increment the salt
+            let saltValue = new DataView(salt.buffer).getUint32(0, false);
+            saltValue++;
+            new DataView(salt.buffer).setUint32(0, saltValue, false);    
             i++;
         }
         return tx;
     }
-
     /**
      * Return a new **ContractFactory** with the same ABI and bytecode, but connected to `runner`.
      *
