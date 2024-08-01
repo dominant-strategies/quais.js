@@ -157,8 +157,8 @@ export function addressFromTransactionRequest(tx: TransactionRequest): AddressLi
     if ('from' in tx) {
         return tx.from;
     }
-    if (tx.inputs) {
-        return computeAddress(tx.inputs[0].pubkey);
+    if (tx.txInputs) {
+        return computeAddress(tx.txInputs[0].pubkey);
     }
     if ('to' in tx && tx.to !== null) {
         return tx.to as AddressLike;
@@ -280,12 +280,12 @@ export interface QiTransactionRequest {
     /**
      * The inputs for the transaction.
      */
-    inputs?: null | Array<TxInput>;
+    txInputs?: null | Array<TxInput>;
 
     /**
      * The outputs for the transaction.
      */
-    outputs?: null | Array<TxOutput>;
+    txOutputs?: null | Array<TxOutput>;
 }
 
 /**
@@ -398,12 +398,12 @@ export interface QiPreparedTransactionRequest {
     /**
      * The inputs for the transaction.
      */
-    inputs?: null | Array<TxInput>;
+    txInputs?: null | Array<TxInput>;
 
     /**
      * The outputs for the transaction.
      */
-    outputs?: null | Array<TxOutput>;
+    txOutputs?: null | Array<TxOutput>;
 }
 
 /**
@@ -457,12 +457,12 @@ export function copyRequest(req: TransactionRequest): PreparedTransactionRequest
         result.customData = req.customData;
     }
 
-    if ('inputs' in req && req.inputs) {
-        result.inputs = req.inputs.map((entry) => ({ ...entry }));
+    if ('txInputs' in req && req.txInputs) {
+        result.txInputs = req.txInputs.map((entry) => ({ ...entry }));
     }
 
-    if ('outputs' in req && req.outputs) {
-        result.outputs = req.outputs.map((entry) => ({ ...entry }));
+    if ('txOutputs' in req && req.txOutputs) {
+        result.txOutputs = req.txOutputs.map((entry) => ({ ...entry }));
     }
 
     return result;
