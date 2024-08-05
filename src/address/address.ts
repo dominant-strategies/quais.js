@@ -10,6 +10,7 @@ import {
     toBigInt,
     toBeHex,
     stripZerosLeft,
+    hexlify
 } from '../utils/index.js';
 
 import type { SignatureLike } from '../crypto/index.js';
@@ -92,7 +93,9 @@ export function getAddress(address: string): string {
 
 export function getContractAddress(from: string, nonce: BigNumberish, data: BytesLike): string {
     const nonceBytes = zeroPadValue(toBeHex(toBigInt(nonce)), 8);
-    return getAddress(dataSlice(keccak256(concat([getAddress(from), nonceBytes, stripZerosLeft(data)])), 12));
+    const codeHash = keccak256(data.slice(0, data.length - 8));
+    const lastFourBytes = hexlify("0x" + data.slice(data.length - 8));
+    return getAddress(dataSlice(keccak256(concat([getAddress(from), nonceBytes, stripZerosLeft(codeHash), lastFourBytes])), 12));
 }
 
 /**
