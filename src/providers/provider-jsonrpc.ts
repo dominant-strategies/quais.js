@@ -42,8 +42,7 @@ import { Shard, toShard, toZone, Zone } from '../constants/index.js';
 import { TypedDataDomain, TypedDataEncoder, TypedDataField } from '../hash/index.js';
 import { AbstractSigner, Signer } from '../signers/index.js';
 import { toUtf8Bytes } from '../encoding/index.js';
-import { addressFromTransactionRequest } from './provider.js';
-import { zoneFromHash } from './provider';
+import { addressFromTransactionRequest, zoneFromHash } from './provider.js';
 
 type Timer = ReturnType<typeof setTimeout>;
 
