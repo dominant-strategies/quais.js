@@ -11,7 +11,7 @@
  * to listenerCount.
  */
 
-import { computeAddress, resolveAddress } from '../address/index.js';
+import { computeAddress, resolveAddress, formatMixedCaseChecksumAddress } from '../address/index.js';
 import { Shard, toShard, toZone, Zone } from '../constants/index.js';
 import { TxInput, TxOutput } from '../transaction/index.js';
 import { Outpoint } from '../transaction/utxo.js';
@@ -86,7 +86,6 @@ import {
     PollingTransactionSubscriber,
 } from './subscriber-polling.js';
 import { getNodeLocationFromZone, getZoneFromNodeLocation } from '../utils/shards.js';
-import { formatMixedCaseChecksumAddress } from '../address/address';
 
 type Timer = ReturnType<typeof setTimeout>;
 
