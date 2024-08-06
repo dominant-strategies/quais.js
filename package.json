@@ -145,7 +145,7 @@
     "format": "prettier --write src/**/*.ts"
   },
   "sideEffects": false,
-  "version": "1.0.0-alpha.8",
+  "version": "1.0.0-alpha.9",
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
