@@ -19560,8 +19560,8 @@ function addressFromTransactionRequest(tx) {
     if ('from' in tx) {
         return tx.from;
     }
-    if (tx.inputs) {
-        return computeAddress(tx.inputs[0].pubkey);
+    if (tx.txInputs) {
+        return computeAddress(tx.txInputs[0].pubkey);
     }
     if ('to' in tx && tx.to !== null) {
         return tx.to;
@@ -19611,11 +19611,11 @@ function copyRequest(req) {
     if ('customData' in req) {
         result.customData = req.customData;
     }
-    if ('inputs' in req && req.inputs) {
-        result.inputs = req.inputs.map((entry) => ({ ...entry }));
+    if ('txInputs' in req && req.txInputs) {
+        result.txInputs = req.txInputs.map((entry) => ({ ...entry }));
     }
-    if ('outputs' in req && req.outputs) {
-        result.outputs = req.outputs.map((entry) => ({ ...entry }));
+    if ('txOutputs' in req && req.txOutputs) {
+        result.txOutputs = req.txOutputs.map((entry) => ({ ...entry }));
     }
     return result;
 }
@@ -25909,17 +25909,17 @@ class QiHDWallet extends AbstractHDWallet {
         if (!this.provider) {
             throw new Error('Provider is not set');
         }
-        if (!tx.inputs || tx.inputs.length === 0) {
+        if (!tx.txInputs || tx.txInputs.length === 0) {
             throw new Error('Transaction has no inputs');
         }
-        const input = tx.inputs[0];
+        const input = tx.txInputs[0];
         const address = computeAddress(input.pubkey);
         const shard = getZoneForAddress(address);
         if (!shard) {
             throw new Error(`Address ${address} not found in any shard`);
         }
         // verify all inputs are from the same shard
-        if (tx.inputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
+        if (tx.txInputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
             throw new Error('All inputs must be from the same shard');
         }
         const signedTx = await this.signTransaction(tx);
