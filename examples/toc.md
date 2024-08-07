@@ -44,3 +44,6 @@ Happy coding!
 7. [Sign and verify Transactions in Qi Ledger (Musig)](sign-verify-qi-musig.js)
    - Sign a Qi transaction
    - Verify the schnorr signature of the Qi transaction
+
+8. [Sending RPC Requests](send-rpc-req.js)
+   - getBlock()
