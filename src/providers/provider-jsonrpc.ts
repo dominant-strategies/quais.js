@@ -1015,6 +1015,9 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * @returns {Promise<void>} A promise that resolves once the provider is ready.
      */
     async _waitUntilReady(): Promise<void> {
+        if (this._initFailed) {
+            throw new Error('Provider failed to initialize on creation. Run initUrlMap or create a new provider.');
+        }
         if (this.#notReady == null) {
             return;
         }
@@ -1520,6 +1523,9 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
     }
 
     _getConnection(shard?: Shard): FetchRequest {
+        if (this._initFailed) {
+            throw new Error('Provider failed to initialize on creation. Run initUrlMap or create a new provider.');
+        }
         let connection;
         if (shard !== undefined) {
             connection = this._urlMap.get(shard) ?? this.connect[this.connect.length - 1]!.clone();

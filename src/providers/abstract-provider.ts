@@ -677,6 +677,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     #options: Required<AbstractProviderOptions>;
 
+    _initFailed: boolean;
+
     /**
      * Create a new **AbstractProvider** connected to `network`, or use the various network detection capabilities to
      * discover the {@link Network | **Network**} if necessary.
@@ -685,6 +687,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @param options - The options to configure the provider.
      */
     constructor(_network?: 'any' | Networkish, options?: AbstractProviderOptions) {
+        this._initFailed = false;
         this.#options = Object.assign({}, defaultOptions, options || {});
 
         if (_network === 'any') {
@@ -725,35 +728,40 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @returns {Promise<void>} A promise that resolves when the map is initialized.
      */
     async initUrlMap<U = string[] | FetchRequest>(urls: U): Promise<void> {
-        if (urls instanceof FetchRequest) {
-            urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':9001';
-            this._urlMap.set(Shard.Prime, urls as C);
-            this.#connect.push(urls);
-            const shards = await this.getRunningLocations();
-            shards.forEach((shard) => {
-                const port = 9200 + 20 * shard[0] + shard[1];
-                this._urlMap.set(
-                    toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
-                    new FetchRequest(urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':' + port) as C,
-                );
-            });
-            return;
-        }
-        if (Array.isArray(urls)) {
-            for (const url of urls) {
-                const primeUrl = url.split(':')[0] + ':' + url.split(':')[1] + ':9001';
-                const primeConnect = new FetchRequest(primeUrl);
-                this._urlMap.set(Shard.Prime, primeConnect as C);
-                this.#connect.push(primeConnect);
+        try {
+            if (urls instanceof FetchRequest) {
+                urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':9001';
+                this._urlMap.set(Shard.Prime, urls as C);
+                this.#connect.push(urls);
                 const shards = await this.getRunningLocations();
                 shards.forEach((shard) => {
                     const port = 9200 + 20 * shard[0] + shard[1];
                     this._urlMap.set(
                         toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
-                        new FetchRequest(url.split(':')[0] + ':' + url.split(':')[1] + ':' + port) as C,
+                        new FetchRequest(urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':' + port) as C,
                     );
                 });
+                return;
             }
+            if (Array.isArray(urls)) {
+                for (const url of urls) {
+                    const primeUrl = url.split(':')[0] + ':' + url.split(':')[1] + ':9001';
+                    const primeConnect = new FetchRequest(primeUrl);
+                    this._urlMap.set(Shard.Prime, primeConnect as C);
+                    this.#connect.push(primeConnect);
+                    const shards = await this.getRunningLocations();
+                    shards.forEach((shard) => {
+                        const port = 9200 + 20 * shard[0] + shard[1];
+                        this._urlMap.set(
+                            toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
+                            new FetchRequest(url.split(':')[0] + ':' + url.split(':')[1] + ':' + port) as C,
+                        );
+                    });
+                }
+            }
+        } catch (error) {
+            this._initFailed = true;
+            console.log('Error initializing URL map:', error);
         }
     }
 
