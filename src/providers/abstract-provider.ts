@@ -583,6 +583,7 @@ export type PerformActionRequest =
     | {
           method: 'getRunningLocations';
           shard?: Shard;
+          now: boolean;
       }
     | {
           method: 'getProtocolTrieExpansionCount';
@@ -677,6 +678,12 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     #options: Required<AbstractProviderOptions>;
 
+    _initFailed: boolean;
+
+    initResolvePromise: null | ((value: void) => void);
+    initRejectPromise: null | ((reason?: any) => void);
+    initPromise: Promise<void>;
+
     /**
      * Create a new **AbstractProvider** connected to `network`, or use the various network detection capabilities to
      * discover the {@link Network | **Network**} if necessary.
@@ -685,6 +692,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @param options - The options to configure the provider.
      */
     constructor(_network?: 'any' | Networkish, options?: AbstractProviderOptions) {
+        this._initFailed = false;
         this.#options = Object.assign({}, defaultOptions, options || {});
 
         if (_network === 'any') {
@@ -716,6 +724,12 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
         this.#connect = [];
         this._urlMap = new Map();
+        this.initResolvePromise = null;
+        this.initRejectPromise = null;
+        this.initPromise = new Promise((resolve, reject) => {
+            this.initResolvePromise = resolve;
+            this.initRejectPromise = reject;
+        });
     }
 
     /**
@@ -724,36 +738,43 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @param {U} urls - The URLs to initialize the map with.
      * @returns {Promise<void>} A promise that resolves when the map is initialized.
      */
-    async initUrlMap<U = string[] | FetchRequest>(urls: U): Promise<void> {
-        if (urls instanceof FetchRequest) {
-            urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':9001';
-            this._urlMap.set(Shard.Prime, urls as C);
-            this.#connect.push(urls);
-            const shards = await this.getRunningLocations();
-            shards.forEach((shard) => {
-                const port = 9200 + 20 * shard[0] + shard[1];
-                this._urlMap.set(
-                    toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
-                    new FetchRequest(urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':' + port) as C,
-                );
-            });
-            return;
-        }
-        if (Array.isArray(urls)) {
-            for (const url of urls) {
-                const primeUrl = url.split(':')[0] + ':' + url.split(':')[1] + ':9001';
-                const primeConnect = new FetchRequest(primeUrl);
-                this._urlMap.set(Shard.Prime, primeConnect as C);
-                this.#connect.push(primeConnect);
+    async initialize<U = string[] | FetchRequest>(urls: U): Promise<void> {
+        try {
+            if (urls instanceof FetchRequest) {
+                urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':9001';
+                this._urlMap.set(Shard.Prime, urls as C);
+                this.#connect.push(urls);
                 const shards = await this.getRunningLocations();
                 shards.forEach((shard) => {
                     const port = 9200 + 20 * shard[0] + shard[1];
                     this._urlMap.set(
                         toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
-                        new FetchRequest(url.split(':')[0] + ':' + url.split(':')[1] + ':' + port) as C,
+                        new FetchRequest(urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':' + port) as C,
                     );
                 });
+                return;
             }
+            if (Array.isArray(urls)) {
+                for (const url of urls) {
+                    const primeUrl = url.split(':')[0] + ':' + url.split(':')[1] + ':9001';
+                    const primeConnect = new FetchRequest(primeUrl);
+                    this._urlMap.set(Shard.Prime, primeConnect as C);
+                    this.#connect.push(primeConnect);
+                    const shards = await this.getRunningLocations();
+                    shards.forEach((shard) => {
+                        const port = 9200 + 20 * shard[0] + shard[1];
+                        this._urlMap.set(
+                            toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
+                            new FetchRequest(url.split(':')[0] + ':' + url.split(':')[1] + ':' + port) as C,
+                        );
+                    });
+                }
+            }
+            if (this.initResolvePromise) this.initResolvePromise();
+        } catch (error) {
+            this._initFailed = true;
+            console.log('Error initializing URL map:', error);
+            if (this.initRejectPromise) this.initRejectPromise(error);
         }
     }
 
@@ -1325,10 +1346,17 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return expected.clone();
     }
 
-    async getRunningLocations(shard?: Shard): Promise<number[][]> {
+    protected async _getRunningLocations(shard?: Shard, now?: boolean): Promise<number[][]> {
+        now = now ? now : false;
         return await this.#perform(
-            shard ? { method: 'getRunningLocations', shard: shard } : { method: 'getRunningLocations' },
+            shard
+                ? { method: 'getRunningLocations', shard: shard, now: now }
+                : { method: 'getRunningLocations', now: now },
         );
+    }
+
+    async getRunningLocations(shard?: Shard): Promise<number[][]> {
+        return await this._getRunningLocations(shard);
     }
 
     async getProtocolTrieExpansionCount(shard: Shard): Promise<number> {
@@ -1511,6 +1539,26 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         if (computedHash !== nodehash) {
             throw new Error('Transaction hash mismatch');
         }
+    }
+
+    validateUrl(url: string): void {
+        const urlPattern = /^(https?):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
+
+        if (!urlPattern.test(url)) {
+            let errorMessage = 'Invalid URL: ';
+
+            if (!/^https?:\/\//.test(url)) {
+                errorMessage += 'URL must start with http:// or https://. ';
+            }
+
+            if (url.endsWith('/')) {
+                errorMessage += 'URL should not end with a /. ';
+            }
+
+            throw new Error(errorMessage.trim());
+        }
+
+        console.log('Valid URL');
     }
 
     async #getBlock(shard: Shard, block: BlockTag | string, includeTransactions: boolean): Promise<any> {

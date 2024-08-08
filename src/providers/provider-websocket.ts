@@ -80,7 +80,16 @@ export class WebSocketProvider extends SocketProvider {
     ) {
         super(network, options);
         this.#websockets = [];
-        this.initPromise = this.initUrlMap(typeof url === 'string' ? [url] : url);
+        if (typeof url === 'string') {
+            this.validateUrl(url);
+        } else if (Array.isArray(url)) {
+            url.forEach((it) => this.validateUrl(it));
+        } else if (typeof url === 'function') {
+            this.validateUrl(url().url);
+        } else {
+            this.validateUrl(url.url);
+        }
+        this.initialize(typeof url === 'string' ? [url] : url);
     }
 
     /**
@@ -91,6 +100,10 @@ export class WebSocketProvider extends SocketProvider {
      * @param {Shard} shard - The shard identifier.
      */
     initWebSocket(websocket: WebSocketLike, shard: Shard): void {
+        websocket.onerror = (error: any) => {
+            console.log('WebsocketProvider error', error);
+            websocket.close();
+        };
         websocket.onopen = async () => {
             try {
                 await this._start();
@@ -132,52 +145,72 @@ export class WebSocketProvider extends SocketProvider {
      * @param {U} urls - The URLs or WebSocket object or creator.
      * @returns {Promise<void>} A promise that resolves when the URL map is initialized.
      */
-    async initUrlMap<U = string[] | WebSocketLike | WebSocketCreator>(urls: U) {
-        const createWebSocket = (baseUrl: string, port: number): WebSocketLike => {
-            return new _WebSocket(`${baseUrl}:${port}`) as WebSocketLike;
-        };
+    async initialize<U = string[] | WebSocketLike | WebSocketCreator>(urls: U) {
+        //clear websockets
+        this.#websockets = [];
+        this._urlMap.clear();
+        try {
+            const createWebSocket = (baseUrl: string, port: number): WebSocketLike => {
+                const tempWs = new _WebSocket(`${baseUrl}:${port}`);
+                return tempWs as WebSocketLike;
+                // wait 2 minutes
+            };
 
-        const initShardWebSockets = async (baseUrl: string) => {
-            const shards = await this.getRunningLocations();
-            await Promise.all(
-                shards.map(async (shard) => {
-                    const port = 8200 + 20 * shard[0] + shard[1];
-                    const shardUrl = baseUrl.split(':').slice(0, 2).join(':');
-                    const websocket = createWebSocket(shardUrl, port);
-                    this.initWebSocket(websocket, toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`));
-                    this.#websockets.push(websocket);
-                    this._urlMap.set(toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`), websocket);
-                    await this.waitShardReady(toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`));
-                }),
-            );
-        };
+            const initShardWebSockets = async (baseUrl: string) => {
+                const shards = await this._getRunningLocations(Shard.Prime, true);
+                await Promise.all(
+                    shards.map(async (shard) => {
+                        const port = 8200 + 20 * shard[0] + shard[1];
+                        const shardUrl = baseUrl.split(':').slice(0, 2).join(':');
+                        const websocket = createWebSocket(shardUrl, port);
+                        this.initWebSocket(websocket, toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`));
+                        this.#websockets.push(websocket);
+                        this._urlMap.set(toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`), websocket);
+                        try {
+                            await this.waitShardReady(toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`));
+                        } catch (error) {
+                            console.log('failed to waitShardReady', error);
+                            this._initFailed = true;
+                        }
+                    }),
+                );
+            };
 
-        if (Array.isArray(urls)) {
-            for (const url of urls) {
-                const baseUrl = `${url.split(':')[0]}:${url.split(':')[1]}`;
-                const primeWebsocket = createWebSocket(baseUrl, 8001);
+            if (Array.isArray(urls)) {
+                for (const url of urls) {
+                    const baseUrl = `${url.split(':')[0]}:${url.split(':')[1]}`;
+                    const primeWebsocket = createWebSocket(baseUrl, 8001);
+                    this.initWebSocket(primeWebsocket, Shard.Prime);
+                    this.#websockets.push(primeWebsocket);
+                    this._urlMap.set(Shard.Prime, primeWebsocket);
+                    await this.waitShardReady(Shard.Prime);
+                    await initShardWebSockets(baseUrl);
+                }
+            } else if (typeof urls === 'function') {
+                const primeWebsocket = urls();
                 this.initWebSocket(primeWebsocket, Shard.Prime);
                 this.#websockets.push(primeWebsocket);
                 this._urlMap.set(Shard.Prime, primeWebsocket);
                 await this.waitShardReady(Shard.Prime);
+                const baseUrl = this.#websockets[0].url.split(':').slice(0, 2).join(':');
+                await initShardWebSockets(baseUrl);
+            } else {
+                const primeWebsocket = urls as WebSocketLike;
+                this.initWebSocket(primeWebsocket, Shard.Prime);
+                this.#websockets.push(primeWebsocket);
+                this._urlMap.set(Shard.Prime, primeWebsocket);
+                await this.waitShardReady(Shard.Prime);
+                const baseUrl = primeWebsocket.url.split(':').slice(0, 2).join(':');
                 await initShardWebSockets(baseUrl);
             }
-        } else if (typeof urls === 'function') {
-            const primeWebsocket = urls();
-            this.initWebSocket(primeWebsocket, Shard.Prime);
-            this.#websockets.push(primeWebsocket);
-            this._urlMap.set(Shard.Prime, primeWebsocket);
-            await this.waitShardReady(Shard.Prime);
-            const baseUrl = this.#websockets[0].url.split(':').slice(0, 2).join(':');
-            await initShardWebSockets(baseUrl);
-        } else {
-            const primeWebsocket = urls as WebSocketLike;
-            this.initWebSocket(primeWebsocket, Shard.Prime);
-            this.#websockets.push(primeWebsocket);
-            this._urlMap.set(Shard.Prime, primeWebsocket);
-            await this.waitShardReady(Shard.Prime);
-            const baseUrl = primeWebsocket.url.split(':').slice(0, 2).join(':');
-            await initShardWebSockets(baseUrl);
+            if (this.initResolvePromise) this.initResolvePromise();
+        } catch (error) {
+            this._initFailed = true;
+            console.log('failed to initialize', error);
+            //clear websockets
+            this.#websockets = [];
+            if (this.initRejectPromise) this.initRejectPromise(error);
+            return;
         }
     }
 
