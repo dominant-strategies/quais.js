@@ -1521,6 +1521,26 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         }
     }
 
+    validateUrl(url: string): void {
+        const urlPattern = /^(https?):\/\/[a-zA-Z0-9.-]+$/;
+
+        if (!urlPattern.test(url)) {
+            let errorMessage = 'Invalid URL: ';
+
+            if (!/^https?:\/\//.test(url)) {
+                errorMessage += 'URL must start with http:// or https://. ';
+            }
+
+            if (url.endsWith('/')) {
+                errorMessage += 'URL should not end with a /. ';
+            }
+
+            throw new Error(errorMessage.trim());
+        }
+
+        console.log('Valid URL');
+    }
+
     async #getBlock(shard: Shard, block: BlockTag | string, includeTransactions: boolean): Promise<any> {
         if (isHexString(block, 32)) {
             return await this.#perform({

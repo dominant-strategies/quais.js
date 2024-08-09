@@ -443,4 +443,24 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     async _write(message: string, shard?: Shard): Promise<void> {
         throw new Error('sub-classes must override this');
     }
+
+    validateUrl(url: string): void {
+        const urlPattern = /^(ws):\/\/[a-zA-Z0-9.-]+$/;
+
+        if (!urlPattern.test(url)) {
+            let errorMessage = 'Invalid URL: ';
+
+            if (!/^ws:\/\//.test(url)) {
+                errorMessage += 'URL must start with ws://. ';
+            }
+
+            if (url.endsWith('/')) {
+                errorMessage += 'URL should not end with a /. ';
+            }
+
+            throw new Error(errorMessage.trim());
+        }
+
+        console.log('Valid URL');
+    }
 }

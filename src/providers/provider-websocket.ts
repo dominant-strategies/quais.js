@@ -80,6 +80,15 @@ export class WebSocketProvider extends SocketProvider {
     ) {
         super(network, options);
         this.#websockets = [];
+        if (typeof url === 'string') {
+            this.validateUrl(url);
+        } else if (Array.isArray(url)) {
+            url.forEach((it) => this.validateUrl(it));
+        } else if (typeof url === 'function') {
+            this.validateUrl(url().url);
+        } else {
+            this.validateUrl(url.url);
+        }
         this.initPromise = this.initUrlMap(typeof url === 'string' ? [url] : url);
     }
 

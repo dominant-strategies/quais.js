@@ -1509,10 +1509,15 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         super(network, options);
 
         if (Array.isArray(urls)) {
+            urls.forEach((url) => {
+                this.validateUrl(url);
+            });
             this.initPromise = this.initUrlMap(urls);
         } else if (typeof urls === 'string') {
+            this.validateUrl(urls);
             this.initPromise = this.initUrlMap([urls]);
         } else {
+            this.validateUrl(urls.url);
             this.initPromise = this.initUrlMap(urls.clone());
         }
     }
