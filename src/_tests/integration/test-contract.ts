@@ -6,29 +6,23 @@ import { Contract, ContractFactory, ContractRunner, isError, Typed } from '../..
 import TestContract from './contracts/TestContract.js';
 import TypedContract from './contracts/TypedContract.js';
 import { quais } from '../../index.js';
-import { stall } from '../utils.js';
 
 setupProviders();
 
 describe('Test Contract', function () {
-    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
-    const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', provider);
+    const provider = new quais.JsonRpcProvider(process.env.RPC_URL);
+    const wallet = new quais.Wallet(process.env.CYPRUS1_PRIVKEY_1!, provider);
     const abi = TestContract.abi;
     const bytecode = TestContract.bytecode;
     let contract: Contract;
     let addr: string;
     before(async function () {
         this.timeout(100000);
-        await stall(10000);
         const factory = new ContractFactory(abi, bytecode, wallet as ContractRunner);
-        contract = (await factory.deploy({
-            gasLimit: 5000000,
-            maxFeePerGas: quais.parseUnits('10', 'gwei'),
-            maxPriorityFeePerGas: quais.parseUnits('3', 'gwei'),
-        })) as Contract;
+        contract = (await factory.deploy()) as Contract;
         addr = await contract.getAddress();
-        console.log('Contract deployed to: ', addr);
-        await stall(50000);
+        console.log('waiting for contract deployment');
+        await contract.waitForDeployment();
     });
 
     it('tests contract calls', async function () {
@@ -360,22 +354,16 @@ describe('Test Typed Contract Interaction', function () {
     ];
 
     const abi = TypedContract.abi;
-    const provider = new quais.JsonRpcProvider(process.env.CYPRUS1URL);
-    const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', provider);
+    const provider = new quais.JsonRpcProvider(process.env.RPC_URL);
+    const wallet = new quais.Wallet(process.env.CYPRUS1_PRIVKEY_1!, provider);
     const bytecode = TypedContract.bytecode;
     let contract: Contract;
-    let addr: string;
     before(async function () {
         this.timeout(120000);
         const factory = new ContractFactory(abi, bytecode, wallet as ContractRunner);
-        contract = (await factory.deploy({
-            gasLimit: 5000000,
-            maxFeePerGas: quais.parseUnits('10', 'gwei'),
-            maxPriorityFeePerGas: quais.parseUnits('3', 'gwei'),
-        })) as Contract;
-        addr = await contract.getAddress();
-        console.log('Contract deployed to: ', addr);
-        await stall(100000);
+        contract = (await factory.deploy()) as Contract;
+        console.log('waiting for contract deployment');
+        await contract.waitForDeployment();
     });
 
     for (const { types, valueFunc } of tests) {

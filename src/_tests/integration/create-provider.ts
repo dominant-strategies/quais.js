@@ -7,17 +7,15 @@ dotenv.config();
 interface ProviderCreator {
     name: string;
     networks: Array<string>;
-    create: (network: string) => null | AbstractProvider;
+    create: (network?: string | null) => null | AbstractProvider;
 }
-
-const quaiNetworks = ['colosseum'];
 
 const ProviderCreators: Array<ProviderCreator> = [
     {
         name: 'JsonRpcProvider',
-        networks: quaiNetworks,
-        create: function (network: string) {
-            return new JsonRpcProvider(process.env.RPC_URL, network);
+        networks: [],
+        create: function () {
+            return new JsonRpcProvider(process.env.RPC_URL);
         },
     },
 ];
@@ -51,7 +49,7 @@ export function getProviderNetworks(provider: string): Array<string> {
     return [];
 }
 
-export function getProvider(provider: string, network: string): null | AbstractProvider {
+export function getProvider(provider: string, network?: string): null | AbstractProvider {
     if (setup == false) {
         throw new Error('MUST CALL setupProviders in root context');
     }
@@ -67,6 +65,7 @@ export function getProvider(provider: string, network: string): null | AbstractP
             return provider;
         }
     } catch (error) {
+        console.log('error: ', error);
         if (!isError(error, 'INVALID_ARGUMENT')) {
             throw error;
         }

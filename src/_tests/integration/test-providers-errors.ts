@@ -5,8 +5,6 @@ import { concat, dataSlice, id, toBeArray, zeroPadValue, isCallException, isErro
 import { getProvider, setupProviders, providerNames } from './create-provider.js';
 import { stall } from '../utils.js';
 
-// import { HDWallet } from "../wallet/hdwallet.js";
-
 import dotenv from 'dotenv';
 import { QuaiTransactionResponse } from '../../providers/provider.js';
 dotenv.config();
@@ -26,7 +24,13 @@ type TestCustomError = {
 
 setupProviders();
 
-describe('Tests Provider Call Exception', function () {
+// ! Below test suites require a "test contract" to be deployed on the network at a known address.
+// The contract should have the following functions:
+// - testPanic(uint256) - panics with the given code
+// - testCustomError1(bool, uint256, string) - panics with a custom error
+// - testErrorString(bool, string) - panics with a custom error
+
+describe.skip('Tests Provider Call Exception', function () {
     const panics: Array<{ code: number; reason: string }> = [
         //{ code: 0x00, reason: "GENERIC_PANIC" },
         { code: 0x01, reason: 'ASSERT_FALSE' },
@@ -40,14 +44,14 @@ describe('Tests Provider Call Exception', function () {
         //{ code: 0x51, reason: "UNINITIALIZED_FUNCTION_CALL" },
     ];
 
-    const testAddr = '0x0aff86a125b29b25a9e418c2fb64f1753532c0ca'; //Cyprus1
-    const testAddr2 = '0x0aff86a125b29b25a9e418c2fb64f1753532c0ca'; //Cyprus1
+    const testAddr = '0x000001273B55E9e5998328216dB1b130c231221C'; //Cyprus1
+    //! testAddr2 should be the address of the testing contract
+    const testAddr2 = '0x002a8cf994379232561556Da89C148eeec9539cd'; //Cyprus1
 
-    const networkName = 'colosseum';
     for (const { code, reason } of panics) {
         for (const method of ['call', 'estimateGas']) {
             for (const providerName of providerNames) {
-                const provider = getProvider(providerName, networkName);
+                const provider = getProvider(providerName);
                 if (provider == null) {
                     continue;
                 }
@@ -62,10 +66,11 @@ describe('Tests Provider Call Exception', function () {
                     const tx = { to: testAddr, from: testAddr2, data };
                     try {
                         const result = await (method === 'call' ? provider.call(tx) : provider.estimateGas(tx));
-                        console.log(result);
+                        console.log('result: ', result, ' typeOf: ', typeof result);
 
                         assert.ok(false, 'panic call did not throw');
                     } catch (error) {
+                        console.error('EE', error);
                         assert.ok(isCallException(error), 'isCallException');
 
                         // Check some basics
@@ -120,7 +125,7 @@ describe('Tests Provider Call Exception', function () {
         for (const method of ['call', 'estimateGas']) {
             const tx = { to: testAddr, from: testAddr2, data };
             for (const providerName of providerNames) {
-                const provider = getProvider(providerName, networkName);
+                const provider = getProvider(providerName);
                 if (provider == null) {
                     continue;
                 }
@@ -129,10 +134,11 @@ describe('Tests Provider Call Exception', function () {
                     this.timeout(10000);
                     try {
                         const result = await (method === 'call' ? provider.call(tx) : provider.estimateGas(tx));
-                        console.log(result);
+                        console.log(`method: ${method}, tx: ${tx}, result: `, result);
 
                         assert.ok(false, 'panic call did not throw');
                     } catch (error) {
+                        console.error('EE', error);
                         assert.ok(isCallException(error), 'isCallException');
 
                         // Check some basics
@@ -163,13 +169,12 @@ describe('Tests Provider Call Exception', function () {
     }
 });
 
-describe('Test Provider Blockchain Errors', function () {
-    const wallet = new Wallet(<string>process.env.CYPRUS1PK);
-    const wallet2 = new Wallet(<string>process.env.CYPRUS1PK);
+describe.skip('Test Provider Blockchain Errors', function () {
+    const wallet = new Wallet(<string>process.env.CYPRUS1_PRIVKEY_1);
+    const wallet2 = new Wallet(<string>process.env.CYPRUS1_PRIVKEY_1);
 
-    const networkName = 'colosseum';
     for (const providerName of providerNames) {
-        const provider = getProvider(providerName, networkName);
+        const provider = getProvider(providerName);
         if (provider == null) {
             continue;
         }
@@ -236,7 +241,7 @@ describe('Test Provider Blockchain Errors', function () {
     }
 
     for (const providerName of providerNames) {
-        const provider = getProvider(providerName, networkName);
+        const provider = getProvider(providerName);
         if (provider == null) {
             continue;
         }
@@ -271,7 +276,7 @@ describe('Test Provider Blockchain Errors', function () {
     }
 
     for (const providerName of providerNames) {
-        const provider = getProvider(providerName, networkName);
+        const provider = getProvider(providerName);
         if (provider == null) {
             continue;
         }
