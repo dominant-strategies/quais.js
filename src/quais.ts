@@ -151,6 +151,7 @@ export {
     FetchResponse,
     FetchCancelSignal,
     FixedNumber,
+    makeError,
 
     // numbers
     getBigInt,

@@ -43,7 +43,7 @@ function zoneFromBytes(zone: string): Zone {
         case '0x22':
             return Zone.Hydra3;
         default:
-            throw new Error('Invalid zone');
+            throw new Error(`Invalid zone: ${zone}`);
     }
 }
 
