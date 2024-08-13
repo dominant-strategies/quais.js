@@ -76,7 +76,7 @@ export function getTxType(from: string | null, to: string | null): number {
 export function getNodeLocationFromZone(zone: Zone): NodeLocation {
     const zoneId = zone.slice(2);
     if (zoneId.length > 2) {
-        throw new Error('Invalid zone');
+        throw new Error(`Invalid zone: ${zone}`);
     } else if (zoneId.length === 0) {
         return [];
     }
