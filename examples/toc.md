@@ -28,6 +28,17 @@ Happy coding!
     - Get Quai and Qi conversion rates
     - Get current protocol expansion number
 
+3. [Query Smart Contract Events](providers/query-event.js)
+
+    - Instantiate a contract with a simplified ABI
+    - Define a filter to query events
+    - Query historical events in the last 100 blocks
+
+4. [Query Transaction Logs](providers/query-logs.js)
+
+    - Define an arbitrary filter
+    - Query logs matching the filter
+
 ## Signing
 
 1. [Sign and verify transactions on the Quai Ledger](sigining/sign-verify-quai.js)
