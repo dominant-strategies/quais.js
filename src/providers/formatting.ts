@@ -148,22 +148,22 @@ export interface EtxParams {
     /**
      * The maximum priority fee to allow a producer to claim.
      */
-    maxPriorityFeePerGas: bigint;
+    maxPriorityFeePerGas: null | bigint;
 
     /**
      * The maximum fee that will be paid.
      */
-    maxFeePerGas: bigint;
+    maxFeePerGas: null | bigint;
 
     /**
      * The gas supplied for this etx.
      */
-    gas: bigint;
+    gas: null | bigint;
 
     /**
      * The etx value (in wei).
      */
-    value: bigint;
+    value: null | bigint;
 
     /**
      * The input data for this etx.
@@ -187,14 +187,26 @@ export interface EtxParams {
     chainId: null | bigint;
 
     /**
-     * The sender of the etx.
-     */
-    from: null | string;
-
-    /**
      * The hash of the transaction.
      */
     hash: string;
+
+    isCoinbase: number;
+
+    /**
+     * The hash of the originating transaction.
+     */
+    originatingTxHash: string;
+
+    /**
+     * The index of this etx.
+     */
+    etxIndex: number;
+
+    /**
+     * The sender of the etx.
+     */
+    sender: string;
 }
 
 // Transaction Receipt
@@ -284,7 +296,7 @@ export interface TransactionReceiptParams {
      */
     status: null | number;
 
-    etxs: ReadonlyArray<string>;
+    etxs: ReadonlyArray<EtxParams>;
 }
 
 /**
