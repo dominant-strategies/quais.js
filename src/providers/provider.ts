@@ -23,6 +23,7 @@ import type { Outpoint } from '../transaction/utxo.js';
 import type { TxInput, TxOutput } from '../transaction/utxo.js';
 import type { Zone, Shard } from '../constants/index.js';
 import type { txpoolContentResponse, txpoolInspectResponse } from './txpool.js';
+import { EtxParams } from './formatting.js';
 
 const BN_0 = BigInt(0);
 
@@ -1237,7 +1238,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
 
     readonly #logs: ReadonlyArray<Log>;
 
-    readonly etxs!: ReadonlyArray<string>;
+    readonly etxs: ReadonlyArray<EtxParams> = [];
 
     /**
      * @ignore
@@ -1255,6 +1256,40 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
         } else if (tx.gasPrice != null) {
             gasPrice = tx.gasPrice;
         }
+        const etxs: EtxParams[] = tx.etxs
+            ? tx.etxs.map((etx) => {
+                  const safeConvert = (value: any, name: string) => {
+                      try {
+                          if (value != null) {
+                              return BigInt(value);
+                          }
+                          return null;
+                      } catch (error) {
+                          console.error(`Conversion to BigInt failed for ${name}: ${value}, error: ${error}`);
+                          return null;
+                      }
+                  };
+
+                  return {
+                      type: etx.type,
+                      nonce: etx.nonce,
+                      gasPrice: safeConvert(etx.gasPrice, 'gasPrice'),
+                      maxPriorityFeePerGas: safeConvert(etx.maxPriorityFeePerGas, 'maxPriorityFeePerGas'),
+                      maxFeePerGas: safeConvert(etx.maxFeePerGas, 'maxFeePerGas'),
+                      gas: safeConvert(etx.gas, 'gas'),
+                      value: safeConvert(etx.value, 'value'),
+                      input: etx.input,
+                      to: etx.to,
+                      accessList: etx.accessList,
+                      chainId: safeConvert(etx.chainId, 'chainId'),
+                      sender: etx.sender,
+                      hash: etx.hash,
+                      isCoinbase: etx.isCoinbase,
+                      originatingTxHash: etx.originatingTxHash,
+                      etxIndex: etx.etxIndex,
+                  };
+              })
+            : [];
 
         defineProperties<TransactionReceipt>(this, {
             provider,
@@ -1275,7 +1310,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             cumulativeGasUsed: tx.cumulativeGasUsed,
             gasPrice,
 
-            etxs: tx.etxs,
+            etxs: etxs,
             type: tx.type,
             status: tx.status,
         });
@@ -1303,6 +1338,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             logsBloom,
             logs, //byzantium,
             status,
+            etxs,
         } = this;
 
         return {
@@ -1320,6 +1356,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             logsBloom,
             status,
             to,
+            etxs: etxs ?? [],
         };
     }
 

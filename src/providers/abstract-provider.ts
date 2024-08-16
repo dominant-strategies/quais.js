@@ -974,7 +974,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     // @todo `network` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _wrapTransactionReceipt(value: TransactionReceiptParams, network: Network): TransactionReceipt {
-        return new TransactionReceipt(formatTransactionReceipt(value), this);
+        const formattedReceipt = formatTransactionReceipt(value);
+        return new TransactionReceipt(formattedReceipt, this);
     }
 
     /**
