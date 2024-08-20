@@ -118,7 +118,7 @@ class MyReporter {
 
         }).on(EVENT_TEST_END, (test) => {
             const logs = this._testLogs.pop();
-            if (logs.length) {
+            if (logs && logs.length) {
                 this.flush(false);
                 logs.join("\n").split("\n").forEach((line) => {
                     this.log(`  <cyan+>&gt;&gt; <cyan->${ escapeColor(line) }`);
