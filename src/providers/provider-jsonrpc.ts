@@ -728,7 +728,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
                             // The response is an error
                             if ('error' in resp) {
-                                reject(this.getRpcError(payload, resp));
+                                reject(this.getRpcError(payload, resp, shard));
                                 continue;
                             }
 
@@ -1269,7 +1269,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * @param {JsonRpcError} _error - The error that was received.
      * @returns {Error} The coalesced error.
      */
-    getRpcError(payload: JsonRpcPayload, _error: JsonRpcError): Error {
+    getRpcError(payload: JsonRpcPayload, _error: JsonRpcError, shard?: Shard): Error {
         const { method } = payload;
         const { error } = _error;
 
@@ -1278,7 +1278,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             if (!msg.match(/revert/i) && msg.match(/insufficient funds/i)) {
                 return makeError('insufficient funds', 'INSUFFICIENT_FUNDS', {
                     transaction: (<any>payload).params[0],
-                    info: { payload, error },
+                    info: { payload, error, shard },
                 });
             }
         }
@@ -1291,7 +1291,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                 (<any>payload).params[0],
                 result ? result.data : null,
             );
-            e.info = { error, payload };
+            e.info = { error, payload, shard };
             return e;
         }
 
@@ -1301,7 +1301,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
         const message = JSON.stringify(spelunkMessage(error));
 
         if (method === 'quai_getTransactionByHash' && error.message && error.message.match(/transaction not found/i)) {
-            return makeError('transaction not found', 'TRANSACTION_NOT_FOUND', { info: { payload, error } });
+            return makeError('transaction not found', 'TRANSACTION_NOT_FOUND', { info: { payload, error, shard } });
         }
 
         if (typeof error.message === 'string' && error.message.match(/user denied|quais-user-denied/i)) {
@@ -1321,7 +1321,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             return makeError(`user rejected action`, 'ACTION_REJECTED', {
                 action: actionMap[method] || 'unknown',
                 reason: 'rejected',
-                info: { payload, error },
+                info: { payload, error, shard },
             });
         }
 
@@ -1331,31 +1331,34 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             if (message.match(/insufficient funds|base fee exceeds gas limit/i)) {
                 return makeError('insufficient funds for intrinsic transaction cost', 'INSUFFICIENT_FUNDS', {
                     transaction,
-                    info: { error },
+                    info: { error, shard },
                 });
             }
 
             if (message.match(/nonce/i) && message.match(/too low/i)) {
-                return makeError('nonce has already been used', 'NONCE_EXPIRED', { transaction, info: { error } });
+                return makeError('nonce has already been used', 'NONCE_EXPIRED', {
+                    transaction,
+                    info: { error, shard },
+                });
             }
 
             // "replacement transaction underpriced"
             if (message.match(/replacement transaction/i) && message.match(/underpriced/i)) {
                 return makeError('replacement fee too low', 'REPLACEMENT_UNDERPRICED', {
                     transaction,
-                    info: { error },
+                    info: { error, shard },
                 });
             }
 
             if (message.match(/only replay-protected/i)) {
                 return makeError('legacy pre-eip-155 transactions not supported', 'UNSUPPORTED_OPERATION', {
                     operation: method,
-                    info: { transaction, info: { error } },
+                    info: { transaction, info: { error, shard } },
                 });
             }
 
             if (message.match(/already known/i)) {
-                return makeError('transaction already known', 'TRANSACTION_ALREADY_KNOWN', { info: { error } });
+                return makeError('transaction already known', 'TRANSACTION_ALREADY_KNOWN', { info: { error, shard } });
             }
         }
 
@@ -1369,11 +1372,11 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
         if (unsupported) {
             return makeError('unsupported operation', 'UNSUPPORTED_OPERATION', {
                 operation: payload.method,
-                info: { error, payload },
+                info: { error, payload, shard },
             });
         }
 
-        return makeError('could not coalesce error', 'UNKNOWN_ERROR', { error, payload });
+        return makeError('could not coalesce error', 'UNKNOWN_ERROR', { error, payload, shard });
     }
 
     /**
