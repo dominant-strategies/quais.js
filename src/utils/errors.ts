@@ -13,6 +13,7 @@ import { defineProperties } from './properties.js';
 import type { TransactionRequest, TransactionReceipt, TransactionResponse } from '../providers/index.js';
 
 import type { FetchRequest, FetchResponse } from './fetch.js';
+import { ExternalTransactionResponse } from '../providers/provider';
 
 /**
  * An error may contain additional properties, but those must not conflict with any implicit properties.
@@ -538,7 +539,7 @@ export interface TransactionReplacedError extends quaisError<'TRANSACTION_REPLAC
     /**
      * The transaction that replaced the transaction.
      */
-    replacement: TransactionResponse;
+    replacement: TransactionResponse | ExternalTransactionResponse;
 
     /**
      * The receipt of the transaction that replace the transaction.

@@ -18,7 +18,7 @@ export interface BlockParams {
     size: bigint;
     subManifest: Array<string> | null;
     totalEntropy: bigint;
-    transactions: ReadonlyArray<string | QuaiTransactionResponseParams>;
+    transactions: ReadonlyArray<string | TransactionResponseParams | ExternalTransactionResponseParams>;
     uncles: Array<string> | null;
     woHeader: WoHeaderParams; // New nested parameter structure
 }
@@ -482,10 +482,6 @@ export interface QuaiTransactionResponseParams {
     accessList: null | AccessList;
 
     etxType: null | string;
-
-    sender: null | string;
-
-    originatingTxHash: null | string;
 }
 
 /**
