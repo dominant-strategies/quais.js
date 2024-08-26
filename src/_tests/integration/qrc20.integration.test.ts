@@ -3,7 +3,12 @@ import { quais, Contract } from '../../index.js';
 import dotenv from 'dotenv';
 import QRC20 from './contracts/QRC20.js';
 
-dotenv.config();
+const env = process.env.NODE_ENV || 'development';
+
+dotenv.config({ path: `.env.${env}` });
+
+// Or fallback to .env if NODE_ENV specific file doesn't exist
+dotenv.config({ path: `.env`, override: false });
 
 describe('Tests ERC20 contract deployment and integration', function () {
     this.timeout(120000);

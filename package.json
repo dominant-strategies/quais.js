@@ -134,7 +134,7 @@
     "clean": "rm -rf dist lib/esm lib/commonjs && cp -r misc/basedirs/* .",
     "update-symlink": "npm run clean && npm run build-all && npm rm -g quais-6 -g && npm link",
     "stats": "echo 'Dependencies' && npm ls --all --omit=dev",
-    "test": "npm run test-esm",
+    "test": "./start-test-containers.sh && NODE_ENV=test npm run test-esm; ./stop-test-containers.sh",
     "test-browser": "node lib/esm/_tests/browser/test-browser.js",
     "test-commonjs": "mocha --reporter ./reporter.cjs ./lib/commonjs/_tests/**/*.test.js",
     "test-unit": "mocha --reporter ./reporter.cjs ./lib/commonjs/_tests/unit/*.unit.test.js",

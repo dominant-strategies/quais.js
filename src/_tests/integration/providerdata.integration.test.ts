@@ -11,7 +11,12 @@ import axios from 'axios';
 import { stall } from '../utils.js';
 import dotenv from 'dotenv';
 import { Shard } from '../../constants/index.js';
-dotenv.config();
+const env = process.env.NODE_ENV || 'development';
+
+dotenv.config({ path: `.env.${env}` });
+
+// Or fallback to .env if NODE_ENV specific file doesn't exist
+dotenv.config({ path: `.env`, override: false });
 // import {
 //     networkFeatureAtBlock, networkNames,
 //     testAddress, testBlock, testReceipt, testTransaction
@@ -22,9 +27,7 @@ dotenv.config();
 //setupProviders();
 
 const providerC1 = new quais.JsonRpcProvider(process.env.RPC_URL);
-const privateKey = process.env.CYPRUS1PK;
-console.log(privateKey);
-const wallet = new quais.Wallet(process.env.CYPRUS1PK || '', providerC1);
+const wallet = new quais.Wallet(process.env.CYPRUS1_PRIVKEY_1 || '', providerC1);
 const destinationC1 = '0x0047f9CEa7662C567188D58640ffC48901cde02a';
 const destinationC2 = '0x011ae0a1Bd5B71b4F16F8FdD3AEF278C3D042449';
 

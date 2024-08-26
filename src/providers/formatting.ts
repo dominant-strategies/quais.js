@@ -10,7 +10,7 @@ import type { AccessList, TxInput, TxOutput } from '../transaction/index.js';
  * @category Providers
  */
 export interface BlockParams {
-    extTransactions: ReadonlyArray<string | QuaiTransactionResponseParams>;
+    extTransactions: ReadonlyArray<string | ExternalTransactionResponseParams>;
     hash: string;
     header: BlockHeaderParams;
     interlinkHashes: Array<string>; // New parameter
@@ -299,6 +299,89 @@ export interface TransactionReceiptParams {
     etxs: ReadonlyArray<EtxParams>;
 }
 
+export interface ExternalTransactionResponseParams {
+    /**
+     * The block number of the block that included this transaction.
+     */
+    blockNumber: null | number;
+
+    /**
+     * The block hash of the block that included this transaction.
+     */
+    blockHash: null | string;
+
+    /**
+     * The transaction hash.
+     */
+    hash: string;
+
+    /**
+     * The transaction index.
+     */
+    index: bigint;
+
+    /**
+     * The transaction type. Quai transactions are always type 0.
+     */
+    type: number;
+
+    /**
+     * The target of the transaction. If `null`, the `data` is initcode and this transaction is a deployment
+     * transaction.
+     */
+    to: null | string;
+
+    etxIndex: number;
+
+    /**
+     * The sender of the transaction.
+     */
+    from: string;
+
+    /**
+     * The nonce of the transaction, used for replay protection.
+     */
+    nonce: number;
+
+    /**
+     * The maximum amount of gas this transaction is authorized to consume.
+     */
+    gasLimit: bigint;
+
+    /**
+     * The transaction data.
+     */
+    data: string;
+
+    /**
+     * The transaction value (in wei).
+     */
+    value: bigint;
+
+    /**
+     * The chain ID this transaction is valid on.
+     */
+    chainId: bigint;
+
+    /**
+     * The signature of the transaction.
+     */
+    signature: Signature;
+
+    /**
+     * The transaction access list.
+     */
+    accessList: null | AccessList;
+
+    originatingTxHash: null | string;
+
+    isCoinbase: null | number;
+
+    etxType: null | string;
+
+    sender: string;
+}
+
 /**
  * A **TransactionResponseParams** encodes the minimal required properties for a formatted transaction response for
  * either a Qi or Quai transaction.
@@ -397,6 +480,12 @@ export interface QuaiTransactionResponseParams {
      * The transaction access list.
      */
     accessList: null | AccessList;
+
+    etxType: null | string;
+
+    sender: null | string;
+
+    originatingTxHash: null | string;
 }
 
 /**

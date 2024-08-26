@@ -24,6 +24,7 @@ import type {
     EtxParams,
     QiTransactionResponseParams,
     QuaiTransactionResponseParams,
+    ExternalTransactionResponseParams,
 } from './formatting.js';
 
 const BN_0 = BigInt(0);
@@ -208,7 +209,7 @@ const _formatBlock = object({
         if (typeof tx === 'string') {
             return formatHash(tx);
         }
-        return formatTransactionResponse(tx);
+        return formatExternalTransactionResponse(tx);
     }),
     hash: formatHash,
     header: _formatHeader,
@@ -235,11 +236,11 @@ export function formatBlock(value: any): BlockParams {
         }
         return formatTransactionResponse(tx);
     });
-    result.extTransactions = value.extTransactions.map((tx: string | TransactionResponseParams) => {
+    result.extTransactions = value.extTransactions.map((tx: string | ExternalTransactionResponseParams) => {
         if (typeof tx === 'string') {
             return tx;
         }
-        return formatTransactionResponse(tx);
+        return formatExternalTransactionResponse(tx);
     });
     return result;
 }
@@ -321,6 +322,51 @@ export function formatTransactionReceipt(value: any): TransactionReceiptParams {
     return result;
 }
 
+export function formatExternalTransactionResponse(value: any): ExternalTransactionResponseParams {
+    const result = object(
+        {
+            hash: formatHash,
+            type: (value: any) => {
+                if (value === '0x' || value == null) {
+                    return 0;
+                }
+                return parseInt(value, 16);
+            },
+            accessList: allowNull(accessListify, null),
+            blockHash: allowNull(formatHash, null),
+            blockNumber: allowNull((value: any) => (value ? parseInt(value, 16) : null), null),
+            index: allowNull((value: any) => (value ? BigInt(value) : null), null),
+            from: allowNull(getAddress, null),
+            sender: allowNull(getAddress, null),
+            maxPriorityFeePerGas: allowNull((value: any) => (value ? BigInt(value) : null)),
+            maxFeePerGas: allowNull((value: any) => (value ? BigInt(value) : null)),
+            gasLimit: allowNull((value: any) => (value ? BigInt(value) : null), null),
+            to: allowNull(getAddress, null),
+            value: allowNull((value: any) => (value ? BigInt(value) : null), null),
+            nonce: allowNull((value: any) => (value ? parseInt(value, 10) : null), null),
+            creates: allowNull(getAddress, null),
+            chainId: allowNull((value: any) => (value ? BigInt(value) : null), null),
+            isCoinbase: allowNull((value: any) => (value ? parseInt(value, 10) : null), null),
+            originatingTxHash: allowNull(formatHash, null),
+            etxIndex: allowNull((value: any) => (value ? parseInt(value, 10) : null), null),
+            etxType: allowNull((value: any) => value, null),
+            data: (value: any) => value,
+        },
+        {
+            data: ['input'],
+            gasLimit: ['gas'],
+            index: ['transactionIndex'],
+        },
+    )(value) as ExternalTransactionResponseParams;
+
+    // 0x0000... should actually be null
+    if (result.blockHash && getBigInt(result.blockHash) === BN_0) {
+        result.blockHash = null;
+    }
+
+    return result;
+}
+
 export function formatTransactionResponse(value: any): TransactionResponseParams {
     // Determine if it is a Quai or Qi transaction based on the type
     const transactionType = parseInt(value.type, 16);
@@ -352,6 +398,8 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
                 nonce: allowNull((value: any) => (value ? parseInt(value, 10) : null), null),
                 creates: allowNull(getAddress, null),
                 chainId: allowNull((value: any) => (value ? BigInt(value) : null), null),
+                etxType: allowNull((value: any) => value, null),
+                originatingTxHash: allowNull(formatHash, null),
                 data: (value: any) => value,
             },
             {
