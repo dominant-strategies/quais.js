@@ -642,7 +642,9 @@ export class Block implements BlockParams, Iterable<string> {
     readonly size!: bigint;
     readonly subManifest!: Array<string> | null;
     readonly totalEntropy!: bigint;
-    readonly #transactions!: Array<string | QuaiTransactionResponse>;
+    readonly #transactions!: Array<
+        string | QuaiTransactionResponse | QiTransactionResponse | ExternalTransactionResponse
+    >;
     readonly uncles!: Array<string> | null;
     readonly woHeader: WoHeader; // New nested parameter structure
 
@@ -661,10 +663,16 @@ export class Block implements BlockParams, Iterable<string> {
      */
     constructor(block: BlockParams, provider: Provider) {
         this.#transactions = block.transactions.map((tx) => {
-            if (typeof tx !== 'string') {
+            if (typeof tx === 'string') {
+                return tx;
+            }
+            if ('originatingTxHash' in tx) {
+                return new ExternalTransactionResponse(tx as ExternalTransactionResponseParams, provider);
+            }
+            if ('from' in tx) {
                 return new QuaiTransactionResponse(tx, provider);
             }
-            return tx;
+            return new QiTransactionResponse(tx as QiTransactionResponseParams, provider);
         });
 
         this.#extTransactions = block.extTransactions.map((tx) => {
@@ -849,9 +857,9 @@ export class Block implements BlockParams, Iterable<string> {
      * @returns {Promise<TransactionResponse>} A promise resolving to the transaction.
      * @throws {Error} If the transaction is not found.
      */
-    async getTransaction(indexOrHash: number | string): Promise<TransactionResponse> {
+    async getTransaction(indexOrHash: number | string): Promise<TransactionResponse | ExternalTransactionResponse> {
         // Find the internal value by its index or hash
-        let tx: string | TransactionResponse | undefined = undefined;
+        let tx: string | TransactionResponse | ExternalTransactionResponse | undefined = undefined;
         if (typeof indexOrHash === 'number') {
             tx = this.#transactions[indexOrHash];
         } else {
@@ -1698,6 +1706,13 @@ export class ExternalTransactionResponse implements QuaiTransactionLike, Externa
 
         return result;
     }
+
+    replaceableTransaction(startBlock: number): ExternalTransactionResponse {
+        assertArgument(Number.isInteger(startBlock) && startBlock >= 0, 'invalid startBlock', 'startBlock', startBlock);
+        const tx = new ExternalTransactionResponse(this, this.provider);
+        tx.startBlock = startBlock;
+        return tx;
+    }
 }
 
 /**
@@ -1861,10 +1876,6 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
         this.startBlock = -1;
 
         this.etxType = tx.etxType != null ? tx.etxType : null;
-
-        this.sender = tx.sender != null ? tx.sender : null;
-
-        this.originatingTxHash = tx.originatingTxHash != null ? tx.originatingTxHash : null;
     }
 
     /**
@@ -2039,7 +2050,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
 
                 // Search for the transaction that replaced us
                 for (let i = 0; i < block.length; i++) {
-                    const tx: TransactionResponse = await block.getTransaction(i);
+                    const tx: TransactionResponse | ExternalTransactionResponse = await block.getTransaction(i);
 
                     if ('from' in tx && tx.from === this.from && tx.nonce === this.nonce) {
                         // Get the receipt
@@ -2070,7 +2081,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
                             cancelled: reason === 'replaced' || reason === 'cancelled',
                             reason,
                             replacement: tx.replaceableTransaction(startBlock),
-                            hash: tx.hash,
+                            hash: (tx as QuaiTransactionResponse).hash,
                             receipt,
                         });
                     }

@@ -230,12 +230,17 @@ const _formatBlock = object({
 
 export function formatBlock(value: any): BlockParams {
     const result = _formatBlock(value);
-    result.transactions = value.transactions.map((tx: string | TransactionResponseParams) => {
-        if (typeof tx === 'string') {
-            return tx;
-        }
-        return formatTransactionResponse(tx);
-    });
+    result.transactions = value.transactions.map(
+        (tx: string | TransactionResponseParams | ExternalTransactionResponseParams) => {
+            if (typeof tx === 'string') {
+                return tx;
+            }
+            if ('originatingTxHash' in tx) {
+                return formatExternalTransactionResponse(tx);
+            }
+            return formatTransactionResponse(tx);
+        },
+    );
     result.extTransactions = value.extTransactions.map((tx: string | ExternalTransactionResponseParams) => {
         if (typeof tx === 'string') {
             return tx;
@@ -399,7 +404,6 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
                 creates: allowNull(getAddress, null),
                 chainId: allowNull((value: any) => (value ? BigInt(value) : null), null),
                 etxType: allowNull((value: any) => value, null),
-                originatingTxHash: allowNull(formatHash, null),
                 data: (value: any) => value,
             },
             {
