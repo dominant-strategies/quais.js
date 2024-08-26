@@ -59,7 +59,7 @@ export function getTxType(from: string | null, to: string | null): number {
         case senderAddressIsQi && recipientAddressIsQi:
             return 2;
         case senderAddressIsQi && !recipientAddressIsQi:
-            return 2;
+            return 1;
         default:
             return 0;
     }
