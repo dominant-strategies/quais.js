@@ -19,7 +19,7 @@ check_service() {
   local url=$1
   local data=$2
   local attempts=0
-  local max_attempts=30  # Maximum number of attempts to avoid infinite loops
+  local max_attempts=100  # Maximum number of attempts to avoid infinite loops
 
   while [ $attempts -lt $max_attempts ]; do
     response=$(curl -s -X POST -H "Content-Type: application/json" -d "$data" $url)
