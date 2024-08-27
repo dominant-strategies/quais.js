@@ -213,6 +213,7 @@ export type JsonRpcApiProviderOptions = {
     batchMaxCount?: number;
 
     cacheTimeout?: number;
+    usePathing?: boolean;
 };
 
 const defaultOptions = {
@@ -223,6 +224,7 @@ const defaultOptions = {
     batchMaxCount: 100, // 100 requests
 
     cacheTimeout: 250,
+    usePathing: false,
 };
 
 export interface AbstractJsonRpcTransactionRequest {
@@ -1544,17 +1546,18 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         }
         super(network, options);
 
+        const usePathing = options?.usePathing ? options.usePathing : false;
         if (Array.isArray(urls)) {
             urls.forEach((url) => {
                 this.validateUrl(url);
             });
-            this.initialize(urls);
+            this.initialize(urls, usePathing);
         } else if (typeof urls === 'string') {
             this.validateUrl(urls);
-            this.initialize([urls]);
+            this.initialize([urls], usePathing);
         } else {
             this.validateUrl(urls.url);
-            this.initialize(urls.clone());
+            this.initialize(urls.clone(), usePathing);
         }
     }
 

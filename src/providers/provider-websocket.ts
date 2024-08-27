@@ -5,6 +5,7 @@ import { SocketProvider } from './provider-socket.js';
 import type { JsonRpcApiProviderOptions } from './provider-jsonrpc.js';
 import type { Networkish } from './network.js';
 import { Shard, toShard } from '../constants/index.js';
+import { fromShard } from '../constants/shards';
 
 /**
  * A generic interface to a Websocket-like object.
@@ -80,6 +81,7 @@ export class WebSocketProvider extends SocketProvider {
     ) {
         super(network, options);
         this.#websockets = [];
+        const usePathing = options?.usePathing ? options.usePathing : false;
         if (typeof url === 'string') {
             this.validateUrl(url);
         } else if (Array.isArray(url)) {
@@ -89,7 +91,7 @@ export class WebSocketProvider extends SocketProvider {
         } else {
             this.validateUrl(url.url);
         }
-        this.initialize(typeof url === 'string' ? [url] : url);
+        this.initialize(typeof url === 'string' ? [url] : url, usePathing);
     }
 
     /**
@@ -143,15 +145,17 @@ export class WebSocketProvider extends SocketProvider {
      *
      * @ignore
      * @param {U} urls - The URLs or WebSocket object or creator.
+     * @param {boolean} usePathing - Whether to use pathing instead of ports for provider.
      * @returns {Promise<void>} A promise that resolves when the URL map is initialized.
      */
-    async initialize<U = string[] | WebSocketLike | WebSocketCreator>(urls: U) {
+    async initialize<U = string[] | WebSocketLike | WebSocketCreator>(urls: U, usePathing: boolean) {
         //clear websockets
         this.#websockets = [];
         this._urlMap.clear();
         try {
-            const createWebSocket = (baseUrl: string, port: number): WebSocketLike => {
-                const tempWs = new _WebSocket(`${baseUrl}:${port}`);
+            const primeSuffix = usePathing ? `/${fromShard(Shard.Prime, 'nickname')}` : ':8001';
+            const createWebSocket = (baseUrl: string, suffix: string): WebSocketLike => {
+                const tempWs = new _WebSocket(`${baseUrl}${suffix}`);
                 return tempWs as WebSocketLike;
                 // wait 2 minutes
             };
@@ -161,13 +165,15 @@ export class WebSocketProvider extends SocketProvider {
                 await Promise.all(
                     shards.map(async (shard) => {
                         const port = 8200 + 20 * shard[0] + shard[1];
+                        const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
+                        const shardSuffix = usePathing ? `/${fromShard(shardEnum, 'nickname')}` : `:${port}`;
                         const shardUrl = baseUrl.split(':').slice(0, 2).join(':');
-                        const websocket = createWebSocket(shardUrl, port);
-                        this.initWebSocket(websocket, toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`));
+                        const websocket = createWebSocket(shardUrl, shardSuffix);
+                        this.initWebSocket(websocket, shardEnum);
                         this.#websockets.push(websocket);
-                        this._urlMap.set(toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`), websocket);
+                        this._urlMap.set(shardEnum, websocket);
                         try {
-                            await this.waitShardReady(toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`));
+                            await this.waitShardReady(shardEnum);
                         } catch (error) {
                             console.log('failed to waitShardReady', error);
                             this._initFailed = true;
@@ -179,7 +185,7 @@ export class WebSocketProvider extends SocketProvider {
             if (Array.isArray(urls)) {
                 for (const url of urls) {
                     const baseUrl = `${url.split(':')[0]}:${url.split(':')[1]}`;
-                    const primeWebsocket = createWebSocket(baseUrl, 8001);
+                    const primeWebsocket = createWebSocket(baseUrl, primeSuffix);
                     this.initWebSocket(primeWebsocket, Shard.Prime);
                     this.#websockets.push(primeWebsocket);
                     this._urlMap.set(Shard.Prime, primeWebsocket);

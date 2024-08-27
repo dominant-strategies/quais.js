@@ -119,3 +119,6 @@ export function toZone(shard: string): Zone {
             ?.byte || '',
     );
 }
+export function fromZone(zone: Zone, key: 'name' | 'nickname' | 'shard' | 'byte'): string {
+    return ZoneData.find((it) => it.byte == zone)?.[key] || '';
+}
