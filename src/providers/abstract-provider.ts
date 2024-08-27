@@ -86,6 +86,7 @@ import {
     PollingTransactionSubscriber,
 } from './subscriber-polling.js';
 import { getNodeLocationFromZone, getZoneFromNodeLocation } from '../utils/shards.js';
+import { fromShard } from '../constants/shards';
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -638,11 +639,13 @@ type _PerformAccountRequest =
 export type AbstractProviderOptions = {
     cacheTimeout?: number;
     pollingInterval?: number;
+    usePathing?: boolean;
 };
 
 const defaultOptions = {
     cacheTimeout: 250,
     pollingInterval: 4000,
+    usePathing: false,
 };
 
 /**
@@ -736,36 +739,42 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * Initialize the URL map with the provided URLs.
      *
      * @param {U} urls - The URLs to initialize the map with.
+     * @param {boolean} usePathing - Whether to use pathing instead of ports for provider.
      * @returns {Promise<void>} A promise that resolves when the map is initialized.
      */
-    async initialize<U = string[] | FetchRequest>(urls: U): Promise<void> {
+    async initialize<U = string[] | FetchRequest>(urls: U, usePathing: boolean): Promise<void> {
         try {
+            const primeSuffix = usePathing ? `/${fromShard(Shard.Prime, 'nickname')}` : ':9001';
             if (urls instanceof FetchRequest) {
-                urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':9001';
+                urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + primeSuffix;
                 this._urlMap.set(Shard.Prime, urls as C);
                 this.#connect.push(urls);
                 const shards = await this.getRunningLocations();
                 shards.forEach((shard) => {
                     const port = 9200 + 20 * shard[0] + shard[1];
+                    const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
+                    const shardSuffix = usePathing ? `/${fromShard(shardEnum, 'nickname')}` : `:${port}`;
                     this._urlMap.set(
-                        toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
-                        new FetchRequest(urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':' + port) as C,
+                        shardEnum,
+                        new FetchRequest(urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + shardSuffix) as C,
                     );
                 });
                 return;
             }
             if (Array.isArray(urls)) {
                 for (const url of urls) {
-                    const primeUrl = url.split(':')[0] + ':' + url.split(':')[1] + ':9001';
+                    const primeUrl = url.split(':')[0] + ':' + url.split(':')[1] + primeSuffix;
                     const primeConnect = new FetchRequest(primeUrl);
                     this._urlMap.set(Shard.Prime, primeConnect as C);
                     this.#connect.push(primeConnect);
                     const shards = await this.getRunningLocations();
                     shards.forEach((shard) => {
                         const port = 9200 + 20 * shard[0] + shard[1];
+                        const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
+                        const shardSuffix = usePathing ? `/${fromShard(shardEnum, 'nickname')}` : `:${port}`;
                         this._urlMap.set(
                             toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
-                            new FetchRequest(url.split(':')[0] + ':' + url.split(':')[1] + ':' + port) as C,
+                            new FetchRequest(url.split(':')[0] + ':' + url.split(':')[1] + shardSuffix) as C,
                         );
                     });
                 }
@@ -1542,6 +1551,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     validateUrl(url: string): void {
+        // Updated regex pattern to explicitly disallow paths and query strings
         const urlPattern = /^(https?):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
 
         if (!urlPattern.test(url)) {
@@ -1553,6 +1563,11 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
             if (url.endsWith('/')) {
                 errorMessage += 'URL should not end with a /. ';
+            }
+
+            // Additional check to ensure no path, query string, or fragment is present
+            if (/\/[^/]+/.test(url)) {
+                errorMessage += 'URL should not contain a path, query string, or fragment. ';
             }
 
             throw new Error(errorMessage.trim());

@@ -98,3 +98,7 @@ export function toShard(shard: string): Shard {
             ?.byte || '',
     );
 }
+
+export function fromShard(shard: Shard, key: 'name' | 'nickname' | 'shard' | 'byte'): string {
+    return ShardData.find((it) => it.byte == shard)?.[key] || '';
+}
