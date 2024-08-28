@@ -474,7 +474,6 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     }
 
     validateUrl(url: string): void {
-        // Updated regex pattern to disallow paths, query strings, or fragments
         const urlPattern = /^(ws):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
 
         if (!urlPattern.test(url)) {
@@ -488,14 +487,10 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
                 errorMessage += 'URL should not end with a /. ';
             }
 
-            // Additional check to ensure no path, query string, or fragment is present
             if (/\/[^/]+/.test(url)) {
                 errorMessage += 'URL should not contain a path, query string, or fragment. ';
             }
-
             throw new Error(errorMessage.trim());
         }
-
-        console.log('Valid URL');
     }
 }

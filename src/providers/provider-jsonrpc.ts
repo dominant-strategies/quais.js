@@ -1546,18 +1546,17 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         }
         super(network, options);
 
-        const usePathing = options?.usePathing ? options.usePathing : false;
         if (Array.isArray(urls)) {
             urls.forEach((url) => {
                 this.validateUrl(url);
             });
-            this.initialize(urls, usePathing);
+            this.initialize(urls);
         } else if (typeof urls === 'string') {
             this.validateUrl(urls);
-            this.initialize([urls], usePathing);
+            this.initialize([urls]);
         } else {
             this.validateUrl(urls.url);
-            this.initialize(urls.clone(), usePathing);
+            this.initialize(urls.clone());
         }
     }
 
