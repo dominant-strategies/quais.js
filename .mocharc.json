@@ -1,0 +1,4 @@
+{
+    "node-option": ["unhandled-rejections=strict"],
+    "exit": true
+}
