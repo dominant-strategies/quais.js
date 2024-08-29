@@ -1,6 +1,6 @@
 // import { expect } from 'chai';
 import assert from 'assert';
-import { formatTransactionReceipt } from '../../providers/format';
+import { formatTransactionReceipt } from '../../providers/format.js';
 
 // Mock objects similar to what would be returned by your JSON RPC response
 const inZoneTxReceipt = {
