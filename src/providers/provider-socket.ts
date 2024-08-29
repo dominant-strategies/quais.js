@@ -7,7 +7,7 @@ import type { EventFilter } from './provider.js';
 import type { JsonRpcApiProviderOptions, JsonRpcError, JsonRpcPayload, JsonRpcResult } from './provider-jsonrpc.js';
 import type { Networkish } from './network.js';
 import type { WebSocketLike } from './provider-websocket.js';
-import { Shard, Zone } from '../constants/index.js';
+import { Shard, Zone, toShard } from '../constants/index.js';
 
 /**
  * @property {string} method - The method name.
@@ -52,6 +52,7 @@ export class SocketSubscriber implements Subscriber {
 
     #emitPromise: null | Promise<void>;
     protected zone: Zone;
+    protected shard: Shard;
 
     /**
      * Creates a new **SocketSubscriber** attached to `provider` listening to `filter`.
@@ -66,13 +67,14 @@ export class SocketSubscriber implements Subscriber {
         this.#paused = null;
         this.#emitPromise = null;
         this.zone = zone;
+        this.shard = toShard(zone);
     }
 
     /**
      * Start the subscriber.
      */
     start(): void {
-        this.#filterId = this.#provider.send('quai_subscribe', this.filter).then((filterId) => {
+        this.#filterId = this.#provider.send('quai_subscribe', this.filter, this.shard).then((filterId) => {
             this.#provider._register(filterId, this);
             return filterId;
         });
@@ -83,7 +85,7 @@ export class SocketSubscriber implements Subscriber {
      */
     stop(): void {
         (<Promise<number>>this.#filterId).then((filterId) => {
-            this.#provider.send('quai_unsubscribe', [filterId]);
+            this.#provider.send('quai_unsubscribe', [filterId], this.shard);
         });
         this.#filterId = null;
     }
