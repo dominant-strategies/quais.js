@@ -155,13 +155,13 @@ export class FeeData {
  * @throws {Error} If unable to determine the address.
  */
 export function addressFromTransactionRequest(tx: TransactionRequest): AddressLike {
-    if ('from' in tx) {
+    if ('from' in tx && !!tx.from) {
         return tx.from;
     }
-    if (tx.txInputs) {
+    if ('txInputs' in tx && !!tx.txInputs) {
         return computeAddress(tx.txInputs[0].pubkey);
     }
-    if ('to' in tx && tx.to !== null) {
+    if ('to' in tx && !!tx.to) {
         return tx.to as AddressLike;
     }
     throw new Error('Unable to determine address from transaction inputs, from or to field');

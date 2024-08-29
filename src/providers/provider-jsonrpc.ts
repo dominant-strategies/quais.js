@@ -1096,7 +1096,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
     getRpcTransaction(tx: TransactionRequest): JsonRpcTransactionRequest {
         const result: JsonRpcTransactionRequest = {};
 
-        if ('from' in tx) {
+        if ('from' in tx || ('to' in tx && 'data' in tx)) {
             // JSON-RPC now requires numeric values to be "quantity" values
             [
                 'chainId',
