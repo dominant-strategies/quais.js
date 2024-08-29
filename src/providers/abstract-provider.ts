@@ -86,7 +86,7 @@ import {
     PollingTransactionSubscriber,
 } from './subscriber-polling.js';
 import { getNodeLocationFromZone, getZoneFromNodeLocation } from '../utils/shards.js';
-import { fromShard } from '../constants/shards';
+import { fromShard } from '../constants/shards.js';
 
 type Timer = ReturnType<typeof setTimeout>;
 

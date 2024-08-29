@@ -5,7 +5,7 @@ import { SocketProvider } from './provider-socket.js';
 import type { JsonRpcApiProviderOptions } from './provider-jsonrpc.js';
 import type { Networkish } from './network.js';
 import { Shard, toShard } from '../constants/index.js';
-import { fromShard } from '../constants/shards';
+import { fromShard } from '../constants/shards.js';
 
 /**
  * A generic interface to a Websocket-like object.

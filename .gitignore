@@ -11,4 +11,4 @@ lib/esm/**
 .env*
 !.env.test
 .DS_Store
-quai-local-node
+quai-local-node*
