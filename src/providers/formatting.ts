@@ -10,7 +10,7 @@ import type { AccessList, TxInput, TxOutput } from '../transaction/index.js';
  * @category Providers
  */
 export interface BlockParams {
-    extTransactions: ReadonlyArray<string | QuaiTransactionResponseParams>;
+    extTransactions: ReadonlyArray<string | ExternalTransactionResponseParams>;
     hash: string;
     header: BlockHeaderParams;
     interlinkHashes: Array<string>; // New parameter
@@ -18,7 +18,7 @@ export interface BlockParams {
     size: bigint;
     subManifest: Array<string> | null;
     totalEntropy: bigint;
-    transactions: ReadonlyArray<string | QuaiTransactionResponseParams>;
+    transactions: ReadonlyArray<string | TransactionResponseParams | ExternalTransactionResponseParams>;
     uncles: Array<string> | null;
     woHeader: WoHeaderParams; // New nested parameter structure
 }
@@ -148,22 +148,22 @@ export interface EtxParams {
     /**
      * The maximum priority fee to allow a producer to claim.
      */
-    maxPriorityFeePerGas: bigint;
+    maxPriorityFeePerGas: null | bigint;
 
     /**
      * The maximum fee that will be paid.
      */
-    maxFeePerGas: bigint;
+    maxFeePerGas: null | bigint;
 
     /**
      * The gas supplied for this etx.
      */
-    gas: bigint;
+    gas: null | bigint;
 
     /**
      * The etx value (in wei).
      */
-    value: bigint;
+    value: null | bigint;
 
     /**
      * The input data for this etx.
@@ -187,14 +187,26 @@ export interface EtxParams {
     chainId: null | bigint;
 
     /**
-     * The sender of the etx.
-     */
-    from: null | string;
-
-    /**
      * The hash of the transaction.
      */
     hash: string;
+
+    isCoinbase: number;
+
+    /**
+     * The hash of the originating transaction.
+     */
+    originatingTxHash: string;
+
+    /**
+     * The index of this etx.
+     */
+    etxIndex: number;
+
+    /**
+     * The sender of the etx.
+     */
+    sender: string;
 }
 
 // Transaction Receipt
@@ -284,7 +296,90 @@ export interface TransactionReceiptParams {
      */
     status: null | number;
 
-    etxs: ReadonlyArray<string>;
+    etxs: ReadonlyArray<EtxParams>;
+}
+
+export interface ExternalTransactionResponseParams {
+    /**
+     * The block number of the block that included this transaction.
+     */
+    blockNumber: null | number;
+
+    /**
+     * The block hash of the block that included this transaction.
+     */
+    blockHash: null | string;
+
+    /**
+     * The transaction hash.
+     */
+    hash: string;
+
+    /**
+     * The transaction index.
+     */
+    index: bigint;
+
+    /**
+     * The transaction type. Quai transactions are always type 0.
+     */
+    type: number;
+
+    /**
+     * The target of the transaction. If `null`, the `data` is initcode and this transaction is a deployment
+     * transaction.
+     */
+    to: null | string;
+
+    etxIndex: number;
+
+    /**
+     * The sender of the transaction.
+     */
+    from: string;
+
+    /**
+     * The nonce of the transaction, used for replay protection.
+     */
+    nonce: number;
+
+    /**
+     * The maximum amount of gas this transaction is authorized to consume.
+     */
+    gasLimit: bigint;
+
+    /**
+     * The transaction data.
+     */
+    data: string;
+
+    /**
+     * The transaction value (in wei).
+     */
+    value: bigint;
+
+    /**
+     * The chain ID this transaction is valid on.
+     */
+    chainId: bigint;
+
+    /**
+     * The signature of the transaction.
+     */
+    signature: Signature;
+
+    /**
+     * The transaction access list.
+     */
+    accessList: null | AccessList;
+
+    originatingTxHash: null | string;
+
+    isCoinbase: null | number;
+
+    etxType: null | string;
+
+    sender: string;
 }
 
 /**
@@ -385,6 +480,8 @@ export interface QuaiTransactionResponseParams {
      * The transaction access list.
      */
     accessList: null | AccessList;
+
+    etxType: null | string;
 }
 
 /**

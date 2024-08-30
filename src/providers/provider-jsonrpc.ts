@@ -213,6 +213,7 @@ export type JsonRpcApiProviderOptions = {
     batchMaxCount?: number;
 
     cacheTimeout?: number;
+    usePathing?: boolean;
 };
 
 const defaultOptions = {
@@ -223,6 +224,7 @@ const defaultOptions = {
     batchMaxCount: 100, // 100 requests
 
     cacheTimeout: 250,
+    usePathing: false,
 };
 
 export interface AbstractJsonRpcTransactionRequest {
@@ -596,7 +598,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
 type ResolveFunc = (result: JsonRpcResult) => void;
 type RejectFunc = (error: Error) => void;
 
-type Payload = { payload: JsonRpcPayload; resolve: ResolveFunc; reject: RejectFunc; shard?: Shard };
+type Payload = { payload: JsonRpcPayload; resolve: ResolveFunc; reject: RejectFunc; shard?: Shard; now?: boolean };
 
 /**
  * The JsonRpcApiProvider is an abstract class and **MUST** be sub-classed.
@@ -627,8 +629,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
     #network: null | Network;
     #pendingDetectNetwork: null | Promise<Network>;
-
-    initPromise?: Promise<void>;
 
     /**
      * Schedules the draining of the payload queue.
@@ -667,29 +667,49 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                 // Process the result to each payload
                 (async () => {
                     const payloadMap: Map<string | undefined, Array<JsonRpcPayload>> = new Map();
+                    const nowPayloadMap: Map<string | undefined, Array<JsonRpcPayload>> = new Map();
                     for (let i = 0; i < batch.length; i++) {
-                        if (!payloadMap.has(batch[i].shard)) {
-                            if (batch[i].payload != null) {
-                                payloadMap.set(batch[i].shard, [batch[i].payload]);
+                        if (batch[i].now) {
+                            if (!nowPayloadMap.has(batch[i].shard)) {
+                                if (batch[i].payload != null) {
+                                    nowPayloadMap.set(batch[i].shard, [batch[i].payload]);
+                                }
+                            } else {
+                                nowPayloadMap.get(batch[i].shard)?.push(batch[i].payload);
                             }
                         } else {
-                            payloadMap.get(batch[i].shard)?.push(batch[i].payload);
+                            if (!payloadMap.has(batch[i].shard)) {
+                                if (batch[i].payload != null) {
+                                    payloadMap.set(batch[i].shard, [batch[i].payload]);
+                                }
+                            } else {
+                                payloadMap.get(batch[i].shard)?.push(batch[i].payload);
+                            }
                         }
                     }
 
                     const rawResult: Array<Array<JsonRpcResult | JsonRpcError>> = [];
+                    const processPayloads = async (key: string | undefined, value: JsonRpcPayload[], now?: boolean) => {
+                        const payload = value.length === 1 ? value[0] : value;
+                        const shard = key ? toShard(key) : Shard.Prime;
+                        const zone = shard.length < 4 ? undefined : toZone(shard);
+
+                        this.emit('debug', zone, { action: 'sendRpcPayload', payload });
+
+                        rawResult.push(await this._send(payload, shard, now));
+
+                        this.emit('debug', zone, { action: 'receiveRpcResult', payload });
+                    };
                     await Promise.all(
-                        Array.from(payloadMap).map(async ([key, value]) => {
-                            const payload = value.length === 1 ? value[0] : value;
-                            const shard = key ? toShard(key) : Shard.Prime;
-                            const zone = shard.length < 4 ? undefined : toZone(shard);
-
-                            this.emit('debug', zone, { action: 'sendRpcPayload', payload });
-
-                            rawResult.push(await this._send(payload, shard));
-
-                            this.emit('debug', zone, { action: 'receiveRpcResult', payload });
-                        }),
+                        Array.from(nowPayloadMap)
+                            .map(async ([key, value]) => {
+                                await processPayloads(key, value, true);
+                            })
+                            .concat(
+                                Array.from(payloadMap).map(async ([key, value]) => {
+                                    await processPayloads(key, value);
+                                }),
+                            ),
                     );
 
                     const result: Array<JsonRpcResult | JsonRpcError> = rawResult.flat();
@@ -728,7 +748,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
                             // The response is an error
                             if ('error' in resp) {
-                                reject(this.getRpcError(payload, resp));
+                                reject(this.getRpcError(payload, resp, shard));
                                 continue;
                             }
 
@@ -831,12 +851,14 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * @ignore
      * @param {JsonRpcPayload | JsonRpcPayload[]} payload - The JSON-RPC payload.
      * @param {Shard} [shard] - The shard to send the request to.
+     * @param {boolean} [now] - Whether to send the request immediately.
      * @returns {Promise<(JsonRpcResult | JsonRpcError)[]>} The JSON-RPC result.
      * @throws {Error} If the request fails.
      */
     abstract _send(
         payload: JsonRpcPayload | Array<JsonRpcPayload>,
         shard?: Shard,
+        now?: boolean,
     ): Promise<Array<JsonRpcResult | JsonRpcError>>;
 
     /**
@@ -876,7 +898,11 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
         if (request != null) {
             const shard = 'shard' in req ? req.shard : 'zone' in req ? toShard(req.zone!) : undefined;
-            return await this.send(request.method, request.args, shard);
+            if (req.method === 'getRunningLocations') {
+                return await this.send(request.method, request.args, shard, req.now);
+            } else {
+                return await this.send(request.method, request.args, shard);
+            }
         }
 
         return super._perform(req);
@@ -1015,10 +1041,10 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * @returns {Promise<void>} A promise that resolves once the provider is ready.
      */
     async _waitUntilReady(): Promise<void> {
-        if (this.#notReady == null) {
-            return;
+        if (this._initFailed) {
+            throw new Error('Provider failed to initialize on creation. Run initialize or create a new provider.');
         }
-        return await this.#notReady.promise;
+        await this.initPromise;
     }
 
     /**
@@ -1070,7 +1096,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
     getRpcTransaction(tx: TransactionRequest): JsonRpcTransactionRequest {
         const result: JsonRpcTransactionRequest = {};
 
-        if ('from' in tx) {
+        if ('from' in tx || ('to' in tx && 'data' in tx)) {
             // JSON-RPC now requires numeric values to be "quantity" values
             [
                 'chainId',
@@ -1269,7 +1295,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * @param {JsonRpcError} _error - The error that was received.
      * @returns {Error} The coalesced error.
      */
-    getRpcError(payload: JsonRpcPayload, _error: JsonRpcError): Error {
+    getRpcError(payload: JsonRpcPayload, _error: JsonRpcError, shard?: Shard): Error {
         const { method } = payload;
         const { error } = _error;
 
@@ -1278,7 +1304,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             if (!msg.match(/revert/i) && msg.match(/insufficient funds/i)) {
                 return makeError('insufficient funds', 'INSUFFICIENT_FUNDS', {
                     transaction: (<any>payload).params[0],
-                    info: { payload, error },
+                    info: { payload, error, shard },
                 });
             }
         }
@@ -1291,7 +1317,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                 (<any>payload).params[0],
                 result ? result.data : null,
             );
-            e.info = { error, payload };
+            e.info = { error, payload, shard };
             return e;
         }
 
@@ -1301,7 +1327,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
         const message = JSON.stringify(spelunkMessage(error));
 
         if (method === 'quai_getTransactionByHash' && error.message && error.message.match(/transaction not found/i)) {
-            return makeError('transaction not found', 'TRANSACTION_NOT_FOUND', { info: { payload, error } });
+            return makeError('transaction not found', 'TRANSACTION_NOT_FOUND', { info: { payload, error, shard } });
         }
 
         if (typeof error.message === 'string' && error.message.match(/user denied|quais-user-denied/i)) {
@@ -1321,7 +1347,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             return makeError(`user rejected action`, 'ACTION_REJECTED', {
                 action: actionMap[method] || 'unknown',
                 reason: 'rejected',
-                info: { payload, error },
+                info: { payload, error, shard },
             });
         }
 
@@ -1331,31 +1357,34 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             if (message.match(/insufficient funds|base fee exceeds gas limit/i)) {
                 return makeError('insufficient funds for intrinsic transaction cost', 'INSUFFICIENT_FUNDS', {
                     transaction,
-                    info: { error },
+                    info: { error, shard },
                 });
             }
 
             if (message.match(/nonce/i) && message.match(/too low/i)) {
-                return makeError('nonce has already been used', 'NONCE_EXPIRED', { transaction, info: { error } });
+                return makeError('nonce has already been used', 'NONCE_EXPIRED', {
+                    transaction,
+                    info: { error, shard },
+                });
             }
 
             // "replacement transaction underpriced"
             if (message.match(/replacement transaction/i) && message.match(/underpriced/i)) {
                 return makeError('replacement fee too low', 'REPLACEMENT_UNDERPRICED', {
                     transaction,
-                    info: { error },
+                    info: { error, shard },
                 });
             }
 
             if (message.match(/only replay-protected/i)) {
                 return makeError('legacy pre-eip-155 transactions not supported', 'UNSUPPORTED_OPERATION', {
                     operation: method,
-                    info: { transaction, info: { error } },
+                    info: { transaction, info: { error, shard } },
                 });
             }
 
             if (message.match(/already known/i)) {
-                return makeError('transaction already known', 'TRANSACTION_ALREADY_KNOWN', { info: { error } });
+                return makeError('transaction already known', 'TRANSACTION_ALREADY_KNOWN', { info: { error, shard } });
             }
         }
 
@@ -1369,11 +1398,21 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
         if (unsupported) {
             return makeError('unsupported operation', 'UNSUPPORTED_OPERATION', {
                 operation: payload.method,
-                info: { error, payload },
+                info: { error, payload, shard },
             });
         }
 
-        return makeError('could not coalesce error', 'UNKNOWN_ERROR', { error, payload });
+        if (message.match('Provider failed to initialize on creation. Run initialize or create a new provider.')) {
+            return makeError(
+                'Provider failed to initialize on creation. Run initUrlMap or create a new provider.',
+                'PROVIDER_FAILED_TO_INITIALIZE',
+                {
+                    info: { payload, error, shard },
+                },
+            );
+        }
+
+        return makeError('could not coalesce error', 'UNKNOWN_ERROR', { error, payload, shard });
     }
 
     /**
@@ -1388,31 +1427,42 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * @param {string} method - The method to call.
      * @param {any[] | Record<string, any>} params - The parameters to pass to the method.
      * @param {Shard} shard - The shard to send the request to.
+     * @param {boolean} now - If true, the request will be sent immediately.
      * @returns {Promise<any>} A promise that resolves to the result of the method call.
      */
-    send(method: string, params: Array<any> | Record<string, any>, shard?: Shard): Promise<any> {
+    send(method: string, params: Array<any> | Record<string, any>, shard?: Shard, now?: boolean): Promise<any> {
+        const continueSend = (): Promise<any> => {
+            if (this.destroyed) {
+                return Promise.reject(
+                    makeError('provider destroyed; cancelled request', 'UNSUPPORTED_OPERATION', { operation: method }),
+                );
+            }
+            const id = this.#nextId++;
+            const promise = new Promise((resolve, reject) => {
+                this.#payloads.push({
+                    resolve,
+                    reject,
+                    payload: { method, params, id, jsonrpc: '2.0' },
+                    shard: shard,
+                    now: now,
+                });
+            });
+
+            // If there is not a pending drainTimer, set one
+            this.#scheduleDrain();
+
+            return <Promise<JsonRpcResult>>promise;
+        };
         // @TODO: cache chainId?? purge on switch_networks
 
         // We have been destroyed; no operations are supported anymore
-        if (this.destroyed) {
-            return Promise.reject(
-                makeError('provider destroyed; cancelled request', 'UNSUPPORTED_OPERATION', { operation: method }),
-            );
-        }
-        const id = this.#nextId++;
-        const promise = new Promise((resolve, reject) => {
-            this.#payloads.push({
-                resolve,
-                reject,
-                payload: { method, params, id, jsonrpc: '2.0' },
-                shard: shard,
+        if (method !== 'quai_listRunningChains') {
+            return this.initPromise.then(() => {
+                return continueSend();
             });
-        });
-
-        // If there is not a pending drainTimer, set one
-        this.#scheduleDrain();
-
-        return <Promise<JsonRpcResult>>promise;
+        } else {
+            return continueSend();
+        }
     }
 
     /**
@@ -1506,11 +1556,16 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         super(network, options);
 
         if (Array.isArray(urls)) {
-            this.initPromise = this.initUrlMap(urls);
+            urls.forEach((url) => {
+                this.validateUrl(url);
+            });
+            this.initialize(urls);
         } else if (typeof urls === 'string') {
-            this.initPromise = this.initUrlMap([urls]);
+            this.validateUrl(urls);
+            this.initialize([urls]);
         } else {
-            this.initPromise = this.initUrlMap(urls.clone());
+            this.validateUrl(urls.url);
+            this.initialize(urls.clone());
         }
     }
 
@@ -1520,6 +1575,9 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
     }
 
     _getConnection(shard?: Shard): FetchRequest {
+        if (this._initFailed) {
+            throw new Error('Provider failed to initialize on creation. Run initUrlMap or create a new provider.');
+        }
         let connection;
         if (shard !== undefined) {
             connection = this._urlMap.get(shard) ?? this.connect[this.connect.length - 1]!.clone();
@@ -1529,13 +1587,13 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         return new FetchRequest(connection.url);
     }
 
-    async send(method: string, params: Array<any> | Record<string, any>, shard?: Shard): Promise<any> {
+    async send(method: string, params: Array<any> | Record<string, any>, shard?: Shard, now?: boolean): Promise<any> {
         // All requests are over HTTP, so we can just start handling requests
         // We do this here rather than the constructor so that we don't send any
         // requests to the network (i.e. quai_chainId) until we absolutely have to.
         await this._start();
 
-        return await super.send(method, params, shard);
+        return await super.send(method, params, shard, now);
     }
 
     async _send(payload: JsonRpcPayload | Array<JsonRpcPayload>, shard?: Shard): Promise<Array<JsonRpcResult>> {

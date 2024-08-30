@@ -13,6 +13,7 @@ import { defineProperties } from './properties.js';
 import type { TransactionRequest, TransactionReceipt, TransactionResponse } from '../providers/index.js';
 
 import type { FetchRequest, FetchResponse } from './fetch.js';
+import { ExternalTransactionResponse } from '../providers/provider';
 
 /**
  * An error may contain additional properties, but those must not conflict with any implicit properties.
@@ -151,7 +152,10 @@ export type ErrorCode =
     | 'TRANSACTION_ALREADY_KNOWN'
 
     // User Interaction
-    | 'ACTION_REJECTED';
+    | 'ACTION_REJECTED'
+
+    // Provider Errors
+    | 'PROVIDER_FAILED_TO_INITIALIZE';
 
 /**
  * All errors in quais include properties to assist in machine-readable errors.
@@ -535,7 +539,7 @@ export interface TransactionReplacedError extends quaisError<'TRANSACTION_REPLAC
     /**
      * The transaction that replaced the transaction.
      */
-    replacement: TransactionResponse;
+    replacement: TransactionResponse | ExternalTransactionResponse;
 
     /**
      * The receipt of the transaction that replace the transaction.
@@ -579,6 +583,8 @@ export interface TransactionNotFoundError extends quaisError<'TRANSACTION_NOT_FO
  * @category Utils
  */
 export interface TransactionAlreadyKnown extends quaisError<'TRANSACTION_ALREADY_KNOWN'> {}
+
+export interface ProviderFailedToInitializeError extends quaisError<'PROVIDER_FAILED_TO_INITIALIZE'> {}
 
 // Coding; converts an ErrorCode its Typed Error
 
@@ -629,7 +635,9 @@ export type CodedquaisError<T> = T extends 'UNKNOWN_ERROR'
                                           ? TransactionNotFoundError
                                           : T extends 'TRANSACTION_ALREADY_KNOWN'
                                             ? TransactionAlreadyKnown
-                                            : never;
+                                            : T extends 'PROVIDER_FAILED_TO_INITIALIZE'
+                                              ? ProviderFailedToInitializeError
+                                              : never;
 
 /**
  * Returns true if the `error` matches an error thrown by quais that matches the error `code`.

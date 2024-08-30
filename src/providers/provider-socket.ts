@@ -7,7 +7,7 @@ import type { EventFilter } from './provider.js';
 import type { JsonRpcApiProviderOptions, JsonRpcError, JsonRpcPayload, JsonRpcResult } from './provider-jsonrpc.js';
 import type { Networkish } from './network.js';
 import type { WebSocketLike } from './provider-websocket.js';
-import { Shard, Zone } from '../constants/index.js';
+import { Shard, Zone, toShard } from '../constants/index.js';
 
 /**
  * @property {string} method - The method name.
@@ -52,6 +52,7 @@ export class SocketSubscriber implements Subscriber {
 
     #emitPromise: null | Promise<void>;
     protected zone: Zone;
+    protected shard: Shard;
 
     /**
      * Creates a new **SocketSubscriber** attached to `provider` listening to `filter`.
@@ -66,13 +67,14 @@ export class SocketSubscriber implements Subscriber {
         this.#paused = null;
         this.#emitPromise = null;
         this.zone = zone;
+        this.shard = toShard(zone);
     }
 
     /**
      * Start the subscriber.
      */
     start(): void {
-        this.#filterId = this.#provider.send('quai_subscribe', this.filter).then((filterId) => {
+        this.#filterId = this.#provider.send('quai_subscribe', this.filter, this.shard).then((filterId) => {
             this.#provider._register(filterId, this);
             return filterId;
         });
@@ -83,7 +85,7 @@ export class SocketSubscriber implements Subscriber {
      */
     stop(): void {
         (<Promise<number>>this.#filterId).then((filterId) => {
-            this.#provider.send('quai_unsubscribe', [filterId]);
+            this.#provider.send('quai_unsubscribe', [filterId], this.shard);
         });
         this.#filterId = null;
     }
@@ -176,7 +178,7 @@ export class SocketBlockSubscriber extends SocketSubscriber {
      * @returns {Promise<void>}
      */
     async _emit(provider: SocketProvider, message: any): Promise<void> {
-        provider.emit('block', this.zone, parseInt(message.number));
+        provider.emit('block', this.zone, parseInt(message.woHeader.number));
     }
 }
 
@@ -355,12 +357,26 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
      * @ignore
      * @param {JsonRpcPayload | JsonRpcPayload[]} payload - The payload to send.
      * @param {Shard} [shard] - The shard.
+     * @param {boolean} [now] - Whether to send immediately.
      * @returns {Promise<(JsonRpcResult | JsonRpcError)[]>} The result or error.
      */
     async _send(
         payload: JsonRpcPayload | Array<JsonRpcPayload>,
         shard?: Shard,
+        now?: boolean,
     ): Promise<Array<JsonRpcResult | JsonRpcError>> {
+        if (this._initFailed) {
+            console.log('Provider failed to initialize on creation. Run initialize or create a new provider.');
+            return [
+                {
+                    id: Array.isArray(payload) ? payload[0].id : payload.id,
+                    error: {
+                        code: -32000,
+                        message: 'Provider failed to initialize on creation. Run initialize or create a new provider.',
+                    },
+                },
+            ];
+        }
         // WebSocket provider doesn't accept batches
         assertArgument(!Array.isArray(payload), 'WebSocket does not support batch send', 'payload', payload);
 
@@ -372,7 +388,22 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
         });
 
         // Wait until the socket is connected before writing to it
-        await this._waitUntilReady();
+        try {
+            if (!now) {
+                await this._waitUntilReady();
+            }
+        } catch (error) {
+            this.#callbacks.delete(payload.id);
+            return [
+                {
+                    id: Array.isArray(payload) ? payload[0].id : payload.id,
+                    error: {
+                        code: -32000,
+                        message: 'Provider failed to initialize on creation. Run initialize or create a new provider.',
+                    },
+                },
+            ];
+        }
 
         // Write the request to the socket
         await this._write(JSON.stringify(payload), shard);
@@ -442,5 +473,26 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async _write(message: string, shard?: Shard): Promise<void> {
         throw new Error('sub-classes must override this');
+    }
+
+    validateUrl(url: string): void {
+        const urlPattern = /^(ws):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
+
+        if (!urlPattern.test(url)) {
+            let errorMessage = 'Invalid URL: ';
+
+            if (!/^ws:\/\//.test(url)) {
+                errorMessage += 'URL must start with ws://. ';
+            }
+
+            if (url.endsWith('/')) {
+                errorMessage += 'URL should not end with a /. ';
+            }
+
+            if (/\/[^/]+/.test(url)) {
+                errorMessage += 'URL should not contain a path, query string, or fragment. ';
+            }
+            throw new Error(errorMessage.trim());
+        }
     }
 }

@@ -15,6 +15,7 @@ import { randomBytes } from '../crypto/index.js';
 import { getContractAddress, isQiAddress } from '../address/index.js';
 import { getStatic } from '../utils/properties.js';
 import { QuaiTransactionRequest } from '../providers/provider.js';
+import { JsonRpcSigner } from '../providers/provider-jsonrpc.js';
 
 // A = Arguments to the constructor
 // I = Interface of deployed contracts
@@ -133,7 +134,7 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
             },
         );
 
-        if (this.runner instanceof Wallet) {
+        if (this.runner instanceof Wallet || this.runner instanceof JsonRpcSigner) {
             validateAddress(this.runner.address);
             tx.from = this.runner.address;
         }

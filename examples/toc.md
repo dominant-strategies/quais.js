@@ -39,6 +39,12 @@ Happy coding!
     - Define an arbitrary filter
     - Query logs matching the filter
 
+5. [Subscribe to WS block events](providers/ws-subscribe-block.js)
+
+    - Create a websocket provider
+    - Subscribe to new block events
+    - Handle new block events
+
 ## Signing
 
 1. [Sign and verify transactions on the Quai Ledger](sigining/sign-verify-quai.js)

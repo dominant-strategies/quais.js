@@ -23,6 +23,7 @@ import type { Outpoint } from '../transaction/utxo.js';
 import type { TxInput, TxOutput } from '../transaction/utxo.js';
 import type { Zone, Shard } from '../constants/index.js';
 import type { txpoolContentResponse, txpoolInspectResponse } from './txpool.js';
+import { EtxParams } from './formatting.js';
 
 const BN_0 = BigInt(0);
 
@@ -43,6 +44,7 @@ export type BlockTag = BigNumberish | string;
 import {
     BlockHeaderParams,
     BlockParams,
+    ExternalTransactionResponseParams,
     LogParams,
     QiTransactionResponseParams,
     QuaiTransactionResponseParams,
@@ -154,13 +156,13 @@ export class FeeData {
  * @throws {Error} If unable to determine the address.
  */
 export function addressFromTransactionRequest(tx: TransactionRequest): AddressLike {
-    if ('from' in tx) {
+    if ('from' in tx && !!tx.from) {
         return tx.from;
     }
-    if (tx.txInputs) {
+    if ('txInputs' in tx && !!tx.txInputs) {
         return computeAddress(tx.txInputs[0].pubkey);
     }
-    if ('to' in tx && tx.to !== null) {
+    if ('to' in tx && !!tx.to) {
         return tx.to as AddressLike;
     }
     throw new Error('Unable to determine address from transaction inputs, from or to field');
@@ -632,7 +634,7 @@ export class WoHeader implements WoHeaderParams {
  * @category Providers
  */
 export class Block implements BlockParams, Iterable<string> {
-    readonly #extTransactions!: Array<string | QuaiTransactionResponse>;
+    readonly #extTransactions!: Array<string | ExternalTransactionResponse>;
     readonly hash: string;
     readonly header: BlockHeader;
     readonly interlinkHashes: Array<string>; // New parameter
@@ -640,7 +642,9 @@ export class Block implements BlockParams, Iterable<string> {
     readonly size!: bigint;
     readonly subManifest!: Array<string> | null;
     readonly totalEntropy!: bigint;
-    readonly #transactions!: Array<string | QuaiTransactionResponse>;
+    readonly #transactions!: Array<
+        string | QuaiTransactionResponse | QiTransactionResponse | ExternalTransactionResponse
+    >;
     readonly uncles!: Array<string> | null;
     readonly woHeader: WoHeader; // New nested parameter structure
 
@@ -659,15 +663,21 @@ export class Block implements BlockParams, Iterable<string> {
      */
     constructor(block: BlockParams, provider: Provider) {
         this.#transactions = block.transactions.map((tx) => {
-            if (typeof tx !== 'string') {
+            if (typeof tx === 'string') {
+                return tx;
+            }
+            if ('originatingTxHash' in tx) {
+                return new ExternalTransactionResponse(tx as ExternalTransactionResponseParams, provider);
+            }
+            if ('from' in tx) {
                 return new QuaiTransactionResponse(tx, provider);
             }
-            return tx;
+            return new QiTransactionResponse(tx as QiTransactionResponseParams, provider);
         });
 
         this.#extTransactions = block.extTransactions.map((tx) => {
             if (typeof tx !== 'string') {
-                return new QuaiTransactionResponse(tx, provider);
+                return new ExternalTransactionResponse(tx, provider);
             }
             return tx;
         });
@@ -751,7 +761,7 @@ export class Block implements BlockParams, Iterable<string> {
      * @returns {TransactionResponse[]} The list of prefetched extended transactions.
      * @throws {Error} If the transactions were not prefetched.
      */
-    get prefetchedExtTransactions(): Array<TransactionResponse> {
+    get prefetchedExtTransactions(): Array<ExternalTransactionResponse> {
         const txs = this.#extTransactions.slice();
 
         // Doesn't matter...
@@ -769,7 +779,7 @@ export class Block implements BlockParams, Iterable<string> {
             },
         );
 
-        return <Array<TransactionResponse>>txs;
+        return <Array<ExternalTransactionResponse>>txs;
     }
 
     /**
@@ -847,9 +857,9 @@ export class Block implements BlockParams, Iterable<string> {
      * @returns {Promise<TransactionResponse>} A promise resolving to the transaction.
      * @throws {Error} If the transaction is not found.
      */
-    async getTransaction(indexOrHash: number | string): Promise<TransactionResponse> {
+    async getTransaction(indexOrHash: number | string): Promise<TransactionResponse | ExternalTransactionResponse> {
         // Find the internal value by its index or hash
-        let tx: string | TransactionResponse | undefined = undefined;
+        let tx: string | TransactionResponse | ExternalTransactionResponse | undefined = undefined;
         if (typeof indexOrHash === 'number') {
             tx = this.#transactions[indexOrHash];
         } else {
@@ -888,9 +898,9 @@ export class Block implements BlockParams, Iterable<string> {
      * @returns {Promise<TransactionResponse>} A promise resolving to the extended transaction.
      * @throws {Error} If the extended transaction is not found.
      */
-    async getExtTransaction(indexOrHash: number | string): Promise<TransactionResponse> {
+    async getExtTransaction(indexOrHash: number | string): Promise<ExternalTransactionResponse> {
         // Find the internal value by its index or hash
-        let tx: string | TransactionResponse | undefined = undefined;
+        let tx: string | ExternalTransactionResponse | undefined = undefined;
         if (typeof indexOrHash === 'number') {
             tx = this.#extTransactions[indexOrHash];
         } else {
@@ -916,7 +926,7 @@ export class Block implements BlockParams, Iterable<string> {
         }
 
         if (typeof tx === 'string') {
-            return <TransactionResponse>await this.provider.getTransaction(tx);
+            throw new Error("External Transaction isn't prefetched");
         } else {
             return tx;
         }
@@ -1237,7 +1247,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
 
     readonly #logs: ReadonlyArray<Log>;
 
-    readonly etxs!: ReadonlyArray<string>;
+    readonly etxs: ReadonlyArray<EtxParams> = [];
 
     /**
      * @ignore
@@ -1255,6 +1265,40 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
         } else if (tx.gasPrice != null) {
             gasPrice = tx.gasPrice;
         }
+        const etxs: EtxParams[] = tx.etxs
+            ? tx.etxs.map((etx) => {
+                  const safeConvert = (value: any, name: string) => {
+                      try {
+                          if (value != null) {
+                              return BigInt(value);
+                          }
+                          return null;
+                      } catch (error) {
+                          console.error(`Conversion to BigInt failed for ${name}: ${value}, error: ${error}`);
+                          return null;
+                      }
+                  };
+
+                  return {
+                      type: etx.type,
+                      nonce: etx.nonce,
+                      gasPrice: safeConvert(etx.gasPrice, 'gasPrice'),
+                      maxPriorityFeePerGas: safeConvert(etx.maxPriorityFeePerGas, 'maxPriorityFeePerGas'),
+                      maxFeePerGas: safeConvert(etx.maxFeePerGas, 'maxFeePerGas'),
+                      gas: safeConvert(etx.gas, 'gas'),
+                      value: safeConvert(etx.value, 'value'),
+                      input: etx.input,
+                      to: etx.to,
+                      accessList: etx.accessList,
+                      chainId: safeConvert(etx.chainId, 'chainId'),
+                      sender: etx.sender,
+                      hash: etx.hash,
+                      isCoinbase: etx.isCoinbase,
+                      originatingTxHash: etx.originatingTxHash,
+                      etxIndex: etx.etxIndex,
+                  };
+              })
+            : [];
 
         defineProperties<TransactionReceipt>(this, {
             provider,
@@ -1275,7 +1319,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             cumulativeGasUsed: tx.cumulativeGasUsed,
             gasPrice,
 
-            etxs: tx.etxs,
+            etxs: etxs,
             type: tx.type,
             status: tx.status,
         });
@@ -1303,6 +1347,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             logsBloom,
             logs, //byzantium,
             status,
+            etxs,
         } = this;
 
         return {
@@ -1320,6 +1365,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             logsBloom,
             status,
             to,
+            etxs: etxs ?? [],
         };
     }
 
@@ -1474,6 +1520,201 @@ export interface QiMinedTransactionResponse extends QiTransactionResponse {
     date: Date;
 }
 
+export class ExternalTransactionResponse implements QuaiTransactionLike, ExternalTransactionResponseParams {
+    /**
+     * The provider this is connected to, which will influence how its methods will resolve its async inspection
+     * methods.
+     */
+    readonly provider: Provider;
+
+    /**
+     * The block number of the block that this transaction was included in.
+     *
+     * This is `null` for pending transactions.
+     */
+    readonly blockNumber: null | number;
+
+    /**
+     * The blockHash of the block that this transaction was included in.
+     *
+     * This is `null` for pending transactions.
+     */
+    readonly blockHash: null | string;
+
+    /**
+     * The index within the block that this transaction resides at.
+     */
+    readonly index!: bigint;
+
+    /**
+     * The transaction hash.
+     */
+    readonly hash!: string;
+
+    /**
+     * The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) transaction envelope type. This is `0` for legacy
+     * transactions types.
+     */
+    readonly type!: number;
+
+    /**
+     * The receiver of this transaction.
+     *
+     * If `null`, then the transaction is an initcode transaction. This means the result of executing the
+     * {@link ExternalTransactionResponse.data | **data** } will be deployed as a new contract on chain (assuming it does
+     * not revert) and the address may be computed using [getCreateAddress](../functions/getCreateAddress).
+     */
+    readonly to!: null | string;
+
+    /**
+     * The sender of this transaction. It is implicitly computed from the transaction pre-image hash (as the digest) and
+     * the {@link QuaiTransactionResponse.signature | **signature** } using ecrecover.
+     */
+    readonly from!: string;
+
+    /**
+     * The nonce, which is used to prevent replay attacks and offer a method to ensure transactions from a given sender
+     * are explicitly ordered.
+     *
+     * When sending a transaction, this must be equal to the number of transactions ever sent by
+     * {@link ExternalTransactionResponse.from | **from** }.
+     */
+    readonly nonce!: number;
+
+    /**
+     * The maximum units of gas this transaction can consume. If execution exceeds this, the entries transaction is
+     * reverted and the sender is charged for the full amount, despite not state changes being made.
+     */
+    readonly gasLimit!: bigint;
+
+    /**
+     * The data.
+     */
+    readonly data!: string;
+
+    /**
+     * The value, in wei. Use [formatEther](../functions/formatEther) to format this value as ether.
+     */
+    readonly value!: bigint;
+
+    /**
+     * The chain ID.
+     */
+    readonly chainId!: bigint;
+
+    /**
+     * The signature.
+     */
+    readonly signature!: Signature;
+
+    /**
+     * The [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) access list for transaction types that support it,
+     * otherwise `null`.
+     */
+    readonly accessList!: null | AccessList;
+
+    readonly etxType!: null | string;
+
+    readonly isCoinbase!: null | number;
+
+    readonly originatingTxHash!: null | string;
+
+    readonly sender!: string;
+
+    readonly etxIndex!: number;
+
+    protected startBlock: number;
+
+    /**
+     * @ignore
+     */
+    constructor(tx: ExternalTransactionResponseParams, provider: Provider) {
+        this.provider = provider;
+
+        this.blockNumber = tx.blockNumber != null ? tx.blockNumber : null;
+        this.blockHash = tx.blockHash != null ? tx.blockHash : null;
+
+        this.hash = tx.hash;
+        this.index = tx.index;
+
+        this.type = tx.type;
+
+        this.from = tx.from;
+        this.to = tx.to || null;
+
+        this.gasLimit = tx.gasLimit;
+        this.nonce = tx.nonce;
+        this.data = tx.data;
+        this.value = tx.value;
+
+        this.chainId = tx.chainId;
+        this.signature = tx.signature;
+
+        this.accessList = tx.accessList != null ? tx.accessList : null;
+        this.startBlock = -1;
+        this.originatingTxHash = tx.originatingTxHash != null ? tx.originatingTxHash : null;
+        this.isCoinbase = tx.isCoinbase != null ? tx.isCoinbase : null;
+        this.etxType = tx.etxType != null ? tx.etxType : null;
+        this.sender = tx.sender;
+        this.etxIndex = tx.etxIndex;
+    }
+
+    /**
+     * Returns a JSON-compatible representation of this transaction.
+     */
+    toJSON(): any {
+        const {
+            blockNumber,
+            blockHash,
+            index,
+            hash,
+            type,
+            to,
+            from,
+            nonce,
+            data,
+            signature,
+            accessList,
+            etxType,
+            isCoinbase,
+            originatingTxHash,
+            etxIndex,
+            sender,
+        } = this;
+        const result = {
+            _type: 'TransactionReceipt',
+            accessList,
+            blockNumber,
+            blockHash,
+            chainId: toJson(this.chainId),
+            data,
+            from,
+            gasLimit: toJson(this.gasLimit),
+            hash,
+            nonce,
+            signature,
+            to,
+            index,
+            type,
+            etxType,
+            isCoinbase,
+            originatingTxHash,
+            sender,
+            etxIndex,
+            value: toJson(this.value),
+        };
+
+        return result;
+    }
+
+    replaceableTransaction(startBlock: number): ExternalTransactionResponse {
+        assertArgument(Number.isInteger(startBlock) && startBlock >= 0, 'invalid startBlock', 'startBlock', startBlock);
+        const tx = new ExternalTransactionResponse(this, this.provider);
+        tx.startBlock = startBlock;
+        return tx;
+    }
+}
+
 /**
  * A **TransactionResponse** is an interface representing either a Quai or Qi transaction that has been mined into a
  * block.
@@ -1595,6 +1836,12 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
      */
     readonly accessList!: null | AccessList;
 
+    readonly etxType!: null | string;
+
+    readonly sender!: null | string;
+
+    readonly originatingTxHash!: null | string;
+
     protected startBlock: number;
 
     /**
@@ -1627,6 +1874,8 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
 
         this.accessList = tx.accessList != null ? tx.accessList : null;
         this.startBlock = -1;
+
+        this.etxType = tx.etxType != null ? tx.etxType : null;
     }
 
     /**
@@ -1801,7 +2050,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
 
                 // Search for the transaction that replaced us
                 for (let i = 0; i < block.length; i++) {
-                    const tx: TransactionResponse = await block.getTransaction(i);
+                    const tx: TransactionResponse | ExternalTransactionResponse = await block.getTransaction(i);
 
                     if ('from' in tx && tx.from === this.from && tx.nonce === this.nonce) {
                         // Get the receipt
@@ -1832,7 +2081,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
                             cancelled: reason === 'replaced' || reason === 'cancelled',
                             reason,
                             replacement: tx.replaceableTransaction(startBlock),
-                            hash: tx.hash,
+                            hash: (tx as QuaiTransactionResponse).hash,
                             receipt,
                         });
                     }

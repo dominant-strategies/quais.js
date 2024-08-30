@@ -8,5 +8,7 @@ dist/*.gz
 .idea/**
 lib/commonjs/**
 lib/esm/**
-.env
+.env*
+!.env.test
 .DS_Store
+quai-local-node*

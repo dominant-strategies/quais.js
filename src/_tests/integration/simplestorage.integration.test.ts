@@ -5,7 +5,12 @@ import { JsonRpcProvider, Wallet, ContractFactory, Contract, ContractRunner } fr
 import SimpleStorageContract from './contracts/SimpleStorageContract.js';
 
 import dotenv from 'dotenv';
-dotenv.config();
+const env = process.env.NODE_ENV || 'development';
+
+dotenv.config({ path: `.env.${env}` });
+
+// Or fallback to .env if NODE_ENV specific file doesn't exist
+dotenv.config({ path: `.env`, override: false });
 
 describe('Test Contract SimpleStorage', function () {
     this.timeout(60000);
