@@ -1,8 +1,11 @@
-name: Auto Dev Workflow
+name: Manual Dev Workflow
 on:
-  pull_request:
-    types: [closed]
-    branches: [ "alpha" ]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to use'
+        required: true
+        default: 'main'
 jobs:
   call-common-workflow:
     uses: dominant-strategies/quai-cicd/.github/workflows/deploy-dev-common.yml@main
