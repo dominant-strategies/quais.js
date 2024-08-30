@@ -1431,29 +1431,38 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      * @returns {Promise<any>} A promise that resolves to the result of the method call.
      */
     send(method: string, params: Array<any> | Record<string, any>, shard?: Shard, now?: boolean): Promise<any> {
+        const continueSend = (): Promise<any> => {
+            if (this.destroyed) {
+                return Promise.reject(
+                    makeError('provider destroyed; cancelled request', 'UNSUPPORTED_OPERATION', { operation: method }),
+                );
+            }
+            const id = this.#nextId++;
+            const promise = new Promise((resolve, reject) => {
+                this.#payloads.push({
+                    resolve,
+                    reject,
+                    payload: { method, params, id, jsonrpc: '2.0' },
+                    shard: shard,
+                    now: now,
+                });
+            });
+
+            // If there is not a pending drainTimer, set one
+            this.#scheduleDrain();
+
+            return <Promise<JsonRpcResult>>promise;
+        };
         // @TODO: cache chainId?? purge on switch_networks
 
         // We have been destroyed; no operations are supported anymore
-        if (this.destroyed) {
-            return Promise.reject(
-                makeError('provider destroyed; cancelled request', 'UNSUPPORTED_OPERATION', { operation: method }),
-            );
-        }
-        const id = this.#nextId++;
-        const promise = new Promise((resolve, reject) => {
-            this.#payloads.push({
-                resolve,
-                reject,
-                payload: { method, params, id, jsonrpc: '2.0' },
-                shard: shard,
-                now: now,
+        if (method !== 'quai_listRunningChains') {
+            return this.initPromise.then(() => {
+                return continueSend();
             });
-        });
-
-        // If there is not a pending drainTimer, set one
-        this.#scheduleDrain();
-
-        return <Promise<JsonRpcResult>>promise;
+        } else {
+            return continueSend();
+        }
     }
 
     /**
