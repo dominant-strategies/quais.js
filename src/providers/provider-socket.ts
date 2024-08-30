@@ -178,7 +178,7 @@ export class SocketBlockSubscriber extends SocketSubscriber {
      * @returns {Promise<void>}
      */
     async _emit(provider: SocketProvider, message: any): Promise<void> {
-        provider.emit('block', this.zone, parseInt(message.number));
+        provider.emit('block', this.zone, parseInt(message.woHeader.number));
     }
 }
 
