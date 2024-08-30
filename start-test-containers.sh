@@ -3,7 +3,7 @@
 # Check if the quai-local-node directory exists, if not, clone it
 if [ ! -d "./quai-local-node" ]; then
   echo "quai-local-node directory not found. Cloning from GitHub..."
-  git clone git@github.com:dominant-strategies/quai-local-node.git
+  git clone https://github.com/dominant-strategies/quai-local-node.git
   if [ $? -ne 0 ]; then
     echo "Failed to clone quai-local-node repository. Exiting."
     exit 1
