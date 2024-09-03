@@ -280,3 +280,27 @@ export function zeroPadValue(data: BytesLike, length: number): string {
 export function zeroPadBytes(data: BytesLike, length: number): string {
     return zeroPad(data, length, false);
 }
+
+/**
+ * XOR two Uint8Array values.
+ *
+ * @category Utils
+ * @param {Uint8Array} a - The first Uint8Array.
+ * @param {Uint8Array} b - The second Uint8Array.
+ *
+ * @returns {Uint8Array} The XOR result.
+ */
+export function xorUint8Arrays(a: Uint8Array, b: Uint8Array): Uint8Array {
+    if (a.length !== b.length) {
+        throw new Error('Uint8Arrays are not of the same length');
+    }
+
+    const result = new Uint8Array(a.length);
+
+    // eslint-disable-next-line unicorn/no-for-loop
+    for (let i = 0; i < a.length; i++) {
+        result[i] = a[i] ^ b[i];
+    }
+
+    return result;
+}
