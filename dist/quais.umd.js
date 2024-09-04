@@ -7256,7 +7256,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             case '0x22':
                 return exports.Zone.Hydra3;
             default:
-                throw new Error('Invalid zone');
+                throw new Error(`Invalid zone: ${zone}`);
         }
     }
     const ZoneData = [
@@ -11119,6 +11119,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         return shardFromBytes(ShardData.find((it) => it.name == shard || it.byte == shard || it.nickname == shard || it.shard == shard)
             ?.byte || '');
     }
+    function fromShard(shard, key) {
+        return ShardData.find((it) => it.byte == shard)?.[key] || '';
+    }
 
     // Constants
     const BN_0$5 = BigInt(0);
@@ -12211,7 +12214,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             case senderAddressIsQi && recipientAddressIsQi:
                 return 2;
             case senderAddressIsQi && !recipientAddressIsQi:
-                return 2;
+                return 1;
             default:
                 return 0;
         }
@@ -12227,7 +12230,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     function getNodeLocationFromZone(zone) {
         const zoneId = zone.slice(2);
         if (zoneId.length > 2) {
-            throw new Error('Invalid zone');
+            throw new Error(`Invalid zone: ${zone}`);
         }
         else if (zoneId.length === 0) {
             return [];
@@ -18614,7 +18617,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (typeof tx === 'string') {
                 return formatHash(tx);
             }
-            return formatTransactionResponse(tx);
+            return formatExternalTransactionResponse(tx);
         }),
         hash: formatHash,
         header: _formatHeader,
@@ -18638,13 +18641,16 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (typeof tx === 'string') {
                 return tx;
             }
+            if ('originatingTxHash' in tx) {
+                return formatExternalTransactionResponse(tx);
+            }
             return formatTransactionResponse(tx);
         });
         result.extTransactions = value.extTransactions.map((tx) => {
             if (typeof tx === 'string') {
                 return tx;
             }
-            return formatTransactionResponse(tx);
+            return formatExternalTransactionResponse(tx);
         });
         return result;
     }
@@ -18665,17 +18671,20 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
     const _formatEtx = object({
         type: allowNull(getNumber, 0),
-        nonce: getNumber,
+        nonce: allowNull(getNumber),
         gasPrice: allowNull(getBigInt),
-        maxPriorityFeePerGas: getBigInt,
-        maxFeePerGas: getBigInt,
-        gas: getBigInt,
+        maxPriorityFeePerGas: allowNull(getBigInt),
+        maxFeePerGas: allowNull(getBigInt),
+        gas: allowNull(getBigInt),
         value: allowNull(getBigInt, BN_0$2),
-        input: formatData,
+        input: allowNull(formatData),
         to: allowNull(getAddress, null),
         accessList: allowNull(accessListify, null),
+        isCoinbase: allowNull(getNumber, 0),
+        sender: getAddress,
+        originatingTxHash: formatHash,
+        etxIndex: getNumber,
         chainId: allowNull(getBigInt, null),
-        from: allowNull(getAddress, null),
         hash: formatHash,
     }, {
         from: ['sender'],
@@ -18707,6 +18716,45 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         const result = _formatTransactionReceipt(value);
         return result;
     }
+    function formatExternalTransactionResponse(value) {
+        const result = object({
+            hash: formatHash,
+            type: (value) => {
+                if (value === '0x' || value == null) {
+                    return 0;
+                }
+                return parseInt(value, 16);
+            },
+            accessList: allowNull(accessListify, null),
+            blockHash: allowNull(formatHash, null),
+            blockNumber: allowNull((value) => (value ? parseInt(value, 16) : null), null),
+            index: allowNull((value) => (value ? BigInt(value) : null), null),
+            from: allowNull(getAddress, null),
+            sender: allowNull(getAddress, null),
+            maxPriorityFeePerGas: allowNull((value) => (value ? BigInt(value) : null)),
+            maxFeePerGas: allowNull((value) => (value ? BigInt(value) : null)),
+            gasLimit: allowNull((value) => (value ? BigInt(value) : null), null),
+            to: allowNull(getAddress, null),
+            value: allowNull((value) => (value ? BigInt(value) : null), null),
+            nonce: allowNull((value) => (value ? parseInt(value, 10) : null), null),
+            creates: allowNull(getAddress, null),
+            chainId: allowNull((value) => (value ? BigInt(value) : null), null),
+            isCoinbase: allowNull((value) => (value ? parseInt(value, 10) : null), null),
+            originatingTxHash: allowNull(formatHash, null),
+            etxIndex: allowNull((value) => (value ? parseInt(value, 10) : null), null),
+            etxType: allowNull((value) => value, null),
+            data: (value) => value,
+        }, {
+            data: ['input'],
+            gasLimit: ['gas'],
+            index: ['transactionIndex'],
+        })(value);
+        // 0x0000... should actually be null
+        if (result.blockHash && getBigInt(result.blockHash) === BN_0$2) {
+            result.blockHash = null;
+        }
+        return result;
+    }
     function formatTransactionResponse(value) {
         // Determine if it is a Quai or Qi transaction based on the type
         const transactionType = parseInt(value.type, 16);
@@ -18735,6 +18783,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 nonce: allowNull((value) => (value ? parseInt(value, 10) : null), null),
                 creates: allowNull(getAddress, null),
                 chainId: allowNull((value) => (value ? BigInt(value) : null), null),
+                etxType: allowNull((value) => value, null),
                 data: (value) => value,
             }, {
                 data: ['input'],
@@ -19580,13 +19629,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @throws {Error} If unable to determine the address.
      */
     function addressFromTransactionRequest(tx) {
-        if ('from' in tx) {
+        if ('from' in tx && !!tx.from) {
             return tx.from;
         }
-        if (tx.txInputs) {
+        if ('txInputs' in tx && !!tx.txInputs) {
             return computeAddress(tx.txInputs[0].pubkey);
         }
-        if ('to' in tx && tx.to !== null) {
+        if ('to' in tx && !!tx.to) {
             return tx.to;
         }
         throw new Error('Unable to determine address from transaction inputs, from or to field');
@@ -19815,14 +19864,20 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         constructor(block, provider) {
             this.#transactions = block.transactions.map((tx) => {
-                if (typeof tx !== 'string') {
+                if (typeof tx === 'string') {
+                    return tx;
+                }
+                if ('originatingTxHash' in tx) {
+                    return new ExternalTransactionResponse(tx, provider);
+                }
+                if ('from' in tx) {
                     return new QuaiTransactionResponse(tx, provider);
                 }
-                return tx;
+                return new QiTransactionResponse(tx, provider);
             });
             this.#extTransactions = block.extTransactions.map((tx) => {
                 if (typeof tx !== 'string') {
-                    return new QuaiTransactionResponse(tx, provider);
+                    return new ExternalTransactionResponse(tx, provider);
                 }
                 return tx;
             });
@@ -20045,7 +20100,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 throw new Error('no such tx');
             }
             if (typeof tx === 'string') {
-                return await this.provider.getTransaction(tx);
+                throw new Error("External Transaction isn't prefetched");
             }
             else {
                 return tx;
@@ -20319,7 +20374,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * the receipt.
          */
         #logs;
-        etxs;
+        etxs = [];
         /**
          * @ignore
          */
@@ -20334,6 +20389,40 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             else if (tx.gasPrice != null) {
                 gasPrice = tx.gasPrice;
             }
+            const etxs = tx.etxs
+                ? tx.etxs.map((etx) => {
+                    const safeConvert = (value, name) => {
+                        try {
+                            if (value != null) {
+                                return BigInt(value);
+                            }
+                            return null;
+                        }
+                        catch (error) {
+                            console.error(`Conversion to BigInt failed for ${name}: ${value}, error: ${error}`);
+                            return null;
+                        }
+                    };
+                    return {
+                        type: etx.type,
+                        nonce: etx.nonce,
+                        gasPrice: safeConvert(etx.gasPrice, 'gasPrice'),
+                        maxPriorityFeePerGas: safeConvert(etx.maxPriorityFeePerGas, 'maxPriorityFeePerGas'),
+                        maxFeePerGas: safeConvert(etx.maxFeePerGas, 'maxFeePerGas'),
+                        gas: safeConvert(etx.gas, 'gas'),
+                        value: safeConvert(etx.value, 'value'),
+                        input: etx.input,
+                        to: etx.to,
+                        accessList: etx.accessList,
+                        chainId: safeConvert(etx.chainId, 'chainId'),
+                        sender: etx.sender,
+                        hash: etx.hash,
+                        isCoinbase: etx.isCoinbase,
+                        originatingTxHash: etx.originatingTxHash,
+                        etxIndex: etx.etxIndex,
+                    };
+                })
+                : [];
             defineProperties(this, {
                 provider,
                 to: tx.to,
@@ -20347,7 +20436,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 gasUsed: tx.gasUsed,
                 cumulativeGasUsed: tx.cumulativeGasUsed,
                 gasPrice,
-                etxs: tx.etxs,
+                etxs: etxs,
                 type: tx.type,
                 status: tx.status,
             });
@@ -20363,7 +20452,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         toJSON() {
             const { to, from, contractAddress, hash, index, blockHash, blockNumber, logsBloom, logs, //byzantium,
-            status, } = this;
+            status, etxs, } = this;
             return {
                 _type: 'TransactionReceipt',
                 blockHash,
@@ -20379,6 +20468,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 logsBloom,
                 status,
                 to,
+                etxs: etxs ?? [],
             };
         }
         /**
@@ -20466,6 +20556,152 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 operation: 'reorderedEvent(other)',
             });
             return createReorderedTransactionFilter(this, other);
+        }
+    }
+    class ExternalTransactionResponse {
+        /**
+         * The provider this is connected to, which will influence how its methods will resolve its async inspection
+         * methods.
+         */
+        provider;
+        /**
+         * The block number of the block that this transaction was included in.
+         *
+         * This is `null` for pending transactions.
+         */
+        blockNumber;
+        /**
+         * The blockHash of the block that this transaction was included in.
+         *
+         * This is `null` for pending transactions.
+         */
+        blockHash;
+        /**
+         * The index within the block that this transaction resides at.
+         */
+        index;
+        /**
+         * The transaction hash.
+         */
+        hash;
+        /**
+         * The [EIP-2718](https://eips.ethereum.org/EIPS/eip-2718) transaction envelope type. This is `0` for legacy
+         * transactions types.
+         */
+        type;
+        /**
+         * The receiver of this transaction.
+         *
+         * If `null`, then the transaction is an initcode transaction. This means the result of executing the
+         * {@link ExternalTransactionResponse.data | **data** } will be deployed as a new contract on chain (assuming it does
+         * not revert) and the address may be computed using [getCreateAddress](../functions/getCreateAddress).
+         */
+        to;
+        /**
+         * The sender of this transaction. It is implicitly computed from the transaction pre-image hash (as the digest) and
+         * the {@link QuaiTransactionResponse.signature | **signature** } using ecrecover.
+         */
+        from;
+        /**
+         * The nonce, which is used to prevent replay attacks and offer a method to ensure transactions from a given sender
+         * are explicitly ordered.
+         *
+         * When sending a transaction, this must be equal to the number of transactions ever sent by
+         * {@link ExternalTransactionResponse.from | **from** }.
+         */
+        nonce;
+        /**
+         * The maximum units of gas this transaction can consume. If execution exceeds this, the entries transaction is
+         * reverted and the sender is charged for the full amount, despite not state changes being made.
+         */
+        gasLimit;
+        /**
+         * The data.
+         */
+        data;
+        /**
+         * The value, in wei. Use [formatEther](../functions/formatEther) to format this value as ether.
+         */
+        value;
+        /**
+         * The chain ID.
+         */
+        chainId;
+        /**
+         * The signature.
+         */
+        signature;
+        /**
+         * The [EIP-2930](https://eips.ethereum.org/EIPS/eip-2930) access list for transaction types that support it,
+         * otherwise `null`.
+         */
+        accessList;
+        etxType;
+        isCoinbase;
+        originatingTxHash;
+        sender;
+        etxIndex;
+        startBlock;
+        /**
+         * @ignore
+         */
+        constructor(tx, provider) {
+            this.provider = provider;
+            this.blockNumber = tx.blockNumber != null ? tx.blockNumber : null;
+            this.blockHash = tx.blockHash != null ? tx.blockHash : null;
+            this.hash = tx.hash;
+            this.index = tx.index;
+            this.type = tx.type;
+            this.from = tx.from;
+            this.to = tx.to || null;
+            this.gasLimit = tx.gasLimit;
+            this.nonce = tx.nonce;
+            this.data = tx.data;
+            this.value = tx.value;
+            this.chainId = tx.chainId;
+            this.signature = tx.signature;
+            this.accessList = tx.accessList != null ? tx.accessList : null;
+            this.startBlock = -1;
+            this.originatingTxHash = tx.originatingTxHash != null ? tx.originatingTxHash : null;
+            this.isCoinbase = tx.isCoinbase != null ? tx.isCoinbase : null;
+            this.etxType = tx.etxType != null ? tx.etxType : null;
+            this.sender = tx.sender;
+            this.etxIndex = tx.etxIndex;
+        }
+        /**
+         * Returns a JSON-compatible representation of this transaction.
+         */
+        toJSON() {
+            const { blockNumber, blockHash, index, hash, type, to, from, nonce, data, signature, accessList, etxType, isCoinbase, originatingTxHash, etxIndex, sender, } = this;
+            const result = {
+                _type: 'TransactionReceipt',
+                accessList,
+                blockNumber,
+                blockHash,
+                chainId: toJson(this.chainId),
+                data,
+                from,
+                gasLimit: toJson(this.gasLimit),
+                hash,
+                nonce,
+                signature,
+                to,
+                index,
+                type,
+                etxType,
+                isCoinbase,
+                originatingTxHash,
+                sender,
+                etxIndex,
+                value: toJson(this.value),
+            };
+            return result;
+        }
+        replaceableTransaction(startBlock) {
+            assertArgument(Number.isInteger(startBlock) && startBlock >= 0, 'invalid startBlock', 'startBlock', startBlock);
+            const tx = new ExternalTransactionResponse(this, this.provider);
+            tx.startBlock = startBlock;
+            return tx;
         }
     }
     /**
@@ -20564,6 +20800,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * otherwise `null`.
          */
         accessList;
+        etxType;
+        sender;
+        originatingTxHash;
         startBlock;
         /**
          * @ignore
@@ -20587,6 +20826,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.signature = tx.signature;
             this.accessList = tx.accessList != null ? tx.accessList : null;
             this.startBlock = -1;
+            this.etxType = tx.etxType != null ? tx.etxType : null;
         }
         /**
          * Returns a JSON-compatible representation of this transaction.
@@ -26291,163 +26531,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
     }
 
-    // A = Arguments to the constructor
-    // I = Interface of deployed contracts
-    /**
-     * A **ContractFactory** is used to deploy a Contract to the blockchain.
-     *
-     * @category Contract
-     */
-    class ContractFactory {
-        /**
-         * The Contract Interface.
-         */
-        interface;
-        /**
-         * The Contract deployment bytecode. Often called the initcode.
-         */
-        bytecode;
-        /**
-         * The ContractRunner to deploy the Contract as.
-         */
-        runner;
-        /**
-         * Create a new **ContractFactory** with `abi` and `bytecode`, optionally connected to `runner`.
-         *
-         * The `bytecode` may be the `bytecode` property within the standard Solidity JSON output.
-         */
-        constructor(abi, bytecode, runner) {
-            const iface = Interface.from(abi);
-            // Dereference Solidity bytecode objects and allow a missing `0x`-prefix
-            if (bytecode instanceof Uint8Array) {
-                bytecode = hexlify(getBytes(bytecode));
-            }
-            else {
-                if (typeof bytecode === 'object') {
-                    bytecode = bytecode.object;
-                }
-                if (!bytecode.startsWith('0x')) {
-                    bytecode = '0x' + bytecode;
-                }
-                bytecode = hexlify(getBytes(bytecode));
-            }
-            defineProperties(this, {
-                bytecode,
-                interface: iface,
-                runner: runner || null,
-            });
-        }
-        attach(target) {
-            return new BaseContract(target, this.interface, this.runner);
-        }
-        /**
-         * Resolves to the transaction to deploy the contract, passing `args` into the constructor.
-         *
-         * @param {ContractMethods<A>} args - The arguments to the constructor.
-         * @returns {Promise<ContractDeployTransaction>} A promise resolving to the deployment transaction.
-         */
-        async getDeployTransaction(...args) {
-            let overrides;
-            const fragment = this.interface.deploy;
-            if (fragment.inputs.length + 1 === args.length) {
-                overrides = await copyOverrides(args.pop());
-                const resolvedArgs = await resolveArgs(this.runner, fragment.inputs, args);
-                const data = concat([this.bytecode, this.interface.encodeDeploy(resolvedArgs)]);
-                return Object.assign({}, overrides, { data });
-            }
-            if (fragment.inputs.length !== args.length) {
-                throw new Error('incorrect number of arguments to constructor');
-            }
-            const resolvedArgs = await resolveArgs(this.runner, fragment.inputs, args);
-            const data = concat([this.bytecode, this.interface.encodeDeploy(resolvedArgs)]);
-            const from = args.pop()?.from || undefined;
-            return Object.assign({}, from, { data });
-        }
-        /**
-         * Resolves to the Contract deployed by passing `args` into the constructor.
-         *
-         * This will resovle to the Contract before it has been deployed to the network, so the
-         * [baseContract.waitForDeployment](../classes/BaseContract#waitForDeployment) should be used before sending any
-         * transactions to it.
-         *
-         * @param {ContractMethods<A>} args - The arguments to the constructor.
-         * @returns {Promise<
-         *     BaseContract & { deploymentTransaction(): ContractTransactionResponse } & Omit<I, keyof BaseContract>
-         * >}
-         *   A promise resolving to the Contract.
-         */
-        async deploy(...args) {
-            const tx = await this.getDeployTransaction(...args);
-            assert(this.runner && typeof this.runner.sendTransaction === 'function', 'factory runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
-                operation: 'sendTransaction',
-            });
-            if (this.runner instanceof Wallet) {
-                validateAddress(this.runner.address);
-                tx.from = this.runner.address;
-            }
-            const grindedTx = await this.grindContractAddress(tx);
-            const sentTx = await this.runner.sendTransaction(grindedTx);
-            const address = getStatic(this.constructor, 'getContractAddress')?.(tx);
-            return new BaseContract(address, this.interface, this.runner, sentTx);
-        }
-        static getContractAddress(transaction) {
-            return getContractAddress(transaction.from, BigInt(transaction.nonce), // Fix: Convert BigInt to bigint
-            transaction.data);
-        }
-        async grindContractAddress(tx) {
-            if (tx.nonce == null && tx.from) {
-                tx.nonce = await this.runner?.provider?.getTransactionCount(tx.from);
-            }
-            const sender = String(tx.from);
-            const toShard = getZoneForAddress(sender);
-            let i = 0;
-            const startingData = tx.data;
-            while (i < 10000) {
-                const contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
-                const contractShard = getZoneForAddress(contractAddress);
-                const utxo = isQiAddress(contractAddress);
-                if (contractShard === toShard && !utxo) {
-                    return tx;
-                }
-                const salt = randomBytes(32);
-                tx.data = hexlify(concat([String(startingData), salt]));
-                i++;
-            }
-            return tx;
-        }
-        /**
-         * Return a new **ContractFactory** with the same ABI and bytecode, but connected to `runner`.
-         *
-         * @param {ContractRunner} runner - The runner to connect to.
-         * @returns {ContractFactory<A, I>} A new ContractFactory.
-         */
-        connect(runner) {
-            return new ContractFactory(this.interface, this.bytecode, runner);
-        }
-        /**
-         * Create a new **ContractFactory** from the standard Solidity JSON output.
-         *
-         * @param {any} output - The Solidity JSON output.
-         * @param {ContractRunner} runner - The runner to connect to.
-         * @returns {ContractFactory<A, I>} A new ContractFactory.
-         */
-        static fromSolidity(output, runner) {
-            assertArgument(output != null, 'bad compiler output', 'output', output);
-            if (typeof output === 'string') {
-                output = JSON.parse(output);
-            }
-            const abi = output.abi;
-            let bytecode = '';
-            if (output.bytecode) {
-                bytecode = output.bytecode;
-            }
-            else if (output.evm && output.evm.bytecode) {
-                bytecode = output.evm.bytecode;
-            }
-            return new this(abi, bytecode, runner);
-        }
-    }
-
     /**
      * A **Network** encapsulates the various properties required to interact with a specific chain.
      * @category Providers
@@ -27202,6 +27285,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     const defaultOptions$1 = {
         cacheTimeout: 250,
         pollingInterval: 4000,
+        usePathing: false,
     };
     /**
      * An **AbstractProvider** provides a base class for other sub-classes to implement the {@link Provider | **Provider**}
@@ -27228,6 +27312,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         #nextTimer;
         #timers;
         #options;
+        _initFailed;
+        initResolvePromise;
+        initRejectPromise;
+        initPromise;
         /**
          * Create a new **AbstractProvider** connected to `network`, or use the various network detection capabilities to
          * discover the {@link Network | **Network**} if necessary.
@@ -27236,6 +27324,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param options - The options to configure the provider.
          */
         constructor(_network, options) {
+            this._initFailed = false;
             this.#options = Object.assign({}, defaultOptions$1, options || {});
             if (_network === 'any') {
                 this.#anyNetwork = true;
@@ -27262,6 +27351,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.#timers = new Map();
             this.#connect = [];
             this._urlMap = new Map();
+            this.initResolvePromise = null;
+            this.initRejectPromise = null;
+            this.initPromise = new Promise((resolve, reject) => {
+                this.initResolvePromise = resolve;
+                this.initRejectPromise = reject;
+            });
         }
         /**
          * Initialize the URL map with the provided URLs.
@@ -27269,30 +27364,47 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {U} urls - The URLs to initialize the map with.
          * @returns {Promise<void>} A promise that resolves when the map is initialized.
          */
-        async initUrlMap(urls) {
-            if (urls instanceof FetchRequest) {
-                urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':9001';
-                this._urlMap.set(exports.Shard.Prime, urls);
-                this.#connect.push(urls);
-                const shards = await this.getRunningLocations();
-                shards.forEach((shard) => {
-                    const port = 9200 + 20 * shard[0] + shard[1];
-                    this._urlMap.set(toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`), new FetchRequest(urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + ':' + port));
-                });
-                return;
-            }
-            if (Array.isArray(urls)) {
-                for (const url of urls) {
-                    const primeUrl = url.split(':')[0] + ':' + url.split(':')[1] + ':9001';
-                    const primeConnect = new FetchRequest(primeUrl);
-                    this._urlMap.set(exports.Shard.Prime, primeConnect);
-                    this.#connect.push(primeConnect);
+        async initialize(urls) {
+            try {
+                const primeSuffix = this.#options.usePathing ? `/${fromShard(exports.Shard.Prime, 'nickname')}` : ':9001';
+                if (urls instanceof FetchRequest) {
+                    urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + primeSuffix;
+                    this._urlMap.set(exports.Shard.Prime, urls);
+                    this.#connect.push(urls);
                     const shards = await this.getRunningLocations();
                     shards.forEach((shard) => {
                         const port = 9200 + 20 * shard[0] + shard[1];
-                        this._urlMap.set(toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`), new FetchRequest(url.split(':')[0] + ':' + url.split(':')[1] + ':' + port));
+                        const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
+                        const shardSuffix = this.#options.usePathing ? `/${fromShard(shardEnum, 'nickname')}` : `:${port}`;
+                        this._urlMap.set(shardEnum, new FetchRequest(urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + shardSuffix));
                     });
+                    return;
                 }
+                if (Array.isArray(urls)) {
+                    for (const url of urls) {
+                        const primeUrl = url.split(':')[0] + ':' + url.split(':')[1] + primeSuffix;
+                        const primeConnect = new FetchRequest(primeUrl);
+                        this._urlMap.set(exports.Shard.Prime, primeConnect);
+                        this.#connect.push(primeConnect);
+                        const shards = await this.getRunningLocations();
+                        shards.forEach((shard) => {
+                            const port = 9200 + 20 * shard[0] + shard[1];
+                            const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
+                            const shardSuffix = this.#options.usePathing
+                                ? `/${fromShard(shardEnum, 'nickname')}`
+                                : `:${port}`;
+                            this._urlMap.set(toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`), new FetchRequest(url.split(':')[0] + ':' + url.split(':')[1] + shardSuffix));
+                        });
+                    }
+                }
+                if (this.initResolvePromise)
+                    this.initResolvePromise();
+            }
+            catch (error) {
+                this._initFailed = true;
+                console.log('Error initializing URL map:', error);
+                if (this.initRejectPromise)
+                    this.initRejectPromise(error);
             }
         }
         /**
@@ -27491,7 +27603,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         // @todo `network` is not used, remove or re-write
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         _wrapTransactionReceipt(value, network) {
-            return new TransactionReceipt(formatTransactionReceipt(value), this);
+            const formattedReceipt = formatTransactionReceipt(value);
+            return new TransactionReceipt(formattedReceipt, this);
         }
         /**
          * Provides the opportunity for a sub-class to wrap a transaction response before returning it, to add additional
@@ -27797,8 +27910,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             return expected.clone();
         }
+        async _getRunningLocations(shard, now) {
+            now = now ? now : false;
+            return await this.#perform(shard
+                ? { method: 'getRunningLocations', shard: shard, now: now }
+                : { method: 'getRunningLocations', now: now });
+        }
         async getRunningLocations(shard) {
-            return await this.#perform(shard ? { method: 'getRunningLocations', shard: shard } : { method: 'getRunningLocations' });
+            return await this._getRunningLocations(shard);
         }
         async getProtocolTrieExpansionCount(shard) {
             return await this.#perform({ method: 'getProtocolTrieExpansionCount', shard: shard });
@@ -27938,6 +28057,22 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         #validateTransactionHash(computedHash, nodehash) {
             if (computedHash !== nodehash) {
                 throw new Error('Transaction hash mismatch');
+            }
+        }
+        validateUrl(url) {
+            const urlPattern = /^(https?):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
+            if (!urlPattern.test(url)) {
+                let errorMessage = 'Invalid URL: ';
+                if (!/^https?:\/\//.test(url)) {
+                    errorMessage += 'URL must start with http:// or https://. ';
+                }
+                if (url.endsWith('/')) {
+                    errorMessage += 'URL should not end with a /. ';
+                }
+                if (/\/[^/]+/.test(url)) {
+                    errorMessage += 'URL should not contain a path, query string, or fragment. ';
+                }
+                throw new Error(errorMessage.trim());
             }
         }
         async #getBlock(shard, block, includeTransactions) {
@@ -28766,6 +28901,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         batchMaxSize: 1 << 20,
         batchMaxCount: 100,
         cacheTimeout: 250,
+        usePathing: false,
     };
     // @TODO: Unchecked Signers
     /**
@@ -29027,7 +29163,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         #notReady;
         #network;
         #pendingDetectNetwork;
-        initPromise;
         /**
          * Schedules the draining of the payload queue.
          *
@@ -29060,25 +29195,45 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     // Process the result to each payload
                     (async () => {
                         const payloadMap = new Map();
+                        const nowPayloadMap = new Map();
                         for (let i = 0; i < batch.length; i++) {
-                            if (!payloadMap.has(batch[i].shard)) {
-                                if (batch[i].payload != null) {
-                                    payloadMap.set(batch[i].shard, [batch[i].payload]);
+                            if (batch[i].now) {
+                                if (!nowPayloadMap.has(batch[i].shard)) {
+                                    if (batch[i].payload != null) {
+                                        nowPayloadMap.set(batch[i].shard, [batch[i].payload]);
+                                    }
+                                }
+                                else {
+                                    nowPayloadMap.get(batch[i].shard)?.push(batch[i].payload);
                                 }
                             }
                             else {
-                                payloadMap.get(batch[i].shard)?.push(batch[i].payload);
+                                if (!payloadMap.has(batch[i].shard)) {
+                                    if (batch[i].payload != null) {
+                                        payloadMap.set(batch[i].shard, [batch[i].payload]);
+                                    }
+                                }
+                                else {
+                                    payloadMap.get(batch[i].shard)?.push(batch[i].payload);
+                                }
                             }
                         }
                         const rawResult = [];
-                        await Promise.all(Array.from(payloadMap).map(async ([key, value]) => {
+                        const processPayloads = async (key, value, now) => {
                             const payload = value.length === 1 ? value[0] : value;
                             const shard = key ? toShard(key) : exports.Shard.Prime;
                             const zone = shard.length < 4 ? undefined : toZone(shard);
                             this.emit('debug', zone, { action: 'sendRpcPayload', payload });
-                            rawResult.push(await this._send(payload, shard));
+                            rawResult.push(await this._send(payload, shard, now));
                             this.emit('debug', zone, { action: 'receiveRpcResult', payload });
-                        }));
+                        };
+                        await Promise.all(Array.from(nowPayloadMap)
+                            .map(async ([key, value]) => {
+                            await processPayloads(key, value, true);
+                        })
+                            .concat(Array.from(payloadMap).map(async ([key, value]) => {
+                            await processPayloads(key, value);
+                        })));
                         const result = rawResult.flat();
                         let lastZone;
                         try {
@@ -29110,7 +29265,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                                 }
                                 // The response is an error
                                 if ('error' in resp) {
-                                    reject(this.getRpcError(payload, resp));
+                                    reject(this.getRpcError(payload, resp, shard));
                                     continue;
                                 }
                                 // All good; send the result
@@ -29221,7 +29376,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const request = this.getRpcRequest(req);
             if (request != null) {
                 const shard = 'shard' in req ? req.shard : 'zone' in req ? toShard(req.zone) : undefined;
-                return await this.send(request.method, request.args, shard);
+                if (req.method === 'getRunningLocations') {
+                    return await this.send(request.method, request.args, shard, req.now);
+                }
+                else {
+                    return await this.send(request.method, request.args, shard);
+                }
             }
             return super._perform(req);
         }
@@ -29342,10 +29502,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {Promise<void>} A promise that resolves once the provider is ready.
          */
         async _waitUntilReady() {
-            if (this.#notReady == null) {
-                return;
+            if (this._initFailed) {
+                throw new Error('Provider failed to initialize on creation. Run initialize or create a new provider.');
             }
-            return await this.#notReady.promise;
+            await this.initPromise;
         }
         /**
          * Return a Subscriber that will manage the `sub`.
@@ -29390,7 +29550,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         getRpcTransaction(tx) {
             const result = {};
-            if ('from' in tx) {
+            if ('from' in tx || ('to' in tx && 'data' in tx)) {
                 // JSON-RPC now requires numeric values to be "quantity" values
                 [
                     'chainId',
@@ -29564,7 +29724,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {JsonRpcError} _error - The error that was received.
          * @returns {Error} The coalesced error.
          */
-        getRpcError(payload, _error) {
+        getRpcError(payload, _error, shard) {
             const { method } = payload;
             const { error } = _error;
             if (method === 'quai_estimateGas' && error.message) {
@@ -29572,21 +29732,21 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (!msg.match(/revert/i) && msg.match(/insufficient funds/i)) {
                     return makeError('insufficient funds', 'INSUFFICIENT_FUNDS', {
                         transaction: payload.params[0],
-                        info: { payload, error },
+                        info: { payload, error, shard },
                     });
                 }
             }
             if (method === 'quai_call' || method === 'quai_estimateGas') {
                 const result = spelunkData(error);
                 const e = AbiCoder.getBuiltinCallException(method === 'quai_call' ? 'call' : 'estimateGas', payload.params[0], result ? result.data : null);
-                e.info = { error, payload };
+                e.info = { error, payload, shard };
                 return e;
             }
             // Only estimateGas and call can return arbitrary contract-defined text, so now we
             // we can process text safely.
             const message = JSON.stringify(spelunkMessage(error));
             if (method === 'quai_getTransactionByHash' && error.message && error.message.match(/transaction not found/i)) {
-                return makeError('transaction not found', 'TRANSACTION_NOT_FOUND', { info: { payload, error } });
+                return makeError('transaction not found', 'TRANSACTION_NOT_FOUND', { info: { payload, error, shard } });
             }
             if (typeof error.message === 'string' && error.message.match(/user denied|quais-user-denied/i)) {
                 const actionMap = {
@@ -29601,7 +29761,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 return makeError(`user rejected action`, 'ACTION_REJECTED', {
                     action: actionMap[method] || 'unknown',
                     reason: 'rejected',
-                    info: { payload, error },
+                    info: { payload, error, shard },
                 });
             }
             if (method === 'quai_sendRawTransaction' || method === 'quai_sendTransaction') {
@@ -29609,27 +29769,30 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (message.match(/insufficient funds|base fee exceeds gas limit/i)) {
                     return makeError('insufficient funds for intrinsic transaction cost', 'INSUFFICIENT_FUNDS', {
                         transaction,
-                        info: { error },
+                        info: { error, shard },
                     });
                 }
                 if (message.match(/nonce/i) && message.match(/too low/i)) {
-                    return makeError('nonce has already been used', 'NONCE_EXPIRED', { transaction, info: { error } });
+                    return makeError('nonce has already been used', 'NONCE_EXPIRED', {
+                        transaction,
+                        info: { error, shard },
+                    });
                 }
                 // "replacement transaction underpriced"
                 if (message.match(/replacement transaction/i) && message.match(/underpriced/i)) {
                     return makeError('replacement fee too low', 'REPLACEMENT_UNDERPRICED', {
                         transaction,
-                        info: { error },
+                        info: { error, shard },
                     });
                 }
                 if (message.match(/only replay-protected/i)) {
                     return makeError('legacy pre-eip-155 transactions not supported', 'UNSUPPORTED_OPERATION', {
                         operation: method,
-                        info: { transaction, info: { error } },
+                        info: { transaction, info: { error, shard } },
                     });
                 }
                 if (message.match(/already known/i)) {
-                    return makeError('transaction already known', 'TRANSACTION_ALREADY_KNOWN', { info: { error } });
+                    return makeError('transaction already known', 'TRANSACTION_ALREADY_KNOWN', { info: { error, shard } });
                 }
             }
             let unsupported = !!message.match(/the method .* does not exist/i);
@@ -29641,10 +29804,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (unsupported) {
                 return makeError('unsupported operation', 'UNSUPPORTED_OPERATION', {
                     operation: payload.method,
-                    info: { error, payload },
+                    info: { error, payload, shard },
                 });
             }
-            return makeError('could not coalesce error', 'UNKNOWN_ERROR', { error, payload });
+            if (message.match('Provider failed to initialize on creation. Run initialize or create a new provider.')) {
+                return makeError('Provider failed to initialize on creation. Run initUrlMap or create a new provider.', 'PROVIDER_FAILED_TO_INITIALIZE', {
+                    info: { payload, error, shard },
+                });
+            }
+            return makeError('could not coalesce error', 'UNKNOWN_ERROR', { error, payload, shard });
         }
         /**
          * Requests the `method` with `params` via the JSON-RPC protocol over the underlying channel. This can be used to
@@ -29658,26 +29826,38 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {string} method - The method to call.
          * @param {any[] | Record<string, any>} params - The parameters to pass to the method.
          * @param {Shard} shard - The shard to send the request to.
+         * @param {boolean} now - If true, the request will be sent immediately.
          * @returns {Promise<any>} A promise that resolves to the result of the method call.
          */
-        send(method, params, shard) {
+        send(method, params, shard, now) {
+            const continueSend = () => {
+                if (this.destroyed) {
+                    return Promise.reject(makeError('provider destroyed; cancelled request', 'UNSUPPORTED_OPERATION', { operation: method }));
+                }
+                const id = this.#nextId++;
+                const promise = new Promise((resolve, reject) => {
+                    this.#payloads.push({
+                        resolve,
+                        reject,
+                        payload: { method, params, id, jsonrpc: '2.0' },
+                        shard: shard,
+                        now: now,
+                    });
+                });
+                // If there is not a pending drainTimer, set one
+                this.#scheduleDrain();
+                return promise;
+            };
             // @TODO: cache chainId?? purge on switch_networks
             // We have been destroyed; no operations are supported anymore
-            if (this.destroyed) {
-                return Promise.reject(makeError('provider destroyed; cancelled request', 'UNSUPPORTED_OPERATION', { operation: method }));
-            }
-            const id = this.#nextId++;
-            const promise = new Promise((resolve, reject) => {
-                this.#payloads.push({
-                    resolve,
-                    reject,
-                    payload: { method, params, id, jsonrpc: '2.0' },
-                    shard: shard,
+            if (method !== 'quai_listRunningChains') {
+                return this.initPromise.then(() => {
+                    return continueSend();
                 });
-            });
-            // If there is not a pending drainTimer, set one
-            this.#scheduleDrain();
-            return promise;
+            }
+            else {
+                return continueSend();
+            }
         }
         /**
          * Returns a JsonRpcSigner for the given address.
@@ -29756,13 +29936,18 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             super(network, options);
             if (Array.isArray(urls)) {
-                this.initPromise = this.initUrlMap(urls);
+                urls.forEach((url) => {
+                    this.validateUrl(url);
+                });
+                this.initialize(urls);
             }
             else if (typeof urls === 'string') {
-                this.initPromise = this.initUrlMap([urls]);
+                this.validateUrl(urls);
+                this.initialize([urls]);
             }
             else {
-                this.initPromise = this.initUrlMap(urls.clone());
+                this.validateUrl(urls.url);
+                this.initialize(urls.clone());
             }
         }
         _getSubscriber(sub) {
@@ -29770,6 +29955,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return subscriber;
         }
         _getConnection(shard) {
+            if (this._initFailed) {
+                throw new Error('Provider failed to initialize on creation. Run initUrlMap or create a new provider.');
+            }
             let connection;
             if (shard !== undefined) {
                 connection = this._urlMap.get(shard) ?? this.connect[this.connect.length - 1].clone();
@@ -29779,12 +29967,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             return new FetchRequest(connection.url);
         }
-        async send(method, params, shard) {
+        async send(method, params, shard, now) {
             // All requests are over HTTP, so we can just start handling requests
             // We do this here rather than the constructor so that we don't send any
             // requests to the network (i.e. quai_chainId) until we absolutely have to.
             await this._start();
-            return await super.send(method, params, shard);
+            return await super.send(method, params, shard, now);
         }
         async _send(payload, shard) {
             // Configure a POST connection for the requested method
@@ -29855,6 +30043,163 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         const result = [];
         _spelunkMessage(value, result);
         return result;
+    }
+
+    // A = Arguments to the constructor
+    // I = Interface of deployed contracts
+    /**
+     * A **ContractFactory** is used to deploy a Contract to the blockchain.
+     *
+     * @category Contract
+     */
+    class ContractFactory {
+        /**
+         * The Contract Interface.
+         */
+        interface;
+        /**
+         * The Contract deployment bytecode. Often called the initcode.
+         */
+        bytecode;
+        /**
+         * The ContractRunner to deploy the Contract as.
+         */
+        runner;
+        /**
+         * Create a new **ContractFactory** with `abi` and `bytecode`, optionally connected to `runner`.
+         *
+         * The `bytecode` may be the `bytecode` property within the standard Solidity JSON output.
+         */
+        constructor(abi, bytecode, runner) {
+            const iface = Interface.from(abi);
+            // Dereference Solidity bytecode objects and allow a missing `0x`-prefix
+            if (bytecode instanceof Uint8Array) {
+                bytecode = hexlify(getBytes(bytecode));
+            }
+            else {
+                if (typeof bytecode === 'object') {
+                    bytecode = bytecode.object;
+                }
+                if (!bytecode.startsWith('0x')) {
+                    bytecode = '0x' + bytecode;
+                }
+                bytecode = hexlify(getBytes(bytecode));
+            }
+            defineProperties(this, {
+                bytecode,
+                interface: iface,
+                runner: runner || null,
+            });
+        }
+        attach(target) {
+            return new BaseContract(target, this.interface, this.runner);
+        }
+        /**
+         * Resolves to the transaction to deploy the contract, passing `args` into the constructor.
+         *
+         * @param {ContractMethods<A>} args - The arguments to the constructor.
+         * @returns {Promise<ContractDeployTransaction>} A promise resolving to the deployment transaction.
+         */
+        async getDeployTransaction(...args) {
+            let overrides;
+            const fragment = this.interface.deploy;
+            if (fragment.inputs.length + 1 === args.length) {
+                overrides = await copyOverrides(args.pop());
+                const resolvedArgs = await resolveArgs(this.runner, fragment.inputs, args);
+                const data = concat([this.bytecode, this.interface.encodeDeploy(resolvedArgs)]);
+                return Object.assign({}, overrides, { data });
+            }
+            if (fragment.inputs.length !== args.length) {
+                throw new Error('incorrect number of arguments to constructor');
+            }
+            const resolvedArgs = await resolveArgs(this.runner, fragment.inputs, args);
+            const data = concat([this.bytecode, this.interface.encodeDeploy(resolvedArgs)]);
+            const from = args.pop()?.from || undefined;
+            return Object.assign({}, from, { data });
+        }
+        /**
+         * Resolves to the Contract deployed by passing `args` into the constructor.
+         *
+         * This will resovle to the Contract before it has been deployed to the network, so the
+         * [baseContract.waitForDeployment](../classes/BaseContract#waitForDeployment) should be used before sending any
+         * transactions to it.
+         *
+         * @param {ContractMethods<A>} args - The arguments to the constructor.
+         * @returns {Promise<
+         *     BaseContract & { deploymentTransaction(): ContractTransactionResponse } & Omit<I, keyof BaseContract>
+         * >}
+         *   A promise resolving to the Contract.
+         */
+        async deploy(...args) {
+            const tx = await this.getDeployTransaction(...args);
+            assert(this.runner && typeof this.runner.sendTransaction === 'function', 'factory runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
+                operation: 'sendTransaction',
+            });
+            if (this.runner instanceof Wallet || this.runner instanceof JsonRpcSigner) {
+                validateAddress(this.runner.address);
+                tx.from = this.runner.address;
+            }
+            const grindedTx = await this.grindContractAddress(tx);
+            const sentTx = await this.runner.sendTransaction(grindedTx);
+            const address = getStatic(this.constructor, 'getContractAddress')?.(tx);
+            return new BaseContract(address, this.interface, this.runner, sentTx);
+        }
+        static getContractAddress(transaction) {
+            return getContractAddress(transaction.from, BigInt(transaction.nonce), // Fix: Convert BigInt to bigint
+            transaction.data);
+        }
+        async grindContractAddress(tx) {
+            if (tx.nonce == null && tx.from) {
+                tx.nonce = await this.runner?.provider?.getTransactionCount(tx.from);
+            }
+            const sender = String(tx.from);
+            const toShard = getZoneForAddress(sender);
+            let i = 0;
+            const startingData = tx.data;
+            while (i < 10000) {
+                const contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
+                const contractShard = getZoneForAddress(contractAddress);
+                const utxo = isQiAddress(contractAddress);
+                if (contractShard === toShard && !utxo) {
+                    return tx;
+                }
+                const salt = randomBytes(32);
+                tx.data = hexlify(concat([String(startingData), salt]));
+                i++;
+            }
+            return tx;
+        }
+        /**
+         * Return a new **ContractFactory** with the same ABI and bytecode, but connected to `runner`.
+         *
+         * @param {ContractRunner} runner - The runner to connect to.
+         * @returns {ContractFactory<A, I>} A new ContractFactory.
+         */
+        connect(runner) {
+            return new ContractFactory(this.interface, this.bytecode, runner);
+        }
+        /**
+         * Create a new **ContractFactory** from the standard Solidity JSON output.
+         *
+         * @param {any} output - The Solidity JSON output.
+         * @param {ContractRunner} runner - The runner to connect to.
+         * @returns {ContractFactory<A, I>} A new ContractFactory.
+         */
+        static fromSolidity(output, runner) {
+            assertArgument(output != null, 'bad compiler output', 'output', output);
+            if (typeof output === 'string') {
+                output = JSON.parse(output);
+            }
+            const abi = output.abi;
+            let bytecode = '';
+            if (output.bytecode) {
+                bytecode = output.bytecode;
+            }
+            else if (output.evm && output.evm.bytecode) {
+                bytecode = output.evm.bytecode;
+            }
+            return new this(abi, bytecode, runner);
+        }
     }
 
     /**
@@ -30014,6 +30359,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         #paused;
         #emitPromise;
         zone;
+        shard;
         /**
          * Creates a new **SocketSubscriber** attached to `provider` listening to `filter`.
          *
@@ -30027,12 +30373,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.#paused = null;
             this.#emitPromise = null;
             this.zone = zone;
+            this.shard = toShard(zone);
         }
         /**
          * Start the subscriber.
          */
         start() {
-            this.#filterId = this.#provider.send('quai_subscribe', this.filter).then((filterId) => {
+            this.#filterId = this.#provider.send('quai_subscribe', this.filter, this.shard).then((filterId) => {
                 this.#provider._register(filterId, this);
                 return filterId;
             });
@@ -30042,7 +30389,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         stop() {
             this.#filterId.then((filterId) => {
-                this.#provider.send('quai_unsubscribe', [filterId]);
+                this.#provider.send('quai_unsubscribe', [filterId], this.shard);
             });
             this.#filterId = null;
         }
@@ -30125,7 +30472,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {Promise<void>}
          */
         async _emit(provider, message) {
-            provider.emit('block', this.zone, parseInt(message.number));
+            provider.emit('block', this.zone, parseInt(message.woHeader.number));
         }
     }
     /**
@@ -30283,9 +30630,22 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @ignore
          * @param {JsonRpcPayload | JsonRpcPayload[]} payload - The payload to send.
          * @param {Shard} [shard] - The shard.
+         * @param {boolean} [now] - Whether to send immediately.
          * @returns {Promise<(JsonRpcResult | JsonRpcError)[]>} The result or error.
          */
-        async _send(payload, shard) {
+        async _send(payload, shard, now) {
+            if (this._initFailed) {
+                console.log('Provider failed to initialize on creation. Run initialize or create a new provider.');
+                return [
+                    {
+                        id: Array.isArray(payload) ? payload[0].id : payload.id,
+                        error: {
+                            code: -32000,
+                            message: 'Provider failed to initialize on creation. Run initialize or create a new provider.',
+                        },
+                    },
+                ];
+            }
             // WebSocket provider doesn't accept batches
             assertArgument(!Array.isArray(payload), 'WebSocket does not support batch send', 'payload', payload);
             // @TODO: stringify payloads here and store to prevent mutations
@@ -30294,7 +30654,23 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 this.#callbacks.set(payload.id, { payload, resolve, reject });
             });
             // Wait until the socket is connected before writing to it
-            await this._waitUntilReady();
+            try {
+                if (!now) {
+                    await this._waitUntilReady();
+                }
+            }
+            catch (error) {
+                this.#callbacks.delete(payload.id);
+                return [
+                    {
+                        id: Array.isArray(payload) ? payload[0].id : payload.id,
+                        error: {
+                            code: -32000,
+                            message: 'Provider failed to initialize on creation. Run initialize or create a new provider.',
+                        },
+                    },
+                ];
+            }
             // Write the request to the socket
             await this._write(JSON.stringify(payload), shard);
             return [await promise];
@@ -30354,6 +30730,22 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         async _write(message, shard) {
             throw new Error('sub-classes must override this');
         }
+        validateUrl(url) {
+            const urlPattern = /^(ws):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
+            if (!urlPattern.test(url)) {
+                let errorMessage = 'Invalid URL: ';
+                if (!/^ws:\/\//.test(url)) {
+                    errorMessage += 'URL must start with ws://. ';
+                }
+                if (url.endsWith('/')) {
+                    errorMessage += 'URL should not end with a /. ';
+                }
+                if (/\/[^/]+/.test(url)) {
+                    errorMessage += 'URL should not contain a path, query string, or fragment. ';
+                }
+                throw new Error(errorMessage.trim());
+            }
+        }
     }
 
     function getGlobal() {
@@ -30412,7 +30804,19 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         constructor(url, network, options) {
             super(network, options);
             this.#websockets = [];
-            this.initPromise = this.initUrlMap(typeof url === 'string' ? [url] : url);
+            if (typeof url === 'string') {
+                this.validateUrl(url);
+            }
+            else if (Array.isArray(url)) {
+                url.forEach((it) => this.validateUrl(it));
+            }
+            else if (typeof url === 'function') {
+                this.validateUrl(url().url);
+            }
+            else {
+                this.validateUrl(url.url);
+            }
+            this.initialize(typeof url === 'string' ? [url] : url);
         }
         /**
          * Initialize a WebSocket connection for a shard.
@@ -30422,6 +30826,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {Shard} shard - The shard identifier.
          */
         initWebSocket(websocket, shard) {
+            websocket.onerror = (error) => {
+                console.log('WebsocketProvider error', error);
+                websocket.close();
+            };
             websocket.onopen = async () => {
                 try {
                     await this._start();
@@ -30462,50 +30870,79 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {U} urls - The URLs or WebSocket object or creator.
          * @returns {Promise<void>} A promise that resolves when the URL map is initialized.
          */
-        async initUrlMap(urls) {
-            const createWebSocket = (baseUrl, port) => {
-                return new _WebSocket(`${baseUrl}:${port}`);
-            };
-            const initShardWebSockets = async (baseUrl) => {
-                const shards = await this.getRunningLocations();
-                await Promise.all(shards.map(async (shard) => {
-                    const port = 8200 + 20 * shard[0] + shard[1];
-                    const shardUrl = baseUrl.split(':').slice(0, 2).join(':');
-                    const websocket = createWebSocket(shardUrl, port);
-                    this.initWebSocket(websocket, toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`));
-                    this.#websockets.push(websocket);
-                    this._urlMap.set(toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`), websocket);
-                    await this.waitShardReady(toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`));
-                }));
-            };
-            if (Array.isArray(urls)) {
-                for (const url of urls) {
-                    const baseUrl = `${url.split(':')[0]}:${url.split(':')[1]}`;
-                    const primeWebsocket = createWebSocket(baseUrl, 8001);
+        async initialize(urls) {
+            //clear websockets
+            this.#websockets = [];
+            this._urlMap.clear();
+            try {
+                const primeSuffix = this._getOption('usePathing') ? `/${fromShard(exports.Shard.Prime, 'nickname')}` : ':8001';
+                const createWebSocket = (baseUrl, suffix) => {
+                    const tempWs = new _WebSocket(`${baseUrl}${suffix}`);
+                    return tempWs;
+                    // wait 2 minutes
+                };
+                const initShardWebSockets = async (baseUrl) => {
+                    const shards = await this._getRunningLocations(exports.Shard.Prime, true);
+                    await Promise.all(shards.map(async (shard) => {
+                        const port = 8200 + 20 * shard[0] + shard[1];
+                        const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
+                        const shardSuffix = this._getOption('usePathing')
+                            ? `/${fromShard(shardEnum, 'nickname')}`
+                            : `:${port}`;
+                        const shardUrl = baseUrl.split(':').slice(0, 2).join(':');
+                        const websocket = createWebSocket(shardUrl, shardSuffix);
+                        this.initWebSocket(websocket, shardEnum);
+                        this.#websockets.push(websocket);
+                        this._urlMap.set(shardEnum, websocket);
+                        try {
+                            await this.waitShardReady(shardEnum);
+                        }
+                        catch (error) {
+                            console.log('failed to waitShardReady', error);
+                            this._initFailed = true;
+                        }
+                    }));
+                };
+                if (Array.isArray(urls)) {
+                    for (const url of urls) {
+                        const baseUrl = `${url.split(':')[0]}:${url.split(':')[1]}`;
+                        const primeWebsocket = createWebSocket(baseUrl, primeSuffix);
+                        this.initWebSocket(primeWebsocket, exports.Shard.Prime);
+                        this.#websockets.push(primeWebsocket);
+                        this._urlMap.set(exports.Shard.Prime, primeWebsocket);
+                        await this.waitShardReady(exports.Shard.Prime);
+                        await initShardWebSockets(baseUrl);
+                    }
+                }
+                else if (typeof urls === 'function') {
+                    const primeWebsocket = urls();
                     this.initWebSocket(primeWebsocket, exports.Shard.Prime);
                     this.#websockets.push(primeWebsocket);
                     this._urlMap.set(exports.Shard.Prime, primeWebsocket);
                     await this.waitShardReady(exports.Shard.Prime);
+                    const baseUrl = this.#websockets[0].url.split(':').slice(0, 2).join(':');
                     await initShardWebSockets(baseUrl);
                 }
+                else {
+                    const primeWebsocket = urls;
+                    this.initWebSocket(primeWebsocket, exports.Shard.Prime);
+                    this.#websockets.push(primeWebsocket);
+                    this._urlMap.set(exports.Shard.Prime, primeWebsocket);
+                    await this.waitShardReady(exports.Shard.Prime);
+                    const baseUrl = primeWebsocket.url.split(':').slice(0, 2).join(':');
+                    await initShardWebSockets(baseUrl);
+                }
+                if (this.initResolvePromise)
+                    this.initResolvePromise();
             }
-            else if (typeof urls === 'function') {
-                const primeWebsocket = urls();
-                this.initWebSocket(primeWebsocket, exports.Shard.Prime);
-                this.#websockets.push(primeWebsocket);
-                this._urlMap.set(exports.Shard.Prime, primeWebsocket);
-                await this.waitShardReady(exports.Shard.Prime);
-                const baseUrl = this.#websockets[0].url.split(':').slice(0, 2).join(':');
-                await initShardWebSockets(baseUrl);
-            }
-            else {
-                const primeWebsocket = urls;
-                this.initWebSocket(primeWebsocket, exports.Shard.Prime);
-                this.#websockets.push(primeWebsocket);
-                this._urlMap.set(exports.Shard.Prime, primeWebsocket);
-                await this.waitShardReady(exports.Shard.Prime);
-                const baseUrl = primeWebsocket.url.split(':').slice(0, 2).join(':');
-                await initShardWebSockets(baseUrl);
+            catch (error) {
+                this._initFailed = true;
+                console.log('failed to initialize', error);
+                //clear websockets
+                this.#websockets = [];
+                if (this.initRejectPromise)
+                    this.initRejectPromise(error);
+                return;
             }
         }
         /**
@@ -30806,6 +31243,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         isQuaiAddress: isQuaiAddress,
         keccak256: keccak256,
         lock: lock,
+        makeError: makeError,
         mask: mask,
         musigCrypto: musigCrypto,
         parseQuai: parseQuai,
@@ -30967,6 +31405,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     exports.isQuaiAddress = isQuaiAddress;
     exports.keccak256 = keccak256;
     exports.lock = lock;
+    exports.makeError = makeError;
     exports.mask = mask;
     exports.musigCrypto = musigCrypto;
     exports.parseQuai = parseQuai;
