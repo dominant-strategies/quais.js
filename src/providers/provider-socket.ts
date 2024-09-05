@@ -476,13 +476,13 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     }
 
     validateUrl(url: string): void {
-        const urlPattern = /^(ws):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
+        const urlPattern = /^(wss?):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
 
         if (!urlPattern.test(url)) {
             let errorMessage = 'Invalid URL: ';
 
-            if (!/^ws:\/\//.test(url)) {
-                errorMessage += 'URL must start with ws://. ';
+            if (!/^wss?:\/\//.test(url)) {
+                errorMessage += 'URL must start with ws:// or wss://. ';
             }
 
             if (url.endsWith('/')) {
