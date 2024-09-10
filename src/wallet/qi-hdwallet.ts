@@ -12,6 +12,9 @@ import { Outpoint } from '../transaction/utxo.js';
 import { getZoneForAddress } from '../utils/index.js';
 import { AllowedCoinType, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
+import { PaymentCodePrivate, PaymentCodePublic, PC_VERSION } from './payment-codes.js';
+import { HDNodeBIP32Adapter } from './bip32-types.js';
+import type { TinySecp256k1Interface, BIP32API } from './bip32-types.js';
 
 /**
  * @property {Outpoint} outpoint - The outpoint object.
@@ -120,6 +123,9 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     protected _outpoints: OutpointInfo[] = [];
 
+    //! Review this
+    private _ecc!: TinySecp256k1Interface;
+
     /**
      * @ignore
      * @param {HDNodeWallet} root - The root HDNodeWallet.
@@ -127,6 +133,10 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     constructor(guard: any, root: HDNodeWallet, provider?: Provider) {
         super(guard, root, provider);
+        //! Review this
+        import('tiny-secp256k1').then((ecc) => {
+            this._ecc = ecc;
+        });
     }
 
     /**
@@ -595,5 +605,100 @@ export class QiHDWallet extends AbstractHDWallet {
                 throw new Error(`Invalid Outpoint: ${JSON.stringify(info)} `);
             }
         });
+    }
+
+    /**
+     * Creates a new BIP47 payment code for the specified account. The payment code is derived from the account's BIP32
+     * root key.
+     *
+     * @param {number} account - The account index to derive the payment code from.
+     * @returns {Promise<string>} A promise that resolves to the Base58-encoded BIP47 payment code.
+     */
+    public async getPaymentCode(account: number): Promise<string> {
+        const privatePcode = await this._getPaymentCodePrivate(account);
+        return privatePcode.toBase58();
+    }
+
+    // helper method to get a bip32 API instance
+    private async _getBIP32API(): Promise<BIP32API> {
+        const module = await import('@samouraiwallet/bip32');
+        const { BIP32Factory } = module;
+        return BIP32Factory(this._ecc) as unknown as BIP32API;
+    }
+
+    // helper method to decode a base58 string into a Uint8Array
+    private async _decodeBase58(base58: string): Promise<Uint8Array> {
+        const { bs58check } = await import('@samouraiwallet/bip32/crypto');
+        return bs58check.decode(base58);
+    }
+
+    /**
+     * Generates a BIP47 private payment code for the specified account. The payment code is created by combining the
+     * account's public key and chain code.
+     *
+     * @private
+     * @param {number} account - The account index for which to generate the private payment code.
+     * @returns {Promise<PaymentCodePrivate>} A promise that resolves to the PaymentCodePrivate instance.
+     */
+    private async _getPaymentCodePrivate(account: number): Promise<PaymentCodePrivate> {
+        const bip32 = await this._getBIP32API();
+
+        const accountNode = this._root.deriveChild(account);
+
+        // payment code array
+        const pc = new Uint8Array(80);
+
+        // set version + options
+        pc.set([1, 0]);
+
+        // set the public key
+        const pubKey = accountNode.publicKey;
+        pc.set(getBytes(pubKey), 2);
+
+        // set the chain code
+        const chainCode = accountNode.chainCode;
+        pc.set(getBytes(chainCode), 35);
+
+        const adapter = new HDNodeBIP32Adapter(accountNode);
+
+        return new PaymentCodePrivate(adapter, this._ecc, bip32, pc);
+    }
+
+    /**
+     * Generates a payment address for sending funds to the specified receiver's BIP47 payment code. Uses Diffie-Hellman
+     * key exchange to derive the address from the receiver's public key and sender's private key.
+     *
+     * @param {string} receiverPaymentCode - The Base58-encoded BIP47 payment code of the receiver.
+     * @returns {Promise<string>} A promise that resolves to the payment address for sending funds.
+     * @throws {Error} Throws an error if the payment code version is invalid.
+     */
+    public async generateSendAddress(receiverPaymentCode: string): Promise<string> {
+        const bip32 = await this._getBIP32API();
+        const buf = await this._decodeBase58(receiverPaymentCode);
+        const version = buf[0];
+        if (version !== PC_VERSION) throw new Error('Invalid payment code version');
+
+        const receiverPCodePrivate = await this._getPaymentCodePrivate(0);
+        const senderPCodePublic = new PaymentCodePublic(this._ecc, bip32, buf.slice(1));
+        return senderPCodePublic.getPaymentAddress(receiverPCodePrivate, 0);
+    }
+
+    /**
+     * Generates a payment address for receiving funds from the specified sender's BIP47 payment code. Uses
+     * Diffie-Hellman key exchange to derive the address from the sender's public key and receiver's private key.
+     *
+     * @param {string} senderPaymentCode - The Base58-encoded BIP47 payment code of the sender.
+     * @returns {Promise<string>} A promise that resolves to the payment address for receiving funds.
+     * @throws {Error} Throws an error if the payment code version is invalid.
+     */
+    public async generateReceiveAddress(senderPaymentCode: string): Promise<string> {
+        const bip32 = await this._getBIP32API();
+        const buf = await this._decodeBase58(senderPaymentCode);
+        const version = buf[0];
+        if (version !== PC_VERSION) throw new Error('Invalid payment code version');
+
+        const senderPCodePublic = new PaymentCodePublic(this._ecc, bip32, buf.slice(1));
+        const receiverPCodePrivate = await this._getPaymentCodePrivate(0);
+        return receiverPCodePrivate.getPaymentAddress(senderPCodePublic, 0);
     }
 }
