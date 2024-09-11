@@ -70,6 +70,8 @@ export class BrowserProvider extends JsonRpcApiProvider {
     constructor(ethereum: Eip1193Provider, network?: Networkish) {
         super(network, { batchMaxCount: 1 });
 
+        if (this.initResolvePromise) this.initResolvePromise();
+
         this.#request = async (method: string, params: Array<any> | Record<string, any>) => {
             const payload = { method, params };
             this.emit('debug', undefined, { action: 'sendEip1193Request', payload });
@@ -116,6 +118,7 @@ export class BrowserProvider extends JsonRpcApiProvider {
      * @returns {Promise<any>} The result of the request.
      */
     async send(method: string, params: Array<any> | Record<string, any>): Promise<any> {
+        console.log('BrowserProvider.send', method, params);
         await this._start();
 
         return await super.send(method, params);
