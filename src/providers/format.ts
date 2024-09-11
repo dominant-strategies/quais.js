@@ -151,47 +151,33 @@ const _formatHeader = object({
     etxSetRoot: formatHash,
     evmRoot: formatHash,
     expansionNumber: getNumber,
-    extRollupRoot: formatHash,
-    extTransactionsRoot: formatHash,
+    etxRollupRoot: formatHash,
+    etxsRoot: formatHash,
     extraData: formatData,
     gasLimit: getBigInt,
     gasUsed: getBigInt,
-    hash: formatHash,
     interlinkRootHash: formatHash,
     manifestHash: arrayOf(formatHash),
     number: arrayOf(getNumber),
-    parentDeltaS: arrayOf(getBigInt),
+    parentDeltaEntropy: arrayOf(getBigInt),
     parentEntropy: arrayOf(getBigInt),
     parentHash: arrayOf(formatHash),
-    parentUncledS: arrayOf(allowNull(getBigInt)),
-    parentUncledSubDeltaS: arrayOf(getBigInt),
-    primeTerminus: formatHash,
+    parentUncledDeltaEntropy: arrayOf(getBigInt),
+    primeTerminusHash: formatHash,
+    quaiStateSize: getBigInt,
     receiptsRoot: formatHash,
-    sha3Uncles: formatHash,
+    uncleHash: formatHash,
     size: getBigInt,
+    stateLimit: getBigInt,
+    stateUsed: getBigInt,
     thresholdCount: getBigInt,
     transactionsRoot: formatHash,
-    uncledS: getBigInt,
+    uncledEntropy: getBigInt,
     utxoRoot: formatHash,
 });
 
 const _formatUncle = object({
     coinbase: allowNull(getAddress),
-    difficulty: getBigInt,
-    headerHash: formatHash,
-    location: formatData,
-    mixHash: formatHash,
-    nonce: formatData,
-    number: getNumber,
-    parentHash: formatHash,
-    primeTerminusNumber: getNumber,
-    time: getBigInt,
-    txHash: formatHash,
-    workShare: formatBoolean,
-});
-
-const _formatWoHeader = object({
-    coinbase: getAddress,
     difficulty: getNumber,
     headerHash: formatHash,
     location: formatData,
@@ -200,12 +186,12 @@ const _formatWoHeader = object({
     number: getNumber,
     parentHash: formatHash,
     primeTerminusNumber: getNumber,
-    time: formatData,
+    timestamp: getNumber,
     txHash: formatHash,
 });
 
 const _formatBlock = object({
-    extTransactions: arrayOf((tx: any) => {
+    etxs: arrayOf((tx: any) => {
         if (typeof tx === 'string') {
             return formatHash(tx);
         }
@@ -214,7 +200,6 @@ const _formatBlock = object({
     hash: formatHash,
     header: _formatHeader,
     interlinkHashes: arrayOf(formatHash),
-    order: getNumber,
     size: getBigInt,
     subManifest: arrayOf(formatData),
     totalEntropy: getBigInt,
@@ -224,8 +209,9 @@ const _formatBlock = object({
         }
         return formatTransactionResponse(tx);
     }),
-    uncles: allowNull(arrayOf(_formatUncle), []),
-    woHeader: _formatWoHeader,
+    uncles: arrayOf(_formatUncle),
+    woHeader: _formatUncle,
+    workShares: allowNull(arrayOf(_formatUncle), []),
 });
 
 export function formatBlock(value: any): BlockParams {
@@ -241,7 +227,7 @@ export function formatBlock(value: any): BlockParams {
             return formatTransactionResponse(tx);
         },
     );
-    result.extTransactions = value.extTransactions.map((tx: string | ExternalTransactionResponseParams) => {
+    result.etxs = value.etxs.map((tx: string | ExternalTransactionResponseParams) => {
         if (typeof tx === 'string') {
             return tx;
         }
