@@ -210,7 +210,7 @@ describe.skip('Test Provider Block operations', function () {
     before(async () => {
         const rpcBlock = await fetchRPCBlock('0xA');
         block = {
-            extTransactions: rpcBlock.extTransactions,
+            etxs: rpcBlock.etxs,
             hash: rpcBlock.hash,
             header: {
                 baseFeePerGas: BigInt(rpcBlock.header.baseFeePerGas),
@@ -219,49 +219,40 @@ describe.skip('Test Provider Block operations', function () {
                 etxSetRoot: rpcBlock.header.etxSetRoot,
                 evmRoot: rpcBlock.header.evmRoot,
                 expansionNumber: Number(rpcBlock.header.expansionNumber),
-                extRollupRoot: rpcBlock.header.extRollupRoot,
-                extTransactionsRoot: rpcBlock.header.extTransactionsRoot,
+                etxRollupRoot: rpcBlock.header.etxRollupRoot,
+                etxsRoot: rpcBlock.header.etxsRoot,
                 extraData: rpcBlock.header.extraData,
                 gasLimit: BigInt(rpcBlock.header.gasLimit),
                 gasUsed: BigInt(rpcBlock.header.gasUsed),
-                hash: rpcBlock.header.hash,
                 interlinkRootHash: rpcBlock.header.interlinkRootHash,
                 manifestHash: rpcBlock.header.manifestHash,
                 number: rpcBlock.header.number.map((stringNumber: string) => Number(stringNumber)),
-                parentDeltaS: rpcBlock.header.parentDeltaS.map((delta: string) => BigInt(delta)),
+                parentDeltaEntropy: rpcBlock.header.parentDeltaEntropy.map((delta: string) => BigInt(delta)),
                 parentEntropy: rpcBlock.header.parentEntropy.map((entropy: string) => BigInt(entropy)),
                 parentHash: rpcBlock.header.parentHash,
-                parentUncledS: rpcBlock.header.parentUncledS.map((uncled: string | null) =>
-                    uncled ? BigInt(uncled) : null,
+                parentUncledDeltaEntropy: rpcBlock.header.parentUncledDeltaEntropy.map((delta: string) =>
+                    BigInt(delta),
                 ),
-                parentUncledSubDeltaS: rpcBlock.header.parentUncledSubDeltaS.map((delta: string) => BigInt(delta)),
-                primeTerminus: rpcBlock.header.primeTerminus,
+                primeTerminusHash: rpcBlock.header.primeTerminusHash,
                 receiptsRoot: rpcBlock.header.receiptsRoot,
-                sha3Uncles: rpcBlock.header.sha3Uncles,
+                quaiStateSize: BigInt(rpcBlock.header.quaiStateSize),
                 size: BigInt(rpcBlock.header.size),
+                stateLimit: BigInt(rpcBlock.header.stateLimit),
+                stateUsed: BigInt(rpcBlock.header.stateUsed),
                 thresholdCount: BigInt(rpcBlock.header.thresholdCount),
                 transactionsRoot: rpcBlock.header.transactionsRoot,
-                uncledS: BigInt(rpcBlock.header.uncledS),
+                uncleHash: rpcBlock.header.uncleHash,
+                uncledEntropy: BigInt(rpcBlock.header.uncledEntropy),
                 utxoRoot: rpcBlock.header.utxoRoot,
             },
             interlinkHashes: rpcBlock.interlinkHashes,
-            order: rpcBlock.order,
             size: BigInt(rpcBlock.size),
             subManifest: rpcBlock.subManifest,
             totalEntropy: BigInt(rpcBlock.totalEntropy),
             transactions: rpcBlock.transactions,
             uncles: rpcBlock.uncles,
-            woHeader: {
-                difficulty: rpcBlock.woHeader.difficulty,
-                headerHash: rpcBlock.woHeader.headerHash,
-                location: rpcBlock.woHeader.location,
-                mixHash: rpcBlock.woHeader.mixHash,
-                nonce: rpcBlock.woHeader.nonce,
-                number: rpcBlock.woHeader.number,
-                parentHash: rpcBlock.woHeader.parentHash,
-                time: rpcBlock.woHeader.time,
-                txHash: rpcBlock.woHeader.txHash,
-            },
+            woHeader: rpcBlock.woHeader,
+            workShares: rpcBlock.workShares,
         };
     });
 
@@ -273,7 +264,7 @@ describe.skip('Test Provider Block operations', function () {
         const { provider, ...formatBlock } = {
             ...responseBlock,
             transactions: responseBlock.transactions,
-            extTransactions: responseBlock.extTransactions,
+            etxs: responseBlock.etxs,
         };
         equals('Block by Number', formatBlock, block);
     });
@@ -287,7 +278,7 @@ describe.skip('Test Provider Block operations', function () {
         const { provider, ...formatBlock } = {
             ...responseBlock,
             transactions: responseBlock.transactions,
-            extTransactions: responseBlock.extTransactions,
+            etxs: responseBlock.etxs,
         };
         equals('Block by Hash', formatBlock, block);
     });
