@@ -23,7 +23,7 @@ import type { Outpoint } from '../transaction/utxo.js';
 import type { TxInput, TxOutput } from '../transaction/utxo.js';
 import type { Zone, Shard } from '../constants/index.js';
 import type { txpoolContentResponse, txpoolInspectResponse } from './txpool.js';
-import { EtxParams } from './formatting.js';
+import { EtxParams, UncleParams } from './formatting.js';
 
 const BN_0 = BigInt(0);
 
@@ -492,27 +492,28 @@ export class BlockHeader implements BlockHeaderParams {
     readonly etxSetRoot: string;
     readonly evmRoot!: string;
     readonly expansionNumber: number;
-    readonly extRollupRoot!: string;
-    readonly extTransactionsRoot!: string;
+    readonly etxRollupRoot!: string;
+    readonly etxsRoot!: string;
     readonly extraData!: string;
     readonly gasLimit!: bigint;
     readonly gasUsed!: bigint;
-    readonly hash!: null | string;
     readonly interlinkRootHash: string;
     readonly manifestHash!: Array<string>;
-    readonly number!: Array<string>;
-    readonly parentDeltaS!: Array<bigint>;
+    readonly number!: Array<number>;
+    readonly parentDeltaEntropy!: Array<bigint>;
     readonly parentEntropy!: Array<bigint>;
     readonly parentHash!: Array<string>;
-    readonly parentUncledS: Array<bigint | null>;
-    readonly parentUncledSubDeltaS: Array<bigint>;
-    readonly primeTerminus: string;
+    readonly parentUncledDeltaEntropy: Array<bigint>;
+    readonly primeTerminusHash: string;
+    readonly quaiStateSize!: bigint;
     readonly receiptsRoot!: string;
-    readonly sha3Uncles!: string;
+    readonly uncleHash!: string;
     readonly size!: bigint;
+    readonly stateLimit!: bigint;
+    readonly stateUsed!: bigint;
     readonly thresholdCount: bigint;
     readonly transactionsRoot!: string;
-    readonly uncledS: bigint;
+    readonly uncledEntropy: bigint;
     readonly utxoRoot!: string;
 
     constructor(params: BlockHeaderParams) {
@@ -522,60 +523,34 @@ export class BlockHeader implements BlockHeaderParams {
         this.etxSetRoot = params.etxSetRoot;
         this.evmRoot = params.evmRoot;
         this.expansionNumber = params.expansionNumber;
-        this.extRollupRoot = params.extRollupRoot;
-        this.extTransactionsRoot = params.extTransactionsRoot;
+        this.etxRollupRoot = params.etxRollupRoot;
+        this.etxsRoot = params.etxsRoot;
         this.extraData = params.extraData;
         this.gasLimit = params.gasLimit;
         this.gasUsed = params.gasUsed;
-        this.hash = params.hash;
         this.interlinkRootHash = params.interlinkRootHash;
         this.manifestHash = params.manifestHash;
         this.number = params.number;
-        this.parentDeltaS = params.parentDeltaS;
+        this.parentDeltaEntropy = params.parentDeltaEntropy;
         this.parentEntropy = params.parentEntropy;
         this.parentHash = params.parentHash;
-        this.parentUncledS = params.parentUncledS;
-        this.parentUncledSubDeltaS = params.parentUncledSubDeltaS;
-        this.primeTerminus = params.primeTerminus;
+        this.parentUncledDeltaEntropy = params.parentUncledDeltaEntropy;
+        this.primeTerminusHash = params.primeTerminusHash;
+        this.quaiStateSize = params.quaiStateSize;
         this.receiptsRoot = params.receiptsRoot;
-        this.sha3Uncles = params.sha3Uncles;
+        this.uncleHash = params.uncleHash;
         this.size = params.size;
+        this.stateLimit = params.stateLimit;
+        this.stateUsed = params.stateUsed;
         this.thresholdCount = params.thresholdCount;
         this.transactionsRoot = params.transactionsRoot;
-        this.uncledS = params.uncledS;
+        this.uncledEntropy = params.uncledEntropy;
         this.utxoRoot = params.utxoRoot;
     }
 
     toJSON(): BlockHeaderParams {
         return {
-            baseFeePerGas: this.baseFeePerGas,
-            efficiencyScore: this.efficiencyScore,
-            etxEligibleSlices: this.etxEligibleSlices,
-            etxSetRoot: this.etxSetRoot,
-            evmRoot: this.evmRoot,
-            expansionNumber: this.expansionNumber,
-            extRollupRoot: this.extRollupRoot,
-            extTransactionsRoot: this.extTransactionsRoot,
-            extraData: this.extraData,
-            gasLimit: this.gasLimit,
-            gasUsed: this.gasUsed,
-            hash: this.hash,
-            interlinkRootHash: this.interlinkRootHash,
-            manifestHash: this.manifestHash,
-            number: this.number,
-            parentDeltaS: this.parentDeltaS,
-            parentEntropy: this.parentEntropy,
-            parentHash: this.parentHash,
-            parentUncledS: this.parentUncledS,
-            parentUncledSubDeltaS: this.parentUncledSubDeltaS,
-            primeTerminus: this.primeTerminus,
-            receiptsRoot: this.receiptsRoot,
-            sha3Uncles: this.sha3Uncles,
-            size: this.size,
-            thresholdCount: this.thresholdCount,
-            transactionsRoot: this.transactionsRoot,
-            uncledS: this.uncledS,
-            utxoRoot: this.utxoRoot,
+            ...this,
         };
     }
 }
@@ -585,23 +560,25 @@ export class BlockHeader implements BlockHeaderParams {
  *
  * @category Providers
  */
-export class WoHeader implements WoHeaderParams {
+export class Uncle implements UncleParams {
+    readonly coinbase: string;
     readonly difficulty!: string;
-    readonly headerHash: string;
+    readonly headerHash!: string;
     readonly location!: string;
     readonly mixHash!: string;
     readonly nonce!: string;
     readonly number!: string;
     readonly parentHash!: string;
-    readonly time: string;
-    readonly txHash: string;
+    readonly timestamp!: string;
+    readonly txHash!: string;
 
     /**
-     * Creates a new WoHeader instance.
+     * Creates a new Uncle instance.
      *
-     * @param {WoHeaderParams} params - The parameters for the WoHeader.
+     * @param {UncleParams} params - The parameters for the Uncle.
      */
     constructor(params: WoHeaderParams) {
+        this.coinbase = params.coinbase;
         this.difficulty = params.difficulty;
         this.headerHash = params.headerHash;
         this.location = params.location;
@@ -609,12 +586,13 @@ export class WoHeader implements WoHeaderParams {
         this.nonce = params.nonce;
         this.number = params.number;
         this.parentHash = params.parentHash;
-        this.time = params.time;
+        this.timestamp = params.timestamp;
         this.txHash = params.txHash;
     }
 
     toJSON(): WoHeaderParams {
         return {
+            coinbase: this.coinbase,
             difficulty: this.difficulty,
             headerHash: this.headerHash,
             location: this.location,
@@ -622,7 +600,7 @@ export class WoHeader implements WoHeaderParams {
             nonce: this.nonce,
             number: this.number,
             parentHash: this.parentHash,
-            time: this.time,
+            timestamp: this.timestamp,
             txHash: this.txHash,
         };
     }
@@ -634,20 +612,19 @@ export class WoHeader implements WoHeaderParams {
  * @category Providers
  */
 export class Block implements BlockParams, Iterable<string> {
-    readonly #extTransactions!: Array<string | ExternalTransactionResponse>;
+    readonly #etxs!: Array<string | ExternalTransactionResponse>;
     readonly hash: string;
     readonly header: BlockHeader;
     readonly interlinkHashes: Array<string>; // New parameter
-    readonly order!: number;
     readonly size!: bigint;
-    readonly subManifest!: Array<string> | null;
+    readonly subManifest!: Array<string>;
     readonly totalEntropy!: bigint;
     readonly #transactions!: Array<
         string | QuaiTransactionResponse | QiTransactionResponse | ExternalTransactionResponse
     >;
-    readonly uncles!: Array<string> | null;
-    readonly woHeader: WoHeader; // New nested parameter structure
-
+    readonly uncles!: Array<Uncle | string>;
+    readonly woHeader: Uncle;
+    readonly workShares!: Array<Uncle | string>;
     /**
      * The provider connected to the block used to fetch additional details if necessary.
      */
@@ -675,7 +652,7 @@ export class Block implements BlockParams, Iterable<string> {
             return new QiTransactionResponse(tx as QiTransactionResponseParams, provider);
         });
 
-        this.#extTransactions = block.extTransactions.map((tx) => {
+        this.#etxs = block.etxs.map((tx) => {
             if (typeof tx !== 'string') {
                 return new ExternalTransactionResponse(tx, provider);
             }
@@ -685,12 +662,22 @@ export class Block implements BlockParams, Iterable<string> {
         this.hash = block.hash;
         this.header = new BlockHeader(block.header);
         this.interlinkHashes = block.interlinkHashes;
-        this.order = block.order;
         this.size = block.size;
         this.subManifest = block.subManifest;
         this.totalEntropy = block.totalEntropy;
-        this.uncles = block.uncles;
-        this.woHeader = new WoHeader(block.woHeader);
+        this.uncles = block.uncles.map((uncle) => {
+            if (typeof uncle === 'string') {
+                return uncle;
+            }
+            return new Uncle(uncle);
+        });
+        this.woHeader = new Uncle(block.woHeader);
+        this.workShares = block.workShares.map((workShare) => {
+            if (typeof workShare === 'string') {
+                return workShare;
+            }
+            return new Uncle(workShare);
+        });
         this.provider = provider;
     }
 
@@ -713,8 +700,8 @@ export class Block implements BlockParams, Iterable<string> {
      *
      * @returns {ReadonlyArray<string>} The list of extended transaction hashes.
      */
-    get extTransactions(): ReadonlyArray<string> {
-        return this.#extTransactions.map((tx) => {
+    get etxs(): ReadonlyArray<string> {
+        return this.#etxs.map((tx) => {
             if (typeof tx === 'string') {
                 return tx;
             }
@@ -762,7 +749,7 @@ export class Block implements BlockParams, Iterable<string> {
      * @throws {Error} If the transactions were not prefetched.
      */
     get prefetchedExtTransactions(): Array<ExternalTransactionResponse> {
-        const txs = this.#extTransactions.slice();
+        const txs = this.#etxs.slice();
 
         // Doesn't matter...
         if (txs.length === 0) {
@@ -787,26 +774,35 @@ export class Block implements BlockParams, Iterable<string> {
      *
      * @returns {any} The JSON-friendly value.
      */
-    toJSON(): any {
-        const { hash, header, interlinkHashes, order, size, subManifest, totalEntropy, uncles, woHeader } = this;
+    toJSON(): BlockParams {
+        const { hash, header, interlinkHashes, size, subManifest, totalEntropy, uncles, woHeader, workShares } = this;
 
         // Using getters to retrieve the transactions and extTransactions
         const transactions = this.transactions;
-        const extTransactions = this.extTransactions;
+        const etxs = this.etxs;
 
         return {
-            _type: 'Block',
+            etxs, // Includes the extended transaction hashes or full transactions based on the prefetched data
             hash,
             header: header.toJSON(),
             interlinkHashes,
-            order,
-            size: toJson(size),
-            subManifest,
-            totalEntropy: toJson(totalEntropy),
-            uncles,
-            woHeader: woHeader.toJSON(),
             transactions, // Includes the transaction hashes or full transactions based on the prefetched data
-            extTransactions, // Includes the extended transaction hashes or full transactions based on the prefetched data
+            size: size,
+            subManifest,
+            totalEntropy: totalEntropy,
+            uncles: uncles.map((uncle) => {
+                if (typeof uncle === 'string') {
+                    return uncle;
+                }
+                return uncle.toJSON();
+            }),
+            woHeader: woHeader.toJSON(),
+            workShares: workShares.map((workShare) => {
+                if (typeof workShare === 'string') {
+                    return workShare;
+                }
+                return workShare.toJSON();
+            }),
         };
     }
 
@@ -842,7 +838,7 @@ export class Block implements BlockParams, Iterable<string> {
      * @returns {null | Date} The date this block was included at, or null if the timestamp is not available.
      */
     get date(): null | Date {
-        const timestampHex = this.woHeader.time;
+        const timestampHex = this.woHeader.timestamp;
         if (!timestampHex) {
             return null;
         }
@@ -902,10 +898,10 @@ export class Block implements BlockParams, Iterable<string> {
         // Find the internal value by its index or hash
         let tx: string | ExternalTransactionResponse | undefined = undefined;
         if (typeof indexOrHash === 'number') {
-            tx = this.#extTransactions[indexOrHash];
+            tx = this.#etxs[indexOrHash];
         } else {
             const hash = indexOrHash.toLowerCase();
-            for (const v of this.#extTransactions) {
+            for (const v of this.#etxs) {
                 if (typeof v === 'string') {
                     if (v !== hash) {
                         continue;
@@ -965,7 +961,7 @@ export class Block implements BlockParams, Iterable<string> {
      * @returns {boolean} True if the block has been mined.
      */
     isMined(): this is MinedBlock {
-        return !!this.header.hash;
+        return !!this.hash;
     }
 
     /**
@@ -976,7 +972,7 @@ export class Block implements BlockParams, Iterable<string> {
             throw new Error('');
         }
         return createOrphanedBlockFilter({
-            hash: this.header.hash!,
+            hash: this.hash!,
             number: parseInt(this.woHeader.number!, 16),
         });
     }
