@@ -10,17 +10,17 @@ import type { AccessList, TxInput, TxOutput } from '../transaction/index.js';
  * @category Providers
  */
 export interface BlockParams {
-    extTransactions: ReadonlyArray<string | ExternalTransactionResponseParams>;
+    etxs: ReadonlyArray<string | ExternalTransactionResponseParams>;
     hash: string;
     header: BlockHeaderParams;
-    interlinkHashes: Array<string>; // New parameter
-    order: number;
+    interlinkHashes: Array<string>;
     size: bigint;
-    subManifest: Array<string> | null;
+    subManifest: Array<string>;
     totalEntropy: bigint;
     transactions: ReadonlyArray<string | TransactionResponseParams | ExternalTransactionResponseParams>;
-    uncles: Array<string> | null;
-    woHeader: WoHeaderParams; // New nested parameter structure
+    uncles: Array<string | UncleParams>;
+    woHeader: WoHeaderParams;
+    workShares: Array<string | WorkShareParams>;
 }
 
 export interface BlockHeaderParams {
@@ -30,31 +30,33 @@ export interface BlockHeaderParams {
     etxSetRoot: string;
     evmRoot: string;
     expansionNumber: number;
-    extRollupRoot: string;
-    extTransactionsRoot: string;
+    etxRollupRoot: string;
+    etxsRoot: string;
     extraData: string;
     gasLimit: bigint;
     gasUsed: bigint;
-    hash: null | string;
     interlinkRootHash: string;
     manifestHash: Array<string>;
-    number: Array<string>;
-    parentDeltaS: Array<bigint>;
+    number: Array<number>;
+    parentDeltaEntropy: Array<bigint>;
     parentEntropy: Array<bigint>;
     parentHash: Array<string>;
-    parentUncledS: Array<bigint | null>;
-    parentUncledSubDeltaS: Array<bigint>;
-    primeTerminus: string;
+    parentUncledDeltaEntropy: Array<bigint>;
+    primeTerminusHash: string;
+    quaiStateSize: bigint;
     receiptsRoot: string;
-    sha3Uncles: string;
+    uncleHash: string;
     size: bigint;
+    stateLimit: bigint;
+    stateUsed: bigint;
     thresholdCount: bigint;
     transactionsRoot: string;
-    uncledS: bigint;
+    uncledEntropy: bigint;
     utxoRoot: string;
 }
 
-export interface WoHeaderParams {
+export interface UncleParams {
+    coinbase: string;
     difficulty: string;
     headerHash: string;
     location: string;
@@ -62,9 +64,13 @@ export interface WoHeaderParams {
     nonce: string;
     number: string;
     parentHash: string;
-    time: string;
+    timestamp: string;
     txHash: string;
 }
+
+// Create named params for the work share and wo header despite them being the same as the uncle params
+export interface WorkShareParams extends UncleParams {}
+export interface WoHeaderParams extends UncleParams {}
 
 //////////////////////
 // Log
