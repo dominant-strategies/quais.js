@@ -3,6 +3,7 @@ import { JsonRpcApiProvider, JsonRpcSigner } from './provider-jsonrpc.js';
 
 import type { JsonRpcError, JsonRpcPayload, JsonRpcResult } from './provider-jsonrpc.js';
 import type { Networkish } from './network.js';
+import { Shard } from '../constants/index.js';
 
 /**
  * The interface to an [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193) provider, which is a standard used by most
@@ -18,9 +19,10 @@ export interface Eip1193Provider {
      * @param {Object} request - The request object.
      * @param {string} request.method - The method name.
      * @param {any[] | Record<string, any>} [request.params] - The parameters for the method.
+     * @param {Shard} [request.shard] - The shard to send the request to.
      * @returns {Promise<any>} The result of the request.
      */
-    request(request: { method: string; params?: Array<any> | Record<string, any> }): Promise<any>;
+    request(request: { method: string; params?: Array<any> | Record<string, any>; shard?: Shard }): Promise<any>;
 }
 
 /**
@@ -58,7 +60,7 @@ export type DebugEventBrowserProvider =
  * @extends JsonRpcApiProvider
  */
 export class BrowserProvider extends JsonRpcApiProvider {
-    #request: (method: string, params: Array<any> | Record<string, any>) => Promise<any>;
+    #request: (method: string, params: Array<any> | Record<string, any>, shard?: Shard) => Promise<any>;
 
     /**
      * Connect to the `ethereum` provider, optionally forcing the `network`.
@@ -72,8 +74,8 @@ export class BrowserProvider extends JsonRpcApiProvider {
 
         if (this.initResolvePromise) this.initResolvePromise();
 
-        this.#request = async (method: string, params: Array<any> | Record<string, any>) => {
-            const payload = { method, params };
+        this.#request = async (method: string, params: Array<any> | Record<string, any>, shard?: Shard) => {
+            const payload = { method, params, shard };
             this.emit('debug', undefined, { action: 'sendEip1193Request', payload });
             try {
                 const result = await ethereum.request(payload);
@@ -117,11 +119,10 @@ export class BrowserProvider extends JsonRpcApiProvider {
      * @param {any[] | Record<string, any>} params - The parameters for the method.
      * @returns {Promise<any>} The result of the request.
      */
-    async send(method: string, params: Array<any> | Record<string, any>): Promise<any> {
-        console.log('BrowserProvider.send', method, params);
+    async send(method: string, params: Array<any> | Record<string, any>, shard?: Shard): Promise<any> {
         await this._start();
 
-        return await super.send(method, params);
+        return await super.send(method, params, shard);
     }
 
     /**
@@ -132,17 +133,20 @@ export class BrowserProvider extends JsonRpcApiProvider {
      * @param {JsonRpcPayload | JsonRpcPayload[]} payload - The JSON-RPC payload.
      * @returns {Promise<(JsonRpcResult | JsonRpcError)[]>} The result of the request.
      */
-    async _send(payload: JsonRpcPayload | Array<JsonRpcPayload>): Promise<Array<JsonRpcResult | JsonRpcError>> {
+    async _send(
+        payload: JsonRpcPayload | Array<JsonRpcPayload>,
+        shard?: Shard,
+    ): Promise<Array<JsonRpcResult | JsonRpcError>> {
         assertArgument(!Array.isArray(payload), 'EIP-1193 does not support batch request', 'payload', payload);
 
         try {
-            const result = await this.#request(payload.method, payload.params || []);
+            const result = await this.#request(payload.method, payload.params || [], shard);
             return [{ id: payload.id, result }];
         } catch (e: any) {
             return [
                 {
                     id: payload.id,
-                    error: { code: e.code, data: e.data, message: e.message },
+                    error: { code: e.code, data: e.data, message: e.message, shard: shard || undefined },
                 },
             ];
         }

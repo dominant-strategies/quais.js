@@ -157,6 +157,7 @@ export type JsonRpcError = {
         code: number;
         message?: string;
         data?: any;
+        shard?: Shard;
     };
 };
 
