@@ -40,7 +40,7 @@ export interface TinySecp256k1Interface extends TinySecp256k1InterfaceBIP32 {
     xOnlyPointFromPoint(p: Uint8Array): Uint8Array;
 }
 
-interface Signer {
+interface SignerBIP32 {
     publicKey: Uint8Array;
     lowR: boolean;
     sign(hash: Uint8Array, lowR?: boolean): Uint8Array;
@@ -48,7 +48,7 @@ interface Signer {
     signSchnorr(hash: Uint8Array): Uint8Array;
     verifySchnorr(hash: Uint8Array, signature: Uint8Array): boolean;
 }
-export interface BIP32Interface extends Signer {
+export interface BIP32Interface extends SignerBIP32 {
     chainCode: Uint8Array;
     network: Network;
     depth: number;
@@ -63,7 +63,7 @@ export interface BIP32Interface extends Signer {
     derive(index: number): BIP32Interface;
     deriveHardened(index: number): BIP32Interface;
     derivePath(path: string): BIP32Interface;
-    tweak(t: Uint8Array): Signer;
+    tweak(t: Uint8Array): SignerBIP32;
 }
 
 export interface BIP32API {
