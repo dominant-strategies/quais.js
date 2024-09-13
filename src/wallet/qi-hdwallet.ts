@@ -1,4 +1,10 @@
-import { AbstractHDWallet, NeuteredAddressInfo, SerializedHDWallet, _guard } from './hdwallet.js';
+import {
+    AbstractHDWallet,
+    NeuteredAddressInfo,
+    SerializedHDWallet,
+    _guard,
+    MAX_ADDRESS_DERIVATION_ATTEMPTS,
+} from './hdwallet.js';
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress } from '../address/index.js';
@@ -28,6 +34,13 @@ interface OutpointInfo {
     address: string;
     zone: Zone;
     account?: number;
+}
+
+interface paymentCodeInfo {
+    address: string;
+    index: number;
+    isUsed: boolean;
+    zone: Zone;
 }
 
 /**
@@ -125,6 +138,16 @@ export class QiHDWallet extends AbstractHDWallet {
 
     //! Review this
     private _ecc!: TinySecp256k1Interface;
+
+    /**
+     * Map of paymentcodes to paymentCodeInfo for the receiver
+     */
+    private _receiverPaymentCodeInfo: Map<string, paymentCodeInfo[]> = new Map();
+
+    /**
+     * Map of paymentcodes to paymentCodeInfo for the sender
+     */
+    private _senderPaymentCodeInfo: Map<string, paymentCodeInfo[]> = new Map();
 
     /**
      * @ignore
@@ -672,7 +695,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<string>} A promise that resolves to the payment address for sending funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    public async generateSendAddress(receiverPaymentCode: string): Promise<string> {
+    public async generateSendAddress(receiverPaymentCode: string, zone: Zone): Promise<string> {
         const bip32 = await this._getBIP32API();
         const buf = await this._decodeBase58(receiverPaymentCode);
         const version = buf[0];
@@ -680,7 +703,31 @@ export class QiHDWallet extends AbstractHDWallet {
 
         const receiverPCodePrivate = await this._getPaymentCodePrivate(0);
         const senderPCodePublic = new PaymentCodePublic(this._ecc, bip32, buf.slice(1));
-        return senderPCodePublic.getPaymentAddress(receiverPCodePrivate, 0);
+
+        const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(receiverPaymentCode);
+        const lastIndex =
+            paymentCodeInfoArray && paymentCodeInfoArray.length > 0
+                ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
+                : 0;
+
+        let addrIndex = lastIndex;
+        for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
+            const address = senderPCodePublic.getPaymentAddress(receiverPCodePrivate, addrIndex++);
+            if (this.isValidAddressForZone(address, zone)) {
+                if (paymentCodeInfoArray) {
+                    paymentCodeInfoArray.push({ address, index: addrIndex, isUsed: false, zone });
+                } else {
+                    this._receiverPaymentCodeInfo.set(receiverPaymentCode, [
+                        { address, index: addrIndex, isUsed: false, zone },
+                    ]);
+                }
+                return address;
+            }
+        }
+
+        throw new Error(
+            `Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`,
+        );
     }
 
     /**
@@ -691,7 +738,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<string>} A promise that resolves to the payment address for receiving funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    public async generateReceiveAddress(senderPaymentCode: string): Promise<string> {
+    public async generateReceiveAddress(senderPaymentCode: string, zone: Zone): Promise<string> {
         const bip32 = await this._getBIP32API();
         const buf = await this._decodeBase58(senderPaymentCode);
         const version = buf[0];
@@ -699,6 +746,30 @@ export class QiHDWallet extends AbstractHDWallet {
 
         const senderPCodePublic = new PaymentCodePublic(this._ecc, bip32, buf.slice(1));
         const receiverPCodePrivate = await this._getPaymentCodePrivate(0);
-        return receiverPCodePrivate.getPaymentAddress(senderPCodePublic, 0);
+
+        const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(senderPaymentCode);
+        const lastIndex =
+            paymentCodeInfoArray && paymentCodeInfoArray.length > 0
+                ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
+                : 0;
+
+        let addrIndex = lastIndex;
+        for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
+            const address = receiverPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex++);
+            if (this.isValidAddressForZone(address, zone)) {
+                if (paymentCodeInfoArray) {
+                    paymentCodeInfoArray.push({ address, index: addrIndex, isUsed: false, zone });
+                } else {
+                    this._senderPaymentCodeInfo.set(senderPaymentCode, [
+                        { address, index: addrIndex, isUsed: false, zone },
+                    ]);
+                }
+                return address;
+            }
+        }
+
+        throw new Error(
+            `Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`,
+        );
     }
 }
