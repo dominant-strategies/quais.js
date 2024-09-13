@@ -1,10 +1,10 @@
+import { BIP32API, BIP32Interface, HDNodeBIP32Adapter } from './bip32/types.js';
 import { sha256 } from '@noble/hashes/sha256';
 import { keccak256 } from '../crypto/index.js';
 import { getBytes, hexlify } from '../utils/data.js';
 import { getAddress } from '../address/address.js';
 import { bs58check } from './bip32/crypto.js';
-import { HDNodeBIP32Adapter } from './bip32/types.js';
-import type { TinySecp256k1Interface, BIP32API, BIP32Interface } from './bip32/types.js';
+import type { TinySecp256k1Interface } from './bip32/types.js';
 import { secp256k1 } from '@noble/curves/secp256k1';
 
 export const PC_VERSION = 0x47;

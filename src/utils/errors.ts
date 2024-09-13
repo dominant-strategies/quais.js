@@ -13,7 +13,7 @@ import { defineProperties } from './properties.js';
 import type { TransactionRequest, TransactionReceipt, TransactionResponse } from '../providers/index.js';
 
 import type { FetchRequest, FetchResponse } from './fetch.js';
-import { ExternalTransactionResponse } from '../providers/provider';
+import { ExternalTransactionResponse } from '../providers/provider.js';
 
 /**
  * An error may contain additional properties, but those must not conflict with any implicit properties.
