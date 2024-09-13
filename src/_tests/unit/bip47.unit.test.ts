@@ -1,4 +1,4 @@
-import { Mnemonic, QiHDWallet } from '../../index.js';
+import { Mnemonic, QiHDWallet, Zone } from '../../index.js';
 import assert from 'assert';
 
 describe('Test generation of payment codes and payment addresses', function () {
@@ -26,11 +26,11 @@ describe('Test generation of payment codes and payment addresses', function () {
         );
 
         // Alice generates a payment address for sending funds to Bob
-        const bobAddress = await aliceQiWallet.generateSendAddress(bobPaymentCode);
-        assert.equal(bobAddress, '0x798e976dfAffe2174c3b21ac7116A35D09DB837d');
+        const bobAddress = await aliceQiWallet.generateSendAddress(bobPaymentCode, Zone.Cyprus1);
+        assert.equal(bobAddress, '0x0083d552Fc0A3f9269089cbb9Ca11eaba93802e3');
 
         // Bob generates a payment address for receiving funds from Alice
-        const receiveAddress = await bobQiWallet.generateReceiveAddress(alicePaymentCode);
-        assert.equal(receiveAddress, '0x798e976dfAffe2174c3b21ac7116A35D09DB837d');
+        const receiveAddress = await bobQiWallet.generateReceiveAddress(alicePaymentCode, Zone.Cyprus1);
+        assert.equal(receiveAddress, '0x0083d552Fc0A3f9269089cbb9Ca11eaba93802e3');
     });
 });

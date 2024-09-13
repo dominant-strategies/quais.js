@@ -34,7 +34,7 @@ export interface SerializedHDWallet {
 /**
  * Constant to represent the maximum attempt to derive an address.
  */
-const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
+export const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
 
 export const _guard = {};
 
@@ -94,6 +94,17 @@ export abstract class AbstractHDWallet {
         return this._root.extendedKey;
     }
 
+    // helper method to check if an address is valid for a given zone
+    protected isValidAddressForZone(address: string, zone: Zone): boolean {
+        const addressZone = getZoneForAddress(address);
+        if (!addressZone) {
+            return false;
+        }
+        const isCorrectShard = addressZone === zone;
+        const isCorrectLedger = this.coinType() === 969 ? isQiAddress(address) : !isQiAddress(address);
+        return isCorrectShard && isCorrectLedger;
+    }
+
     /**
      * Derives the next valid address node for a specified account, starting index, and zone. The method ensures the
      * derived address belongs to the correct shard and ledger, as defined by the Quai blockchain specifications.
@@ -117,19 +128,9 @@ export abstract class AbstractHDWallet {
         let addrIndex = startingIndex;
         let addressNode: HDNodeWallet;
 
-        const isValidAddressForZone = (address: string): boolean => {
-            const addressZone = getZoneForAddress(address);
-            if (!addressZone) {
-                return false;
-            }
-            const isCorrectShard = addressZone === zone;
-            const isCorrectLedger = this.coinType() === 969 ? isQiAddress(address) : !isQiAddress(address);
-            return isCorrectShard && isCorrectLedger;
-        };
-
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             addressNode = changeNode.deriveChild(addrIndex++);
-            if (isValidAddressForZone(addressNode.address)) {
+            if (this.isValidAddressForZone(addressNode.address, zone)) {
                 return addressNode;
             }
         }
