@@ -41,6 +41,7 @@ interface paymentCodeInfo {
     index: number;
     isUsed: boolean;
     zone: Zone;
+    account: number;
 }
 
 /**
@@ -637,7 +638,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @param {number} account - The account index to derive the payment code from.
      * @returns {Promise<string>} A promise that resolves to the Base58-encoded BIP47 payment code.
      */
-    public async getPaymentCode(account: number): Promise<string> {
+    public async getPaymentCode(account: number = 0): Promise<string> {
         const privatePcode = await this._getPaymentCodePrivate(account);
         return privatePcode.toBase58();
     }
@@ -695,13 +696,13 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<string>} A promise that resolves to the payment address for sending funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    public async generateSendAddress(receiverPaymentCode: string, zone: Zone): Promise<string> {
+    public async generateSendAddress(receiverPaymentCode: string, zone: Zone, account: number = 0): Promise<string> {
         const bip32 = await this._getBIP32API();
         const buf = await this._decodeBase58(receiverPaymentCode);
         const version = buf[0];
         if (version !== PC_VERSION) throw new Error('Invalid payment code version');
 
-        const receiverPCodePrivate = await this._getPaymentCodePrivate(0);
+        const receiverPCodePrivate = await this._getPaymentCodePrivate(account);
         const senderPCodePublic = new PaymentCodePublic(this._ecc, bip32, buf.slice(1));
 
         const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(receiverPaymentCode);
@@ -714,12 +715,17 @@ export class QiHDWallet extends AbstractHDWallet {
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             const address = senderPCodePublic.getPaymentAddress(receiverPCodePrivate, addrIndex++);
             if (this.isValidAddressForZone(address, zone)) {
+                const pcInfo: paymentCodeInfo = {
+                    address,
+                    index: addrIndex,
+                    account,
+                    zone,
+                    isUsed: false,
+                };
                 if (paymentCodeInfoArray) {
-                    paymentCodeInfoArray.push({ address, index: addrIndex, isUsed: false, zone });
+                    paymentCodeInfoArray.push(pcInfo);
                 } else {
-                    this._receiverPaymentCodeInfo.set(receiverPaymentCode, [
-                        { address, index: addrIndex, isUsed: false, zone },
-                    ]);
+                    this._receiverPaymentCodeInfo.set(receiverPaymentCode, [pcInfo]);
                 }
                 return address;
             }
@@ -738,14 +744,14 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<string>} A promise that resolves to the payment address for receiving funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    public async generateReceiveAddress(senderPaymentCode: string, zone: Zone): Promise<string> {
+    public async generateReceiveAddress(senderPaymentCode: string, zone: Zone, account: number = 0): Promise<string> {
         const bip32 = await this._getBIP32API();
         const buf = await this._decodeBase58(senderPaymentCode);
         const version = buf[0];
         if (version !== PC_VERSION) throw new Error('Invalid payment code version');
 
         const senderPCodePublic = new PaymentCodePublic(this._ecc, bip32, buf.slice(1));
-        const receiverPCodePrivate = await this._getPaymentCodePrivate(0);
+        const receiverPCodePrivate = await this._getPaymentCodePrivate(account);
 
         const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(senderPaymentCode);
         const lastIndex =
@@ -757,12 +763,17 @@ export class QiHDWallet extends AbstractHDWallet {
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             const address = receiverPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex++);
             if (this.isValidAddressForZone(address, zone)) {
+                const pcInfo: paymentCodeInfo = {
+                    address,
+                    index: addrIndex,
+                    account,
+                    zone,
+                    isUsed: false,
+                };
                 if (paymentCodeInfoArray) {
-                    paymentCodeInfoArray.push({ address, index: addrIndex, isUsed: false, zone });
+                    paymentCodeInfoArray.push(pcInfo);
                 } else {
-                    this._senderPaymentCodeInfo.set(senderPaymentCode, [
-                        { address, index: addrIndex, isUsed: false, zone },
-                    ]);
+                    this._senderPaymentCodeInfo.set(senderPaymentCode, [pcInfo]);
                 }
                 return address;
             }
