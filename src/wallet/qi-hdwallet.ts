@@ -20,7 +20,8 @@ import { AllowedCoinType, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
 import { PaymentCodePrivate, PaymentCodePublic, PC_VERSION } from './payment-codes.js';
 import { HDNodeBIP32Adapter } from './bip32-types.js';
-import type { TinySecp256k1Interface, BIP32API } from './bip32-types.js';
+import type { BIP32API } from './bip32-types.js';
+import ecc from '@bitcoinerlab/secp256k1';
 
 /**
  * @property {Outpoint} outpoint - The outpoint object.
@@ -137,9 +138,6 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     protected _outpoints: OutpointInfo[] = [];
 
-    //! Review this
-    private _ecc!: TinySecp256k1Interface;
-
     /**
      * Map of paymentcodes to paymentCodeInfo for the receiver
      */
@@ -157,10 +155,6 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     constructor(guard: any, root: HDNodeWallet, provider?: Provider) {
         super(guard, root, provider);
-        //! Review this
-        import('tiny-secp256k1').then((ecc) => {
-            this._ecc = ecc;
-        });
     }
 
     /**
@@ -647,7 +641,7 @@ export class QiHDWallet extends AbstractHDWallet {
     private async _getBIP32API(): Promise<BIP32API> {
         const module = await import('@samouraiwallet/bip32');
         const { BIP32Factory } = module;
-        return BIP32Factory(this._ecc) as unknown as BIP32API;
+        return BIP32Factory(ecc) as BIP32API;
     }
 
     // helper method to decode a base58 string into a Uint8Array
@@ -685,7 +679,7 @@ export class QiHDWallet extends AbstractHDWallet {
 
         const adapter = new HDNodeBIP32Adapter(accountNode);
 
-        return new PaymentCodePrivate(adapter, this._ecc, bip32, pc);
+        return new PaymentCodePrivate(adapter, ecc, bip32, pc);
     }
 
     /**
@@ -703,7 +697,7 @@ export class QiHDWallet extends AbstractHDWallet {
         if (version !== PC_VERSION) throw new Error('Invalid payment code version');
 
         const receiverPCodePrivate = await this._getPaymentCodePrivate(account);
-        const senderPCodePublic = new PaymentCodePublic(this._ecc, bip32, buf.slice(1));
+        const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
 
         const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(receiverPaymentCode);
         const lastIndex =
@@ -750,7 +744,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const version = buf[0];
         if (version !== PC_VERSION) throw new Error('Invalid payment code version');
 
-        const senderPCodePublic = new PaymentCodePublic(this._ecc, bip32, buf.slice(1));
+        const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
         const receiverPCodePrivate = await this._getPaymentCodePrivate(account);
 
         const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(senderPaymentCode);
