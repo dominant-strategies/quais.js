@@ -18,7 +18,7 @@ import { Outpoint } from '../transaction/utxo.js';
 import { getZoneForAddress } from '../utils/index.js';
 import { AllowedCoinType, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
-import { PaymentCodePrivate, PaymentCodePublic, PC_VERSION } from './payment-codes.js';
+import { PaymentCodePrivate, PaymentCodePublic, PC_VERSION, validatePaymentCode } from './payment-codes.js';
 import { BIP32Factory } from './bip32/bip32.js';
 import { bs58check } from './bip32/crypto.js';
 import { type BIP32API, HDNodeBIP32Adapter } from './bip32/types.js';
@@ -59,6 +59,8 @@ interface SerializedQiHDWallet extends SerializedHDWallet {
     changeAddresses: NeuteredAddressInfo[];
     gapAddresses: NeuteredAddressInfo[];
     gapChangeAddresses: NeuteredAddressInfo[];
+    receiverPaymentCodeInfo: { [key: string]: paymentCodeInfo[] };
+    senderPaymentCodeInfo: { [key: string]: paymentCodeInfo[] };
 }
 
 /**
@@ -156,6 +158,15 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     constructor(guard: any, root: HDNodeWallet, provider?: Provider) {
         super(guard, root, provider);
+    }
+
+    // getters for the payment code info maps
+    public get receiverPaymentCodeInfo(): { [key: string]: paymentCodeInfo[] } {
+        return Object.fromEntries(this._receiverPaymentCodeInfo);
+    }
+
+    public get senderPaymentCodeInfo(): { [key: string]: paymentCodeInfo[] } {
+        return Object.fromEntries(this._senderPaymentCodeInfo);
     }
 
     /**
@@ -546,6 +557,8 @@ export class QiHDWallet extends AbstractHDWallet {
             changeAddresses: Array.from(this._changeAddresses.values()),
             gapAddresses: this._gapAddresses,
             gapChangeAddresses: this._gapChangeAddresses,
+            receiverPaymentCodeInfo: Object.fromEntries(this._receiverPaymentCodeInfo),
+            senderPaymentCodeInfo: Object.fromEntries(this._senderPaymentCodeInfo),
             ...hdwalletSerialized,
         };
     }
@@ -591,7 +604,60 @@ export class QiHDWallet extends AbstractHDWallet {
         // validate the outpoints and import them
         wallet.validateOutpointInfo(serialized.outpoints);
         wallet._outpoints.push(...serialized.outpoints);
+
+        // validate and import the payment code info
+        wallet.validateAndImportPaymentCodeInfo(serialized.receiverPaymentCodeInfo, 'receiver');
+        wallet.validateAndImportPaymentCodeInfo(serialized.senderPaymentCodeInfo, 'sender');
+
         return wallet;
+    }
+
+    /**
+     * Validates and imports a map of payment code info.
+     *
+     * @param {Map<string, paymentCodeInfo[]>} paymentCodeInfoMap - The map of payment code info to validate and import.
+     * @param {'receiver' | 'sender'} target - The target map to update ('receiver' or 'sender').
+     * @throws {Error} If any of the payment code info is invalid.
+     */
+    private validateAndImportPaymentCodeInfo(
+        paymentCodeInfoMap: { [key: string]: paymentCodeInfo[] },
+        target: 'receiver' | 'sender',
+    ): void {
+        const targetMap = target === 'receiver' ? this._receiverPaymentCodeInfo : this._senderPaymentCodeInfo;
+
+        for (const [paymentCode, paymentCodeInfoArray] of Object.entries(paymentCodeInfoMap)) {
+            if (!validatePaymentCode(paymentCode)) {
+                throw new Error(`Invalid payment code: ${paymentCode}`);
+            }
+            for (const pcInfo of paymentCodeInfoArray) {
+                this.validatePaymentCodeInfo(pcInfo);
+            }
+            targetMap.set(paymentCode, paymentCodeInfoArray);
+        }
+    }
+
+    /**
+     * Validates a payment code info object.
+     *
+     * @param {paymentCodeInfo} pcInfo - The payment code info to validate.
+     * @throws {Error} If the payment code info is invalid.
+     */
+    private validatePaymentCodeInfo(pcInfo: paymentCodeInfo): void {
+        if (!/^(0x)?[0-9a-fA-F]{40}$/.test(pcInfo.address)) {
+            throw new Error('Invalid payment code info: address must be a 40-character hexadecimal string');
+        }
+        if (!Number.isInteger(pcInfo.index) || pcInfo.index < 0) {
+            throw new Error('Invalid payment code info: index must be a non-negative integer');
+        }
+        if (typeof pcInfo.isUsed !== 'boolean') {
+            throw new Error('Invalid payment code info: isUsed must be a boolean');
+        }
+        if (!Object.values(Zone).includes(pcInfo.zone)) {
+            throw new Error(`Invalid payment code info: zone '${pcInfo.zone}' is not a valid Zone`);
+        }
+        if (!Number.isInteger(pcInfo.account) || pcInfo.account < 0) {
+            throw new Error('Invalid payment code info: account must be a non-negative integer');
+        }
     }
 
     /**

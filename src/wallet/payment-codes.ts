@@ -5,6 +5,7 @@ import { getAddress } from '../address/address.js';
 import { bs58check } from './bip32/crypto.js';
 import { HDNodeBIP32Adapter } from './bip32/types.js';
 import type { TinySecp256k1Interface, BIP32API, BIP32Interface } from './bip32/types.js';
+import { secp256k1 } from '@noble/curves/secp256k1';
 
 export const PC_VERSION = 0x47;
 
@@ -275,5 +276,58 @@ export class PaymentCodePrivate extends PaymentCodePublic {
     getNotificationPrivateKey(): Uint8Array {
         const child = this.derive(0);
         return child.privateKey!;
+    }
+}
+
+/**
+ * Validates a payment code base58 encoded string.
+ *
+ * @param {string} paymentCode - The payment code to validate.
+ * @throws {Error} If the payment code is invalid.
+ */
+export async function validatePaymentCode(paymentCode: string): Promise<boolean> {
+    try {
+        const decoded = bs58check.decode(paymentCode);
+
+        if (decoded.length !== 82) {
+            return false;
+        }
+
+        if (decoded[0] !== 0x47) {
+            return false;
+        }
+
+        const payload = decoded.slice(0, -4);
+        const checksum = decoded.slice(-4);
+        const calculatedChecksum = sha256(sha256(payload)).slice(0, 4);
+        if (!checksum.every((b, i) => b === calculatedChecksum[i])) {
+            return false;
+        }
+
+        const paymentCodeBytes = decoded.slice(1, -4);
+
+        if (paymentCodeBytes[0] !== 0x01 && paymentCodeBytes[0] !== 0x02) {
+            return false;
+        }
+        if (paymentCodeBytes[2] !== 0x02 && paymentCodeBytes[2] !== 0x03) {
+            return false;
+        }
+
+        const xCoordinate = paymentCodeBytes.slice(3, 35);
+        try {
+            secp256k1.ProjectivePoint.fromHex(xCoordinate).assertValidity();
+        } catch (error) {
+            console.log('error validating paymentcode x-coordinate: ', error);
+            return false;
+        }
+
+        if (!paymentCodeBytes.slice(67).every((byte) => byte === 0)) {
+            return false;
+        }
+
+        return true;
+    } catch (error) {
+        console.log('error validating paymentcode: ', error);
+        return false;
     }
 }
