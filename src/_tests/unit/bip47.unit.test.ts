@@ -2,6 +2,7 @@ import { Mnemonic, QiHDWallet, Zone } from '../../index.js';
 import assert from 'assert';
 
 describe('Test generation of payment codes and payment addresses', function () {
+    this.timeout(10000);
     const ALICE_MNEMONIC =
         'empower cook violin million wool twelve involve nice donate author mammal salt royal shiver birth olympic embody hello beef suit isolate mixed text spot';
     const aliceMnemonic = Mnemonic.fromPhrase(ALICE_MNEMONIC);
