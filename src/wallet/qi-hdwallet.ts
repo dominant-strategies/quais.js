@@ -19,8 +19,9 @@ import { getZoneForAddress } from '../utils/index.js';
 import { AllowedCoinType, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
 import { PaymentCodePrivate, PaymentCodePublic, PC_VERSION } from './payment-codes.js';
-import { HDNodeBIP32Adapter } from './bip32-types.js';
-import type { BIP32API } from './bip32-types.js';
+import { BIP32Factory } from './bip32/bip32.js';
+import { bs58check } from './bip32/crypto.js';
+import { type BIP32API, HDNodeBIP32Adapter } from './bip32/types.js';
 import ecc from '@bitcoinerlab/secp256k1';
 
 /**
@@ -639,14 +640,11 @@ export class QiHDWallet extends AbstractHDWallet {
 
     // helper method to get a bip32 API instance
     private async _getBIP32API(): Promise<BIP32API> {
-        const module = await import('@samouraiwallet/bip32');
-        const { BIP32Factory } = module;
         return BIP32Factory(ecc) as BIP32API;
     }
 
     // helper method to decode a base58 string into a Uint8Array
     private async _decodeBase58(base58: string): Promise<Uint8Array> {
-        const { bs58check } = await import('@samouraiwallet/bip32/crypto');
         return bs58check.decode(base58);
     }
 
