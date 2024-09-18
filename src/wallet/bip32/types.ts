@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { HDNodeWallet } from './hdnodewallet.js';
-import { getBytes } from '../utils/data.js';
+import { HDNodeWallet } from '../hdnodewallet.js';
+import { getBytes } from '../../utils/data.js';
 interface XOnlyPointAddTweakResult {
     parity: 1 | 0;
     xOnlyPubkey: Uint8Array;
 }
 
-interface TinySecp256k1InterfaceBIP32 {
+export interface TinySecp256k1InterfaceBIP32 {
     isPoint(p: Uint8Array): boolean;
     isPrivate(d: Uint8Array): boolean;
     pointFromScalar(d: Uint8Array, compressed?: boolean): Uint8Array | null;
@@ -20,15 +20,11 @@ interface TinySecp256k1InterfaceBIP32 {
     privateNegate?(d: Uint8Array): Uint8Array;
 }
 
-interface Network {
-    messagePrefix: string;
-    bech32: string;
+export interface Network {
     bip32: {
         public: number;
         private: number;
     };
-    pubKeyHash: number;
-    scriptHash: number;
     wif: number;
 }
 
@@ -40,7 +36,7 @@ export interface TinySecp256k1Interface extends TinySecp256k1InterfaceBIP32 {
     xOnlyPointFromPoint(p: Uint8Array): Uint8Array;
 }
 
-interface SignerBIP32 {
+export interface SignerBIP32 {
     publicKey: Uint8Array;
     lowR: boolean;
     sign(hash: Uint8Array, lowR?: boolean): Uint8Array;
