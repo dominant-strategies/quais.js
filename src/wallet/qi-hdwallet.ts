@@ -754,7 +754,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<string>} A promise that resolves to the payment address for sending funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    public async generateSendAddress(receiverPaymentCode: string, zone: Zone, account: number = 0): Promise<string> {
+    public async getNextSendAddress(receiverPaymentCode: string, zone: Zone, account: number = 0): Promise<string> {
         const bip32 = await this._getBIP32API();
         const buf = await this._decodeBase58(receiverPaymentCode);
         const version = buf[0];
@@ -802,7 +802,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<string>} A promise that resolves to the payment address for receiving funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    public async generateReceiveAddress(senderPaymentCode: string, zone: Zone, account: number = 0): Promise<string> {
+    public async getNextReceiveAddress(senderPaymentCode: string, zone: Zone, account: number = 0): Promise<string> {
         const bip32 = await this._getBIP32API();
         const buf = await this._decodeBase58(senderPaymentCode);
         const version = buf[0];
@@ -840,5 +840,29 @@ export class QiHDWallet extends AbstractHDWallet {
         throw new Error(
             `Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`,
         );
+    }
+
+    /**
+     * Receives a payment code and stores it in the wallet for future use. If the payment code is already in the wallet,
+     * it will be ignored.
+     *
+     * @param {string} paymentCode - The payment code to store.
+     * @param {'receiver' | 'sender'} type - The type of payment code ('receiver' or 'sender').
+     */
+    public openChannel(paymentCode: string, type: 'receiver' | 'sender'): void {
+        if (!validatePaymentCode(paymentCode)) {
+            throw new Error(`Invalid payment code: ${paymentCode}`);
+        }
+        if (type === 'receiver') {
+            if (this._receiverPaymentCodeInfo.has(paymentCode)) {
+                return;
+            }
+            this._receiverPaymentCodeInfo.set(paymentCode, []);
+        } else {
+            if (this._senderPaymentCodeInfo.has(paymentCode)) {
+                return;
+            }
+            this._senderPaymentCodeInfo.set(paymentCode, []);
+        }
     }
 }

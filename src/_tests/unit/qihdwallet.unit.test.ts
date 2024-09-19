@@ -111,8 +111,8 @@ describe('QiHDWallet: Test serialization and deserialization of QiHDWallet with 
         const bobPaymentCode = await bobQiWallet.getPaymentCode(0);
 
         // Generate addresses
-        await aliceQiWallet.generateSendAddress(bobPaymentCode, Zone.Cyprus1);
-        await aliceQiWallet.generateReceiveAddress(bobPaymentCode, Zone.Cyprus1);
+        await aliceQiWallet.getNextSendAddress(bobPaymentCode, Zone.Cyprus1);
+        await aliceQiWallet.getNextReceiveAddress(bobPaymentCode, Zone.Cyprus1);
 
         // Serialize Alice's wallet
         const serializedAliceWallet = aliceQiWallet.serialize();
