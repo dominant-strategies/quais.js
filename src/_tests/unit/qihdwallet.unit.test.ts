@@ -91,6 +91,55 @@ describe('QiHDWallet: Test serialization and deserialization of QiHDWallet', fun
     }
 });
 
+describe('QiHDWallet: Test serialization and deserialization of QiHDWallet with payment codes', function () {
+    this.timeout(10000);
+    it('tests serialization and deserialization with payment codes and addresses', async function () {
+        // Create Alice's wallet
+        const aliceMnemonic = Mnemonic.fromPhrase(
+            'empower cook violin million wool twelve involve nice donate author mammal salt royal shiver birth olympic embody hello beef suit isolate mixed text spot',
+        );
+        const aliceQiWallet = QiHDWallet.fromMnemonic(aliceMnemonic);
+
+        // Create Bob's wallet
+        const bobMnemonic = Mnemonic.fromPhrase(
+            'innocent perfect bus miss prevent night oval position aspect nut angle usage expose grace juice',
+        );
+        const bobQiWallet = QiHDWallet.fromMnemonic(bobMnemonic);
+
+        // Get payment codes
+        const alicePaymentCode = await aliceQiWallet.getPaymentCode(0);
+        const bobPaymentCode = await bobQiWallet.getPaymentCode(0);
+
+        // Generate addresses
+        await aliceQiWallet.generateSendAddress(bobPaymentCode, Zone.Cyprus1);
+        await aliceQiWallet.generateReceiveAddress(bobPaymentCode, Zone.Cyprus1);
+
+        // Serialize Alice's wallet
+        const serializedAliceWallet = aliceQiWallet.serialize();
+
+        // Deserialize Alice's wallet
+        const deserializedAliceWallet = await QiHDWallet.deserialize(serializedAliceWallet);
+
+        // Assertions
+        assert.strictEqual(
+            await deserializedAliceWallet.getPaymentCode(0),
+            alicePaymentCode,
+            'Payment code should match after deserialization',
+        );
+
+        assert.deepStrictEqual(
+            deserializedAliceWallet.receiverPaymentCodeInfo,
+            aliceQiWallet.receiverPaymentCodeInfo,
+            'Receiver payment code info should match',
+        );
+        assert.deepStrictEqual(
+            deserializedAliceWallet.senderPaymentCodeInfo,
+            aliceQiWallet.senderPaymentCodeInfo,
+            'Sender payment code info should match',
+        );
+    });
+});
+
 describe('QiHDWallet: Test transaction signing', function () {
     const tests = loadTests<TestCaseQiTransaction>('qi-transaction');
     for (const test of tests) {
