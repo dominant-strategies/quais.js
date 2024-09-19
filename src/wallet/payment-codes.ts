@@ -285,39 +285,41 @@ export class PaymentCodePrivate extends PaymentCodePublic {
  * @param {string} paymentCode - The payment code to validate.
  * @throws {Error} If the payment code is invalid.
  */
-export async function validatePaymentCode(paymentCode: string): Promise<boolean> {
+export function validatePaymentCode(paymentCode: string): boolean {
+    const VERSION_BYTE = 0x47;
+    const FEATURE_BYTE = 0x00;
+
     try {
         const decoded = bs58check.decode(paymentCode);
 
-        if (decoded.length !== 82) {
+        if (decoded.length !== 81) {
             return false;
         }
 
-        if (decoded[0] !== 0x47) {
+        if (decoded[0] !== VERSION_BYTE) {
             return false;
         }
 
-        const payload = decoded.slice(0, -4);
-        const checksum = decoded.slice(-4);
-        const calculatedChecksum = sha256(sha256(payload)).slice(0, 4);
-        if (!checksum.every((b, i) => b === calculatedChecksum[i])) {
+        const paymentCodeBytes = decoded.slice(1);
+
+        if (paymentCodeBytes[0] !== 0x01) {
             return false;
         }
 
-        const paymentCodeBytes = decoded.slice(1, -4);
-
-        if (paymentCodeBytes[0] !== 0x01 && paymentCodeBytes[0] !== 0x02) {
+        // Check if the second byte is 0 (features byte)
+        if (paymentCodeBytes[1] !== FEATURE_BYTE) {
             return false;
         }
+
+        // Check if the public key starts with 0x02 or 0x03
         if (paymentCodeBytes[2] !== 0x02 && paymentCodeBytes[2] !== 0x03) {
             return false;
         }
 
-        const xCoordinate = paymentCodeBytes.slice(3, 35);
+        const pubKey = paymentCodeBytes.slice(2, 35);
         try {
-            secp256k1.ProjectivePoint.fromHex(xCoordinate).assertValidity();
+            secp256k1.ProjectivePoint.fromHex(Buffer.from(pubKey).toString('hex')).assertValidity();
         } catch (error) {
-            console.log('error validating paymentcode x-coordinate: ', error);
             return false;
         }
 
@@ -327,7 +329,6 @@ export async function validatePaymentCode(paymentCode: string): Promise<boolean>
 
         return true;
     } catch (error) {
-        console.log('error validating paymentcode: ', error);
         return false;
     }
 }
