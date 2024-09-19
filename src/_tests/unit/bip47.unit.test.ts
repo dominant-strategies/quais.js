@@ -27,11 +27,36 @@ describe('Test generation of payment codes and payment addresses', function () {
         );
 
         // Alice generates a payment address for sending funds to Bob
-        const bobAddress = await aliceQiWallet.generateSendAddress(bobPaymentCode, Zone.Cyprus1);
+        const bobAddress = await aliceQiWallet.getNextSendAddress(bobPaymentCode, Zone.Cyprus1);
         assert.equal(bobAddress, '0x0083d552Fc0A3f9269089cbb9Ca11eaba93802e3');
 
         // Bob generates a payment address for receiving funds from Alice
-        const receiveAddress = await bobQiWallet.generateReceiveAddress(alicePaymentCode, Zone.Cyprus1);
+        const receiveAddress = await bobQiWallet.getNextReceiveAddress(alicePaymentCode, Zone.Cyprus1);
         assert.equal(receiveAddress, '0x0083d552Fc0A3f9269089cbb9Ca11eaba93802e3');
+    });
+});
+
+describe('Test opening channels', function () {
+    const BOB_MNEMONIC =
+        'innocent perfect bus miss prevent night oval position aspect nut angle usage expose grace juice';
+    const bobMnemonic = Mnemonic.fromPhrase(BOB_MNEMONIC);
+    const bobQiWallet = QiHDWallet.fromMnemonic(bobMnemonic);
+    it('opens a channel correctly', async function () {
+        const paymentCode =
+            'PM8TJTzqM3pqdQxBA52AX9M5JBCdkyJYWpNfJZpNX9H7FY2XitYFd99LSfCCQamCN5LubK1YNQMoz33g1WgVNX2keWoDtfDG9H1AfGcupRzHsPn6Rc2z';
+        bobQiWallet.openChannel(paymentCode, 'receiver');
+        assert.deepEqual(bobQiWallet.receiverPaymentCodeInfo[paymentCode], []);
+    });
+
+    it('does nothing if the channel is already open', async function () {
+        const paymentCode =
+            'PM8TJTzqM3pqdQxBA52AX9M5JBCdkyJYWpNfJZpNX9H7FY2XitYFd99LSfCCQamCN5LubK1YNQMoz33g1WgVNX2keWoDtfDG9H1AfGcupRzHsPn6Rc2z';
+        bobQiWallet.openChannel(paymentCode, 'receiver');
+        assert.deepEqual(bobQiWallet.receiverPaymentCodeInfo[paymentCode], []);
+    });
+
+    it('returns an error if the payment code is not valid', async function () {
+        const invalidPaymentCode = 'InvalidPaymentCode';
+        assert.throws(() => bobQiWallet.openChannel(invalidPaymentCode, 'receiver'), /Invalid payment code/);
     });
 });
