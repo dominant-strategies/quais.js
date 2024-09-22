@@ -482,11 +482,7 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     private async getOutpointsByAddress(address: string): Promise<Outpoint[]> {
         try {
-            const outpointsMap = await this.provider!.getOutpointsByAddress(address);
-            if (!outpointsMap) {
-                return [];
-            }
-            return Object.values(outpointsMap) as Outpoint[];
+            return await this.provider!.getOutpointsByAddress(address);
         } catch (error) {
             throw new Error(`Failed to get outpoints for address: ${address} - error: ${error}`);
         }
