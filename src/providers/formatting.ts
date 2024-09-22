@@ -531,7 +531,7 @@ export interface QiTransactionResponseParams {
 }
 
 export interface OutpointResponseParams {
-    Txhash: string;
+    TxHash: string;
     Index: number;
     Denomination: number;
 }
