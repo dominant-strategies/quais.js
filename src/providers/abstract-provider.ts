@@ -1484,16 +1484,15 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     async getOutpointsByAddress(address: AddressLike): Promise<Outpoint[]> {
-        const outpoints: OutpointResponseParams[] = await this.#getAccountValue(
+        const outpointsObj: Record<string, OutpointResponseParams> = await this.#getAccountValue(
             { method: 'getOutpointsByAddress' },
             address,
             'latest',
         );
 
-        const outpointsArray = Array.isArray(outpoints) ? outpoints : [];
-
-        return outpointsArray.map((outpoint: OutpointResponseParams) => ({
-            txhash: outpoint.Txhash,
+        // Convert the object to an array of Outpoint objects
+        return Object.values(outpointsObj).map((outpoint: OutpointResponseParams) => ({
+            txhash: outpoint.TxHash,
             index: outpoint.Index,
             denomination: outpoint.Denomination,
         }));
