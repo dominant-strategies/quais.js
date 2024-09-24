@@ -33,6 +33,7 @@ export { FewestCoinSelector } from './coinselector-fewest.js';
 export type { TransactionLike } from './abstract-transaction.js';
 
 export type { TxInput, TxOutput } from './utxo.js';
+export { denominations, UTXO } from './utxo.js';
 
 export { QiTransaction } from './qi-transaction.js';
 export { QiTransactionLike } from './qi-transaction.js';
