@@ -1,6 +1,4 @@
 import { validateAddress } from '../address/index.js';
-import { getBigInt } from '../utils/index.js';
-import type { BigNumberish } from '../utils/index.js';
 
 /**
  * Represents an a spendable transaction outpoint.
@@ -21,7 +19,7 @@ export type Outpoint = {
  * @category Transaction
  */
 export interface UTXOEntry {
-    denomination: null | bigint;
+    denomination: null | number;
     address: string;
 }
 
@@ -83,30 +81,14 @@ export const denominations: bigint[] = [
 ];
 
 /**
- * Checks if the provided denomination is valid.
+ * Checks if the provided denomination index is valid.
  *
  * @category Transaction
- * @param {bigint} denomination - The denomination to check.
- * @returns {boolean} True if the denomination is valid, false otherwise.
+ * @param {number} index - The denomination index to check.
+ * @returns {boolean} True if the denomination index is valid, false otherwise.
  */
-function isValidDenomination(denomination: bigint): boolean {
-    return denominations.includes(denomination);
-}
-
-/**
- * Handles conversion of string to bigint, specifically for transaction parameters.
- *
- * @ignore
- * @category Transaction
- * @param {string} value - The value to convert.
- * @param {string} param - The parameter name.
- * @returns {bigint} The converted value.
- */
-function handleBigInt(value: string, param: string): bigint {
-    if (value === '0x') {
-        return BigInt(0);
-    }
-    return getBigInt(value, param);
+function isValidDenominationIndex(index: number): boolean {
+    return index >= 0 && index < denominations.length;
 }
 
 /**
@@ -153,7 +135,7 @@ export class UTXO implements UTXOLike {
     #txhash: null | string;
     #index: null | number;
     #address: null | string;
-    #denomination: null | bigint;
+    #denomination: null | number;
 
     /**
      * Gets the transaction hash.
@@ -214,30 +196,29 @@ export class UTXO implements UTXOLike {
     /**
      * Gets the denomination.
      *
-     * @returns {null | bigint} The denomination.
+     * @returns {null | number} The denomination.
      */
-    get denomination(): null | bigint {
+    get denomination(): null | number {
         return this.#denomination;
     }
 
     /**
      * Sets the denomination.
      *
-     * @param {null | BigNumberish} value - The denomination.
+     * @param {null | number} value - The denomination.
      * @throws {Error} If the denomination value is invalid.
      */
-    set denomination(value: null | BigNumberish) {
+    set denomination(value: null | number) {
         if (value == null) {
             this.#denomination = null;
             return;
         }
 
-        const denominationBigInt = handleBigInt(value.toString(), 'denomination');
-        if (!isValidDenomination(denominationBigInt)) {
+        if (!isValidDenominationIndex(value)) {
             throw new Error('Invalid denomination value');
         }
 
-        this.#denomination = denominationBigInt;
+        this.#denomination = value;
     }
 
     /**
