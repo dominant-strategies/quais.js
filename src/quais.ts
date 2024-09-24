@@ -126,7 +126,14 @@ export {
 export { AbstractSigner, VoidSigner } from './signers/index.js';
 
 // TRANSACTION
-export { accessListify, FewestCoinSelector, QiTransaction, QuaiTransaction } from './transaction/index.js';
+export {
+    accessListify,
+    FewestCoinSelector,
+    QiTransaction,
+    QuaiTransaction,
+    denominations,
+    UTXO,
+} from './transaction/index.js';
 
 // UTILS
 export {
