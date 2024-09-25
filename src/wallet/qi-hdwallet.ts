@@ -9,12 +9,12 @@ import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress } from '../address/index.js';
 import { getBytes, hexlify } from '../utils/index.js';
-import { TransactionLike, QiTransaction, TxInput } from '../transaction/index.js';
+import { TransactionLike, QiTransaction, TxInput, FewestCoinSelector, SpendTarget } from '../transaction/index.js';
 import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
 import { keccak_256 } from '@noble/hashes/sha3';
 import { musigCrypto } from '../crypto/index.js';
-import { Outpoint } from '../transaction/utxo.js';
+import { Outpoint, UTXO, denominations } from '../transaction/utxo.js';
 import { getZoneForAddress } from '../utils/index.js';
 import { AllowedCoinType, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
@@ -31,7 +31,7 @@ import ecc from '@bitcoinerlab/secp256k1';
  * @property {number} [account] - The account number (optional).
  * @interface OutpointInfo
  */
-interface OutpointInfo {
+export interface OutpointInfo {
     outpoint: Outpoint;
     address: string;
     zone: Zone;
@@ -224,6 +224,7 @@ export class QiHDWallet extends AbstractHDWallet {
         if (!txobj.txInputs || txobj.txInputs.length == 0 || !txobj.txOutputs)
             throw new Error('Invalid UTXO transaction, missing inputs or outputs');
 
+        console.log('---> QiHDWallet @ signTransaction: unsignedSerialized: ', txobj.unsignedSerialized);
         const hash = keccak_256(txobj.unsignedSerialized);
 
         let signature: string;
@@ -236,6 +237,44 @@ export class QiHDWallet extends AbstractHDWallet {
 
         txobj.signature = signature;
         return txobj.serialized;
+    }
+
+    /**
+     * Gets the balance for the specified zone.
+     *
+     * @param {Zone} zone - The zone to get the balance for.
+     * @returns {bigint} The total balance for the zone.
+     */
+    public getBalanceForZone(zone: Zone): bigint {
+        this.validateZone(zone);
+
+        return this._outpoints
+            .filter((outpoint) => outpoint.zone === zone)
+            .reduce((total, outpoint) => {
+                const denominationValue = denominations[outpoint.outpoint.denomination];
+                return total + denominationValue;
+            }, BigInt(0));
+    }
+
+    /**
+     * Converts outpoints for a specific zone to UTXO format.
+     *
+     * @param {Zone} zone - The zone to filter outpoints for.
+     * @returns {UTXO[]} An array of UTXO objects.
+     */
+    private outpointsToUTXOs(zone: Zone): UTXO[] {
+        this.validateZone(zone);
+        console.log('---> QiHDWallet @ outpointsToUTXOs: outpoints: ', this._outpoints);
+        return this._outpoints
+            .filter((outpointInfo) => outpointInfo.zone === zone)
+            .map((outpointInfo) => {
+                const utxo = new UTXO();
+                utxo.txhash = outpointInfo.outpoint.txhash;
+                utxo.index = outpointInfo.outpoint.index;
+                utxo.address = outpointInfo.address;
+                utxo.denomination = outpointInfo.outpoint.denomination;
+                return utxo;
+            });
     }
 
     /**
@@ -289,9 +328,7 @@ export class QiHDWallet extends AbstractHDWallet {
             return await this.provider.broadcastTransaction(shard, signedTx);
         } else if (args.length === 4) {
             // This is the new method call (recipientPaymentCode, amount, originZone, destinationZone)
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const [recipientPaymentCode, amount, originZone, destinationZone] = args;
-            // !TODO: Implement the logic for sending a transaction using payment codes
             if (!validatePaymentCode(recipientPaymentCode)) {
                 throw new Error('Invalid payment code');
             }
@@ -303,22 +340,99 @@ export class QiHDWallet extends AbstractHDWallet {
             }
 
             // 1. Check the wallet has enough balance in the originating zone to send the transaction
+            const balance = this.getBalanceForZone(originZone);
+            if (balance < amount) {
+                throw new Error('Insufficient balance in the originating zone');
+            }
 
-            // 2. Use the FewestCoinSelector.perform method to select the UXTOs from the specified zone to use as inputs,
-            // and generate the spend and change outputs
+            // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
+            const zoneUTXOs = this.outpointsToUTXOs(originZone);
+            const fewestCoinSelector = new FewestCoinSelector(zoneUTXOs);
 
-            // 3. Use the generateSendAddress method to generate as many unused addresses as required to populate the spend outputs
+            const senderAddress = await this.getNextSendAddress(recipientPaymentCode, destinationZone);
+            const spendTarget: SpendTarget = {
+                address: senderAddress,
+                value: BigInt(amount),
+            };
+            const selectedUTXOs = fewestCoinSelector.performSelection(spendTarget);
 
-            // 4. Use the getNextChangeAddress method to generate as many addresses as required to populate the change outputs
+            //! Helper function to handle BigInt serialization
+            const bigIntSerializer = (key: string, value: any) => {
+                if (typeof value === 'bigint') {
+                    return value.toString();
+                }
+                return value;
+            };
 
+            console.log(
+                '---> QiHDWallet @ sendTransaction: selectedUTXOs: ',
+                JSON.stringify(selectedUTXOs, bigIntSerializer, 2),
+            );
+
+            // 3. Generate as many unused addresses as required to populate the spend outputs
+            // TODO: Do we need to use 1 sender address for each spend output?
+            // const sendAddresses: string[] = [];
+            // for (let i = 0; i < selectedUTXOs.spendOutputs.length; i++) {
+            //     sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
+            // }
+            // console.log('---> QiHDWallet @ sendTransaction: sendAddresses: ', sendAddresses);
+            // 4. Generate as many addresses as required to populate the change outputs
+            const changeAddresses: string[] = [];
+            for (let i = 0; i < selectedUTXOs.changeOutputs.length; i++) {
+                changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
+            }
+            console.log('---> QiHDWallet @ sendTransaction: changeAddresses: ', changeAddresses);
             // 5. Create the transaction and sign it using the signTransaction method
 
-            // 6. Broadcast the transaction to the network using the provider
+            // 5.1 Fetch the public keys for the input addresses
+            const inputPubKeys = selectedUTXOs.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
+            if (inputPubKeys.some((pubkey) => !pubkey)) {
+                throw new Error('Missing public key for input address');
+            }
+            // 5.2 Create the inputs with: txhash, index, pubkey
+            const inputs = selectedUTXOs.inputs.map((input, pubKeyIndex) => ({
+                txhash: input.txhash,
+                index: input.index,
+                pubkey: inputPubKeys[pubKeyIndex],
+            }));
+            console.log('---> QiHDWallet @ sendTransaction: inputs: ', inputs);
 
-            throw new Error('Payment code sendTransaction not implemented');
-        } else {
-            throw new Error('Invalid arguments for sendTransaction');
+            // 5.3 Create the "sender" outputs
+            const senderOutputs = selectedUTXOs.spendOutputs.map((output) => ({
+                address: senderAddress,
+                denomination: output.denomination,
+            }));
+            // const senderOutputs = selectedUTXOs.spendOutputs.map((output, index) => ({
+            //     address: sendAddresses[index],
+            //     denomination: output.denomination,
+            // }));
+            console.log('---> QiHDWallet @ sendTransaction: senderOutputs: ', senderOutputs);
+            // 5.4 Create the "change" outputs
+            const changeOutputs = selectedUTXOs.changeOutputs.map((output, index) => ({
+                address: changeAddresses[index],
+                denomination: output.denomination,
+            }));
+            console.log('---> QiHDWallet @ sendTransaction: changeOutputs: ', changeOutputs);
+            // 5.5 Create a Qi tx with the inputs, sender outputs and change outputs
+            const tx = new QiTransaction();
+            tx.txInputs = inputs.map((input) => ({
+                txhash: input.txhash!,
+                index: input.index!,
+                pubkey: input.pubkey!,
+            }));
+            tx.txOutputs = [...senderOutputs, ...changeOutputs].map((output) => ({
+                address: output.address,
+                denomination: output.denomination!,
+            }));
+            tx.chainId = (await this.provider.getNetwork()).chainId;
+
+            // 5.6 Sign the transaction
+            const signedTx = await this.signTransaction(tx);
+
+            // 6. Broadcast the transaction to the network using the provider
+            return this.provider.broadcastTransaction(originZone, signedTx);
         }
+        throw new Error('Invalid arguments');
     }
 
     /**
