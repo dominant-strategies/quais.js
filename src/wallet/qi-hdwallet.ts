@@ -239,34 +239,86 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     /**
-     * Sends a Qi transaction.
+     * Sends a transaction using the traditional method (compatible with AbstractHDWallet).
      *
-     * @param {QiTransactionRequest} tx - The transaction to send.
-     * @returns {Promise<TransactionResponse>} The transaction response.
-     * @throws {Error} If the provider is not set or if the transaction has no inputs.
+     * @param tx The transaction request.
      */
-    public async sendTransaction(tx: QiTransactionRequest): Promise<TransactionResponse> {
+    public async sendTransaction(tx: QiTransactionRequest): Promise<TransactionResponse>;
+
+    /**
+     * Sends a transaction using payment codes and specific parameters.
+     *
+     * @param recipientPaymentCode The payment code of the recipient.
+     * @param amount The amount to send.
+     * @param originZone The origin zone of the transaction.
+     * @param destinationZone The destination zone of the transaction.
+     */
+    public async sendTransaction(
+        recipientPaymentCode: string,
+        amount: bigint,
+        originZone: Zone,
+        destinationZone: Zone,
+    ): Promise<TransactionResponse>;
+
+    /**
+     * Implementation of the sendTransaction method.
+     */
+    public async sendTransaction(...args: any[]): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
         }
-        if (!tx.txInputs || tx.txInputs.length === 0) {
-            throw new Error('Transaction has no inputs');
-        }
-        const input = tx.txInputs[0];
-        const address = computeAddress(input.pubkey);
-        const shard = getZoneForAddress(address);
-        if (!shard) {
-            throw new Error(`Address ${address} not found in any shard`);
-        }
 
-        // verify all inputs are from the same shard
-        if (tx.txInputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
-            throw new Error('All inputs must be from the same shard');
+        if (args.length === 1 && typeof args[0] === 'object') {
+            // This is the traditional method call (tx: TransactionRequest)
+            const tx = args[0] as QiTransactionRequest;
+            if (!tx.txInputs || tx.txInputs.length === 0) {
+                throw new Error('Transaction has no inputs');
+            }
+            const input = tx.txInputs[0];
+            const address = computeAddress(input.pubkey);
+            const shard = getZoneForAddress(address);
+            if (!shard) {
+                throw new Error(`Address ${address} not found in any shard`);
+            }
+
+            // verify all inputs are from the same shard
+            if (tx.txInputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
+                throw new Error('All inputs must be from the same shard');
+            }
+            const signedTx = await this.signTransaction(tx);
+            return await this.provider.broadcastTransaction(shard, signedTx);
+        } else if (args.length === 4) {
+            // This is the new method call (recipientPaymentCode, amount, originZone, destinationZone)
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const [recipientPaymentCode, amount, originZone, destinationZone] = args;
+            // !TODO: Implement the logic for sending a transaction using payment codes
+            if (!validatePaymentCode(recipientPaymentCode)) {
+                throw new Error('Invalid payment code');
+            }
+            if (amount <= 0) {
+                throw new Error('Amount must be greater than 0');
+            }
+            if (!Object.values(Zone).includes(originZone) || !Object.values(Zone).includes(destinationZone)) {
+                throw new Error('Invalid zone');
+            }
+
+            // 1. Check the wallet has enough balance in the originating zone to send the transaction
+
+            // 2. Use the FewestCoinSelector.perform method to select the UXTOs from the specified zone to use as inputs,
+            // and generate the spend and change outputs
+
+            // 3. Use the generateSendAddress method to generate as many unused addresses as required to populate the spend outputs
+
+            // 4. Use the getNextChangeAddress method to generate as many addresses as required to populate the change outputs
+
+            // 5. Create the transaction and sign it using the signTransaction method
+
+            // 6. Broadcast the transaction to the network using the provider
+
+            throw new Error('Payment code sendTransaction not implemented');
+        } else {
+            throw new Error('Invalid arguments for sendTransaction');
         }
-
-        const signedTx = await this.signTransaction(tx);
-
-        return await this.provider.broadcastTransaction(shard, signedTx);
     }
 
     /**
