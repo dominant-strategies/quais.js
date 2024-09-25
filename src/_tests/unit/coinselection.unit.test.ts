@@ -1,16 +1,20 @@
 import assert from 'assert';
 import { FewestCoinSelector } from '../../transaction/coinselector-fewest.js';
-import { UTXOLike, denominations } from '../../transaction/utxo.js';
+import { UTXO, denominations } from '../../transaction/utxo.js';
 
 const TEST_SPEND_ADDRESS = '0x00539bc2CE3eD0FD039c582CB700EF5398bB0491';
 const TEST_RECEIVE_ADDRESS = '0x02b9B1D30B6cCdc7d908B82739ce891463c3FA19';
 
 // Utility function to create UTXOs (adjust as necessary)
-function createUTXOs(denominationIndices: number[]): UTXOLike[] {
-    return denominationIndices.map((index) => ({
-        denomination: index,
-        address: TEST_SPEND_ADDRESS,
-    }));
+function createUTXOs(denominationIndices: number[]): UTXO[] {
+    return denominationIndices.map((index) =>
+        UTXO.from({
+            txhash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            index: 0,
+            address: TEST_SPEND_ADDRESS,
+            denomination: index,
+        }),
+    );
 }
 
 describe('FewestCoinSelector', function () {
