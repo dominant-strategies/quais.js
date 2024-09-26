@@ -18040,29 +18040,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         BigInt(1000000000), // 1000000 Qi
     ];
     /**
-     * Checks if the provided denomination is valid.
+     * Checks if the provided denomination index is valid.
      *
      * @category Transaction
-     * @param {bigint} denomination - The denomination to check.
-     * @returns {boolean} True if the denomination is valid, false otherwise.
+     * @param {number} index - The denomination index to check.
+     * @returns {boolean} True if the denomination index is valid, false otherwise.
      */
-    function isValidDenomination(denomination) {
-        return denominations.includes(denomination);
-    }
-    /**
-     * Handles conversion of string to bigint, specifically for transaction parameters.
-     *
-     * @ignore
-     * @category Transaction
-     * @param {string} value - The value to convert.
-     * @param {string} param - The parameter name.
-     * @returns {bigint} The converted value.
-     */
-    function handleBigInt(value, param) {
-        if (value === '0x') {
-            return BigInt(0);
-        }
-        return getBigInt(value, param);
+    function isValidDenominationIndex(index) {
+        return index >= 0 && index < denominations.length;
     }
     /**
      * Given a value, returns an array of supported denominations that sum to the value.
@@ -18156,7 +18141,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         /**
          * Gets the denomination.
          *
-         * @returns {null | bigint} The denomination.
+         * @returns {null | number} The denomination.
          */
         get denomination() {
             return this.#denomination;
@@ -18164,7 +18149,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         /**
          * Sets the denomination.
          *
-         * @param {null | BigNumberish} value - The denomination.
+         * @param {null | number} value - The denomination.
          * @throws {Error} If the denomination value is invalid.
          */
         set denomination(value) {
@@ -18172,11 +18157,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 this.#denomination = null;
                 return;
             }
-            const denominationBigInt = handleBigInt(value.toString(), 'denomination');
-            if (!isValidDenomination(denominationBigInt)) {
+            if (!isValidDenominationIndex(value)) {
                 throw new Error('Invalid denomination value');
             }
-            this.#denomination = denominationBigInt;
+            this.#denomination = value;
         }
         /**
          * Constructs a new UTXO instance with null properties.
@@ -18239,22 +18223,24 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @abstract
      */
     class AbstractCoinSelector {
-        #availableUXTOs;
+        #availableUTXOs;
         #spendOutputs;
         #changeOutputs;
         /**
          * Gets the available UTXOs.
+         *
          * @returns {UTXO[]} The available UTXOs.
          */
-        get availableUXTOs() {
-            return this.#availableUXTOs;
+        get availableUTXOs() {
+            return this.#availableUTXOs;
         }
         /**
          * Sets the available UTXOs.
+         *
          * @param {UTXOLike[]} value - The UTXOs to set.
          */
-        set availableUXTOs(value) {
-            this.#availableUXTOs = value.map((val) => {
+        set availableUTXOs(value) {
+            this.#availableUTXOs = value.map((val) => {
                 const utxo = UTXO.from(val);
                 this._validateUTXO(utxo);
                 return utxo;
@@ -18262,6 +18248,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Gets the spend outputs.
+         *
          * @returns {UTXO[]} The spend outputs.
          */
         get spendOutputs() {
@@ -18269,6 +18256,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Sets the spend outputs.
+         *
          * @param {UTXOLike[]} value - The spend outputs to set.
          */
         set spendOutputs(value) {
@@ -18276,6 +18264,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Gets the change outputs.
+         *
          * @returns {UTXO[]} The change outputs.
          */
         get changeOutputs() {
@@ -18283,6 +18272,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Sets the change outputs.
+         *
          * @param {UTXOLike[]} value - The change outputs to set.
          */
         set changeOutputs(value) {
@@ -18290,11 +18280,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Constructs a new AbstractCoinSelector instance with an empty UTXO array.
-         * @param {UTXOEntry[]} [availableUXTOs=[]] - The initial available UTXOs.
+         *
+         * @param {UTXOEntry[]} [availableUXTOs=[]] - The initial available UTXOs. Default is `[]`
          */
-        constructor(availableUXTOs = []) {
-            this.#availableUXTOs = availableUXTOs.map((val) => {
-                const utxo = UTXO.from(val);
+        constructor(availableUTXOs = []) {
+            this.#availableUTXOs = availableUTXOs.map((utxo) => {
                 this._validateUTXO(utxo);
                 return utxo;
             });
@@ -18315,6 +18305,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             if (utxo.denomination == null) {
                 throw new Error('UTXO denomination is required');
+            }
+            if (utxo.txhash == null) {
+                throw new Error('UTXO txhash is required');
+            }
+            if (utxo.index == null) {
+                throw new Error('UTXO index is required');
             }
         }
     }
@@ -18338,80 +18334,81 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * change output.
          *
          * @param {SpendTarget} target - The target amount to spend.
-         *
          * @returns {SelectedCoinsResult} The selected UTXOs and change outputs.
          */
         performSelection(target) {
             this.validateTarget(target);
             this.validateUTXOs();
-            const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUXTOs, 'desc');
+            const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUTXOs, 'desc');
             let totalValue = BigInt(0);
             let selectedUTXOs = [];
             // Get UTXOs that meets or exceeds the target value
-            const UTXOsEqualOrGreaterThanTarget = sortedUTXOs.filter((utxo) => utxo.denomination && utxo.denomination >= target.value);
+            const UTXOsEqualOrGreaterThanTarget = sortedUTXOs.filter((utxo) => utxo.denomination !== null && denominations[utxo.denomination] >= target.value);
             if (UTXOsEqualOrGreaterThanTarget.length > 0) {
                 // Find the smallest UTXO that meets or exceeds the target value
                 const optimalUTXO = UTXOsEqualOrGreaterThanTarget.reduce((minDenominationUTXO, currentUTXO) => {
-                    if (!currentUTXO.denomination)
+                    if (currentUTXO.denomination === null)
                         return minDenominationUTXO;
-                    return currentUTXO.denomination < minDenominationUTXO.denomination ? currentUTXO : minDenominationUTXO;
-                }, UTXOsEqualOrGreaterThanTarget[0]); // Initialize with the first UTXO in the list
+                    return denominations[currentUTXO.denomination] < denominations[minDenominationUTXO.denomination]
+                        ? currentUTXO
+                        : minDenominationUTXO;
+                }, UTXOsEqualOrGreaterThanTarget[0]);
                 selectedUTXOs.push(optimalUTXO);
-                totalValue += optimalUTXO.denomination;
+                totalValue += denominations[optimalUTXO.denomination];
             }
             else {
                 // If no single UTXO meets or exceeds the target, aggregate smaller denominations
                 // until the target is met/exceeded or there are no more UTXOs to aggregate
                 while (sortedUTXOs.length > 0 && totalValue < target.value) {
                     const nextOptimalUTXO = sortedUTXOs.reduce((closest, utxo) => {
-                        if (!utxo.denomination)
+                        if (utxo.denomination === null)
                             return closest;
                         // Prioritize UTXOs that bring totalValue closer to target.value
-                        const absThisDiff = bigIntAbs(target.value - (totalValue + utxo.denomination));
-                        const currentClosestDiff = closest && closest.denomination
-                            ? bigIntAbs(target.value - (totalValue + closest.denomination))
+                        const absThisDiff = bigIntAbs(target.value - (totalValue + denominations[utxo.denomination]));
+                        const currentClosestDiff = closest && closest.denomination !== null
+                            ? bigIntAbs(target.value - (totalValue + denominations[closest.denomination]))
                             : BigInt(Infinity);
                         return absThisDiff < currentClosestDiff ? utxo : closest;
                     }, sortedUTXOs[0]);
                     // Add the selected UTXO to the selection and update totalValue
                     selectedUTXOs.push(nextOptimalUTXO);
-                    totalValue += nextOptimalUTXO.denomination;
+                    totalValue += denominations[nextOptimalUTXO.denomination];
                     // Remove the selected UTXO from the list of available UTXOs
                     const index = sortedUTXOs.findIndex((utxo) => utxo.denomination === nextOptimalUTXO.denomination && utxo.address === nextOptimalUTXO.address);
                     sortedUTXOs.splice(index, 1);
                 }
             }
+            // Replace the existing optimization code with this new implementation
+            selectedUTXOs = this.sortUTXOsByDenomination(selectedUTXOs, 'desc');
+            let runningTotal = totalValue;
+            for (let i = selectedUTXOs.length - 1; i >= 0; i--) {
+                const utxo = selectedUTXOs[i];
+                if (utxo.denomination !== null && runningTotal - denominations[utxo.denomination] >= target.value) {
+                    runningTotal -= denominations[utxo.denomination];
+                    selectedUTXOs.splice(i, 1);
+                }
+                else {
+                    break;
+                }
+            }
+            totalValue = runningTotal;
+            // Ensure that selectedUTXOs contain all required properties
+            const completeSelectedUTXOs = selectedUTXOs.map((utxo) => {
+                const originalUTXO = this.availableUTXOs.find((availableUTXO) => availableUTXO.denomination === utxo.denomination && availableUTXO.address === utxo.address);
+                if (!originalUTXO) {
+                    throw new Error('Selected UTXO not found in available UTXOs');
+                }
+                return originalUTXO;
+            });
             // Check if the selected UTXOs meet or exceed the target amount
             if (totalValue < target.value) {
                 throw new Error('Insufficient funds');
-            }
-            // Check if any denominations can be removed from the input set and it still remain valid
-            selectedUTXOs = this.sortUTXOsByDenomination(selectedUTXOs, 'asc');
-            let runningTotal = totalValue;
-            let lastRemovableIndex = -1; // Index of the last UTXO that can be removed
-            // Iterate through selectedUTXOs to find the last removable UTXO
-            for (let i = 0; i < selectedUTXOs.length; i++) {
-                const utxo = selectedUTXOs[i];
-                if (utxo.denomination) {
-                    if (runningTotal - utxo.denomination >= target.value) {
-                        runningTotal -= utxo.denomination;
-                        lastRemovableIndex = i;
-                    }
-                    else {
-                        // Once a UTXO makes the total less than target.value, stop the loop
-                        break;
-                    }
-                }
-            }
-            if (lastRemovableIndex >= 0) {
-                totalValue -= selectedUTXOs[lastRemovableIndex].denomination;
-                selectedUTXOs.splice(lastRemovableIndex, 1);
             }
             // Break down the total spend into properly denominatated UTXOs
             const spendDenominations = denominate(target.value);
             this.spendOutputs = spendDenominations.map((denomination) => {
                 const utxo = new UTXO();
-                utxo.denomination = denomination;
+                utxo.denomination = denominations.indexOf(denomination);
                 utxo.address = target.address;
                 return utxo;
             });
@@ -18422,7 +18419,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 const changeDenominations = denominate(change);
                 this.changeOutputs = changeDenominations.map((denomination) => {
                     const utxo = new UTXO();
-                    utxo.denomination = denomination;
+                    utxo.denomination = denominations.indexOf(denomination);
                     // We do not have access to change addresses here so leave it null
                     return utxo;
                 });
@@ -18431,7 +18428,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 this.changeOutputs = [];
             }
             return {
-                inputs: selectedUTXOs,
+                inputs: completeSelectedUTXOs,
                 spendOutputs: this.spendOutputs,
                 changeOutputs: this.changeOutputs,
             };
@@ -18446,12 +18443,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         sortUTXOsByDenomination(utxos, direction) {
             if (direction === 'asc') {
                 return [...utxos].sort((a, b) => {
-                    const diff = (a.denomination ?? BigInt(0)) - (b.denomination ?? BigInt(0));
+                    const diff = (a.denomination !== null ? denominations[a.denomination] : BigInt(0)) -
+                        (b.denomination !== null ? denominations[b.denomination] : BigInt(0));
                     return diff > 0 ? 1 : diff < 0 ? -1 : 0;
                 });
             }
             return [...utxos].sort((a, b) => {
-                const diff = (b.denomination ?? BigInt(0)) - (a.denomination ?? BigInt(0));
+                const diff = (b.denomination !== null ? denominations[b.denomination] : BigInt(0)) -
+                    (a.denomination !== null ? denominations[a.denomination] : BigInt(0));
                 return diff > 0 ? 1 : diff < 0 ? -1 : 0;
             });
         }
@@ -18472,7 +18471,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @throws Will throw an error if there are no available UTXOs.
          */
         validateUTXOs() {
-            if (this.availableUXTOs.length === 0) {
+            if (this.availableUTXOs.length === 0) {
                 throw new Error('No UTXOs available');
             }
         }
@@ -26471,34 +26470,34 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @param {string} paymentCode - The payment code to validate.
      * @throws {Error} If the payment code is invalid.
      */
-    async function validatePaymentCode(paymentCode) {
+    function validatePaymentCode(paymentCode) {
+        const VERSION_BYTE = 0x47;
+        const FEATURE_BYTE = 0x00;
         try {
             const decoded = bs58check.decode(paymentCode);
-            if (decoded.length !== 82) {
+            if (decoded.length !== 81) {
                 return false;
             }
-            if (decoded[0] !== 0x47) {
+            if (decoded[0] !== VERSION_BYTE) {
                 return false;
             }
-            const payload = decoded.slice(0, -4);
-            const checksum = decoded.slice(-4);
-            const calculatedChecksum = sha256$1(sha256$1(payload)).slice(0, 4);
-            if (!checksum.every((b, i) => b === calculatedChecksum[i])) {
+            const paymentCodeBytes = decoded.slice(1);
+            if (paymentCodeBytes[0] !== 0x01) {
                 return false;
             }
-            const paymentCodeBytes = decoded.slice(1, -4);
-            if (paymentCodeBytes[0] !== 0x01 && paymentCodeBytes[0] !== 0x02) {
+            // Check if the second byte is 0 (features byte)
+            if (paymentCodeBytes[1] !== FEATURE_BYTE) {
                 return false;
             }
+            // Check if the public key starts with 0x02 or 0x03
             if (paymentCodeBytes[2] !== 0x02 && paymentCodeBytes[2] !== 0x03) {
                 return false;
             }
-            const xCoordinate = paymentCodeBytes.slice(3, 35);
+            const pubKey = paymentCodeBytes.slice(2, 35);
             try {
-                secp256k1.ProjectivePoint.fromHex(xCoordinate).assertValidity();
+                secp256k1.ProjectivePoint.fromHex(Buffer.from(pubKey).toString('hex')).assertValidity();
             }
             catch (error) {
-                console.log('error validating paymentcode x-coordinate: ', error);
                 return false;
             }
             if (!paymentCodeBytes.slice(67).every((byte) => byte === 0)) {
@@ -26507,7 +26506,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return true;
         }
         catch (error) {
-            console.log('error validating paymentcode: ', error);
             return false;
         }
     }
@@ -27163,31 +27161,57 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return txobj.serialized;
         }
         /**
-         * Sends a Qi transaction.
-         *
-         * @param {QiTransactionRequest} tx - The transaction to send.
-         * @returns {Promise<TransactionResponse>} The transaction response.
-         * @throws {Error} If the provider is not set or if the transaction has no inputs.
+         * Implementation of the sendTransaction method.
          */
-        async sendTransaction(tx) {
+        async sendTransaction(...args) {
             if (!this.provider) {
                 throw new Error('Provider is not set');
             }
-            if (!tx.txInputs || tx.txInputs.length === 0) {
-                throw new Error('Transaction has no inputs');
+            if (args.length === 1 && typeof args[0] === 'object') {
+                // This is the traditional method call (tx: TransactionRequest)
+                const tx = args[0];
+                if (!tx.txInputs || tx.txInputs.length === 0) {
+                    throw new Error('Transaction has no inputs');
+                }
+                const input = tx.txInputs[0];
+                const address = computeAddress(input.pubkey);
+                const shard = getZoneForAddress(address);
+                if (!shard) {
+                    throw new Error(`Address ${address} not found in any shard`);
+                }
+                // verify all inputs are from the same shard
+                if (tx.txInputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
+                    throw new Error('All inputs must be from the same shard');
+                }
+                const signedTx = await this.signTransaction(tx);
+                return await this.provider.broadcastTransaction(shard, signedTx);
             }
-            const input = tx.txInputs[0];
-            const address = computeAddress(input.pubkey);
-            const shard = getZoneForAddress(address);
-            if (!shard) {
-                throw new Error(`Address ${address} not found in any shard`);
+            else if (args.length === 4) {
+                // This is the new method call (recipientPaymentCode, amount, originZone, destinationZone)
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                const [recipientPaymentCode, amount, originZone, destinationZone] = args;
+                // !TODO: Implement the logic for sending a transaction using payment codes
+                if (!validatePaymentCode(recipientPaymentCode)) {
+                    throw new Error('Invalid payment code');
+                }
+                if (amount <= 0) {
+                    throw new Error('Amount must be greater than 0');
+                }
+                if (!Object.values(exports.Zone).includes(originZone) || !Object.values(exports.Zone).includes(destinationZone)) {
+                    throw new Error('Invalid zone');
+                }
+                // 1. Check the wallet has enough balance in the originating zone to send the transaction
+                // 2. Use the FewestCoinSelector.perform method to select the UXTOs from the specified zone to use as inputs,
+                // and generate the spend and change outputs
+                // 3. Use the generateSendAddress method to generate as many unused addresses as required to populate the spend outputs
+                // 4. Use the getNextChangeAddress method to generate as many addresses as required to populate the change outputs
+                // 5. Create the transaction and sign it using the signTransaction method
+                // 6. Broadcast the transaction to the network using the provider
+                throw new Error('Payment code sendTransaction not implemented');
             }
-            // verify all inputs are from the same shard
-            if (tx.txInputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
-                throw new Error('All inputs must be from the same shard');
+            else {
+                throw new Error('Invalid arguments for sendTransaction');
             }
-            const signedTx = await this.signTransaction(tx);
-            return await this.provider.broadcastTransaction(shard, signedTx);
         }
         /**
          * Returns a schnorr signature for the given message and private key.
@@ -27385,11 +27409,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         async getOutpointsByAddress(address) {
             try {
-                const outpointsMap = await this.provider.getOutpointsByAddress(address);
-                if (!outpointsMap) {
-                    return [];
-                }
-                return Object.values(outpointsMap);
+                return await this.provider.getOutpointsByAddress(address);
             }
             catch (error) {
                 throw new Error(`Failed to get outpoints for address: ${address} - error: ${error}`);
@@ -27628,7 +27648,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {Promise<string>} A promise that resolves to the payment address for sending funds.
          * @throws {Error} Throws an error if the payment code version is invalid.
          */
-        async generateSendAddress(receiverPaymentCode, zone, account = 0) {
+        async getNextSendAddress(receiverPaymentCode, zone, account = 0) {
             const bip32 = await this._getBIP32API();
             const buf = await this._decodeBase58(receiverPaymentCode);
             const version = buf[0];
@@ -27670,7 +27690,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {Promise<string>} A promise that resolves to the payment address for receiving funds.
          * @throws {Error} Throws an error if the payment code version is invalid.
          */
-        async generateReceiveAddress(senderPaymentCode, zone, account = 0) {
+        async getNextReceiveAddress(senderPaymentCode, zone, account = 0) {
             const bip32 = await this._getBIP32API();
             const buf = await this._decodeBase58(senderPaymentCode);
             const version = buf[0];
@@ -27703,6 +27723,30 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
             }
             throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
+        }
+        /**
+         * Receives a payment code and stores it in the wallet for future use. If the payment code is already in the wallet,
+         * it will be ignored.
+         *
+         * @param {string} paymentCode - The payment code to store.
+         * @param {'receiver' | 'sender'} type - The type of payment code ('receiver' or 'sender').
+         */
+        openChannel(paymentCode, type) {
+            if (!validatePaymentCode(paymentCode)) {
+                throw new Error(`Invalid payment code: ${paymentCode}`);
+            }
+            if (type === 'receiver') {
+                if (this._receiverPaymentCodeInfo.has(paymentCode)) {
+                    return;
+                }
+                this._receiverPaymentCodeInfo.set(paymentCode, []);
+            }
+            else {
+                if (this._senderPaymentCodeInfo.has(paymentCode)) {
+                    return;
+                }
+                this._senderPaymentCodeInfo.set(paymentCode, []);
+            }
         }
     }
 
@@ -29186,10 +29230,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return getBigInt(await this.#getAccountValue({ method: 'getBalance' }, address, blockTag), '%response');
         }
         async getOutpointsByAddress(address) {
-            const outpoints = await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest');
-            const outpointsArray = Array.isArray(outpoints) ? outpoints : [];
-            return outpointsArray.map((outpoint) => ({
-                txhash: outpoint.Txhash,
+            const outpointsObj = await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest');
+            // Convert the object to an array of Outpoint objects
+            return Object.values(outpointsObj).map((outpoint) => ({
+                txhash: outpoint.TxHash,
                 index: outpoint.Index,
                 denomination: outpoint.Denomination,
             }));
@@ -32359,6 +32403,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         TransactionReceipt: TransactionReceipt,
         Typed: Typed,
         TypedDataEncoder: TypedDataEncoder,
+        UTXO: UTXO,
         UndecodedEventLog: UndecodedEventLog,
         UnmanagedSubscriber: UnmanagedSubscriber,
         VoidSigner: VoidSigner,
@@ -32384,6 +32429,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         decodeBytes32: decodeBytes32,
         decryptKeystoreJson: decryptKeystoreJson,
         decryptKeystoreJsonSync: decryptKeystoreJsonSync,
+        denominations: denominations,
         encodeBase58: encodeBase58,
         encodeBase64: encodeBase64,
         encodeBytes32: encodeBytes32,
@@ -32522,6 +32568,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     exports.TransactionReceipt = TransactionReceipt;
     exports.Typed = Typed;
     exports.TypedDataEncoder = TypedDataEncoder;
+    exports.UTXO = UTXO;
     exports.UndecodedEventLog = UndecodedEventLog;
     exports.UnmanagedSubscriber = UnmanagedSubscriber;
     exports.VoidSigner = VoidSigner;
@@ -32546,6 +32593,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     exports.decodeBytes32 = decodeBytes32;
     exports.decryptKeystoreJson = decryptKeystoreJson;
     exports.decryptKeystoreJsonSync = decryptKeystoreJsonSync;
+    exports.denominations = denominations;
     exports.encodeBase58 = encodeBase58;
     exports.encodeBase64 = encodeBase64;
     exports.encodeBytes32 = encodeBytes32;
