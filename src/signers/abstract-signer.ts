@@ -134,14 +134,14 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         } else {
             pop.chainId = network.chainId;
         }
-        if (pop.maxFeePerGas == null || pop.maxPriorityFeePerGas == null) {
+        if (pop.gasPrice == null || pop.minerTip == null) {
             const feeData = await provider.getFeeData(zone, true);
 
-            if (pop.maxFeePerGas == null) {
-                pop.maxFeePerGas = feeData.maxFeePerGas;
+            if (pop.gasPrice == null) {
+                pop.gasPrice = feeData.gasPrice;
             }
-            if (pop.maxPriorityFeePerGas == null) {
-                pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas || 10n;
+            if (pop.minerTip == null) {
+                pop.minerTip = feeData.minerTip || 10n;
             }
         }
         //@TOOD: Don't await all over the place; save them up for
