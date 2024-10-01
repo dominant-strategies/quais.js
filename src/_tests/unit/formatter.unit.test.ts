@@ -33,8 +33,8 @@ const crossZoneTxReceipt = {
             type: '0x1',
             nonce: null,
             gasPrice: null,
-            maxPriorityFeePerGas: null,
-            maxFeePerGas: null,
+            minerTip: null,
+            gasLimit: null,
             gas: '0x5208',
             value: '0x280de80',
             input: '0x',
@@ -81,8 +81,7 @@ describe('Transaction Receipt Formatter', () => {
         assert.equal(formattedReceipt.etxs[0].nonce, crossZoneTxReceipt.etxs[0].nonce);
         assert.equal(formattedReceipt.etxs[0].gas, crossZoneTxReceipt.etxs[0].gas);
         assert.equal(formattedReceipt.etxs[0].gasPrice, crossZoneTxReceipt.etxs[0].gasPrice);
-        assert.equal(formattedReceipt.etxs[0].maxFeePerGas, crossZoneTxReceipt.etxs[0].maxFeePerGas);
-        assert.equal(formattedReceipt.etxs[0].maxPriorityFeePerGas, crossZoneTxReceipt.etxs[0].maxPriorityFeePerGas);
+        assert.equal(formattedReceipt.etxs[0].minerTip, crossZoneTxReceipt.etxs[0].minerTip);
         assert.equal(formattedReceipt.etxs[0].isCoinbase, crossZoneTxReceipt.etxs[0].isCoinbase);
         assert.equal(formattedReceipt.etxs[0].value, crossZoneTxReceipt.etxs[0].value);
         assert.equal(formattedReceipt.etxs[0].input, crossZoneTxReceipt.etxs[0].input);

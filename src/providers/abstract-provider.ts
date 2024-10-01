@@ -85,11 +85,6 @@ import { AccessList } from '../transaction';
 type Timer = ReturnType<typeof setTimeout>;
 
 /**
- * Constants
- */
-const BN_2 = BigInt(2);
-
-/**
  * Check if a value is a Promise.
  *
  * @param {any} value - The value to check.
@@ -549,7 +544,7 @@ export type PerformActionRequest =
           zone: Zone;
       }
     | {
-          method: 'getMaxPriorityFeePerGas';
+          method: 'getMinerTip';
           zone?: Zone;
       }
     | {
@@ -1385,7 +1380,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     async getFeeData(zone?: Zone, txType: boolean = true): Promise<FeeData> {
         const getFeeDataFunc = async () => {
-            const { gasPrice, priorityFee } = await resolveProperties({
+            const { gasPrice, minerTip } = await resolveProperties({
                 gasPrice: (async () => {
                     try {
                         const value = await this.#perform({ method: 'getGasPrice', txType, zone: zone });
@@ -1395,11 +1390,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                     }
                     return null;
                 })(),
-                priorityFee: (async () => {
+                minerTip: (async () => {
                     try {
-                        const value = txType
-                            ? await this.#perform({ method: 'getMaxPriorityFeePerGas', zone: zone })
-                            : 0;
+                        const value = txType ? await this.#perform({ method: 'getMinerTip', zone: zone }) : 0;
                         return getBigInt(value, '%response');
                         // eslint-disable-next-line no-empty
                     } catch (error) {}
@@ -1411,15 +1404,13 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                 throw new Error('could not determine gasPrice');
             }
 
-            let maxFeePerGas: null | bigint = null;
-            let maxPriorityFeePerGas: null | bigint = null;
+            let baseMinerTip: null | bigint = null;
 
             // These are the recommended EIP-1559 heuristics for fee data
 
-            maxPriorityFeePerGas = priorityFee != null ? priorityFee : BigInt('1000000000');
-            maxFeePerGas = gasPrice * BN_2 + maxPriorityFeePerGas;
+            baseMinerTip = minerTip != null ? minerTip : BigInt('1000000000');
 
-            return new FeeData(gasPrice, maxFeePerGas, maxPriorityFeePerGas);
+            return new FeeData(gasPrice, baseMinerTip);
         };
 
         return await getFeeDataFunc();

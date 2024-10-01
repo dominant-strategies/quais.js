@@ -105,8 +105,8 @@ describe.skip('Ensure Catchable Errors', function () {
             from: from,
             chainId: 2328,
             gasLimit: 100000,
-            maxFeePerGas: 2000000000,
-            maxPriorityFeePerGas: 1000000000,
+            gasPrice: 2000000000,
+            minerTip: 1000000000,
             to: to,
             value: 1,
         };
@@ -168,8 +168,8 @@ describe.skip('Ensure Catchable Errors', function () {
             from: from,
             chainId: 1337,
             gasLimit: 100000,
-            maxFeePerGas: 2000000000,
-            maxPriorityFeePerGas: 1000000000,
+            gasPrice: 2000000000,
+            minerTip: 1000000000,
             to: to,
             value: 1,
         };

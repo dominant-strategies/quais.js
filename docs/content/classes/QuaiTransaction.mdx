@@ -161,12 +161,6 @@ The gas limit.
 
 ***
 
-### gasPrice
-
-```ts
-get gasPrice(): null | bigint
-```
-
 The gas price.
 
 On legacy networks this defines the fee that will be paid. On EIP-1559 networks, this should be `null`.
@@ -224,10 +218,10 @@ True if the transaction is external.
 
 ***
 
-### maxFeePerGas
+### gasPrice
 
 ```ts
-get maxFeePerGas(): null | bigint
+get gasPrice(): null | bigint
 ```
 
 The maximum total fee per unit of gas to pay. On legacy networks this should be `null`.
@@ -242,10 +236,10 @@ The maximum total fee per unit of gas to pay. On legacy networks this should be 
 
 ***
 
-### maxPriorityFeePerGas
+### minerTip
 
 ```ts
-get maxPriorityFeePerGas(): null | bigint
+get minerTip(): null | bigint
 ```
 
 The maximum priority fee per unit of gas to pay. On legacy networks this should be `null`.
