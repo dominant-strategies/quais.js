@@ -47,19 +47,14 @@ export interface QuaiTransactionLike extends TransactionLike {
     gasLimit?: null | BigNumberish;
 
     /**
-     * The gas price for legacy and berlin transactions.
-     */
-    gasPrice?: null | BigNumberish;
-
-    /**
      * The maximum priority fee per gas for london transactions.
      */
-    maxPriorityFeePerGas?: null | BigNumberish;
+    minerTip?: null | BigNumberish;
 
     /**
      * The maximum total fee per gas for london transactions.
      */
-    maxFeePerGas?: null | BigNumberish;
+    gasPrice?: null | BigNumberish;
 
     /**
      * The data.
@@ -112,8 +107,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     #nonce: number;
     #gasLimit: bigint;
     #gasPrice: null | bigint;
-    #maxPriorityFeePerGas: null | bigint;
-    #maxFeePerGas: null | bigint;
+    #minerTip: null | bigint;
     #value: bigint;
     #accessList: null | AccessList;
     from?: string;
@@ -213,34 +207,19 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     }
 
     /**
-     * The gas price.
-     *
-     * On legacy networks this defines the fee that will be paid. On EIP-1559 networks, this should be `null`.
-     *
-     * @type {null | bigint}
-     */
-    get gasPrice(): null | bigint {
-        const value = this.#gasPrice;
-        return value;
-    }
-    set gasPrice(value: null | BigNumberish) {
-        this.#gasPrice = value == null ? null : getBigInt(value, 'gasPrice');
-    }
-
-    /**
      * The maximum priority fee per unit of gas to pay. On legacy networks this should be `null`.
      *
      * @type {null | bigint}
      */
-    get maxPriorityFeePerGas(): null | bigint {
-        const value = this.#maxPriorityFeePerGas;
+    get minerTip(): null | bigint {
+        const value = this.#minerTip;
         if (value == null) {
             return null;
         }
         return value;
     }
-    set maxPriorityFeePerGas(value: null | BigNumberish) {
-        this.#maxPriorityFeePerGas = value == null ? null : getBigInt(value, 'maxPriorityFeePerGas');
+    set minerTip(value: null | BigNumberish) {
+        this.#minerTip = value == null ? null : getBigInt(value, 'minerTip');
     }
 
     /**
@@ -248,15 +227,15 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      *
      * @type {null | bigint}
      */
-    get maxFeePerGas(): null | bigint {
-        const value = this.#maxFeePerGas;
+    get gasPrice(): null | bigint {
+        const value = this.#gasPrice;
         if (value == null) {
             return null;
         }
         return value;
     }
-    set maxFeePerGas(value: null | BigNumberish) {
-        this.#maxFeePerGas = value == null ? null : getBigInt(value, 'maxFeePerGas');
+    set gasPrice(value: null | BigNumberish) {
+        this.#gasPrice = value == null ? null : getBigInt(value, 'gasPrice');
     }
 
     /**
@@ -313,8 +292,8 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         this.#nonce = 0;
         this.#gasLimit = BigInt(0);
         this.#gasPrice = null;
-        this.#maxPriorityFeePerGas = null;
-        this.#maxFeePerGas = null;
+        this.#minerTip = null;
+        this.#gasPrice = null;
         this.#data = '0x';
         this.#value = BigInt(0);
         this.#accessList = null;
@@ -327,13 +306,10 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      * @returns {number[]} The compatible transaction types.
      */
     inferTypes(): Array<number> {
-        if (this.maxFeePerGas != null && this.maxPriorityFeePerGas != null) {
-            assert(
-                this.maxFeePerGas >= this.maxPriorityFeePerGas,
-                'priorityFee cannot be more than maxFee',
-                'BAD_DATA',
-                { value: this },
-            );
+        if (this.gasPrice != null && this.minerTip != null) {
+            assert(this.gasPrice >= this.minerTip, 'priorityFee cannot be more than maxFee', 'BAD_DATA', {
+                value: this,
+            });
         }
 
         assert(
@@ -387,8 +363,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             nonce: this.nonce,
             gasLimit: s(this.gasLimit),
             gasPrice: s(this.gasPrice),
-            maxPriorityFeePerGas: s(this.maxPriorityFeePerGas),
-            maxFeePerGas: s(this.maxFeePerGas),
+            minerTip: s(this.minerTip),
             value: s(this.value),
             chainId: s(this.chainId),
             signature: this.signature ? this.signature.toJSON() : null,
@@ -408,8 +383,8 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             type: this.type || 0,
             chain_id: formatNumber(this.chainId || 0, 'chainId'),
             nonce: this.nonce || 0,
-            gas_tip_cap: formatNumber(this.maxPriorityFeePerGas || 0, 'maxPriorityFeePerGas'),
-            gas_fee_cap: formatNumber(this.maxFeePerGas || 0, 'maxFeePerGas'),
+            miner_tip: formatNumber(this.minerTip || 0, 'minerTip'),
+            gas_price: formatNumber(this.gasPrice || 0, 'gasPrice'),
             gas: Number(this.gasLimit || 0),
             to: this.to != null ? getBytes(this.to as string) : null,
             value: formatNumber(this.value || 0, 'value'),
@@ -452,11 +427,11 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         if (tx.gasLimit != null) {
             result.gasLimit = tx.gasLimit;
         }
-        if (tx.maxPriorityFeePerGas != null) {
-            result.maxPriorityFeePerGas = tx.maxPriorityFeePerGas;
+        if (tx.minerTip != null) {
+            result.minerTip = tx.minerTip;
         }
-        if (tx.maxFeePerGas != null) {
-            result.maxFeePerGas = tx.maxFeePerGas;
+        if (tx.gasPrice != null) {
+            result.gasPrice = tx.gasPrice;
         }
         if (tx.data != null && tx.data !== '') {
             result.data = tx.data;
@@ -534,8 +509,8 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         tx.type = protoTx.type;
         tx.chainId = toBigInt(protoTx.chain_id);
         tx.nonce = Number(protoTx.nonce);
-        tx.maxPriorityFeePerGas = toBigInt(protoTx.gas_tip_cap!);
-        tx.maxFeePerGas = toBigInt(protoTx.gas_fee_cap!);
+        tx.minerTip = toBigInt(protoTx.miner_tip!);
+        tx.gasPrice = toBigInt(protoTx.gas_price!);
         tx.gasLimit = toBigInt(protoTx.gas!);
         tx.value = protoTx.value !== null ? toBigInt(protoTx.value!) : BigInt(0);
         tx.data = hexlify(protoTx.data!);

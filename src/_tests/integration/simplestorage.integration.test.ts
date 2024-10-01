@@ -34,8 +34,8 @@ describe('Test Contract SimpleStorage', function () {
         const nonce = await provider.getTransactionCount(wallet.address, 'latest');
         const deployParams = {
             nonce,
-            maxPriorityFeePerGas: 1000000000n,
-            maxFeePerGas: 3000000000000n,
+            minerTip: 1000000000n,
+            gasPrice: 3000000000000n,
             from: wallet.address,
         };
         console.log('Deploying contract...');

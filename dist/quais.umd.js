@@ -1,9 +1,9 @@
 const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 'undefined' ? window: typeof global !== 'undefined' ? global: typeof self !== 'undefined' ? self: {});
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('google-protobuf'), require('@bitcoinerlab/secp256k1')) :
-    typeof define === 'function' && define.amd ? define(['exports', 'google-protobuf', '@bitcoinerlab/secp256k1'], factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.quais = {}, global.pb_1, global.ecc));
-})(this, (function (exports, pb_1, ecc) { 'use strict';
+    typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('google-protobuf')) :
+    typeof define === 'function' && define.amd ? define(['exports', 'google-protobuf'], factory) :
+    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.quais = {}, global.pb_1));
+})(this, (function (exports, pb_1) { 'use strict';
 
     function _interopNamespaceDefault(e) {
         var n = Object.create(null);
@@ -250,7 +250,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @param {ErrorInfo<T>} [info] - Additional properties for the error.
      * @throws {T} Throws the error if `check` is falsish.
      */
-    function assert$1(check, message, code, info) {
+    function assert(check, message, code, info) {
         if (!check) {
             throw makeError(message, code, info);
         }
@@ -269,7 +269,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @throws {InvalidArgumentError} Throws if `check` is falsish.
      */
     function assertArgument(check, message, name, value) {
-        assert$1(check, message, 'INVALID_ARGUMENT', { argument: name, value: value });
+        assert(check, message, 'INVALID_ARGUMENT', { argument: name, value: value });
     }
     function assertArgumentCount(count, expectedCount, message) {
         if (message == null) {
@@ -278,11 +278,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         if (message) {
             message = ': ' + message;
         }
-        assert$1(count >= expectedCount, 'missing arguemnt' + message, 'MISSING_ARGUMENT', {
+        assert(count >= expectedCount, 'missing arguemnt' + message, 'MISSING_ARGUMENT', {
             count: count,
             expectedCount: expectedCount,
         });
-        assert$1(count <= expectedCount, 'too many arguemnts' + message, 'UNEXPECTED_ARGUMENT', {
+        assert(count <= expectedCount, 'too many arguemnts' + message, 'UNEXPECTED_ARGUMENT', {
             count: count,
             expectedCount: expectedCount,
         });
@@ -318,7 +318,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @throws {UnsupportedOperationError} Throws if the form is not supported.
      */
     function assertNormalize(form) {
-        assert$1(_normalizeForms.indexOf(form) >= 0, 'platform missing String.prototype.normalize', 'UNSUPPORTED_OPERATION', {
+        assert(_normalizeForms.indexOf(form) >= 0, 'platform missing String.prototype.normalize', 'UNSUPPORTED_OPERATION', {
             operation: 'String.prototype.normalize',
             info: { form },
         });
@@ -344,7 +344,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 method += '.';
                 operation += ' ' + className;
             }
-            assert$1(false, `private constructor; use ${method}from* methods`, 'UNSUPPORTED_OPERATION', {
+            assert(false, `private constructor; use ${method}from* methods`, 'UNSUPPORTED_OPERATION', {
                 operation,
             });
         }
@@ -504,7 +504,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     function dataSlice(data, start, end) {
         const bytes = getBytes(data);
         if (end != null && end > bytes.length) {
-            assert$1(false, 'cannot slice beyond data bounds', 'BUFFER_OVERRUN', {
+            assert(false, 'cannot slice beyond data bounds', 'BUFFER_OVERRUN', {
                 buffer: bytes,
                 length: bytes.length,
                 offset: end,
@@ -541,7 +541,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      */
     function zeroPad(data, length, left) {
         const bytes = getBytes(data);
-        assert$1(length >= bytes.length, 'padding exceeds data length', 'BUFFER_OVERRUN', {
+        assert(length >= bytes.length, 'padding exceeds data length', 'BUFFER_OVERRUN', {
             buffer: new Uint8Array(bytes),
             length: length,
             offset: length + 1,
@@ -713,7 +713,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     function fromTwos(_value, _width) {
         const value = getUint(_value, 'value');
         const width = BigInt(getNumber(_width, 'width'));
-        assert$1(value >> width === BN_0$8, 'overflow', 'NUMERIC_FAULT', {
+        assert(value >> width === BN_0$8, 'overflow', 'NUMERIC_FAULT', {
             operation: 'fromTwos',
             fault: 'overflow',
             value: _value,
@@ -742,7 +742,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         const limit = BN_1$4 << (width - BN_1$4);
         if (value < BN_0$8) {
             value = -value;
-            assert$1(value <= limit, 'too low', 'NUMERIC_FAULT', {
+            assert(value <= limit, 'too low', 'NUMERIC_FAULT', {
                 operation: 'toTwos',
                 fault: 'overflow',
                 value: _value,
@@ -751,7 +751,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return (~value & mask) + BN_1$4;
         }
         else {
-            assert$1(value < limit, 'too high', 'NUMERIC_FAULT', {
+            assert(value < limit, 'too high', 'NUMERIC_FAULT', {
                 operation: 'toTwos',
                 fault: 'overflow',
                 value: _value,
@@ -805,6 +805,21 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         assertArgument(false, 'invalid BigNumberish value', name || 'value', value);
     }
     /**
+     * Returns absolute value of bigint `value`.
+     *
+     * @category Utils
+     * @param {BigNumberish} value - The value to convert.
+     * @returns {bigint} The absolute value.
+     */
+    function bigIntAbs(value) {
+        value = getBigInt(value);
+        // if value is negative (including -0), return -value, else return value
+        if (value === -BN_0$8 || value < BN_0$8) {
+            return -value;
+        }
+        return value;
+    }
+    /**
      * Returns `value` as a bigint, validating it is valid as a bigint value and that it is positive.
      *
      * @category Utils
@@ -815,7 +830,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      */
     function getUint(value, name) {
         const result = getBigInt(value, name);
-        assert$1(result >= BN_0$8, 'unsigned value cannot be negative', 'NUMERIC_FAULT', {
+        assert(result >= BN_0$8, 'unsigned value cannot be negative', 'NUMERIC_FAULT', {
             fault: 'overflow',
             operation: 'getUint',
             value,
@@ -905,7 +920,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         else {
             const width = getNumber(_width, 'width');
-            assert$1(width * 2 >= result.length, `value exceeds width (${width} bytes)`, 'NUMERIC_FAULT', {
+            assert(width * 2 >= result.length, `value exceeds width (${width} bytes)`, 'NUMERIC_FAULT', {
                 operation: 'toBeHex',
                 fault: 'overflow',
                 value: _value,
@@ -1029,7 +1044,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
 
     /**
      * Generated by the protoc-gen-ts.  DO NOT EDIT!
-     * compiler version: 4.24.3
+     * compiler version: 4.25.3
      * source: proto_common.proto
      * git: https://github.com/thesayyn/protoc-gen-ts */
     var common;
@@ -1398,7 +1413,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
 
     /**
      * Generated by the protoc-gen-ts.  DO NOT EDIT!
-     * compiler version: 4.24.3
+     * compiler version: 4.25.3
      * source: proto_block.proto
      * git: https://github.com/thesayyn/protoc-gen-ts */
     var block;
@@ -5179,7 +5194,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         block.ProtoOutPoint = ProtoOutPoint;
         class ProtoTxOut extends pb_1__namespace.Message {
-            #one_of_decls = [[1], [2], [3]];
+            #one_of_decls = [[1], [2]];
             constructor(data) {
                 super();
                 pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
@@ -5189,9 +5204,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     }
                     if ("address" in data && data.address != undefined) {
                         this.address = data.address;
-                    }
-                    if ("lock" in data && data.lock != undefined) {
-                        this.lock = data.lock;
                     }
                 }
             }
@@ -5213,15 +5225,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             get has_address() {
                 return pb_1__namespace.Message.getField(this, 2) != null;
             }
-            get lock() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 3, new Uint8Array(0));
-            }
-            set lock(value) {
-                pb_1__namespace.Message.setOneofField(this, 3, this.#one_of_decls[2], value);
-            }
-            get has_lock() {
-                return pb_1__namespace.Message.getField(this, 3) != null;
-            }
             get _denomination() {
                 const cases = {
                     0: "none",
@@ -5236,13 +5239,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [2])];
             }
-            get _lock() {
-                const cases = {
-                    0: "none",
-                    3: "lock"
-                };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [3])];
-            }
             static fromObject(data) {
                 const message = new ProtoTxOut({});
                 if (data.denomination != null) {
@@ -5250,9 +5246,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 if (data.address != null) {
                     message.address = data.address;
-                }
-                if (data.lock != null) {
-                    message.lock = data.lock;
                 }
                 return message;
             }
@@ -5264,9 +5257,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.address != null) {
                     data.address = this.address;
                 }
-                if (this.lock != null) {
-                    data.lock = this.lock;
-                }
                 return data;
             }
             serialize(w) {
@@ -5275,8 +5265,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     writer.writeUint32(1, this.denomination);
                 if (this.has_address)
                     writer.writeBytes(2, this.address);
-                if (this.has_lock)
-                    writer.writeBytes(3, this.lock);
                 if (!w)
                     return writer.getResultBuffer();
             }
@@ -5291,9 +5279,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                             break;
                         case 2:
                             message.address = reader.readBytes();
-                            break;
-                        case 3:
-                            message.lock = reader.readBytes();
                             break;
                         default: reader.skipField();
                     }
@@ -5584,11 +5569,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     function createGetUrl(options) {
         async function getUrl(req, _signal) {
             const protocol = req.url.split(':')[0].toLowerCase();
-            assert$1(protocol === 'http' || protocol === 'https', `unsupported protocol ${protocol}`, 'UNSUPPORTED_OPERATION', {
+            assert(protocol === 'http' || protocol === 'https', `unsupported protocol ${protocol}`, 'UNSUPPORTED_OPERATION', {
                 info: { protocol },
                 operation: 'request',
             });
-            assert$1(protocol === 'https' || !req.credentials || req.allowInsecureAuthentication, 'insecure authorized connections unsupported', 'UNSUPPORTED_OPERATION', {
+            assert(protocol === 'https' || !req.credentials || req.allowInsecureAuthentication, 'insecure authorized connections unsupported', 'UNSUPPORTED_OPERATION', {
                 operation: 'request',
             });
             let signal = undefined;
@@ -5715,7 +5700,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             });
         }
         addListener(listener) {
-            assert$1(!this.#cancelled, 'singal already cancelled', 'UNSUPPORTED_OPERATION', {
+            assert(!this.#cancelled, 'singal already cancelled', 'UNSUPPORTED_OPERATION', {
                 operation: 'fetchCancelSignal.addCancelListener',
             });
             this.#listeners.push(listener);
@@ -5724,7 +5709,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return this.#cancelled;
         }
         checkSignal() {
-            assert$1(!this.cancelled, 'cancelled', 'CANCELLED', {});
+            assert(!this.cancelled, 'cancelled', 'CANCELLED', {});
         }
     }
     // Check the signal, throwing if it is cancelled
@@ -6046,7 +6031,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (attempt >= this.#throttle.maxAttempts) {
                 return _response.makeServerError('exceeded maximum retry limit');
             }
-            assert$1(getTime$1() <= expires, 'timeout', 'TIMEOUT', {
+            assert(getTime$1() <= expires, 'timeout', 'TIMEOUT', {
                 operation: 'request.send',
                 reason: 'timeout',
                 request: _request,
@@ -6130,7 +6115,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Resolves to the response by sending the request.
          */
         send() {
-            assert$1(this.#signal == null, 'request already sent', 'UNSUPPORTED_OPERATION', {
+            assert(this.#signal == null, 'request already sent', 'UNSUPPORTED_OPERATION', {
                 operation: 'fetchRequest.send',
             });
             this.#signal = new FetchCancelSignal(this);
@@ -6141,7 +6126,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * {@link FetchRequest.send | **send**}.
          */
         cancel() {
-            assert$1(this.#signal != null, 'request has not been sent', 'UNSUPPORTED_OPERATION', {
+            assert(this.#signal != null, 'request has not been sent', 'UNSUPPORTED_OPERATION', {
                 operation: 'fetchRequest.cancel',
             });
             const signal = fetchSignals.get(this);
@@ -6164,7 +6149,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // - non-GET requests
             // - downgrading the security (e.g. https => http)
             // - to non-HTTP (or non-HTTPS) protocols [this could be relaxed?]
-            assert$1(this.method === 'GET' && (current !== 'https' || target !== 'http') && location.match(/^https?:/), `unsupported redirect`, 'UNSUPPORTED_OPERATION', {
+            assert(this.method === 'GET' && (current !== 'https' || target !== 'http') && location.match(/^https?:/), `unsupported redirect`, 'UNSUPPORTED_OPERATION', {
                 operation: `redirect(${this.method} ${JSON.stringify(this.url)} => ${JSON.stringify(location)})`,
             });
             // Create a copy of this request, with a new URL
@@ -6351,7 +6336,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 return this.#body == null ? '' : toUtf8String(this.#body);
             }
             catch (error) {
-                assert$1(false, 'response body is not valid UTF-8 data', 'UNSUPPORTED_OPERATION', {
+                assert(false, 'response body is not valid UTF-8 data', 'UNSUPPORTED_OPERATION', {
                     operation: 'bodyText',
                     info: { response: this },
                 });
@@ -6367,7 +6352,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 return JSON.parse(this.bodyText);
             }
             catch (error) {
-                assert$1(false, 'response body is not valid JSON', 'UNSUPPORTED_OPERATION', {
+                assert(false, 'response body is not valid JSON', 'UNSUPPORTED_OPERATION', {
                     operation: 'bodyJson',
                     info: { response: this },
                 });
@@ -6485,7 +6470,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (message === '') {
                 message = `server response ${this.statusCode} ${this.statusMessage}`;
             }
-            assert$1(false, message, 'SERVER_ERROR', {
+            assert(false, message, 'SERVER_ERROR', {
                 request: this.request || 'unknown request',
                 response: this,
                 error,
@@ -6532,7 +6517,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         const width = BigInt(format.width);
         if (format.signed) {
             const limit = BN_1$3 << (width - BN_1$3);
-            assert$1(safeOp == null || (val >= -limit && val < limit), 'overflow', 'NUMERIC_FAULT', {
+            assert(safeOp == null || (val >= -limit && val < limit), 'overflow', 'NUMERIC_FAULT', {
                 operation: safeOp,
                 fault: 'overflow',
                 value: val,
@@ -6546,7 +6531,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         else {
             const limit = BN_1$3 << width;
-            assert$1(safeOp == null || (val >= 0 && val < limit), 'overflow', 'NUMERIC_FAULT', {
+            assert(safeOp == null || (val >= 0 && val < limit), 'overflow', 'NUMERIC_FAULT', {
                 operation: safeOp,
                 fault: 'overflow',
                 value: val,
@@ -6798,7 +6783,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         mulSignal(other) {
             this.#checkFormat(other);
             const value = this.#val * other.#val;
-            assert$1(value % this.#tens === BN_0$6, 'precision lost during signalling mul', 'NUMERIC_FAULT', {
+            assert(value % this.#tens === BN_0$6, 'precision lost during signalling mul', 'NUMERIC_FAULT', {
                 operation: 'mulSignal',
                 fault: 'underflow',
                 value: this,
@@ -6806,7 +6791,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return this.#checkValue(value / this.#tens, 'mulSignal');
         }
         #div(o, safeOp) {
-            assert$1(o.#val !== BN_0$6, 'division by zero', 'NUMERIC_FAULT', {
+            assert(o.#val !== BN_0$6, 'division by zero', 'NUMERIC_FAULT', {
                 operation: 'div',
                 fault: 'divide-by-zero',
                 value: this,
@@ -6843,14 +6828,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @throws {NumericFaultError} Thrown if underflow occurs.
          */
         divSignal(other) {
-            assert$1(other.#val !== BN_0$6, 'division by zero', 'NUMERIC_FAULT', {
+            assert(other.#val !== BN_0$6, 'division by zero', 'NUMERIC_FAULT', {
                 operation: 'div',
                 fault: 'divide-by-zero',
                 value: this,
             });
             this.#checkFormat(other);
             const value = this.#val * this.#tens;
-            assert$1(value % other.#val === BN_0$6, 'precision lost during signalling div', 'NUMERIC_FAULT', {
+            assert(value % other.#val === BN_0$6, 'precision lost during signalling div', 'NUMERIC_FAULT', {
                 operation: 'divSignal',
                 fault: 'underflow',
                 value: this,
@@ -7048,7 +7033,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const delta = decimals - format.decimals;
             if (delta > 0) {
                 const tens = getTens(delta);
-                assert$1(value % tens === BN_0$6, 'value loses precision for format', 'NUMERIC_FAULT', {
+                assert(value % tens === BN_0$6, 'value loses precision for format', 'NUMERIC_FAULT', {
                     operation: 'fromValue',
                     fault: 'underflow',
                     value: _value,
@@ -7082,7 +7067,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 decimal += Zeros;
             }
             // Check precision is safe
-            assert$1(decimal.substring(format.decimals).match(/^0*$/), 'too many decimals for format', 'NUMERIC_FAULT', {
+            assert(decimal.substring(format.decimals).match(/^0*$/), 'too many decimals for format', 'NUMERIC_FAULT', {
                 operation: 'fromString',
                 fault: 'underflow',
                 value: _value,
@@ -7414,26 +7399,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     const isLE = new Uint8Array(new Uint32Array([0x11223344]).buffer)[0] === 0x44;
     if (!isLE)
         throw new Error('Non little-endian hardware is not supported');
-    /**
-     * @example hexToBytes('cafe0123') // Uint8Array.from([0xca, 0xfe, 0x01, 0x23])
-     */
-    function hexToBytes$1(hex) {
-        if (typeof hex !== 'string')
-            throw new Error('hex string expected, got ' + typeof hex);
-        const len = hex.length;
-        if (len % 2)
-            throw new Error('padded hex string expected, got unpadded hex of length ' + len);
-        const array = new Uint8Array(len / 2);
-        for (let i = 0; i < array.length; i++) {
-            const j = i * 2;
-            const hexByte = hex.slice(j, j + 2);
-            const byte = Number.parseInt(hexByte, 16);
-            if (Number.isNaN(byte) || byte < 0)
-                throw new Error('Invalid byte sequence');
-            array[i] = byte;
-        }
-        return array;
-    }
     // There is no setImmediate in browser and setTimeout is slow.
     // call of async fn will return Promise, which will be fullfiled only on
     // next scheduler queue processing step and this is exactly what we need.
@@ -8121,7 +8086,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         return pbkdf2$1(algo, password, salt, { c: iterations, dkLen: keylen });
     }
     function randomBytes$1(length) {
-        assert$1(crypto != null, 'platform does not support secure random numbers', 'UNSUPPORTED_OPERATION', {
+        assert(crypto != null, 'platform does not support secure random numbers', 'UNSUPPORTED_OPERATION', {
             operation: 'randomBytes',
         });
         assertArgument(Number.isInteger(length) && length > 0 && length <= 1024, 'invalid length', 'length', length);
@@ -11181,7 +11146,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     // Constants
     const BN_0$5 = BigInt(0);
     const BN_1$2 = BigInt(1);
-    const BN_2$1 = BigInt(2);
+    const BN_2 = BigInt(2);
     const BN_27 = BigInt(27);
     const BN_28 = BigInt(28);
     const BN_35 = BigInt(35);
@@ -11345,7 +11310,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             // Bad value for an EIP-155 v
             assertArgument(bv >= BN_35, 'invalid EIP-155 v', 'v', v);
-            return (bv - BN_35) / BN_2$1;
+            return (bv - BN_35) / BN_2;
         }
         /**
          * Compute the `v` for a chain ID for a legacy EIP-155 transactions.
@@ -11366,7 +11331,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {bigint} The `v` value.
          */
         static getChainIdV(chainId, v) {
-            return getBigInt(chainId) * BN_2$1 + BigInt(35 + v - 27);
+            return getBigInt(chainId) * BN_2 + BigInt(35 + v - 27);
         }
         /**
          * Compute the normalized legacy transaction `v` from a `yParirty`, a legacy transaction `v` or a legacy
@@ -12427,7 +12392,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return this.#names.reduce(
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             (accum, name, index) => {
-                assert$1(name != null, 'value at index ${ index } unnamed', 'UNSUPPORTED_OPERATION', {
+                assert(name != null, 'value at index ${ index } unnamed', 'UNSUPPORTED_OPERATION', {
                     operation: 'toObject()',
                 });
                 // Add values for names that don't conflict
@@ -12572,7 +12537,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
     function getValue$1(value) {
         let bytes = toBeArray(value);
-        assert$1(bytes.length <= WordSize, 'value out-of-bounds', 'BUFFER_OVERRUN', {
+        assert(bytes.length <= WordSize, 'value out-of-bounds', 'BUFFER_OVERRUN', {
             buffer: bytes,
             length: WordSize,
             offset: bytes.length,
@@ -12700,7 +12665,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             this.#bytesRead += count;
             // Check for excessive inflation (see: #4537)
-            assert$1(this.#maxInflation < 1 || this.#bytesRead <= this.#maxInflation * this.dataLength, 
+            assert(this.#maxInflation < 1 || this.#bytesRead <= this.#maxInflation * this.dataLength, 
             // eslint-disable-next-line no-useless-escape
             `compressed ABI data exceeds inflation ratio of ${this.#maxInflation} ( see: https:/\/github.com/ethers-io/ethers.js/issues/4537 )`, 'BUFFER_OVERRUN', {
                 buffer: getBytesCopy(this.#data),
@@ -12719,7 +12684,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     alignedLength = length;
                 }
                 else {
-                    assert$1(false, 'data out-of-bounds', 'BUFFER_OVERRUN', {
+                    assert(false, 'data out-of-bounds', 'BUFFER_OVERRUN', {
                         buffer: getBytesCopy(this.#data),
                         length: this.#data.length,
                         offset: this.#offset + alignedLength,
@@ -14138,8 +14103,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             let unique = {};
             arrayValues = coders.map((coder) => {
                 const name = coder.localName;
-                assert$1(name, "cannot encode object for signature with missing names", "INVALID_ARGUMENT", { argument: "values", info: { coder }, value: values });
-                assert$1(!unique[name], "cannot encode object for signature with duplicate names", "INVALID_ARGUMENT", { argument: "values", info: { coder }, value: values });
+                assert(name, "cannot encode object for signature with missing names", "INVALID_ARGUMENT", { argument: "values", info: { coder }, value: values });
+                assert(!unique[name], "cannot encode object for signature with duplicate names", "INVALID_ARGUMENT", { argument: "values", info: { coder }, value: values });
                 unique[name] = true;
                 return values[name];
             });
@@ -14271,7 +14236,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 // slot requires at least 32 bytes for their value (or 32
                 // bytes as a link to the data). This could use a much
                 // tighter bound, but we are erroring on the side of safety.
-                assert$1(count * WordSize <= reader.dataLength, "insufficient data length", "BUFFER_OVERRUN", { buffer: reader.bytes, offset: count * WordSize, length: reader.dataLength });
+                assert(count * WordSize <= reader.dataLength, "insufficient data length", "BUFFER_OVERRUN", { buffer: reader.bytes, offset: count * WordSize, length: reader.dataLength });
             }
             let coders = [];
             for (let i = 0; i < count; i++) {
@@ -16048,7 +16013,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     case 'struct':
                         return StructFragment.from(obj);
                 }
-                assert$1(false, `unsupported type: ${obj.type}`, 'UNSUPPORTED_OPERATION', {
+                assert(false, `unsupported type: ${obj.type}`, 'UNSUPPORTED_OPERATION', {
                     operation: 'Fragment.from',
                 });
             }
@@ -16287,7 +16252,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Returns a string representation of this constructor as `format`.
          */
         format(format) {
-            assert$1(format != null && format !== 'sighash', 'cannot format a constructor for sighash', 'UNSUPPORTED_OPERATION', { operation: 'format(sighash)' });
+            assert(format != null && format !== 'sighash', 'cannot format a constructor for sighash', 'UNSUPPORTED_OPERATION', { operation: 'format(sighash)' });
             if (format === 'json') {
                 return JSON.stringify({
                     type: 'constructor',
@@ -17567,7 +17532,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
             }
             // Call returned data with no error, but the data is junk
-            assert$1(false, message, 'BAD_DATA', {
+            assert(false, message, 'BAD_DATA', {
                 value: hexlify(bytes),
                 info: { method: fragment.name, signature: fragment.format() },
             });
@@ -17628,7 +17593,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 assertArgument(f, 'unknown event', 'eventFragment', fragment);
                 fragment = f;
             }
-            assert$1(values.length <= fragment.inputs.length, `too many arguments for ${fragment.format()}`, 'UNEXPECTED_ARGUMENT', { count: values.length, expectedCount: fragment.inputs.length });
+            assert(values.length <= fragment.inputs.length, `too many arguments for ${fragment.format()}`, 'UNEXPECTED_ARGUMENT', { count: values.length, expectedCount: fragment.inputs.length });
             const topics = [];
             if (!fragment.anonymous) {
                 topics.push(fragment.topicHash);
@@ -18021,7 +17986,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * {@link AbstractTransaction.unsignedSerialized | **unsignedSerialized** }.
          */
         get serialized() {
-            assert$1(this.signature != null, 'cannot serialize unsigned transaction; maybe you meant .unsignedSerialized', 'UNSUPPORTED_OPERATION', { operation: '.serialized' });
+            assert(this.signature != null, 'cannot serialize unsigned transaction; maybe you meant .unsignedSerialized', 'UNSUPPORTED_OPERATION', { operation: '.serialized' });
             return encodeProtoTransaction(this.toProtobuf(true));
         }
         /**
@@ -18051,61 +18016,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
 
     /**
-     * An **AbstractCoinSelector** provides a base class for other sub-classes to implement the functionality for selecting
-     * UTXOs for a spend and to properly handle spend and change outputs.
-     *
-     * This class is abstract and should not be used directly. Sub-classes should implement the
-     * {@link AbstractCoinSelector#performSelection | **performSelection**} method to provide the actual coin selection
-     * logic.
-     *
-     * @category Transaction
-     * @abstract
-     */
-    class AbstractCoinSelector {
-        availableUTXOs;
-        totalInputValue = BigInt(0);
-        spendOutputs = [];
-        changeOutputs = [];
-        selectedUTXOs = [];
-        target = null;
-        /**
-         * Constructs a new AbstractCoinSelector instance with an empty UTXO array.
-         *
-         * @param {UTXO[]} [availableUXTOs=[]] - The initial available UTXOs. Default is `[]`
-         */
-        constructor(availableUTXOs = []) {
-            this.availableUTXOs = availableUTXOs.map((utxo) => {
-                this._validateUTXO(utxo);
-                return utxo;
-            });
-            this.spendOutputs = [];
-            this.changeOutputs = [];
-        }
-        /**
-         * Validates the provided UTXO instance. In order to be valid for coin selection, the UTXO must have a valid address
-         * and denomination.
-         *
-         * @param {UTXO} utxo - The UTXO to validate.
-         * @throws {Error} If the UTXO is invalid.
-         * @protected
-         */
-        _validateUTXO(utxo) {
-            if (utxo.address == null) {
-                throw new Error('UTXO address is required');
-            }
-            if (utxo.denomination == null) {
-                throw new Error('UTXO denomination is required');
-            }
-            if (utxo.txhash == null) {
-                throw new Error('UTXO txhash is required');
-            }
-            if (utxo.index == null) {
-                throw new Error('UTXO index is required');
-            }
-        }
-    }
-
-    /**
      * List of supported Qi denominations.
      *
      * @category Transaction
@@ -18127,17 +18037,32 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         BigInt(1000000),
         BigInt(10000000),
         BigInt(100000000),
-        BigInt(1000000000), // 1,000,000 Qi (1,000,000,000 Qit)
+        BigInt(1000000000), // 1000000 Qi
     ];
     /**
-     * Checks if the provided denomination index is valid.
+     * Checks if the provided denomination is valid.
      *
      * @category Transaction
-     * @param {number} index - The denomination index to check.
-     * @returns {boolean} True if the denomination index is valid, false otherwise.
+     * @param {bigint} denomination - The denomination to check.
+     * @returns {boolean} True if the denomination is valid, false otherwise.
      */
-    function isValidDenominationIndex(index) {
-        return index >= 0 && index < denominations.length;
+    function isValidDenomination(denomination) {
+        return denominations.includes(denomination);
+    }
+    /**
+     * Handles conversion of string to bigint, specifically for transaction parameters.
+     *
+     * @ignore
+     * @category Transaction
+     * @param {string} value - The value to convert.
+     * @param {string} param - The parameter name.
+     * @returns {bigint} The converted value.
+     */
+    function handleBigInt(value, param) {
+        if (value === '0x') {
+            return BigInt(0);
+        }
+        return getBigInt(value, param);
     }
     /**
      * Given a value, returns an array of supported denominations that sum to the value.
@@ -18147,31 +18072,19 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @returns {bigint[]} An array of denominations that sum to the value.
      * @throws {Error} If the value is less than or equal to 0 or cannot be matched with available denominations.
      */
-    function denominate(value, maxDenomination) {
+    function denominate(value) {
         if (value <= BigInt(0)) {
             throw new Error('Value must be greater than 0');
         }
         const result = [];
-        let remainingValue = BigInt(value);
-        // Find the index of the maximum allowed denomination
-        let maxDenominationIndex;
-        if (maxDenomination != null) {
-            maxDenominationIndex = denominations.findIndex((d) => d === maxDenomination);
-            if (maxDenominationIndex === -1) {
-                throw new Error('Invalid maximum denomination');
-            }
-        }
-        else {
-            // No maximum denomination set, use the highest denomination
-            maxDenominationIndex = denominations.length - 1;
-        }
-        // Iterate through denominations in descending order, up to the maximum allowed denomination
-        for (let i = maxDenominationIndex; i >= 0; i--) {
+        let remainingValue = value;
+        // Iterate through denominations in descending order
+        for (let i = denominations.length - 1; i >= 0; i--) {
             const denomination = denominations[i];
             // Add the denomination to the result array as many times as possible
             while (remainingValue >= denomination) {
                 result.push(denomination);
-                remainingValue -= BigInt(denomination);
+                remainingValue -= denomination;
             }
         }
         if (remainingValue > 0) {
@@ -18243,7 +18156,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         /**
          * Gets the denomination.
          *
-         * @returns {null | number} The denomination.
+         * @returns {null | bigint} The denomination.
          */
         get denomination() {
             return this.#denomination;
@@ -18251,7 +18164,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         /**
          * Sets the denomination.
          *
-         * @param {null | number} value - The denomination.
+         * @param {null | BigNumberish} value - The denomination.
          * @throws {Error} If the denomination value is invalid.
          */
         set denomination(value) {
@@ -18259,10 +18172,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 this.#denomination = null;
                 return;
             }
-            if (!isValidDenominationIndex(value)) {
+            const denominationBigInt = handleBigInt(value.toString(), 'denomination');
+            if (!isValidDenomination(denominationBigInt)) {
                 throw new Error('Invalid denomination value');
             }
-            this.#denomination = value;
+            this.#denomination = denominationBigInt;
         }
         /**
          * Constructs a new UTXO instance with null properties.
@@ -18313,7 +18227,98 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
     }
 
-    // import { bigIntAbs } from '../utils/maths.js';
+    /**
+     * An **AbstractCoinSelector** provides a base class for other sub-classes to implement the functionality for selecting
+     * UTXOs for a spend and to properly handle spend and change outputs.
+     *
+     * This class is abstract and should not be used directly. Sub-classes should implement the
+     * {@link AbstractCoinSelector#performSelection | **performSelection**} method to provide the actual coin selection
+     * logic.
+     *
+     * @category Transaction
+     * @abstract
+     */
+    class AbstractCoinSelector {
+        #availableUXTOs;
+        #spendOutputs;
+        #changeOutputs;
+        /**
+         * Gets the available UTXOs.
+         * @returns {UTXO[]} The available UTXOs.
+         */
+        get availableUXTOs() {
+            return this.#availableUXTOs;
+        }
+        /**
+         * Sets the available UTXOs.
+         * @param {UTXOLike[]} value - The UTXOs to set.
+         */
+        set availableUXTOs(value) {
+            this.#availableUXTOs = value.map((val) => {
+                const utxo = UTXO.from(val);
+                this._validateUTXO(utxo);
+                return utxo;
+            });
+        }
+        /**
+         * Gets the spend outputs.
+         * @returns {UTXO[]} The spend outputs.
+         */
+        get spendOutputs() {
+            return this.#spendOutputs;
+        }
+        /**
+         * Sets the spend outputs.
+         * @param {UTXOLike[]} value - The spend outputs to set.
+         */
+        set spendOutputs(value) {
+            this.#spendOutputs = value.map((utxo) => UTXO.from(utxo));
+        }
+        /**
+         * Gets the change outputs.
+         * @returns {UTXO[]} The change outputs.
+         */
+        get changeOutputs() {
+            return this.#changeOutputs;
+        }
+        /**
+         * Sets the change outputs.
+         * @param {UTXOLike[]} value - The change outputs to set.
+         */
+        set changeOutputs(value) {
+            this.#changeOutputs = value.map((utxo) => UTXO.from(utxo));
+        }
+        /**
+         * Constructs a new AbstractCoinSelector instance with an empty UTXO array.
+         * @param {UTXOEntry[]} [availableUXTOs=[]] - The initial available UTXOs.
+         */
+        constructor(availableUXTOs = []) {
+            this.#availableUXTOs = availableUXTOs.map((val) => {
+                const utxo = UTXO.from(val);
+                this._validateUTXO(utxo);
+                return utxo;
+            });
+            this.#spendOutputs = [];
+            this.#changeOutputs = [];
+        }
+        /**
+         * Validates the provided UTXO instance. In order to be valid for coin selection, the UTXO must have a valid address
+         * and denomination.
+         *
+         * @param {UTXO} utxo - The UTXO to validate.
+         * @throws {Error} If the UTXO is invalid.
+         * @protected
+         */
+        _validateUTXO(utxo) {
+            if (utxo.address == null) {
+                throw new Error('UTXO address is required');
+            }
+            if (utxo.denomination == null) {
+                throw new Error('UTXO denomination is required');
+            }
+        }
+    }
+
     /**
      * The FewestCoinSelector class provides a coin selection algorithm that selects the fewest UTXOs required to meet the
      * target amount. This algorithm is useful for minimizing the size of the transaction and the fees associated with it.
@@ -18326,258 +18331,110 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      */
     class FewestCoinSelector extends AbstractCoinSelector {
         /**
-         * Performs coin selection to meet the target amount plus fee, using the smallest possible denominations and
-         * minimizing the number of inputs and outputs.
+         * The largest first coin selection algorithm.
          *
-         * @param {bigint} target - The target amount to spend.
-         * @param {bigint} fee - The fee amount to include in the selection.
-         * @returns {SelectedCoinsResult} The selected UTXOs and outputs.
+         * This algorithm selects the largest UTXOs first, and continues to select UTXOs until the target amount is reached.
+         * If the total value of the selected UTXOs is greater than the target amount, the remaining value is returned as a
+         * change output.
+         *
+         * @param {SpendTarget} target - The target amount to spend.
+         *
+         * @returns {SelectedCoinsResult} The selected UTXOs and change outputs.
          */
-        performSelection(target, fee = BigInt(0)) {
-            if (target <= BigInt(0)) {
-                throw new Error('Target amount must be greater than 0');
-            }
-            if (fee < BigInt(0)) {
-                throw new Error('Fee amount cannot be negative');
-            }
+        performSelection(target) {
+            this.validateTarget(target);
             this.validateUTXOs();
-            this.target = target;
-            const totalRequired = BigInt(target) + BigInt(fee);
-            // Initialize selection state
-            this.selectedUTXOs = [];
-            this.totalInputValue = BigInt(0);
-            // Sort available UTXOs by denomination in ascending order
-            const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUTXOs, 'asc');
-            // Attempt to find a single UTXO that can cover the total required amount
-            const singleUTXO = sortedUTXOs.find((utxo) => BigInt(denominations[utxo.denomination]) >= totalRequired);
-            if (singleUTXO) {
-                // Use the smallest UTXO that can cover the total required amount
-                this.selectedUTXOs.push(singleUTXO);
-                this.totalInputValue = BigInt(denominations[singleUTXO.denomination]);
-            }
-            else {
-                // If no single UTXO can cover the total required amount, find the minimal set
-                this.selectedUTXOs = this.findMinimalUTXOSet(sortedUTXOs, totalRequired);
-                if (this.selectedUTXOs.length === 0) {
-                    throw new Error('Insufficient funds');
-                }
-                // Calculate total input value
-                this.totalInputValue = this.selectedUTXOs.reduce((sum, utxo) => sum + BigInt(denominations[utxo.denomination]), BigInt(0));
-            }
-            // Create outputs
-            const changeAmount = this.totalInputValue - BigInt(target) - BigInt(fee);
-            // Create spend outputs (to the recipient)
-            this.spendOutputs = this.createSpendOutputs(target);
-            // Create change outputs (to ourselves), if any
-            this.changeOutputs = this.createChangeOutputs(changeAmount);
-            // Verify that sum of outputs does not exceed sum of inputs
-            const totalOutputValue = this.calculateTotalOutputValue();
-            if (totalOutputValue > this.totalInputValue) {
-                throw new Error('Total output value exceeds total input value');
-            }
-            // Ensure largest output denomination ≤ largest input denomination
-            const maxInputDenomination = this.getMaxInputDenomination();
-            const maxOutputDenomination = this.getMaxOutputDenomination();
-            if (maxOutputDenomination > maxInputDenomination) {
-                throw new Error('Largest output denomination exceeds largest input denomination');
-            }
-            return {
-                inputs: this.selectedUTXOs,
-                spendOutputs: this.spendOutputs,
-                changeOutputs: this.changeOutputs,
-            };
-        }
-        /**
-         * Finds the minimal set of UTXOs that can cover the total required amount.
-         *
-         * @param {UTXO[]} sortedUTXOs - Available UTXOs sorted by denomination (ascending).
-         * @param {bigint} totalRequired - The total amount required (target + fee).
-         * @returns {UTXO[]} The minimal set of UTXOs.
-         */
-        findMinimalUTXOSet(sortedUTXOs, totalRequired) {
-            // Use a greedy algorithm to select the fewest UTXOs
-            // Starting from the largest denominations to minimize the number of inputs
-            const utxos = [...sortedUTXOs].reverse(); // Largest to smallest
+            const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUXTOs, 'desc');
             let totalValue = BigInt(0);
-            const selectedUTXOs = [];
-            for (const utxo of utxos) {
-                if (totalValue >= totalRequired) {
-                    break;
-                }
-                selectedUTXOs.push(utxo);
-                totalValue += BigInt(denominations[utxo.denomination]);
-            }
-            if (totalValue >= totalRequired) {
-                return selectedUTXOs;
+            let selectedUTXOs = [];
+            // Get UTXOs that meets or exceeds the target value
+            const UTXOsEqualOrGreaterThanTarget = sortedUTXOs.filter((utxo) => utxo.denomination && utxo.denomination >= target.value);
+            if (UTXOsEqualOrGreaterThanTarget.length > 0) {
+                // Find the smallest UTXO that meets or exceeds the target value
+                const optimalUTXO = UTXOsEqualOrGreaterThanTarget.reduce((minDenominationUTXO, currentUTXO) => {
+                    if (!currentUTXO.denomination)
+                        return minDenominationUTXO;
+                    return currentUTXO.denomination < minDenominationUTXO.denomination ? currentUTXO : minDenominationUTXO;
+                }, UTXOsEqualOrGreaterThanTarget[0]); // Initialize with the first UTXO in the list
+                selectedUTXOs.push(optimalUTXO);
+                totalValue += optimalUTXO.denomination;
             }
             else {
-                return []; // Insufficient funds
+                // If no single UTXO meets or exceeds the target, aggregate smaller denominations
+                // until the target is met/exceeded or there are no more UTXOs to aggregate
+                while (sortedUTXOs.length > 0 && totalValue < target.value) {
+                    const nextOptimalUTXO = sortedUTXOs.reduce((closest, utxo) => {
+                        if (!utxo.denomination)
+                            return closest;
+                        // Prioritize UTXOs that bring totalValue closer to target.value
+                        const absThisDiff = bigIntAbs(target.value - (totalValue + utxo.denomination));
+                        const currentClosestDiff = closest && closest.denomination
+                            ? bigIntAbs(target.value - (totalValue + closest.denomination))
+                            : BigInt(Infinity);
+                        return absThisDiff < currentClosestDiff ? utxo : closest;
+                    }, sortedUTXOs[0]);
+                    // Add the selected UTXO to the selection and update totalValue
+                    selectedUTXOs.push(nextOptimalUTXO);
+                    totalValue += nextOptimalUTXO.denomination;
+                    // Remove the selected UTXO from the list of available UTXOs
+                    const index = sortedUTXOs.findIndex((utxo) => utxo.denomination === nextOptimalUTXO.denomination && utxo.address === nextOptimalUTXO.address);
+                    sortedUTXOs.splice(index, 1);
+                }
             }
-        }
-        /**
-         * Creates spend outputs based on the target amount and input denominations.
-         *
-         * @param {bigint} amount - The target amount to spend.
-         * @param {UTXO[]} inputs - The selected inputs.
-         * @returns {UTXO[]} The spend outputs.
-         */
-        createSpendOutputs(amount) {
-            const maxInputDenomination = this.getMaxInputDenomination();
-            // Denominate the amount using available denominations up to the max input denomination
-            const spendDenominations = denominate(amount, maxInputDenomination);
-            return spendDenominations.map((denominationValue) => {
-                const utxo = new UTXO();
-                utxo.denomination = denominations.indexOf(denominationValue);
-                return utxo;
-            });
-        }
-        /**
-         * Creates change outputs based on the change amount and input denominations.
-         *
-         * @param {bigint} change - The change amount to return.
-         * @param {UTXO[]} inputs - The selected inputs.
-         * @returns {UTXO[]} The change outputs.
-         */
-        createChangeOutputs(change) {
-            if (change <= BigInt(0)) {
-                return [];
+            // Check if the selected UTXOs meet or exceed the target amount
+            if (totalValue < target.value) {
+                throw new Error('Insufficient funds');
             }
-            const maxInputDenomination = this.getMaxInputDenomination();
-            // Denominate the change amount using available denominations up to the max input denomination
-            const changeDenominations = denominate(change, maxInputDenomination);
-            return changeDenominations.map((denominationValue) => {
-                const utxo = new UTXO();
-                utxo.denomination = denominations.indexOf(denominationValue);
-                return utxo;
-            });
-        }
-        /**
-         * Calculates the total value of outputs (spend + change).
-         *
-         * @returns {bigint} The total output value.
-         */
-        calculateTotalOutputValue() {
-            const spendValue = this.spendOutputs.reduce((sum, output) => sum + BigInt(denominations[output.denomination]), BigInt(0));
-            const changeValue = this.changeOutputs.reduce((sum, output) => sum + BigInt(denominations[output.denomination]), BigInt(0));
-            return spendValue + changeValue;
-        }
-        /**
-         * Gets the maximum denomination value from the selected UTXOs.
-         *
-         * @returns {bigint} The maximum input denomination value.
-         */
-        getMaxInputDenomination() {
-            const inputs = [...this.selectedUTXOs];
-            return this.getMaxDenomination(inputs);
-        }
-        /**
-         * Gets the maximum denomination value from the spend and change outputs.
-         *
-         * @returns {bigint} The maximum output denomination value.
-         */
-        getMaxOutputDenomination() {
-            const outputs = [...this.spendOutputs, ...this.changeOutputs];
-            return this.getMaxDenomination(outputs);
-        }
-        /**
-         * Gets the maximum denomination value from a list of UTXOs.
-         *
-         * @param {UTXO[]} utxos - The list of UTXOs.
-         * @returns {bigint} The maximum denomination value.
-         */
-        getMaxDenomination(utxos) {
-            return utxos.reduce((max, utxo) => {
-                const denomValue = BigInt(denominations[utxo.denomination]);
-                return denomValue > max ? denomValue : max;
-            }, BigInt(0));
-        }
-        /**
-         * Increases the total fee by first reducing change outputs, then selecting additional inputs if necessary.
-         *
-         * @param {bigint} additionalFeeNeeded - The additional fee needed.
-         * @returns {boolean} Returns true if successful, false if insufficient funds.
-         */
-        increaseFee(additionalFeeNeeded) {
-            let remainingFee = BigInt(additionalFeeNeeded);
-            // First, try to cover the fee by reducing change outputs
-            const totalChange = this.changeOutputs.reduce((sum, output) => BigInt(sum) + BigInt(denominations[output.denomination]), BigInt(0));
-            if (totalChange >= remainingFee) {
-                // We can cover the fee by reducing change outputs
-                this.adjustChangeOutputs(totalChange - remainingFee);
-                return {
-                    inputs: this.selectedUTXOs,
-                    spendOutputs: this.spendOutputs,
-                    changeOutputs: this.changeOutputs,
-                };
-            }
-            // If we can't cover the entire fee with change, reduce change to zero and calculate remaining fee
-            remainingFee -= BigInt(totalChange);
-            this.changeOutputs = [];
-            // Now, select additional inputs to cover the remaining fee
-            const unusedUTXOs = this.availableUTXOs.filter((utxo) => !this.selectedUTXOs.includes(utxo));
-            const sortedUTXOs = this.sortUTXOsByDenomination(unusedUTXOs, 'asc');
-            for (const utxo of sortedUTXOs) {
-                this.selectedUTXOs.push(utxo);
-                this.totalInputValue += BigInt(denominations[utxo.denomination]);
-                remainingFee -= BigInt(denominations[utxo.denomination]);
-                if (remainingFee <= BigInt(0)) {
-                    // If we have excess, create a new change output
-                    if (remainingFee < BigInt(0)) {
-                        const change = BigInt(this.totalInputValue) - BigInt(this.target) - BigInt(additionalFeeNeeded);
-                        this.adjustChangeOutputs(change);
+            // Check if any denominations can be removed from the input set and it still remain valid
+            selectedUTXOs = this.sortUTXOsByDenomination(selectedUTXOs, 'asc');
+            let runningTotal = totalValue;
+            let lastRemovableIndex = -1; // Index of the last UTXO that can be removed
+            // Iterate through selectedUTXOs to find the last removable UTXO
+            for (let i = 0; i < selectedUTXOs.length; i++) {
+                const utxo = selectedUTXOs[i];
+                if (utxo.denomination) {
+                    if (runningTotal - utxo.denomination >= target.value) {
+                        runningTotal -= utxo.denomination;
+                        lastRemovableIndex = i;
+                    }
+                    else {
+                        // Once a UTXO makes the total less than target.value, stop the loop
+                        break;
                     }
                 }
             }
-            return {
-                inputs: this.selectedUTXOs,
-                spendOutputs: this.spendOutputs,
-                changeOutputs: this.changeOutputs,
-            };
-        }
-        /**
-         * Decreases the fee by removing inputs if possible and adjusting change outputs.
-         *
-         * @param {bigint} feeReduction - The amount by which the fee has decreased.
-         * @returns {void}
-         */
-        decreaseFee(feeReduction) {
-            let excessValue = feeReduction;
-            // First, try to remove inputs
-            const sortedInputs = this.sortUTXOsByDenomination(this.selectedUTXOs, 'desc');
-            const inputsToRemove = [];
-            for (const input of sortedInputs) {
-                const inputValue = BigInt(denominations[input.denomination]);
-                if (excessValue >= inputValue && this.totalInputValue - inputValue >= this.target) {
-                    inputsToRemove.push(input);
-                    excessValue -= BigInt(inputValue);
-                    this.totalInputValue -= BigInt(inputValue);
-                }
-                if (excessValue === BigInt(0))
-                    break;
+            if (lastRemovableIndex >= 0) {
+                totalValue -= selectedUTXOs[lastRemovableIndex].denomination;
+                selectedUTXOs.splice(lastRemovableIndex, 1);
             }
-            // Remove the identified inputs
-            this.selectedUTXOs = this.selectedUTXOs.filter((utxo) => !inputsToRemove.includes(utxo));
-            // If there's still excess value, add it to change outputs
-            if (excessValue > BigInt(0)) {
-                this.adjustChangeOutputs(excessValue);
+            // Break down the total spend into properly denominatated UTXOs
+            const spendDenominations = denominate(target.value);
+            this.spendOutputs = spendDenominations.map((denomination) => {
+                const utxo = new UTXO();
+                utxo.denomination = denomination;
+                utxo.address = target.address;
+                return utxo;
+            });
+            // Calculate change to be returned
+            const change = totalValue - target.value;
+            // If there's change, break it down into properly denominatated UTXOs
+            if (change > BigInt(0)) {
+                const changeDenominations = denominate(change);
+                this.changeOutputs = changeDenominations.map((denomination) => {
+                    const utxo = new UTXO();
+                    utxo.denomination = denomination;
+                    // We do not have access to change addresses here so leave it null
+                    return utxo;
+                });
             }
-            return {
-                inputs: this.selectedUTXOs,
-                spendOutputs: this.spendOutputs,
-                changeOutputs: this.changeOutputs,
-            };
-        }
-        /**
-         * Helper method to adjust change outputs.
-         *
-         * @param {bigint} changeAmount - The amount to adjust change outputs by.
-         */
-        adjustChangeOutputs(changeAmount) {
-            if (changeAmount <= BigInt(0)) {
+            else {
                 this.changeOutputs = [];
-                return;
             }
-            this.changeOutputs = this.createChangeOutputs(changeAmount);
+            return {
+                inputs: selectedUTXOs,
+                spendOutputs: this.spendOutputs,
+                changeOutputs: this.changeOutputs,
+            };
         }
         /**
          * Sorts UTXOs by their denomination.
@@ -18589,16 +18446,25 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         sortUTXOsByDenomination(utxos, direction) {
             if (direction === 'asc') {
                 return [...utxos].sort((a, b) => {
-                    const diff = BigInt(a.denomination !== null ? denominations[a.denomination] : 0) -
-                        BigInt(b.denomination !== null ? denominations[b.denomination] : 0);
-                    return diff > BigInt(0) ? 1 : diff < BigInt(0) ? -1 : 0;
+                    const diff = (a.denomination ?? BigInt(0)) - (b.denomination ?? BigInt(0));
+                    return diff > 0 ? 1 : diff < 0 ? -1 : 0;
                 });
             }
             return [...utxos].sort((a, b) => {
-                const diff = BigInt(b.denomination !== null ? denominations[b.denomination] : 0) -
-                    BigInt(a.denomination !== null ? denominations[a.denomination] : 0);
-                return diff > BigInt(0) ? 1 : diff < BigInt(0) ? -1 : 0;
+                const diff = (b.denomination ?? BigInt(0)) - (a.denomination ?? BigInt(0));
+                return diff > 0 ? 1 : diff < 0 ? -1 : 0;
             });
+        }
+        /**
+         * Validates the target amount.
+         *
+         * @param {SpendTarget} target - The target amount to validate.
+         * @throws Will throw an error if the target amount is less than or equal to 0.
+         */
+        validateTarget(target) {
+            if (target.value <= BigInt(0)) {
+                throw new Error('Target amount must be greater than 0');
+            }
         }
         /**
          * Validates the available UTXOs.
@@ -18606,7 +18472,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @throws Will throw an error if there are no available UTXOs.
          */
         validateUTXOs() {
-            if (this.availableUTXOs.length === 0) {
+            if (this.availableUXTOs.length === 0) {
                 throw new Error('No UTXOs available');
             }
         }
@@ -18656,7 +18522,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 catch (error) {
                     const message = error instanceof Error ? error.message : 'not-an-error';
-                    assert$1(false, `invalid value for value.${key} (${message})`, 'BAD_DATA', { value });
+                    assert(false, `invalid value for value.${key} (${message})`, 'BAD_DATA', { value });
                 }
             }
             return result;
@@ -18716,45 +18582,32 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         etxSetRoot: formatHash,
         evmRoot: formatHash,
         expansionNumber: getNumber,
-        extRollupRoot: formatHash,
-        extTransactionsRoot: formatHash,
+        etxRollupRoot: formatHash,
+        etxsRoot: formatHash,
         extraData: formatData,
         gasLimit: getBigInt,
         gasUsed: getBigInt,
-        hash: formatHash,
         interlinkRootHash: formatHash,
         manifestHash: arrayOf(formatHash),
         number: arrayOf(getNumber),
-        parentDeltaS: arrayOf(getBigInt),
+        parentDeltaEntropy: arrayOf(getBigInt),
         parentEntropy: arrayOf(getBigInt),
         parentHash: arrayOf(formatHash),
-        parentUncledS: arrayOf(allowNull(getBigInt)),
-        parentUncledSubDeltaS: arrayOf(getBigInt),
-        primeTerminus: formatHash,
+        parentUncledDeltaEntropy: arrayOf(getBigInt),
+        primeTerminusHash: formatHash,
+        quaiStateSize: getBigInt,
         receiptsRoot: formatHash,
-        sha3Uncles: formatHash,
+        uncleHash: formatHash,
         size: getBigInt,
+        stateLimit: getBigInt,
+        stateUsed: getBigInt,
         thresholdCount: getBigInt,
         transactionsRoot: formatHash,
-        uncledS: getBigInt,
+        uncledEntropy: getBigInt,
         utxoRoot: formatHash,
     });
     const _formatUncle = object({
         coinbase: allowNull(getAddress),
-        difficulty: getBigInt,
-        headerHash: formatHash,
-        location: formatData,
-        mixHash: formatHash,
-        nonce: formatData,
-        number: getNumber,
-        parentHash: formatHash,
-        primeTerminusNumber: getNumber,
-        time: getBigInt,
-        txHash: formatHash,
-        workShare: formatBoolean,
-    });
-    const _formatWoHeader = object({
-        coinbase: getAddress,
         difficulty: getNumber,
         headerHash: formatHash,
         location: formatData,
@@ -18763,11 +18616,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         number: getNumber,
         parentHash: formatHash,
         primeTerminusNumber: getNumber,
-        time: formatData,
+        timestamp: getNumber,
         txHash: formatHash,
     });
     const _formatBlock = object({
-        extTransactions: arrayOf((tx) => {
+        etxs: arrayOf((tx) => {
             if (typeof tx === 'string') {
                 return formatHash(tx);
             }
@@ -18776,7 +18629,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         hash: formatHash,
         header: _formatHeader,
         interlinkHashes: arrayOf(formatHash),
-        order: getNumber,
         size: getBigInt,
         subManifest: arrayOf(formatData),
         totalEntropy: getBigInt,
@@ -18786,8 +18638,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             return formatTransactionResponse(tx);
         }),
-        uncles: allowNull(arrayOf(_formatUncle), []),
-        woHeader: _formatWoHeader,
+        uncles: arrayOf(_formatUncle),
+        woHeader: _formatUncle,
+        workShares: allowNull(arrayOf(_formatUncle), []),
     });
     function formatBlock(value) {
         const result = _formatBlock(value);
@@ -18800,7 +18653,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             return formatTransactionResponse(tx);
         });
-        result.extTransactions = value.extTransactions.map((tx) => {
+        result.etxs = value.etxs.map((tx) => {
             if (typeof tx === 'string') {
                 return tx;
             }
@@ -18827,8 +18680,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         type: allowNull(getNumber, 0),
         nonce: allowNull(getNumber),
         gasPrice: allowNull(getBigInt),
-        maxPriorityFeePerGas: allowNull(getBigInt),
-        maxFeePerGas: allowNull(getBigInt),
+        minerTip: allowNull(getBigInt),
         gas: allowNull(getBigInt),
         value: allowNull(getBigInt, BN_0$2),
         input: allowNull(formatData),
@@ -18885,8 +18737,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             index: allowNull((value) => (value ? BigInt(value) : null), null),
             from: allowNull(getAddress, null),
             sender: allowNull(getAddress, null),
-            maxPriorityFeePerGas: allowNull((value) => (value ? BigInt(value) : null)),
-            maxFeePerGas: allowNull((value) => (value ? BigInt(value) : null)),
+            minerTip: allowNull((value) => (value ? BigInt(value) : null)),
+            gasPrice: allowNull((value) => (value ? BigInt(value) : null)),
             gasLimit: allowNull((value) => (value ? BigInt(value) : null), null),
             to: allowNull(getAddress, null),
             value: allowNull((value) => (value ? BigInt(value) : null), null),
@@ -18929,8 +18781,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 index: allowNull((value) => (value ? BigInt(value) : null), null),
                 from: allowNull(getAddress, null),
                 sender: allowNull(getAddress, null),
-                maxPriorityFeePerGas: allowNull((value) => (value ? BigInt(value) : null)),
-                maxFeePerGas: allowNull((value) => (value ? BigInt(value) : null)),
+                minerTip: allowNull((value) => (value ? BigInt(value) : null)),
+                gasPrice: allowNull((value) => (value ? BigInt(value) : null)),
                 gasLimit: allowNull((value) => (value ? BigInt(value) : null), null),
                 to: allowNull(getAddress, null),
                 value: allowNull((value) => (value ? BigInt(value) : null), null),
@@ -19102,9 +18954,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const dataBuffer = Buffer.from(hexString, 'hex');
             const hashHex = keccak256(dataBuffer);
             const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
-            const prevTxHash = this.txInputs[0].txhash;
-            const prevTxHashBytes = getBytes(prevTxHash);
-            const origin = prevTxHashBytes[1]; // Get the second byte (0-based index)
+            const origin = this.originZone ? parseInt(this.originZone.slice(2), 16) : 0;
             hashBuffer[0] = origin;
             hashBuffer[1] |= 0x80;
             hashBuffer[2] = origin;
@@ -19207,7 +19057,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     tx_outs: this.txOutputs.map((output) => ({
                         address: getBytes(output.address),
                         denomination: output.denomination,
-                        lock: new Uint8Array(),
                     })),
                 },
             };
@@ -19259,18 +19108,19 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const tx = new QiTransaction();
             tx.type = protoTx.type;
             tx.chainId = toBigInt(protoTx.chain_id);
-            tx.txInputs =
-                protoTx.tx_ins?.tx_ins.map((input) => ({
-                    txhash: hexlify(input.previous_out_point.hash.value),
-                    index: input.previous_out_point.index,
-                    pubkey: hexlify(input.pub_key),
-                })) ?? [];
-            tx.txOutputs =
-                protoTx.tx_outs?.tx_outs.map((output) => ({
-                    address: hexlify(output.address),
-                    denomination: output.denomination,
-                    lock: output.lock ? hexlify(output.lock) : '',
-                })) ?? [];
+            if (protoTx.type == 2) {
+                tx.txInputs =
+                    protoTx.tx_ins?.tx_ins.map((input) => ({
+                        txhash: hexlify(input.previous_out_point.hash.value),
+                        index: input.previous_out_point.index,
+                        pubkey: hexlify(input.pub_key),
+                    })) ?? [];
+                tx.txOutputs =
+                    protoTx.tx_outs?.tx_outs.map((output) => ({
+                        address: hexlify(output.address),
+                        denomination: output.denomination,
+                    })) ?? [];
+            }
             if (protoTx.signature) {
                 tx.signature = hexlify(protoTx.signature);
             }
@@ -19311,8 +19161,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         #nonce;
         #gasLimit;
         #gasPrice;
-        #maxPriorityFeePerGas;
-        #maxFeePerGas;
+        #minerTip;
         #value;
         #accessList;
         from;
@@ -19401,48 +19250,34 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.#gasLimit = getBigInt(value);
         }
         /**
-         * The gas price.
-         *
-         * On legacy networks this defines the fee that will be paid. On EIP-1559 networks, this should be `null`.
-         *
-         * @type {null | bigint}
-         */
-        get gasPrice() {
-            const value = this.#gasPrice;
-            return value;
-        }
-        set gasPrice(value) {
-            this.#gasPrice = value == null ? null : getBigInt(value, 'gasPrice');
-        }
-        /**
          * The maximum priority fee per unit of gas to pay. On legacy networks this should be `null`.
          *
          * @type {null | bigint}
          */
-        get maxPriorityFeePerGas() {
-            const value = this.#maxPriorityFeePerGas;
+        get minerTip() {
+            const value = this.#minerTip;
             if (value == null) {
                 return null;
             }
             return value;
         }
-        set maxPriorityFeePerGas(value) {
-            this.#maxPriorityFeePerGas = value == null ? null : getBigInt(value, 'maxPriorityFeePerGas');
+        set minerTip(value) {
+            this.#minerTip = value == null ? null : getBigInt(value, 'minerTip');
         }
         /**
          * The maximum total fee per unit of gas to pay. On legacy networks this should be `null`.
          *
          * @type {null | bigint}
          */
-        get maxFeePerGas() {
-            const value = this.#maxFeePerGas;
+        get gasPrice() {
+            const value = this.#gasPrice;
             if (value == null) {
                 return null;
             }
             return value;
         }
-        set maxFeePerGas(value) {
-            this.#maxFeePerGas = value == null ? null : getBigInt(value, 'maxFeePerGas');
+        set gasPrice(value) {
+            this.#gasPrice = value == null ? null : getBigInt(value, 'gasPrice');
         }
         /**
          * The transaction data. For `init` transactions this is the deployment code.
@@ -19495,8 +19330,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.#nonce = 0;
             this.#gasLimit = BigInt(0);
             this.#gasPrice = null;
-            this.#maxPriorityFeePerGas = null;
-            this.#maxFeePerGas = null;
+            this.#minerTip = null;
+            this.#gasPrice = null;
             this.#data = '0x';
             this.#value = BigInt(0);
             this.#accessList = null;
@@ -19508,10 +19343,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {number[]} The compatible transaction types.
          */
         inferTypes() {
-            if (this.maxFeePerGas != null && this.maxPriorityFeePerGas != null) {
-                assert$1(this.maxFeePerGas >= this.maxPriorityFeePerGas, 'priorityFee cannot be more than maxFee', 'BAD_DATA', { value: this });
+            if (this.gasPrice != null && this.minerTip != null) {
+                assert(this.gasPrice >= this.minerTip, 'priorityFee cannot be more than maxFee', 'BAD_DATA', { value: this });
             }
-            assert$1(this.type !== 0 && this.type !== 1, 'transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList', 'BAD_DATA', { value: this });
+            assert(this.type !== 0 && this.type !== 1, 'transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList', 'BAD_DATA', { value: this });
             const types = [];
             // Explicit type
             if (this.type != null) {
@@ -19551,8 +19386,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 nonce: this.nonce,
                 gasLimit: s(this.gasLimit),
                 gasPrice: s(this.gasPrice),
-                maxPriorityFeePerGas: s(this.maxPriorityFeePerGas),
-                maxFeePerGas: s(this.maxFeePerGas),
+                minerTip: s(this.minerTip),
                 value: s(this.value),
                 chainId: s(this.chainId),
                 signature: this.signature ? this.signature.toJSON() : null,
@@ -19571,8 +19405,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 type: this.type || 0,
                 chain_id: formatNumber(this.chainId || 0, 'chainId'),
                 nonce: this.nonce || 0,
-                gas_tip_cap: formatNumber(this.maxPriorityFeePerGas || 0, 'maxPriorityFeePerGas'),
-                gas_fee_cap: formatNumber(this.maxFeePerGas || 0, 'maxFeePerGas'),
+                miner_tip: formatNumber(this.minerTip || 0, 'minerTip'),
+                gas_price: formatNumber(this.gasPrice || 0, 'gasPrice'),
                 gas: Number(this.gasLimit || 0),
                 to: this.to != null ? getBytes(this.to) : null,
                 value: formatNumber(this.value || 0, 'value'),
@@ -19611,11 +19445,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (tx.gasLimit != null) {
                 result.gasLimit = tx.gasLimit;
             }
-            if (tx.maxPriorityFeePerGas != null) {
-                result.maxPriorityFeePerGas = tx.maxPriorityFeePerGas;
+            if (tx.minerTip != null) {
+                result.minerTip = tx.minerTip;
             }
-            if (tx.maxFeePerGas != null) {
-                result.maxFeePerGas = tx.maxFeePerGas;
+            if (tx.gasPrice != null) {
+                result.gasPrice = tx.gasPrice;
             }
             if (tx.data != null && tx.data !== '') {
                 result.data = tx.data;
@@ -19679,8 +19513,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             tx.type = protoTx.type;
             tx.chainId = toBigInt(protoTx.chain_id);
             tx.nonce = Number(protoTx.nonce);
-            tx.maxPriorityFeePerGas = toBigInt(protoTx.gas_tip_cap);
-            tx.maxFeePerGas = toBigInt(protoTx.gas_fee_cap);
+            tx.minerTip = toBigInt(protoTx.miner_tip);
+            tx.gasPrice = toBigInt(protoTx.gas_price);
             tx.gasLimit = toBigInt(protoTx.gas);
             tx.value = protoTx.value !== null ? toBigInt(protoTx.value) : BigInt(0);
             tx.data = hexlify(protoTx.data);
@@ -19730,36 +19564,24 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         gasPrice;
         /**
-         * The maximum fee to pay per gas.
-         *
-         * The base fee per gas is defined by the network and based on congestion, increasing the cost during times of heavy
-         * load and lowering when less busy.
-         *
-         * The actual fee per gas will be the base fee for the block and the priority fee, up to the max fee per gas.
-         *
-         * This will be `null` on legacy networks (i.e. [pre-EIP-1559](https://eips.ethereum.org/EIPS/eip-1559))
-         */
-        maxFeePerGas;
-        /**
          * The additional amount to pay per gas to encourage a validator to include the transaction.
          *
          * The purpose of this is to compensate the validator for the adjusted risk for including a given transaction.
          *
          * This will be `null` on legacy networks (i.e. [pre-EIP-1559](https://eips.ethereum.org/EIPS/eip-1559))
          */
-        maxPriorityFeePerGas;
+        minerTip;
         /**
-         * Creates a new FeeData for `gasPrice`, `maxFeePerGas` and `maxPriorityFeePerGas`.
+         * Creates a new FeeData for `gasPrice`, `gasPrice` and `minerTip`.
          *
          * @param {null | bigint} [gasPrice] - The gas price.
-         * @param {null | bigint} [maxFeePerGas] - The maximum fee per gas.
-         * @param {null | bigint} [maxPriorityFeePerGas] - The maximum priority fee per gas.
+         * @param {null | bigint} [gasPrice] - The maximum fee per gas.
+         * @param {null | bigint} [minerTip] - The maximum priority fee per gas.
          */
-        constructor(gasPrice, maxFeePerGas, maxPriorityFeePerGas) {
+        constructor(gasPrice, gasLimit, minerTip) {
             defineProperties(this, {
                 gasPrice: getValue(gasPrice),
-                maxFeePerGas: getValue(maxFeePerGas),
-                maxPriorityFeePerGas: getValue(maxPriorityFeePerGas),
+                minerTip: getValue(minerTip),
             });
         }
         /**
@@ -19768,12 +19590,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {any} The JSON-friendly value.
          */
         toJSON() {
-            const { gasPrice, maxFeePerGas, maxPriorityFeePerGas } = this;
+            const { gasPrice, minerTip } = this;
             return {
                 _type: 'FeeData',
                 gasPrice: toJson(gasPrice),
-                maxFeePerGas: toJson(maxFeePerGas),
-                maxPriorityFeePerGas: toJson(maxPriorityFeePerGas),
+                minerTip: toJson(minerTip),
             };
         }
     }
@@ -19816,7 +19637,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         if ('data' in req && req.data) {
             result.data = hexlify(req.data);
         }
-        const bigIntKeys = 'chainId,gasLimit,gasPrice,maxFeePerGas,maxPriorityFeePerGas,value'.split(/,/);
+        const bigIntKeys = 'chainId,gasLimit,gasPrice,minerTip,value'.split(/,/);
         for (const key of bigIntKeys) {
             if (!(key in req) || req[key] == null) {
                 continue;
@@ -19853,94 +19674,69 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Providers
      */
     class BlockHeader {
-        baseFeePerGas;
+        gasPrice;
         efficiencyScore;
         etxEligibleSlices;
         etxSetRoot;
         evmRoot;
         expansionNumber;
-        extRollupRoot;
-        extTransactionsRoot;
+        etxRollupRoot;
+        etxsRoot;
         extraData;
         gasLimit;
         gasUsed;
-        hash;
         interlinkRootHash;
         manifestHash;
         number;
-        parentDeltaS;
+        parentDeltaEntropy;
         parentEntropy;
         parentHash;
-        parentUncledS;
-        parentUncledSubDeltaS;
-        primeTerminus;
+        parentUncledDeltaEntropy;
+        primeTerminusHash;
+        quaiStateSize;
         receiptsRoot;
-        sha3Uncles;
+        uncleHash;
         size;
+        stateLimit;
+        stateUsed;
         thresholdCount;
         transactionsRoot;
-        uncledS;
+        uncledEntropy;
         utxoRoot;
         constructor(params) {
-            this.baseFeePerGas = params.baseFeePerGas;
+            this.gasPrice = params.gasPrice;
             this.efficiencyScore = params.efficiencyScore;
             this.etxEligibleSlices = params.etxEligibleSlices;
             this.etxSetRoot = params.etxSetRoot;
             this.evmRoot = params.evmRoot;
             this.expansionNumber = params.expansionNumber;
-            this.extRollupRoot = params.extRollupRoot;
-            this.extTransactionsRoot = params.extTransactionsRoot;
+            this.etxRollupRoot = params.etxRollupRoot;
+            this.etxsRoot = params.etxsRoot;
             this.extraData = params.extraData;
             this.gasLimit = params.gasLimit;
             this.gasUsed = params.gasUsed;
-            this.hash = params.hash;
             this.interlinkRootHash = params.interlinkRootHash;
             this.manifestHash = params.manifestHash;
             this.number = params.number;
-            this.parentDeltaS = params.parentDeltaS;
+            this.parentDeltaEntropy = params.parentDeltaEntropy;
             this.parentEntropy = params.parentEntropy;
             this.parentHash = params.parentHash;
-            this.parentUncledS = params.parentUncledS;
-            this.parentUncledSubDeltaS = params.parentUncledSubDeltaS;
-            this.primeTerminus = params.primeTerminus;
+            this.parentUncledDeltaEntropy = params.parentUncledDeltaEntropy;
+            this.primeTerminusHash = params.primeTerminusHash;
+            this.quaiStateSize = params.quaiStateSize;
             this.receiptsRoot = params.receiptsRoot;
-            this.sha3Uncles = params.sha3Uncles;
+            this.uncleHash = params.uncleHash;
             this.size = params.size;
+            this.stateLimit = params.stateLimit;
+            this.stateUsed = params.stateUsed;
             this.thresholdCount = params.thresholdCount;
             this.transactionsRoot = params.transactionsRoot;
-            this.uncledS = params.uncledS;
+            this.uncledEntropy = params.uncledEntropy;
             this.utxoRoot = params.utxoRoot;
         }
         toJSON() {
             return {
-                baseFeePerGas: this.baseFeePerGas,
-                efficiencyScore: this.efficiencyScore,
-                etxEligibleSlices: this.etxEligibleSlices,
-                etxSetRoot: this.etxSetRoot,
-                evmRoot: this.evmRoot,
-                expansionNumber: this.expansionNumber,
-                extRollupRoot: this.extRollupRoot,
-                extTransactionsRoot: this.extTransactionsRoot,
-                extraData: this.extraData,
-                gasLimit: this.gasLimit,
-                gasUsed: this.gasUsed,
-                hash: this.hash,
-                interlinkRootHash: this.interlinkRootHash,
-                manifestHash: this.manifestHash,
-                number: this.number,
-                parentDeltaS: this.parentDeltaS,
-                parentEntropy: this.parentEntropy,
-                parentHash: this.parentHash,
-                parentUncledS: this.parentUncledS,
-                parentUncledSubDeltaS: this.parentUncledSubDeltaS,
-                primeTerminus: this.primeTerminus,
-                receiptsRoot: this.receiptsRoot,
-                sha3Uncles: this.sha3Uncles,
-                size: this.size,
-                thresholdCount: this.thresholdCount,
-                transactionsRoot: this.transactionsRoot,
-                uncledS: this.uncledS,
-                utxoRoot: this.utxoRoot,
+                ...this,
             };
         }
     }
@@ -19949,7 +19745,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Providers
      */
-    class WoHeader {
+    class Uncle {
+        coinbase;
         difficulty;
         headerHash;
         location;
@@ -19957,14 +19754,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         nonce;
         number;
         parentHash;
-        time;
+        timestamp;
         txHash;
         /**
-         * Creates a new WoHeader instance.
+         * Creates a new Uncle instance.
          *
-         * @param {WoHeaderParams} params - The parameters for the WoHeader.
+         * @param {UncleParams} params - The parameters for the Uncle.
          */
         constructor(params) {
+            this.coinbase = params.coinbase;
             this.difficulty = params.difficulty;
             this.headerHash = params.headerHash;
             this.location = params.location;
@@ -19972,11 +19770,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.nonce = params.nonce;
             this.number = params.number;
             this.parentHash = params.parentHash;
-            this.time = params.time;
+            this.timestamp = params.timestamp;
             this.txHash = params.txHash;
         }
         toJSON() {
             return {
+                coinbase: this.coinbase,
                 difficulty: this.difficulty,
                 headerHash: this.headerHash,
                 location: this.location,
@@ -19984,7 +19783,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 nonce: this.nonce,
                 number: this.number,
                 parentHash: this.parentHash,
-                time: this.time,
+                timestamp: this.timestamp,
                 txHash: this.txHash,
             };
         }
@@ -19995,17 +19794,17 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Providers
      */
     class Block {
-        #extTransactions;
+        #etxs;
         hash;
         header;
         interlinkHashes; // New parameter
-        order;
         size;
         subManifest;
         totalEntropy;
         #transactions;
         uncles;
-        woHeader; // New nested parameter structure
+        woHeader;
+        workShares;
         /**
          * The provider connected to the block used to fetch additional details if necessary.
          */
@@ -20031,7 +19830,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 return new QiTransactionResponse(tx, provider);
             });
-            this.#extTransactions = block.extTransactions.map((tx) => {
+            this.#etxs = block.etxs.map((tx) => {
                 if (typeof tx !== 'string') {
                     return new ExternalTransactionResponse(tx, provider);
                 }
@@ -20040,12 +19839,22 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.hash = block.hash;
             this.header = new BlockHeader(block.header);
             this.interlinkHashes = block.interlinkHashes;
-            this.order = block.order;
             this.size = block.size;
             this.subManifest = block.subManifest;
             this.totalEntropy = block.totalEntropy;
-            this.uncles = block.uncles;
-            this.woHeader = new WoHeader(block.woHeader);
+            this.uncles = block.uncles.map((uncle) => {
+                if (typeof uncle === 'string') {
+                    return uncle;
+                }
+                return new Uncle(uncle);
+            });
+            this.woHeader = new Uncle(block.woHeader);
+            this.workShares = block.workShares.map((workShare) => {
+                if (typeof workShare === 'string') {
+                    return workShare;
+                }
+                return new Uncle(workShare);
+            });
             this.provider = provider;
         }
         /**
@@ -20066,8 +19875,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @returns {ReadonlyArray<string>} The list of extended transaction hashes.
          */
-        get extTransactions() {
-            return this.#extTransactions.map((tx) => {
+        get etxs() {
+            return this.#etxs.map((tx) => {
                 if (typeof tx === 'string') {
                     return tx;
                 }
@@ -20090,7 +19899,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 return [];
             }
             // Make sure we prefetched the transactions
-            assert$1(typeof txs[0] === 'object', 'transactions were not prefetched with block request', 'UNSUPPORTED_OPERATION', {
+            assert(typeof txs[0] === 'object', 'transactions were not prefetched with block request', 'UNSUPPORTED_OPERATION', {
                 operation: 'transactionResponses()',
             });
             return txs;
@@ -20105,13 +19914,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @throws {Error} If the transactions were not prefetched.
          */
         get prefetchedExtTransactions() {
-            const txs = this.#extTransactions.slice();
+            const txs = this.#etxs.slice();
             // Doesn't matter...
             if (txs.length === 0) {
                 return [];
             }
             // Make sure we prefetched the transactions
-            assert$1(typeof txs[0] === 'object', 'transactions were not prefetched with block request', 'UNSUPPORTED_OPERATION', {
+            assert(typeof txs[0] === 'object', 'transactions were not prefetched with block request', 'UNSUPPORTED_OPERATION', {
                 operation: 'transactionResponses()',
             });
             return txs;
@@ -20122,23 +19931,32 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {any} The JSON-friendly value.
          */
         toJSON() {
-            const { hash, header, interlinkHashes, order, size, subManifest, totalEntropy, uncles, woHeader } = this;
+            const { hash, header, interlinkHashes, size, subManifest, totalEntropy, uncles, woHeader, workShares } = this;
             // Using getters to retrieve the transactions and extTransactions
             const transactions = this.transactions;
-            const extTransactions = this.extTransactions;
+            const etxs = this.etxs;
             return {
-                _type: 'Block',
+                etxs,
                 hash,
                 header: header.toJSON(),
                 interlinkHashes,
-                order,
-                size: toJson(size),
-                subManifest,
-                totalEntropy: toJson(totalEntropy),
-                uncles,
-                woHeader: woHeader.toJSON(),
                 transactions,
-                extTransactions, // Includes the extended transaction hashes or full transactions based on the prefetched data
+                size: size,
+                subManifest,
+                totalEntropy: totalEntropy,
+                uncles: uncles.map((uncle) => {
+                    if (typeof uncle === 'string') {
+                        return uncle;
+                    }
+                    return uncle.toJSON();
+                }),
+                woHeader: woHeader.toJSON(),
+                workShares: workShares.map((workShare) => {
+                    if (typeof workShare === 'string') {
+                        return workShare;
+                    }
+                    return workShare.toJSON();
+                }),
             };
         }
         [Symbol.iterator]() {
@@ -20171,7 +19989,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {null | Date} The date this block was included at, or null if the timestamp is not available.
          */
         get date() {
-            const timestampHex = this.woHeader.time;
+            const timestampHex = this.woHeader.timestamp;
             if (!timestampHex) {
                 return null;
             }
@@ -20231,11 +20049,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // Find the internal value by its index or hash
             let tx = undefined;
             if (typeof indexOrHash === 'number') {
-                tx = this.#extTransactions[indexOrHash];
+                tx = this.#etxs[indexOrHash];
             }
             else {
                 const hash = indexOrHash.toLowerCase();
-                for (const v of this.#extTransactions) {
+                for (const v of this.#etxs) {
                     if (typeof v === 'string') {
                         if (v !== hash) {
                             continue;
@@ -20292,7 +20110,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {boolean} True if the block has been mined.
          */
         isMined() {
-            return !!this.header.hash;
+            return !!this.hash;
         }
         /**
          * @ignore
@@ -20302,7 +20120,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 throw new Error('');
             }
             return createOrphanedBlockFilter({
-                hash: this.header.hash,
+                hash: this.hash,
                 number: parseInt(this.woHeader.number, 16),
             });
         }
@@ -20411,7 +20229,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         async getBlock(shard) {
             const block = await this.provider.getBlock(shard, this.blockHash);
-            assert$1(!!block, 'failed to find transaction', 'UNKNOWN_ERROR', {});
+            assert(!!block, 'failed to find transaction', 'UNKNOWN_ERROR', {});
             return block;
         }
         /**
@@ -20421,7 +20239,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         async getTransaction() {
             const tx = await this.provider.getTransaction(this.transactionHash);
-            assert$1(!!tx, 'failed to find transaction', 'UNKNOWN_ERROR', {});
+            assert(!!tx, 'failed to find transaction', 'UNKNOWN_ERROR', {});
             return tx;
         }
         /**
@@ -20431,7 +20249,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         async getTransactionReceipt() {
             const receipt = await this.provider.getTransactionReceipt(this.transactionHash);
-            assert$1(!!receipt, 'failed to find transaction receipt', 'UNKNOWN_ERROR', {});
+            assert(!!receipt, 'failed to find transaction receipt', 'UNKNOWN_ERROR', {});
             return receipt;
         }
         /**
@@ -20563,8 +20381,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         type: etx.type,
                         nonce: etx.nonce,
                         gasPrice: safeConvert(etx.gasPrice, 'gasPrice'),
-                        maxPriorityFeePerGas: safeConvert(etx.maxPriorityFeePerGas, 'maxPriorityFeePerGas'),
-                        maxFeePerGas: safeConvert(etx.maxFeePerGas, 'maxFeePerGas'),
+                        minerTip: safeConvert(etx.minerTip, 'minerTip'),
                         gas: safeConvert(etx.gas, 'gas'),
                         value: safeConvert(etx.value, 'value'),
                         input: etx.input,
@@ -20708,7 +20525,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @ignore
          */
         reorderedEvent(other) {
-            assert$1(!other || other.isMined(), "unmined 'other' transction cannot be orphaned", 'UNSUPPORTED_OPERATION', {
+            assert(!other || other.isMined(), "unmined 'other' transction cannot be orphaned", 'UNSUPPORTED_OPERATION', {
                 operation: 'reorderedEvent(other)',
             });
             return createReorderedTransactionFilter(this, other);
@@ -20928,13 +20745,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         gasLimit;
         /**
          * The maximum priority fee (per unit of gas) to allow a validator to charge the sender. This is inclusive of the
-         * {@link QuaiTransactionResponse.maxFeePerGas | **maxFeePerGas** }.
+         * {@link QuaiTransactionResponse.gasPrice | **gasPrice** }.
          */
-        maxPriorityFeePerGas;
+        minerTip;
         /**
          * The maximum fee (per unit of gas) to allow this transaction to charge the sender.
          */
-        maxFeePerGas;
+        gasPrice;
         /**
          * The data.
          */
@@ -20976,8 +20793,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.nonce = tx.nonce;
             this.data = tx.data;
             this.value = tx.value;
-            this.maxPriorityFeePerGas = tx.maxPriorityFeePerGas != null ? tx.maxPriorityFeePerGas : null;
-            this.maxFeePerGas = tx.maxFeePerGas != null ? tx.maxFeePerGas : null;
+            this.minerTip = tx.minerTip != null ? tx.minerTip : null;
+            this.gasPrice = tx.gasPrice != null ? tx.gasPrice : null;
             this.chainId = tx.chainId;
             this.signature = tx.signature;
             this.accessList = tx.accessList != null ? tx.accessList : null;
@@ -20999,8 +20816,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 from,
                 gasLimit: toJson(this.gasLimit),
                 hash,
-                maxFeePerGas: toJson(this.maxFeePerGas),
-                maxPriorityFeePerGas: toJson(this.maxPriorityFeePerGas),
+                gasPrice: toJson(this.gasPrice),
+                minerTip: toJson(this.minerTip),
                 nonce,
                 signature,
                 to,
@@ -21163,7 +20980,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                             else if (tx.data === '0x' && tx.from === tx.to && tx.value === BN_0$1) {
                                 reason = 'cancelled';
                             }
-                            assert$1(false, 'transaction was replaced', 'TRANSACTION_REPLACED', {
+                            assert(false, 'transaction was replaced', 'TRANSACTION_REPLACED', {
                                 cancelled: reason === 'replaced' || reason === 'cancelled',
                                 reason,
                                 replacement: tx.replaceableTransaction(startBlock),
@@ -21180,7 +20997,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (receipt == null || receipt.status !== 0) {
                     return receipt;
                 }
-                assert$1(false, 'transaction execution reverted', 'CALL_EXCEPTION', {
+                assert(false, 'transaction execution reverted', 'CALL_EXCEPTION', {
                     action: 'sendTransaction',
                     data: null,
                     reason: null,
@@ -21296,7 +21113,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {OrphanFilter} The orphan filter.
          */
         removedEvent() {
-            assert$1(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
+            assert(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
                 operation: 'removeEvent()',
             });
             return createRemovedTransactionFilter(this);
@@ -21308,10 +21125,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {OrphanFilter} The orphan filter.
          */
         reorderedEvent(other) {
-            assert$1(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
+            assert(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
                 operation: 'removeEvent()',
             });
-            assert$1(!other || other.isMined(), "unmined 'other' transaction canot be orphaned", 'UNSUPPORTED_OPERATION', {
+            assert(!other || other.isMined(), "unmined 'other' transaction canot be orphaned", 'UNSUPPORTED_OPERATION', {
                 operation: 'removeEvent()',
             });
             return createReorderedTransactionFilter(this, other);
@@ -21501,7 +21318,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {OrphanFilter} The orphan filter.
          */
         removedEvent() {
-            assert$1(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
+            assert(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
                 operation: 'removeEvent()',
             });
             return createRemovedTransactionFilter(this);
@@ -21513,10 +21330,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {OrphanFilter} The orphan filter.
          */
         reorderedEvent(other) {
-            assert$1(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
+            assert(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
                 operation: 'removeEvent()',
             });
-            assert$1(!other || other.isMined(), "unmined 'other' transaction canot be orphaned", 'UNSUPPORTED_OPERATION', {
+            assert(!other || other.isMined(), "unmined 'other' transaction canot be orphaned", 'UNSUPPORTED_OPERATION', {
                 operation: 'removeEvent()',
             });
             return createReorderedTransactionFilter(this, other);
@@ -21972,7 +21789,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         const staticCall = async function (overrides) {
             const runner = getRunner(contract.runner, 'call');
-            assert$1(canCall(runner), 'contract runner does not support calling', 'UNSUPPORTED_OPERATION', {
+            assert(canCall(runner), 'contract runner does not support calling', 'UNSUPPORTED_OPERATION', {
                 operation: 'call',
             });
             const tx = await populateTransaction(overrides);
@@ -21995,7 +21812,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         const send = async function (overrides) {
             const runner = contract.runner;
-            assert$1(canSend(runner), 'contract runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
+            assert(canSend(runner), 'contract runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
                 operation: 'sendTransaction',
             });
             const tx = (await runner.sendTransaction(await populateTransaction(overrides)));
@@ -22013,7 +21830,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         const estimateGas = async function (overrides) {
             const runner = getRunner(contract.runner, 'estimateGas');
-            assert$1(canEstimate(runner), 'contract runner does not support gas estimation', 'UNSUPPORTED_OPERATION', {
+            assert(canEstimate(runner), 'contract runner does not support gas estimation', 'UNSUPPORTED_OPERATION', {
                 operation: 'estimateGas',
             });
             return await runner.estimateGas(await populateTransaction(overrides));
@@ -22054,7 +21871,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         const getFragment = function (...args) {
             const fragment = contract.interface.getFunction(key, args);
-            assert$1(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
+            assert(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
                 operation: 'fragment',
                 info: { key, args },
             });
@@ -22112,7 +21929,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         const send = async function (...args) {
             const runner = contract.runner;
-            assert$1(canSend(runner), 'contract runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
+            assert(canSend(runner), 'contract runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
                 operation: 'sendTransaction',
             });
             const pop = await populateTransaction(...args);
@@ -22134,7 +21951,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         const estimateGas = async function (...args) {
             const runner = getRunner(contract.runner, 'estimateGas');
-            assert$1(canEstimate(runner), 'contract runner does not support gas estimation', 'UNSUPPORTED_OPERATION', {
+            assert(canEstimate(runner), 'contract runner does not support gas estimation', 'UNSUPPORTED_OPERATION', {
                 operation: 'estimateGas',
             });
             return await runner.estimateGas(await populateTransaction(...args));
@@ -22148,7 +21965,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         const staticCallResult = async function (...args) {
             const runner = getRunner(contract.runner, 'call');
-            assert$1(canCall(runner), 'contract runner does not support calling', 'UNSUPPORTED_OPERATION', {
+            assert(canCall(runner), 'contract runner does not support calling', 'UNSUPPORTED_OPERATION', {
                 operation: 'call',
             });
             const tx = await populateTransaction(...args);
@@ -22199,7 +22016,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             enumerable: true,
             get: () => {
                 const fragment = contract.interface.getFunction(key);
-                assert$1(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
+                assert(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
                     operation: 'fragment',
                     info: { key },
                 });
@@ -22225,7 +22042,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         const getFragment = function (...args) {
             const fragment = contract.interface.getEvent(key, args);
-            assert$1(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
+            assert(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
                 operation: 'fragment',
                 info: { key, args },
             });
@@ -22252,7 +22069,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             enumerable: true,
             get: () => {
                 const fragment = contract.interface.getEvent(key);
-                assert$1(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
+                assert(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
                     operation: 'fragment',
                     info: { key },
                 });
@@ -22410,7 +22227,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     async function getSub(contract, operation, event) {
         // Make sure our runner can actually subscribe to events
         const provider = getProvider(contract.runner);
-        assert$1(provider, 'contract runner does not support subscribing', 'UNSUPPORTED_OPERATION', { operation });
+        assert(provider, 'contract runner does not support subscribing', 'UNSUPPORTED_OPERATION', { operation });
         const { fragment, tag, topics } = await getSubInfo(contract, event);
         const { addr, subs } = getInternal(contract);
         let sub = subs.get(tag);
@@ -22688,7 +22505,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         async getDeployedCode() {
             const provider = getProvider(this.runner);
-            assert$1(provider, 'runner does not support .provider', 'UNSUPPORTED_OPERATION', {
+            assert(provider, 'runner does not support .provider', 'UNSUPPORTED_OPERATION', {
                 operation: 'getDeployedCode',
             });
             const code = await provider.getCode(await this.getAddress());
@@ -22717,7 +22534,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             // Make sure we can subscribe to a provider event
             const provider = getProvider(this.runner);
-            assert$1(provider != null, 'contract runner does not support .provider', 'UNSUPPORTED_OPERATION', {
+            assert(provider != null, 'contract runner does not support .provider', 'UNSUPPORTED_OPERATION', {
                 operation: 'waitForDeployment',
             });
             return new Promise((resolve, reject) => {
@@ -22804,7 +22621,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const zone = getZoneForAddress(address);
             const filter = { address, topics, fromBlock, toBlock, nodeLocation: getNodeLocationFromZone(zone) };
             const provider = getProvider(this.runner);
-            assert$1(provider, 'contract runner does not have a provider', 'UNSUPPORTED_OPERATION', {
+            assert(provider, 'contract runner does not have a provider', 'UNSUPPORTED_OPERATION', {
                 operation: 'queryFilter',
             });
             return (await provider.getLogs(filter)).map((log) => {
@@ -23021,7 +22838,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         if (signer.provider) {
             return signer.provider;
         }
-        assert$1(false, 'missing provider', 'UNSUPPORTED_OPERATION', { operation });
+        assert(false, 'missing provider', 'UNSUPPORTED_OPERATION', { operation });
     }
     async function populate(signer, tx) {
         const pop = copyRequest(tx);
@@ -23086,6 +22903,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (pop.nonce == null) {
                 pop.nonce = await this.getNonce('pending');
             }
+            if (pop.type == null) {
+                pop.type = getTxType(pop.from ?? null, pop.to ?? null);
+            }
             if (pop.gasLimit == null) {
                 if (pop.type == 0)
                     pop.gasLimit = await this.estimateGas(pop);
@@ -23106,13 +22926,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             else {
                 pop.chainId = network.chainId;
             }
-            if (pop.maxFeePerGas == null || pop.maxPriorityFeePerGas == null) {
-                const feeData = await provider.getFeeData(zone, true);
-                if (pop.maxFeePerGas == null) {
-                    pop.maxFeePerGas = feeData.maxFeePerGas;
+            if (pop.gasPrice == null || pop.minerTip == null) {
+                const feeData = await provider.getFeeData(zone);
+                if (pop.gasPrice == null) {
+                    pop.gasPrice = feeData.gasPrice;
                 }
-                if (pop.maxPriorityFeePerGas == null) {
-                    pop.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas || 10n;
+                if (pop.minerTip == null) {
+                    pop.minerTip = feeData.minerTip || 10n;
                 }
             }
             //@TOOD: Don't await all over the place; save them up for
@@ -23163,7 +22983,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return new VoidSigner(this.address, provider);
         }
         #throwUnsupported(suffix, operation) {
-            assert$1(false, `VoidSigner cannot sign ${suffix}`, 'UNSUPPORTED_OPERATION', { operation });
+            assert(false, `VoidSigner cannot sign ${suffix}`, 'UNSUPPORTED_OPERATION', { operation });
         }
         // TODO: `domain`, `types` and `value` are not used, remove?
         // TODO: this function only throws, remove?
@@ -23502,7 +23322,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
 
     const words$1 = "0erleonalorenseinceregesticitStanvetearctssi#ch2Athck&tneLl0And#Il.yLeOutO=S|S%b/ra@SurdU'0Ce[Cid|CountCu'Hie=IdOu,-Qui*Ro[TT]T%T*[Tu$0AptDD-tD*[Ju,M.UltV<)Vi)0Rob-0FairF%dRaid0A(EEntRee0Ead0MRRp%tS!_rmBumCoholErtI&LLeyLowMo,O}PhaReadySoT Ways0A>urAz(gOngOuntU'd0Aly,Ch%Ci|G G!GryIm$K!Noun)Nu$O` Sw T&naTiqueXietyY1ArtOlogyPe?P!Pro=Ril1ChCt-EaEnaGueMMedM%MyOundR<+Re,Ri=RowTTefa@Ti,Tw%k0KPe@SaultSetSi,SumeThma0H!>OmTa{T&dT.udeTra@0Ct]D.Gu,NtTh%ToTumn0Era+OcadoOid0AkeA*AyEsomeFulKw?d0Is:ByChel%C#D+GL<)Lc#y~MbooN<aNn RRelyRga(R*lSeS-SketTt!3A^AnAutyCau'ComeEfF%eG(Ha=H(dLie=LowLtN^Nef./TrayTt Twe&Y#d3Cyc!DKeNdOlogyRdR`Tt _{AdeAmeAnketA,EakE[IndOodO[omOu'UeUrUsh_rdAtDyIlMbNeNusOkO,Rd R(gRrowSsTtomUn)XY_{etA(AndA[A=EadEezeI{Id+IefIghtIngIskOccoliOk&OnzeOomO` OwnUsh2Bb!DdyD+tFf$oIldLbLkL!tNd!Nk Rd&Rg R,SS(e[SyTt Y Zz:Bba+B(B!CtusGeKe~LmM aMpNN$N)lNdyNn#NoeNvasNy#Pab!P.$Pta(RRb#RdRgoRpetRryRtSeShS(o/!Su$TT$ogT^Teg%yTt!UghtU'Ut]Ve3Il(gL yM|NsusNturyRe$Rta(_irAlkAmp]An+AosApt Ar+A'AtEapE{Ee'EfErryE,I{&IefIldIm}yOi)Oo'R#-U{!UnkUrn0G?Nnam#Rc!Tiz&TyVil_imApArifyAwAyE<ErkEv I{I|IffImbIn-IpO{OgO'O`OudOwnUbUmpU, Ut^_^A,C#utDeFfeeIlInL!@L%LumnMb(eMeMf%tM-Mm#Mp<yNc tNdu@NfirmNg*[N}@Nsid NtrolNv()OkOlPp PyR$ReRnR*@/Tt#U^UntryUp!Ur'Us(V Yo>_{Ad!AftAmA}AshAt AwlAzyEamEd.EekEwI{etImeIspIt-OpO[Ou^OwdUci$UelUi'Umb!Un^UshYY,$2BeLtu*PPbo?dRiousRr|Rta(R=Sh]/omTe3C!:DMa+MpN)Ng R(gShUght WnY3AlBa>BrisCadeCemb CideCl(eC%a>C*a'ErF&'F(eFyG*eLayLiv M<dMi'Ni$Nti,NyP?tP&dPos.P`PutyRi=ScribeS tSignSkSpair/royTailTe@VelopVi)Vo>3AgramAlAm#dAryCeE'lEtFf G.$Gn.yLemmaNn NosaurRe@RtSag*eScov Sea'ShSmi[S%d Splay/<)V tVideV%)Zzy5Ct%Cum|G~Lph(Ma(Na>NkeyN%OrSeUb!Ve_ftAg#AmaA,-AwEamE[IftIllInkIpI=OpUmY2CkMbNeR(g/T^Ty1Arf1Nam-:G G!RlyRnR`Sily/Sy1HoOlogyOnomy0GeItUca>1F%t0G1GhtTh 2BowD E@r-Eg<tEm|Eph<tEvat%I>Se0B?kBodyBra)Er+Ot]PloyPow Pty0Ab!A@DD![D%'EmyErgyF%)Ga+G(eH<)JoyLi,OughR-hRollSu*T Ti*TryVelope1Isode0U$Uip0AA'OdeOs]R%Upt0CapeSayS&)Ta>0Ern$H-s1Id&)IlOkeOl=1A@Amp!Ce[Ch<+C.eCludeCu'Ecu>Erci'Hau,Hib.I!I,ItOt-P<dPe@Pi*Pla(Po'P*[T&dTra0EEbrow:Br-CeCultyDeIntI`~L'MeMilyMousNNcyNtasyRmSh]TT$Th TigueUltV%.e3Atu*Bru?yD $EEdElMa!N)/iv$T^V W3B Ct]EldGu*LeLmLt N$NdNeNg NishReRmR,Sc$ShTT}[X_gAmeAshAtAv%EeIghtIpOatO{O%Ow UidUshY_mCusGIlLd~owOdOtR)Re,R+tRkRtu}RumRw?dSsil/ UndX_gi!AmeEqu|EshI&dIn+OgOntO,OwnOz&U.2ElNNnyRna)RyTu*:D+tInLaxy~ yMePRa+Rba+Rd&Rl-Rm|SSpTeTh U+Ze3N $NiusN*Nt!Nu(e/u*2O,0AntFtGg!Ng RaffeRlVe_dAn)A*A[IdeImp'ObeOomOryO=OwUe_tDde[LdOdO'RillaSpelSsipV nWn_bA)A(AntApeA[Av.yEatE&IdIefItOc yOupOwUnt_rdE[IdeIltIt?N3M:B.IrLfMm M, NdPpyRb%RdRshR=,TVeWkZ?d3AdAl`ArtAvyD+hogIght~oLmetLpNRo3Dd&Gh~NtPRe/%y5BbyCkeyLdLeLiday~owMeNeyOdPeRnRr%R'Sp.$/TelUrV 5BGeM<Mb!M%Nd*dNgryNtRd!RryRtSb<d3Brid:1EOn0EaEntifyLe2N%e4LLeg$L}[0A+Ita>M&'Mu}Pa@Po'Pro=Pul'0ChCludeComeC*a'DexD-a>Do%Du,ryF<tFl-tF%mHa!H .Iti$Je@JuryMa>N Noc|PutQuiryS<eSe@SideSpi*/$lTa@T e,ToVe,V.eVol=3On0L<dOla>Sue0Em1Ory:CketGu?RZz3AlousAns~yWel9BInKeUr}yY5D+I)MpNg!Ni%Nk/:Ng?oo3EnEpT^upY3CkDD}yNdNgdomSsTT^&TeTt&Wi4EeIfeO{Ow:BBelB%Dd DyKeMpNgua+PtopR+T T(UghUndryVaWWnWsu.Y Zy3Ad AfArnA=Ctu*FtGG$G&dIsu*M#NdNg`NsOp?dSs#Tt Vel3ArB tyBr?yC&'FeFtGhtKeMbM.NkOnQuid/Tt!VeZ?d5AdAnB, C$CkG-NelyNgOpTt yUdUn+VeY$5CkyGga+Mb N?N^Xury3R-s:Ch(eDG-G}tIdIlInJ%KeMm$NNa+Nda>NgoNs]Nu$P!Rb!R^Rg(R(eRketRria+SkSs/ T^T i$ThTrixTt XimumZe3AdowAnAsu*AtCh<-D$DiaLodyLtMb M%yNt]NuRcyR+R.RryShSsa+T$Thod3Dd!DnightLk~]M-NdNimumN%Nu>Rac!Rr%S ySs/akeXXedXtu*5Bi!DelDifyMM|N.%NkeyN, N`OnR$ReRn(gSqu.oTh T]T%Unta(U'VeVie5ChFf(LeLtiplySc!SeumShroomS-/Tu$3Self/ yTh:I=MePk(Rrow/yT]Tu*3ArCkEdGati=G!@I` PhewR=/TTw%kUtr$V WsXt3CeGht5B!I'M(eeOd!Rm$R`SeTab!TeTh(gTi)VelW5C!?Mb R'T:K0EyJe@Li+Scu*S =Ta(Vious0CurE<Tob 0Or1FF Fi)T&2L1Ay0DI=Ymp-0It0CeEI#L(eLy1EnEraIn]Po'T]1An+B.Ch?dD D(?yG<I|Ig($Ph<0Tr-h0H 0Tdo%T TputTside0AlEnEr0NN 0Yg&0/ 0O}:CtDd!GeIrLa)LmNdaNelN-N` P RadeR|RkRrotRtySsT^ThTi|TrolTt nU'VeYm|3A)AnutArAs<tL-<NN$tyNcilOp!Pp Rfe@Rm.Rs#T2O}OtoRa'Ys-$0AnoCn-Ctu*E)GGe#~LotNkO} Pe/olT^Zza_)A}tA,-A>AyEa'Ed+U{UgUn+2EmEtIntL?LeLi)NdNyOlPul?Rt]S.]Ssib!/TatoTt yV tyWd W _@i)Ai'Ed-tEf Epa*Es|EttyEv|I)IdeIm?yIntI%.yIs#Iva>IzeOb!mO)[Odu)Of.OgramOje@Omo>OofOp tyOsp O>@OudOvide2Bl-Dd(g~LpL'Mpk(N^PilPpyR^a'R.yRpo'R'ShTZz!3Ramid:99Al.yAntumArt E,]I{ItIzO>:Bb.Cco#CeCkD?DioIlInI'~yMpN^NdomN+PidReTeTh V&WZ%3AdyAlAs#BelBuildC$lCei=CipeC%dCyc!Du)F!@F%mFu'G]G*tGul?Je@LaxLea'LiefLyMa(Memb M(dMo=Nd NewNtOp&PairPeatPla)P%tQui*ScueSemb!Si,Sour)Sp#'SultTi*T*atTurnUn]Ve$ViewW?d2Y`m0BBb#CeChDeD+F!GhtGidNgOtPp!SkTu$V$V 5AdA,BotBu,CketM<)OfOkieOmSeTa>UghUndU>Y$5Bb DeGLeNNwayR$:DDd!D}[FeIlLadLm#L#LtLu>MeMp!NdTisfyToshiU)Usa+VeY1A!AnA*Att E}HemeHoolI&)I[%sOrp]OutRapRe&RiptRub1AAr^As#AtC#dC*tCt]Cur.yEdEkGm|Le@~M(?Ni%N'Nt&)RiesRvi)Ss]Tt!TupV&_dowAftAllowA*EdEllEriffIeldIftI}IpIv O{OeOotOpOrtOuld O=RimpRugUff!Y0Bl(gCkDeE+GhtGnL|Lk~yLv Mil?Mp!N)NgR&/ Tua>XZe1A>Et^IIllInIrtUll0AbAmEepEnd I)IdeIghtImOg<OtOwUsh0AllArtI!OkeOo`0A{AkeApIffOw0ApCc Ci$CkDaFtL?Ldi LidLut]L=Me#eNgOnRryRtUlUndUpUr)U`0A)A*Ati$AwnEakEci$EedEllEndH eI)Id IkeInIr.L.OilOns%O#OrtOtRayReadR(gY0Ua*UeezeUir*l_b!AdiumAffA+AirsAmpAndArtA>AyEakEelEmEpE*oI{IllIngO{Oma^O}OolOryO=Ra>gyReetRikeR#gRugg!Ud|UffUmb!Y!0Bje@Bm.BwayC)[ChDd&Ff G?G+,ItMm NNnyN'tP PplyP*meReRfa)R+Rpri'RroundR=ySpe@/a(1AllowAmpApArmE?EetIftImIngIt^Ord1MbolMptomRup/em:B!Ck!GIlL|LkNkPeR+tSk/eTtooXi3A^Am~NN<tNnisNtRm/Xt_nkAtEmeEnE%yE*EyIngIsOughtReeRi=RowUmbUnd 0CketDeG LtMb MeNyPRedSsueT!5A,BaccoDayDdl EGe` I!tK&MatoM%rowNeNgueNightOlO`PP-Pp!R^RnadoRtoi'SsT$Uri,W?dW WnY_{AdeAff-Ag-A(Ansf ApAshA=lAyEatEeEndI$IbeI{Igg ImIpOphyOub!U{UeUlyUmpetU,U`Y2BeIt]Mb!NaN}lRkeyRnRt!1El=EntyI)InI,O1PeP-$:5Ly5B*lla0Ab!Awa*C!Cov D DoFairFoldHappyIf%mIqueItIv 'KnownLo{TilUsu$Veil1Da>GradeHoldOnP Set1B<Ge0A+EEdEfulE![U$0Il.y:C<tCuumGueLidL!yL=NNishP%Rious/Ult3H-!L=tNd%Ntu*NueRbRifyRs]RyS'lT <3Ab!Br<tCiousCt%yDeoEw~a+Nta+Ol(Rtu$RusSaS.Su$T$Vid5C$I)IdLc<oLumeTeYa+:GeG#ItLk~LnutNtRfa*RmRri%ShSp/eT VeY3Al`Ap#ArA'lA` BDd(gEk&dIrdLcome/T_!AtEatEelEnE*IpIsp 0DeD`FeLd~NNdowNeNgNkNn Nt ReSdomSeShT}[5LfM<Nd OdOlRdRkRldRryR`_pE{E,!I,I>Ong::Rd3Ar~ow9UUngU`:3BraRo9NeO";
-    const checksum$2 = '0x3c8acc1e7b08d8e76f9fda015ef48dc8c710a73cb7e0f77b2c18a9b5a7adde60';
+    const checksum$1 = '0x3c8acc1e7b08d8e76f9fda015ef48dc8c710a73cb7e0f77b2c18a9b5a7adde60';
     let wordlist$1 = null;
     /**
      * The [English wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt) for [mnemonic
@@ -23519,7 +23339,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @ignore
          */
         constructor() {
-            super('en', words$1, checksum$2);
+            super('en', words$1, checksum$1);
         }
         /**
          * Returns a singleton instance of a `LangEn`, creating it if this is the first time being called.
@@ -24215,7 +24035,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const aesCtr = new CTR(key, iv);
             return hexlify(aesCtr.decrypt(ciphertext));
         }
-        assert$1(false, 'unsupported cipher', 'UNSUPPORTED_OPERATION', {
+        assert(false, 'unsupported cipher', 'UNSUPPORTED_OPERATION', {
             operation: 'decrypt',
         });
     }
@@ -24316,7 +24136,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const key = pbkdf2(password, salt, count, dkLen, algorithm);
             return getAccount(data, key);
         }
-        assert$1(params.name === 'scrypt', 'cannot be reached', 'UNKNOWN_ERROR', { params });
+        assert(params.name === 'scrypt', 'cannot be reached', 'UNKNOWN_ERROR', { params });
         const { salt, N, r, p, dkLen } = params;
         const key = scryptSync(password, salt, N, r, p, dkLen);
         return getAccount(data, key);
@@ -24367,7 +24187,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             return getAccount(data, key);
         }
-        assert$1(params.name === 'scrypt', 'cannot be reached', 'UNKNOWN_ERROR', { params });
+        assert(params.name === 'scrypt', 'cannot be reached', 'UNKNOWN_ERROR', { params });
         const { salt, N, r, p, dkLen } = params;
         const key = await scrypt(password, salt, N, r, p, dkLen, progress);
         return getAccount(data, key);
@@ -24559,7 +24379,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     function ser_I(index, chainCode, publicKey, privateKey) {
         const data = new Uint8Array(37);
         if (index & HardenedBit) {
-            assert$1(privateKey != null, 'cannot derive child of neutered node', 'UNSUPPORTED_OPERATION', {
+            assert(privateKey != null, 'cannot derive child of neutered node', 'UNSUPPORTED_OPERATION', {
                 operation: 'deriveChild',
             });
             // Data = 0x00 || ser_256(k_par)
@@ -24761,7 +24581,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // we should always use mainnet, and use BIP-44 to derive the network
             //   - Mainnet: public=0x0488B21E, private=0x0488ADE4
             //   - Testnet: public=0x043587CF, private=0x04358394
-            assert$1(this.depth < 256, 'Depth too deep', 'UNSUPPORTED_OPERATION', {
+            assert(this.depth < 256, 'Depth too deep', 'UNSUPPORTED_OPERATION', {
                 operation: 'extendedKey',
             });
             return encodeBase58Check(concat([
@@ -25043,7 +24863,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // we should always use mainnet, and use BIP-44 to derive the network
             //   - Mainnet: public=0x0488B21E, private=0x0488ADE4
             //   - Testnet: public=0x043587CF, private=0x04358394
-            assert$1(this.depth < 256, 'Depth too deep', 'UNSUPPORTED_OPERATION', { operation: 'extendedKey' });
+            assert(this.depth < 256, 'Depth too deep', 'UNSUPPORTED_OPERATION', { operation: 'extendedKey' });
             return encodeBase58Check(concat([
                 '0x0488B21E',
                 zpad(this.depth, 1),
@@ -25148,16 +24968,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         get xPub() {
             return this._root.extendedKey;
         }
-        // helper method to check if an address is valid for a given zone
-        isValidAddressForZone(address, zone) {
-            const addressZone = getZoneForAddress(address);
-            if (!addressZone) {
-                return false;
-            }
-            const isCorrectShard = addressZone === zone;
-            const isCorrectLedger = this.coinType() === 969 ? isQiAddress(address) : !isQiAddress(address);
-            return isCorrectShard && isCorrectLedger;
-        }
         /**
          * Derives the next valid address node for a specified account, starting index, and zone. The method ensures the
          * derived address belongs to the correct shard and ledger, as defined by the Quai blockchain specifications.
@@ -25174,9 +24984,18 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const changeNode = this._root.deriveChild(account).deriveChild(changeIndex);
             let addrIndex = startingIndex;
             let addressNode;
+            const isValidAddressForZone = (address) => {
+                const addressZone = getZoneForAddress(address);
+                if (!addressZone) {
+                    return false;
+                }
+                const isCorrectShard = addressZone === zone;
+                const isCorrectLedger = this.coinType() === 969 ? isQiAddress(address) : !isQiAddress(address);
+                return isCorrectShard && isCorrectLedger;
+            };
             for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
                 addressNode = changeNode.deriveChild(addrIndex++);
-                if (this.isValidAddressForZone(addressNode.address, zone)) {
+                if (isValidAddressForZone(addressNode.address)) {
                     return addressNode;
                 }
             }
@@ -25359,13 +25178,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist);
             return this.createInstance(mnemonic);
         }
-        // /**
-        //  * Abstract method to send a transaction.
-        //  *
-        //  * @param {TransactionRequest} tx - The transaction request.
-        //  * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
-        //  */
-        // abstract sendTransaction(tx: TransactionRequest): Promise<TransactionResponse>;
         /**
          * Connects the wallet to a provider.
          *
@@ -26182,979 +25994,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
       };
     }
 
-    /*! scure-base - MIT License (c) 2022 Paul Miller (paulmillr.com) */
-    // Utilities
-
-    function isBytes(a) {
-        return (a instanceof Uint8Array ||
-            (a != null && typeof a === 'object' && a.constructor.name === 'Uint8Array'));
-    }
-    /**
-     * @__NO_SIDE_EFFECTS__
-     */
-    function chain(...args) {
-        const id = (a) => a;
-        // Wrap call in closure so JIT can inline calls
-        const wrap = (a, b) => (c) => a(b(c));
-        // Construct chain of args[-1].encode(args[-2].encode([...]))
-        const encode = args.map((x) => x.encode).reduceRight(wrap, id);
-        // Construct chain of args[0].decode(args[1].decode(...))
-        const decode = args.map((x) => x.decode).reduce(wrap, id);
-        return { encode, decode };
-    }
-    /**
-     * Encodes integer radix representation to array of strings using alphabet and back
-     * @__NO_SIDE_EFFECTS__
-     */
-    function alphabet(alphabet) {
-        return {
-            encode: (digits) => {
-                if (!Array.isArray(digits) || (digits.length && typeof digits[0] !== 'number'))
-                    throw new Error('alphabet.encode input should be an array of numbers');
-                return digits.map((i) => {
-                    if (i < 0 || i >= alphabet.length)
-                        throw new Error(`Digit index outside alphabet: ${i} (alphabet: ${alphabet.length})`);
-                    return alphabet[i];
-                });
-            },
-            decode: (input) => {
-                if (!Array.isArray(input) || (input.length && typeof input[0] !== 'string'))
-                    throw new Error('alphabet.decode input should be array of strings');
-                return input.map((letter) => {
-                    if (typeof letter !== 'string')
-                        throw new Error(`alphabet.decode: not string element=${letter}`);
-                    const index = alphabet.indexOf(letter);
-                    if (index === -1)
-                        throw new Error(`Unknown letter: "${letter}". Allowed: ${alphabet}`);
-                    return index;
-                });
-            },
-        };
-    }
-    /**
-     * @__NO_SIDE_EFFECTS__
-     */
-    function join(separator = '') {
-        if (typeof separator !== 'string')
-            throw new Error('join separator should be string');
-        return {
-            encode: (from) => {
-                if (!Array.isArray(from) || (from.length && typeof from[0] !== 'string'))
-                    throw new Error('join.encode input should be array of strings');
-                for (let i of from)
-                    if (typeof i !== 'string')
-                        throw new Error(`join.encode: non-string input=${i}`);
-                return from.join(separator);
-            },
-            decode: (to) => {
-                if (typeof to !== 'string')
-                    throw new Error('join.decode input should be string');
-                return to.split(separator);
-            },
-        };
-    }
-    /**
-     * Slow: O(n^2) time complexity
-     * @__NO_SIDE_EFFECTS__
-     */
-    function convertRadix(data, from, to) {
-        // base 1 is impossible
-        if (from < 2)
-            throw new Error(`convertRadix: wrong from=${from}, base cannot be less than 2`);
-        if (to < 2)
-            throw new Error(`convertRadix: wrong to=${to}, base cannot be less than 2`);
-        if (!Array.isArray(data))
-            throw new Error('convertRadix: data should be array');
-        if (!data.length)
-            return [];
-        let pos = 0;
-        const res = [];
-        const digits = Array.from(data);
-        digits.forEach((d) => {
-            if (d < 0 || d >= from)
-                throw new Error(`Wrong integer: ${d}`);
-        });
-        while (true) {
-            let carry = 0;
-            let done = true;
-            for (let i = pos; i < digits.length; i++) {
-                const digit = digits[i];
-                const digitBase = from * carry + digit;
-                if (!Number.isSafeInteger(digitBase) ||
-                    (from * carry) / from !== carry ||
-                    digitBase - digit !== from * carry) {
-                    throw new Error('convertRadix: carry overflow');
-                }
-                carry = digitBase % to;
-                const rounded = Math.floor(digitBase / to);
-                digits[i] = rounded;
-                if (!Number.isSafeInteger(rounded) || rounded * to + carry !== digitBase)
-                    throw new Error('convertRadix: carry overflow');
-                if (!done)
-                    continue;
-                else if (!rounded)
-                    pos = i;
-                else
-                    done = false;
-            }
-            res.push(carry);
-            if (done)
-                break;
-        }
-        for (let i = 0; i < data.length - 1 && data[i] === 0; i++)
-            res.push(0);
-        return res.reverse();
-    }
-    /**
-     * @__NO_SIDE_EFFECTS__
-     */
-    function radix(num) {
-        return {
-            encode: (bytes) => {
-                if (!isBytes(bytes))
-                    throw new Error('radix.encode input should be Uint8Array');
-                return convertRadix(Array.from(bytes), 2 ** 8, num);
-            },
-            decode: (digits) => {
-                if (!Array.isArray(digits) || (digits.length && typeof digits[0] !== 'number'))
-                    throw new Error('radix.decode input should be array of numbers');
-                return Uint8Array.from(convertRadix(digits, num, 2 ** 8));
-            },
-        };
-    }
-    /**
-     * @__NO_SIDE_EFFECTS__
-     */
-    function checksum$1(len, fn) {
-        if (typeof fn !== 'function')
-            throw new Error('checksum fn should be function');
-        return {
-            encode(data) {
-                if (!isBytes(data))
-                    throw new Error('checksum.encode: input should be Uint8Array');
-                const checksum = fn(data).slice(0, len);
-                const res = new Uint8Array(data.length + len);
-                res.set(data);
-                res.set(checksum, data.length);
-                return res;
-            },
-            decode(data) {
-                if (!isBytes(data))
-                    throw new Error('checksum.decode: input should be Uint8Array');
-                const payload = data.slice(0, -len);
-                const newChecksum = fn(payload).slice(0, len);
-                const oldChecksum = data.slice(-len);
-                for (let i = 0; i < len; i++)
-                    if (newChecksum[i] !== oldChecksum[i])
-                        throw new Error('Invalid checksum');
-                return payload;
-            },
-        };
-    }
-    // base58 code
-    // -----------
-    const genBase58 = (abc) => chain(radix(58), alphabet(abc), join(''));
-    const base58 = /* @__PURE__ */ genBase58('123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz');
-    const createBase58check = (sha256) => chain(checksum$1(4, (data) => sha256(sha256(data))), base58);
-    // legacy export, bad name
-    const base58check = createBase58check;
-
-    const bs58check = base58check(sha256$1);
-    function hash160(buffer) {
-        return ripemd160$1(sha256$1(buffer));
-    }
-    function hmacSHA512(key, data) {
-        return hmac(sha512$1, key, data);
-    }
-
-    const PC_VERSION = 0x47;
-    class PaymentCodePublic {
-        ecc;
-        bip32;
-        buf;
-        root;
-        hasPrivKeys;
-        /**
-         * Constructor for the PaymentCode class.
-         *
-         * @param {TinySecp256k1Interface} ecc - Implementation of secp256k1 elliptic curve
-         * @param {BIP32API} bip32 - Bip32 instance
-         * @param {Uint8Array} buf - The buffer representing the payment code.
-         * @throws {Error} Invalid buffer length - If the length of the buffer is not 80.
-         * @throws {Error} Only payment codes version 1 are supported - If the version of the payment code is not 1.
-         */
-        constructor(ecc, bip32, buf) {
-            this.ecc = ecc;
-            this.bip32 = bip32;
-            this.hasPrivKeys = false;
-            if (buf.length !== 80)
-                throw new Error('Invalid buffer length');
-            if (buf[0] !== 1)
-                throw new Error('Only payment codes version 1 are supported');
-            this.buf = buf;
-            this.root = bip32.fromPublicKey(this.pubKey, this.chainCode);
-        }
-        /**
-         * Get the features of PaymentCode.
-         *
-         * @returns {Uint8Array} The features as a Uint8Array object.
-         */
-        get features() {
-            return this.buf.subarray(1, 2);
-        }
-        /**
-         * Returns the public key.
-         *
-         * @returns {Uint8Array} The public key as a Uint8Array.
-         */
-        get pubKey() {
-            return this.buf.subarray(2, 2 + 33);
-        }
-        /**
-         * Retrieves the chain code of the payment code.
-         *
-         * @returns {Uint8Array} - The extracted chain code as a Uint8Array.
-         */
-        get chainCode() {
-            return this.buf.subarray(35, 35 + 32);
-        }
-        /**
-         * Retrieves the payment code buffer.
-         *
-         * @returns {Uint8Array} The payment code buffer.
-         */
-        get paymentCode() {
-            return this.buf;
-        }
-        /**
-         * Creates a base58 representation of the payment code.
-         *
-         * @returns {string} - The Base58 representation of PaymentCode.
-         */
-        async toBase58() {
-            const version = new Uint8Array([PC_VERSION]);
-            const buf = new Uint8Array(version.length + this.buf.length);
-            buf.set(version);
-            buf.set(this.buf, version.length);
-            // const { bs58check } = await import('@samouraiwallet/bip32/crypto');
-            return bs58check.encode(buf);
-        }
-        /**
-         * Derives a child from the root BIP32 node at the specified index.
-         *
-         * @param {number} index - The index of the child BIP32Interface object to be derived.
-         * @returns {BIP32Interface} - The derived child BIP32Interface object.
-         */
-        derive(index) {
-            return this.root.derive(index);
-        }
-        /**
-         * Retrieves the public key for notification.
-         *
-         * @returns {Uint8Array} The public key for notification.
-         */
-        getNotificationPublicKey() {
-            return getBytes(this.derive(0).publicKey);
-        }
-        /**
-         * Derives a public key from the shared secret.
-         *
-         * @param {Uint8Array} B - Public key
-         * @param {Uint8Array} S - Shared secret point
-         * @returns {Uint8Array} The derived public key.
-         * @throws {Error} If the shared secret is invalid or unable to derive the public key.
-         */
-        derivePublicKeyFromSharedSecret(B, S) {
-            const Sx = S.subarray(1, 33);
-            const s = sha256$1(Sx);
-            if (!this.ecc.isPrivate(s))
-                throw new Error('Invalid shared secret');
-            const P = this.ecc.pointAddScalar(B, s, true);
-            if (!P)
-                throw new Error('Unable to derive public key');
-            return P;
-        }
-        /**
-         * Derives a payment public key based on the given public payment code.
-         *
-         * @param {PaymentCodePublic} paymentCode - The public payment code to derive the payment public key from.
-         * @param {number} idx - The index used for derivation.
-         * @returns {Uint8Array} The derived payment public key.
-         * @throws {Error} If the payment code does not contain a valid public key, or if any step in the derivation process
-         *   fails.
-         */
-        derivePaymentPublicKey(paymentCode, idx) {
-            const a = paymentCode.getNotificationPrivateKey();
-            if (!this.ecc.isPrivate(a))
-                throw new Error('Received invalid private key');
-            const B = this.derive(idx).publicKey;
-            const S = this.ecc.pointMultiply(B, a);
-            if (!S)
-                throw new Error('Unable to compute secret point');
-            return this.derivePublicKeyFromSharedSecret(B, S);
-        }
-        /**
-         * Retrieves the address from a given public key.
-         *
-         * @param {Uint8Array} pubKey - The public key.
-         * @returns {string} The generated address.
-         * @throws {Error} - When unsupported address type is passed
-         * @protected
-         */
-        getAddressFromPubkey(pubKey) {
-            return getAddress(keccak256('0x' + hexlify(pubKey).substring(4)).substring(26));
-        }
-        /**
-         * Retrieves a payment address based on the provided parameters.
-         *
-         * @param {PaymentCodePublic} paymentCode - The public payment code to derive the payment address from.
-         * @param {number} idx - The index used in the derivation process.
-         * @returns {string} - The generated payment address.
-         * @throws {Error} - If unable to derive public key or if an unknown address type is specified.
-         */
-        getPaymentAddress(paymentCode, idx) {
-            const pubkey = hexlify(this.derivePaymentPublicKey(paymentCode, idx));
-            return getAddress(keccak256('0x' + pubkey.substring(4)).substring(26));
-        }
-    }
-    class PaymentCodePrivate extends PaymentCodePublic {
-        /**
-         * Constructor for the PaymentCodePrivate class.
-         *
-         * @param {HDNodeBIP32Adapter} root - The root HDNodeWallet as a HDNodeBIP32Adapter.
-         * @param {TinySecp256k1Interface} ecc - Implementation of secp256k1 elliptic curve.
-         * @param {BIP32API} bip32 - An instance implementing the bip32 API methods.
-         * @param {Uint8Array} buf - The buffer representing the payment code.
-         */
-        constructor(root, ecc, bip32, buf) {
-            super(ecc, bip32, buf);
-            this.root = root;
-            this.hasPrivKeys = true;
-        }
-        /**
-         * Derives a payment public key based on the given public payment code.
-         *
-         * @param {PaymentCodePublic} paymentCode - The public payment code to derive the payment public key from.
-         * @param {number} idx - The index used for derivation.
-         * @returns {Uint8Array} The derived payment public key.
-         * @throws {Error} If the payment code does not contain a valid public key or unable to derive the node with private
-         *   key.
-         */
-        derivePaymentPublicKey(paymentCode, idx) {
-            const A = paymentCode.getNotificationPublicKey();
-            if (!this.ecc.isPoint(A))
-                throw new Error('Received invalid public key');
-            const b_node = this.derive(idx);
-            if (!b_node.privateKey)
-                throw new Error('Unable to derive node with private key');
-            const b = getBytes(b_node.privateKey);
-            const B = getBytes(b_node.publicKey);
-            const S = this.ecc.pointMultiply(A, b);
-            if (!S)
-                throw new Error('Unable to compute resulting point');
-            return this.derivePublicKeyFromSharedSecret(B, S);
-        }
-        /**
-         * Retrieves a payment address based on the provided parameters.
-         *
-         * @param {PaymentCodePublic} paymentCode - The public payment code to derive the payment address from.
-         * @param {number} idx - The index used in the derivation process.
-         * @returns {string} - The generated payment address.
-         * @throws {Error} - If unable to derive public key or if an unknown address type is specified.
-         */
-        getPaymentAddress(paymentCode, idx) {
-            const pubKey = this.derivePaymentPublicKey(paymentCode, idx);
-            return this.getAddressFromPubkey(pubKey);
-        }
-        /**
-         * Derives a payment private key based on the given public payment code.
-         *
-         * @param {PaymentCodePublic} paymentCodePublic - The public payment code to derive the payment private key from.
-         * @param {number} idx - The index used for derivation.
-         * @returns {Uint8Array} The derived payment private key.
-         * @throws {Error} If the payment code does not contain a valid public key, unable to derive the node without
-         *   private key, unable to compute the resulting point, or invalid shared secret.
-         */
-        derivePaymentPrivateKey(paymentCodePublic, idx) {
-            const A = paymentCodePublic.getNotificationPublicKey();
-            if (!this.ecc.isPoint(A))
-                throw new Error('Argument is not a valid public key');
-            const b_node = this.derive(idx);
-            if (!b_node.privateKey)
-                throw new Error('Unable to derive node without private key');
-            const b = getBytes(b_node.privateKey);
-            const S = this.ecc.pointMultiply(A, b);
-            if (!S)
-                throw new Error('Unable to compute resulting point');
-            const Sx = S.subarray(1, 33);
-            const s = sha256$1(Sx);
-            if (!this.ecc.isPrivate(s))
-                throw new Error('Invalid shared secret');
-            const paymentPrivateKey = this.ecc.privateAdd(b, s);
-            if (!paymentPrivateKey)
-                throw new Error('Unable to compute payment private key');
-            return paymentPrivateKey;
-        }
-        /**
-         * Retrieves the notification private key.
-         *
-         * @returns {Uint8Array} The notification private key.
-         */
-        getNotificationPrivateKey() {
-            const child = this.derive(0);
-            return child.privateKey;
-        }
-    }
-    /**
-     * Validates a payment code base58 encoded string.
-     *
-     * @param {string} paymentCode - The payment code to validate.
-     * @throws {Error} If the payment code is invalid.
-     */
-    function validatePaymentCode(paymentCode) {
-        const VERSION_BYTE = 0x47;
-        const FEATURE_BYTE = 0x00;
-        try {
-            const decoded = bs58check.decode(paymentCode);
-            if (decoded.length !== 81) {
-                return false;
-            }
-            if (decoded[0] !== VERSION_BYTE) {
-                return false;
-            }
-            const paymentCodeBytes = decoded.slice(1);
-            if (paymentCodeBytes[0] !== 0x01) {
-                return false;
-            }
-            // Check if the second byte is 0 (features byte)
-            if (paymentCodeBytes[1] !== FEATURE_BYTE) {
-                return false;
-            }
-            // Check if the public key starts with 0x02 or 0x03
-            if (paymentCodeBytes[2] !== 0x02 && paymentCodeBytes[2] !== 0x03) {
-                return false;
-            }
-            const pubKey = paymentCodeBytes.slice(2, 35);
-            try {
-                secp256k1.ProjectivePoint.fromHex(Buffer.from(pubKey).toString('hex')).assertValidity();
-            }
-            catch (error) {
-                return false;
-            }
-            if (!paymentCodeBytes.slice(67).every((byte) => byte === 0)) {
-                return false;
-            }
-            return true;
-        }
-        catch (error) {
-            return false;
-        }
-    }
-
-    /**
-     * Uint8Array comparison
-     */
-    function areUint8ArraysEqual(a, b) {
-        if (a === b) {
-            return true;
-        }
-        if (a.length !== b.length) {
-            return false;
-        }
-        for (let index = 0; index < a.length; index++) {
-            if (a[index] !== b[index]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    const h = (hex) => hexToBytes$1(hex);
-    function testEcc(ecc) {
-        assert(ecc.isPoint(h('0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798')));
-        assert(!ecc.isPoint(h('030000000000000000000000000000000000000000000000000000000000000005')));
-        assert(ecc.isPrivate(h('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798')));
-        // order - 1
-        assert(ecc.isPrivate(h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140')));
-        // 0
-        assert(!ecc.isPrivate(h('0000000000000000000000000000000000000000000000000000000000000000')));
-        // order
-        assert(!ecc.isPrivate(h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141')));
-        // order + 1
-        assert(!ecc.isPrivate(h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364142')));
-        assert(areUint8ArraysEqual(ecc.pointFromScalar(h('b1121e4088a66a28f5b6b0f5844943ecd9f610196d7bb83b25214b60452c09af')), h('02b07ba9dca9523b7ef4bd97703d43d20399eb698e194704791a25ce77a400df99')));
-        if (ecc.xOnlyPointAddTweak) {
-            assert(ecc.xOnlyPointAddTweak(h('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'), h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140')) === null);
-            let xOnlyRes = ecc.xOnlyPointAddTweak(h('1617d38ed8d8657da4d4761e8057bc396ea9e4b9d29776d4be096016dbd2509b'), h('a8397a935f0dfceba6ba9618f6451ef4d80637abf4e6af2669fbc9de6a8fd2ac'));
-            assert(areUint8ArraysEqual(xOnlyRes.xOnlyPubkey, h('e478f99dab91052ab39a33ea35fd5e6e4933f4d28023cd597c9a1f6760346adf')) && xOnlyRes.parity === 1);
-            xOnlyRes = ecc.xOnlyPointAddTweak(h('2c0b7cf95324a07d05398b240174dc0c2be444d96b159aa6c7f7b1e668680991'), h('823c3cd2142744b075a87eade7e1b8678ba308d566226a0056ca2b7a76f86b47'));
-        }
-        assert(areUint8ArraysEqual(ecc.pointAddScalar(h('0379be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'), h('0000000000000000000000000000000000000000000000000000000000000003')), h('02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5')));
-        assert(areUint8ArraysEqual(ecc.privateAdd(h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036413e'), h('0000000000000000000000000000000000000000000000000000000000000002')), h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140')));
-        if (ecc.privateNegate) {
-            assert(areUint8ArraysEqual(ecc.privateNegate(h('0000000000000000000000000000000000000000000000000000000000000001')), h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140')));
-            assert(areUint8ArraysEqual(ecc.privateNegate(h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036413e')), h('0000000000000000000000000000000000000000000000000000000000000003')));
-            assert(areUint8ArraysEqual(ecc.privateNegate(h('b1121e4088a66a28f5b6b0f5844943ecd9f610196d7bb83b25214b60452c09af')), h('4eede1bf775995d70a494f0a7bb6bc11e0b8cccd41cce8009ab1132c8b0a3792')));
-        }
-        assert(areUint8ArraysEqual(ecc.sign(h('5e9f0a0d593efdcf78ac923bc3313e4e7d408d574354ee2b3288c0da9fbba6ed'), h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140')), h('54c4a33c6423d689378f160a7ff8b61330444abb58fb470f96ea16d99d4a2fed07082304410efa6b2943111b6a4e0aaa7b7db55a07e9861d1fb3cb1f421044a5')));
-        assert(ecc.verify(h('5e9f0a0d593efdcf78ac923bc3313e4e7d408d574354ee2b3288c0da9fbba6ed'), h('0379be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'), h('54c4a33c6423d689378f160a7ff8b61330444abb58fb470f96ea16d99d4a2fed07082304410efa6b2943111b6a4e0aaa7b7db55a07e9861d1fb3cb1f421044a5')));
-        if (ecc.signSchnorr) {
-            assert(areUint8ArraysEqual(ecc.signSchnorr(h('7e2d58d8b3bcdf1abadec7829054f90dda9805aab56c77333024b9d0a508b75c'), h('c90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b14e5c9'), h('c87aa53824b4d7ae2eb035a2b5bbbccc080e76cdc6d1692c4b0b62d798e6d906')), h('5831aaeed7b44bb74e5eab94ba9d4294c49bcf2a60728d8b4c200f50dd313c1bab745879a5ad954a72c45a91c3a51d3c7adea98d82f8481e0e1e03674a6f3fb7')));
-        }
-        if (ecc.verifySchnorr) {
-            assert(ecc.verifySchnorr(h('7e2d58d8b3bcdf1abadec7829054f90dda9805aab56c77333024b9d0a508b75c'), h('dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8'), h('5831aaeed7b44bb74e5eab94ba9d4294c49bcf2a60728d8b4c200f50dd313c1bab745879a5ad954a72c45a91c3a51d3c7adea98d82f8481e0e1e03674a6f3fb7')));
-        }
-    }
-    function assert(bool) {
-        if (!bool)
-            throw new Error('ecc library invalid');
-    }
-
-    function BIP32Factory(ecc) {
-        testEcc(ecc);
-        // const UINT256_TYPE = ow.uint8Array.length(32);
-        // const NETWORK_TYPE = ow.object.partialShape({
-        //     wif: ow.number.uint8,
-        //     bip32: ow.object.exactShape({
-        //         public: ow.number.uint32,
-        //         private: ow.number.uint32,
-        //     }),
-        // });
-        const BITCOIN = {
-            bip32: {
-                public: 0x0488b21e,
-                private: 0x0488ade4,
-            },
-            wif: 0x80,
-        };
-        const HIGHEST_BIT = 0x80000000;
-        // const UINT31_MAX = Math.pow(2, 31) - 1;
-        function toXOnly(pubKey) {
-            return pubKey.length === 32 ? pubKey : pubKey.subarray(1, 33);
-        }
-        class Bip32Signer {
-            __D;
-            __Q;
-            lowR;
-            constructor({ __D, __Q }) {
-                this.__D = __D;
-                this.__Q = __Q;
-                this.lowR = false;
-            }
-            get publicKey() {
-                if (this.__Q === undefined)
-                    this.__Q = ecc.pointFromScalar(this.__D, true);
-                return this.__Q;
-            }
-            get privateKey() {
-                return this.__D;
-            }
-            sign(hash, lowR) {
-                if (!this.privateKey)
-                    throw new Error('Missing private key');
-                if (lowR === undefined)
-                    lowR = this.lowR;
-                if (lowR === false) {
-                    return ecc.sign(hash, this.privateKey);
-                }
-                else {
-                    let sig = ecc.sign(hash, this.privateKey);
-                    const extraData = new Uint8Array(32);
-                    const extraDataView = new DataView(extraData.buffer);
-                    let counter = 0;
-                    // if first try is lowR, skip the loop
-                    // for second try and on, add extra entropy counting up
-                    while (sig[0] > 0x7f) {
-                        counter++;
-                        extraDataView.setUint32(0, counter, true);
-                        sig = ecc.sign(hash, this.privateKey, extraData);
-                    }
-                    return sig;
-                }
-            }
-            signSchnorr(hash) {
-                if (!this.privateKey)
-                    throw new Error('Missing private key');
-                if (!ecc.signSchnorr)
-                    throw new Error('signSchnorr not supported by ecc library');
-                return ecc.signSchnorr(hash, this.privateKey);
-            }
-            verify(hash, signature) {
-                return ecc.verify(hash, this.publicKey, signature);
-            }
-            verifySchnorr(hash, signature) {
-                if (!ecc.verifySchnorr)
-                    throw new Error('verifySchnorr not supported by ecc library');
-                return ecc.verifySchnorr(hash, this.publicKey.subarray(1, 33), signature);
-            }
-        }
-        class BIP32 extends Bip32Signer {
-            chainCode;
-            network;
-            __DEPTH;
-            __INDEX;
-            __PARENT_FINGERPRINT;
-            constructor({ __D, __Q, chainCode, network, __DEPTH = 0, __INDEX = 0, __PARENT_FINGERPRINT = 0x00000000, }) {
-                super({ __D, __Q });
-                this.chainCode = chainCode;
-                this.network = network;
-                this.__DEPTH = __DEPTH;
-                this.__INDEX = __INDEX;
-                this.__PARENT_FINGERPRINT = __PARENT_FINGERPRINT;
-                // ow(network, NETWORK_TYPE);
-            }
-            get depth() {
-                return this.__DEPTH;
-            }
-            get index() {
-                return this.__INDEX;
-            }
-            get parentFingerprint() {
-                return this.__PARENT_FINGERPRINT;
-            }
-            get identifier() {
-                return hash160(this.publicKey);
-            }
-            get fingerprint() {
-                return this.identifier.subarray(0, 4);
-            }
-            get compressed() {
-                return true;
-            }
-            isNeutered() {
-                return this.__D === undefined;
-            }
-            neutered() {
-                return fromPublicKeyLocal(this.publicKey, this.chainCode, this.network, this.depth, this.index, this.parentFingerprint);
-            }
-            toBase58() {
-                const network = this.network;
-                const version = !this.isNeutered() ? network.bip32.private : network.bip32.public;
-                const buffer = new Uint8Array(78);
-                const bufferView = new DataView(buffer.buffer);
-                // 4 bytes: version bytes
-                bufferView.setUint32(0, version, false);
-                // 1 byte: depth: 0x00 for master nodes, 0x01 for level-1 descendants, ....
-                bufferView.setUint8(4, this.depth);
-                // 4 bytes: the fingerprint of the parent's key (0x00000000 if master key)
-                bufferView.setUint32(5, this.parentFingerprint, false);
-                // 4 bytes: child number. This is the number i in xi = xpar/i, with xi the key being serialized.
-                // This is encoded in big endian. (0x00000000 if master key)
-                bufferView.setUint32(9, this.index, false);
-                // 32 bytes: the chain code
-                buffer.set(this.chainCode, 13);
-                // 33 bytes: the public key or private key data
-                if (!this.isNeutered()) {
-                    // 0x00 + k for private keys
-                    bufferView.setUint8(45, 0);
-                    buffer.set(this.privateKey, 46);
-                    // 33 bytes: the public key
-                }
-                else {
-                    // X9.62 encoding for public keys
-                    buffer.set(this.publicKey, 45);
-                }
-                return bs58check.encode(buffer);
-            }
-            derive(index) {
-                // ow(index, ow.number.message('Expected UInt32').uint32.message('Expected UInt32'));
-                const isHardened = index >= HIGHEST_BIT;
-                const data = new Uint8Array(37);
-                const dataView = new DataView(data.buffer);
-                // Hardened child
-                if (isHardened) {
-                    if (this.isNeutered())
-                        throw new TypeError('Missing private key for hardened child key');
-                    // data = 0x00 || ser256(kpar) || ser32(index)
-                    data[0] = 0x00;
-                    data.set(this.privateKey, 1);
-                    dataView.setUint32(33, index, false);
-                    // Normal child
-                }
-                else {
-                    // data = serP(point(kpar)) || ser32(index)
-                    //      = serP(Kpar) || ser32(index)
-                    data.set(this.publicKey, 0);
-                    dataView.setUint32(33, index, false);
-                }
-                const I = hmacSHA512(this.chainCode, data);
-                const IL = I.slice(0, 32);
-                const IR = I.slice(32);
-                // if parse256(IL) >= n, proceed with the next value for i
-                if (!ecc.isPrivate(IL))
-                    return this.derive(index + 1);
-                // Private parent key -> private child key
-                let hd;
-                if (!this.isNeutered()) {
-                    // ki = parse256(IL) + kpar (mod n)
-                    const ki = ecc.privateAdd(this.privateKey, IL);
-                    // In case ki == 0, proceed with the next value for i
-                    if (ki == null)
-                        return this.derive(index + 1);
-                    hd = fromPrivateKeyLocal(ki, IR, this.network, this.depth + 1, index, new DataView(this.fingerprint.buffer).getUint32(0, false));
-                    // Public parent key -> public child key
-                }
-                else {
-                    // Ki = point(parse256(IL)) + Kpar
-                    //    = G*IL + Kpar
-                    const Ki = ecc.pointAddScalar(this.publicKey, IL, true);
-                    // In case Ki is the point at infinity, proceed with the next value for i
-                    if (Ki === null)
-                        return this.derive(index + 1);
-                    hd = fromPublicKeyLocal(Ki, IR, this.network, this.depth + 1, index, new DataView(this.fingerprint.buffer).getUint32(0, false));
-                }
-                return hd;
-            }
-            deriveHardened(index) {
-                // ow(index, ow.number
-                //     .message('Expected UInt31')
-                //     .uint32.message('Expected UInt31')
-                //     .is(value => value <= UINT31_MAX)
-                //     .message('Expected UInt31'));
-                // Only derives hardened private keys by default
-                return this.derive(index + HIGHEST_BIT);
-            }
-            derivePath(path) {
-                // ow(path, ow.string
-                //     .is(value => value.match(/^(m\/)?(\d+'?\/)*\d+'?$/) !== null)
-                //     .message(value => `Expected BIP32Path, got ${value}`));
-                let splitPath = path.split('/');
-                if (splitPath[0] === 'm') {
-                    if (this.parentFingerprint)
-                        throw new TypeError('Expected master, got child');
-                    splitPath = splitPath.slice(1);
-                }
-                return splitPath.reduce((prevHd, indexStr) => {
-                    let index;
-                    if (indexStr.slice(-1) === `'`) {
-                        index = parseInt(indexStr.slice(0, -1), 10);
-                        return prevHd.deriveHardened(index);
-                    }
-                    else {
-                        index = parseInt(indexStr, 10);
-                        return prevHd.derive(index);
-                    }
-                }, this);
-            }
-            tweak(t) {
-                if (this.privateKey)
-                    return this.tweakFromPrivateKey(t);
-                return this.tweakFromPublicKey(t);
-            }
-            tweakFromPublicKey(t) {
-                const xOnlyPubKey = toXOnly(this.publicKey);
-                if (!ecc.xOnlyPointAddTweak)
-                    throw new Error('xOnlyPointAddTweak not supported by ecc library');
-                const tweakedPublicKey = ecc.xOnlyPointAddTweak(xOnlyPubKey, t);
-                if (!tweakedPublicKey || tweakedPublicKey.xOnlyPubkey === null)
-                    throw new Error('Cannot tweak public key!');
-                const parityByte = Uint8Array.from([tweakedPublicKey.parity === 0 ? 0x02 : 0x03]);
-                const tweakedPublicKeyCompresed = new Uint8Array(tweakedPublicKey.xOnlyPubkey.length + 1);
-                tweakedPublicKeyCompresed.set(parityByte);
-                tweakedPublicKeyCompresed.set(tweakedPublicKey.xOnlyPubkey, 1);
-                return new Bip32Signer({ __Q: tweakedPublicKeyCompresed });
-            }
-            tweakFromPrivateKey(t) {
-                const hasOddY = this.publicKey[0] === 3 || (this.publicKey[0] === 4 && (this.publicKey[64] & 1) === 1);
-                const privateKey = (() => {
-                    if (!hasOddY)
-                        return this.privateKey;
-                    else if (!ecc.privateNegate)
-                        throw new Error('privateNegate not supported by ecc library');
-                    else
-                        return ecc.privateNegate(this.privateKey);
-                })();
-                const tweakedPrivateKey = ecc.privateAdd(privateKey, t);
-                if (!tweakedPrivateKey)
-                    throw new Error('Invalid tweaked private key!');
-                return new Bip32Signer({ __D: tweakedPrivateKey });
-            }
-        }
-        function fromBase58(inString, network) {
-            const buffer = bs58check.decode(inString);
-            const bufferView = new DataView(buffer.buffer);
-            if (buffer.length !== 78)
-                throw new TypeError('Invalid buffer length');
-            network = network || BITCOIN;
-            // 4 bytes: version bytes
-            const version = bufferView.getUint32(0, false);
-            if (version !== network.bip32.private && version !== network.bip32.public)
-                throw new TypeError('Invalid network version');
-            // 1 byte: depth: 0x00 for master nodes, 0x01 for level-1 descendants, ...
-            const depth = buffer[4];
-            // 4 bytes: the fingerprint of the parent's key (0x00000000 if master key)
-            const parentFingerprint = bufferView.getUint32(5, false);
-            if (depth === 0) {
-                if (parentFingerprint !== 0x00000000)
-                    throw new TypeError('Invalid parent fingerprint');
-            }
-            // 4 bytes: child number. This is the number i in xi = xpar/i, with xi the key being serialized.
-            // This is encoded in MSB order. (0x00000000 if master key)
-            const index = bufferView.getUint32(9, false);
-            if (depth === 0 && index !== 0)
-                throw new TypeError('Invalid index');
-            // 32 bytes: the chain code
-            const chainCode = buffer.subarray(13, 45);
-            let hd;
-            // 33 bytes: private key data (0x00 + k)
-            if (version === network.bip32.private) {
-                if (bufferView.getUint8(45) !== 0x00)
-                    throw new TypeError('Invalid private key');
-                const k = buffer.subarray(46, 78);
-                hd = fromPrivateKeyLocal(k, chainCode, network, depth, index, parentFingerprint);
-                // 33 bytes: public key data (0x02 + X or 0x03 + X)
-            }
-            else {
-                const X = buffer.subarray(45, 78);
-                hd = fromPublicKeyLocal(X, chainCode, network, depth, index, parentFingerprint);
-            }
-            return hd;
-        }
-        function fromPrivateKey(privateKey, chainCode, network) {
-            return fromPrivateKeyLocal(privateKey, chainCode, network || BITCOIN, 0, 0, 0);
-        }
-        function fromPrivateKeyLocal(privateKey, chainCode, network, depth, index, parentFingerprint) {
-            // ow({ privateKey, chainCode }, ow.object.exactShape({
-            //     privateKey: UINT256_TYPE,
-            //     chainCode: UINT256_TYPE,
-            // }));
-            network = network || BITCOIN;
-            if (!ecc.isPrivate(privateKey))
-                throw new TypeError('Private key not in range [1, n)');
-            return new BIP32({
-                __D: privateKey,
-                chainCode,
-                network,
-                __DEPTH: depth,
-                __INDEX: index,
-                __PARENT_FINGERPRINT: parentFingerprint,
-            });
-        }
-        function fromPublicKey(publicKey, chainCode, network) {
-            return fromPublicKeyLocal(publicKey, chainCode, network || BITCOIN, 0, 0, 0);
-        }
-        function fromPublicKeyLocal(publicKey, chainCode, network, depth, index, parentFingerprint) {
-            // ow({ publicKey, chainCode }, ow.object.exactShape({
-            //     publicKey: ow.uint8Array.length(33),
-            //     chainCode: UINT256_TYPE,
-            // }));
-            network = network || BITCOIN;
-            // verify the X coordinate is a point on the curve
-            if (!ecc.isPoint(publicKey))
-                throw new TypeError('Point is not on the curve');
-            return new BIP32({
-                __Q: publicKey,
-                chainCode,
-                network,
-                __DEPTH: depth,
-                __INDEX: index,
-                __PARENT_FINGERPRINT: parentFingerprint,
-            });
-        }
-        function fromSeed(seed, network) {
-            // ow(seed, ow.uint8Array);
-            if (seed.length < 16)
-                throw new TypeError('Seed should be at least 128 bits');
-            if (seed.length > 64)
-                throw new TypeError('Seed should be at most 512 bits');
-            network = network || BITCOIN;
-            const encoder = new TextEncoder();
-            const I = hmacSHA512(encoder.encode('Bitcoin seed'), seed);
-            const IL = I.slice(0, 32);
-            const IR = I.slice(32);
-            return fromPrivateKey(IL, IR, network);
-        }
-        return {
-            fromSeed,
-            fromBase58,
-            fromPublicKey,
-            fromPrivateKey,
-        };
-    }
-
-    class HDNodeBIP32Adapter {
-        hdNodeWallet;
-        constructor(hdNodeWallet) {
-            this.hdNodeWallet = hdNodeWallet;
-        }
-        get chainCode() {
-            return getBytes(this.hdNodeWallet.chainCode);
-        }
-        get network() {
-            throw 'Not implemented';
-        }
-        get depth() {
-            return this.hdNodeWallet.depth;
-        }
-        get index() {
-            return this.hdNodeWallet.index;
-        }
-        get parentFingerprint() {
-            return parseInt(this.hdNodeWallet.parentFingerprint);
-        }
-        get privateKey() {
-            return getBytes(this.hdNodeWallet.privateKey);
-        }
-        get identifier() {
-            throw 'Not implemented';
-        }
-        get fingerprint() {
-            throw 'Not implemented';
-        }
-        isNeutered() {
-            throw 'Not implemented';
-        }
-        neutered() {
-            throw 'Not implemented';
-        }
-        toBase58() {
-            throw 'Not implemented';
-        }
-        // Map `derive` to `deriveChild`
-        derive(index) {
-            const derivedNode = this.hdNodeWallet.deriveChild(index);
-            return new HDNodeBIP32Adapter(derivedNode);
-        }
-        deriveHardened(index) {
-            throw 'Not implemented';
-        }
-        derivePath(path) {
-            const derivedNode = this.hdNodeWallet.derivePath(path);
-            return new HDNodeBIP32Adapter(derivedNode);
-        }
-        tweak(t) {
-            throw 'Not implemented';
-        }
-        get publicKey() {
-            return getBytes(this.hdNodeWallet.publicKey);
-        }
-        get lowR() {
-            throw 'Not implemented';
-        }
-        sign(hash) {
-            const sig = this.hdNodeWallet.signingKey.sign(hash);
-            return getBytes(sig.serialized);
-        }
-        verify(hash, signature) {
-            throw 'Not implemented';
-        }
-        signSchnorr(hash) {
-            throw 'Not implemented';
-        }
-        verifySchnorr(hash, signature) {
-            throw 'Not implemented';
-        }
-    }
-
-    /**
-     * Current known issues:
-     *
-     * - When generating send addresses we are not checking if the address has already been used before
-     * - When syncing is seems like we are adding way too many change addresses
-     * - Bip44 external and change address maps also have gap addresses in them
-     * - It is unclear if we have checked if addresses have been used and if they are used
-     * - We should always check all addresses that were previously included in a transaction to see if they have been used
-     */
     /**
      * The Qi HD wallet is a BIP44-compliant hierarchical deterministic wallet used for managing a set of addresses in the
      * Qi ledger. This is wallet implementation is the primary way to interact with the Qi UTXO ledger on the Quai network.
@@ -27192,7 +26031,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @ignore
          * @type {number}
          */
-        static _GAP_LIMIT = 5;
+        static _GAP_LIMIT = 20;
         /**
          * @ignore
          * @type {AllowedCoinType}
@@ -27220,45 +26059,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         _gapAddresses = [];
         /**
-         * This array is used to keep track of gap addresses that have been included in a transaction, but whose outpoints
-         * have not been imported into the wallet.
-         *
-         * @ignore
-         * @type {NeuteredAddressInfo[]}
-         */
-        _usedGapAddresses = [];
-        /**
-         * This array is used to keep track of gap change addresses that have been included in a transaction, but whose
-         * outpoints have not been imported into the wallet.
-         *
-         * @ignore
-         * @type {NeuteredAddressInfo[]}
-         */
-        _usedGapChangeAddresses = [];
-        /**
          * Array of outpoint information.
          *
          * @ignore
          * @type {OutpointInfo[]}
          */
-        _availableOutpoints = [];
-        /**
-         * Map of outpoints that are pending confirmation of being spent.
-         */
-        _pendingOutpoints = [];
-        /**
-         * @ignore
-         * @type {AddressUsageCallback}
-         */
-        _addressUseChecker;
-        /**
-         * Map of paymentcodes to PaymentChannelAddressInfo for the receiver
-         */
-        _receiverPaymentCodeInfo = new Map();
-        /**
-         * Map of paymentcodes to PaymentChannelAddressInfo for the sender
-         */
-        _senderPaymentCodeInfo = new Map();
+        _outpoints = [];
         /**
          * @ignore
          * @param {HDNodeWallet} root - The root HDNodeWallet.
@@ -27266,23 +26072,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         constructor(guard, root, provider) {
             super(guard, root, provider);
-        }
-        /**
-         * Sets the address use checker. The provided callback function should accept an address as input and return a
-         * boolean indicating whether the address is in use. If the callback returns true, the address is considered used
-         * and if it returns false, the address is considered unused.
-         *
-         * @param {AddressUsageCallback} checker - The address use checker.
-         */
-        setAddressUseChecker(checker) {
-            this._addressUseChecker = checker;
-        }
-        // getters for the payment code info maps
-        get receiverPaymentCodeInfo() {
-            return Object.fromEntries(this._receiverPaymentCodeInfo);
-        }
-        get senderPaymentCodeInfo() {
-            return Object.fromEntries(this._senderPaymentCodeInfo);
         }
         /**
          * Promise that resolves to the next change address for the specified account and zone.
@@ -27311,7 +26100,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         importOutpoints(outpoints) {
             this.validateOutpointInfo(outpoints);
-            this._availableOutpoints.push(...outpoints);
+            this._outpoints.push(...outpoints);
         }
         /**
          * Gets the outpoints for the specified zone.
@@ -27321,7 +26110,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         getOutpoints(zone) {
             this.validateZone(zone);
-            return this._availableOutpoints.filter((outpoint) => outpoint.zone === zone);
+            return this._outpoints.filter((outpoint) => outpoint.zone === zone);
         }
         /**
          * Signs a Qi transaction and returns the serialized transaction.
@@ -27334,15 +26123,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const txobj = QiTransaction.from(tx);
             if (!txobj.txInputs || txobj.txInputs.length == 0 || !txobj.txOutputs)
                 throw new Error('Invalid UTXO transaction, missing inputs or outputs');
-            const hash = getBytes(keccak256(txobj.unsignedSerialized));
-            const shouldUseSchnorrSignature = (inputs) => {
-                if (inputs.length === 1)
-                    return true;
-                const firstPubKey = inputs[0].pubkey;
-                return inputs.every((input) => input.pubkey === firstPubKey);
-            };
+            const hash = keccak_256(txobj.unsignedSerialized);
             let signature;
-            if (shouldUseSchnorrSignature(txobj.txInputs)) {
+            if (txobj.txInputs.length == 1) {
                 signature = this.createSchnorrSignature(txobj.txInputs[0], hash);
             }
             else {
@@ -27352,247 +26135,31 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return txobj.serialized;
         }
         /**
-         * Gets the payment channel address info for a given address.
+         * Sends a Qi transaction.
          *
-         * @param {string} address - The address to look up.
-         * @returns {PaymentChannelAddressInfo | null} The address info or null if not found.
+         * @param {QiTransactionRequest} tx - The transaction to send.
+         * @returns {Promise<TransactionResponse>} The transaction response.
+         * @throws {Error} If the provider is not set or if the transaction has no inputs.
          */
-        getPaymentChannelAddressInfo(address) {
-            for (const [paymentCode, pcInfoArray] of this._receiverPaymentCodeInfo.entries()) {
-                const pcInfo = pcInfoArray.find((info) => info.address === address);
-                if (pcInfo) {
-                    return { ...pcInfo, counterpartyPaymentCode: paymentCode };
-                }
-            }
-            return null;
-        }
-        /**
-         * Locates the address information for the given address, searching through standard addresses, change addresses,
-         * and payment channel addresses.
-         *
-         * @param {string} address - The address to locate.
-         * @returns {NeuteredAddressInfo | PaymentChannelAddressInfo | null} The address info or null if not found.
-         */
-        locateAddressInfo(address) {
-            // First, try to get standard address info
-            let addressInfo = this.getAddressInfo(address);
-            if (addressInfo) {
-                return addressInfo;
-            }
-            // Next, try to get change address info
-            addressInfo = this.getChangeAddressInfo(address);
-            if (addressInfo) {
-                return addressInfo;
-            }
-            // Finally, try to get payment channel address info
-            const pcAddressInfo = this.getPaymentChannelAddressInfo(address);
-            if (pcAddressInfo) {
-                return pcAddressInfo;
-            }
-            // Address not found
-            return null;
-        }
-        /**
-         * Gets the balance for the specified zone.
-         *
-         * @param {Zone} zone - The zone to get the balance for.
-         * @returns {bigint} The total balance for the zone.
-         */
-        getBalanceForZone(zone) {
-            this.validateZone(zone);
-            return this._availableOutpoints
-                .filter((outpoint) => outpoint.zone === zone)
-                .reduce((total, outpoint) => {
-                const denominationValue = denominations[outpoint.outpoint.denomination];
-                return total + denominationValue;
-            }, BigInt(0));
-        }
-        /**
-         * Converts outpoints for a specific zone to UTXO format.
-         *
-         * @param {Zone} zone - The zone to filter outpoints for.
-         * @returns {UTXO[]} An array of UTXO objects.
-         */
-        outpointsToUTXOs(zone) {
-            this.validateZone(zone);
-            return this._availableOutpoints
-                .filter((outpointInfo) => outpointInfo.zone === zone)
-                .map((outpointInfo) => {
-                const utxo = new UTXO();
-                utxo.txhash = outpointInfo.outpoint.txhash;
-                utxo.index = outpointInfo.outpoint.index;
-                utxo.address = outpointInfo.address;
-                utxo.denomination = outpointInfo.outpoint.denomination;
-                return utxo;
-            });
-        }
-        /**
-         * Sends a transaction using the traditional method (compatible with AbstractHDWallet).
-         *
-         * @param tx The transaction request.
-         */
-        async sendTransaction(recipientPaymentCode, amount, originZone, destinationZone) {
+        async sendTransaction(tx) {
             if (!this.provider) {
                 throw new Error('Provider is not set');
             }
-            // This is the new method call (recipientPaymentCode, amount, originZone, destinationZone)
-            if (!validatePaymentCode(recipientPaymentCode)) {
-                throw new Error('Invalid payment code');
+            if (!tx.txInputs || tx.txInputs.length === 0) {
+                throw new Error('Transaction has no inputs');
             }
-            if (amount <= 0) {
-                throw new Error('Amount must be greater than 0');
+            const input = tx.txInputs[0];
+            const address = computeAddress(input.pubkey);
+            const shard = getZoneForAddress(address);
+            if (!shard) {
+                throw new Error(`Address ${address} not found in any shard`);
             }
-            if (!Object.values(exports.Zone).includes(originZone) || !Object.values(exports.Zone).includes(destinationZone)) {
-                throw new Error('Invalid zone');
+            // verify all inputs are from the same shard
+            if (tx.txInputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
+                throw new Error('All inputs must be from the same shard');
             }
-            // 1. Check the wallet has enough balance in the originating zone to send the transaction
-            const balance = this.getBalanceForZone(originZone);
-            if (balance < amount) {
-                throw new Error(`Insufficient balance in the originating zone: want ${amount} Qi got ${balance} Qi`);
-            }
-            // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
-            const zoneUTXOs = this.outpointsToUTXOs(originZone);
-            const fewestCoinSelector = new FewestCoinSelector(zoneUTXOs);
-            const spendTarget = amount;
-            let selection = fewestCoinSelector.performSelection(spendTarget);
-            // 3. Generate as many unused addresses as required to populate the spend outputs
-            const sendAddresses = [];
-            while (sendAddresses.length < selection.spendOutputs.length) {
-                const address = this.getNextSendAddress(recipientPaymentCode, destinationZone).address;
-                const { isUsed } = await this.checkAddressUse(address);
-                if (!isUsed) {
-                    sendAddresses.push(address);
-                }
-            }
-            // 4. get known change addresses, then populate with new ones as needed
-            const changeAddresses = [];
-            for (let i = 0; i < selection.changeOutputs.length; i++) {
-                if (this._gapChangeAddresses.length > 0) {
-                    // 1. get next change address from gap addresses array
-                    // 2. remove it from the gap change addresses array
-                    // 3. add it to the change addresses array
-                    // 4. add it to the used gap change addresses array
-                    const nextChangeAddressInfo = this._gapChangeAddresses.shift();
-                    changeAddresses.push(nextChangeAddressInfo.address);
-                    this._usedGapChangeAddresses.push(nextChangeAddressInfo);
-                }
-                else {
-                    changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
-                }
-            }
-            // 5. Create the transaction and sign it using the signTransaction method
-            // 5.1 Fetch the public keys for the input addresses
-            let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
-            if (inputPubKeys.some((pubkey) => !pubkey)) {
-                throw new Error('Missing public key for input address');
-            }
-            const chainId = (await this.provider.getNetwork()).chainId;
-            let tx = await this.prepareTransaction(selection, inputPubKeys.map((pubkey) => pubkey), sendAddresses, changeAddresses, Number(chainId));
-            const gasLimit = await this.provider.estimateGas(tx);
-            const feeData = await this.provider.getFeeData(originZone, false);
-            // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, maxFeePerGas and maxPriorityFeePerGas
-            const totalFee = gasLimit * (feeData.gasPrice ?? 1n) + (feeData.maxFeePerGas ?? 0n) + (feeData.maxPriorityFeePerGas ?? 0n);
-            // Get new selection with fee
-            selection = fewestCoinSelector.performSelection(spendTarget, totalFee);
-            // 5.7 Determine if new addresses are needed for the change outputs
-            const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
-            if (changeAddressesNeeded > 0) {
-                for (let i = 0; i < changeAddressesNeeded; i++) {
-                    changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
-                }
-            }
-            const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
-            if (spendAddressesNeeded > 0) {
-                for (let i = 0; i < spendAddressesNeeded; i++) {
-                    sendAddresses.push(this.getNextSendAddress(recipientPaymentCode, destinationZone).address);
-                }
-            }
-            inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
-            tx = await this.prepareTransaction(selection, inputPubKeys.map((pubkey) => pubkey), sendAddresses, changeAddresses, Number(chainId));
-            // Move used outpoints to pendingOutpoints
-            this.moveOutpointsToPending(tx.txInputs);
-            // 5.6 Sign the transaction
             const signedTx = await this.signTransaction(tx);
-            // 6. Broadcast the transaction to the network using the provider
-            return this.provider.broadcastTransaction(originZone, signedTx);
-        }
-        async prepareTransaction(selection, inputPubKeys, sendAddresses, changeAddresses, chainId) {
-            const tx = new QiTransaction();
-            tx.txInputs = selection.inputs.map((input, index) => ({
-                txhash: input.txhash,
-                index: input.index,
-                pubkey: inputPubKeys[index],
-            }));
-            // 5.3 Create the "sender" outputs
-            const senderOutputs = selection.spendOutputs.map((output, index) => ({
-                address: sendAddresses[index],
-                denomination: output.denomination,
-            }));
-            // 5.4 Create the "change" outputs
-            const changeOutputs = selection.changeOutputs.map((output, index) => ({
-                address: changeAddresses[index],
-                denomination: output.denomination,
-            }));
-            tx.txOutputs = [...senderOutputs, ...changeOutputs].map((output) => ({
-                address: output.address,
-                denomination: output.denomination,
-            }));
-            tx.chainId = chainId;
-            return tx;
-        }
-        /**
-         * Checks the status of pending outpoints and updates the wallet's UTXO set accordingly.
-         *
-         * @param zone The zone in which to check the pending outpoints.
-         */
-        async checkPendingOutpoints(zone) {
-            // Create a copy to iterate over, as we'll be modifying the _pendingOutpoints array
-            const pendingOutpoints = [...this._pendingOutpoints.filter((info) => info.zone === zone)];
-            const uniqueAddresses = new Set(pendingOutpoints.map((info) => info.address));
-            const outpointsByAddress = await Promise.all(Array.from(uniqueAddresses).map((address) => this.getOutpointsByAddress(address)));
-            const allOutpointsByAddress = outpointsByAddress.flat();
-            for (const outpointInfo of pendingOutpoints) {
-                const isSpent = !allOutpointsByAddress.some((outpoint) => outpoint.txhash === outpointInfo.outpoint.txhash && outpoint.index === outpointInfo.outpoint.index);
-                if (isSpent) {
-                    // Outpoint has been spent; remove it from pendingOutpoints
-                    this.removeOutpointFromPending(outpointInfo.outpoint);
-                }
-                else {
-                    // Outpoint is still unspent; move it back to available outpoints
-                    this.moveOutpointToAvailable(outpointInfo);
-                }
-            }
-        }
-        /**
-         * Moves specified inputs to pending outpoints.
-         *
-         * @param inputs List of inputs used in the transaction.
-         */
-        moveOutpointsToPending(inputs) {
-            inputs.forEach((input) => {
-                const index = this._availableOutpoints.findIndex((outpointInfo) => outpointInfo.outpoint.txhash === input.txhash && outpointInfo.outpoint.index === input.index);
-                if (index !== -1) {
-                    const [outpointInfo] = this._availableOutpoints.splice(index, 1);
-                    this._pendingOutpoints.push(outpointInfo);
-                }
-            });
-        }
-        /**
-         * Removes an outpoint from the pending outpoints.
-         *
-         * @param outpoint The outpoint to remove.
-         */
-        removeOutpointFromPending(outpoint) {
-            this._pendingOutpoints = this._pendingOutpoints.filter((info) => !(info.outpoint.txhash === outpoint.txhash && info.outpoint.index === outpoint.index));
-        }
-        /**
-         * Moves an outpoint from pending back to available outpoints.
-         *
-         * @param outpointInfo The outpoint info to move.
-         */
-        moveOutpointToAvailable(outpointInfo) {
-            this.removeOutpointFromPending(outpointInfo.outpoint);
-            this._availableOutpoints.push(outpointInfo);
+            return await this.provider.broadcastTransaction(shard, signedTx);
         }
         /**
          * Returns a schnorr signature for the given message and private key.
@@ -27646,12 +26213,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         /**
          * Retrieves the private key for a given transaction input.
          *
-         * This method derives the private key for a transaction input by locating the address info and then deriving the
-         * private key based on where the address info was found:
+         * This method derives the private key for a transaction input by following these steps:
          *
-         * - For BIP44 addresses (standard or change), it uses the HD wallet to derive the private key.
-         * - For payment channel addresses (BIP47), it uses PaymentCodePrivate to derive the private key.
+         * 1. Ensures the input contains a public key.
+         * 2. Computes the address from the public key.
+         * 3. Fetches address information associated with the computed address.
+         * 4. Derives the hierarchical deterministic (HD) node corresponding to the address.
+         * 5. Returns the private key of the derived HD node.
          *
+         * @ignore
          * @param {TxInput} input - The transaction input containing the public key.
          * @returns {string} The private key corresponding to the transaction input.
          * @throws {Error} If the input does not contain a public key or if the address information cannot be found.
@@ -27660,42 +26230,21 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (!input.pubkey)
                 throw new Error('Missing public key for input');
             const address = computeAddress(input.pubkey);
-            const addressInfo = this.locateAddressInfo(address);
-            if (!addressInfo) {
+            // get address info
+            const addressInfo = this.getAddressInfo(address);
+            if (!addressInfo)
                 throw new Error(`Address not found: ${address}`);
-            }
-            if ('change' in addressInfo) {
-                // NeuteredAddressInfo (BIP44 addresses)
-                const changeIndex = addressInfo.change ? 1 : 0;
-                const addressNode = this._root
-                    .deriveChild(addressInfo.account)
-                    .deriveChild(changeIndex)
-                    .deriveChild(addressInfo.index);
-                return addressNode.privateKey;
-            }
-            else {
-                // PaymentChannelAddressInfo (BIP47 addresses)
-                const pcAddressInfo = addressInfo;
-                const account = pcAddressInfo.account;
-                const index = pcAddressInfo.index - 1;
-                const counterpartyPaymentCode = pcAddressInfo.counterpartyPaymentCode;
-                if (!counterpartyPaymentCode) {
-                    throw new Error('Counterparty payment code not found for payment channel address');
-                }
-                const bip32 = BIP32Factory(ecc);
-                const buf = bs58check.decode(counterpartyPaymentCode);
-                const version = buf[0];
-                if (version !== PC_VERSION)
-                    throw new Error('Invalid payment code version');
-                const counterpartyPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
-                const paymentCodePrivate = this._getPaymentCodePrivate(account);
-                const paymentPrivateKey = paymentCodePrivate.derivePaymentPrivateKey(counterpartyPCodePublic, index);
-                return hexlify(paymentPrivateKey);
-            }
+            // derive an HDNode for the address and get the private key
+            const changeIndex = addressInfo.change ? 1 : 0;
+            const addressNode = this._root
+                .deriveChild(addressInfo.account)
+                .deriveChild(changeIndex)
+                .deriveChild(addressInfo.index);
+            return addressNode.privateKey;
         }
         /**
          * Scans the specified zone for addresses with unspent outputs. Starting at index 0, it will generate new addresses
-         * until the gap limit is reached for external and change BIP44 addresses and payment channel addresses.
+         * until the gap limit is reached for both gap and change addresses.
          *
          * @param {Zone} zone - The zone in which to scan for addresses.
          * @param {number} [account=0] - The index of the account to scan. Default is `0`
@@ -27709,28 +26258,38 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this._changeAddresses = new Map();
             this._gapAddresses = [];
             this._gapChangeAddresses = [];
-            this._availableOutpoints = [];
-            // Reset each map so that all keys have empty array values but keys are preserved
-            const resetSenderPaymentCodeInfo = new Map(Array.from(this._senderPaymentCodeInfo.keys()).map((key) => [key, []]));
-            const resetReceiverPaymentCodeInfo = new Map(Array.from(this._receiverPaymentCodeInfo.keys()).map((key) => [key, []]));
-            this._senderPaymentCodeInfo = resetSenderPaymentCodeInfo;
-            this._receiverPaymentCodeInfo = resetReceiverPaymentCodeInfo;
+            this._outpoints = [];
             await this._scan(zone, account);
         }
         /**
          * Scans the specified zone for addresses with unspent outputs. Starting at the last address index, it will generate
-         * new addresses until the gap limit is reached for external and change BIP44 addresses and payment channel
-         * addresses.
+         * new addresses until the gap limit is reached for both gap and change addresses. If no account is specified, it
+         * will scan all accounts known to the wallet.
          *
          * @param {Zone} zone - The zone in which to sync addresses.
-         * @param {number} [account=0] - The index of the account to sync. Default is `0`
+         * @param {number} [account] - The index of the account to sync. If not specified, all accounts will be scanned.
          * @returns {Promise<void>} A promise that resolves when the sync is complete.
          * @throws {Error} If the zone is invalid.
          */
-        async sync(zone, account = 0) {
+        async sync(zone, account) {
             this.validateZone(zone);
-            await this._scan(zone, account);
-            await this.checkPendingOutpoints(zone);
+            // if no account is specified, scan all accounts.
+            if (account === undefined) {
+                const addressInfos = Array.from(this._addresses.values());
+                const accounts = addressInfos.reduce((unique, info) => {
+                    if (!unique.includes(info.account)) {
+                        unique.push(info.account);
+                    }
+                    return unique;
+                }, []);
+                for (const acc of accounts) {
+                    await this._scan(zone, acc);
+                }
+            }
+            else {
+                await this._scan(zone, account);
+            }
+            return;
         }
         /**
          * Internal method to scan the specified zone for addresses with unspent outputs. This method handles the actual
@@ -27744,17 +26303,18 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         async _scan(zone, account = 0) {
             if (!this.provider)
                 throw new Error('Provider not set');
-            // Start scanning processes for each derivation tree
-            const scans = [
-                this.scanBIP44Addresses(zone, account, false),
-                this.scanBIP44Addresses(zone, account, true), // Change addresses
-            ];
-            // Add scanning processes for each payment channel
-            for (const paymentCode of this._receiverPaymentCodeInfo.keys()) {
-                scans.push(this.scanPaymentChannel(zone, account, paymentCode));
+            let gapAddressesCount = 0;
+            let changeGapAddressesCount = 0;
+            while (gapAddressesCount < QiHDWallet._GAP_LIMIT || changeGapAddressesCount < QiHDWallet._GAP_LIMIT) {
+                [gapAddressesCount, changeGapAddressesCount] = await Promise.all([
+                    gapAddressesCount < QiHDWallet._GAP_LIMIT
+                        ? this.scanAddress(zone, account, false, gapAddressesCount)
+                        : gapAddressesCount,
+                    changeGapAddressesCount < QiHDWallet._GAP_LIMIT
+                        ? this.scanAddress(zone, account, true, changeGapAddressesCount)
+                        : changeGapAddressesCount,
+                ]);
             }
-            // Run all scans in parallel
-            await Promise.all(scans);
         }
         /**
          * Scans for the next address in the specified zone and account, checking for associated outpoints, and updates the
@@ -27763,169 +26323,29 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {Zone} zone - The zone in which the address is being scanned.
          * @param {number} account - The index of the account for which the address is being scanned.
          * @param {boolean} isChange - A flag indicating whether the address is a change address.
-         * @returns {Promise<void>} A promise that resolves when the scan is complete.
+         * @param {number} addressesCount - The current count of addresses scanned.
+         * @returns {Promise<number>} A promise that resolves to the updated address count.
          * @throws {Error} If an error occurs during the address scanning or outpoints retrieval process.
          */
-        async scanBIP44Addresses(zone, account, isChange) {
+        async scanAddress(zone, account, isChange, addressesCount) {
             const addressMap = isChange ? this._changeAddresses : this._addresses;
-            const gapAddresses = isChange ? this._gapChangeAddresses : this._gapAddresses;
-            const usedGapAddresses = isChange ? this._usedGapChangeAddresses : this._usedGapAddresses;
-            // First, add all used gap addresses to the address map and import their outpoints
-            for (const addressInfo of usedGapAddresses) {
-                this._addAddress(addressMap, account, addressInfo.index, isChange);
-                const outpoints = await this.getOutpointsByAddress(addressInfo.address);
-                if (outpoints.length > 0) {
-                    this.importOutpoints(outpoints.map((outpoint) => ({
-                        outpoint,
-                        address: addressInfo.address,
-                        zone,
-                        account,
-                    })));
-                }
-            }
-            let gapCount = 0;
-            // Second, re-examine existing gap addresses
-            const newlyUsedAddresses = [];
-            for (let i = 0; i < gapAddresses.length;) {
-                const addressInfo = gapAddresses[i];
-                const { isUsed, outpoints } = await this.checkAddressUse(addressInfo.address);
-                if (isUsed) {
-                    // Address has been used since last scan
-                    this._addAddress(addressMap, account, addressInfo.index, isChange);
-                    if (outpoints.length > 0) {
-                        this.importOutpoints(outpoints.map((outpoint) => ({
-                            outpoint,
-                            address: addressInfo.address,
-                            zone,
-                            account,
-                        })));
-                    }
-                    // Remove from gap addresses
-                    newlyUsedAddresses.push(addressInfo);
-                    gapCount = 0;
-                }
-                else {
-                    gapCount++;
-                    i++;
-                }
-            }
-            // remove addresses that have been used from the gap addresses
-            const updatedGapAddresses = gapAddresses.filter((addressInfo) => !newlyUsedAddresses.some((usedAddress) => usedAddress.address === addressInfo.address));
-            // Scan for new gap addresses
-            const newGapAddresses = [];
-            while (gapCount < QiHDWallet._GAP_LIMIT) {
-                const addressInfo = this._getNextAddress(account, zone, isChange, addressMap);
-                const { isUsed, outpoints } = await this.checkAddressUse(addressInfo.address);
-                if (isUsed) {
-                    if (outpoints.length > 0) {
-                        this.importOutpoints(outpoints.map((outpoint) => ({
-                            outpoint,
-                            address: addressInfo.address,
-                            zone,
-                            account,
-                        })));
-                    }
-                    gapCount = 0;
-                }
-                else {
-                    gapCount++;
-                    // check if the address is already in the updated gap addresses array
-                    if (!updatedGapAddresses.some((usedAddress) => usedAddress.address === addressInfo.address)) {
-                        newGapAddresses.push(addressInfo);
-                    }
-                }
-            }
-            // update the gap addresses
-            if (isChange) {
-                this._gapChangeAddresses = [...updatedGapAddresses, ...newGapAddresses];
+            const addressInfo = this._getNextAddress(account, zone, isChange, addressMap);
+            const outpoints = await this.getOutpointsByAddress(addressInfo.address);
+            if (outpoints.length > 0) {
+                this.importOutpoints(outpoints.map((outpoint) => ({
+                    outpoint,
+                    address: addressInfo.address,
+                    zone,
+                    account,
+                })));
+                addressesCount = 0;
+                isChange ? (this._gapChangeAddresses = []) : (this._gapAddresses = []);
             }
             else {
-                this._gapAddresses = [...updatedGapAddresses, ...newGapAddresses];
+                addressesCount++;
+                isChange ? this._gapChangeAddresses.push(addressInfo) : this._gapAddresses.push(addressInfo);
             }
-        }
-        /**
-         * Scans the specified payment channel for addresses with unspent outputs. Starting at the last address index, it
-         * will generate new addresses until the gap limit is reached.
-         *
-         * @param {Zone} zone - The zone in which to scan for addresses.
-         * @param {number} account - The index of the account to scan.
-         * @param {string} paymentCode - The payment code to scan.
-         * @returns {Promise<void>} A promise that resolves when the scan is complete.
-         * @throws {Error} If the zone is invalid.
-         */
-        async scanPaymentChannel(zone, account, paymentCode) {
-            let gapCount = 0;
-            const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(paymentCode);
-            if (!paymentCodeInfoArray) {
-                throw new Error(`Payment code ${paymentCode} not found`);
-            }
-            // first, re-examine existing unused addresses
-            const newlyUsedAddresses = [];
-            const unusedAddresses = paymentCodeInfoArray.filter((info) => !info.isUsed);
-            for (let i = 0; i < unusedAddresses.length;) {
-                const addressInfo = unusedAddresses[i];
-                const { isUsed, outpoints } = await this.checkAddressUse(addressInfo.address);
-                if (outpoints.length > 0 || isUsed) {
-                    // Address has been used since last scan
-                    addressInfo.isUsed = true;
-                    const pcAddressInfoIndex = paymentCodeInfoArray.findIndex((info) => info.index === addressInfo.index);
-                    paymentCodeInfoArray[pcAddressInfoIndex] = addressInfo;
-                    this.importOutpoints(outpoints.map((outpoint) => ({
-                        outpoint,
-                        address: addressInfo.address,
-                        zone,
-                        account,
-                    })));
-                    // Remove from gap addresses
-                    newlyUsedAddresses.push(addressInfo);
-                    gapCount = 0;
-                }
-                else {
-                    // Address is still unused
-                    gapCount++;
-                    i++;
-                }
-            }
-            // remove the addresses that have been used from the payment code info array
-            const updatedPaymentCodeInfoArray = paymentCodeInfoArray.filter((addressInfo) => !newlyUsedAddresses.some((usedAddress) => usedAddress.index === addressInfo.index));
-            // Then, scan for new gap addresses
-            while (gapCount < QiHDWallet._GAP_LIMIT) {
-                const pcAddressInfo = this.getNextReceiveAddress(paymentCode, zone, account);
-                const outpoints = await this.getOutpointsByAddress(pcAddressInfo.address);
-                let isUsed = false;
-                if (outpoints.length > 0) {
-                    isUsed = true;
-                    this.importOutpoints(outpoints.map((outpoint) => ({
-                        outpoint,
-                        address: pcAddressInfo.address,
-                        zone,
-                        account,
-                    })));
-                    gapCount = 0;
-                }
-                else if (this._addressUseChecker !== undefined &&
-                    (await this._addressUseChecker(pcAddressInfo.address))) {
-                    // address checker returned true, so the address is used
-                    isUsed = true;
-                    gapCount = 0;
-                }
-                else {
-                    gapCount++;
-                }
-                if (isUsed) {
-                    // update the payment code info array if the address has been used
-                    pcAddressInfo.isUsed = isUsed;
-                    const pcAddressInfoIndex = updatedPaymentCodeInfoArray.findIndex((info) => info.index === pcAddressInfo.index);
-                    if (pcAddressInfoIndex !== -1) {
-                        updatedPaymentCodeInfoArray[pcAddressInfoIndex] = pcAddressInfo;
-                    }
-                    else {
-                        updatedPaymentCodeInfoArray.push(pcAddressInfo);
-                    }
-                }
-            }
-            // update the payment code info map
-            this._receiverPaymentCodeInfo.set(paymentCode, updatedPaymentCodeInfoArray);
+            return addressesCount;
         }
         /**
          * Queries the network node for the outpoints of the specified address.
@@ -27937,29 +26357,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         async getOutpointsByAddress(address) {
             try {
-                return await this.provider.getOutpointsByAddress(address);
+                const outpointsMap = await this.provider.getOutpointsByAddress(address);
+                if (!outpointsMap) {
+                    return [];
+                }
+                return Object.values(outpointsMap);
             }
             catch (error) {
                 throw new Error(`Failed to get outpoints for address: ${address} - error: ${error}`);
             }
-        }
-        async checkAddressUse(address) {
-            let isUsed = false;
-            let outpoints = [];
-            try {
-                outpoints = await this.getOutpointsByAddress(address);
-                if (outpoints.length > 0) {
-                    isUsed = true;
-                }
-                else if (this._addressUseChecker !== undefined && (await this._addressUseChecker(address))) {
-                    // address checker returned true, so the address is used
-                    isUsed = true;
-                }
-            }
-            catch (error) {
-                throw new Error(`Failed to get outpoints for address: ${address} - error: ${error}`);
-            }
-            return { isUsed, outpoints };
         }
         /**
          * Gets the change addresses for the specified zone.
@@ -28005,7 +26411,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         async signMessage(address, message) {
             const addrNode = this._getHDNodeForAddress(address);
             const privKey = addrNode.privateKey;
-            const digest = keccak256(message);
+            const digest = keccak_256(message);
             const signature = schnorr.sign(digest, getBytes(privKey));
             return hexlify(signature);
         }
@@ -28018,15 +26424,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         serialize() {
             const hdwalletSerialized = super.serialize();
             return {
-                outpoints: this._availableOutpoints,
-                pendingOutpoints: this._pendingOutpoints,
+                outpoints: this._outpoints,
                 changeAddresses: Array.from(this._changeAddresses.values()),
                 gapAddresses: this._gapAddresses,
                 gapChangeAddresses: this._gapChangeAddresses,
-                usedGapAddresses: this._usedGapAddresses,
-                usedGapChangeAddresses: this._usedGapChangeAddresses,
-                receiverPaymentCodeInfo: Object.fromEntries(this._receiverPaymentCodeInfo),
-                senderPaymentCodeInfo: Object.fromEntries(this._senderPaymentCodeInfo),
                 ...hdwalletSerialized,
             };
         }
@@ -28065,73 +26466,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 wallet._gapChangeAddresses.push(gapChangeAddressInfo);
             }
-            // validate the used gap addresses and import them
-            for (const usedGapAddressInfo of serialized.usedGapAddresses) {
-                if (!wallet._addresses.has(usedGapAddressInfo.address)) {
-                    throw new Error(`Address ${usedGapAddressInfo.address} not found in wallet`);
-                }
-                wallet._usedGapAddresses.push(usedGapAddressInfo);
-            }
-            // validate the used gap change addresses and import them
-            for (const usedGapChangeAddressInfo of serialized.usedGapChangeAddresses) {
-                if (!wallet._changeAddresses.has(usedGapChangeAddressInfo.address)) {
-                    throw new Error(`Address ${usedGapChangeAddressInfo.address} not found in wallet`);
-                }
-                wallet._usedGapChangeAddresses.push(usedGapChangeAddressInfo);
-            }
-            // validate the available outpoints and import them
+            // validate the outpoints and import them
             wallet.validateOutpointInfo(serialized.outpoints);
-            wallet._availableOutpoints.push(...serialized.outpoints);
-            // validate the pending outpoints and import them
-            wallet.validateOutpointInfo(serialized.pendingOutpoints);
-            wallet._pendingOutpoints.push(...serialized.pendingOutpoints);
-            // validate and import the payment code info
-            wallet.validateAndImportPaymentCodeInfo(serialized.receiverPaymentCodeInfo, 'receiver');
-            wallet.validateAndImportPaymentCodeInfo(serialized.senderPaymentCodeInfo, 'sender');
+            wallet._outpoints.push(...serialized.outpoints);
             return wallet;
-        }
-        /**
-         * Validates and imports a map of payment code info.
-         *
-         * @param {Map<string, PaymentChannelAddressInfo[]>} paymentCodeInfoMap - The map of payment code info to validate
-         *   and import.
-         * @param {'receiver' | 'sender'} target - The target map to update ('receiver' or 'sender').
-         * @throws {Error} If any of the payment code info is invalid.
-         */
-        validateAndImportPaymentCodeInfo(paymentCodeInfoMap, target) {
-            const targetMap = target === 'receiver' ? this._receiverPaymentCodeInfo : this._senderPaymentCodeInfo;
-            for (const [paymentCode, paymentCodeInfoArray] of Object.entries(paymentCodeInfoMap)) {
-                if (!validatePaymentCode(paymentCode)) {
-                    throw new Error(`Invalid payment code: ${paymentCode}`);
-                }
-                for (const pcInfo of paymentCodeInfoArray) {
-                    this.validatePaymentCodeInfo(pcInfo);
-                }
-                targetMap.set(paymentCode, paymentCodeInfoArray);
-            }
-        }
-        /**
-         * Validates a payment code info object.
-         *
-         * @param {PaymentChannelAddressInfo} pcInfo - The payment code info to validate.
-         * @throws {Error} If the payment code info is invalid.
-         */
-        validatePaymentCodeInfo(pcInfo) {
-            if (!/^(0x)?[0-9a-fA-F]{40}$/.test(pcInfo.address)) {
-                throw new Error('Invalid payment code info: address must be a 40-character hexadecimal string');
-            }
-            if (!Number.isInteger(pcInfo.index) || pcInfo.index < 0) {
-                throw new Error('Invalid payment code info: index must be a non-negative integer');
-            }
-            if (typeof pcInfo.isUsed !== 'boolean') {
-                throw new Error('Invalid payment code info: isUsed must be a boolean');
-            }
-            if (!Object.values(exports.Zone).includes(pcInfo.zone)) {
-                throw new Error(`Invalid payment code info: zone '${pcInfo.zone}' is not a valid Zone`);
-            }
-            if (!Number.isInteger(pcInfo.account) || pcInfo.account < 0) {
-                throw new Error('Invalid payment code info: account must be a non-negative integer');
-            }
         }
         /**
          * Validates an array of OutpointInfo objects. This method checks the validity of each OutpointInfo object by
@@ -28151,185 +26489,18 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 // validate zone
                 this.validateZone(info.zone);
                 // validate address and account
-                this.validateAddressAndAccount(info.address, info.account);
+                const addressInfo = this.getAddressInfo(info.address);
+                if (!addressInfo) {
+                    throw new Error(`Address ${info.address} not found in wallet`);
+                }
+                if (info.account !== undefined && info.account !== addressInfo.account) {
+                    throw new Error(`Account ${info.account} not found for address ${info.address}`);
+                }
                 // validate Outpoint
                 if (info.outpoint.txhash == null || info.outpoint.index == null || info.outpoint.denomination == null) {
                     throw new Error(`Invalid Outpoint: ${JSON.stringify(info)} `);
                 }
             });
-        }
-        validateAddressAndAccount(address, account) {
-            const addressInfo = this.locateAddressInfo(address);
-            if (!addressInfo) {
-                throw new Error(`Address ${address} not found in wallet`);
-            }
-            if (account && account !== addressInfo.account) {
-                throw new Error(`Address ${address} does not match account ${account}`);
-            }
-        }
-        /**
-         * Creates a new BIP47 payment code for the specified account. The payment code is derived from the account's BIP32
-         * root key.
-         *
-         * @param {number} account - The account index to derive the payment code from.
-         * @returns {Promise<string>} A promise that resolves to the Base58-encoded BIP47 payment code.
-         */
-        async getPaymentCode(account = 0) {
-            const privatePcode = await this._getPaymentCodePrivate(account);
-            return privatePcode.toBase58();
-        }
-        // helper method to get a bip32 API instance
-        _getBIP32API() {
-            return BIP32Factory(ecc);
-        }
-        // helper method to decode a base58 string into a Uint8Array
-        _decodeBase58(base58) {
-            return bs58check.decode(base58);
-        }
-        /**
-         * Generates a BIP47 private payment code for the specified account. The payment code is created by combining the
-         * account's public key and chain code.
-         *
-         * @private
-         * @param {number} account - The account index for which to generate the private payment code.
-         * @returns {Promise<PaymentCodePrivate>} A promise that resolves to the PaymentCodePrivate instance.
-         */
-        _getPaymentCodePrivate(account) {
-            const bip32 = this._getBIP32API();
-            const accountNode = this._root.deriveChild(account);
-            // payment code array
-            const pc = new Uint8Array(80);
-            // set version + options
-            pc.set([1, 0]);
-            // set the public key
-            const pubKey = accountNode.publicKey;
-            pc.set(getBytes(pubKey), 2);
-            // set the chain code
-            const chainCode = accountNode.chainCode;
-            pc.set(getBytes(chainCode), 35);
-            const adapter = new HDNodeBIP32Adapter(accountNode);
-            return new PaymentCodePrivate(adapter, ecc, bip32, pc);
-        }
-        /**
-         * Generates a payment address for sending funds to the specified receiver's BIP47 payment code. Uses Diffie-Hellman
-         * key exchange to derive the address from the receiver's public key and sender's private key.
-         *
-         * @param {string} receiverPaymentCode - The Base58-encoded BIP47 payment code of the receiver.
-         * @returns {Promise<string>} A promise that resolves to the payment address for sending funds.
-         * @throws {Error} Throws an error if the payment code version is invalid.
-         */
-        getNextSendAddress(receiverPaymentCode, zone, account = 0) {
-            const bip32 = this._getBIP32API();
-            const buf = this._decodeBase58(receiverPaymentCode);
-            const version = buf[0];
-            if (version !== PC_VERSION)
-                throw new Error('Invalid payment code version');
-            const receiverPCodePrivate = this._getPaymentCodePrivate(account);
-            const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
-            const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(receiverPaymentCode);
-            const lastIndex = paymentCodeInfoArray && paymentCodeInfoArray.length > 0
-                ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
-                : 0;
-            let addrIndex = lastIndex;
-            for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
-                const address = senderPCodePublic.getPaymentAddress(receiverPCodePrivate, addrIndex++);
-                if (this.isValidAddressForZone(address, zone)) {
-                    const pcInfo = {
-                        address,
-                        pubKey: hexlify(senderPCodePublic.pubKey),
-                        index: addrIndex,
-                        account,
-                        zone,
-                        isUsed: false,
-                    };
-                    if (paymentCodeInfoArray) {
-                        paymentCodeInfoArray.push(pcInfo);
-                    }
-                    else {
-                        this._senderPaymentCodeInfo.set(receiverPaymentCode, [pcInfo]);
-                    }
-                    return pcInfo;
-                }
-            }
-            throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
-        }
-        /**
-         * Generates a payment address for receiving funds from the specified sender's BIP47 payment code. Uses
-         * Diffie-Hellman key exchange to derive the address from the sender's public key and receiver's private key.
-         *
-         * @param {string} senderPaymentCode - The Base58-encoded BIP47 payment code of the sender.
-         * @returns {Promise<string>} A promise that resolves to the payment address for receiving funds.
-         * @throws {Error} Throws an error if the payment code version is invalid.
-         */
-        getNextReceiveAddress(senderPaymentCode, zone, account = 0) {
-            const bip32 = this._getBIP32API();
-            const buf = this._decodeBase58(senderPaymentCode);
-            const version = buf[0];
-            if (version !== PC_VERSION)
-                throw new Error('Invalid payment code version');
-            const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
-            const receiverPCodePrivate = this._getPaymentCodePrivate(account);
-            const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(senderPaymentCode);
-            const lastIndex = paymentCodeInfoArray && paymentCodeInfoArray.length > 0
-                ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
-                : 0;
-            let addrIndex = lastIndex;
-            for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
-                const address = receiverPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex++);
-                if (this.isValidAddressForZone(address, zone)) {
-                    const pcInfo = {
-                        address,
-                        pubKey: hexlify(receiverPCodePrivate.pubKey),
-                        index: addrIndex,
-                        account,
-                        zone,
-                        isUsed: false,
-                    };
-                    if (paymentCodeInfoArray) {
-                        paymentCodeInfoArray.push(pcInfo);
-                    }
-                    else {
-                        this._receiverPaymentCodeInfo.set(senderPaymentCode, [pcInfo]);
-                    }
-                    return pcInfo;
-                }
-            }
-            throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
-        }
-        /**
-         * Receives a payment code and stores it in the wallet for future use. If the payment code is already in the wallet,
-         * it will be ignored.
-         *
-         * @param {string} paymentCode - The payment code to store.
-         * @param {'receiver' | 'sender'} type - The type of payment code ('receiver' or 'sender').
-         */
-        openChannel(paymentCode, type) {
-            if (!validatePaymentCode(paymentCode)) {
-                throw new Error(`Invalid payment code: ${paymentCode}`);
-            }
-            if (type === 'receiver') {
-                if (!this._receiverPaymentCodeInfo.has(paymentCode)) {
-                    this._receiverPaymentCodeInfo.set(paymentCode, []);
-                }
-            }
-            else {
-                if (!this._senderPaymentCodeInfo.has(paymentCode)) {
-                    this._senderPaymentCodeInfo.set(paymentCode, []);
-                }
-            }
-        }
-        /**
-         * Gets the address info for a given address.
-         *
-         * @param {string} address - The address.
-         * @returns {NeuteredAddressInfo | null} The address info or null if not found.
-         */
-        getChangeAddressInfo(address) {
-            const changeAddressInfo = this._changeAddresses.get(address);
-            if (!changeAddressInfo) {
-                return null;
-            }
-            return changeAddressInfo;
         }
     }
 
@@ -28880,10 +27051,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * migrate the listener to the static event. We also need to maintain a map of Signer to address so we can sync respond
      * to listenerCount.
      */
-    /**
-     * Constants
-     */
-    const BN_2 = BigInt(2);
     /**
      * Check if a value is a Promise.
      *
@@ -29453,23 +27620,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         // TODO: `newtork` is not used, remove or re-write
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         _wrapTransactionResponse(tx, network) {
-            try {
-                if (tx.type === 0 || tx.type === 1) {
-                    // For QuaiTransaction, format and wrap as before
-                    const formattedTx = formatTransactionResponse(tx);
-                    return new QuaiTransactionResponse(formattedTx, this);
-                }
-                else if (tx.type === 2) {
-                    // For QiTransaction, use fromProto() directly
-                    return new QiTransactionResponse(tx, this);
-                }
-                else {
-                    throw new Error('Unknown transaction type');
-                }
+            if ('from' in tx) {
+                return new QuaiTransactionResponse(formatTransactionResponse(tx), this);
             }
-            catch (error) {
-                console.error('Error in _wrapTransactionResponse:', error);
-                throw error;
+            else {
+                return new QiTransactionResponse(formatTransactionResponse(tx), this);
             }
         }
         /**
@@ -29483,7 +27638,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         _detectNetwork() {
-            assert$1(false, 'sub-classes must implement this', 'UNSUPPORTED_OPERATION', {
+            assert(false, 'sub-classes must implement this', 'UNSUPPORTED_OPERATION', {
                 operation: '_detectNetwork',
             });
         }
@@ -29498,7 +27653,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {Promise<T>} A promise resolving to the result of the operation.
          */
         async _perform(req) {
-            assert$1(false, `unsupported method: ${req.method}`, 'UNSUPPORTED_OPERATION', {
+            assert(false, `unsupported method: ${req.method}`, 'UNSUPPORTED_OPERATION', {
                 operation: req.method,
                 info: req,
             });
@@ -29750,7 +27905,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 else {
                     // Otherwise, we do not allow changes to the underlying network
-                    assert$1(false, `network changed: ${expected.chainId} => ${actual.chainId} `, 'NETWORK_ERROR', {
+                    assert(false, `network changed: ${expected.chainId} => ${actual.chainId} `, 'NETWORK_ERROR', {
                         event: 'changed',
                     });
                 }
@@ -29771,7 +27926,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         async getFeeData(zone, txType = true) {
             const getFeeDataFunc = async () => {
-                const { gasPrice, priorityFee } = await resolveProperties({
+                const { gasPrice, minerTip } = await resolveProperties({
                     gasPrice: (async () => {
                         try {
                             const value = await this.#perform({ method: 'getGasPrice', txType, zone: zone });
@@ -29782,10 +27937,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         }
                         return null;
                     })(),
-                    priorityFee: (async () => {
+                    minerTip: (async () => {
                         try {
                             const value = txType
-                                ? await this.#perform({ method: 'getMaxPriorityFeePerGas', zone: zone })
+                                ? await this.#perform({ method: 'getMinerTip', zone: zone })
                                 : 0;
                             return getBigInt(value, '%response');
                             // eslint-disable-next-line no-empty
@@ -29797,12 +27952,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (gasPrice == null) {
                     throw new Error('could not determine gasPrice');
                 }
-                let maxFeePerGas = null;
-                let maxPriorityFeePerGas = null;
+                let baseMinerTip = null;
                 // These are the recommended EIP-1559 heuristics for fee data
-                maxPriorityFeePerGas = priorityFee != null ? priorityFee : BigInt('1000000000');
-                maxFeePerGas = gasPrice * BN_2 + maxPriorityFeePerGas;
-                return new FeeData(gasPrice, maxFeePerGas, maxPriorityFeePerGas);
+                baseMinerTip = minerTip != null ? minerTip : BigInt('1000000000');
+                return new FeeData(gasPrice, baseMinerTip);
             };
             return await getFeeDataFunc();
         }
@@ -29858,10 +28011,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return getBigInt(await this.#getAccountValue({ method: 'getBalance' }, address, blockTag), '%response');
         }
         async getOutpointsByAddress(address) {
-            const outpointsObj = await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest');
-            // Convert the object to an array of Outpoint objects
-            return Object.values(outpointsObj).map((outpoint) => ({
-                txhash: outpoint.TxHash,
+            const outpoints = await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest');
+            const outpointsArray = Array.isArray(outpoints) ? outpoints : [];
+            return outpointsArray.map((outpoint) => ({
+                txhash: outpoint.Txhash,
                 index: outpoint.Index,
                 denomination: outpoint.Denomination,
             }));
@@ -29888,30 +28041,22 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         // Write
         async broadcastTransaction(zone, signedTx) {
             const type = decodeProtoTransaction(getBytes(signedTx)).type;
-            try {
-                const { blockNumber, hash, network } = await resolveProperties({
-                    blockNumber: this.getBlockNumber(toShard(zone)),
-                    hash: this._perform({
-                        method: 'broadcastTransaction',
-                        signedTransaction: signedTx,
-                        zone: zone,
-                    }),
-                    network: this.getNetwork(),
-                });
-                const tx = type == 2 ? QiTransaction.from(signedTx) : QuaiTransaction.from(signedTx);
-                const txObj = tx.toJSON();
-                this.#validateTransactionHash(tx.hash || '', hash);
-                const wrappedTx = this._wrapTransactionResponse(txObj, network);
-                return wrappedTx.replaceableTransaction(blockNumber);
-            }
-            catch (error) {
-                console.error('Error in broadcastTransaction:', error);
-                throw error;
-            }
+            const { blockNumber, hash, network } = await resolveProperties({
+                blockNumber: this.getBlockNumber(toShard(zone)),
+                hash: this._perform({
+                    method: 'broadcastTransaction',
+                    signedTransaction: signedTx,
+                    zone: zone,
+                }),
+                network: this.getNetwork(),
+            });
+            const tx = type == 2 ? QiTransaction.from(signedTx) : QuaiTransaction.from(signedTx);
+            this.#validateTransactionHash(tx.hash || '', hash);
+            return this._wrapTransactionResponse(tx, network).replaceableTransaction(blockNumber);
         }
         #validateTransactionHash(computedHash, nodehash) {
             if (computedHash !== nodehash) {
-                throw new Error(`Transaction hash mismatch: ${computedHash} !== ${nodehash}`);
+                throw new Error('Transaction hash mismatch');
             }
         }
         validateUrl(url) {
@@ -30025,7 +28170,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         // TODO: unsupported, remove?
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         _getProvider(chainId) {
-            assert$1(false, 'provider cannot connect to target network', 'UNSUPPORTED_OPERATION', {
+            assert(false, 'provider cannot connect to target network', 'UNSUPPORTED_OPERATION', {
                 operation: '_getProvider()',
             });
         }
@@ -30074,7 +28219,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         // TODO: not implemented yet
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         async waitForBlock(shard, blockTag) {
-            assert$1(false, 'not implemented yet', 'NOT_IMPLEMENTED', {
+            assert(false, 'not implemented yet', 'NOT_IMPLEMENTED', {
                 operation: 'waitForBlock',
             });
         }
@@ -30395,7 +28540,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.#pausedState == !!dropWhilePaused) {
                     return;
                 }
-                assert$1(false, 'cannot change pause type; resume first', 'UNSUPPORTED_OPERATION', {
+                assert(false, 'cannot change pause type; resume first', 'UNSUPPORTED_OPERATION', {
                     operation: 'pause',
                 });
             }
@@ -30786,7 +28931,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         connect(provider) {
-            assert$1(false, 'cannot reconnect JsonRpcSigner', 'UNSUPPORTED_OPERATION', {
+            assert(false, 'cannot reconnect JsonRpcSigner', 'UNSUPPORTED_OPERATION', {
                 operation: 'signer.connect',
             });
         }
@@ -31193,7 +29338,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @throws {Error} If the network is not available yet.
          */
         get _network() {
-            assert$1(this.#network, 'network is not available yet', 'NETWORK_ERROR');
+            assert(this.#network, 'network is not available yet', 'NETWORK_ERROR');
             return this.#network;
         }
         /**
@@ -31217,9 +29362,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 const tx = req.transaction;
                 if (tx && tx.type != null && getBigInt(tx.type)) {
                     // If there are no EIP-1559 properties, it might be non-EIP-a559
-                    if (tx.maxFeePerGas == null && tx.maxPriorityFeePerGas == null) {
-                        const feeData = await this.getFeeData(req.zone, tx.type === 1); // tx type 1 is Quai and 2 is Qi
-                        if (feeData.maxFeePerGas == null && feeData.maxPriorityFeePerGas == null) {
+                    if (tx.gasPrice == null && tx.minerTip == null) {
+                        const feeData = await this.getFeeData(req.zone);
+                        if (feeData.gasPrice == null && feeData.minerTip == null) {
                             // Network doesn't know about EIP-1559 (and hence type)
                             req = Object.assign({}, req, {
                                 transaction: Object.assign({}, tx, { type: undefined }),
@@ -31412,8 +29557,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     'gasLimit',
                     'gasPrice',
                     'type',
-                    'maxFeePerGas',
-                    'maxPriorityFeePerGas',
+                    'gasPrice',
+                    'minerTip',
                     'nonce',
                     'value',
                 ].forEach((key) => {
@@ -31426,6 +29571,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     }
                     result[dstKey] = toQuantity(getBigInt(tx[key], `tx.${key}`));
                 });
+                // Make sure addresses and data are lowercase
                 ['from', 'to', 'data'].forEach((key) => {
                     if (tx[key] == null) {
                         return;
@@ -31438,19 +29584,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
             }
             else {
-                if (tx.txInputs != null) {
-                    result['txInputs'] = tx.txInputs.map((input) => ({
-                        txhash: hexlify(input.txhash),
-                        index: toQuantity(getBigInt(input.index, `tx.txInputs.${input.index}`)),
-                        pubkey: hexlify(input.pubkey),
-                    }));
-                }
-                if (tx.txOutputs != null) {
-                    result['txOutputs'] = tx.txOutputs.map((output) => ({
-                        address: hexlify(output.address),
-                        denomination: toQuantity(getBigInt(output.denomination, `tx.txOutputs.${output.denomination}`)),
-                    }));
-                }
+                throw new Error('No Qi getRPCTransaction implementation yet');
             }
             return result;
         }
@@ -31470,11 +29604,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     return { method: 'quai_blockNumber', args: [] };
                 case 'getGasPrice':
                     return {
-                        method: 'quai_baseFee',
+                        method: 'quai_gasPrice',
                         args: [req.txType],
                     };
-                case 'getMaxPriorityFeePerGas':
-                    return { method: 'quai_maxPriorityFeePerGas', args: [] };
+                case 'getMinerTip':
+                    return { method: 'quai_minerTip', args: [] };
                 case 'getPendingHeader':
                     return { method: 'quai_getPendingHeader', args: [] };
                 case 'getBalance':
@@ -31998,7 +30132,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         async deploy(...args) {
             const tx = await this.getDeployTransaction(...args);
-            assert$1(this.runner && typeof this.runner.sendTransaction === 'function', 'factory runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
+            assert(this.runner && typeof this.runner.sendTransaction === 'function', 'factory runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
                 operation: 'sendTransaction',
             });
             if (this.runner instanceof Wallet || this.runner instanceof JsonRpcSigner) {
@@ -32087,10 +30221,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         constructor(ethereum, network) {
             super(network, { batchMaxCount: 1 });
-            if (this.initResolvePromise)
-                this.initResolvePromise();
-            this.#request = async (method, params, shard) => {
-                const payload = { method, params, shard };
+            this.#request = async (method, params) => {
+                const payload = { method, params };
                 this.emit('debug', undefined, { action: 'sendEip1193Request', payload });
                 try {
                     const result = await ethereum.request(payload);
@@ -32131,9 +30263,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {any[] | Record<string, any>} params - The parameters for the method.
          * @returns {Promise<any>} The result of the request.
          */
-        async send(method, params, shard) {
+        async send(method, params) {
             await this._start();
-            return await super.send(method, params, shard);
+            return await super.send(method, params);
         }
         /**
          * Sends a JSON-RPC payload.
@@ -32143,17 +30275,17 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {JsonRpcPayload | JsonRpcPayload[]} payload - The JSON-RPC payload.
          * @returns {Promise<(JsonRpcResult | JsonRpcError)[]>} The result of the request.
          */
-        async _send(payload, shard) {
+        async _send(payload) {
             assertArgument(!Array.isArray(payload), 'EIP-1193 does not support batch request', 'payload', payload);
             try {
-                const result = await this.#request(payload.method, payload.params || [], shard);
+                const result = await this.#request(payload.method, payload.params || []);
                 return [{ id: payload.id, result }];
             }
             catch (e) {
                 return [
                     {
                         id: payload.id,
-                        error: { code: e.code, data: e.data, message: e.message, shard: shard || undefined },
+                        error: { code: e.code, data: e.data, message: e.message },
                     },
                 ];
             }
@@ -32267,7 +30399,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {boolean} [dropWhilePaused] - Whether to drop logs while paused.
          */
         pause(dropWhilePaused) {
-            assert$1(dropWhilePaused, 'preserve logs while paused not supported by SocketSubscriber yet', 'UNSUPPORTED_OPERATION', { operation: 'pause(false)' });
+            assert(dropWhilePaused, 'preserve logs while paused not supported by SocketSubscriber yet', 'UNSUPPORTED_OPERATION', { operation: 'pause(false)' });
             this.#paused = !!dropWhilePaused;
         }
         /**
@@ -32599,11 +30731,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             throw new Error('sub-classes must override this');
         }
         validateUrl(url) {
-            const urlPattern = /^(wss?):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
+            const urlPattern = /^(ws):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
             if (!urlPattern.test(url)) {
                 let errorMessage = 'Invalid URL: ';
-                if (!/^wss?:\/\//.test(url)) {
-                    errorMessage += 'URL must start with ws:// or wss://. ';
+                if (!/^ws:\/\//.test(url)) {
+                    errorMessage += 'URL must start with ws://. ';
                 }
                 if (url.endsWith('/')) {
                     errorMessage += 'URL should not end with a /. ';
@@ -33050,7 +31182,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         TransactionReceipt: TransactionReceipt,
         Typed: Typed,
         TypedDataEncoder: TypedDataEncoder,
-        UTXO: UTXO,
         UndecodedEventLog: UndecodedEventLog,
         UnmanagedSubscriber: UnmanagedSubscriber,
         VoidSigner: VoidSigner,
@@ -33076,7 +31207,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         decodeBytes32: decodeBytes32,
         decryptKeystoreJson: decryptKeystoreJson,
         decryptKeystoreJsonSync: decryptKeystoreJsonSync,
-        denominations: denominations,
         encodeBase58: encodeBase58,
         encodeBase64: encodeBase64,
         encodeBytes32: encodeBytes32,
@@ -33217,7 +31347,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     exports.TransactionReceipt = TransactionReceipt;
     exports.Typed = Typed;
     exports.TypedDataEncoder = TypedDataEncoder;
-    exports.UTXO = UTXO;
     exports.UndecodedEventLog = UndecodedEventLog;
     exports.UnmanagedSubscriber = UnmanagedSubscriber;
     exports.VoidSigner = VoidSigner;
@@ -33242,7 +31371,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     exports.decodeBytes32 = decodeBytes32;
     exports.decryptKeystoreJson = decryptKeystoreJson;
     exports.decryptKeystoreJsonSync = decryptKeystoreJsonSync;
-    exports.denominations = denominations;
     exports.encodeBase58 = encodeBase58;
     exports.encodeBase64 = encodeBase64;
     exports.encodeBytes32 = encodeBytes32;
