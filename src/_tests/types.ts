@@ -182,8 +182,7 @@ export interface TestCaseTransactionTx {
     gasLimit?: string;
 
     gasPrice?: string;
-    maxFeePerGas?: string;
-    maxPriorityFeePerGas?: string;
+    minerTip?: string;
 
     data?: string;
     value?: string;

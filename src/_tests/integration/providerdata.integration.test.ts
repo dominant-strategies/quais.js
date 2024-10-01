@@ -107,14 +107,13 @@ async function sendTransaction(to: string) {
         console.log('Nonce: ', await providerC1.getTransactionCount(wallet.address, 'latest'));
         do {
             typeValue = getTxType(wallet.address, to);
-            const gas = await getRPCGasPrice(process.env.CYPRUS1URL);
+            const gasPrice = await getRPCGasPrice(process.env.CYPRUS1URL);
             const tx: {
                 from: string;
                 to: string;
                 value: any;
                 gasPrice: any;
-                maxFeePerGas: any;
-                maxPriorityFeePerGas: any;
+                minerTip: any;
                 nonce: number;
                 data: string;
                 type: number;
@@ -127,9 +126,8 @@ async function sendTransaction(to: string) {
                 from: wallet.address,
                 to,
                 value: quais.parseQuai('0.1'), // Sending 0.1 ether
-                gasPrice: gas * 2,
-                maxFeePerGas: quais.parseUnits('20', 'gwei'),
-                maxPriorityFeePerGas: quais.parseUnits('20', 'gwei'),
+                gasPrice: gasPrice,
+                minerTip: quais.parseUnits('20', 'gwei'),
                 nonce: await providerC1.getTransactionCount(wallet.address, 'latest'),
                 data: '',
                 type: typeValue,
@@ -213,7 +211,7 @@ describe.skip('Test Provider Block operations', function () {
             etxs: rpcBlock.etxs,
             hash: rpcBlock.hash,
             header: {
-                baseFeePerGas: BigInt(rpcBlock.header.baseFeePerGas),
+                gasPrice: BigInt(rpcBlock.header.gasPrice),
                 efficiencyScore: BigInt(rpcBlock.header.efficiencyScore),
                 etxEligibleSlices: rpcBlock.header.etxEligibleSlices,
                 etxSetRoot: rpcBlock.header.etxSetRoot,
@@ -354,8 +352,8 @@ describe.skip('Test Transaction operations', function () {
                 {
                     type: Number(etx.type),
                     nonce: Number(etx.nonce),
-                    maxPriorityFeePerGas: BigInt(etx.maxPriorityFeePerGas),
-                    maxFeePerGas: BigInt(etx.maxFeePerGas),
+                    minerTip: BigInt(etx.minerTip),
+                    gasPrice: BigInt(etx.gasPrice),
                     gas: BigInt(etx.gas),
                     value: BigInt(etx.value),
                     input: etx.input,
