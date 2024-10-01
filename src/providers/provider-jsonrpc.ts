@@ -278,19 +278,14 @@ export interface QuaiJsonRpcTransactionRequest extends AbstractJsonRpcTransactio
     gas?: string;
 
     /**
-     * The gas price per wei for transactions prior to [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559).
+     * The maximum fee per gas for [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) transactions.
      */
     gasPrice?: string;
 
     /**
-     * The maximum fee per gas for [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) transactions.
-     */
-    maxFeePerGas?: string;
-
-    /**
      * The maximum priority fee per gas for [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) transactions.
      */
-    maxPriorityFeePerGas?: string;
+    minerTip?: string;
 
     /**
      * The nonce for the transaction.
@@ -883,9 +878,9 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             const tx = req.transaction;
             if (tx && tx.type != null && getBigInt(tx.type)) {
                 // If there are no EIP-1559 properties, it might be non-EIP-a559
-                if (tx.maxFeePerGas == null && tx.maxPriorityFeePerGas == null) {
+                if (tx.gasPrice == null && tx.minerTip == null) {
                     const feeData = await this.getFeeData(req.zone);
-                    if (feeData.maxFeePerGas == null && feeData.maxPriorityFeePerGas == null) {
+                    if (feeData.gasPrice == null && feeData.minerTip == null) {
                         // Network doesn't know about EIP-1559 (and hence type)
                         req = Object.assign({}, req, {
                             transaction: Object.assign({}, tx, { type: undefined }),
@@ -1099,16 +1094,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
         if ('from' in tx || ('to' in tx && 'data' in tx)) {
             // JSON-RPC now requires numeric values to be "quantity" values
-            [
-                'chainId',
-                'gasLimit',
-                'gasPrice',
-                'type',
-                'maxFeePerGas',
-                'maxPriorityFeePerGas',
-                'nonce',
-                'value',
-            ].forEach((key) => {
+            ['chainId', 'gasLimit', 'gasPrice', 'type', 'gasPrice', 'minerTip', 'nonce', 'value'].forEach((key) => {
                 if ((<any>tx)[key] == null) {
                     return;
                 }
@@ -1155,12 +1141,12 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
             case 'getGasPrice':
                 return {
-                    method: 'quai_baseFee',
+                    method: 'quai_gasPrice',
                     args: [req.txType],
                 };
 
-            case 'getMaxPriorityFeePerGas':
-                return { method: 'quai_maxPriorityFeePerGas', args: [] };
+            case 'getMinerTip':
+                return { method: 'quai_minerTip', args: [] };
 
             case 'getPendingHeader':
                 return { method: 'quai_getPendingHeader', args: [] };

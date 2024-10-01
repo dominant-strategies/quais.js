@@ -21,9 +21,8 @@ When populating a transaction this type is returned.
 | `data` | `string` | The transaction data. | `QuaiPreparedTransactionRequest.data` | `QuaiPreparedTransactionRequest.data` |
 | `from` | `string` | The from address, if any. | `QuaiPreparedTransactionRequest.from` | `QuaiPreparedTransactionRequest.from` |
 | `gasLimit?` | `bigint` | The maximum amount of gas to allow this transaction to consume. | `QuaiPreparedTransactionRequest.gasLimit` | `QuaiPreparedTransactionRequest.gasLimit` |
-| `gasPrice?` | `bigint` | The gas price to use for legacy transactions or transactions on legacy networks.<br /><br />Most of the time the `max*FeePerGas` is preferred. | `QuaiPreparedTransactionRequest.gasPrice` | `QuaiPreparedTransactionRequest.gasPrice` |
-| `maxFeePerGas?` | `bigint` | The [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) maximum total fee to pay per gas. The actual value used<br />is protocol enforced to be the block's base fee. | `QuaiPreparedTransactionRequest.maxFeePerGas` | `QuaiPreparedTransactionRequest.maxFeePerGas` |
-| `maxPriorityFeePerGas?` | `bigint` | The [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) maximum priority fee to pay per gas. | `QuaiPreparedTransactionRequest.maxPriorityFeePerGas` | `QuaiPreparedTransactionRequest.maxPriorityFeePerGas` |
+| `gasPrice?` | `bigint` | The [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) maximum total fee to pay per gas. The actual value used<br />is protocol enforced to be the block's base fee. | `QuaiPreparedTransactionRequest.gasPrice` | `QuaiPreparedTransactionRequest.gasPrice` |
+| `minerTip?` | `bigint` | The [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) maximum priority fee to pay per gas. | `QuaiPreparedTransactionRequest.minerTip` | `QuaiPreparedTransactionRequest.minerTip` |
 | `nonce?` | `number` | The nonce of the transaction, used to prevent replay attacks. | `QuaiPreparedTransactionRequest.nonce` | `QuaiPreparedTransactionRequest.nonce` |
 | `to` | `string` | The target address. | `QuaiPreparedTransactionRequest.to` | `QuaiPreparedTransactionRequest.to` |
 | `type?` | `number` | The transaction type. | `QuaiPreparedTransactionRequest.type` | `QuaiPreparedTransactionRequest.type` |

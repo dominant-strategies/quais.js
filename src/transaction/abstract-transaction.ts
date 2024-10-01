@@ -75,14 +75,14 @@ export interface ProtoTransaction {
     chain_id: Uint8Array;
 
     /**
-     * The gas fee cap for the transaction.
+     * The gas price for the transaction.
      */
-    gas_fee_cap?: Uint8Array;
+    gas_price?: Uint8Array;
 
     /**
      * The gas tip cap for the transaction.
      */
-    gas_tip_cap?: Uint8Array;
+    miner_tip?: Uint8Array;
 
     /**
      * The access list for the transaction.

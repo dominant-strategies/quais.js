@@ -36,8 +36,8 @@ describe('Test Transaction Signing', function () {
             const txData = Object.assign({}, test.transaction, {
                 type: 0,
                 accessList: [],
-                maxFeePerGas: 0,
-                maxPriorityFeePerGas: 0,
+                gasLimit: 0,
+                minerTip: 0,
             });
             const signed = await wallet.signTransaction(txData);
             // let parsed = Transaction.from(signed);

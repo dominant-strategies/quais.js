@@ -11,8 +11,8 @@ async function main() {
     const from = addressInfo1.address;
     const txObj = new quais.QuaiTransaction(from);
     txObj.gasLimit = BigInt(1000000);
-    (txObj.maxPriorityFeePerGas = BigInt(10000000000)),
-        (txObj.maxFeePerGas = BigInt(30000000000000)),
+    (txObj.minerTip = BigInt(10000000000)),
+        (txObj.gasPrice = BigInt(30000000000000)),
         (txObj.to = '0x002F4783248e2D6FF1aa6482A8C0D7a76de3C329');
     txObj.value = BigInt(4200000);
 

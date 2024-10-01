@@ -97,38 +97,25 @@ export class FeeData {
     readonly gasPrice!: null | bigint;
 
     /**
-     * The maximum fee to pay per gas.
-     *
-     * The base fee per gas is defined by the network and based on congestion, increasing the cost during times of heavy
-     * load and lowering when less busy.
-     *
-     * The actual fee per gas will be the base fee for the block and the priority fee, up to the max fee per gas.
-     *
-     * This will be `null` on legacy networks (i.e. [pre-EIP-1559](https://eips.ethereum.org/EIPS/eip-1559))
-     */
-    readonly maxFeePerGas!: null | bigint;
-
-    /**
      * The additional amount to pay per gas to encourage a validator to include the transaction.
      *
      * The purpose of this is to compensate the validator for the adjusted risk for including a given transaction.
      *
      * This will be `null` on legacy networks (i.e. [pre-EIP-1559](https://eips.ethereum.org/EIPS/eip-1559))
      */
-    readonly maxPriorityFeePerGas!: null | bigint;
+    readonly minerTip!: null | bigint;
 
     /**
-     * Creates a new FeeData for `gasPrice`, `maxFeePerGas` and `maxPriorityFeePerGas`.
+     * Creates a new FeeData for `gasPrice`, `gasPrice` and `minerTip`.
      *
      * @param {null | bigint} [gasPrice] - The gas price.
-     * @param {null | bigint} [maxFeePerGas] - The maximum fee per gas.
-     * @param {null | bigint} [maxPriorityFeePerGas] - The maximum priority fee per gas.
+     * @param {null | bigint} [gasPrice] - The maximum fee per gas.
+     * @param {null | bigint} [minerTip] - The maximum priority fee per gas.
      */
-    constructor(gasPrice?: null | bigint, maxFeePerGas?: null | bigint, maxPriorityFeePerGas?: null | bigint) {
+    constructor(gasPrice?: null | bigint, gasLimit?: null | bigint, minerTip?: null | bigint) {
         defineProperties<FeeData>(this, {
             gasPrice: getValue(gasPrice),
-            maxFeePerGas: getValue(maxFeePerGas),
-            maxPriorityFeePerGas: getValue(maxPriorityFeePerGas),
+            minerTip: getValue(minerTip),
         });
     }
 
@@ -138,12 +125,11 @@ export class FeeData {
      * @returns {any} The JSON-friendly value.
      */
     toJSON(): any {
-        const { gasPrice, maxFeePerGas, maxPriorityFeePerGas } = this;
+        const { gasPrice, minerTip } = this;
         return {
             _type: 'FeeData',
             gasPrice: toJson(gasPrice),
-            maxFeePerGas: toJson(maxFeePerGas),
-            maxPriorityFeePerGas: toJson(maxPriorityFeePerGas),
+            minerTip: toJson(minerTip),
         };
     }
 }
@@ -220,13 +206,7 @@ export interface QuaiTransactionRequest {
     /**
      * The [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) maximum priority fee to pay per gas.
      */
-    maxPriorityFeePerGas?: null | BigNumberish;
-
-    /**
-     * The [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) maximum total fee to pay per gas. The actual value used
-     * is protocol enforced to be the block's base fee.
-     */
-    maxFeePerGas?: null | BigNumberish;
+    minerTip?: null | BigNumberish;
 
     /**
      * The transaction data.
@@ -339,13 +319,7 @@ export interface QuaiPreparedTransactionRequest {
     /**
      * The [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) maximum priority fee to pay per gas.
      */
-    maxPriorityFeePerGas?: bigint;
-
-    /**
-     * The [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) maximum total fee to pay per gas. The actual value used
-     * is protocol enforced to be the block's base fee.
-     */
-    maxFeePerGas?: bigint;
+    minerTip?: bigint;
 
     /**
      * The transaction data.
@@ -431,7 +405,7 @@ export function copyRequest(req: TransactionRequest): PreparedTransactionRequest
         result.data = hexlify(req.data);
     }
 
-    const bigIntKeys = 'chainId,gasLimit,gasPrice,maxFeePerGas,maxPriorityFeePerGas,value'.split(/,/);
+    const bigIntKeys = 'chainId,gasLimit,gasPrice,minerTip,value'.split(/,/);
     for (const key of bigIntKeys) {
         if (!(key in req) || (<any>req)[key] == null) {
             continue;
@@ -486,7 +460,7 @@ export interface MinedBlock extends Block {}
  * @category Providers
  */
 export class BlockHeader implements BlockHeaderParams {
-    readonly baseFeePerGas!: null | bigint;
+    readonly gasPrice!: null | bigint;
     readonly efficiencyScore: bigint;
     readonly etxEligibleSlices: string;
     readonly etxSetRoot: string;
@@ -517,7 +491,7 @@ export class BlockHeader implements BlockHeaderParams {
     readonly utxoRoot!: string;
 
     constructor(params: BlockHeaderParams) {
-        this.baseFeePerGas = params.baseFeePerGas;
+        this.gasPrice = params.gasPrice;
         this.efficiencyScore = params.efficiencyScore;
         this.etxEligibleSlices = params.etxEligibleSlices;
         this.etxSetRoot = params.etxSetRoot;
@@ -1279,8 +1253,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
                       type: etx.type,
                       nonce: etx.nonce,
                       gasPrice: safeConvert(etx.gasPrice, 'gasPrice'),
-                      maxPriorityFeePerGas: safeConvert(etx.maxPriorityFeePerGas, 'maxPriorityFeePerGas'),
-                      maxFeePerGas: safeConvert(etx.maxFeePerGas, 'maxFeePerGas'),
+                      minerTip: safeConvert(etx.minerTip, 'minerTip'),
                       gas: safeConvert(etx.gas, 'gas'),
                       value: safeConvert(etx.value, 'value'),
                       input: etx.input,
@@ -1797,14 +1770,14 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
 
     /**
      * The maximum priority fee (per unit of gas) to allow a validator to charge the sender. This is inclusive of the
-     * {@link QuaiTransactionResponse.maxFeePerGas | **maxFeePerGas** }.
+     * {@link QuaiTransactionResponse.gasPrice | **gasPrice** }.
      */
-    readonly maxPriorityFeePerGas!: null | bigint;
+    readonly minerTip!: null | bigint;
 
     /**
      * The maximum fee (per unit of gas) to allow this transaction to charge the sender.
      */
-    readonly maxFeePerGas!: null | bigint;
+    readonly gasPrice!: null | bigint;
 
     /**
      * The data.
@@ -1862,8 +1835,8 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
         this.data = tx.data;
         this.value = tx.value;
 
-        this.maxPriorityFeePerGas = tx.maxPriorityFeePerGas != null ? tx.maxPriorityFeePerGas : null;
-        this.maxFeePerGas = tx.maxFeePerGas != null ? tx.maxFeePerGas : null;
+        this.minerTip = tx.minerTip != null ? tx.minerTip : null;
+        this.gasPrice = tx.gasPrice != null ? tx.gasPrice : null;
 
         this.chainId = tx.chainId;
         this.signature = tx.signature;
@@ -1889,8 +1862,8 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
             from,
             gasLimit: toJson(this.gasLimit),
             hash,
-            maxFeePerGas: toJson(this.maxFeePerGas),
-            maxPriorityFeePerGas: toJson(this.maxPriorityFeePerGas),
+            gasPrice: toJson(this.gasPrice),
+            minerTip: toJson(this.minerTip),
             nonce,
             signature,
             to,
