@@ -152,7 +152,7 @@ const _formatHeader = object({
     evmRoot: formatHash,
     expansionNumber: getNumber,
     etxRollupRoot: formatHash,
-    etxsRoot: formatHash,
+    outboundEtxsRoot: formatHash,
     extraData: formatData,
     gasLimit: getBigInt,
     gasUsed: getBigInt,
@@ -174,10 +174,14 @@ const _formatHeader = object({
     transactionsRoot: formatHash,
     uncledEntropy: getBigInt,
     utxoRoot: formatHash,
+    secondaryCoinbase: allowNull(getAddress),
+    exchangeRate: getBigInt,
+    quaiToQi: getBigInt,
+    qiToQuai: getBigInt,
 });
 
 const _formatUncle = object({
-    coinbase: allowNull(getAddress),
+    primaryCoinbase: allowNull(getAddress),
     difficulty: getNumber,
     headerHash: formatHash,
     location: formatData,
@@ -188,10 +192,11 @@ const _formatUncle = object({
     primeTerminusNumber: getNumber,
     timestamp: getNumber,
     txHash: formatHash,
+    lock: getNumber,
 });
 
 const _formatBlock = object({
-    etxs: arrayOf((tx: any) => {
+    outboundEtxs: arrayOf((tx: any) => {
         if (typeof tx === 'string') {
             return formatHash(tx);
         }
@@ -227,7 +232,7 @@ export function formatBlock(value: any): BlockParams {
             return formatTransactionResponse(tx);
         },
     );
-    result.etxs = value.etxs.map((tx: string | ExternalTransactionResponseParams) => {
+    result.outboundEtxs = value.outboundEtxs.map((tx: string | ExternalTransactionResponseParams) => {
         if (typeof tx === 'string') {
             return tx;
         }
@@ -267,15 +272,15 @@ const _formatEtx = object(
         input: allowNull(formatData),
         to: allowNull(getAddress, null),
         accessList: allowNull(accessListify, null),
-        isCoinbase: allowNull(getNumber, 0),
-        sender: getAddress,
+        from: getAddress,
         originatingTxHash: formatHash,
         etxIndex: getNumber,
         chainId: allowNull(getBigInt, null),
+        etxType: getNumber,
         hash: formatHash,
     },
     {
-        from: ['sender'],
+        from: ['from'],
     },
 );
 
@@ -299,7 +304,9 @@ const _formatTransactionReceipt = object(
         effectiveGasPrice: allowNull(getBigInt),
         status: allowNull(getNumber),
         type: allowNull(getNumber, 0),
-        etxs: (value) => (value === null ? [] : arrayOf(formatEtx)(value)),
+        outboundEtxs: (value) => (value === null ? [] : arrayOf(formatEtx)(value)),
+        originatingTxHash: allowNull(formatHash),
+        etxType: allowNull(getNumber),
     },
     {
         hash: ['transactionHash'],
@@ -327,7 +334,6 @@ export function formatExternalTransactionResponse(value: any): ExternalTransacti
             blockNumber: allowNull((value: any) => (value ? parseInt(value, 16) : null), null),
             index: allowNull((value: any) => (value ? BigInt(value) : null), null),
             from: allowNull(getAddress, null),
-            sender: allowNull(getAddress, null),
             minerTip: allowNull((value: any) => (value ? BigInt(value) : null)),
             gasPrice: allowNull((value: any) => (value ? BigInt(value) : null)),
             gasLimit: allowNull((value: any) => (value ? BigInt(value) : null), null),
@@ -336,7 +342,6 @@ export function formatExternalTransactionResponse(value: any): ExternalTransacti
             nonce: allowNull((value: any) => (value ? parseInt(value, 10) : null), null),
             creates: allowNull(getAddress, null),
             chainId: allowNull((value: any) => (value ? BigInt(value) : null), null),
-            isCoinbase: allowNull((value: any) => (value ? parseInt(value, 10) : null), null),
             originatingTxHash: allowNull(formatHash, null),
             etxIndex: allowNull((value: any) => (value ? parseInt(value, 10) : null), null),
             etxType: allowNull((value: any) => value, null),
@@ -379,7 +384,6 @@ export function formatTransactionResponse(value: any): TransactionResponseParams
                 blockNumber: allowNull((value: any) => (value ? parseInt(value, 16) : null), null),
                 index: allowNull((value: any) => (value ? BigInt(value) : null), null),
                 from: allowNull(getAddress, null),
-                sender: allowNull(getAddress, null),
                 minerTip: allowNull((value: any) => (value ? BigInt(value) : null)),
                 gasPrice: allowNull((value: any) => (value ? BigInt(value) : null)),
                 gasLimit: allowNull((value: any) => (value ? BigInt(value) : null), null),

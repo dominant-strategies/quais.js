@@ -18563,7 +18563,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         evmRoot: formatHash,
         expansionNumber: getNumber,
         etxRollupRoot: formatHash,
-        etxsRoot: formatHash,
+        outboundEtxsRoot: formatHash,
         extraData: formatData,
         gasLimit: getBigInt,
         gasUsed: getBigInt,
@@ -18585,9 +18585,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         transactionsRoot: formatHash,
         uncledEntropy: getBigInt,
         utxoRoot: formatHash,
+        secondaryCoinbase: allowNull(getAddress),
+        exchangeRate: getBigInt,
+        quaiToQi: getBigInt,
+        qiToQuai: getBigInt
     });
     const _formatUncle = object({
-        coinbase: allowNull(getAddress),
+        primaryCoinbase: allowNull(getAddress),
         difficulty: getNumber,
         headerHash: formatHash,
         location: formatData,
@@ -18598,9 +18602,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         primeTerminusNumber: getNumber,
         timestamp: getNumber,
         txHash: formatHash,
+        lock: getNumber
     });
     const _formatBlock = object({
-        etxs: arrayOf((tx) => {
+        outboundEtxs: arrayOf((tx) => {
             if (typeof tx === 'string') {
                 return formatHash(tx);
             }
@@ -18633,7 +18638,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             return formatTransactionResponse(tx);
         });
-        result.etxs = value.etxs.map((tx) => {
+        result.outboundEtxs = value.outboundEtxs.map((tx) => {
             if (typeof tx === 'string') {
                 return tx;
             }
@@ -18666,14 +18671,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         input: allowNull(formatData),
         to: allowNull(getAddress, null),
         accessList: allowNull(accessListify, null),
-        isCoinbase: allowNull(getNumber, 0),
-        sender: getAddress,
+        from: getAddress,
         originatingTxHash: formatHash,
         etxIndex: getNumber,
         chainId: allowNull(getBigInt, null),
+        etxType: getNumber,
         hash: formatHash,
     }, {
-        from: ['sender'],
+        from: ['from'],
     });
     function formatEtx(value) {
         return _formatEtx(value);
@@ -18693,7 +18698,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         effectiveGasPrice: allowNull(getBigInt),
         status: allowNull(getNumber),
         type: allowNull(getNumber, 0),
-        etxs: (value) => (value === null ? [] : arrayOf(formatEtx)(value)),
+        outboundEtxs: (value) => (value === null ? [] : arrayOf(formatEtx)(value)),
+        originatingTxHash: allowNull(formatHash),
+        etxType: allowNull(getNumber),
     }, {
         hash: ['transactionHash'],
         index: ['transactionIndex'],
@@ -18716,7 +18723,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             blockNumber: allowNull((value) => (value ? parseInt(value, 16) : null), null),
             index: allowNull((value) => (value ? BigInt(value) : null), null),
             from: allowNull(getAddress, null),
-            sender: allowNull(getAddress, null),
             minerTip: allowNull((value) => (value ? BigInt(value) : null)),
             gasPrice: allowNull((value) => (value ? BigInt(value) : null)),
             gasLimit: allowNull((value) => (value ? BigInt(value) : null), null),
@@ -18725,7 +18731,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             nonce: allowNull((value) => (value ? parseInt(value, 10) : null), null),
             creates: allowNull(getAddress, null),
             chainId: allowNull((value) => (value ? BigInt(value) : null), null),
-            isCoinbase: allowNull((value) => (value ? parseInt(value, 10) : null), null),
             originatingTxHash: allowNull(formatHash, null),
             etxIndex: allowNull((value) => (value ? parseInt(value, 10) : null), null),
             etxType: allowNull((value) => value, null),
@@ -18760,7 +18765,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 blockNumber: allowNull((value) => (value ? parseInt(value, 16) : null), null),
                 index: allowNull((value) => (value ? BigInt(value) : null), null),
                 from: allowNull(getAddress, null),
-                sender: allowNull(getAddress, null),
                 minerTip: allowNull((value) => (value ? BigInt(value) : null)),
                 gasPrice: allowNull((value) => (value ? BigInt(value) : null)),
                 gasLimit: allowNull((value) => (value ? BigInt(value) : null), null),
@@ -19324,7 +19328,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         inferTypes() {
             if (this.gasPrice != null && this.minerTip != null) {
-                assert(this.gasPrice >= this.minerTip, 'priorityFee cannot be more than maxFee', 'BAD_DATA', { value: this });
+                assert(this.gasPrice >= this.minerTip, 'priorityFee cannot be more than maxFee', 'BAD_DATA', {
+                    value: this,
+                });
             }
             assert(this.type !== 0 && this.type !== 1, 'transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList', 'BAD_DATA', { value: this });
             const types = [];
@@ -19661,7 +19667,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         evmRoot;
         expansionNumber;
         etxRollupRoot;
-        etxsRoot;
+        outboundEtxsRoot;
         extraData;
         gasLimit;
         gasUsed;
@@ -19683,6 +19689,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         transactionsRoot;
         uncledEntropy;
         utxoRoot;
+        exchangeRate;
+        quaiToQi;
+        qiToQuai;
+        secondaryCoinbase;
         constructor(params) {
             this.gasPrice = params.gasPrice;
             this.efficiencyScore = params.efficiencyScore;
@@ -19691,7 +19701,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.evmRoot = params.evmRoot;
             this.expansionNumber = params.expansionNumber;
             this.etxRollupRoot = params.etxRollupRoot;
-            this.etxsRoot = params.etxsRoot;
+            this.outboundEtxsRoot = params.outboundEtxsRoot;
             this.extraData = params.extraData;
             this.gasLimit = params.gasLimit;
             this.gasUsed = params.gasUsed;
@@ -19713,6 +19723,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.transactionsRoot = params.transactionsRoot;
             this.uncledEntropy = params.uncledEntropy;
             this.utxoRoot = params.utxoRoot;
+            this.exchangeRate = params.exchangeRate;
+            this.quaiToQi = params.quaiToQi;
+            this.qiToQuai = params.qiToQuai;
+            this.secondaryCoinbase = params.secondaryCoinbase;
         }
         toJSON() {
             return {
@@ -19726,7 +19740,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Providers
      */
     class Uncle {
-        coinbase;
+        primaryCoinbase;
         difficulty;
         headerHash;
         location;
@@ -19736,13 +19750,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         parentHash;
         timestamp;
         txHash;
+        lock;
         /**
          * Creates a new Uncle instance.
          *
          * @param {UncleParams} params - The parameters for the Uncle.
          */
         constructor(params) {
-            this.coinbase = params.coinbase;
+            this.primaryCoinbase = params.primaryCoinbase;
             this.difficulty = params.difficulty;
             this.headerHash = params.headerHash;
             this.location = params.location;
@@ -19752,10 +19767,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.parentHash = params.parentHash;
             this.timestamp = params.timestamp;
             this.txHash = params.txHash;
+            this.lock = params.lock;
         }
         toJSON() {
             return {
-                coinbase: this.coinbase,
+                primaryCoinbase: this.primaryCoinbase,
                 difficulty: this.difficulty,
                 headerHash: this.headerHash,
                 location: this.location,
@@ -19765,6 +19781,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 parentHash: this.parentHash,
                 timestamp: this.timestamp,
                 txHash: this.txHash,
+                lock: this.lock,
             };
         }
     }
@@ -19774,7 +19791,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Providers
      */
     class Block {
-        #etxs;
+        #outboundEtxs;
         hash;
         header;
         interlinkHashes; // New parameter
@@ -19810,7 +19827,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 return new QiTransactionResponse(tx, provider);
             });
-            this.#etxs = block.etxs.map((tx) => {
+            this.#outboundEtxs = block.outboundEtxs.map((tx) => {
                 if (typeof tx !== 'string') {
                     return new ExternalTransactionResponse(tx, provider);
                 }
@@ -19855,8 +19872,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @returns {ReadonlyArray<string>} The list of extended transaction hashes.
          */
-        get etxs() {
-            return this.#etxs.map((tx) => {
+        get outboundEtxs() {
+            return this.#outboundEtxs.map((tx) => {
                 if (typeof tx === 'string') {
                     return tx;
                 }
@@ -19894,7 +19911,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @throws {Error} If the transactions were not prefetched.
          */
         get prefetchedExtTransactions() {
-            const txs = this.#etxs.slice();
+            const txs = this.#outboundEtxs.slice();
             // Doesn't matter...
             if (txs.length === 0) {
                 return [];
@@ -19914,9 +19931,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const { hash, header, interlinkHashes, size, subManifest, totalEntropy, uncles, woHeader, workShares } = this;
             // Using getters to retrieve the transactions and extTransactions
             const transactions = this.transactions;
-            const etxs = this.etxs;
+            const outboundEtxs = this.outboundEtxs;
             return {
-                etxs,
+                outboundEtxs,
                 hash,
                 header: header.toJSON(),
                 interlinkHashes,
@@ -20029,11 +20046,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // Find the internal value by its index or hash
             let tx = undefined;
             if (typeof indexOrHash === 'number') {
-                tx = this.#etxs[indexOrHash];
+                tx = this.#outboundEtxs[indexOrHash];
             }
             else {
                 const hash = indexOrHash.toLowerCase();
-                for (const v of this.#etxs) {
+                for (const v of this.#outboundEtxs) {
                     if (typeof v === 'string') {
                         if (v !== hash) {
                             continue;
@@ -20328,7 +20345,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * the receipt.
          */
         #logs;
-        etxs = [];
+        outboundEtxs = [];
+        etxType;
+        originatingTxHash;
         /**
          * @ignore
          */
@@ -20343,8 +20362,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             else if (tx.gasPrice != null) {
                 gasPrice = tx.gasPrice;
             }
-            const etxs = tx.etxs
-                ? tx.etxs.map((etx) => {
+            const outboundEtxs = tx.outboundEtxs
+                ? tx.outboundEtxs.map((etx) => {
                     const safeConvert = (value, name) => {
                         try {
                             if (value != null) {
@@ -20368,9 +20387,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         to: etx.to,
                         accessList: etx.accessList,
                         chainId: safeConvert(etx.chainId, 'chainId'),
-                        sender: etx.sender,
+                        from: etx.from,
                         hash: etx.hash,
-                        isCoinbase: etx.isCoinbase,
                         originatingTxHash: etx.originatingTxHash,
                         etxIndex: etx.etxIndex,
                     };
@@ -20389,9 +20407,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 gasUsed: tx.gasUsed,
                 cumulativeGasUsed: tx.cumulativeGasUsed,
                 gasPrice,
-                etxs: etxs,
+                outboundEtxs: outboundEtxs,
                 type: tx.type,
                 status: tx.status,
+                etxType: tx.etxType,
+                originatingTxHash: tx.originatingTxHash,
             });
         }
         /**
@@ -20405,7 +20425,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         toJSON() {
             const { to, from, contractAddress, hash, index, blockHash, blockNumber, logsBloom, logs, //byzantium,
-            status, etxs, } = this;
+            status, outboundEtxs, } = this;
             return {
                 _type: 'TransactionReceipt',
                 blockHash,
@@ -20421,7 +20441,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 logsBloom,
                 status,
                 to,
-                etxs: etxs ?? [],
+                outboundEtxs: outboundEtxs ?? [],
             };
         }
         /**
@@ -20590,7 +20610,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         accessList;
         etxType;
-        isCoinbase;
         originatingTxHash;
         sender;
         etxIndex;
@@ -20616,16 +20635,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.accessList = tx.accessList != null ? tx.accessList : null;
             this.startBlock = -1;
             this.originatingTxHash = tx.originatingTxHash != null ? tx.originatingTxHash : null;
-            this.isCoinbase = tx.isCoinbase != null ? tx.isCoinbase : null;
             this.etxType = tx.etxType != null ? tx.etxType : null;
-            this.sender = tx.sender;
             this.etxIndex = tx.etxIndex;
         }
         /**
          * Returns a JSON-compatible representation of this transaction.
          */
         toJSON() {
-            const { blockNumber, blockHash, index, hash, type, to, from, nonce, data, signature, accessList, etxType, isCoinbase, originatingTxHash, etxIndex, sender, } = this;
+            const { blockNumber, blockHash, index, hash, type, to, from, nonce, data, signature, accessList, etxType, originatingTxHash, etxIndex, } = this;
             const result = {
                 _type: 'TransactionReceipt',
                 accessList,
@@ -20642,9 +20659,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 index,
                 type,
                 etxType,
-                isCoinbase,
                 originatingTxHash,
-                sender,
                 etxIndex,
                 value: toJson(this.value),
             };
@@ -27886,9 +27901,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     })(),
                     minerTip: (async () => {
                         try {
-                            const value = txType
-                                ? await this.#perform({ method: 'getMinerTip', zone: zone })
-                                : 0;
+                            const value = txType ? await this.#perform({ method: 'getMinerTip', zone: zone }) : 0;
                             return getBigInt(value, '%response');
                             // eslint-disable-next-line no-empty
                         }
@@ -29499,16 +29512,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const result = {};
             if ('from' in tx || ('to' in tx && 'data' in tx)) {
                 // JSON-RPC now requires numeric values to be "quantity" values
-                [
-                    'chainId',
-                    'gasLimit',
-                    'gasPrice',
-                    'type',
-                    'gasPrice',
-                    'minerTip',
-                    'nonce',
-                    'value',
-                ].forEach((key) => {
+                ['chainId', 'gasLimit', 'gasPrice', 'type', 'gasPrice', 'minerTip', 'nonce', 'value'].forEach((key) => {
                     if (tx[key] == null) {
                         return;
                     }
