@@ -467,7 +467,7 @@ export class BlockHeader implements BlockHeaderParams {
     readonly evmRoot!: string;
     readonly expansionNumber: number;
     readonly etxRollupRoot!: string;
-    readonly etxsRoot!: string;
+    readonly outboundEtxsRoot!: string;
     readonly extraData!: string;
     readonly gasLimit!: bigint;
     readonly gasUsed!: bigint;
@@ -489,6 +489,10 @@ export class BlockHeader implements BlockHeaderParams {
     readonly transactionsRoot!: string;
     readonly uncledEntropy: bigint;
     readonly utxoRoot!: string;
+    readonly exchangeRate!: bigint;
+    readonly quaiToQi!: bigint;
+    readonly qiToQuai!: bigint;
+    readonly secondaryCoinbase!: string;
 
     constructor(params: BlockHeaderParams) {
         this.gasPrice = params.gasPrice;
@@ -498,7 +502,7 @@ export class BlockHeader implements BlockHeaderParams {
         this.evmRoot = params.evmRoot;
         this.expansionNumber = params.expansionNumber;
         this.etxRollupRoot = params.etxRollupRoot;
-        this.etxsRoot = params.etxsRoot;
+        this.outboundEtxsRoot = params.outboundEtxsRoot;
         this.extraData = params.extraData;
         this.gasLimit = params.gasLimit;
         this.gasUsed = params.gasUsed;
@@ -520,6 +524,10 @@ export class BlockHeader implements BlockHeaderParams {
         this.transactionsRoot = params.transactionsRoot;
         this.uncledEntropy = params.uncledEntropy;
         this.utxoRoot = params.utxoRoot;
+        this.exchangeRate = params.exchangeRate;
+        this.quaiToQi = params.quaiToQi;
+        this.qiToQuai = params.qiToQuai;
+        this.secondaryCoinbase = params.secondaryCoinbase;
     }
 
     toJSON(): BlockHeaderParams {
@@ -535,7 +543,7 @@ export class BlockHeader implements BlockHeaderParams {
  * @category Providers
  */
 export class Uncle implements UncleParams {
-    readonly coinbase: string;
+    readonly primaryCoinbase: string;
     readonly difficulty!: string;
     readonly headerHash!: string;
     readonly location!: string;
@@ -545,6 +553,7 @@ export class Uncle implements UncleParams {
     readonly parentHash!: string;
     readonly timestamp!: string;
     readonly txHash!: string;
+    readonly lock!: number;
 
     /**
      * Creates a new Uncle instance.
@@ -552,7 +561,7 @@ export class Uncle implements UncleParams {
      * @param {UncleParams} params - The parameters for the Uncle.
      */
     constructor(params: WoHeaderParams) {
-        this.coinbase = params.coinbase;
+        this.primaryCoinbase = params.primaryCoinbase;
         this.difficulty = params.difficulty;
         this.headerHash = params.headerHash;
         this.location = params.location;
@@ -562,11 +571,12 @@ export class Uncle implements UncleParams {
         this.parentHash = params.parentHash;
         this.timestamp = params.timestamp;
         this.txHash = params.txHash;
+        this.lock = params.lock;
     }
 
     toJSON(): WoHeaderParams {
         return {
-            coinbase: this.coinbase,
+            primaryCoinbase: this.primaryCoinbase,
             difficulty: this.difficulty,
             headerHash: this.headerHash,
             location: this.location,
@@ -576,6 +586,7 @@ export class Uncle implements UncleParams {
             parentHash: this.parentHash,
             timestamp: this.timestamp,
             txHash: this.txHash,
+            lock: this.lock,
         };
     }
 }
@@ -586,7 +597,7 @@ export class Uncle implements UncleParams {
  * @category Providers
  */
 export class Block implements BlockParams, Iterable<string> {
-    readonly #etxs!: Array<string | ExternalTransactionResponse>;
+    readonly #outboundEtxs!: Array<string | ExternalTransactionResponse>;
     readonly hash: string;
     readonly header: BlockHeader;
     readonly interlinkHashes: Array<string>; // New parameter
@@ -626,7 +637,7 @@ export class Block implements BlockParams, Iterable<string> {
             return new QiTransactionResponse(tx as QiTransactionResponseParams, provider);
         });
 
-        this.#etxs = block.etxs.map((tx) => {
+        this.#outboundEtxs = block.outboundEtxs.map((tx) => {
             if (typeof tx !== 'string') {
                 return new ExternalTransactionResponse(tx, provider);
             }
@@ -674,8 +685,8 @@ export class Block implements BlockParams, Iterable<string> {
      *
      * @returns {ReadonlyArray<string>} The list of extended transaction hashes.
      */
-    get etxs(): ReadonlyArray<string> {
-        return this.#etxs.map((tx) => {
+    get outboundEtxs(): ReadonlyArray<string> {
+        return this.#outboundEtxs.map((tx) => {
             if (typeof tx === 'string') {
                 return tx;
             }
@@ -723,7 +734,7 @@ export class Block implements BlockParams, Iterable<string> {
      * @throws {Error} If the transactions were not prefetched.
      */
     get prefetchedExtTransactions(): Array<ExternalTransactionResponse> {
-        const txs = this.#etxs.slice();
+        const txs = this.#outboundEtxs.slice();
 
         // Doesn't matter...
         if (txs.length === 0) {
@@ -753,10 +764,10 @@ export class Block implements BlockParams, Iterable<string> {
 
         // Using getters to retrieve the transactions and extTransactions
         const transactions = this.transactions;
-        const etxs = this.etxs;
+        const outboundEtxs = this.outboundEtxs;
 
         return {
-            etxs, // Includes the extended transaction hashes or full transactions based on the prefetched data
+            outboundEtxs, // Includes the extended transaction hashes or full transactions based on the prefetched data
             hash,
             header: header.toJSON(),
             interlinkHashes,
@@ -872,10 +883,10 @@ export class Block implements BlockParams, Iterable<string> {
         // Find the internal value by its index or hash
         let tx: string | ExternalTransactionResponse | undefined = undefined;
         if (typeof indexOrHash === 'number') {
-            tx = this.#etxs[indexOrHash];
+            tx = this.#outboundEtxs[indexOrHash];
         } else {
             const hash = indexOrHash.toLowerCase();
-            for (const v of this.#etxs) {
+            for (const v of this.#outboundEtxs) {
                 if (typeof v === 'string') {
                     if (v !== hash) {
                         continue;
@@ -1217,7 +1228,11 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
 
     readonly #logs: ReadonlyArray<Log>;
 
-    readonly etxs: ReadonlyArray<EtxParams> = [];
+    readonly outboundEtxs: ReadonlyArray<EtxParams> = [];
+
+    readonly etxType?: null | number;
+
+    readonly originatingTxHash?: null | string;
 
     /**
      * @ignore
@@ -1235,8 +1250,8 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
         } else if (tx.gasPrice != null) {
             gasPrice = tx.gasPrice;
         }
-        const etxs: EtxParams[] = tx.etxs
-            ? tx.etxs.map((etx) => {
+        const outboundEtxs: EtxParams[] = tx.outboundEtxs
+            ? tx.outboundEtxs.map((etx) => {
                   const safeConvert = (value: any, name: string) => {
                       try {
                           if (value != null) {
@@ -1260,9 +1275,8 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
                       to: etx.to,
                       accessList: etx.accessList,
                       chainId: safeConvert(etx.chainId, 'chainId'),
-                      sender: etx.sender,
+                      from: etx.from,
                       hash: etx.hash,
-                      isCoinbase: etx.isCoinbase,
                       originatingTxHash: etx.originatingTxHash,
                       etxIndex: etx.etxIndex,
                   };
@@ -1288,9 +1302,11 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             cumulativeGasUsed: tx.cumulativeGasUsed,
             gasPrice,
 
-            etxs: etxs,
+            outboundEtxs: outboundEtxs,
             type: tx.type,
             status: tx.status,
+            etxType: tx.etxType,
+            originatingTxHash: tx.originatingTxHash,
         });
     }
 
@@ -1316,7 +1332,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             logsBloom,
             logs, //byzantium,
             status,
-            etxs,
+            outboundEtxs,
         } = this;
 
         return {
@@ -1334,7 +1350,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
             logsBloom,
             status,
             to,
-            etxs: etxs ?? [],
+            outboundEtxs: outboundEtxs ?? [],
         };
     }
 
@@ -1582,9 +1598,7 @@ export class ExternalTransactionResponse implements QuaiTransactionLike, Externa
      */
     readonly accessList!: null | AccessList;
 
-    readonly etxType!: null | string;
-
-    readonly isCoinbase!: null | number;
+    readonly etxType!: null | number;
 
     readonly originatingTxHash!: null | string;
 
@@ -1622,9 +1636,7 @@ export class ExternalTransactionResponse implements QuaiTransactionLike, Externa
         this.accessList = tx.accessList != null ? tx.accessList : null;
         this.startBlock = -1;
         this.originatingTxHash = tx.originatingTxHash != null ? tx.originatingTxHash : null;
-        this.isCoinbase = tx.isCoinbase != null ? tx.isCoinbase : null;
         this.etxType = tx.etxType != null ? tx.etxType : null;
-        this.sender = tx.sender;
         this.etxIndex = tx.etxIndex;
     }
 
@@ -1645,10 +1657,8 @@ export class ExternalTransactionResponse implements QuaiTransactionLike, Externa
             signature,
             accessList,
             etxType,
-            isCoinbase,
             originatingTxHash,
             etxIndex,
-            sender,
         } = this;
         const result = {
             _type: 'TransactionReceipt',
@@ -1666,9 +1676,7 @@ export class ExternalTransactionResponse implements QuaiTransactionLike, Externa
             index,
             type,
             etxType,
-            isCoinbase,
             originatingTxHash,
-            sender,
             etxIndex,
             value: toJson(this.value),
         };
@@ -1805,7 +1813,7 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
      */
     readonly accessList!: null | AccessList;
 
-    readonly etxType!: null | string;
+    readonly etxType!: null | number;
 
     readonly sender!: null | string;
 
