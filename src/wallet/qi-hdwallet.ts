@@ -38,7 +38,7 @@ interface OutpointInfo {
     account?: number;
 }
 
-interface paymentCodeInfo {
+interface PaymentChannelAddressInfo {
     address: string;
     index: number;
     isUsed: boolean;
@@ -59,8 +59,8 @@ interface SerializedQiHDWallet extends SerializedHDWallet {
     changeAddresses: NeuteredAddressInfo[];
     gapAddresses: NeuteredAddressInfo[];
     gapChangeAddresses: NeuteredAddressInfo[];
-    receiverPaymentCodeInfo: { [key: string]: paymentCodeInfo[] };
-    senderPaymentCodeInfo: { [key: string]: paymentCodeInfo[] };
+    receiverPaymentCodeInfo: { [key: string]: PaymentChannelAddressInfo[] };
+    senderPaymentCodeInfo: { [key: string]: PaymentChannelAddressInfo[] };
 }
 
 /**
@@ -142,14 +142,14 @@ export class QiHDWallet extends AbstractHDWallet {
     protected _outpoints: OutpointInfo[] = [];
 
     /**
-     * Map of paymentcodes to paymentCodeInfo for the receiver
+     * Map of paymentcodes to PaymentChannelAddressInfo for the receiver
      */
-    private _receiverPaymentCodeInfo: Map<string, paymentCodeInfo[]> = new Map();
+    private _receiverPaymentCodeInfo: Map<string, PaymentChannelAddressInfo[]> = new Map();
 
     /**
-     * Map of paymentcodes to paymentCodeInfo for the sender
+     * Map of paymentcodes to PaymentChannelAddressInfo for the sender
      */
-    private _senderPaymentCodeInfo: Map<string, paymentCodeInfo[]> = new Map();
+    private _senderPaymentCodeInfo: Map<string, PaymentChannelAddressInfo[]> = new Map();
 
     /**
      * @ignore
@@ -161,11 +161,11 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     // getters for the payment code info maps
-    public get receiverPaymentCodeInfo(): { [key: string]: paymentCodeInfo[] } {
+    public get receiverPaymentCodeInfo(): { [key: string]: PaymentChannelAddressInfo[] } {
         return Object.fromEntries(this._receiverPaymentCodeInfo);
     }
 
-    public get senderPaymentCodeInfo(): { [key: string]: paymentCodeInfo[] } {
+    public get senderPaymentCodeInfo(): { [key: string]: PaymentChannelAddressInfo[] } {
         return Object.fromEntries(this._senderPaymentCodeInfo);
     }
 
@@ -414,7 +414,7 @@ export class QiHDWallet extends AbstractHDWallet {
 
     /**
      * Scans the specified zone for addresses with unspent outputs. Starting at index 0, it will generate new addresses
-     * until the gap limit is reached for both gap and change addresses.
+     * until the gap limit is reached for external and change BIP44 addresses and payment channel addresses.
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
      * @param {number} [account=0] - The index of the account to scan. Default is `0`
@@ -430,38 +430,33 @@ export class QiHDWallet extends AbstractHDWallet {
         this._gapChangeAddresses = [];
         this._outpoints = [];
 
+        // Reset each map so that all keys have empty array values but keys are preserved
+        const resetSenderPaymentCodeInfo = new Map(
+            Array.from(this._senderPaymentCodeInfo.keys()).map((key) => [key, []]),
+        );
+        const resetReceiverPaymentCodeInfo = new Map(
+            Array.from(this._receiverPaymentCodeInfo.keys()).map((key) => [key, []]),
+        );
+
+        this._senderPaymentCodeInfo = resetSenderPaymentCodeInfo;
+        this._receiverPaymentCodeInfo = resetReceiverPaymentCodeInfo;
+
         await this._scan(zone, account);
     }
 
     /**
      * Scans the specified zone for addresses with unspent outputs. Starting at the last address index, it will generate
-     * new addresses until the gap limit is reached for both gap and change addresses. If no account is specified, it
-     * will scan all accounts known to the wallet.
+     * new addresses until the gap limit is reached for external and change BIP44 addresses and payment channel
+     * addresses.
      *
      * @param {Zone} zone - The zone in which to sync addresses.
-     * @param {number} [account] - The index of the account to sync. If not specified, all accounts will be scanned.
+     * @param {number} [account=0] - The index of the account to sync. Default is `0`
      * @returns {Promise<void>} A promise that resolves when the sync is complete.
      * @throws {Error} If the zone is invalid.
      */
-    public async sync(zone: Zone, account?: number): Promise<void> {
+    public async sync(zone: Zone, account: number = 0): Promise<void> {
         this.validateZone(zone);
-        // if no account is specified, scan all accounts.
-        if (account === undefined) {
-            const addressInfos = Array.from(this._addresses.values());
-            const accounts = addressInfos.reduce<number[]>((unique, info) => {
-                if (!unique.includes(info.account)) {
-                    unique.push(info.account);
-                }
-                return unique;
-            }, []);
-
-            for (const acc of accounts) {
-                await this._scan(zone, acc);
-            }
-        } else {
-            await this._scan(zone, account);
-        }
-        return;
+        await this._scan(zone, account);
     }
 
     /**
@@ -476,19 +471,19 @@ export class QiHDWallet extends AbstractHDWallet {
     private async _scan(zone: Zone, account: number = 0): Promise<void> {
         if (!this.provider) throw new Error('Provider not set');
 
-        let gapAddressesCount = 0;
-        let changeGapAddressesCount = 0;
+        // Start scanning processes for each derivation tree
+        const scans = [
+            this.scanBIP44Addresses(zone, account, false), // External addresses
+            this.scanBIP44Addresses(zone, account, true), // Change addresses
+        ];
 
-        while (gapAddressesCount < QiHDWallet._GAP_LIMIT || changeGapAddressesCount < QiHDWallet._GAP_LIMIT) {
-            [gapAddressesCount, changeGapAddressesCount] = await Promise.all([
-                gapAddressesCount < QiHDWallet._GAP_LIMIT
-                    ? this.scanAddress(zone, account, false, gapAddressesCount)
-                    : gapAddressesCount,
-                changeGapAddressesCount < QiHDWallet._GAP_LIMIT
-                    ? this.scanAddress(zone, account, true, changeGapAddressesCount)
-                    : changeGapAddressesCount,
-            ]);
+        // Add scanning processes for each payment channel
+        for (const paymentCode of this._senderPaymentCodeInfo.keys()) {
+            scans.push(this.scanPaymentChannel(zone, account, paymentCode));
         }
+
+        // Run all scans in parallel
+        await Promise.all(scans);
     }
 
     /**
@@ -498,30 +493,167 @@ export class QiHDWallet extends AbstractHDWallet {
      * @param {Zone} zone - The zone in which the address is being scanned.
      * @param {number} account - The index of the account for which the address is being scanned.
      * @param {boolean} isChange - A flag indicating whether the address is a change address.
-     * @param {number} addressesCount - The current count of addresses scanned.
-     * @returns {Promise<number>} A promise that resolves to the updated address count.
+     * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If an error occurs during the address scanning or outpoints retrieval process.
      */
-    private async scanAddress(zone: Zone, account: number, isChange: boolean, addressesCount: number): Promise<number> {
+    private async scanBIP44Addresses(zone: Zone, account: number, isChange: boolean): Promise<void> {
         const addressMap = isChange ? this._changeAddresses : this._addresses;
-        const addressInfo = this._getNextAddress(account, zone, isChange, addressMap);
-        const outpoints = await this.getOutpointsByAddress(addressInfo.address);
-        if (outpoints.length > 0) {
-            this.importOutpoints(
-                outpoints.map((outpoint) => ({
-                    outpoint,
-                    address: addressInfo.address,
-                    zone,
-                    account,
-                })),
-            );
-            addressesCount = 0;
-            isChange ? (this._gapChangeAddresses = []) : (this._gapAddresses = []);
-        } else {
-            addressesCount++;
-            isChange ? this._gapChangeAddresses.push(addressInfo) : this._gapAddresses.push(addressInfo);
+        const gapAddresses = isChange ? this._gapChangeAddresses : this._gapAddresses;
+        const gapLimit = QiHDWallet._GAP_LIMIT;
+
+        let gapCount = 0;
+
+        // First, re-examine existing gap addresses
+        const newlyUsedAddresses: NeuteredAddressInfo[] = [];
+        for (let i: number = 0; i < gapAddresses.length; ) {
+            const addressInfo = gapAddresses[i];
+            const outpoints = await this.getOutpointsByAddress(addressInfo.address);
+            if (outpoints.length > 0) {
+                // Address has been used since last scan
+                this.importOutpoints(
+                    outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: addressInfo.address,
+                        zone,
+                        account,
+                    })),
+                );
+                // Remove from gap addresses
+                newlyUsedAddresses.push(addressInfo);
+                gapCount = 0;
+            } else {
+                // Address is still unused
+                gapCount++;
+                i++;
+            }
         }
-        return addressesCount;
+
+        // remove addresses that have been used from the gap addresses
+        const updatedGapAddresses = gapAddresses.filter(
+            (addressInfo) => !newlyUsedAddresses.some((usedAddress) => usedAddress.address === addressInfo.address),
+        );
+
+        // Scan for new gap addresses
+        const newGapAddresses: NeuteredAddressInfo[] = [];
+        while (gapCount < gapLimit) {
+            const addressInfo = this._getNextAddress(account, zone, isChange, addressMap);
+            const outpoints = await this.getOutpointsByAddress(addressInfo.address);
+            if (outpoints.length > 0) {
+                this.importOutpoints(
+                    outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: addressInfo.address,
+                        zone,
+                        account,
+                    })),
+                );
+                gapCount = 0;
+            } else {
+                gapCount++;
+                // check if the address is already in the updated gap addresses array
+                if (!updatedGapAddresses.some((usedAddress) => usedAddress.address === addressInfo.address)) {
+                    newGapAddresses.push(addressInfo);
+                }
+            }
+        }
+
+        // update the gap addresses
+        if (isChange) {
+            this._gapChangeAddresses = [...updatedGapAddresses, ...newGapAddresses];
+        } else {
+            this._gapAddresses = [...updatedGapAddresses, ...newGapAddresses];
+        }
+    }
+
+    /**
+     * Scans the specified payment channel for addresses with unspent outputs. Starting at the last address index, it
+     * will generate new addresses until the gap limit is reached.
+     *
+     * @param {Zone} zone - The zone in which to scan for addresses.
+     * @param {number} account - The index of the account to scan.
+     * @param {string} paymentCode - The payment code to scan.
+     * @returns {Promise<void>} A promise that resolves when the scan is complete.
+     * @throws {Error} If the zone is invalid.
+     */
+    private async scanPaymentChannel(zone: Zone, account: number, paymentCode: string): Promise<void> {
+        const gapLimit = QiHDWallet._GAP_LIMIT;
+        let gapCount = 0;
+
+        const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(paymentCode);
+        if (!paymentCodeInfoArray) {
+            throw new Error(`Payment code ${paymentCode} not found`);
+        }
+
+        // first, re-examine existing unused addresses
+        const newlyUsedAddresses: PaymentChannelAddressInfo[] = [];
+        const unusedAddresses = paymentCodeInfoArray.filter((info) => !info.isUsed);
+        for (let i: number = 0; i < unusedAddresses.length; ) {
+            const addressInfo = unusedAddresses[i];
+            const outpoints = await this.getOutpointsByAddress(addressInfo.address);
+            if (outpoints.length > 0) {
+                // Address has been used since last scan
+                addressInfo.isUsed = true;
+                const pcAddressInfoIndex = paymentCodeInfoArray.findIndex((info) => info.index === addressInfo.index);
+                paymentCodeInfoArray[pcAddressInfoIndex] = addressInfo;
+                this.importOutpoints(
+                    outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: addressInfo.address,
+                        zone,
+                        account,
+                    })),
+                );
+                // Remove from gap addresses
+                newlyUsedAddresses.push(addressInfo);
+            } else {
+                // Address is still unused
+                gapCount++;
+                i++;
+            }
+        }
+
+        // remove the addresses that have been used from the payment code info array
+        const updatedPaymentCodeInfoArray = paymentCodeInfoArray.filter(
+            (addressInfo: PaymentChannelAddressInfo) =>
+                !newlyUsedAddresses.some((usedAddress) => usedAddress.index === addressInfo.index),
+        );
+
+        // Then, scan for new gap addresses
+        while (gapCount < gapLimit) {
+            const pcAddressInfo = await this.getNextReceiveAddress(paymentCode, zone, account);
+            const outpoints = await this.getOutpointsByAddress(pcAddressInfo.address);
+
+            // update the payment code info array based on whether the address has been used
+            pcAddressInfo.isUsed = outpoints.length > 0;
+            const pcAddressInfoIndex = updatedPaymentCodeInfoArray.findIndex(
+                (info) => info.index === pcAddressInfo.index,
+            );
+            if (pcAddressInfoIndex !== -1) {
+                updatedPaymentCodeInfoArray[pcAddressInfoIndex] = pcAddressInfo;
+            } else {
+                // this should never happen because the `getNextReceiveAddress` method pushes the address info to the array
+                throw new Error(
+                    `Error occurred while scanning payment channel ${paymentCode}. Address info not found: ${pcAddressInfo.address}`,
+                );
+            }
+
+            if (outpoints.length > 0) {
+                this.importOutpoints(
+                    outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: pcAddressInfo.address,
+                        zone,
+                        account,
+                    })),
+                );
+                gapCount = 0;
+            } else {
+                gapCount++;
+            }
+        }
+
+        // update the payment code info array
+        this._senderPaymentCodeInfo.set(paymentCode, updatedPaymentCodeInfoArray);
     }
 
     /**
@@ -663,12 +795,13 @@ export class QiHDWallet extends AbstractHDWallet {
     /**
      * Validates and imports a map of payment code info.
      *
-     * @param {Map<string, paymentCodeInfo[]>} paymentCodeInfoMap - The map of payment code info to validate and import.
+     * @param {Map<string, PaymentChannelAddressInfo[]>} paymentCodeInfoMap - The map of payment code info to validate
+     *   and import.
      * @param {'receiver' | 'sender'} target - The target map to update ('receiver' or 'sender').
      * @throws {Error} If any of the payment code info is invalid.
      */
     private validateAndImportPaymentCodeInfo(
-        paymentCodeInfoMap: { [key: string]: paymentCodeInfo[] },
+        paymentCodeInfoMap: { [key: string]: PaymentChannelAddressInfo[] },
         target: 'receiver' | 'sender',
     ): void {
         const targetMap = target === 'receiver' ? this._receiverPaymentCodeInfo : this._senderPaymentCodeInfo;
@@ -687,10 +820,10 @@ export class QiHDWallet extends AbstractHDWallet {
     /**
      * Validates a payment code info object.
      *
-     * @param {paymentCodeInfo} pcInfo - The payment code info to validate.
+     * @param {PaymentChannelAddressInfo} pcInfo - The payment code info to validate.
      * @throws {Error} If the payment code info is invalid.
      */
-    private validatePaymentCodeInfo(pcInfo: paymentCodeInfo): void {
+    private validatePaymentCodeInfo(pcInfo: PaymentChannelAddressInfo): void {
         if (!/^(0x)?[0-9a-fA-F]{40}$/.test(pcInfo.address)) {
             throw new Error('Invalid payment code info: address must be a 40-character hexadecimal string');
         }
@@ -802,7 +935,11 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<string>} A promise that resolves to the payment address for sending funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    public async getNextSendAddress(receiverPaymentCode: string, zone: Zone, account: number = 0): Promise<string> {
+    public async getNextSendAddress(
+        receiverPaymentCode: string,
+        zone: Zone,
+        account: number = 0,
+    ): Promise<PaymentChannelAddressInfo> {
         const bip32 = await this._getBIP32API();
         const buf = await this._decodeBase58(receiverPaymentCode);
         const version = buf[0];
@@ -821,7 +958,7 @@ export class QiHDWallet extends AbstractHDWallet {
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             const address = senderPCodePublic.getPaymentAddress(receiverPCodePrivate, addrIndex++);
             if (this.isValidAddressForZone(address, zone)) {
-                const pcInfo: paymentCodeInfo = {
+                const pcInfo: PaymentChannelAddressInfo = {
                     address,
                     index: addrIndex,
                     account,
@@ -833,7 +970,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 } else {
                     this._receiverPaymentCodeInfo.set(receiverPaymentCode, [pcInfo]);
                 }
-                return address;
+                return pcInfo;
             }
         }
 
@@ -850,7 +987,11 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<string>} A promise that resolves to the payment address for receiving funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    public async getNextReceiveAddress(senderPaymentCode: string, zone: Zone, account: number = 0): Promise<string> {
+    public async getNextReceiveAddress(
+        senderPaymentCode: string,
+        zone: Zone,
+        account: number = 0,
+    ): Promise<PaymentChannelAddressInfo> {
         const bip32 = await this._getBIP32API();
         const buf = await this._decodeBase58(senderPaymentCode);
         const version = buf[0];
@@ -869,7 +1010,7 @@ export class QiHDWallet extends AbstractHDWallet {
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             const address = receiverPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex++);
             if (this.isValidAddressForZone(address, zone)) {
-                const pcInfo: paymentCodeInfo = {
+                const pcInfo: PaymentChannelAddressInfo = {
                     address,
                     index: addrIndex,
                     account,
@@ -881,7 +1022,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 } else {
                     this._senderPaymentCodeInfo.set(senderPaymentCode, [pcInfo]);
                 }
-                return address;
+                return pcInfo;
             }
         }
 
@@ -902,15 +1043,13 @@ export class QiHDWallet extends AbstractHDWallet {
             throw new Error(`Invalid payment code: ${paymentCode}`);
         }
         if (type === 'receiver') {
-            if (this._receiverPaymentCodeInfo.has(paymentCode)) {
-                return;
+            if (!this._receiverPaymentCodeInfo.has(paymentCode)) {
+                this._receiverPaymentCodeInfo.set(paymentCode, []);
             }
-            this._receiverPaymentCodeInfo.set(paymentCode, []);
         } else {
-            if (this._senderPaymentCodeInfo.has(paymentCode)) {
-                return;
+            if (!this._senderPaymentCodeInfo.has(paymentCode)) {
+                this._senderPaymentCodeInfo.set(paymentCode, []);
             }
-            this._senderPaymentCodeInfo.set(paymentCode, []);
         }
     }
 }
