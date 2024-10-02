@@ -10,7 +10,7 @@ import type { AccessList, TxInput, TxOutput } from '../transaction/index.js';
  * @category Providers
  */
 export interface BlockParams {
-    etxs: ReadonlyArray<string | ExternalTransactionResponseParams>;
+    outboundEtxs: ReadonlyArray<string | ExternalTransactionResponseParams>;
     hash: string;
     header: BlockHeaderParams;
     interlinkHashes: Array<string>;
@@ -31,7 +31,7 @@ export interface BlockHeaderParams {
     evmRoot: string;
     expansionNumber: number;
     etxRollupRoot: string;
-    etxsRoot: string;
+    outboundEtxsRoot: string;
     extraData: string;
     gasLimit: bigint;
     gasUsed: bigint;
@@ -53,10 +53,15 @@ export interface BlockHeaderParams {
     transactionsRoot: string;
     uncledEntropy: bigint;
     utxoRoot: string;
+    exchangeRate: bigint;
+    quaiToQi: bigint;
+    qiToQuai: bigint;
+    secondaryCoinbase: string;
 }
 
 export interface UncleParams {
-    coinbase: string;
+    primaryCoinbase: string;
+    lock: number;
     difficulty: string;
     headerHash: string;
     location: string;
@@ -192,8 +197,6 @@ export interface EtxParams {
      */
     hash: string;
 
-    isCoinbase: number;
-
     /**
      * The hash of the originating transaction.
      */
@@ -207,7 +210,7 @@ export interface EtxParams {
     /**
      * The sender of the etx.
      */
-    sender: string;
+    from: string;
 }
 
 // Transaction Receipt
@@ -297,7 +300,11 @@ export interface TransactionReceiptParams {
      */
     status: null | number;
 
-    etxs: ReadonlyArray<EtxParams>;
+    etxType?: null | number;
+
+    originatingTxHash?: null | string;
+
+    outboundEtxs: ReadonlyArray<EtxParams>;
 }
 
 export interface ExternalTransactionResponseParams {
@@ -376,11 +383,7 @@ export interface ExternalTransactionResponseParams {
 
     originatingTxHash: null | string;
 
-    isCoinbase: null | number;
-
-    etxType: null | string;
-
-    sender: string;
+    etxType: null | number;
 }
 
 /**
@@ -482,7 +485,7 @@ export interface QuaiTransactionResponseParams {
      */
     accessList: null | AccessList;
 
-    etxType: null | string;
+    etxType: null | number;
 }
 
 /**

@@ -208,7 +208,7 @@ describe.skip('Test Provider Block operations', function () {
     before(async () => {
         const rpcBlock = await fetchRPCBlock('0xA');
         block = {
-            etxs: rpcBlock.etxs,
+            outboundEtxs: rpcBlock.outboundEtxs,
             hash: rpcBlock.hash,
             header: {
                 gasPrice: BigInt(rpcBlock.header.gasPrice),
@@ -218,7 +218,7 @@ describe.skip('Test Provider Block operations', function () {
                 evmRoot: rpcBlock.header.evmRoot,
                 expansionNumber: Number(rpcBlock.header.expansionNumber),
                 etxRollupRoot: rpcBlock.header.etxRollupRoot,
-                etxsRoot: rpcBlock.header.etxsRoot,
+                outboundEtxsRoot: rpcBlock.header.outboundEtxsRoot,
                 extraData: rpcBlock.header.extraData,
                 gasLimit: BigInt(rpcBlock.header.gasLimit),
                 gasUsed: BigInt(rpcBlock.header.gasUsed),
@@ -242,6 +242,10 @@ describe.skip('Test Provider Block operations', function () {
                 uncleHash: rpcBlock.header.uncleHash,
                 uncledEntropy: BigInt(rpcBlock.header.uncledEntropy),
                 utxoRoot: rpcBlock.header.utxoRoot,
+                exchangeRate: BigInt(rpcBlock.header.exchangeRate),
+                quaiToQi: BigInt(rpcBlock.header.quaiToQi),
+                qiToQuai: BigInt(rpcBlock.header.qiToQuai),
+                secondaryCoinbase: rpcBlock.header.secondaryCoinbase,
             },
             interlinkHashes: rpcBlock.interlinkHashes,
             size: BigInt(rpcBlock.size),
@@ -262,7 +266,7 @@ describe.skip('Test Provider Block operations', function () {
         const { provider, ...formatBlock } = {
             ...responseBlock,
             transactions: responseBlock.transactions,
-            etxs: responseBlock.etxs,
+            outboundEtxs: responseBlock.outboundEtxs,
         };
         equals('Block by Number', formatBlock, block);
     });
@@ -276,7 +280,7 @@ describe.skip('Test Provider Block operations', function () {
         const { provider, ...formatBlock } = {
             ...responseBlock,
             transactions: responseBlock.transactions,
-            etxs: responseBlock.etxs,
+            outboundtxs: responseBlock.outboundEtxs,
         };
         equals('Block by Hash', formatBlock, block);
     });
