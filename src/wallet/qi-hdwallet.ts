@@ -63,6 +63,8 @@ interface SerializedQiHDWallet extends SerializedHDWallet {
     senderPaymentCodeInfo: { [key: string]: PaymentChannelAddressInfo[] };
 }
 
+type AddressUsageCallback = (address: string) => Promise<boolean>;
+
 /**
  * The Qi HD wallet is a BIP44-compliant hierarchical deterministic wallet used for managing a set of addresses in the
  * Qi ledger. This is wallet implementation is the primary way to interact with the Qi UTXO ledger on the Quai network.
@@ -142,6 +144,12 @@ export class QiHDWallet extends AbstractHDWallet {
     protected _outpoints: OutpointInfo[] = [];
 
     /**
+     * @ignore
+     * @type {AddressUsageCallback}
+     */
+    protected _addressUseChecker: AddressUsageCallback | undefined;
+
+    /**
      * Map of paymentcodes to PaymentChannelAddressInfo for the receiver
      */
     private _receiverPaymentCodeInfo: Map<string, PaymentChannelAddressInfo[]> = new Map();
@@ -158,6 +166,17 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     constructor(guard: any, root: HDNodeWallet, provider?: Provider) {
         super(guard, root, provider);
+    }
+
+    /**
+     * Sets the address use checker. The provided callback function should accept an address as input and return a
+     * boolean indicating whether the address is in use. If the callback returns true, the address is considered used
+     * and if it returns false, the address is considered unused.
+     *
+     * @param {AddressUsageCallback} checker - The address use checker.
+     */
+    public setAddressUseChecker(checker: AddressUsageCallback): void {
+        this._addressUseChecker = checker;
     }
 
     // getters for the payment code info maps
@@ -521,8 +540,11 @@ export class QiHDWallet extends AbstractHDWallet {
                 // Remove from gap addresses
                 newlyUsedAddresses.push(addressInfo);
                 gapCount = 0;
+            } else if (this._addressUseChecker !== undefined && (await this._addressUseChecker(addressInfo.address))) {
+                // address checker returned true, so the address is used
+                newlyUsedAddresses.push(addressInfo);
+                gapCount = 0;
             } else {
-                // Address is still unused
                 gapCount++;
                 i++;
             }
@@ -547,6 +569,9 @@ export class QiHDWallet extends AbstractHDWallet {
                         account,
                     })),
                 );
+                gapCount = 0;
+            } else if (this._addressUseChecker !== undefined && (await this._addressUseChecker(addressInfo.address))) {
+                // address checker returned true, so the address is used
                 gapCount = 0;
             } else {
                 gapCount++;
@@ -605,6 +630,11 @@ export class QiHDWallet extends AbstractHDWallet {
                 );
                 // Remove from gap addresses
                 newlyUsedAddresses.push(addressInfo);
+                gapCount = 0;
+            } else if (this._addressUseChecker !== undefined && (await this._addressUseChecker(addressInfo.address))) {
+                // address checker returned true, so the address is used
+                newlyUsedAddresses.push(addressInfo);
+                gapCount = 0;
             } else {
                 // Address is still unused
                 gapCount++;
@@ -623,21 +653,9 @@ export class QiHDWallet extends AbstractHDWallet {
             const pcAddressInfo = await this.getNextReceiveAddress(paymentCode, zone, account);
             const outpoints = await this.getOutpointsByAddress(pcAddressInfo.address);
 
-            // update the payment code info array based on whether the address has been used
-            pcAddressInfo.isUsed = outpoints.length > 0;
-            const pcAddressInfoIndex = updatedPaymentCodeInfoArray.findIndex(
-                (info) => info.index === pcAddressInfo.index,
-            );
-            if (pcAddressInfoIndex !== -1) {
-                updatedPaymentCodeInfoArray[pcAddressInfoIndex] = pcAddressInfo;
-            } else {
-                // this should never happen because the `getNextReceiveAddress` method pushes the address info to the array
-                throw new Error(
-                    `Error occurred while scanning payment channel ${paymentCode}. Address info not found: ${pcAddressInfo.address}`,
-                );
-            }
-
+            let isUsed = false;
             if (outpoints.length > 0) {
+                isUsed = true;
                 this.importOutpoints(
                     outpoints.map((outpoint) => ({
                         outpoint,
@@ -647,8 +665,31 @@ export class QiHDWallet extends AbstractHDWallet {
                     })),
                 );
                 gapCount = 0;
+            } else if (
+                this._addressUseChecker !== undefined &&
+                (await this._addressUseChecker(pcAddressInfo.address))
+            ) {
+                // address checker returned true, so the address is used
+                isUsed = true;
+                gapCount = 0;
             } else {
                 gapCount++;
+            }
+
+            if (isUsed) {
+                // update the payment code info array if the address has been used
+                pcAddressInfo.isUsed = isUsed;
+                const pcAddressInfoIndex = updatedPaymentCodeInfoArray.findIndex(
+                    (info) => info.index === pcAddressInfo.index,
+                );
+                if (pcAddressInfoIndex !== -1) {
+                    updatedPaymentCodeInfoArray[pcAddressInfoIndex] = pcAddressInfo;
+                } else {
+                    // this should never happen because the `getNextReceiveAddress` method pushes the address info to the array
+                    throw new Error(
+                        `Error occurred while scanning payment channel ${paymentCode}. Address info not found: ${pcAddressInfo.address}`,
+                    );
+                }
             }
         }
 
