@@ -305,6 +305,7 @@ export abstract class AbstractTransaction<S extends allowedSignatureTypes> imple
      * This is the digest that a [Signer](../interfaces/Signer) must sign to authorize this transaction.
      */
     get digest(): string {
+        console.log(`---> AbstractTransaction @ digest: this.unsignedSerialized: ${this.unsignedSerialized}`);
         return keccak256(this.unsignedSerialized);
     }
 
