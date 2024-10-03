@@ -12,7 +12,8 @@ import { getBytes, hexlify } from '../utils/index.js';
 import { TransactionLike, QiTransaction, TxInput, FewestCoinSelector, SpendTarget } from '../transaction/index.js';
 import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
-import { keccak_256 } from '@noble/hashes/sha3';
+// import { keccak_256 } from '@noble/hashes/sha3';
+import { keccak256 as keccak_256 } from '../crypto/index.js';
 import { musigCrypto } from '../crypto/index.js';
 import { Outpoint, UTXO, denominations } from '../transaction/utxo.js';
 import { getZoneForAddress } from '../utils/index.js';
@@ -225,7 +226,10 @@ export class QiHDWallet extends AbstractHDWallet {
             throw new Error('Invalid UTXO transaction, missing inputs or outputs');
 
         console.log('---> QiHDWallet @ signTransaction: unsignedSerialized: ', txobj.unsignedSerialized);
-        const hash = keccak_256(txobj.unsignedSerialized);
+        const hashStr = keccak_256(txobj.unsignedSerialized);
+        const hash = getBytes(hashStr);
+        // print the hash in hex
+        console.log('---> QiHDWallet @ signTransaction: digest(hash) to sign: ', hexlify(hash));
 
         let signature: string;
 
@@ -234,7 +238,7 @@ export class QiHDWallet extends AbstractHDWallet {
         } else {
             signature = this.createMuSigSignature(txobj, hash);
         }
-
+        console.log('---> QiHDWallet @ signTransaction: signature: ', signature);
         txobj.signature = signature;
         return txobj.serialized;
     }
@@ -342,7 +346,7 @@ export class QiHDWallet extends AbstractHDWallet {
             // 1. Check the wallet has enough balance in the originating zone to send the transaction
             const balance = this.getBalanceForZone(originZone);
             if (balance < amount) {
-                throw new Error('Insufficient balance in the originating zone');
+                throw new Error(`Insufficient balance in the originating zone: want ${amount} Qi got ${balance} Qi`);
             }
 
             // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
@@ -356,26 +360,11 @@ export class QiHDWallet extends AbstractHDWallet {
             };
             const selectedUTXOs = fewestCoinSelector.performSelection(spendTarget);
 
-            //! Helper function to handle BigInt serialization
-            const bigIntSerializer = (key: string, value: any) => {
-                if (typeof value === 'bigint') {
-                    return value.toString();
-                }
-                return value;
-            };
-
-            console.log(
-                '---> QiHDWallet @ sendTransaction: selectedUTXOs: ',
-                JSON.stringify(selectedUTXOs, bigIntSerializer, 2),
-            );
-
             // 3. Generate as many unused addresses as required to populate the spend outputs
-            // TODO: Do we need to use 1 sender address for each spend output?
-            // const sendAddresses: string[] = [];
-            // for (let i = 0; i < selectedUTXOs.spendOutputs.length; i++) {
-            //     sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
-            // }
-            // console.log('---> QiHDWallet @ sendTransaction: sendAddresses: ', sendAddresses);
+            const sendAddresses: string[] = [];
+            for (let i = 0; i < selectedUTXOs.spendOutputs.length; i++) {
+                sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
+            }
             // 4. Generate as many addresses as required to populate the change outputs
             const changeAddresses: string[] = [];
             for (let i = 0; i < selectedUTXOs.changeOutputs.length; i++) {
@@ -398,14 +387,10 @@ export class QiHDWallet extends AbstractHDWallet {
             console.log('---> QiHDWallet @ sendTransaction: inputs: ', inputs);
 
             // 5.3 Create the "sender" outputs
-            const senderOutputs = selectedUTXOs.spendOutputs.map((output) => ({
-                address: senderAddress,
+            const senderOutputs = selectedUTXOs.spendOutputs.map((output, index) => ({
+                address: sendAddresses[index],
                 denomination: output.denomination,
             }));
-            // const senderOutputs = selectedUTXOs.spendOutputs.map((output, index) => ({
-            //     address: sendAddresses[index],
-            //     denomination: output.denomination,
-            // }));
             console.log('---> QiHDWallet @ sendTransaction: senderOutputs: ', senderOutputs);
             // 5.4 Create the "change" outputs
             const changeOutputs = selectedUTXOs.changeOutputs.map((output, index) => ({
@@ -445,6 +430,7 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     private createSchnorrSignature(input: TxInput, hash: Uint8Array): string {
         const privKey = this.getPrivateKeyForTxInput(input);
+        console.log('---> QiHDWallet @ createSchnorrSignature: privKey: ', privKey);
         const signature = schnorr.sign(hash, getBytes(privKey));
         return hexlify(signature);
     }
@@ -513,6 +499,7 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     private getPrivateKeyForTxInput(input: TxInput): string {
         if (!input.pubkey) throw new Error('Missing public key for input');
+        console.log('---> QiHDWallet @ getPrivateKeyForTxInput: pubkey: ', input.pubkey);
         const address = computeAddress(input.pubkey);
         // get address info
         const addressInfo = this.getAddressInfo(address);

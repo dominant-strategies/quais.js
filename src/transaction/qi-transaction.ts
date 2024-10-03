@@ -119,7 +119,9 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         const hashHex = keccak256(dataBuffer);
         const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
 
-        const origin = this.originZone ? parseInt(this.originZone.slice(2), 16) : 0;
+        const prevTxHash = this.txInputs[0].txhash;
+        const prevTxHashBytes = getBytes(prevTxHash);
+        const origin = prevTxHashBytes[1];
         hashBuffer[0] = origin;
         hashBuffer[1] |= 0x80;
         hashBuffer[2] = origin;
@@ -234,6 +236,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
                 tx_outs: this.txOutputs.map((output) => ({
                     address: getBytes(output.address),
                     denomination: output.denomination,
+                    lock: new Uint8Array(),
                 })),
             },
         };
@@ -241,7 +244,25 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         if (this.signature && includeSignature) {
             protoTx.signature = getBytes(this.signature);
         }
+        // Create a formatting function to convert Uint8Array to hexadecimal strings
+        // const formatProtoTx = (obj: any): any => {
+        //     if (obj === null || typeof obj !== 'object') {
+        //         return obj;
+        //     }
+        //     if (obj instanceof Uint8Array) {
+        //         return '0x' + Buffer.from(obj).toString('hex');
+        //     }
+        //     if (Array.isArray(obj)) {
+        //         return obj.map(formatProtoTx);
+        //     }
+        //     const result: any = {};
+        //     for (const key in obj) {
+        //         result[key] = formatProtoTx(obj[key]);
+        //     }
+        //     return result;
+        // };
 
+        // console.log(`---> QiTransaction @ toProtobuf: protoTx: ${JSON.stringify(formatProtoTx(protoTx), null, 2)}`);
         return protoTx;
     }
 
