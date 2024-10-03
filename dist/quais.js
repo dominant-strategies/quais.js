@@ -18565,7 +18565,7 @@ const _formatHeader = object({
     secondaryCoinbase: allowNull(getAddress),
     exchangeRate: getBigInt,
     quaiToQi: getBigInt,
-    qiToQuai: getBigInt
+    qiToQuai: getBigInt,
 });
 const _formatUncle = object({
     primaryCoinbase: allowNull(getAddress),
@@ -18579,7 +18579,7 @@ const _formatUncle = object({
     primeTerminusNumber: getNumber,
     timestamp: getNumber,
     txHash: formatHash,
-    lock: getNumber
+    lock: getNumber,
 });
 const _formatBlock = object({
     outboundEtxs: arrayOf((tx) => {
