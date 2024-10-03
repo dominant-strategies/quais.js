@@ -9,7 +9,7 @@ const inZoneTxReceipt = {
     contractAddress: null,
     cumulativeGasUsed: '0x5208',
     effectiveGasPrice: '0x3b9aca0a',
-    etxs: null,
+    outboundEtxs: null,
     from: '0x000001273B55E9e5998328216dB1b130c231221C',
     gasUsed: '0x5208',
     logs: [],
@@ -28,7 +28,7 @@ const crossZoneTxReceipt = {
     contractAddress: null,
     cumulativeGasUsed: '0xf618',
     effectiveGasPrice: '0x3b9aca0a',
-    etxs: [
+    outboundEtxs: [
         {
             type: '0x1',
             nonce: null,
@@ -41,10 +41,11 @@ const crossZoneTxReceipt = {
             to: '0x010001D025371794a6eDb5feE8aC2F384EdD7463',
             accessList: [],
             isCoinbase: '0x0',
-            sender: '0x000001273B55E9e5998328216dB1b130c231221C',
+            from: '0x000001273B55E9e5998328216dB1b130c231221C',
             originatingTxHash: '0x0045007859423351f24f9dde0084b43817958aed81b5473fa04832b16f130131',
             etxIndex: '0x0',
             hash: '0x006401504cf1c7a8c6636dc0a007eaf9325a447cc617b1919b09f3341b4a4624',
+            etxType: '0x0',
         },
     ],
     from: '0x000001273B55E9e5998328216dB1b130c231221C',
@@ -76,16 +77,19 @@ describe('Transaction Receipt Formatter', () => {
         assert.equal(formattedReceipt.blockHash, crossZoneTxReceipt.blockHash);
         assert.equal(formattedReceipt.hash, crossZoneTxReceipt.transactionHash);
         assert.ok(formattedReceipt.outboundEtxs);
-        assert.equal(formattedReceipt.outboundEtxs[0].from, crossZoneTxReceipt.etxs[0].sender);
-        assert.equal(formattedReceipt.outboundEtxs[0].hash, crossZoneTxReceipt.etxs[0].hash);
-        assert.equal(formattedReceipt.outboundEtxs[0].nonce, crossZoneTxReceipt.etxs[0].nonce);
-        assert.equal(formattedReceipt.outboundEtxs[0].gas, crossZoneTxReceipt.etxs[0].gas);
-        assert.equal(formattedReceipt.outboundEtxs[0].gasPrice, crossZoneTxReceipt.etxs[0].gasPrice);
-        assert.equal(formattedReceipt.outboundEtxs[0].minerTip, crossZoneTxReceipt.etxs[0].minerTip);
-        assert.equal(formattedReceipt.outboundEtxs[0].value, crossZoneTxReceipt.etxs[0].value);
-        assert.equal(formattedReceipt.outboundEtxs[0].input, crossZoneTxReceipt.etxs[0].input);
-        assert.equal(formattedReceipt.outboundEtxs[0].to, crossZoneTxReceipt.etxs[0].to);
-        assert.equal(formattedReceipt.outboundEtxs[0].originatingTxHash, crossZoneTxReceipt.etxs[0].originatingTxHash);
-        assert.equal(formattedReceipt.outboundEtxs[0].etxIndex, crossZoneTxReceipt.etxs[0].etxIndex);
+        assert.equal(formattedReceipt.outboundEtxs[0].from, crossZoneTxReceipt.outboundEtxs[0].from);
+        assert.equal(formattedReceipt.outboundEtxs[0].hash, crossZoneTxReceipt.outboundEtxs[0].hash);
+        assert.equal(formattedReceipt.outboundEtxs[0].nonce, crossZoneTxReceipt.outboundEtxs[0].nonce);
+        assert.equal(formattedReceipt.outboundEtxs[0].gas, crossZoneTxReceipt.outboundEtxs[0].gas);
+        assert.equal(formattedReceipt.outboundEtxs[0].gasPrice, crossZoneTxReceipt.outboundEtxs[0].gasPrice);
+        assert.equal(formattedReceipt.outboundEtxs[0].minerTip, crossZoneTxReceipt.outboundEtxs[0].minerTip);
+        assert.equal(formattedReceipt.outboundEtxs[0].value, crossZoneTxReceipt.outboundEtxs[0].value);
+        assert.equal(formattedReceipt.outboundEtxs[0].input, crossZoneTxReceipt.outboundEtxs[0].input);
+        assert.equal(formattedReceipt.outboundEtxs[0].to, crossZoneTxReceipt.outboundEtxs[0].to);
+        assert.equal(
+            formattedReceipt.outboundEtxs[0].originatingTxHash,
+            crossZoneTxReceipt.outboundEtxs[0].originatingTxHash,
+        );
+        assert.equal(formattedReceipt.outboundEtxs[0].etxIndex, crossZoneTxReceipt.outboundEtxs[0].etxIndex);
     });
 });

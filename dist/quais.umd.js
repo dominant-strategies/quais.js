@@ -18588,7 +18588,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         secondaryCoinbase: allowNull(getAddress),
         exchangeRate: getBigInt,
         quaiToQi: getBigInt,
-        qiToQuai: getBigInt
+        qiToQuai: getBigInt,
     });
     const _formatUncle = object({
         primaryCoinbase: allowNull(getAddress),
@@ -18602,7 +18602,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         primeTerminusNumber: getNumber,
         timestamp: getNumber,
         txHash: formatHash,
-        lock: getNumber
+        lock: getNumber,
     });
     const _formatBlock = object({
         outboundEtxs: arrayOf((tx) => {
