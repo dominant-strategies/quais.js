@@ -1547,7 +1547,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     #validateTransactionHash(computedHash: string, nodehash: string) {
         if (computedHash !== nodehash) {
-            throw new Error('Transaction hash mismatch');
+            throw new Error(`Transaction hash mismatch: ${computedHash} !== ${nodehash}`);
         }
     }
 
