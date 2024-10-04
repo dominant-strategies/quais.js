@@ -1142,7 +1142,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             case 'getGasPrice':
                 return {
                     method: 'quai_gasPrice',
-                    args: [req.txType],
+                    args: [],
                 };
 
             case 'getMinerTip':

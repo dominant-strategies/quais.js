@@ -216,7 +216,6 @@ export class Indexed {
      * Check if a value is an **Indexed** This provides a Type Guard for property access.
      *
      * @param value - The value to check.
-     *
      * @returns `true` if the value is an **Indexed**.
      */
     static isIndexed(value: any): value is Indexed {

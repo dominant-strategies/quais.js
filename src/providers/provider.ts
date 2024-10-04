@@ -112,7 +112,7 @@ export class FeeData {
      * @param {null | bigint} [gasPrice] - The maximum fee per gas.
      * @param {null | bigint} [minerTip] - The maximum priority fee per gas.
      */
-    constructor(gasPrice?: null | bigint, gasLimit?: null | bigint, minerTip?: null | bigint) {
+    constructor(gasPrice?: null | bigint, minerTip?: null | bigint) {
         defineProperties<FeeData>(this, {
             gasPrice: getValue(gasPrice),
             minerTip: getValue(minerTip),
@@ -2163,13 +2163,13 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
 
                     // Rescheudle a check on the next block
                     if (!stopScanning) {
-                        this.provider.once('block', replaceListener);
+                        this.provider.once('block', replaceListener, zone);
                     }
                 };
                 cancellers.push(() => {
-                    this.provider.off('block', replaceListener);
+                    this.provider.off('block', replaceListener, zone);
                 });
-                this.provider.once('block', replaceListener);
+                this.provider.once('block', replaceListener, zone);
             }
         });
 

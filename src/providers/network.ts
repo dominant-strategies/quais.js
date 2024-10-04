@@ -1,5 +1,6 @@
 /**
  * A **Network** encapsulates the various properties required to interact with a specific chain.
+ *
  * @category Providers
  */
 
@@ -40,6 +41,7 @@ export class Network {
 
     /**
      * Creates a new **Network** for `name` and `chainId`.
+     *
      * @param {string} name - The network name.
      * @param {BigNumberish} chainId - The network chain ID.
      */
@@ -50,6 +52,7 @@ export class Network {
 
     /**
      * Returns a JSON-compatible representation of a Network.
+     *
      * @returns {Object} The JSON representation of the network.
      */
     toJSON(): any {
@@ -60,6 +63,7 @@ export class Network {
      * The network common name.
      *
      * This is the canonical name, as networks might have multiple names.
+     *
      * @returns {string} The network name.
      */
     get name(): string {
@@ -68,6 +72,7 @@ export class Network {
 
     /**
      * Sets the network name.
+     *
      * @param {string} value - The new network name.
      */
     set name(value: string) {
@@ -76,6 +81,7 @@ export class Network {
 
     /**
      * The network chain ID.
+     *
      * @returns {bigint} The network chain ID.
      */
     get chainId(): bigint {
@@ -84,6 +90,7 @@ export class Network {
 
     /**
      * Sets the network chain ID.
+     *
      * @param {BigNumberish} value - The new network chain ID.
      */
     set chainId(value: BigNumberish) {
@@ -96,9 +103,9 @@ export class Network {
      *
      * This method does not currently check for additional properties, such as plug-in compatibility.
      *
+     * @ignore
      * @param {Networkish} other - The network to compare.
      * @returns {boolean} True if the networks match.
-     * @ignore
      */
     matches(other: Networkish): boolean {
         if (other == null) {
@@ -140,6 +147,7 @@ export class Network {
 
     /**
      * Create a copy of this Network.
+     *
      * @returns {Network} A new Network instance.
      */
     clone(): Network {

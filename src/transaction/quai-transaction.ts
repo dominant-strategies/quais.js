@@ -476,6 +476,10 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         //  TODO: Fix this because new tx instance requires a 'from' address
         let signature: null | Signature = null;
         let address: string = '';
+        delete protoTx.etx_sender;
+        delete protoTx.etx_index;
+        const protoTxCopy = structuredClone(protoTx);
+
         if (protoTx.v && protoTx.r && protoTx.s) {
             // check if protoTx.r is zero
             if (protoTx.r.reduce((acc, val) => (acc += val), 0) == 0) {
@@ -484,14 +488,10 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             const signatureFields = [hexlify(protoTx.v!), hexlify(protoTx.r!), hexlify(protoTx.s!)];
             signature = _parseSignature(signatureFields);
 
-            const protoTxCopy = structuredClone(protoTx);
-
             delete protoTxCopy.v;
             delete protoTxCopy.r;
             delete protoTxCopy.s;
             delete protoTxCopy.signature;
-            delete protoTxCopy.etx_sender;
-            delete protoTxCopy.etx_index;
 
             address = recoverAddress(keccak256(encodeProtoTransaction(protoTxCopy)), signature);
         }

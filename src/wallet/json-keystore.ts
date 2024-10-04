@@ -59,7 +59,6 @@ export type EncryptOptions = {
  *
  * @category Wallet
  * @param {string} json - The JSON data to check.
- *
  * @returns {boolean} True if the JSON data is a valid Keystore Wallet.
  */
 export function isKeystoreJson(json: string): boolean {
@@ -80,7 +79,6 @@ export function isKeystoreJson(json: string): boolean {
  * @param {any} data - The data containing encryption parameters.
  * @param {Uint8Array} key - The key to use for decryption.
  * @param {Uint8Array} ciphertext - The ciphertext to decrypt.
- *
  * @returns {string} The decrypted data as a hex string.
  */
 function decrypt(data: any, key: Uint8Array, ciphertext: Uint8Array): string {
@@ -101,7 +99,6 @@ function decrypt(data: any, key: Uint8Array, ciphertext: Uint8Array): string {
  *
  * @param {any} data - The data containing account information.
  * @param {string} _key - The key to use for decryption.
- *
  * @returns {KeystoreAccount} The decrypted account details.
  */
 function getAccount(data: any, _key: string): KeystoreAccount {
@@ -173,7 +170,6 @@ type KdfParams =
  * Retrieves the key derivation function parameters from the given data.
  *
  * @param {any} data - The data containing KDF parameters.
- *
  * @returns {KdfParams} The key derivation function parameters.
  */
 function getDecryptKdfParams(data: any): KdfParams {
@@ -224,7 +220,6 @@ function getDecryptKdfParams(data: any): KdfParams {
  * @category Wallet
  * @param {string} json - The JSON data to decrypt.
  * @param {string | Uint8Array} _password - The password to decrypt the JSON data.
- *
  * @returns {KeystoreAccount} The decrypted account.
  */
 export function decryptKeystoreJsonSync(json: string, _password: string | Uint8Array): KeystoreAccount {
@@ -250,7 +245,6 @@ export function decryptKeystoreJsonSync(json: string, _password: string | Uint8A
  * Pauses execution for the specified duration.
  *
  * @param {number} duration - The duration to stall in milliseconds.
- *
  * @returns {Promise<void>} A promise that resolves after the specified duration.
  */
 function stall(duration: number): Promise<void> {
@@ -273,7 +267,6 @@ function stall(duration: number): Promise<void> {
  * @param {string} json - The JSON data to decrypt.
  * @param {string | Uint8Array} _password - The password to decrypt the JSON data.
  * @param {ProgressCallback} [progress] - The callback to receive progress updates.
- *
  * @returns {Promise<KeystoreAccount>} The decrypted account.
  */
 export async function decryptKeystoreJson(
@@ -311,7 +304,6 @@ export async function decryptKeystoreJson(
  * Retrieves the key derivation function parameters for encryption.
  *
  * @param {EncryptOptions} options - The encryption options.
- *
  * @returns {ScryptParams} The key derivation function parameters.
  */
 function getEncryptKdfParams(options: EncryptOptions): ScryptParams {
@@ -363,7 +355,6 @@ function getEncryptKdfParams(options: EncryptOptions): ScryptParams {
  * @param {ScryptParams} kdf - The key derivation function parameters.
  * @param {KeystoreAccount} account - The account to encrypt.
  * @param {EncryptOptions} options - The encryption options.
- *
  * @returns {any} The encrypted keystore data.
  */
 function _encryptKeystore(key: Uint8Array, kdf: ScryptParams, account: KeystoreAccount, options: EncryptOptions): any {
@@ -467,7 +458,6 @@ function _encryptKeystore(key: Uint8Array, kdf: ScryptParams, account: KeystoreA
  * @param {KeystoreAccount} account - The account to encrypt.
  * @param {string | Uint8Array} password - The password to encrypt the JSON data.
  * @param {EncryptOptions} [options] - The options to use when encrypting the JSON data.
- *
  * @returns {string} The encrypted JSON data.
  */
 export function encryptKeystoreJsonSync(
@@ -496,7 +486,6 @@ export function encryptKeystoreJsonSync(
  * @param {KeystoreAccount} account - The account to encrypt.
  * @param {string | Uint8Array} password - The password to encrypt the JSON data.
  * @param {EncryptOptions} [options] - The options to use when encrypting the JSON data.
- *
  * @returns {Promise<string>} The encrypted JSON data.
  */
 export async function encryptKeystoreJson(
