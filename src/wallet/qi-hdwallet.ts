@@ -12,9 +12,7 @@ import { getBytes, hexlify } from '../utils/index.js';
 import { TransactionLike, QiTransaction, TxInput, FewestCoinSelector, SpendTarget } from '../transaction/index.js';
 import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
-// import { keccak_256 } from '@noble/hashes/sha3';
-import { keccak256 as keccak_256 } from '../crypto/index.js';
-import { musigCrypto } from '../crypto/index.js';
+import { keccak256, musigCrypto } from '../crypto/index.js';
 import { Outpoint, UTXO, denominations } from '../transaction/utxo.js';
 import { getZoneForAddress } from '../utils/index.js';
 import { AllowedCoinType, Zone } from '../constants/index.js';
@@ -225,11 +223,7 @@ export class QiHDWallet extends AbstractHDWallet {
         if (!txobj.txInputs || txobj.txInputs.length == 0 || !txobj.txOutputs)
             throw new Error('Invalid UTXO transaction, missing inputs or outputs');
 
-        console.log('---> QiHDWallet @ signTransaction: unsignedSerialized: ', txobj.unsignedSerialized);
-        const hashStr = keccak_256(txobj.unsignedSerialized);
-        const hash = getBytes(hashStr);
-        // print the hash in hex
-        console.log('---> QiHDWallet @ signTransaction: digest(hash) to sign: ', hexlify(hash));
+        const hash = getBytes(keccak256(txobj.unsignedSerialized));
 
         let signature: string;
 
@@ -268,7 +262,6 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     private outpointsToUTXOs(zone: Zone): UTXO[] {
         this.validateZone(zone);
-        console.log('---> QiHDWallet @ outpointsToUTXOs: outpoints: ', this._outpoints);
         return this._outpoints
             .filter((outpointInfo) => outpointInfo.zone === zone)
             .map((outpointInfo) => {
@@ -370,7 +363,7 @@ export class QiHDWallet extends AbstractHDWallet {
             for (let i = 0; i < selectedUTXOs.changeOutputs.length; i++) {
                 changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
             }
-            console.log('---> QiHDWallet @ sendTransaction: changeAddresses: ', changeAddresses);
+            // console.log('---> QiHDWallet @ sendTransaction: changeAddresses: ', changeAddresses);
             // 5. Create the transaction and sign it using the signTransaction method
 
             // 5.1 Fetch the public keys for the input addresses
@@ -384,7 +377,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 index: input.index,
                 pubkey: inputPubKeys[pubKeyIndex],
             }));
-            console.log('---> QiHDWallet @ sendTransaction: inputs: ', inputs);
+            // console.log('---> QiHDWallet @ sendTransaction: inputs: ', inputs);
 
             // 5.3 Create the "sender" outputs
             const senderOutputs = selectedUTXOs.spendOutputs.map((output, index) => ({
@@ -397,7 +390,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 address: changeAddresses[index],
                 denomination: output.denomination,
             }));
-            console.log('---> QiHDWallet @ sendTransaction: changeOutputs: ', changeOutputs);
+            // console.log('---> QiHDWallet @ sendTransaction: changeOutputs: ', changeOutputs);
             // 5.5 Create a Qi tx with the inputs, sender outputs and change outputs
             const tx = new QiTransaction();
             tx.txInputs = inputs.map((input) => ({
@@ -688,7 +681,7 @@ export class QiHDWallet extends AbstractHDWallet {
     public async signMessage(address: string, message: string | Uint8Array): Promise<string> {
         const addrNode = this._getHDNodeForAddress(address);
         const privKey = addrNode.privateKey;
-        const digest = keccak_256(message);
+        const digest = keccak256(message);
         const signature = schnorr.sign(digest, getBytes(privKey));
         return hexlify(signature);
     }
