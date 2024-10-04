@@ -232,7 +232,6 @@ export class QiHDWallet extends AbstractHDWallet {
         } else {
             signature = this.createMuSigSignature(txobj, hash);
         }
-        console.log('---> QiHDWallet @ signTransaction: signature: ', signature);
         txobj.signature = signature;
         return txobj.serialized;
     }
@@ -363,7 +362,6 @@ export class QiHDWallet extends AbstractHDWallet {
             for (let i = 0; i < selectedUTXOs.changeOutputs.length; i++) {
                 changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
             }
-            // console.log('---> QiHDWallet @ sendTransaction: changeAddresses: ', changeAddresses);
             // 5. Create the transaction and sign it using the signTransaction method
 
             // 5.1 Fetch the public keys for the input addresses
@@ -377,20 +375,19 @@ export class QiHDWallet extends AbstractHDWallet {
                 index: input.index,
                 pubkey: inputPubKeys[pubKeyIndex],
             }));
-            // console.log('---> QiHDWallet @ sendTransaction: inputs: ', inputs);
 
             // 5.3 Create the "sender" outputs
             const senderOutputs = selectedUTXOs.spendOutputs.map((output, index) => ({
                 address: sendAddresses[index],
                 denomination: output.denomination,
             }));
-            console.log('---> QiHDWallet @ sendTransaction: senderOutputs: ', senderOutputs);
+            
             // 5.4 Create the "change" outputs
             const changeOutputs = selectedUTXOs.changeOutputs.map((output, index) => ({
                 address: changeAddresses[index],
                 denomination: output.denomination,
             }));
-            // console.log('---> QiHDWallet @ sendTransaction: changeOutputs: ', changeOutputs);
+
             // 5.5 Create a Qi tx with the inputs, sender outputs and change outputs
             const tx = new QiTransaction();
             tx.txInputs = inputs.map((input) => ({
@@ -423,7 +420,6 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     private createSchnorrSignature(input: TxInput, hash: Uint8Array): string {
         const privKey = this.getPrivateKeyForTxInput(input);
-        console.log('---> QiHDWallet @ createSchnorrSignature: privKey: ', privKey);
         const signature = schnorr.sign(hash, getBytes(privKey));
         return hexlify(signature);
     }
@@ -492,7 +488,6 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     private getPrivateKeyForTxInput(input: TxInput): string {
         if (!input.pubkey) throw new Error('Missing public key for input');
-        console.log('---> QiHDWallet @ getPrivateKeyForTxInput: pubkey: ', input.pubkey);
         const address = computeAddress(input.pubkey);
         // get address info
         const addressInfo = this.getAddressInfo(address);
