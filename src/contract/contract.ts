@@ -194,7 +194,7 @@ function getProvider(value: null | ContractRunner): null | Provider {
 }
 
 /**
- * @ignore Copy overrides and validate them.
+ * @ignore Copy Overrides and validate them.
  * @param {any} arg - The argument containing overrides.
  * @param {string[]} [allowed] - The allowed override keys.
  * @returns {Promise<Omit<ContractTransaction, O>>} The copied and validated overrides.
@@ -233,7 +233,7 @@ export async function copyOverrides<O extends string = 'data' | 'to'>(
 }
 
 /**
- * @ignore Resolve arguments for a contract runner.
+ * @ignore Resolve Arguments for a contract runner.
  * @param {null | ContractRunner} _runner - The contract runner.
  * @param {ReadonlyArray<ParamType>} inputs - The input parameter types.
  * @param {any[]} args - The arguments to resolve.

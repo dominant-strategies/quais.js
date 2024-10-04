@@ -37,7 +37,6 @@ const BN_58 = BigInt(58);
  *
  * @category Encoding
  * @param {BytesLike} _value - The value to encode.
- *
  * @returns {string} The Base58-encoded string.
  */
 export function encodeBase58(_value: BytesLike): string {
@@ -66,7 +65,6 @@ export function encodeBase58(_value: BytesLike): string {
  *
  * @category Encoding
  * @param {string} value - The Base58-encoded value.
- *
  * @returns {bigint} The decoded value.
  */
 export function decodeBase58(value: string): bigint {

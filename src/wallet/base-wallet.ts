@@ -11,11 +11,10 @@ import { QuaiTransaction, QuaiTransactionLike } from '../transaction/quai-transa
 import { keccak256 } from '../crypto/index.js';
 
 /**
- * The **BaseWallet** is a stream-lined implementation of a {@link AbstractSigner} that operates with a private
- * key.
+ * The **BaseWallet** is a stream-lined implementation of a {@link AbstractSigner} that operates with a private key.
  *
- * It is preferred to use the {@link Wallet} class, as it offers additional functionality and simplifies
- * loading a variety of JSON formats, Mnemonic Phrases, etc.
+ * It is preferred to use the {@link Wallet} class, as it offers additional functionality and simplifies loading a
+ * variety of JSON formats, Mnemonic Phrases, etc.
  *
  * This class may be of use for those attempting to implement a minimal Signer.
  *
@@ -24,6 +23,7 @@ import { keccak256 } from '../crypto/index.js';
 export class BaseWallet extends AbstractSigner {
     /**
      * The wallet address.
+     *
      * @type {string}
      * @readonly
      */
@@ -31,6 +31,7 @@ export class BaseWallet extends AbstractSigner {
 
     /**
      * The signing key used for signing payloads.
+     *
      * @type {SigningKey}
      * @readonly
      */
@@ -63,6 +64,7 @@ export class BaseWallet extends AbstractSigner {
 
     /**
      * The address of this wallet.
+     *
      * @type {string}
      * @readonly
      */
@@ -72,6 +74,7 @@ export class BaseWallet extends AbstractSigner {
 
     /**
      * The {@link SigningKey | **SigningKey**} used for signing payloads.
+     *
      * @type {SigningKey}
      * @readonly
      */
@@ -81,6 +84,7 @@ export class BaseWallet extends AbstractSigner {
 
     /**
      * The private key for this wallet.
+     *
      * @type {string}
      * @readonly
      */
@@ -89,13 +93,13 @@ export class BaseWallet extends AbstractSigner {
     }
 
     // TODO: `_zone` is not used, should it be removed?
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     /**
      * Returns the address of this wallet.
      *
      * @param {string} [_zone] - The zone (optional).
      * @returns {Promise<string>} The wallet address.
      */
+    // eslint-disable-next-line
     async getAddress(_zone?: string): Promise<string> {
         return this.#address;
     }
@@ -150,9 +154,9 @@ export class BaseWallet extends AbstractSigner {
     /**
      * Signs a message.
      *
+     * @async
      * @param {string | Uint8Array} message - The message to sign.
      * @returns {Promise<string>} The signed message.
-     * @async
      */
     async signMessage(message: string | Uint8Array): Promise<string> {
         return this.signMessageSync(message);
@@ -173,11 +177,11 @@ export class BaseWallet extends AbstractSigner {
     /**
      * Signs typed data.
      *
+     * @async
      * @param {TypedDataDomain} domain - The domain of the typed data.
-     * @param {Record<string, Array<TypedDataField>>} types - The types of the typed data.
+     * @param {Record<string, TypedDataField[]>} types - The types of the typed data.
      * @param {Record<string, any>} value - The value of the typed data.
      * @returns {Promise<string>} The signed typed data.
-     * @async
      */
     async signTypedData(
         domain: TypedDataDomain,

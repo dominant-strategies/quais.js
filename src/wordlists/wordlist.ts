@@ -28,7 +28,6 @@ export abstract class Wordlist {
      * `/\s+/`).
      *
      * @param {string} phrase - The phrase to split.
-     *
      * @returns {string[]} The split words in the phrase.
      */
     split(phrase: string): Array<string> {
@@ -41,7 +40,6 @@ export abstract class Wordlist {
      * By default, `words` are joined by a single space.
      *
      * @param {string[]} words - The words to join.
-     *
      * @returns {string} The joined phrase.
      */
     join(words: Array<string>): string {

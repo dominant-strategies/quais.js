@@ -1,12 +1,5 @@
 import { pbkdf2, sha256 } from '../crypto/index.js';
-import {
-    defineProperties,
-    getBytes,
-    hexlify,
-    assertNormalize,
-    assertPrivate,
-    assertArgument,
-} from '../utils/index.js';
+import { defineProperties, getBytes, hexlify, assertNormalize, assertPrivate, assertArgument } from '../utils/index.js';
 import { toUtf8Bytes } from '../encoding/index.js';
 import { LangEn } from '../wordlists/lang-en.js';
 

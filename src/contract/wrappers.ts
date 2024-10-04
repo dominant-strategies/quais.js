@@ -136,7 +136,6 @@ export class ContractTransactionResponse extends QuaiTransactionResponse {
      * wait until enough confirmations have completed.
      *
      * @param {number} confirms - The number of confirmations to wait for.
-     *
      * @returns {Promise<ContractTransactionReceipt | null>} The transaction receipt, or `null` if `confirms` is `0`.
      */
     async wait(confirms?: number): Promise<null | ContractTransactionReceipt> {
@@ -172,7 +171,6 @@ export class ContractUnknownEventPayload extends EventPayload<ContractEventName>
      * Resolves to the block the event occured in.
      *
      * @param {Shard} shard - The shard to get the block from.
-     *
      * @returns {Promise<Block>} A promise resolving to the block the event occured in.
      */
     async getBlock(shard: Shard): Promise<Block> {

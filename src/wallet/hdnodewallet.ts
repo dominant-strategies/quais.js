@@ -197,6 +197,7 @@ export class HDNodeWallet extends BaseWallet {
     readonly depth!: number;
 
     /**
+     * @ignore
      * @param {any} guard
      * @param {SigningKey} signingKey
      * @param {string} parentFingerprint
@@ -206,7 +207,6 @@ export class HDNodeWallet extends BaseWallet {
      * @param {number} depth
      * @param {null | Mnemonic} mnemonic
      * @param {null | Provider} provider
-     * @ignore
      */
     constructor(
         guard: any,
@@ -241,7 +241,6 @@ export class HDNodeWallet extends BaseWallet {
      * Connects the wallet to a provider.
      *
      * @param {null | Provider} provider
-     *
      * @returns {HDNodeWallet}
      */
     connect(provider: null | Provider): HDNodeWallet {
@@ -259,8 +258,8 @@ export class HDNodeWallet extends BaseWallet {
     }
 
     /**
-     * @returns {KeystoreAccount}
      * @ignore
+     * @returns {KeystoreAccount}
      */
     #account(): KeystoreAccount {
         const account: KeystoreAccount = { address: this.address, privateKey: this.privateKey };
@@ -283,7 +282,6 @@ export class HDNodeWallet extends BaseWallet {
      *
      * @param {Uint8Array | string} password
      * @param {ProgressCallback} [progressCallback]
-     *
      * @returns {Promise<string>}
      */
     async encrypt(password: Uint8Array | string, progressCallback?: ProgressCallback): Promise<string> {
@@ -300,7 +298,6 @@ export class HDNodeWallet extends BaseWallet {
      * duration.
      *
      * @param {Uint8Array | string} password
-     *
      * @returns {string}
      */
     encryptSync(password: Uint8Array | string): string {
@@ -372,7 +369,6 @@ export class HDNodeWallet extends BaseWallet {
      * Return the child for `index`.
      *
      * @param {Numeric} _index
-     *
      * @returns {HDNodeWallet}
      */
     deriveChild(_index: Numeric): HDNodeWallet {
@@ -408,7 +404,6 @@ export class HDNodeWallet extends BaseWallet {
      * Return the HDNode for `path` from this node.
      *
      * @param {string} path
-     *
      * @returns {HDNodeWallet}
      */
     derivePath(path: string): HDNodeWallet {
@@ -416,12 +411,10 @@ export class HDNodeWallet extends BaseWallet {
     }
 
     /**
-
+     * @ignore
      * @param {BytesLike} _seed
      * @param {null | Mnemonic} mnemonic
-     *
      * @returns {HDNodeWallet}
-     * @ignore
      */
     static #fromSeed(_seed: BytesLike, mnemonic: null | Mnemonic): HDNodeWallet {
         assertArgument(isBytesLike(_seed), 'invalid seed', 'seed', '[REDACTED]');
@@ -442,7 +435,6 @@ export class HDNodeWallet extends BaseWallet {
      * ([[HDNodeVoidWallet]]) or full HD Node ([[HDNodeWallet]]) respectively.
      *
      * @param {string} extendedKey
-     *
      * @returns {HDNodeWallet | HDNodeVoidWallet}
      */
     static fromExtendedKey(extendedKey: string): HDNodeWallet | HDNodeVoidWallet {
@@ -507,7 +499,6 @@ export class HDNodeWallet extends BaseWallet {
      * @param {string} path
      * @param {string} [password]
      * @param {Wordlist} [wordlist]
-     *
      * @returns {HDNodeWallet}
      */
     static createRandom(path: string, password?: string, wordlist?: Wordlist): HDNodeWallet {
@@ -526,7 +517,6 @@ export class HDNodeWallet extends BaseWallet {
      *
      * @param {Mnemonic} mnemonic
      * @param {string} path
-     *
      * @returns {HDNodeWallet}
      */
     static fromMnemonic(mnemonic: Mnemonic, path: string): HDNodeWallet {
@@ -540,7 +530,6 @@ export class HDNodeWallet extends BaseWallet {
      * @param {string} path
      * @param {string} [password]
      * @param {Wordlist} [wordlist]
-     *
      * @returns {HDNodeWallet}
      */
     static fromPhrase(phrase: string, path: string, password?: string, wordlist?: Wordlist): HDNodeWallet {
@@ -558,7 +547,6 @@ export class HDNodeWallet extends BaseWallet {
      * Creates an HD Node from a `seed`.
      *
      * @param {BytesLike} seed
-     *
      * @returns {HDNodeWallet}
      */
     static fromSeed(seed: BytesLike): HDNodeWallet {
@@ -630,6 +618,7 @@ export class HDNodeVoidWallet extends VoidSigner {
     readonly depth!: number;
 
     /**
+     * @ignore
      * @param {any} guard
      * @param {string} address
      * @param {string} publicKey
@@ -639,7 +628,6 @@ export class HDNodeVoidWallet extends VoidSigner {
      * @param {number} index
      * @param {number} depth
      * @param {null | Provider} provider
-     * @ignore
      */
     constructor(
         guard: any,
@@ -673,7 +661,6 @@ export class HDNodeVoidWallet extends VoidSigner {
      * Connects the wallet to a provider.
      *
      * @param {null | Provider} provider
-     *
      * @returns {HDNodeVoidWallet}
      */
     connect(provider: null | Provider): HDNodeVoidWallet {
@@ -732,7 +719,6 @@ export class HDNodeVoidWallet extends VoidSigner {
      * Return the child for `index`.
      *
      * @param {Numeric} _index
-     *
      * @returns {HDNodeVoidWallet}
      */
     deriveChild(_index: Numeric): HDNodeVoidWallet {
@@ -770,7 +756,6 @@ export class HDNodeVoidWallet extends VoidSigner {
      * Return the signer for `path` from this node.
      *
      * @param {string} path
-     *
      * @returns {HDNodeVoidWallet}
      */
     derivePath(path: string): HDNodeVoidWallet {
@@ -786,7 +771,6 @@ export class HDNodeVoidWallet extends VoidSigner {
  * There is also an [alternate pattern](getIndexedAccountPath) used by some software.
  *
  * @param {Numeric} _index
- *
  * @returns {string}
  */
 export function getAccountPath(_index: Numeric): string {
@@ -803,7 +787,6 @@ export function getAccountPath(_index: Numeric): string {
  * This is the pattern used by wallets like MetaMask.
  *
  * @param {Numeric} _index
- *
  * @returns {string}
  */
 export function getIndexedAccountPath(_index: Numeric): string {
