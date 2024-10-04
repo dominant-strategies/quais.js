@@ -10,7 +10,6 @@ import type { BytesLike } from './index.js';
  *
  * @category Utils
  * @param {BytesLike} randomBytes - The random bytes to use.
- *
  * @returns {string} The UUID.
  */
 export function uuidV4(randomBytes: BytesLike): string {

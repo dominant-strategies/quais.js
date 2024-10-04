@@ -2,20 +2,13 @@
  * @module wallet/utils
  */
 
-import {
-    getBytesCopy,
-    assertArgument,
-    BytesLike,
-    concat,
-    dataSlice,
-    getBytes,
-    assert,
-} from '../utils/index.js';
+import { getBytesCopy, assertArgument, BytesLike, concat, dataSlice, getBytes, assert } from '../utils/index.js';
 import { computeHmac, sha256 } from '../crypto/index.js';
 import { encodeBase58, toUtf8Bytes } from '../encoding/index.js';
 
 /**
  * Converts a hex string to a Uint8Array. If the string does not start with '0x', it adds it.
+ *
  * @param {string} hexString - The hex string to convert.
  * @returns {Uint8Array} The resulting byte array.
  */
@@ -28,7 +21,8 @@ export function looseArrayify(hexString: string): Uint8Array {
 
 /**
  * Converts a password to a Uint8Array. If the password is a string, it converts it to UTF-8 bytes.
- * @param {string|Uint8Array} password - The password to convert.
+ *
+ * @param {string | Uint8Array} password - The password to convert.
  * @returns {Uint8Array} The resulting byte array.
  */
 export function getPassword(password: string | Uint8Array): Uint8Array {
@@ -40,6 +34,7 @@ export function getPassword(password: string | Uint8Array): Uint8Array {
 
 /**
  * Traverses an object based on a path and returns the value at that path.
+ *
  * @param {any} object - The object to traverse.
  * @param {string} _path - The path to traverse.
  * @returns {T} The value at the specified path.
@@ -116,21 +111,30 @@ export function spelunk<T>(object: any, _path: string): T {
 
 // HDNODEWallet and UTXO Wallet util methods
 
-/** "Bitcoin seed" */
+/**
+ * "Bitcoin seed"
+ */
 export const MasterSecret = new Uint8Array([66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100]);
 
-/** Hardened bit constant */
+/**
+ * Hardened bit constant
+ */
 export const HardenedBit = 0x80000000;
 
-/** Constant N used in cryptographic operations */
+/**
+ * Constant N used in cryptographic operations
+ */
 export const N = BigInt('0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
 
-/** Hexadecimal characters */
+/**
+ * Hexadecimal characters
+ */
 export const Nibbles = '0123456789abcdef';
 
 /**
  * Pads a value with leading zeros to a specified length.
- * @param {string|number} value - The value to pad.
+ *
+ * @param {string | number} value - The value to pad.
  * @param {number} length - The desired length.
  * @returns {string} The padded value.
  */
@@ -158,6 +162,7 @@ export function zpad(value: string | number, length: number): string {
 
 /**
  * Encodes a value using Base58Check encoding.
+ *
  * @param {BytesLike} _value - The value to encode.
  * @returns {string} The Base58Check encoded string.
  */
@@ -170,11 +175,12 @@ export function encodeBase58Check(_value: BytesLike): string {
 
 /**
  * Serializes an index, chain code, public key, and private key into a pair of derived keys.
+ *
  * @param {number} index - The index to serialize.
  * @param {string} chainCode - The chain code.
  * @param {string} publicKey - The public key.
- * @param {null|string} privateKey - The private key.
- * @returns {{IL: Uint8Array, IR: Uint8Array}} The derived keys.
+ * @param {null | string} privateKey - The private key.
+ * @returns {{ IL: Uint8Array; IR: Uint8Array }} The derived keys.
  */
 export function ser_I(
     index: number,

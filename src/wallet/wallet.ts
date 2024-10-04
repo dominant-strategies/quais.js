@@ -44,7 +44,6 @@ export class Wallet extends BaseWallet {
      * Connects the wallet to a provider.
      *
      * @param {null | Provider} provider - The provider to connect to.
-     *
      * @returns {Wallet} The connected wallet.
      */
     connect(provider: null | Provider): Wallet {
@@ -58,7 +57,6 @@ export class Wallet extends BaseWallet {
      *
      * @param {Uint8Array | string} password - The password to encrypt the wallet with.
      * @param {ProgressCallback} [progressCallback] - An optional callback to keep the user informed.
-     *
      * @returns {Promise<string>} The encrypted JSON wallet.
      */
     async encrypt(password: Uint8Array | string, progressCallback?: ProgressCallback): Promise<string> {
@@ -76,7 +74,6 @@ export class Wallet extends BaseWallet {
      * duration.
      *
      * @param {Uint8Array | string} password - The password to encrypt the wallet with.
-     *
      * @returns {string} The encrypted JSON wallet.
      */
     encryptSync(password: Uint8Array | string): string {
@@ -89,7 +86,6 @@ export class Wallet extends BaseWallet {
      *
      * @ignore
      * @param {KeystoreAccount} account - The keystore account.
-     *
      * @returns {Wallet} The wallet instance.
      */
     static #fromAccount(account: KeystoreAccount): Wallet {
@@ -110,7 +106,6 @@ export class Wallet extends BaseWallet {
      * @param {string} json - The JSON data to decrypt.
      * @param {Uint8Array | string} password - The password to decrypt the JSON data.
      * @param {ProgressCallback} [progress] - An optional callback to keep the user informed.
-     *
      * @returns {Promise<QuaiHDWallet | Wallet>} The decrypted wallet.
      */
     static async fromEncryptedJson(
@@ -134,7 +129,6 @@ export class Wallet extends BaseWallet {
      *
      * @param {string} json - The JSON data to decrypt.
      * @param {Uint8Array | string} password - The password to decrypt the JSON data.
-     *
      * @returns {QuaiHDWallet | Wallet} The decrypted wallet.
      */
     static fromEncryptedJsonSync(json: string, password: Uint8Array | string): QuaiHDWallet | Wallet {

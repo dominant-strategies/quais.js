@@ -8,34 +8,40 @@ import "proto_common.proto";
 message ProtoHeader {
   repeated common.ProtoHash parent_hash = 1;
   optional common.ProtoHash uncle_hash = 2;
-  optional bytes coinbase = 3;
-  optional common.ProtoHash evm_root = 4;
-  optional common.ProtoHash tx_hash = 5;
-  optional common.ProtoHash etx_hash = 6;
-  optional common.ProtoHash etx_rollup_hash = 7;
-  repeated common.ProtoHash manifest_hash = 8;
-  optional common.ProtoHash receipt_hash = 9;
-  optional bytes difficulty = 10;
-  repeated bytes parent_entropy = 11;
-  repeated bytes parent_delta_s = 12;
-  repeated bytes parent_uncled_sub_delta_s = 13;
-  optional bytes uncled_s = 14;
-  repeated bytes number = 15;
-  optional uint64 gas_limit = 16;
-  optional uint64 gas_used = 17;
-  optional bytes base_fee = 18;
-  optional common.ProtoLocation location = 19;
-  optional bytes extra = 20;
-  optional common.ProtoHash mix_hash = 21;
-  optional uint64 nonce = 22;
-  optional common.ProtoHash utxo_root = 23;
-  optional common.ProtoHash etx_set_hash = 24;
-  optional uint64 efficiency_score = 25;
-  optional uint64 threshold_count = 26;
-  optional uint64 expansion_number = 27;
-  optional common.ProtoHash etx_eligible_slices = 28;
-  optional common.ProtoHash prime_terminus = 29;
-  optional common.ProtoHash interlink_root_hash = 30;
+  optional common.ProtoHash evm_root = 3;
+  optional common.ProtoHash tx_hash = 4;
+  optional common.ProtoHash outbound_etx_hash = 5;
+  optional common.ProtoHash etx_rollup_hash = 6;
+  repeated common.ProtoHash manifest_hash = 7;
+  optional common.ProtoHash receipt_hash = 8;
+  optional bytes difficulty = 9;
+  repeated bytes parent_entropy = 10;
+  repeated bytes parent_delta_entropy = 11;
+  repeated bytes parent_uncled_delta_entropy = 12;
+  optional bytes uncled_entropy = 13;
+  repeated bytes number = 14;
+  optional uint64 gas_limit = 15;
+  optional uint64 gas_used = 16;
+  optional bytes base_fee = 17;
+  optional common.ProtoLocation location = 18;
+  optional bytes extra = 19;
+  optional common.ProtoHash mix_hash = 20;
+  optional uint64 nonce = 21;
+  optional common.ProtoHash utxo_root = 22;
+  optional common.ProtoHash etx_set_root = 23;
+  optional uint64 efficiency_score = 24;
+  optional uint64 threshold_count = 25;
+  optional uint64 expansion_number = 26;
+  optional common.ProtoHash etx_eligible_slices = 27;
+  optional common.ProtoHash prime_terminus_hash = 28;
+  optional common.ProtoHash interlink_root_hash = 29;
+  optional uint64 state_limit = 30;
+  optional uint64 state_used = 31;
+  optional bytes quai_state_size = 32;
+  optional bytes secondary_coinbase = 33;
+  optional bytes exchange_rate = 34;
+  optional bytes quai_to_qi = 35;
+  optional bytes qi_to_quai = 36;
 }
 
 message ProtoTransaction {
@@ -46,18 +52,18 @@ message ProtoTransaction {
   optional uint64 gas = 5;
   optional bytes data = 6;
   optional bytes chain_id = 7;
-  optional bytes gas_fee_cap = 8;
-  optional bytes gas_tip_cap = 9;
+  optional bytes miner_tip = 8;
+  optional bytes gas_price = 9;
   optional ProtoAccessList access_list = 10;
   optional bytes v = 11;
   optional bytes r = 12;
   optional bytes s = 13;
   optional common.ProtoHash originating_tx_hash = 14;
-  optional uint32 etx_index = 15;
-  optional ProtoTxIns tx_ins = 16;
-  optional ProtoTxOuts tx_outs = 17;
-  optional bytes signature = 18;
-  optional bytes etx_sender = 19;
+  optional ProtoTxIns tx_ins = 15;
+  optional ProtoTxOuts tx_outs = 16;
+  optional bytes signature = 17;
+  optional common.ProtoHash parent_hash = 18;
+  optional common.ProtoHash mix_hash = 19;
 }
 
 message ProtoTransactions { repeated ProtoTransaction transactions = 1; }
@@ -78,6 +84,9 @@ message ProtoWorkObjectHeader {
   optional common.ProtoLocation location = 7;
   optional common.ProtoHash mix_hash = 8;
   optional uint64 time = 9;
+  optional bytes prime_terminus_number = 10;
+  optional uint32 lock = 11;
+  optional common.ProtoAddress primary_coinbase = 12;
 }
 
 message ProtoWorkObjectHeaders {
@@ -88,7 +97,7 @@ message ProtoWorkObjectBody {
   optional ProtoHeader header = 1;
   optional ProtoTransactions transactions = 2;
   optional ProtoWorkObjectHeaders uncles = 3;
-  optional ProtoTransactions ext_transactions = 4;
+  optional ProtoTransactions outbound_etxs = 4;
   optional ProtoManifest manifest = 5;
   optional common.ProtoHashes interlink_hashes = 6;
 }
@@ -101,6 +110,22 @@ message ProtoWorkObject {
 
 message ProtoWorkObjects { repeated ProtoWorkObject work_objects = 1; }
 
+message ProtoWorkObjectBlockView {
+    optional ProtoWorkObject work_object = 1;
+}
+
+message ProtoWorkObjectBlocksView {
+  repeated ProtoWorkObjectBlockView work_objects = 1;
+}
+
+message ProtoWorkObjectHeaderView {
+    optional ProtoWorkObject work_object = 1;
+}
+
+message ProtoWorkObjectShareView {
+  optional ProtoWorkObject  work_object = 1;
+}
+
 message ProtoAccessTuple {
   bytes address = 1;
   repeated common.ProtoHash storage_key = 2;
@@ -109,11 +134,11 @@ message ProtoAccessTuple {
 message ProtoReceiptForStorage {
   bytes post_state_or_status = 1;
   uint64 cumulative_gas_used = 2;
-  common.ProtoHash tx_hash = 3;
-  common.ProtoAddress contract_address = 4;
-  ProtoLogsForStorage logs = 5;
-  ProtoTransactions etxs = 6;
-  uint64 gas_used = 7;
+  ProtoLogsForStorage logs = 3;
+  common.ProtoHash tx_hash = 4;
+  common.ProtoAddress contract_address = 5;
+  uint64 gas_used = 6;
+  ProtoTransactions outbound_etxs = 7;
 }
 
 message ProtoReceiptsForStorage {
@@ -142,7 +167,7 @@ message ProtoEtxSet { optional bytes etx_hashes = 1; }
 
 message ProtoPendingEtxs {
   optional ProtoWorkObject header = 1;
-  optional ProtoTransactions etxs = 2;
+  optional ProtoTransactions outbound_etxs = 2;
 }
 
 message ProtoPendingEtxsRollup {
@@ -168,4 +193,30 @@ message ProtoTxOut {
   optional uint32 denomination = 1;
   optional bytes address = 2;
   optional bytes lock = 3;
+}
+
+message ProtoOutPointAndDenomination {
+  optional common.ProtoHash hash = 1;
+  optional uint32 index = 2;
+  optional uint32 denomination = 3;
+}
+
+message ProtoAddressOutPoints {
+  map<string, ProtoOutPointAndDenomination> out_points = 1;
+}
+
+message ProtoOutPointsMap {
+  map<string, ProtoAddressOutPoints> entries = 1;
+}
+
+message ProtoSpentUTXO {
+  optional ProtoOutPoint outpoint = 1;
+  optional ProtoTxOut sutxo = 2;
+}
+
+message ProtoSpentUTXOs {
+  repeated ProtoSpentUTXO sutxos = 1;
+}
+message ProtoKeys {
+  repeated bytes keys = 1;
 }
