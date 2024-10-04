@@ -112,12 +112,12 @@ export interface ProtoTransaction {
     /**
      * The external transaction index.
      */
-    etx_index?: number;
+    etx_index?: number | null;
 
     /**
      * The external transaction sender.
      */
-    etx_sender?: Uint8Array;
+    etx_sender?: Uint8Array | null;
 
     /**
      * The transaction inputs.

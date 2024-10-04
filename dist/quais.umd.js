@@ -61,7 +61,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Utils
      * @param {Object} value - The object to resolve.
-     *
      * @returns {Promise<Object>} The resolved object.
      */
     async function resolveProperties(value) {
@@ -361,7 +360,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @param {BytesLike} value - The value to convert.
      * @param {string} [name] - The name of the value for error context.
      * @param {boolean} [copy] - Whether to create a copy of the value.
-     *
      * @returns {Uint8Array} The converted Uint8Array.
      * @throws {Error} If the value is not a valid BytesLike.
      */
@@ -390,7 +388,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Utils
      * @param {BytesLike} value - The value to convert to a Uint8Array.
      * @param {string} [name] - The name of the value for error context.
-     *
      * @returns {Uint8Array} The typed Uint8Array.
      */
     function getBytes(value, name) {
@@ -403,7 +400,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Utils
      * @param {BytesLike} value - The value to convert to a Uint8Array.
      * @param {string} [name] - The name of the value for error context.
-     *
      * @returns {Uint8Array} The typed Uint8Array.
      */
     function getBytesCopy(value, name) {
@@ -418,7 +414,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Utils
      * @param {any} value - The value to check.
      * @param {number | boolean} [length] - The expected length of the data.
-     *
      * @returns {boolean} True if the value is a valid {@link HexString | **HexString**}.
      */
     function isHexString(value, length) {
@@ -439,7 +434,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Utils
      * @param {any} value - The value to check.
-     *
      * @returns {boolean} True if the value is a valid {@link DataHexString | **DataHexString**}.
      */
     function isBytesLike(value) {
@@ -451,7 +445,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Utils
      * @param {BytesLike} data - The data to convert to a hex string.
-     *
      * @returns {string} The hex string.
      */
     function hexlify(data) {
@@ -468,7 +461,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Utils
      * @param {ReadonlyArray<BytesLike>} datas - The data to concatenate.
-     *
      * @returns {string} The concatenated data.
      */
     function concat(datas) {
@@ -479,7 +471,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Utils
      * @param {BytesLike} data - The data to get the length of.
-     *
      * @returns {number} The length of the data.
      */
     function dataLength(data) {
@@ -497,7 +488,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @param {BytesLike} data - The data to slice.
      * @param {number} [start] - The start offset.
      * @param {number} [end] - The end offset.
-     *
      * @returns {string} The sliced data.
      * @throws {Error} If the end offset is beyond the data bounds.
      */
@@ -517,7 +507,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Utils
      * @param {BytesLike} data - The data to strip.
-     *
      * @returns {string} The stripped data.
      */
     function stripZerosLeft(data) {
@@ -535,7 +524,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @param {BytesLike} data - The data to pad.
      * @param {number} length - The length to pad to.
      * @param {boolean} left - Whether to pad on the left.
-     *
      * @returns {string} The padded data.
      * @throws {Error} If the padding exceeds data length.
      */
@@ -566,7 +554,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Utils
      * @param {BytesLike} data - The data to pad.
      * @param {number} length - The length to pad to.
-     *
      * @returns {string} The padded data.
      */
     function zeroPadValue(data, length) {
@@ -582,7 +569,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Utils
      * @param {BytesLike} data - The data to pad.
      * @param {number} length - The length to pad to.
-     *
      * @returns {string} The padded data.
      */
     function zeroPadBytes(data, length) {
@@ -650,7 +636,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Encoding
      * @param {string} text - The string to encode.
-     *
      * @returns {string} The Bytes32-encoded string.
      * @throws {Error} If the string is too long to fit in a Bytes32 format.
      */
@@ -669,7 +654,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Encoding
      * @param {BytesLike} _bytes - The Bytes32-encoded data.
-     *
      * @returns {string} The decoded string.
      * @throws {Error} If the input is not exactly 32 bytes long or lacks a null terminator.
      */
@@ -1005,7 +989,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Encoding
      * @param {BytesLike} _value - The value to encode.
-     *
      * @returns {string} The Base58-encoded string.
      */
     function encodeBase58(_value) {
@@ -1030,7 +1013,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Encoding
      * @param {string} value - The Base58-encoded value.
-     *
      * @returns {bigint} The decoded value.
      */
     function decodeBase58(value) {
@@ -1044,9 +1026,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
 
     /**
      * Generated by the protoc-gen-ts.  DO NOT EDIT!
-     * compiler version: 4.25.3
+     * compiler version: 5.28.2
      * source: proto_common.proto
      * git: https://github.com/thesayyn/protoc-gen-ts */
+    // eslint-disable-next-line
     var common;
     (function (common) {
         class ProtoLocation extends pb_1__namespace.Message {
@@ -1411,18 +1394,19 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         common.ProtoLocations = ProtoLocations;
     })(common || (common = {}));
 
+    /* eslint-disable */
     /**
      * Generated by the protoc-gen-ts.  DO NOT EDIT!
-     * compiler version: 4.25.3
+     * compiler version: 5.28.2
      * source: proto_block.proto
      * git: https://github.com/thesayyn/protoc-gen-ts */
     var block;
     (function (block) {
         class ProtoHeader extends pb_1__namespace.Message {
-            #one_of_decls = [[2], [3], [4], [5], [6], [7], [9], [10], [14], [16], [17], [18], [19], [20], [21], [22], [23], [24], [25], [26], [27], [28], [29], [30]];
+            #one_of_decls = [[2], [3], [4], [5], [6], [8], [9], [13], [15], [16], [17], [18], [19], [20], [21], [22], [23], [24], [25], [26], [27], [28], [29], [30], [31], [32], [33], [34], [35], [36]];
             constructor(data) {
                 super();
-                pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1, 8, 11, 12, 13, 15], this.#one_of_decls);
+                pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1, 7, 10, 11, 12, 14], this.#one_of_decls);
                 if (!Array.isArray(data) && typeof data == "object") {
                     if ("parent_hash" in data && data.parent_hash != undefined) {
                         this.parent_hash = data.parent_hash;
@@ -1430,17 +1414,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     if ("uncle_hash" in data && data.uncle_hash != undefined) {
                         this.uncle_hash = data.uncle_hash;
                     }
-                    if ("coinbase" in data && data.coinbase != undefined) {
-                        this.coinbase = data.coinbase;
-                    }
                     if ("evm_root" in data && data.evm_root != undefined) {
                         this.evm_root = data.evm_root;
                     }
                     if ("tx_hash" in data && data.tx_hash != undefined) {
                         this.tx_hash = data.tx_hash;
                     }
-                    if ("etx_hash" in data && data.etx_hash != undefined) {
-                        this.etx_hash = data.etx_hash;
+                    if ("outbound_etx_hash" in data && data.outbound_etx_hash != undefined) {
+                        this.outbound_etx_hash = data.outbound_etx_hash;
                     }
                     if ("etx_rollup_hash" in data && data.etx_rollup_hash != undefined) {
                         this.etx_rollup_hash = data.etx_rollup_hash;
@@ -1457,14 +1438,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     if ("parent_entropy" in data && data.parent_entropy != undefined) {
                         this.parent_entropy = data.parent_entropy;
                     }
-                    if ("parent_delta_s" in data && data.parent_delta_s != undefined) {
-                        this.parent_delta_s = data.parent_delta_s;
+                    if ("parent_delta_entropy" in data && data.parent_delta_entropy != undefined) {
+                        this.parent_delta_entropy = data.parent_delta_entropy;
                     }
-                    if ("parent_uncled_sub_delta_s" in data && data.parent_uncled_sub_delta_s != undefined) {
-                        this.parent_uncled_sub_delta_s = data.parent_uncled_sub_delta_s;
+                    if ("parent_uncled_delta_entropy" in data && data.parent_uncled_delta_entropy != undefined) {
+                        this.parent_uncled_delta_entropy = data.parent_uncled_delta_entropy;
                     }
-                    if ("uncled_s" in data && data.uncled_s != undefined) {
-                        this.uncled_s = data.uncled_s;
+                    if ("uncled_entropy" in data && data.uncled_entropy != undefined) {
+                        this.uncled_entropy = data.uncled_entropy;
                     }
                     if ("number" in data && data.number != undefined) {
                         this.number = data.number;
@@ -1493,8 +1474,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     if ("utxo_root" in data && data.utxo_root != undefined) {
                         this.utxo_root = data.utxo_root;
                     }
-                    if ("etx_set_hash" in data && data.etx_set_hash != undefined) {
-                        this.etx_set_hash = data.etx_set_hash;
+                    if ("etx_set_root" in data && data.etx_set_root != undefined) {
+                        this.etx_set_root = data.etx_set_root;
                     }
                     if ("efficiency_score" in data && data.efficiency_score != undefined) {
                         this.efficiency_score = data.efficiency_score;
@@ -1508,11 +1489,32 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     if ("etx_eligible_slices" in data && data.etx_eligible_slices != undefined) {
                         this.etx_eligible_slices = data.etx_eligible_slices;
                     }
-                    if ("prime_terminus" in data && data.prime_terminus != undefined) {
-                        this.prime_terminus = data.prime_terminus;
+                    if ("prime_terminus_hash" in data && data.prime_terminus_hash != undefined) {
+                        this.prime_terminus_hash = data.prime_terminus_hash;
                     }
                     if ("interlink_root_hash" in data && data.interlink_root_hash != undefined) {
                         this.interlink_root_hash = data.interlink_root_hash;
+                    }
+                    if ("state_limit" in data && data.state_limit != undefined) {
+                        this.state_limit = data.state_limit;
+                    }
+                    if ("state_used" in data && data.state_used != undefined) {
+                        this.state_used = data.state_used;
+                    }
+                    if ("quai_state_size" in data && data.quai_state_size != undefined) {
+                        this.quai_state_size = data.quai_state_size;
+                    }
+                    if ("secondary_coinbase" in data && data.secondary_coinbase != undefined) {
+                        this.secondary_coinbase = data.secondary_coinbase;
+                    }
+                    if ("exchange_rate" in data && data.exchange_rate != undefined) {
+                        this.exchange_rate = data.exchange_rate;
+                    }
+                    if ("quai_to_qi" in data && data.quai_to_qi != undefined) {
+                        this.quai_to_qi = data.quai_to_qi;
+                    }
+                    if ("qi_to_quai" in data && data.qi_to_quai != undefined) {
+                        this.qi_to_quai = data.qi_to_quai;
                     }
                 }
             }
@@ -1531,242 +1533,296 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             get has_uncle_hash() {
                 return pb_1__namespace.Message.getField(this, 2) != null;
             }
-            get coinbase() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 3, new Uint8Array(0));
-            }
-            set coinbase(value) {
-                pb_1__namespace.Message.setOneofField(this, 3, this.#one_of_decls[1], value);
-            }
-            get has_coinbase() {
-                return pb_1__namespace.Message.getField(this, 3) != null;
-            }
             get evm_root() {
-                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 4);
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 3);
             }
             set evm_root(value) {
-                pb_1__namespace.Message.setOneofWrapperField(this, 4, this.#one_of_decls[2], value);
+                pb_1__namespace.Message.setOneofWrapperField(this, 3, this.#one_of_decls[1], value);
             }
             get has_evm_root() {
-                return pb_1__namespace.Message.getField(this, 4) != null;
+                return pb_1__namespace.Message.getField(this, 3) != null;
             }
             get tx_hash() {
-                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 5);
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 4);
             }
             set tx_hash(value) {
-                pb_1__namespace.Message.setOneofWrapperField(this, 5, this.#one_of_decls[3], value);
+                pb_1__namespace.Message.setOneofWrapperField(this, 4, this.#one_of_decls[2], value);
             }
             get has_tx_hash() {
+                return pb_1__namespace.Message.getField(this, 4) != null;
+            }
+            get outbound_etx_hash() {
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 5);
+            }
+            set outbound_etx_hash(value) {
+                pb_1__namespace.Message.setOneofWrapperField(this, 5, this.#one_of_decls[3], value);
+            }
+            get has_outbound_etx_hash() {
                 return pb_1__namespace.Message.getField(this, 5) != null;
             }
-            get etx_hash() {
+            get etx_rollup_hash() {
                 return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 6);
             }
-            set etx_hash(value) {
+            set etx_rollup_hash(value) {
                 pb_1__namespace.Message.setOneofWrapperField(this, 6, this.#one_of_decls[4], value);
             }
-            get has_etx_hash() {
+            get has_etx_rollup_hash() {
                 return pb_1__namespace.Message.getField(this, 6) != null;
             }
-            get etx_rollup_hash() {
-                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 7);
-            }
-            set etx_rollup_hash(value) {
-                pb_1__namespace.Message.setOneofWrapperField(this, 7, this.#one_of_decls[5], value);
-            }
-            get has_etx_rollup_hash() {
-                return pb_1__namespace.Message.getField(this, 7) != null;
-            }
             get manifest_hash() {
-                return pb_1__namespace.Message.getRepeatedWrapperField(this, common.ProtoHash, 8);
+                return pb_1__namespace.Message.getRepeatedWrapperField(this, common.ProtoHash, 7);
             }
             set manifest_hash(value) {
-                pb_1__namespace.Message.setRepeatedWrapperField(this, 8, value);
+                pb_1__namespace.Message.setRepeatedWrapperField(this, 7, value);
             }
             get receipt_hash() {
-                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 9);
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 8);
             }
             set receipt_hash(value) {
-                pb_1__namespace.Message.setOneofWrapperField(this, 9, this.#one_of_decls[6], value);
+                pb_1__namespace.Message.setOneofWrapperField(this, 8, this.#one_of_decls[5], value);
             }
             get has_receipt_hash() {
-                return pb_1__namespace.Message.getField(this, 9) != null;
+                return pb_1__namespace.Message.getField(this, 8) != null;
             }
             get difficulty() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 10, new Uint8Array(0));
+                return pb_1__namespace.Message.getFieldWithDefault(this, 9, new Uint8Array(0));
             }
             set difficulty(value) {
-                pb_1__namespace.Message.setOneofField(this, 10, this.#one_of_decls[7], value);
+                pb_1__namespace.Message.setOneofField(this, 9, this.#one_of_decls[6], value);
             }
             get has_difficulty() {
-                return pb_1__namespace.Message.getField(this, 10) != null;
+                return pb_1__namespace.Message.getField(this, 9) != null;
             }
             get parent_entropy() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 11, []);
+                return pb_1__namespace.Message.getFieldWithDefault(this, 10, []);
             }
             set parent_entropy(value) {
+                pb_1__namespace.Message.setField(this, 10, value);
+            }
+            get parent_delta_entropy() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 11, []);
+            }
+            set parent_delta_entropy(value) {
                 pb_1__namespace.Message.setField(this, 11, value);
             }
-            get parent_delta_s() {
+            get parent_uncled_delta_entropy() {
                 return pb_1__namespace.Message.getFieldWithDefault(this, 12, []);
             }
-            set parent_delta_s(value) {
+            set parent_uncled_delta_entropy(value) {
                 pb_1__namespace.Message.setField(this, 12, value);
             }
-            get parent_uncled_sub_delta_s() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 13, []);
+            get uncled_entropy() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 13, new Uint8Array(0));
             }
-            set parent_uncled_sub_delta_s(value) {
-                pb_1__namespace.Message.setField(this, 13, value);
+            set uncled_entropy(value) {
+                pb_1__namespace.Message.setOneofField(this, 13, this.#one_of_decls[7], value);
             }
-            get uncled_s() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 14, new Uint8Array(0));
-            }
-            set uncled_s(value) {
-                pb_1__namespace.Message.setOneofField(this, 14, this.#one_of_decls[8], value);
-            }
-            get has_uncled_s() {
-                return pb_1__namespace.Message.getField(this, 14) != null;
+            get has_uncled_entropy() {
+                return pb_1__namespace.Message.getField(this, 13) != null;
             }
             get number() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 15, []);
+                return pb_1__namespace.Message.getFieldWithDefault(this, 14, []);
             }
             set number(value) {
-                pb_1__namespace.Message.setField(this, 15, value);
+                pb_1__namespace.Message.setField(this, 14, value);
             }
             get gas_limit() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 16, 0);
+                return pb_1__namespace.Message.getFieldWithDefault(this, 15, 0);
             }
             set gas_limit(value) {
-                pb_1__namespace.Message.setOneofField(this, 16, this.#one_of_decls[9], value);
+                pb_1__namespace.Message.setOneofField(this, 15, this.#one_of_decls[8], value);
             }
             get has_gas_limit() {
-                return pb_1__namespace.Message.getField(this, 16) != null;
+                return pb_1__namespace.Message.getField(this, 15) != null;
             }
             get gas_used() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 17, 0);
+                return pb_1__namespace.Message.getFieldWithDefault(this, 16, 0);
             }
             set gas_used(value) {
-                pb_1__namespace.Message.setOneofField(this, 17, this.#one_of_decls[10], value);
+                pb_1__namespace.Message.setOneofField(this, 16, this.#one_of_decls[9], value);
             }
             get has_gas_used() {
-                return pb_1__namespace.Message.getField(this, 17) != null;
+                return pb_1__namespace.Message.getField(this, 16) != null;
             }
             get base_fee() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 18, new Uint8Array(0));
+                return pb_1__namespace.Message.getFieldWithDefault(this, 17, new Uint8Array(0));
             }
             set base_fee(value) {
-                pb_1__namespace.Message.setOneofField(this, 18, this.#one_of_decls[11], value);
+                pb_1__namespace.Message.setOneofField(this, 17, this.#one_of_decls[10], value);
             }
             get has_base_fee() {
-                return pb_1__namespace.Message.getField(this, 18) != null;
+                return pb_1__namespace.Message.getField(this, 17) != null;
             }
             get location() {
-                return pb_1__namespace.Message.getWrapperField(this, common.ProtoLocation, 19);
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoLocation, 18);
             }
             set location(value) {
-                pb_1__namespace.Message.setOneofWrapperField(this, 19, this.#one_of_decls[12], value);
+                pb_1__namespace.Message.setOneofWrapperField(this, 18, this.#one_of_decls[11], value);
             }
             get has_location() {
-                return pb_1__namespace.Message.getField(this, 19) != null;
+                return pb_1__namespace.Message.getField(this, 18) != null;
             }
             get extra() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 20, new Uint8Array(0));
+                return pb_1__namespace.Message.getFieldWithDefault(this, 19, new Uint8Array(0));
             }
             set extra(value) {
-                pb_1__namespace.Message.setOneofField(this, 20, this.#one_of_decls[13], value);
+                pb_1__namespace.Message.setOneofField(this, 19, this.#one_of_decls[12], value);
             }
             get has_extra() {
-                return pb_1__namespace.Message.getField(this, 20) != null;
+                return pb_1__namespace.Message.getField(this, 19) != null;
             }
             get mix_hash() {
-                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 21);
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 20);
             }
             set mix_hash(value) {
-                pb_1__namespace.Message.setOneofWrapperField(this, 21, this.#one_of_decls[14], value);
+                pb_1__namespace.Message.setOneofWrapperField(this, 20, this.#one_of_decls[13], value);
             }
             get has_mix_hash() {
-                return pb_1__namespace.Message.getField(this, 21) != null;
+                return pb_1__namespace.Message.getField(this, 20) != null;
             }
             get nonce() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 22, 0);
+                return pb_1__namespace.Message.getFieldWithDefault(this, 21, 0);
             }
             set nonce(value) {
-                pb_1__namespace.Message.setOneofField(this, 22, this.#one_of_decls[15], value);
+                pb_1__namespace.Message.setOneofField(this, 21, this.#one_of_decls[14], value);
             }
             get has_nonce() {
-                return pb_1__namespace.Message.getField(this, 22) != null;
+                return pb_1__namespace.Message.getField(this, 21) != null;
             }
             get utxo_root() {
-                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 23);
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 22);
             }
             set utxo_root(value) {
-                pb_1__namespace.Message.setOneofWrapperField(this, 23, this.#one_of_decls[16], value);
+                pb_1__namespace.Message.setOneofWrapperField(this, 22, this.#one_of_decls[15], value);
             }
             get has_utxo_root() {
+                return pb_1__namespace.Message.getField(this, 22) != null;
+            }
+            get etx_set_root() {
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 23);
+            }
+            set etx_set_root(value) {
+                pb_1__namespace.Message.setOneofWrapperField(this, 23, this.#one_of_decls[16], value);
+            }
+            get has_etx_set_root() {
                 return pb_1__namespace.Message.getField(this, 23) != null;
             }
-            get etx_set_hash() {
-                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 24);
-            }
-            set etx_set_hash(value) {
-                pb_1__namespace.Message.setOneofWrapperField(this, 24, this.#one_of_decls[17], value);
-            }
-            get has_etx_set_hash() {
-                return pb_1__namespace.Message.getField(this, 24) != null;
-            }
             get efficiency_score() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 25, 0);
+                return pb_1__namespace.Message.getFieldWithDefault(this, 24, 0);
             }
             set efficiency_score(value) {
-                pb_1__namespace.Message.setOneofField(this, 25, this.#one_of_decls[18], value);
+                pb_1__namespace.Message.setOneofField(this, 24, this.#one_of_decls[17], value);
             }
             get has_efficiency_score() {
-                return pb_1__namespace.Message.getField(this, 25) != null;
+                return pb_1__namespace.Message.getField(this, 24) != null;
             }
             get threshold_count() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 26, 0);
+                return pb_1__namespace.Message.getFieldWithDefault(this, 25, 0);
             }
             set threshold_count(value) {
-                pb_1__namespace.Message.setOneofField(this, 26, this.#one_of_decls[19], value);
+                pb_1__namespace.Message.setOneofField(this, 25, this.#one_of_decls[18], value);
             }
             get has_threshold_count() {
-                return pb_1__namespace.Message.getField(this, 26) != null;
+                return pb_1__namespace.Message.getField(this, 25) != null;
             }
             get expansion_number() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 27, 0);
+                return pb_1__namespace.Message.getFieldWithDefault(this, 26, 0);
             }
             set expansion_number(value) {
-                pb_1__namespace.Message.setOneofField(this, 27, this.#one_of_decls[20], value);
+                pb_1__namespace.Message.setOneofField(this, 26, this.#one_of_decls[19], value);
             }
             get has_expansion_number() {
-                return pb_1__namespace.Message.getField(this, 27) != null;
+                return pb_1__namespace.Message.getField(this, 26) != null;
             }
             get etx_eligible_slices() {
-                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 28);
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 27);
             }
             set etx_eligible_slices(value) {
-                pb_1__namespace.Message.setOneofWrapperField(this, 28, this.#one_of_decls[21], value);
+                pb_1__namespace.Message.setOneofWrapperField(this, 27, this.#one_of_decls[20], value);
             }
             get has_etx_eligible_slices() {
+                return pb_1__namespace.Message.getField(this, 27) != null;
+            }
+            get prime_terminus_hash() {
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 28);
+            }
+            set prime_terminus_hash(value) {
+                pb_1__namespace.Message.setOneofWrapperField(this, 28, this.#one_of_decls[21], value);
+            }
+            get has_prime_terminus_hash() {
                 return pb_1__namespace.Message.getField(this, 28) != null;
             }
-            get prime_terminus() {
+            get interlink_root_hash() {
                 return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 29);
             }
-            set prime_terminus(value) {
+            set interlink_root_hash(value) {
                 pb_1__namespace.Message.setOneofWrapperField(this, 29, this.#one_of_decls[22], value);
             }
-            get has_prime_terminus() {
+            get has_interlink_root_hash() {
                 return pb_1__namespace.Message.getField(this, 29) != null;
             }
-            get interlink_root_hash() {
-                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 30);
+            get state_limit() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 30, 0);
             }
-            set interlink_root_hash(value) {
-                pb_1__namespace.Message.setOneofWrapperField(this, 30, this.#one_of_decls[23], value);
+            set state_limit(value) {
+                pb_1__namespace.Message.setOneofField(this, 30, this.#one_of_decls[23], value);
             }
-            get has_interlink_root_hash() {
+            get has_state_limit() {
                 return pb_1__namespace.Message.getField(this, 30) != null;
+            }
+            get state_used() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 31, 0);
+            }
+            set state_used(value) {
+                pb_1__namespace.Message.setOneofField(this, 31, this.#one_of_decls[24], value);
+            }
+            get has_state_used() {
+                return pb_1__namespace.Message.getField(this, 31) != null;
+            }
+            get quai_state_size() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 32, new Uint8Array(0));
+            }
+            set quai_state_size(value) {
+                pb_1__namespace.Message.setOneofField(this, 32, this.#one_of_decls[25], value);
+            }
+            get has_quai_state_size() {
+                return pb_1__namespace.Message.getField(this, 32) != null;
+            }
+            get secondary_coinbase() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 33, new Uint8Array(0));
+            }
+            set secondary_coinbase(value) {
+                pb_1__namespace.Message.setOneofField(this, 33, this.#one_of_decls[26], value);
+            }
+            get has_secondary_coinbase() {
+                return pb_1__namespace.Message.getField(this, 33) != null;
+            }
+            get exchange_rate() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 34, new Uint8Array(0));
+            }
+            set exchange_rate(value) {
+                pb_1__namespace.Message.setOneofField(this, 34, this.#one_of_decls[27], value);
+            }
+            get has_exchange_rate() {
+                return pb_1__namespace.Message.getField(this, 34) != null;
+            }
+            get quai_to_qi() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 35, new Uint8Array(0));
+            }
+            set quai_to_qi(value) {
+                pb_1__namespace.Message.setOneofField(this, 35, this.#one_of_decls[28], value);
+            }
+            get has_quai_to_qi() {
+                return pb_1__namespace.Message.getField(this, 35) != null;
+            }
+            get qi_to_quai() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 36, new Uint8Array(0));
+            }
+            set qi_to_quai(value) {
+                pb_1__namespace.Message.setOneofField(this, 36, this.#one_of_decls[29], value);
+            }
+            get has_qi_to_quai() {
+                return pb_1__namespace.Message.getField(this, 36) != null;
             }
             get _uncle_hash() {
                 const cases = {
@@ -1775,166 +1831,208 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [2])];
             }
-            get _coinbase() {
-                const cases = {
-                    0: "none",
-                    3: "coinbase"
-                };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [3])];
-            }
             get _evm_root() {
                 const cases = {
                     0: "none",
-                    4: "evm_root"
+                    3: "evm_root"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [4])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [3])];
             }
             get _tx_hash() {
                 const cases = {
                     0: "none",
-                    5: "tx_hash"
+                    4: "tx_hash"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [5])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [4])];
             }
-            get _etx_hash() {
+            get _outbound_etx_hash() {
                 const cases = {
                     0: "none",
-                    6: "etx_hash"
+                    5: "outbound_etx_hash"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [6])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [5])];
             }
             get _etx_rollup_hash() {
                 const cases = {
                     0: "none",
-                    7: "etx_rollup_hash"
+                    6: "etx_rollup_hash"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [7])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [6])];
             }
             get _receipt_hash() {
                 const cases = {
                     0: "none",
-                    9: "receipt_hash"
+                    8: "receipt_hash"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [9])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [8])];
             }
             get _difficulty() {
                 const cases = {
                     0: "none",
-                    10: "difficulty"
+                    9: "difficulty"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [10])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [9])];
             }
-            get _uncled_s() {
+            get _uncled_entropy() {
                 const cases = {
                     0: "none",
-                    14: "uncled_s"
+                    13: "uncled_entropy"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [14])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [13])];
             }
             get _gas_limit() {
                 const cases = {
                     0: "none",
-                    16: "gas_limit"
+                    15: "gas_limit"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [16])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [15])];
             }
             get _gas_used() {
                 const cases = {
                     0: "none",
-                    17: "gas_used"
+                    16: "gas_used"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [17])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [16])];
             }
             get _base_fee() {
                 const cases = {
                     0: "none",
-                    18: "base_fee"
+                    17: "base_fee"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [18])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [17])];
             }
             get _location() {
                 const cases = {
                     0: "none",
-                    19: "location"
+                    18: "location"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [19])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [18])];
             }
             get _extra() {
                 const cases = {
                     0: "none",
-                    20: "extra"
+                    19: "extra"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [20])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [19])];
             }
             get _mix_hash() {
                 const cases = {
                     0: "none",
-                    21: "mix_hash"
+                    20: "mix_hash"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [21])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [20])];
             }
             get _nonce() {
                 const cases = {
                     0: "none",
-                    22: "nonce"
+                    21: "nonce"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [22])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [21])];
             }
             get _utxo_root() {
                 const cases = {
                     0: "none",
-                    23: "utxo_root"
+                    22: "utxo_root"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [23])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [22])];
             }
-            get _etx_set_hash() {
+            get _etx_set_root() {
                 const cases = {
                     0: "none",
-                    24: "etx_set_hash"
+                    23: "etx_set_root"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [24])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [23])];
             }
             get _efficiency_score() {
                 const cases = {
                     0: "none",
-                    25: "efficiency_score"
+                    24: "efficiency_score"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [25])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [24])];
             }
             get _threshold_count() {
                 const cases = {
                     0: "none",
-                    26: "threshold_count"
+                    25: "threshold_count"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [26])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [25])];
             }
             get _expansion_number() {
                 const cases = {
                     0: "none",
-                    27: "expansion_number"
+                    26: "expansion_number"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [27])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [26])];
             }
             get _etx_eligible_slices() {
                 const cases = {
                     0: "none",
-                    28: "etx_eligible_slices"
+                    27: "etx_eligible_slices"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [28])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [27])];
             }
-            get _prime_terminus() {
+            get _prime_terminus_hash() {
                 const cases = {
                     0: "none",
-                    29: "prime_terminus"
+                    28: "prime_terminus_hash"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [29])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [28])];
             }
             get _interlink_root_hash() {
                 const cases = {
                     0: "none",
-                    30: "interlink_root_hash"
+                    29: "interlink_root_hash"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [29])];
+            }
+            get _state_limit() {
+                const cases = {
+                    0: "none",
+                    30: "state_limit"
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [30])];
+            }
+            get _state_used() {
+                const cases = {
+                    0: "none",
+                    31: "state_used"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [31])];
+            }
+            get _quai_state_size() {
+                const cases = {
+                    0: "none",
+                    32: "quai_state_size"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [32])];
+            }
+            get _secondary_coinbase() {
+                const cases = {
+                    0: "none",
+                    33: "secondary_coinbase"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [33])];
+            }
+            get _exchange_rate() {
+                const cases = {
+                    0: "none",
+                    34: "exchange_rate"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [34])];
+            }
+            get _quai_to_qi() {
+                const cases = {
+                    0: "none",
+                    35: "quai_to_qi"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [35])];
+            }
+            get _qi_to_quai() {
+                const cases = {
+                    0: "none",
+                    36: "qi_to_quai"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [36])];
             }
             static fromObject(data) {
                 const message = new ProtoHeader({});
@@ -1944,17 +2042,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (data.uncle_hash != null) {
                     message.uncle_hash = common.ProtoHash.fromObject(data.uncle_hash);
                 }
-                if (data.coinbase != null) {
-                    message.coinbase = data.coinbase;
-                }
                 if (data.evm_root != null) {
                     message.evm_root = common.ProtoHash.fromObject(data.evm_root);
                 }
                 if (data.tx_hash != null) {
                     message.tx_hash = common.ProtoHash.fromObject(data.tx_hash);
                 }
-                if (data.etx_hash != null) {
-                    message.etx_hash = common.ProtoHash.fromObject(data.etx_hash);
+                if (data.outbound_etx_hash != null) {
+                    message.outbound_etx_hash = common.ProtoHash.fromObject(data.outbound_etx_hash);
                 }
                 if (data.etx_rollup_hash != null) {
                     message.etx_rollup_hash = common.ProtoHash.fromObject(data.etx_rollup_hash);
@@ -1971,14 +2066,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (data.parent_entropy != null) {
                     message.parent_entropy = data.parent_entropy;
                 }
-                if (data.parent_delta_s != null) {
-                    message.parent_delta_s = data.parent_delta_s;
+                if (data.parent_delta_entropy != null) {
+                    message.parent_delta_entropy = data.parent_delta_entropy;
                 }
-                if (data.parent_uncled_sub_delta_s != null) {
-                    message.parent_uncled_sub_delta_s = data.parent_uncled_sub_delta_s;
+                if (data.parent_uncled_delta_entropy != null) {
+                    message.parent_uncled_delta_entropy = data.parent_uncled_delta_entropy;
                 }
-                if (data.uncled_s != null) {
-                    message.uncled_s = data.uncled_s;
+                if (data.uncled_entropy != null) {
+                    message.uncled_entropy = data.uncled_entropy;
                 }
                 if (data.number != null) {
                     message.number = data.number;
@@ -2007,8 +2102,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (data.utxo_root != null) {
                     message.utxo_root = common.ProtoHash.fromObject(data.utxo_root);
                 }
-                if (data.etx_set_hash != null) {
-                    message.etx_set_hash = common.ProtoHash.fromObject(data.etx_set_hash);
+                if (data.etx_set_root != null) {
+                    message.etx_set_root = common.ProtoHash.fromObject(data.etx_set_root);
                 }
                 if (data.efficiency_score != null) {
                     message.efficiency_score = data.efficiency_score;
@@ -2022,11 +2117,32 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (data.etx_eligible_slices != null) {
                     message.etx_eligible_slices = common.ProtoHash.fromObject(data.etx_eligible_slices);
                 }
-                if (data.prime_terminus != null) {
-                    message.prime_terminus = common.ProtoHash.fromObject(data.prime_terminus);
+                if (data.prime_terminus_hash != null) {
+                    message.prime_terminus_hash = common.ProtoHash.fromObject(data.prime_terminus_hash);
                 }
                 if (data.interlink_root_hash != null) {
                     message.interlink_root_hash = common.ProtoHash.fromObject(data.interlink_root_hash);
+                }
+                if (data.state_limit != null) {
+                    message.state_limit = data.state_limit;
+                }
+                if (data.state_used != null) {
+                    message.state_used = data.state_used;
+                }
+                if (data.quai_state_size != null) {
+                    message.quai_state_size = data.quai_state_size;
+                }
+                if (data.secondary_coinbase != null) {
+                    message.secondary_coinbase = data.secondary_coinbase;
+                }
+                if (data.exchange_rate != null) {
+                    message.exchange_rate = data.exchange_rate;
+                }
+                if (data.quai_to_qi != null) {
+                    message.quai_to_qi = data.quai_to_qi;
+                }
+                if (data.qi_to_quai != null) {
+                    message.qi_to_quai = data.qi_to_quai;
                 }
                 return message;
             }
@@ -2038,17 +2154,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.uncle_hash != null) {
                     data.uncle_hash = this.uncle_hash.toObject();
                 }
-                if (this.coinbase != null) {
-                    data.coinbase = this.coinbase;
-                }
                 if (this.evm_root != null) {
                     data.evm_root = this.evm_root.toObject();
                 }
                 if (this.tx_hash != null) {
                     data.tx_hash = this.tx_hash.toObject();
                 }
-                if (this.etx_hash != null) {
-                    data.etx_hash = this.etx_hash.toObject();
+                if (this.outbound_etx_hash != null) {
+                    data.outbound_etx_hash = this.outbound_etx_hash.toObject();
                 }
                 if (this.etx_rollup_hash != null) {
                     data.etx_rollup_hash = this.etx_rollup_hash.toObject();
@@ -2065,14 +2178,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.parent_entropy != null) {
                     data.parent_entropy = this.parent_entropy;
                 }
-                if (this.parent_delta_s != null) {
-                    data.parent_delta_s = this.parent_delta_s;
+                if (this.parent_delta_entropy != null) {
+                    data.parent_delta_entropy = this.parent_delta_entropy;
                 }
-                if (this.parent_uncled_sub_delta_s != null) {
-                    data.parent_uncled_sub_delta_s = this.parent_uncled_sub_delta_s;
+                if (this.parent_uncled_delta_entropy != null) {
+                    data.parent_uncled_delta_entropy = this.parent_uncled_delta_entropy;
                 }
-                if (this.uncled_s != null) {
-                    data.uncled_s = this.uncled_s;
+                if (this.uncled_entropy != null) {
+                    data.uncled_entropy = this.uncled_entropy;
                 }
                 if (this.number != null) {
                     data.number = this.number;
@@ -2101,8 +2214,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.utxo_root != null) {
                     data.utxo_root = this.utxo_root.toObject();
                 }
-                if (this.etx_set_hash != null) {
-                    data.etx_set_hash = this.etx_set_hash.toObject();
+                if (this.etx_set_root != null) {
+                    data.etx_set_root = this.etx_set_root.toObject();
                 }
                 if (this.efficiency_score != null) {
                     data.efficiency_score = this.efficiency_score;
@@ -2116,11 +2229,32 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.etx_eligible_slices != null) {
                     data.etx_eligible_slices = this.etx_eligible_slices.toObject();
                 }
-                if (this.prime_terminus != null) {
-                    data.prime_terminus = this.prime_terminus.toObject();
+                if (this.prime_terminus_hash != null) {
+                    data.prime_terminus_hash = this.prime_terminus_hash.toObject();
                 }
                 if (this.interlink_root_hash != null) {
                     data.interlink_root_hash = this.interlink_root_hash.toObject();
+                }
+                if (this.state_limit != null) {
+                    data.state_limit = this.state_limit;
+                }
+                if (this.state_used != null) {
+                    data.state_used = this.state_used;
+                }
+                if (this.quai_state_size != null) {
+                    data.quai_state_size = this.quai_state_size;
+                }
+                if (this.secondary_coinbase != null) {
+                    data.secondary_coinbase = this.secondary_coinbase;
+                }
+                if (this.exchange_rate != null) {
+                    data.exchange_rate = this.exchange_rate;
+                }
+                if (this.quai_to_qi != null) {
+                    data.quai_to_qi = this.quai_to_qi;
+                }
+                if (this.qi_to_quai != null) {
+                    data.qi_to_quai = this.qi_to_quai;
                 }
                 return data;
             }
@@ -2130,62 +2264,74 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     writer.writeRepeatedMessage(1, this.parent_hash, (item) => item.serialize(writer));
                 if (this.has_uncle_hash)
                     writer.writeMessage(2, this.uncle_hash, () => this.uncle_hash.serialize(writer));
-                if (this.has_coinbase)
-                    writer.writeBytes(3, this.coinbase);
                 if (this.has_evm_root)
-                    writer.writeMessage(4, this.evm_root, () => this.evm_root.serialize(writer));
+                    writer.writeMessage(3, this.evm_root, () => this.evm_root.serialize(writer));
                 if (this.has_tx_hash)
-                    writer.writeMessage(5, this.tx_hash, () => this.tx_hash.serialize(writer));
-                if (this.has_etx_hash)
-                    writer.writeMessage(6, this.etx_hash, () => this.etx_hash.serialize(writer));
+                    writer.writeMessage(4, this.tx_hash, () => this.tx_hash.serialize(writer));
+                if (this.has_outbound_etx_hash)
+                    writer.writeMessage(5, this.outbound_etx_hash, () => this.outbound_etx_hash.serialize(writer));
                 if (this.has_etx_rollup_hash)
-                    writer.writeMessage(7, this.etx_rollup_hash, () => this.etx_rollup_hash.serialize(writer));
+                    writer.writeMessage(6, this.etx_rollup_hash, () => this.etx_rollup_hash.serialize(writer));
                 if (this.manifest_hash.length)
-                    writer.writeRepeatedMessage(8, this.manifest_hash, (item) => item.serialize(writer));
+                    writer.writeRepeatedMessage(7, this.manifest_hash, (item) => item.serialize(writer));
                 if (this.has_receipt_hash)
-                    writer.writeMessage(9, this.receipt_hash, () => this.receipt_hash.serialize(writer));
+                    writer.writeMessage(8, this.receipt_hash, () => this.receipt_hash.serialize(writer));
                 if (this.has_difficulty)
-                    writer.writeBytes(10, this.difficulty);
+                    writer.writeBytes(9, this.difficulty);
                 if (this.parent_entropy.length)
-                    writer.writeRepeatedBytes(11, this.parent_entropy);
-                if (this.parent_delta_s.length)
-                    writer.writeRepeatedBytes(12, this.parent_delta_s);
-                if (this.parent_uncled_sub_delta_s.length)
-                    writer.writeRepeatedBytes(13, this.parent_uncled_sub_delta_s);
-                if (this.has_uncled_s)
-                    writer.writeBytes(14, this.uncled_s);
+                    writer.writeRepeatedBytes(10, this.parent_entropy);
+                if (this.parent_delta_entropy.length)
+                    writer.writeRepeatedBytes(11, this.parent_delta_entropy);
+                if (this.parent_uncled_delta_entropy.length)
+                    writer.writeRepeatedBytes(12, this.parent_uncled_delta_entropy);
+                if (this.has_uncled_entropy)
+                    writer.writeBytes(13, this.uncled_entropy);
                 if (this.number.length)
-                    writer.writeRepeatedBytes(15, this.number);
+                    writer.writeRepeatedBytes(14, this.number);
                 if (this.has_gas_limit)
-                    writer.writeUint64(16, this.gas_limit);
+                    writer.writeUint64(15, this.gas_limit);
                 if (this.has_gas_used)
-                    writer.writeUint64(17, this.gas_used);
+                    writer.writeUint64(16, this.gas_used);
                 if (this.has_base_fee)
-                    writer.writeBytes(18, this.base_fee);
+                    writer.writeBytes(17, this.base_fee);
                 if (this.has_location)
-                    writer.writeMessage(19, this.location, () => this.location.serialize(writer));
+                    writer.writeMessage(18, this.location, () => this.location.serialize(writer));
                 if (this.has_extra)
-                    writer.writeBytes(20, this.extra);
+                    writer.writeBytes(19, this.extra);
                 if (this.has_mix_hash)
-                    writer.writeMessage(21, this.mix_hash, () => this.mix_hash.serialize(writer));
+                    writer.writeMessage(20, this.mix_hash, () => this.mix_hash.serialize(writer));
                 if (this.has_nonce)
-                    writer.writeUint64(22, this.nonce);
+                    writer.writeUint64(21, this.nonce);
                 if (this.has_utxo_root)
-                    writer.writeMessage(23, this.utxo_root, () => this.utxo_root.serialize(writer));
-                if (this.has_etx_set_hash)
-                    writer.writeMessage(24, this.etx_set_hash, () => this.etx_set_hash.serialize(writer));
+                    writer.writeMessage(22, this.utxo_root, () => this.utxo_root.serialize(writer));
+                if (this.has_etx_set_root)
+                    writer.writeMessage(23, this.etx_set_root, () => this.etx_set_root.serialize(writer));
                 if (this.has_efficiency_score)
-                    writer.writeUint64(25, this.efficiency_score);
+                    writer.writeUint64(24, this.efficiency_score);
                 if (this.has_threshold_count)
-                    writer.writeUint64(26, this.threshold_count);
+                    writer.writeUint64(25, this.threshold_count);
                 if (this.has_expansion_number)
-                    writer.writeUint64(27, this.expansion_number);
+                    writer.writeUint64(26, this.expansion_number);
                 if (this.has_etx_eligible_slices)
-                    writer.writeMessage(28, this.etx_eligible_slices, () => this.etx_eligible_slices.serialize(writer));
-                if (this.has_prime_terminus)
-                    writer.writeMessage(29, this.prime_terminus, () => this.prime_terminus.serialize(writer));
+                    writer.writeMessage(27, this.etx_eligible_slices, () => this.etx_eligible_slices.serialize(writer));
+                if (this.has_prime_terminus_hash)
+                    writer.writeMessage(28, this.prime_terminus_hash, () => this.prime_terminus_hash.serialize(writer));
                 if (this.has_interlink_root_hash)
-                    writer.writeMessage(30, this.interlink_root_hash, () => this.interlink_root_hash.serialize(writer));
+                    writer.writeMessage(29, this.interlink_root_hash, () => this.interlink_root_hash.serialize(writer));
+                if (this.has_state_limit)
+                    writer.writeUint64(30, this.state_limit);
+                if (this.has_state_used)
+                    writer.writeUint64(31, this.state_used);
+                if (this.has_quai_state_size)
+                    writer.writeBytes(32, this.quai_state_size);
+                if (this.has_secondary_coinbase)
+                    writer.writeBytes(33, this.secondary_coinbase);
+                if (this.has_exchange_rate)
+                    writer.writeBytes(34, this.exchange_rate);
+                if (this.has_quai_to_qi)
+                    writer.writeBytes(35, this.quai_to_qi);
+                if (this.has_qi_to_quai)
+                    writer.writeBytes(36, this.qi_to_quai);
                 if (!w)
                     return writer.getResultBuffer();
             }
@@ -2202,28 +2348,28 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                             reader.readMessage(message.uncle_hash, () => message.uncle_hash = common.ProtoHash.deserialize(reader));
                             break;
                         case 3:
-                            message.coinbase = reader.readBytes();
-                            break;
-                        case 4:
                             reader.readMessage(message.evm_root, () => message.evm_root = common.ProtoHash.deserialize(reader));
                             break;
-                        case 5:
+                        case 4:
                             reader.readMessage(message.tx_hash, () => message.tx_hash = common.ProtoHash.deserialize(reader));
                             break;
-                        case 6:
-                            reader.readMessage(message.etx_hash, () => message.etx_hash = common.ProtoHash.deserialize(reader));
+                        case 5:
+                            reader.readMessage(message.outbound_etx_hash, () => message.outbound_etx_hash = common.ProtoHash.deserialize(reader));
                             break;
-                        case 7:
+                        case 6:
                             reader.readMessage(message.etx_rollup_hash, () => message.etx_rollup_hash = common.ProtoHash.deserialize(reader));
                             break;
-                        case 8:
-                            reader.readMessage(message.manifest_hash, () => pb_1__namespace.Message.addToRepeatedWrapperField(message, 8, common.ProtoHash.deserialize(reader), common.ProtoHash));
+                        case 7:
+                            reader.readMessage(message.manifest_hash, () => pb_1__namespace.Message.addToRepeatedWrapperField(message, 7, common.ProtoHash.deserialize(reader), common.ProtoHash));
                             break;
-                        case 9:
+                        case 8:
                             reader.readMessage(message.receipt_hash, () => message.receipt_hash = common.ProtoHash.deserialize(reader));
                             break;
-                        case 10:
+                        case 9:
                             message.difficulty = reader.readBytes();
+                            break;
+                        case 10:
+                            pb_1__namespace.Message.addToRepeatedField(message, 10, reader.readBytes());
                             break;
                         case 11:
                             pb_1__namespace.Message.addToRepeatedField(message, 11, reader.readBytes());
@@ -2232,58 +2378,76 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                             pb_1__namespace.Message.addToRepeatedField(message, 12, reader.readBytes());
                             break;
                         case 13:
-                            pb_1__namespace.Message.addToRepeatedField(message, 13, reader.readBytes());
+                            message.uncled_entropy = reader.readBytes();
                             break;
                         case 14:
-                            message.uncled_s = reader.readBytes();
+                            pb_1__namespace.Message.addToRepeatedField(message, 14, reader.readBytes());
                             break;
                         case 15:
-                            pb_1__namespace.Message.addToRepeatedField(message, 15, reader.readBytes());
-                            break;
-                        case 16:
                             message.gas_limit = reader.readUint64();
                             break;
-                        case 17:
+                        case 16:
                             message.gas_used = reader.readUint64();
                             break;
-                        case 18:
+                        case 17:
                             message.base_fee = reader.readBytes();
                             break;
-                        case 19:
+                        case 18:
                             reader.readMessage(message.location, () => message.location = common.ProtoLocation.deserialize(reader));
                             break;
-                        case 20:
+                        case 19:
                             message.extra = reader.readBytes();
                             break;
-                        case 21:
+                        case 20:
                             reader.readMessage(message.mix_hash, () => message.mix_hash = common.ProtoHash.deserialize(reader));
                             break;
-                        case 22:
+                        case 21:
                             message.nonce = reader.readUint64();
                             break;
-                        case 23:
+                        case 22:
                             reader.readMessage(message.utxo_root, () => message.utxo_root = common.ProtoHash.deserialize(reader));
                             break;
-                        case 24:
-                            reader.readMessage(message.etx_set_hash, () => message.etx_set_hash = common.ProtoHash.deserialize(reader));
+                        case 23:
+                            reader.readMessage(message.etx_set_root, () => message.etx_set_root = common.ProtoHash.deserialize(reader));
                             break;
-                        case 25:
+                        case 24:
                             message.efficiency_score = reader.readUint64();
                             break;
-                        case 26:
+                        case 25:
                             message.threshold_count = reader.readUint64();
                             break;
-                        case 27:
+                        case 26:
                             message.expansion_number = reader.readUint64();
                             break;
-                        case 28:
+                        case 27:
                             reader.readMessage(message.etx_eligible_slices, () => message.etx_eligible_slices = common.ProtoHash.deserialize(reader));
                             break;
+                        case 28:
+                            reader.readMessage(message.prime_terminus_hash, () => message.prime_terminus_hash = common.ProtoHash.deserialize(reader));
+                            break;
                         case 29:
-                            reader.readMessage(message.prime_terminus, () => message.prime_terminus = common.ProtoHash.deserialize(reader));
+                            reader.readMessage(message.interlink_root_hash, () => message.interlink_root_hash = common.ProtoHash.deserialize(reader));
                             break;
                         case 30:
-                            reader.readMessage(message.interlink_root_hash, () => message.interlink_root_hash = common.ProtoHash.deserialize(reader));
+                            message.state_limit = reader.readUint64();
+                            break;
+                        case 31:
+                            message.state_used = reader.readUint64();
+                            break;
+                        case 32:
+                            message.quai_state_size = reader.readBytes();
+                            break;
+                        case 33:
+                            message.secondary_coinbase = reader.readBytes();
+                            break;
+                        case 34:
+                            message.exchange_rate = reader.readBytes();
+                            break;
+                        case 35:
+                            message.quai_to_qi = reader.readBytes();
+                            break;
+                        case 36:
+                            message.qi_to_quai = reader.readBytes();
                             break;
                         default: reader.skipField();
                     }
@@ -2325,11 +2489,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     if ("chain_id" in data && data.chain_id != undefined) {
                         this.chain_id = data.chain_id;
                     }
-                    if ("gas_fee_cap" in data && data.gas_fee_cap != undefined) {
-                        this.gas_fee_cap = data.gas_fee_cap;
+                    if ("miner_tip" in data && data.miner_tip != undefined) {
+                        this.miner_tip = data.miner_tip;
                     }
-                    if ("gas_tip_cap" in data && data.gas_tip_cap != undefined) {
-                        this.gas_tip_cap = data.gas_tip_cap;
+                    if ("gas_price" in data && data.gas_price != undefined) {
+                        this.gas_price = data.gas_price;
                     }
                     if ("access_list" in data && data.access_list != undefined) {
                         this.access_list = data.access_list;
@@ -2346,9 +2510,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     if ("originating_tx_hash" in data && data.originating_tx_hash != undefined) {
                         this.originating_tx_hash = data.originating_tx_hash;
                     }
-                    if ("etx_index" in data && data.etx_index != undefined) {
-                        this.etx_index = data.etx_index;
-                    }
                     if ("tx_ins" in data && data.tx_ins != undefined) {
                         this.tx_ins = data.tx_ins;
                     }
@@ -2358,8 +2519,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     if ("signature" in data && data.signature != undefined) {
                         this.signature = data.signature;
                     }
-                    if ("etx_sender" in data && data.etx_sender != undefined) {
-                        this.etx_sender = data.etx_sender;
+                    if ("parent_hash" in data && data.parent_hash != undefined) {
+                        this.parent_hash = data.parent_hash;
+                    }
+                    if ("mix_hash" in data && data.mix_hash != undefined) {
+                        this.mix_hash = data.mix_hash;
                     }
                 }
             }
@@ -2426,22 +2590,22 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             get has_chain_id() {
                 return pb_1__namespace.Message.getField(this, 7) != null;
             }
-            get gas_fee_cap() {
+            get miner_tip() {
                 return pb_1__namespace.Message.getFieldWithDefault(this, 8, new Uint8Array(0));
             }
-            set gas_fee_cap(value) {
+            set miner_tip(value) {
                 pb_1__namespace.Message.setOneofField(this, 8, this.#one_of_decls[7], value);
             }
-            get has_gas_fee_cap() {
+            get has_miner_tip() {
                 return pb_1__namespace.Message.getField(this, 8) != null;
             }
-            get gas_tip_cap() {
+            get gas_price() {
                 return pb_1__namespace.Message.getFieldWithDefault(this, 9, new Uint8Array(0));
             }
-            set gas_tip_cap(value) {
+            set gas_price(value) {
                 pb_1__namespace.Message.setOneofField(this, 9, this.#one_of_decls[8], value);
             }
-            get has_gas_tip_cap() {
+            get has_gas_price() {
                 return pb_1__namespace.Message.getField(this, 9) != null;
             }
             get access_list() {
@@ -2489,49 +2653,49 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             get has_originating_tx_hash() {
                 return pb_1__namespace.Message.getField(this, 14) != null;
             }
-            get etx_index() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 15, 0);
-            }
-            set etx_index(value) {
-                pb_1__namespace.Message.setOneofField(this, 15, this.#one_of_decls[14], value);
-            }
-            get has_etx_index() {
-                return pb_1__namespace.Message.getField(this, 15) != null;
-            }
             get tx_ins() {
-                return pb_1__namespace.Message.getWrapperField(this, ProtoTxIns, 16);
+                return pb_1__namespace.Message.getWrapperField(this, ProtoTxIns, 15);
             }
             set tx_ins(value) {
-                pb_1__namespace.Message.setOneofWrapperField(this, 16, this.#one_of_decls[15], value);
+                pb_1__namespace.Message.setOneofWrapperField(this, 15, this.#one_of_decls[14], value);
             }
             get has_tx_ins() {
-                return pb_1__namespace.Message.getField(this, 16) != null;
+                return pb_1__namespace.Message.getField(this, 15) != null;
             }
             get tx_outs() {
-                return pb_1__namespace.Message.getWrapperField(this, ProtoTxOuts, 17);
+                return pb_1__namespace.Message.getWrapperField(this, ProtoTxOuts, 16);
             }
             set tx_outs(value) {
-                pb_1__namespace.Message.setOneofWrapperField(this, 17, this.#one_of_decls[16], value);
+                pb_1__namespace.Message.setOneofWrapperField(this, 16, this.#one_of_decls[15], value);
             }
             get has_tx_outs() {
-                return pb_1__namespace.Message.getField(this, 17) != null;
+                return pb_1__namespace.Message.getField(this, 16) != null;
             }
             get signature() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 18, new Uint8Array(0));
+                return pb_1__namespace.Message.getFieldWithDefault(this, 17, new Uint8Array(0));
             }
             set signature(value) {
-                pb_1__namespace.Message.setOneofField(this, 18, this.#one_of_decls[17], value);
+                pb_1__namespace.Message.setOneofField(this, 17, this.#one_of_decls[16], value);
             }
             get has_signature() {
+                return pb_1__namespace.Message.getField(this, 17) != null;
+            }
+            get parent_hash() {
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 18);
+            }
+            set parent_hash(value) {
+                pb_1__namespace.Message.setOneofWrapperField(this, 18, this.#one_of_decls[17], value);
+            }
+            get has_parent_hash() {
                 return pb_1__namespace.Message.getField(this, 18) != null;
             }
-            get etx_sender() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 19, new Uint8Array(0));
+            get mix_hash() {
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 19);
             }
-            set etx_sender(value) {
-                pb_1__namespace.Message.setOneofField(this, 19, this.#one_of_decls[18], value);
+            set mix_hash(value) {
+                pb_1__namespace.Message.setOneofWrapperField(this, 19, this.#one_of_decls[18], value);
             }
-            get has_etx_sender() {
+            get has_mix_hash() {
                 return pb_1__namespace.Message.getField(this, 19) != null;
             }
             get _type() {
@@ -2583,17 +2747,17 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [7])];
             }
-            get _gas_fee_cap() {
+            get _miner_tip() {
                 const cases = {
                     0: "none",
-                    8: "gas_fee_cap"
+                    8: "miner_tip"
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [8])];
             }
-            get _gas_tip_cap() {
+            get _gas_price() {
                 const cases = {
                     0: "none",
-                    9: "gas_tip_cap"
+                    9: "gas_price"
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [9])];
             }
@@ -2632,38 +2796,38 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [14])];
             }
-            get _etx_index() {
-                const cases = {
-                    0: "none",
-                    15: "etx_index"
-                };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [15])];
-            }
             get _tx_ins() {
                 const cases = {
                     0: "none",
-                    16: "tx_ins"
+                    15: "tx_ins"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [16])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [15])];
             }
             get _tx_outs() {
                 const cases = {
                     0: "none",
-                    17: "tx_outs"
+                    16: "tx_outs"
                 };
-                return cases[pb_1__namespace.Message.computeOneofCase(this, [17])];
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [16])];
             }
             get _signature() {
                 const cases = {
                     0: "none",
-                    18: "signature"
+                    17: "signature"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [17])];
+            }
+            get _parent_hash() {
+                const cases = {
+                    0: "none",
+                    18: "parent_hash"
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [18])];
             }
-            get _etx_sender() {
+            get _mix_hash() {
                 const cases = {
                     0: "none",
-                    19: "etx_sender"
+                    19: "mix_hash"
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [19])];
             }
@@ -2690,11 +2854,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (data.chain_id != null) {
                     message.chain_id = data.chain_id;
                 }
-                if (data.gas_fee_cap != null) {
-                    message.gas_fee_cap = data.gas_fee_cap;
+                if (data.miner_tip != null) {
+                    message.miner_tip = data.miner_tip;
                 }
-                if (data.gas_tip_cap != null) {
-                    message.gas_tip_cap = data.gas_tip_cap;
+                if (data.gas_price != null) {
+                    message.gas_price = data.gas_price;
                 }
                 if (data.access_list != null) {
                     message.access_list = ProtoAccessList.fromObject(data.access_list);
@@ -2711,9 +2875,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (data.originating_tx_hash != null) {
                     message.originating_tx_hash = common.ProtoHash.fromObject(data.originating_tx_hash);
                 }
-                if (data.etx_index != null) {
-                    message.etx_index = data.etx_index;
-                }
                 if (data.tx_ins != null) {
                     message.tx_ins = ProtoTxIns.fromObject(data.tx_ins);
                 }
@@ -2723,8 +2884,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (data.signature != null) {
                     message.signature = data.signature;
                 }
-                if (data.etx_sender != null) {
-                    message.etx_sender = data.etx_sender;
+                if (data.parent_hash != null) {
+                    message.parent_hash = common.ProtoHash.fromObject(data.parent_hash);
+                }
+                if (data.mix_hash != null) {
+                    message.mix_hash = common.ProtoHash.fromObject(data.mix_hash);
                 }
                 return message;
             }
@@ -2751,11 +2915,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.chain_id != null) {
                     data.chain_id = this.chain_id;
                 }
-                if (this.gas_fee_cap != null) {
-                    data.gas_fee_cap = this.gas_fee_cap;
+                if (this.miner_tip != null) {
+                    data.miner_tip = this.miner_tip;
                 }
-                if (this.gas_tip_cap != null) {
-                    data.gas_tip_cap = this.gas_tip_cap;
+                if (this.gas_price != null) {
+                    data.gas_price = this.gas_price;
                 }
                 if (this.access_list != null) {
                     data.access_list = this.access_list.toObject();
@@ -2772,9 +2936,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.originating_tx_hash != null) {
                     data.originating_tx_hash = this.originating_tx_hash.toObject();
                 }
-                if (this.etx_index != null) {
-                    data.etx_index = this.etx_index;
-                }
                 if (this.tx_ins != null) {
                     data.tx_ins = this.tx_ins.toObject();
                 }
@@ -2784,8 +2945,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.signature != null) {
                     data.signature = this.signature;
                 }
-                if (this.etx_sender != null) {
-                    data.etx_sender = this.etx_sender;
+                if (this.parent_hash != null) {
+                    data.parent_hash = this.parent_hash.toObject();
+                }
+                if (this.mix_hash != null) {
+                    data.mix_hash = this.mix_hash.toObject();
                 }
                 return data;
             }
@@ -2805,10 +2969,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     writer.writeBytes(6, this.data);
                 if (this.has_chain_id)
                     writer.writeBytes(7, this.chain_id);
-                if (this.has_gas_fee_cap)
-                    writer.writeBytes(8, this.gas_fee_cap);
-                if (this.has_gas_tip_cap)
-                    writer.writeBytes(9, this.gas_tip_cap);
+                if (this.has_miner_tip)
+                    writer.writeBytes(8, this.miner_tip);
+                if (this.has_gas_price)
+                    writer.writeBytes(9, this.gas_price);
                 if (this.has_access_list)
                     writer.writeMessage(10, this.access_list, () => this.access_list.serialize(writer));
                 if (this.has_v)
@@ -2819,16 +2983,16 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     writer.writeBytes(13, this.s);
                 if (this.has_originating_tx_hash)
                     writer.writeMessage(14, this.originating_tx_hash, () => this.originating_tx_hash.serialize(writer));
-                if (this.has_etx_index)
-                    writer.writeUint32(15, this.etx_index);
                 if (this.has_tx_ins)
-                    writer.writeMessage(16, this.tx_ins, () => this.tx_ins.serialize(writer));
+                    writer.writeMessage(15, this.tx_ins, () => this.tx_ins.serialize(writer));
                 if (this.has_tx_outs)
-                    writer.writeMessage(17, this.tx_outs, () => this.tx_outs.serialize(writer));
+                    writer.writeMessage(16, this.tx_outs, () => this.tx_outs.serialize(writer));
                 if (this.has_signature)
-                    writer.writeBytes(18, this.signature);
-                if (this.has_etx_sender)
-                    writer.writeBytes(19, this.etx_sender);
+                    writer.writeBytes(17, this.signature);
+                if (this.has_parent_hash)
+                    writer.writeMessage(18, this.parent_hash, () => this.parent_hash.serialize(writer));
+                if (this.has_mix_hash)
+                    writer.writeMessage(19, this.mix_hash, () => this.mix_hash.serialize(writer));
                 if (!w)
                     return writer.getResultBuffer();
             }
@@ -2860,10 +3024,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                             message.chain_id = reader.readBytes();
                             break;
                         case 8:
-                            message.gas_fee_cap = reader.readBytes();
+                            message.miner_tip = reader.readBytes();
                             break;
                         case 9:
-                            message.gas_tip_cap = reader.readBytes();
+                            message.gas_price = reader.readBytes();
                             break;
                         case 10:
                             reader.readMessage(message.access_list, () => message.access_list = ProtoAccessList.deserialize(reader));
@@ -2881,19 +3045,19 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                             reader.readMessage(message.originating_tx_hash, () => message.originating_tx_hash = common.ProtoHash.deserialize(reader));
                             break;
                         case 15:
-                            message.etx_index = reader.readUint32();
-                            break;
-                        case 16:
                             reader.readMessage(message.tx_ins, () => message.tx_ins = ProtoTxIns.deserialize(reader));
                             break;
-                        case 17:
+                        case 16:
                             reader.readMessage(message.tx_outs, () => message.tx_outs = ProtoTxOuts.deserialize(reader));
                             break;
-                        case 18:
+                        case 17:
                             message.signature = reader.readBytes();
                             break;
+                        case 18:
+                            reader.readMessage(message.parent_hash, () => message.parent_hash = common.ProtoHash.deserialize(reader));
+                            break;
                         case 19:
-                            message.etx_sender = reader.readBytes();
+                            reader.readMessage(message.mix_hash, () => message.mix_hash = common.ProtoHash.deserialize(reader));
                             break;
                         default: reader.skipField();
                     }
@@ -3149,7 +3313,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         block.ProtoAccessList = ProtoAccessList;
         class ProtoWorkObjectHeader extends pb_1__namespace.Message {
-            #one_of_decls = [[1], [2], [3], [4], [5], [6], [7], [8], [9]];
+            #one_of_decls = [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12]];
             constructor(data) {
                 super();
                 pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
@@ -3180,6 +3344,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     }
                     if ("time" in data && data.time != undefined) {
                         this.time = data.time;
+                    }
+                    if ("prime_terminus_number" in data && data.prime_terminus_number != undefined) {
+                        this.prime_terminus_number = data.prime_terminus_number;
+                    }
+                    if ("lock" in data && data.lock != undefined) {
+                        this.lock = data.lock;
+                    }
+                    if ("primary_coinbase" in data && data.primary_coinbase != undefined) {
+                        this.primary_coinbase = data.primary_coinbase;
                     }
                 }
             }
@@ -3264,6 +3437,33 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             get has_time() {
                 return pb_1__namespace.Message.getField(this, 9) != null;
             }
+            get prime_terminus_number() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 10, new Uint8Array(0));
+            }
+            set prime_terminus_number(value) {
+                pb_1__namespace.Message.setOneofField(this, 10, this.#one_of_decls[9], value);
+            }
+            get has_prime_terminus_number() {
+                return pb_1__namespace.Message.getField(this, 10) != null;
+            }
+            get lock() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 11, 0);
+            }
+            set lock(value) {
+                pb_1__namespace.Message.setOneofField(this, 11, this.#one_of_decls[10], value);
+            }
+            get has_lock() {
+                return pb_1__namespace.Message.getField(this, 11) != null;
+            }
+            get primary_coinbase() {
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoAddress, 12);
+            }
+            set primary_coinbase(value) {
+                pb_1__namespace.Message.setOneofWrapperField(this, 12, this.#one_of_decls[11], value);
+            }
+            get has_primary_coinbase() {
+                return pb_1__namespace.Message.getField(this, 12) != null;
+            }
             get _header_hash() {
                 const cases = {
                     0: "none",
@@ -3327,6 +3527,27 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [9])];
             }
+            get _prime_terminus_number() {
+                const cases = {
+                    0: "none",
+                    10: "prime_terminus_number"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [10])];
+            }
+            get _lock() {
+                const cases = {
+                    0: "none",
+                    11: "lock"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [11])];
+            }
+            get _primary_coinbase() {
+                const cases = {
+                    0: "none",
+                    12: "primary_coinbase"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [12])];
+            }
             static fromObject(data) {
                 const message = new ProtoWorkObjectHeader({});
                 if (data.header_hash != null) {
@@ -3355,6 +3576,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 if (data.time != null) {
                     message.time = data.time;
+                }
+                if (data.prime_terminus_number != null) {
+                    message.prime_terminus_number = data.prime_terminus_number;
+                }
+                if (data.lock != null) {
+                    message.lock = data.lock;
+                }
+                if (data.primary_coinbase != null) {
+                    message.primary_coinbase = common.ProtoAddress.fromObject(data.primary_coinbase);
                 }
                 return message;
             }
@@ -3387,6 +3617,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.time != null) {
                     data.time = this.time;
                 }
+                if (this.prime_terminus_number != null) {
+                    data.prime_terminus_number = this.prime_terminus_number;
+                }
+                if (this.lock != null) {
+                    data.lock = this.lock;
+                }
+                if (this.primary_coinbase != null) {
+                    data.primary_coinbase = this.primary_coinbase.toObject();
+                }
                 return data;
             }
             serialize(w) {
@@ -3409,6 +3648,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     writer.writeMessage(8, this.mix_hash, () => this.mix_hash.serialize(writer));
                 if (this.has_time)
                     writer.writeUint64(9, this.time);
+                if (this.has_prime_terminus_number)
+                    writer.writeBytes(10, this.prime_terminus_number);
+                if (this.has_lock)
+                    writer.writeUint32(11, this.lock);
+                if (this.has_primary_coinbase)
+                    writer.writeMessage(12, this.primary_coinbase, () => this.primary_coinbase.serialize(writer));
                 if (!w)
                     return writer.getResultBuffer();
             }
@@ -3444,6 +3689,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                             break;
                         case 9:
                             message.time = reader.readUint64();
+                            break;
+                        case 10:
+                            message.prime_terminus_number = reader.readBytes();
+                            break;
+                        case 11:
+                            message.lock = reader.readUint32();
+                            break;
+                        case 12:
+                            reader.readMessage(message.primary_coinbase, () => message.primary_coinbase = common.ProtoAddress.deserialize(reader));
                             break;
                         default: reader.skipField();
                     }
@@ -3533,8 +3787,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     if ("uncles" in data && data.uncles != undefined) {
                         this.uncles = data.uncles;
                     }
-                    if ("ext_transactions" in data && data.ext_transactions != undefined) {
-                        this.ext_transactions = data.ext_transactions;
+                    if ("outbound_etxs" in data && data.outbound_etxs != undefined) {
+                        this.outbound_etxs = data.outbound_etxs;
                     }
                     if ("manifest" in data && data.manifest != undefined) {
                         this.manifest = data.manifest;
@@ -3571,13 +3825,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             get has_uncles() {
                 return pb_1__namespace.Message.getField(this, 3) != null;
             }
-            get ext_transactions() {
+            get outbound_etxs() {
                 return pb_1__namespace.Message.getWrapperField(this, ProtoTransactions, 4);
             }
-            set ext_transactions(value) {
+            set outbound_etxs(value) {
                 pb_1__namespace.Message.setOneofWrapperField(this, 4, this.#one_of_decls[3], value);
             }
-            get has_ext_transactions() {
+            get has_outbound_etxs() {
                 return pb_1__namespace.Message.getField(this, 4) != null;
             }
             get manifest() {
@@ -3619,10 +3873,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [3])];
             }
-            get _ext_transactions() {
+            get _outbound_etxs() {
                 const cases = {
                     0: "none",
-                    4: "ext_transactions"
+                    4: "outbound_etxs"
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [4])];
             }
@@ -3651,8 +3905,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (data.uncles != null) {
                     message.uncles = ProtoWorkObjectHeaders.fromObject(data.uncles);
                 }
-                if (data.ext_transactions != null) {
-                    message.ext_transactions = ProtoTransactions.fromObject(data.ext_transactions);
+                if (data.outbound_etxs != null) {
+                    message.outbound_etxs = ProtoTransactions.fromObject(data.outbound_etxs);
                 }
                 if (data.manifest != null) {
                     message.manifest = ProtoManifest.fromObject(data.manifest);
@@ -3673,8 +3927,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.uncles != null) {
                     data.uncles = this.uncles.toObject();
                 }
-                if (this.ext_transactions != null) {
-                    data.ext_transactions = this.ext_transactions.toObject();
+                if (this.outbound_etxs != null) {
+                    data.outbound_etxs = this.outbound_etxs.toObject();
                 }
                 if (this.manifest != null) {
                     data.manifest = this.manifest.toObject();
@@ -3692,8 +3946,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     writer.writeMessage(2, this.transactions, () => this.transactions.serialize(writer));
                 if (this.has_uncles)
                     writer.writeMessage(3, this.uncles, () => this.uncles.serialize(writer));
-                if (this.has_ext_transactions)
-                    writer.writeMessage(4, this.ext_transactions, () => this.ext_transactions.serialize(writer));
+                if (this.has_outbound_etxs)
+                    writer.writeMessage(4, this.outbound_etxs, () => this.outbound_etxs.serialize(writer));
                 if (this.has_manifest)
                     writer.writeMessage(5, this.manifest, () => this.manifest.serialize(writer));
                 if (this.has_interlink_hashes)
@@ -3717,7 +3971,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                             reader.readMessage(message.uncles, () => message.uncles = ProtoWorkObjectHeaders.deserialize(reader));
                             break;
                         case 4:
-                            reader.readMessage(message.ext_transactions, () => message.ext_transactions = ProtoTransactions.deserialize(reader));
+                            reader.readMessage(message.outbound_etxs, () => message.outbound_etxs = ProtoTransactions.deserialize(reader));
                             break;
                         case 5:
                             reader.readMessage(message.manifest, () => message.manifest = ProtoManifest.deserialize(reader));
@@ -3928,6 +4182,276 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
         }
         block.ProtoWorkObjects = ProtoWorkObjects;
+        class ProtoWorkObjectBlockView extends pb_1__namespace.Message {
+            #one_of_decls = [[1]];
+            constructor(data) {
+                super();
+                pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    if ("work_object" in data && data.work_object != undefined) {
+                        this.work_object = data.work_object;
+                    }
+                }
+            }
+            get work_object() {
+                return pb_1__namespace.Message.getWrapperField(this, ProtoWorkObject, 1);
+            }
+            set work_object(value) {
+                pb_1__namespace.Message.setOneofWrapperField(this, 1, this.#one_of_decls[0], value);
+            }
+            get has_work_object() {
+                return pb_1__namespace.Message.getField(this, 1) != null;
+            }
+            get _work_object() {
+                const cases = {
+                    0: "none",
+                    1: "work_object"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [1])];
+            }
+            static fromObject(data) {
+                const message = new ProtoWorkObjectBlockView({});
+                if (data.work_object != null) {
+                    message.work_object = ProtoWorkObject.fromObject(data.work_object);
+                }
+                return message;
+            }
+            toObject() {
+                const data = {};
+                if (this.work_object != null) {
+                    data.work_object = this.work_object.toObject();
+                }
+                return data;
+            }
+            serialize(w) {
+                const writer = w || new pb_1__namespace.BinaryWriter();
+                if (this.has_work_object)
+                    writer.writeMessage(1, this.work_object, () => this.work_object.serialize(writer));
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes) {
+                const reader = bytes instanceof pb_1__namespace.BinaryReader ? bytes : new pb_1__namespace.BinaryReader(bytes), message = new ProtoWorkObjectBlockView();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        case 1:
+                            reader.readMessage(message.work_object, () => message.work_object = ProtoWorkObject.deserialize(reader));
+                            break;
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary() {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes) {
+                return ProtoWorkObjectBlockView.deserialize(bytes);
+            }
+        }
+        block.ProtoWorkObjectBlockView = ProtoWorkObjectBlockView;
+        class ProtoWorkObjectBlocksView extends pb_1__namespace.Message {
+            #one_of_decls = [];
+            constructor(data) {
+                super();
+                pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    if ("work_objects" in data && data.work_objects != undefined) {
+                        this.work_objects = data.work_objects;
+                    }
+                }
+            }
+            get work_objects() {
+                return pb_1__namespace.Message.getRepeatedWrapperField(this, ProtoWorkObjectBlockView, 1);
+            }
+            set work_objects(value) {
+                pb_1__namespace.Message.setRepeatedWrapperField(this, 1, value);
+            }
+            static fromObject(data) {
+                const message = new ProtoWorkObjectBlocksView({});
+                if (data.work_objects != null) {
+                    message.work_objects = data.work_objects.map(item => ProtoWorkObjectBlockView.fromObject(item));
+                }
+                return message;
+            }
+            toObject() {
+                const data = {};
+                if (this.work_objects != null) {
+                    data.work_objects = this.work_objects.map((item) => item.toObject());
+                }
+                return data;
+            }
+            serialize(w) {
+                const writer = w || new pb_1__namespace.BinaryWriter();
+                if (this.work_objects.length)
+                    writer.writeRepeatedMessage(1, this.work_objects, (item) => item.serialize(writer));
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes) {
+                const reader = bytes instanceof pb_1__namespace.BinaryReader ? bytes : new pb_1__namespace.BinaryReader(bytes), message = new ProtoWorkObjectBlocksView();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        case 1:
+                            reader.readMessage(message.work_objects, () => pb_1__namespace.Message.addToRepeatedWrapperField(message, 1, ProtoWorkObjectBlockView.deserialize(reader), ProtoWorkObjectBlockView));
+                            break;
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary() {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes) {
+                return ProtoWorkObjectBlocksView.deserialize(bytes);
+            }
+        }
+        block.ProtoWorkObjectBlocksView = ProtoWorkObjectBlocksView;
+        class ProtoWorkObjectHeaderView extends pb_1__namespace.Message {
+            #one_of_decls = [[1]];
+            constructor(data) {
+                super();
+                pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    if ("work_object" in data && data.work_object != undefined) {
+                        this.work_object = data.work_object;
+                    }
+                }
+            }
+            get work_object() {
+                return pb_1__namespace.Message.getWrapperField(this, ProtoWorkObject, 1);
+            }
+            set work_object(value) {
+                pb_1__namespace.Message.setOneofWrapperField(this, 1, this.#one_of_decls[0], value);
+            }
+            get has_work_object() {
+                return pb_1__namespace.Message.getField(this, 1) != null;
+            }
+            get _work_object() {
+                const cases = {
+                    0: "none",
+                    1: "work_object"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [1])];
+            }
+            static fromObject(data) {
+                const message = new ProtoWorkObjectHeaderView({});
+                if (data.work_object != null) {
+                    message.work_object = ProtoWorkObject.fromObject(data.work_object);
+                }
+                return message;
+            }
+            toObject() {
+                const data = {};
+                if (this.work_object != null) {
+                    data.work_object = this.work_object.toObject();
+                }
+                return data;
+            }
+            serialize(w) {
+                const writer = w || new pb_1__namespace.BinaryWriter();
+                if (this.has_work_object)
+                    writer.writeMessage(1, this.work_object, () => this.work_object.serialize(writer));
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes) {
+                const reader = bytes instanceof pb_1__namespace.BinaryReader ? bytes : new pb_1__namespace.BinaryReader(bytes), message = new ProtoWorkObjectHeaderView();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        case 1:
+                            reader.readMessage(message.work_object, () => message.work_object = ProtoWorkObject.deserialize(reader));
+                            break;
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary() {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes) {
+                return ProtoWorkObjectHeaderView.deserialize(bytes);
+            }
+        }
+        block.ProtoWorkObjectHeaderView = ProtoWorkObjectHeaderView;
+        class ProtoWorkObjectShareView extends pb_1__namespace.Message {
+            #one_of_decls = [[1]];
+            constructor(data) {
+                super();
+                pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    if ("work_object" in data && data.work_object != undefined) {
+                        this.work_object = data.work_object;
+                    }
+                }
+            }
+            get work_object() {
+                return pb_1__namespace.Message.getWrapperField(this, ProtoWorkObject, 1);
+            }
+            set work_object(value) {
+                pb_1__namespace.Message.setOneofWrapperField(this, 1, this.#one_of_decls[0], value);
+            }
+            get has_work_object() {
+                return pb_1__namespace.Message.getField(this, 1) != null;
+            }
+            get _work_object() {
+                const cases = {
+                    0: "none",
+                    1: "work_object"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [1])];
+            }
+            static fromObject(data) {
+                const message = new ProtoWorkObjectShareView({});
+                if (data.work_object != null) {
+                    message.work_object = ProtoWorkObject.fromObject(data.work_object);
+                }
+                return message;
+            }
+            toObject() {
+                const data = {};
+                if (this.work_object != null) {
+                    data.work_object = this.work_object.toObject();
+                }
+                return data;
+            }
+            serialize(w) {
+                const writer = w || new pb_1__namespace.BinaryWriter();
+                if (this.has_work_object)
+                    writer.writeMessage(1, this.work_object, () => this.work_object.serialize(writer));
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes) {
+                const reader = bytes instanceof pb_1__namespace.BinaryReader ? bytes : new pb_1__namespace.BinaryReader(bytes), message = new ProtoWorkObjectShareView();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        case 1:
+                            reader.readMessage(message.work_object, () => message.work_object = ProtoWorkObject.deserialize(reader));
+                            break;
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary() {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes) {
+                return ProtoWorkObjectShareView.deserialize(bytes);
+            }
+        }
+        block.ProtoWorkObjectShareView = ProtoWorkObjectShareView;
         class ProtoAccessTuple extends pb_1__namespace.Message {
             #one_of_decls = [];
             constructor(data) {
@@ -4020,20 +4544,20 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     if ("cumulative_gas_used" in data && data.cumulative_gas_used != undefined) {
                         this.cumulative_gas_used = data.cumulative_gas_used;
                     }
+                    if ("logs" in data && data.logs != undefined) {
+                        this.logs = data.logs;
+                    }
                     if ("tx_hash" in data && data.tx_hash != undefined) {
                         this.tx_hash = data.tx_hash;
                     }
                     if ("contract_address" in data && data.contract_address != undefined) {
                         this.contract_address = data.contract_address;
                     }
-                    if ("logs" in data && data.logs != undefined) {
-                        this.logs = data.logs;
-                    }
-                    if ("etxs" in data && data.etxs != undefined) {
-                        this.etxs = data.etxs;
-                    }
                     if ("gas_used" in data && data.gas_used != undefined) {
                         this.gas_used = data.gas_used;
+                    }
+                    if ("outbound_etxs" in data && data.outbound_etxs != undefined) {
+                        this.outbound_etxs = data.outbound_etxs;
                     }
                 }
             }
@@ -4049,47 +4573,47 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             set cumulative_gas_used(value) {
                 pb_1__namespace.Message.setField(this, 2, value);
             }
-            get tx_hash() {
-                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 3);
-            }
-            set tx_hash(value) {
-                pb_1__namespace.Message.setWrapperField(this, 3, value);
-            }
-            get has_tx_hash() {
-                return pb_1__namespace.Message.getField(this, 3) != null;
-            }
-            get contract_address() {
-                return pb_1__namespace.Message.getWrapperField(this, common.ProtoAddress, 4);
-            }
-            set contract_address(value) {
-                pb_1__namespace.Message.setWrapperField(this, 4, value);
-            }
-            get has_contract_address() {
-                return pb_1__namespace.Message.getField(this, 4) != null;
-            }
             get logs() {
-                return pb_1__namespace.Message.getWrapperField(this, ProtoLogsForStorage, 5);
+                return pb_1__namespace.Message.getWrapperField(this, ProtoLogsForStorage, 3);
             }
             set logs(value) {
-                pb_1__namespace.Message.setWrapperField(this, 5, value);
+                pb_1__namespace.Message.setWrapperField(this, 3, value);
             }
             get has_logs() {
+                return pb_1__namespace.Message.getField(this, 3) != null;
+            }
+            get tx_hash() {
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 4);
+            }
+            set tx_hash(value) {
+                pb_1__namespace.Message.setWrapperField(this, 4, value);
+            }
+            get has_tx_hash() {
+                return pb_1__namespace.Message.getField(this, 4) != null;
+            }
+            get contract_address() {
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoAddress, 5);
+            }
+            set contract_address(value) {
+                pb_1__namespace.Message.setWrapperField(this, 5, value);
+            }
+            get has_contract_address() {
                 return pb_1__namespace.Message.getField(this, 5) != null;
             }
-            get etxs() {
-                return pb_1__namespace.Message.getWrapperField(this, ProtoTransactions, 6);
-            }
-            set etxs(value) {
-                pb_1__namespace.Message.setWrapperField(this, 6, value);
-            }
-            get has_etxs() {
-                return pb_1__namespace.Message.getField(this, 6) != null;
-            }
             get gas_used() {
-                return pb_1__namespace.Message.getFieldWithDefault(this, 7, 0);
+                return pb_1__namespace.Message.getFieldWithDefault(this, 6, 0);
             }
             set gas_used(value) {
-                pb_1__namespace.Message.setField(this, 7, value);
+                pb_1__namespace.Message.setField(this, 6, value);
+            }
+            get outbound_etxs() {
+                return pb_1__namespace.Message.getWrapperField(this, ProtoTransactions, 7);
+            }
+            set outbound_etxs(value) {
+                pb_1__namespace.Message.setWrapperField(this, 7, value);
+            }
+            get has_outbound_etxs() {
+                return pb_1__namespace.Message.getField(this, 7) != null;
             }
             static fromObject(data) {
                 const message = new ProtoReceiptForStorage({});
@@ -4099,20 +4623,20 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (data.cumulative_gas_used != null) {
                     message.cumulative_gas_used = data.cumulative_gas_used;
                 }
+                if (data.logs != null) {
+                    message.logs = ProtoLogsForStorage.fromObject(data.logs);
+                }
                 if (data.tx_hash != null) {
                     message.tx_hash = common.ProtoHash.fromObject(data.tx_hash);
                 }
                 if (data.contract_address != null) {
                     message.contract_address = common.ProtoAddress.fromObject(data.contract_address);
                 }
-                if (data.logs != null) {
-                    message.logs = ProtoLogsForStorage.fromObject(data.logs);
-                }
-                if (data.etxs != null) {
-                    message.etxs = ProtoTransactions.fromObject(data.etxs);
-                }
                 if (data.gas_used != null) {
                     message.gas_used = data.gas_used;
+                }
+                if (data.outbound_etxs != null) {
+                    message.outbound_etxs = ProtoTransactions.fromObject(data.outbound_etxs);
                 }
                 return message;
             }
@@ -4124,20 +4648,20 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.cumulative_gas_used != null) {
                     data.cumulative_gas_used = this.cumulative_gas_used;
                 }
+                if (this.logs != null) {
+                    data.logs = this.logs.toObject();
+                }
                 if (this.tx_hash != null) {
                     data.tx_hash = this.tx_hash.toObject();
                 }
                 if (this.contract_address != null) {
                     data.contract_address = this.contract_address.toObject();
                 }
-                if (this.logs != null) {
-                    data.logs = this.logs.toObject();
-                }
-                if (this.etxs != null) {
-                    data.etxs = this.etxs.toObject();
-                }
                 if (this.gas_used != null) {
                     data.gas_used = this.gas_used;
+                }
+                if (this.outbound_etxs != null) {
+                    data.outbound_etxs = this.outbound_etxs.toObject();
                 }
                 return data;
             }
@@ -4147,16 +4671,16 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     writer.writeBytes(1, this.post_state_or_status);
                 if (this.cumulative_gas_used != 0)
                     writer.writeUint64(2, this.cumulative_gas_used);
-                if (this.has_tx_hash)
-                    writer.writeMessage(3, this.tx_hash, () => this.tx_hash.serialize(writer));
-                if (this.has_contract_address)
-                    writer.writeMessage(4, this.contract_address, () => this.contract_address.serialize(writer));
                 if (this.has_logs)
-                    writer.writeMessage(5, this.logs, () => this.logs.serialize(writer));
-                if (this.has_etxs)
-                    writer.writeMessage(6, this.etxs, () => this.etxs.serialize(writer));
+                    writer.writeMessage(3, this.logs, () => this.logs.serialize(writer));
+                if (this.has_tx_hash)
+                    writer.writeMessage(4, this.tx_hash, () => this.tx_hash.serialize(writer));
+                if (this.has_contract_address)
+                    writer.writeMessage(5, this.contract_address, () => this.contract_address.serialize(writer));
                 if (this.gas_used != 0)
-                    writer.writeUint64(7, this.gas_used);
+                    writer.writeUint64(6, this.gas_used);
+                if (this.has_outbound_etxs)
+                    writer.writeMessage(7, this.outbound_etxs, () => this.outbound_etxs.serialize(writer));
                 if (!w)
                     return writer.getResultBuffer();
             }
@@ -4173,19 +4697,19 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                             message.cumulative_gas_used = reader.readUint64();
                             break;
                         case 3:
-                            reader.readMessage(message.tx_hash, () => message.tx_hash = common.ProtoHash.deserialize(reader));
-                            break;
-                        case 4:
-                            reader.readMessage(message.contract_address, () => message.contract_address = common.ProtoAddress.deserialize(reader));
-                            break;
-                        case 5:
                             reader.readMessage(message.logs, () => message.logs = ProtoLogsForStorage.deserialize(reader));
                             break;
+                        case 4:
+                            reader.readMessage(message.tx_hash, () => message.tx_hash = common.ProtoHash.deserialize(reader));
+                            break;
+                        case 5:
+                            reader.readMessage(message.contract_address, () => message.contract_address = common.ProtoAddress.deserialize(reader));
+                            break;
                         case 6:
-                            reader.readMessage(message.etxs, () => message.etxs = ProtoTransactions.deserialize(reader));
+                            message.gas_used = reader.readUint64();
                             break;
                         case 7:
-                            message.gas_used = reader.readUint64();
+                            reader.readMessage(message.outbound_etxs, () => message.outbound_etxs = ProtoTransactions.deserialize(reader));
                             break;
                         default: reader.skipField();
                     }
@@ -4682,8 +5206,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     if ("header" in data && data.header != undefined) {
                         this.header = data.header;
                     }
-                    if ("etxs" in data && data.etxs != undefined) {
-                        this.etxs = data.etxs;
+                    if ("outbound_etxs" in data && data.outbound_etxs != undefined) {
+                        this.outbound_etxs = data.outbound_etxs;
                     }
                 }
             }
@@ -4696,13 +5220,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             get has_header() {
                 return pb_1__namespace.Message.getField(this, 1) != null;
             }
-            get etxs() {
+            get outbound_etxs() {
                 return pb_1__namespace.Message.getWrapperField(this, ProtoTransactions, 2);
             }
-            set etxs(value) {
+            set outbound_etxs(value) {
                 pb_1__namespace.Message.setOneofWrapperField(this, 2, this.#one_of_decls[1], value);
             }
-            get has_etxs() {
+            get has_outbound_etxs() {
                 return pb_1__namespace.Message.getField(this, 2) != null;
             }
             get _header() {
@@ -4712,10 +5236,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [1])];
             }
-            get _etxs() {
+            get _outbound_etxs() {
                 const cases = {
                     0: "none",
-                    2: "etxs"
+                    2: "outbound_etxs"
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [2])];
             }
@@ -4724,8 +5248,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (data.header != null) {
                     message.header = ProtoWorkObject.fromObject(data.header);
                 }
-                if (data.etxs != null) {
-                    message.etxs = ProtoTransactions.fromObject(data.etxs);
+                if (data.outbound_etxs != null) {
+                    message.outbound_etxs = ProtoTransactions.fromObject(data.outbound_etxs);
                 }
                 return message;
             }
@@ -4734,8 +5258,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.header != null) {
                     data.header = this.header.toObject();
                 }
-                if (this.etxs != null) {
-                    data.etxs = this.etxs.toObject();
+                if (this.outbound_etxs != null) {
+                    data.outbound_etxs = this.outbound_etxs.toObject();
                 }
                 return data;
             }
@@ -4743,8 +5267,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 const writer = w || new pb_1__namespace.BinaryWriter();
                 if (this.has_header)
                     writer.writeMessage(1, this.header, () => this.header.serialize(writer));
-                if (this.has_etxs)
-                    writer.writeMessage(2, this.etxs, () => this.etxs.serialize(writer));
+                if (this.has_outbound_etxs)
+                    writer.writeMessage(2, this.outbound_etxs, () => this.outbound_etxs.serialize(writer));
                 if (!w)
                     return writer.getResultBuffer();
             }
@@ -4758,7 +5282,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                             reader.readMessage(message.header, () => message.header = ProtoWorkObject.deserialize(reader));
                             break;
                         case 2:
-                            reader.readMessage(message.etxs, () => message.etxs = ProtoTransactions.deserialize(reader));
+                            reader.readMessage(message.outbound_etxs, () => message.outbound_etxs = ProtoTransactions.deserialize(reader));
                             break;
                         default: reader.skipField();
                     }
@@ -5194,7 +5718,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         block.ProtoOutPoint = ProtoOutPoint;
         class ProtoTxOut extends pb_1__namespace.Message {
-            #one_of_decls = [[1], [2]];
+            #one_of_decls = [[1], [2], [3]];
             constructor(data) {
                 super();
                 pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
@@ -5204,6 +5728,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     }
                     if ("address" in data && data.address != undefined) {
                         this.address = data.address;
+                    }
+                    if ("lock" in data && data.lock != undefined) {
+                        this.lock = data.lock;
                     }
                 }
             }
@@ -5225,6 +5752,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             get has_address() {
                 return pb_1__namespace.Message.getField(this, 2) != null;
             }
+            get lock() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 3, new Uint8Array(0));
+            }
+            set lock(value) {
+                pb_1__namespace.Message.setOneofField(this, 3, this.#one_of_decls[2], value);
+            }
+            get has_lock() {
+                return pb_1__namespace.Message.getField(this, 3) != null;
+            }
             get _denomination() {
                 const cases = {
                     0: "none",
@@ -5239,6 +5775,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 };
                 return cases[pb_1__namespace.Message.computeOneofCase(this, [2])];
             }
+            get _lock() {
+                const cases = {
+                    0: "none",
+                    3: "lock"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [3])];
+            }
             static fromObject(data) {
                 const message = new ProtoTxOut({});
                 if (data.denomination != null) {
@@ -5246,6 +5789,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 if (data.address != null) {
                     message.address = data.address;
+                }
+                if (data.lock != null) {
+                    message.lock = data.lock;
                 }
                 return message;
             }
@@ -5257,6 +5803,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (this.address != null) {
                     data.address = this.address;
                 }
+                if (this.lock != null) {
+                    data.lock = this.lock;
+                }
                 return data;
             }
             serialize(w) {
@@ -5265,6 +5814,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     writer.writeUint32(1, this.denomination);
                 if (this.has_address)
                     writer.writeBytes(2, this.address);
+                if (this.has_lock)
+                    writer.writeBytes(3, this.lock);
                 if (!w)
                     return writer.getResultBuffer();
             }
@@ -5280,6 +5831,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         case 2:
                             message.address = reader.readBytes();
                             break;
+                        case 3:
+                            message.lock = reader.readBytes();
+                            break;
                         default: reader.skipField();
                     }
                 }
@@ -5293,6 +5847,496 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
         }
         block.ProtoTxOut = ProtoTxOut;
+        class ProtoOutPointAndDenomination extends pb_1__namespace.Message {
+            #one_of_decls = [[1], [2], [3]];
+            constructor(data) {
+                super();
+                pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    if ("hash" in data && data.hash != undefined) {
+                        this.hash = data.hash;
+                    }
+                    if ("index" in data && data.index != undefined) {
+                        this.index = data.index;
+                    }
+                    if ("denomination" in data && data.denomination != undefined) {
+                        this.denomination = data.denomination;
+                    }
+                }
+            }
+            get hash() {
+                return pb_1__namespace.Message.getWrapperField(this, common.ProtoHash, 1);
+            }
+            set hash(value) {
+                pb_1__namespace.Message.setOneofWrapperField(this, 1, this.#one_of_decls[0], value);
+            }
+            get has_hash() {
+                return pb_1__namespace.Message.getField(this, 1) != null;
+            }
+            get index() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 2, 0);
+            }
+            set index(value) {
+                pb_1__namespace.Message.setOneofField(this, 2, this.#one_of_decls[1], value);
+            }
+            get has_index() {
+                return pb_1__namespace.Message.getField(this, 2) != null;
+            }
+            get denomination() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 3, 0);
+            }
+            set denomination(value) {
+                pb_1__namespace.Message.setOneofField(this, 3, this.#one_of_decls[2], value);
+            }
+            get has_denomination() {
+                return pb_1__namespace.Message.getField(this, 3) != null;
+            }
+            get _hash() {
+                const cases = {
+                    0: "none",
+                    1: "hash"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [1])];
+            }
+            get _index() {
+                const cases = {
+                    0: "none",
+                    2: "index"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [2])];
+            }
+            get _denomination() {
+                const cases = {
+                    0: "none",
+                    3: "denomination"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [3])];
+            }
+            static fromObject(data) {
+                const message = new ProtoOutPointAndDenomination({});
+                if (data.hash != null) {
+                    message.hash = common.ProtoHash.fromObject(data.hash);
+                }
+                if (data.index != null) {
+                    message.index = data.index;
+                }
+                if (data.denomination != null) {
+                    message.denomination = data.denomination;
+                }
+                return message;
+            }
+            toObject() {
+                const data = {};
+                if (this.hash != null) {
+                    data.hash = this.hash.toObject();
+                }
+                if (this.index != null) {
+                    data.index = this.index;
+                }
+                if (this.denomination != null) {
+                    data.denomination = this.denomination;
+                }
+                return data;
+            }
+            serialize(w) {
+                const writer = w || new pb_1__namespace.BinaryWriter();
+                if (this.has_hash)
+                    writer.writeMessage(1, this.hash, () => this.hash.serialize(writer));
+                if (this.has_index)
+                    writer.writeUint32(2, this.index);
+                if (this.has_denomination)
+                    writer.writeUint32(3, this.denomination);
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes) {
+                const reader = bytes instanceof pb_1__namespace.BinaryReader ? bytes : new pb_1__namespace.BinaryReader(bytes), message = new ProtoOutPointAndDenomination();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        case 1:
+                            reader.readMessage(message.hash, () => message.hash = common.ProtoHash.deserialize(reader));
+                            break;
+                        case 2:
+                            message.index = reader.readUint32();
+                            break;
+                        case 3:
+                            message.denomination = reader.readUint32();
+                            break;
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary() {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes) {
+                return ProtoOutPointAndDenomination.deserialize(bytes);
+            }
+        }
+        block.ProtoOutPointAndDenomination = ProtoOutPointAndDenomination;
+        class ProtoAddressOutPoints extends pb_1__namespace.Message {
+            #one_of_decls = [];
+            constructor(data) {
+                super();
+                pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    if ("out_points" in data && data.out_points != undefined) {
+                        this.out_points = data.out_points;
+                    }
+                }
+                if (!this.out_points)
+                    this.out_points = new Map();
+            }
+            get out_points() {
+                return pb_1__namespace.Message.getField(this, 1);
+            }
+            set out_points(value) {
+                pb_1__namespace.Message.setField(this, 1, value);
+            }
+            static fromObject(data) {
+                const message = new ProtoAddressOutPoints({});
+                if (typeof data.out_points == "object") {
+                    message.out_points = new Map(Object.entries(data.out_points).map(([key, value]) => [key, ProtoOutPointAndDenomination.fromObject(value)]));
+                }
+                return message;
+            }
+            toObject() {
+                const data = {};
+                if (this.out_points != null) {
+                    data.out_points = (Object.fromEntries)((Array.from)(this.out_points).map(([key, value]) => [key, value.toObject()]));
+                }
+                return data;
+            }
+            serialize(w) {
+                const writer = w || new pb_1__namespace.BinaryWriter();
+                for (const [key, value] of this.out_points) {
+                    writer.writeMessage(1, this.out_points, () => {
+                        writer.writeString(1, key);
+                        writer.writeMessage(2, value, () => value.serialize(writer));
+                    });
+                }
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes) {
+                const reader = bytes instanceof pb_1__namespace.BinaryReader ? bytes : new pb_1__namespace.BinaryReader(bytes), message = new ProtoAddressOutPoints();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        case 1:
+                            reader.readMessage(message, () => pb_1__namespace.Map.deserializeBinary(message.out_points, reader, reader.readString, () => {
+                                let value;
+                                reader.readMessage(message, () => value = ProtoOutPointAndDenomination.deserialize(reader));
+                                return value;
+                            }));
+                            break;
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary() {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes) {
+                return ProtoAddressOutPoints.deserialize(bytes);
+            }
+        }
+        block.ProtoAddressOutPoints = ProtoAddressOutPoints;
+        class ProtoOutPointsMap extends pb_1__namespace.Message {
+            #one_of_decls = [];
+            constructor(data) {
+                super();
+                pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    if ("entries" in data && data.entries != undefined) {
+                        this.entries = data.entries;
+                    }
+                }
+                if (!this.entries)
+                    this.entries = new Map();
+            }
+            get entries() {
+                return pb_1__namespace.Message.getField(this, 1);
+            }
+            set entries(value) {
+                pb_1__namespace.Message.setField(this, 1, value);
+            }
+            static fromObject(data) {
+                const message = new ProtoOutPointsMap({});
+                if (typeof data.entries == "object") {
+                    message.entries = new Map(Object.entries(data.entries).map(([key, value]) => [key, ProtoAddressOutPoints.fromObject(value)]));
+                }
+                return message;
+            }
+            toObject() {
+                const data = {};
+                if (this.entries != null) {
+                    data.entries = (Object.fromEntries)((Array.from)(this.entries).map(([key, value]) => [key, value.toObject()]));
+                }
+                return data;
+            }
+            serialize(w) {
+                const writer = w || new pb_1__namespace.BinaryWriter();
+                for (const [key, value] of this.entries) {
+                    writer.writeMessage(1, this.entries, () => {
+                        writer.writeString(1, key);
+                        writer.writeMessage(2, value, () => value.serialize(writer));
+                    });
+                }
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes) {
+                const reader = bytes instanceof pb_1__namespace.BinaryReader ? bytes : new pb_1__namespace.BinaryReader(bytes), message = new ProtoOutPointsMap();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        case 1:
+                            reader.readMessage(message, () => pb_1__namespace.Map.deserializeBinary(message.entries, reader, reader.readString, () => {
+                                let value;
+                                reader.readMessage(message, () => value = ProtoAddressOutPoints.deserialize(reader));
+                                return value;
+                            }));
+                            break;
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary() {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes) {
+                return ProtoOutPointsMap.deserialize(bytes);
+            }
+        }
+        block.ProtoOutPointsMap = ProtoOutPointsMap;
+        class ProtoSpentUTXO extends pb_1__namespace.Message {
+            #one_of_decls = [[1], [2]];
+            constructor(data) {
+                super();
+                pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    if ("outpoint" in data && data.outpoint != undefined) {
+                        this.outpoint = data.outpoint;
+                    }
+                    if ("sutxo" in data && data.sutxo != undefined) {
+                        this.sutxo = data.sutxo;
+                    }
+                }
+            }
+            get outpoint() {
+                return pb_1__namespace.Message.getWrapperField(this, ProtoOutPoint, 1);
+            }
+            set outpoint(value) {
+                pb_1__namespace.Message.setOneofWrapperField(this, 1, this.#one_of_decls[0], value);
+            }
+            get has_outpoint() {
+                return pb_1__namespace.Message.getField(this, 1) != null;
+            }
+            get sutxo() {
+                return pb_1__namespace.Message.getWrapperField(this, ProtoTxOut, 2);
+            }
+            set sutxo(value) {
+                pb_1__namespace.Message.setOneofWrapperField(this, 2, this.#one_of_decls[1], value);
+            }
+            get has_sutxo() {
+                return pb_1__namespace.Message.getField(this, 2) != null;
+            }
+            get _outpoint() {
+                const cases = {
+                    0: "none",
+                    1: "outpoint"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [1])];
+            }
+            get _sutxo() {
+                const cases = {
+                    0: "none",
+                    2: "sutxo"
+                };
+                return cases[pb_1__namespace.Message.computeOneofCase(this, [2])];
+            }
+            static fromObject(data) {
+                const message = new ProtoSpentUTXO({});
+                if (data.outpoint != null) {
+                    message.outpoint = ProtoOutPoint.fromObject(data.outpoint);
+                }
+                if (data.sutxo != null) {
+                    message.sutxo = ProtoTxOut.fromObject(data.sutxo);
+                }
+                return message;
+            }
+            toObject() {
+                const data = {};
+                if (this.outpoint != null) {
+                    data.outpoint = this.outpoint.toObject();
+                }
+                if (this.sutxo != null) {
+                    data.sutxo = this.sutxo.toObject();
+                }
+                return data;
+            }
+            serialize(w) {
+                const writer = w || new pb_1__namespace.BinaryWriter();
+                if (this.has_outpoint)
+                    writer.writeMessage(1, this.outpoint, () => this.outpoint.serialize(writer));
+                if (this.has_sutxo)
+                    writer.writeMessage(2, this.sutxo, () => this.sutxo.serialize(writer));
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes) {
+                const reader = bytes instanceof pb_1__namespace.BinaryReader ? bytes : new pb_1__namespace.BinaryReader(bytes), message = new ProtoSpentUTXO();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        case 1:
+                            reader.readMessage(message.outpoint, () => message.outpoint = ProtoOutPoint.deserialize(reader));
+                            break;
+                        case 2:
+                            reader.readMessage(message.sutxo, () => message.sutxo = ProtoTxOut.deserialize(reader));
+                            break;
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary() {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes) {
+                return ProtoSpentUTXO.deserialize(bytes);
+            }
+        }
+        block.ProtoSpentUTXO = ProtoSpentUTXO;
+        class ProtoSpentUTXOs extends pb_1__namespace.Message {
+            #one_of_decls = [];
+            constructor(data) {
+                super();
+                pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    if ("sutxos" in data && data.sutxos != undefined) {
+                        this.sutxos = data.sutxos;
+                    }
+                }
+            }
+            get sutxos() {
+                return pb_1__namespace.Message.getRepeatedWrapperField(this, ProtoSpentUTXO, 1);
+            }
+            set sutxos(value) {
+                pb_1__namespace.Message.setRepeatedWrapperField(this, 1, value);
+            }
+            static fromObject(data) {
+                const message = new ProtoSpentUTXOs({});
+                if (data.sutxos != null) {
+                    message.sutxos = data.sutxos.map(item => ProtoSpentUTXO.fromObject(item));
+                }
+                return message;
+            }
+            toObject() {
+                const data = {};
+                if (this.sutxos != null) {
+                    data.sutxos = this.sutxos.map((item) => item.toObject());
+                }
+                return data;
+            }
+            serialize(w) {
+                const writer = w || new pb_1__namespace.BinaryWriter();
+                if (this.sutxos.length)
+                    writer.writeRepeatedMessage(1, this.sutxos, (item) => item.serialize(writer));
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes) {
+                const reader = bytes instanceof pb_1__namespace.BinaryReader ? bytes : new pb_1__namespace.BinaryReader(bytes), message = new ProtoSpentUTXOs();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        case 1:
+                            reader.readMessage(message.sutxos, () => pb_1__namespace.Message.addToRepeatedWrapperField(message, 1, ProtoSpentUTXO.deserialize(reader), ProtoSpentUTXO));
+                            break;
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary() {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes) {
+                return ProtoSpentUTXOs.deserialize(bytes);
+            }
+        }
+        block.ProtoSpentUTXOs = ProtoSpentUTXOs;
+        class ProtoKeys extends pb_1__namespace.Message {
+            #one_of_decls = [];
+            constructor(data) {
+                super();
+                pb_1__namespace.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
+                if (!Array.isArray(data) && typeof data == "object") {
+                    if ("keys" in data && data.keys != undefined) {
+                        this.keys = data.keys;
+                    }
+                }
+            }
+            get keys() {
+                return pb_1__namespace.Message.getFieldWithDefault(this, 1, []);
+            }
+            set keys(value) {
+                pb_1__namespace.Message.setField(this, 1, value);
+            }
+            static fromObject(data) {
+                const message = new ProtoKeys({});
+                if (data.keys != null) {
+                    message.keys = data.keys;
+                }
+                return message;
+            }
+            toObject() {
+                const data = {};
+                if (this.keys != null) {
+                    data.keys = this.keys;
+                }
+                return data;
+            }
+            serialize(w) {
+                const writer = w || new pb_1__namespace.BinaryWriter();
+                if (this.keys.length)
+                    writer.writeRepeatedBytes(1, this.keys);
+                if (!w)
+                    return writer.getResultBuffer();
+            }
+            static deserialize(bytes) {
+                const reader = bytes instanceof pb_1__namespace.BinaryReader ? bytes : new pb_1__namespace.BinaryReader(bytes), message = new ProtoKeys();
+                while (reader.nextField()) {
+                    if (reader.isEndGroup())
+                        break;
+                    switch (reader.getFieldNumber()) {
+                        case 1:
+                            pb_1__namespace.Message.addToRepeatedField(message, 1, reader.readBytes());
+                            break;
+                        default: reader.skipField();
+                    }
+                }
+                return message;
+            }
+            serializeBinary() {
+                return this.serialize();
+            }
+            static deserializeBinary(bytes) {
+                return ProtoKeys.deserialize(bytes);
+            }
+        }
+        block.ProtoKeys = ProtoKeys;
     })(block || (block = {}));
 
     /**
@@ -5481,7 +6525,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Encoding
      * @param {string} str - The string to convert.
      * @param {UnicodeNormalizationForm} [form] - The normalization form to use.
-     *
      * @returns {Uint8Array} The UTF-8 byte representation.
      * @throws {Error} If the UTF-8 conversion fails.
      */
@@ -5542,7 +6585,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Encoding
      * @param {BytesLike} bytes - The UTF-8 data to convert.
      * @param {Utf8ErrorFunc} [onError] - The error handling function.
-     *
      * @returns {string} The string.
      */
     function toUtf8String(bytes, onError) {
@@ -5556,7 +6598,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Encoding
      * @param {string} str - The string to convert.
      * @param {UnicodeNormalizationForm} [form] - The normalization form to use.
-     *
      * @returns {number[]} The UTF-8 code-points.
      */
     function toUtf8CodePoints(str, form) {
@@ -7189,7 +8230,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Utils
      * @param {BytesLike} randomBytes - The random bytes to use.
-     *
      * @returns {string} The UUID.
      */
     function uuidV4(randomBytes) {
@@ -12946,7 +13986,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint8` type for v.
          *
          * @param {BigNumberish} v - The value to convert to a `uint8`.
-         *
          * @returns {uint8} A new `uint8` type for `v`.
          */
         static uint8(v) {
@@ -12956,7 +13995,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint16` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint16`.
-         *
          * @returns A new `uint16` type for `v`.
          */
         static uint16(v) {
@@ -12966,7 +14004,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint24` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint24`.
-         *
          * @returns A new `uint24` type for `v`.
          */
         static uint24(v) {
@@ -12976,7 +14013,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint32` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint32`.
-         *
          * @returns A new `uint32` type for `v`.
          */
         static uint32(v) {
@@ -12986,7 +14022,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint40` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint40`.
-         *
          * @returns A new `uint40` type for `v`.
          */
         static uint40(v) {
@@ -12996,7 +14031,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint48` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint48`.
-         *
          * @returns A new `uint48` type for `v`.
          */
         static uint48(v) {
@@ -13006,7 +14040,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint56` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint56`.
-         *
          * @returns A new `uint56` type for `v`.
          */
         static uint56(v) {
@@ -13016,7 +14049,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint64` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint64`.
-         *
          * @returns A new `uint64` type for `v`.
          */
         static uint64(v) {
@@ -13026,7 +14058,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint72` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint72`.
-         *
          * @returns A new `uint72` type for `v`.
          */
         static uint72(v) {
@@ -13036,7 +14067,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint80` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint80`.
-         *
          * @returns A new `uint80` type for `v`.
          */
         static uint80(v) {
@@ -13046,7 +14076,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint88` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint88`.
-         *
          * @returns A new `uint88` type for `v`.
          */
         static uint88(v) {
@@ -13056,7 +14085,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint96` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint96`.
-         *
          * @returns A new `uint96` type for `v`.
          */
         static uint96(v) {
@@ -13066,7 +14094,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint104` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint104`.
-         *
          * @returns A new `uint104` type for `v`.
          */
         static uint104(v) {
@@ -13076,7 +14103,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint112` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint112`.
-         *
          * @returns A new `uint112` type for `v`.
          */
         static uint112(v) {
@@ -13086,7 +14112,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint120` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint120`.
-         *
          * @returns A new `uint120` type for `v`.
          */
         static uint120(v) {
@@ -13096,7 +14121,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint128` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint128`.
-         *
          * @returns A new `uint128` type for `v`.
          */
         static uint128(v) {
@@ -13106,7 +14130,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint136` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint136`.
-         *
          * @returns A new `uint136` type for `v`.
          */
         static uint136(v) {
@@ -13116,7 +14139,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint144` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint144`.
-         *
          * @returns A new `uint144` type for `v`.
          */
         static uint144(v) {
@@ -13126,7 +14148,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint152` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint152`.
-         *
          * @returns A new `uint152` type for `v`.
          */
         static uint152(v) {
@@ -13136,7 +14157,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint160` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint160`.
-         *
          * @returns A new `uint160` type for `v`.
          */
         static uint160(v) {
@@ -13146,7 +14166,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint168` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint168`.
-         *
          * @returns A new `uint168` type for `v`.
          */
         static uint168(v) {
@@ -13156,7 +14175,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint176` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint176`.
-         *
          * @returns A new `uint176` type for `v`.
          */
         static uint176(v) {
@@ -13166,7 +14184,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint184` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint184`.
-         *
          * @returns A new `uint184` type for `v`.
          */
         static uint184(v) {
@@ -13176,7 +14193,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint192` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint192`.
-         *
          * @returns A new `uint192` type for `v`.
          */
         static uint192(v) {
@@ -13186,7 +14202,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint200` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint200`.
-         *
          * @returns A new `uint200` type for `v`.
          */
         static uint200(v) {
@@ -13196,7 +14211,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint208` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint208`.
-         *
          * @returns A new `uint208` type for `v`.
          */
         static uint208(v) {
@@ -13206,7 +14220,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint216` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint216`.
-         *
          * @returns A new `uint216` type for `v`.
          */
         static uint216(v) {
@@ -13216,7 +14229,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint224` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint224`.
-         *
          * @returns A new `uint224` type for `v`.
          */
         static uint224(v) {
@@ -13226,7 +14238,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint232` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint232`.
-         *
          * @returns A new `uint232` type for `v`.
          */
         static uint232(v) {
@@ -13236,7 +14247,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint240` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint240`.
-         *
          * @returns A new `uint240` type for `v`.
          */
         static uint240(v) {
@@ -13246,7 +14256,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint248` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint248`.
-         *
          * @returns A new `uint248` type for `v`.
          */
         static uint248(v) {
@@ -13256,7 +14265,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint256` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint256`.
-         *
          * @returns A new `uint256` type for `v`.
          */
         static uint256(v) {
@@ -13266,7 +14274,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `uint256` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to a `uint256`.
-         *
          * @returns A new `uint256` type for `v`.
          */
         static uint(v) {
@@ -13276,7 +14283,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int8` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int8`.
-         *
          * @returns A new `int8` type for `v`.
          */
         static int8(v) {
@@ -13286,7 +14292,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int16` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int16`.
-         *
          * @returns A new `int16` type for `v`.
          */
         static int16(v) {
@@ -13296,7 +14301,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int24` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int24`.
-         *
          * @returns A new `int24` type for `v`.
          */
         static int24(v) {
@@ -13306,7 +14310,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int32` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int32`.
-         *
          * @returns A new `int32` type for `v`.
          */
         static int32(v) {
@@ -13316,7 +14319,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int40` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int40`.
-         *
          * @returns A new `int40` type for `v`.
          */
         static int40(v) {
@@ -13326,7 +14328,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int48` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int48`.
-         *
          * @returns A new `int48` type for `v`.
          */
         static int48(v) {
@@ -13336,7 +14337,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int56` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int56`.
-         *
          * @returns A new `int56` type for `v`.
          */
         static int56(v) {
@@ -13346,7 +14346,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int64` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int64`.
-         *
          * @returns A new `int64` type for `v`.
          */
         static int64(v) {
@@ -13356,7 +14355,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int72` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int72`.
-         *
          * @returns A new `int72` type for `v`.
          */
         static int72(v) {
@@ -13366,7 +14364,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int80` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int80`.
-         *
          * @returns A new `int80` type for `v`.
          */
         static int80(v) {
@@ -13376,7 +14373,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int88` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int88`.
-         *
          * @returns A new `int88` type for `v`.
          */
         static int88(v) {
@@ -13386,7 +14382,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int96` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int96`.
-         *
          * @returns A new `int96` type for `v`.
          */
         static int96(v) {
@@ -13396,7 +14391,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int104` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int104`.
-         *
          * @returns A new `int104` type for `v`.
          */
         static int104(v) {
@@ -13406,7 +14400,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int112` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int112`.
-         *
          * @returns A new `int112` type for `v`.
          */
         static int112(v) {
@@ -13416,7 +14409,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int120` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int120`.
-         *
          * @returns A new `int120` type for `v`.
          */
         static int120(v) {
@@ -13426,7 +14418,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int128` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int128`.
-         *
          * @returns A new `int128` type for `v`.
          */
         static int128(v) {
@@ -13436,7 +14427,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int136` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int136`.
-         *
          * @returns A new `int136` type for `v`.
          */
         static int136(v) {
@@ -13446,7 +14436,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int144` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int144`.
-         *
          * @returns A new `int144` type for `v`.
          */
         static int144(v) {
@@ -13456,7 +14445,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int152` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int152`.
-         *
          * @returns A new `int152` type for `v`.
          */
         static int152(v) {
@@ -13466,7 +14454,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int160` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int160`.
-         *
          * @returns A new `int160` type for `v`.
          */
         static int160(v) {
@@ -13476,7 +14463,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int168` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int168`.
-         *
          * @returns A new `int168` type for `v`.
          */
         static int168(v) {
@@ -13486,7 +14472,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int176` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int176`.
-         *
          * @returns A new `int176` type for `v`.
          */
         static int176(v) {
@@ -13496,7 +14481,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int184` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int184`.
-         *
          * @returns A new `int184` type for `v`.
          */
         static int184(v) {
@@ -13506,7 +14490,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int192` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int192`.
-         *
          * @returns A new `int192` type for `v`.
          */
         static int192(v) {
@@ -13516,7 +14499,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int200` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int200`.
-         *
          * @returns A new `int200` type for `v`.
          */
         static int200(v) {
@@ -13526,7 +14508,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int208` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int208`.
-         *
          * @returns A new `int208` type for `v`.
          */
         static int208(v) {
@@ -13536,7 +14517,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int216` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int216`.
-         *
          * @returns A new `int216` type for `v`.
          */
         static int216(v) {
@@ -13546,7 +14526,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int224` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int224`.
-         *
          * @returns A new `int224` type for `v`.
          */
         static int224(v) {
@@ -13556,7 +14535,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int232` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int232`.
-         *
          * @returns A new `int232` type for `v`.
          */
         static int232(v) {
@@ -13566,7 +14544,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int240` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int240`.
-         *
          * @returns A new `int240` type for `v`.
          */
         static int240(v) {
@@ -13576,7 +14553,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int248` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int248`.
-         *
          * @returns A new `int248` type for `v`.
          */
         static int248(v) {
@@ -13586,7 +14562,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int256` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int256`.
-         *
          * @returns A new `int256` type for `v`.
          */
         static int256(v) {
@@ -13596,7 +14571,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `int256` type for `v`.
          *
          * @param {BigNumberish} v - The value to convert to an `int256`.
-         *
          * @returns A new `int256` type for `v`.
          */
         static int(v) {
@@ -13606,7 +14580,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes1` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes1`.
-         *
          * @returns A new `bytes1` type for `v`.
          */
         static bytes1(v) {
@@ -13616,7 +14589,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes2` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes2`.
-         *
          * @returns A new `bytes2` type for `v`.
          */
         static bytes2(v) {
@@ -13626,7 +14598,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes3` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes3`.
-         *
          * @returns A new `bytes3` type for `v`.
          */
         static bytes3(v) {
@@ -13636,7 +14607,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes4` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes4`.
-         *
          * @returns A new `bytes4` type for `v`.
          */
         static bytes4(v) {
@@ -13646,7 +14616,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes5` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes5`.
-         *
          * @returns A new `bytes5` type for `v`.
          */
         static bytes5(v) {
@@ -13656,7 +14625,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes6` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes6`.
-         *
          * @returns A new `bytes6` type for `v`.
          */
         static bytes6(v) {
@@ -13666,7 +14634,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes7` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes7`.
-         *
          * @returns A new `bytes7` type for `v`.
          */
         static bytes7(v) {
@@ -13676,7 +14643,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes8` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes8`.
-         *
          * @returns A new `bytes8` type for `v`.
          */
         static bytes8(v) {
@@ -13686,7 +14652,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes9` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes9`.
-         *
          * @returns A new `bytes9` type for `v`.
          */
         static bytes9(v) {
@@ -13696,7 +14661,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes10` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes10`.
-         *
          * @returns A new `bytes10` type for `v`.
          */
         static bytes10(v) {
@@ -13706,7 +14670,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes11` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes11`.
-         *
          * @returns A new `bytes11` type for `v`.
          */
         static bytes11(v) {
@@ -13716,7 +14679,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes12` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes12`.
-         *
          * @returns A new `bytes12` type for `v`.
          */
         static bytes12(v) {
@@ -13726,7 +14688,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes13` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes13`.
-         *
          * @returns A new `bytes13` type for `v`.
          */
         static bytes13(v) {
@@ -13736,7 +14697,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes14` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes14`.
-         *
          * @returns A new `bytes14` type for `v`.
          */
         static bytes14(v) {
@@ -13746,7 +14706,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes15` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes15`.
-         *
          * @returns A new `bytes15` type for `v`.
          */
         static bytes15(v) {
@@ -13756,7 +14715,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes16` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes16`.
-         *
          * @returns A new `bytes16` type for `v`.
          */
         static bytes16(v) {
@@ -13766,7 +14724,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes17` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes17`.
-         *
          * @returns A new `bytes17` type for `v`.
          */
         static bytes17(v) {
@@ -13776,7 +14733,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes18` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes18`.
-         *
          * @returns A new `bytes18` type for `v`.
          */
         static bytes18(v) {
@@ -13786,7 +14742,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes19` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes19`.
-         *
          * @returns A new `bytes19` type for `v`.
          */
         static bytes19(v) {
@@ -13796,7 +14751,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes20` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes20`.
-         *
          * @returns A new `bytes20` type for `v`.
          */
         static bytes20(v) {
@@ -13806,7 +14760,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes21` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes21`.
-         *
          * @returns A new `bytes21` type for `v`.
          */
         static bytes21(v) {
@@ -13816,7 +14769,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes22` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes22`.
-         *
          * @returns A new `bytes22` type for `v`.
          */
         static bytes22(v) {
@@ -13826,7 +14778,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes23` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes23`.
-         *
          * @returns A new `bytes23` type for `v`.
          */
         static bytes23(v) {
@@ -13836,7 +14787,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes24` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes24`.
-         *
          * @returns A new `bytes24` type for `v`.
          */
         static bytes24(v) {
@@ -13846,7 +14796,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes25` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes25`.
-         *
          * @returns A new `bytes25` type for `v`.
          */
         static bytes25(v) {
@@ -13856,7 +14805,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes26` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes26`.
-         *
          * @returns A new `bytes26` type for `v`.
          */
         static bytes26(v) {
@@ -13866,7 +14814,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes27` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes27`.
-         *
          * @returns A new `bytes27` type for `v`.
          */
         static bytes27(v) {
@@ -13876,7 +14823,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes28` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes28`.
-         *
          * @returns A new `bytes28` type for `v`.
          */
         static bytes28(v) {
@@ -13886,7 +14832,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes29` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes29`.
-         *
          * @returns A new `bytes29` type for `v`.
          */
         static bytes29(v) {
@@ -13896,7 +14841,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes30` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes30`.
-         *
          * @returns A new `bytes30` type for `v`.
          */
         static bytes30(v) {
@@ -13906,7 +14850,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes31` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes31`.
-         *
          * @returns A new `bytes31` type for `v`.
          */
         static bytes31(v) {
@@ -13916,7 +14859,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes32` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes32`.
-         *
          * @returns A new `bytes32` type for `v`.
          */
         static bytes32(v) {
@@ -13926,7 +14868,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `address` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to an `address`.
-         *
          * @returns A new `address` type for `v`.
          */
         static address(v) {
@@ -13936,7 +14877,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bool` type for `v`.
          *
          * @param {any} v - The value to convert to a `bool`.
-         *
          * @returns A new `bool` type for `v`.
          */
         static bool(v) {
@@ -13946,7 +14886,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `bytes` type for `v`.
          *
          * @param {BytesLike} v - The value to convert to a `bytes`.
-         *
          * @returns A new `bytes` type for `v`.
          */
         static bytes(v) {
@@ -13956,7 +14895,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `string` type for `v`.
          *
          * @param {string} v - The value to convert to a `string`.
-         *
          * @returns A new `string` type for `v`.
          */
         static string(v) {
@@ -13967,7 +14905,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @param {(any | Typed)[]} v - The value to convert to an `array`.
          * @param {null | boolean} dynamic - Whether the array is dynamic.
-         *
          * @returns A new `array` type for `v`.
          */
         static array(v, dynamic) {
@@ -13978,7 +14915,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @param {(any | Typed)[]} v - The value to convert to a `tuple`.
          * @param {string} name - The name of the tuple.
-         *
          * @returns A new `tuple` type for `v`.
          */
         static tuple(v, name) {
@@ -13988,7 +14924,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return a new `overrides` type with the provided properties.
          *
          * @param {Record<string, any>} v - A record containing the properties to be included in the `overrides` type.
-         *
          * @returns A new `overrides` type with the given properties.
          */
         static overrides(v) {
@@ -13998,7 +14933,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Returns true only if `value` is a {@link Typed | **Typed**} instance.
          *
          * @param {any} value - The value to check.
-         *
          * @returns {boolean} True if `value` is a {@link Typed | **Typed**} instance.
          */
         static isTyped(value) {
@@ -14885,7 +15819,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Returnthe encoder for the specific `type`.
          *
          * @param {string} type - The type to get the encoder for.
-         *
          * @returns {(value: any) => string} The encoder for the type.
          */
         getEncoder(type) {
@@ -14940,7 +15873,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return the full type for `name`.
          *
          * @param {string} name - The name to get the full type for.
-         *
          * @returns {string} The full type.
          */
         encodeType(name) {
@@ -14953,7 +15885,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @param {string} type - The type to encode the value for.
          * @param {any} value - The value to encode.
-         *
          * @returns {string} The encoded value.
          */
         encodeData(type, value) {
@@ -14964,7 +15895,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @param {string} name - The name of the type.
          * @param {Record<string, any>} value - The value to hash.
-         *
          * @returns {string} The hash of the value.
          */
         hashStruct(name, value) {
@@ -14974,7 +15904,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return the fulled encoded `value` for the {@link types | **types**}.
          *
          * @param {Record<string, any>} value - The value to encode.
-         *
          * @returns {string} The encoded value.
          */
         encode(value) {
@@ -14984,7 +15913,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return the hash of the fully encoded `value` for the {@link types | **types**}.
          *
          * @param {Record<string, any>} value - The value to hash.
-         *
          * @returns {string} The hash of the value.
          */
         hash(value) {
@@ -15025,7 +15953,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @param {Record<string, any>} value - The value to visit.
          * @param {(type: string, data: any) => any} callback - The callback to call for each value.
-         *
          * @returns {any} The result of the callback.
          */
         visit(value, callback) {
@@ -15035,7 +15962,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Create a new **TypedDataEncoder** for `types`.
          *
          * @param {Record<string, TypedDataField[]>} types - The types to encode.
-         *
          * @returns {TypedDataEncoder} The encoder for the types.
          * @throws {Error} If the types are invalid.
          */
@@ -15046,7 +15972,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return the primary type for `types`.
          *
          * @param {Record<string, TypedDataField[]>} types - The types to get the primary type for.
-         *
          * @returns {string} The primary type.
          * @throws {Error} If the types are invalid.
          */
@@ -15059,7 +15984,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {string} name - The name of the type.
          * @param {Record<string, TypedDataField[]>} types - The types to hash.
          * @param {Record<string, any>} value - The value to hash.
-         *
          * @returns {string} The hash of the value.
          */
         static hashStruct(name, types, value) {
@@ -15069,7 +15993,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return the domain hash for `domain`.
          *
          * @param {TypedDataDomain} domain - The domain to hash.
-         *
          * @returns {string} The hash of the domain.
          * @throws {Error} If the domain is invalid.
          */
@@ -15094,7 +16017,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {TypedDataDomain} domain - The domain to use.
          * @param {Record<string, TypedDataField[]>} types - The types to encode.
          * @param {Record<string, any>} value - The value to encode.
-         *
          * @returns {string} The encoded value.
          */
         static encode(domain, types, value) {
@@ -15107,7 +16029,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {TypedDataDomain} domain - The domain to use.
          * @param {Record<string, TypedDataField[]>} types - The types to hash.
          * @param {Record<string, any>} value - The value to hash.
-         *
          * @returns {string} The hash of the value.
          */
         static hash(domain, types, value) {
@@ -15120,7 +16041,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {TypedDataDomain} domain - The domain to use.
          * @param {Record<string, TypedDataField[]>} types - The types to encode.
          * @param {Record<string, any>} value - The value to encode.
-         *
          * @returns {any} The JSON-encoded payload.
          */
         static getPayload(domain, types, value) {
@@ -15178,7 +16098,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @param {Record<string, TypedDataField[]>} types - The types of the typed data.
      * @param {Record<string, any>} value - The value of the typed data.
      * @param {SignatureLike} signature - The signature to verify.
-     *
      * @returns {string} The address that signed the typed data.
      */
     function verifyTypedData(domain, types, value, signature) {
@@ -16936,7 +17855,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Check if a value is an **Indexed** This provides a Type Guard for property access.
          *
          * @param value - The value to check.
-         *
          * @returns `true` if the value is an **Indexed**.
          */
         static isIndexed(value) {
@@ -17819,8 +18737,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * Converts an address and storage keys into an access set.
      *
      * @param {string} addr - The address to validate and convert.
-     * @param {Array<string>} storageKeys - The storage keys to validate and convert.
-     * @returns {{ address: string; storageKeys: Array<string> }} The access set.
+     * @param {string[]} storageKeys - The storage keys to validate and convert.
+     * @returns {{ address: string; storageKeys: string[] }} The access set.
      */
     function accessSetify(addr, storageKeys) {
         validateAddress(addr);
@@ -18224,6 +19142,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         #changeOutputs;
         /**
          * Gets the available UTXOs.
+         *
          * @returns {UTXO[]} The available UTXOs.
          */
         get availableUXTOs() {
@@ -18231,6 +19150,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Sets the available UTXOs.
+         *
          * @param {UTXOLike[]} value - The UTXOs to set.
          */
         set availableUXTOs(value) {
@@ -18242,6 +19162,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Gets the spend outputs.
+         *
          * @returns {UTXO[]} The spend outputs.
          */
         get spendOutputs() {
@@ -18249,6 +19170,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Sets the spend outputs.
+         *
          * @param {UTXOLike[]} value - The spend outputs to set.
          */
         set spendOutputs(value) {
@@ -18256,6 +19178,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Gets the change outputs.
+         *
          * @returns {UTXO[]} The change outputs.
          */
         get changeOutputs() {
@@ -18263,6 +19186,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Sets the change outputs.
+         *
          * @param {UTXOLike[]} value - The change outputs to set.
          */
         set changeOutputs(value) {
@@ -18270,7 +19194,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Constructs a new AbstractCoinSelector instance with an empty UTXO array.
-         * @param {UTXOEntry[]} [availableUXTOs=[]] - The initial available UTXOs.
+         *
+         * @param {UTXOEntry[]} [availableUXTOs=[]] - The initial available UTXOs. Default is `[]`
          */
         constructor(availableUXTOs = []) {
             this.#availableUXTOs = availableUXTOs.map((val) => {
@@ -18318,7 +19243,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * change output.
          *
          * @param {SpendTarget} target - The target amount to spend.
-         *
          * @returns {SelectedCoinsResult} The selected UTXOs and change outputs.
          */
         performSelection(target) {
@@ -18698,7 +19622,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         effectiveGasPrice: allowNull(getBigInt),
         status: allowNull(getNumber),
         type: allowNull(getNumber, 0),
-        outboundEtxs: (value) => (value === null ? [] : arrayOf(formatEtx)(value)),
+        outboundEtxs: (value) => (value ? arrayOf(formatEtx)(value) : value),
         originatingTxHash: allowNull(formatHash),
         etxType: allowNull(getNumber),
     }, {
@@ -19472,6 +20396,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             //  TODO: Fix this because new tx instance requires a 'from' address
             let signature = null;
             let address = '';
+            delete protoTx.etx_sender;
+            delete protoTx.etx_index;
+            const protoTxCopy = structuredClone(protoTx);
             if (protoTx.v && protoTx.r && protoTx.s) {
                 // check if protoTx.r is zero
                 if (protoTx.r.reduce((acc, val) => (acc += val), 0) == 0) {
@@ -19479,13 +20406,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 const signatureFields = [hexlify(protoTx.v), hexlify(protoTx.r), hexlify(protoTx.s)];
                 signature = _parseSignature(signatureFields);
-                const protoTxCopy = structuredClone(protoTx);
                 delete protoTxCopy.v;
                 delete protoTxCopy.r;
                 delete protoTxCopy.s;
                 delete protoTxCopy.signature;
-                delete protoTxCopy.etx_sender;
-                delete protoTxCopy.etx_index;
                 address = recoverAddress(keccak256(encodeProtoTransaction(protoTxCopy)), signature);
             }
             const tx = new QuaiTransaction(address);
@@ -19564,7 +20488,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {null | bigint} [gasPrice] - The maximum fee per gas.
          * @param {null | bigint} [minerTip] - The maximum priority fee per gas.
          */
-        constructor(gasPrice, gasLimit, minerTip) {
+        constructor(gasPrice, minerTip) {
             defineProperties(this, {
                 gasPrice: getValue(gasPrice),
                 minerTip: getValue(minerTip),
@@ -21076,13 +22000,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         }
                         // Rescheudle a check on the next block
                         if (!stopScanning) {
-                            this.provider.once('block', replaceListener);
+                            this.provider.once('block', replaceListener, zone);
                         }
                     };
                     cancellers.push(() => {
-                        this.provider.off('block', replaceListener);
+                        this.provider.off('block', replaceListener, zone);
                     });
-                    this.provider.once('block', replaceListener);
+                    this.provider.once('block', replaceListener, zone);
                 }
             });
             return await waiter;
@@ -21511,7 +22435,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * wait until enough confirmations have completed.
          *
          * @param {number} confirms - The number of confirmations to wait for.
-         *
          * @returns {Promise<ContractTransactionReceipt | null>} The transaction receipt, or `null` if `confirms` is `0`.
          */
         async wait(confirms) {
@@ -21544,7 +22467,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Resolves to the block the event occured in.
          *
          * @param {Shard} shard - The shard to get the block from.
-         *
          * @returns {Promise<Block>} A promise resolving to the block the event occured in.
          */
         async getBlock(shard) {
@@ -21699,7 +22621,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         return value.provider || null;
     }
     /**
-     * @ignore Copy overrides and validate them.
+     * @ignore Copy Overrides and validate them.
      * @param {any} arg - The argument containing overrides.
      * @param {string[]} [allowed] - The allowed override keys.
      * @returns {Promise<Omit<ContractTransaction, O>>} The copied and validated overrides.
@@ -21720,7 +22642,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         return overrides;
     }
     /**
-     * @ignore Resolve arguments for a contract runner.
+     * @ignore Resolve Arguments for a contract runner.
      * @param {null | ContractRunner} _runner - The contract runner.
      * @param {ReadonlyArray<ParamType>} inputs - The input parameter types.
      * @param {any[]} args - The arguments to resolve.
@@ -23006,11 +23928,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
 
     /**
-     * The **BaseWallet** is a stream-lined implementation of a {@link AbstractSigner} that operates with a private
-     * key.
+     * The **BaseWallet** is a stream-lined implementation of a {@link AbstractSigner} that operates with a private key.
      *
-     * It is preferred to use the {@link Wallet} class, as it offers additional functionality and simplifies
-     * loading a variety of JSON formats, Mnemonic Phrases, etc.
+     * It is preferred to use the {@link Wallet} class, as it offers additional functionality and simplifies loading a
+     * variety of JSON formats, Mnemonic Phrases, etc.
      *
      * This class may be of use for those attempting to implement a minimal Signer.
      *
@@ -23019,12 +23940,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     class BaseWallet extends AbstractSigner {
         /**
          * The wallet address.
+         *
          * @type {string}
          * @readonly
          */
         #address;
         /**
          * The signing key used for signing payloads.
+         *
          * @type {SigningKey}
          * @readonly
          */
@@ -23046,6 +23969,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         // Store private values behind getters to reduce visibility
         /**
          * The address of this wallet.
+         *
          * @type {string}
          * @readonly
          */
@@ -23054,6 +23978,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * The {@link SigningKey | **SigningKey**} used for signing payloads.
+         *
          * @type {SigningKey}
          * @readonly
          */
@@ -23062,6 +23987,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * The private key for this wallet.
+         *
          * @type {string}
          * @readonly
          */
@@ -23069,13 +23995,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return this.signingKey.privateKey;
         }
         // TODO: `_zone` is not used, should it be removed?
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         /**
          * Returns the address of this wallet.
          *
          * @param {string} [_zone] - The zone (optional).
          * @returns {Promise<string>} The wallet address.
          */
+        // eslint-disable-next-line
         async getAddress(_zone) {
             return this.#address;
         }
@@ -23119,9 +24045,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         /**
          * Signs a message.
          *
+         * @async
          * @param {string | Uint8Array} message - The message to sign.
          * @returns {Promise<string>} The signed message.
-         * @async
          */
         async signMessage(message) {
             return this.signMessageSync(message);
@@ -23140,11 +24066,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         /**
          * Signs typed data.
          *
+         * @async
          * @param {TypedDataDomain} domain - The domain of the typed data.
-         * @param {Record<string, Array<TypedDataField>>} types - The types of the typed data.
+         * @param {Record<string, TypedDataField[]>} types - The types of the typed data.
          * @param {Record<string, any>} value - The value of the typed data.
          * @returns {Promise<string>} The signed typed data.
-         * @async
          */
         async signTypedData(domain, types, value) {
             return this.signingKey.sign(TypedDataEncoder.hash(domain, types, value)).serialized;
@@ -23232,7 +24158,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * `/\s+/`).
          *
          * @param {string} phrase - The phrase to split.
-         *
          * @returns {string[]} The split words in the phrase.
          */
         split(phrase) {
@@ -23244,7 +24169,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * By default, `words` are joined by a single space.
          *
          * @param {string[]} words - The words to join.
-         *
          * @returns {string} The joined phrase.
          */
         join(words) {
@@ -23871,6 +24795,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      */
     /**
      * Converts a hex string to a Uint8Array. If the string does not start with '0x', it adds it.
+     *
      * @param {string} hexString - The hex string to convert.
      * @returns {Uint8Array} The resulting byte array.
      */
@@ -23882,7 +24807,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
     /**
      * Converts a password to a Uint8Array. If the password is a string, it converts it to UTF-8 bytes.
-     * @param {string|Uint8Array} password - The password to convert.
+     *
+     * @param {string | Uint8Array} password - The password to convert.
      * @returns {Uint8Array} The resulting byte array.
      */
     function getPassword(password) {
@@ -23893,6 +24819,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
     /**
      * Traverses an object based on a path and returns the value at that path.
+     *
      * @param {any} object - The object to traverse.
      * @param {string} _path - The path to traverse.
      * @returns {T} The value at the specified path.
@@ -23959,11 +24886,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         return cur;
     }
-    /** Constant N used in cryptographic operations */
+    /**
+     * Constant N used in cryptographic operations
+     */
     BigInt('0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
     /**
      * Pads a value with leading zeros to a specified length.
-     * @param {string|number} value - The value to pad.
+     *
+     * @param {string | number} value - The value to pad.
      * @param {number} length - The desired length.
      * @returns {string} The padded value.
      */
@@ -23999,7 +24929,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @category Wallet
      * @param {string} json - The JSON data to check.
-     *
      * @returns {boolean} True if the JSON data is a valid Keystore Wallet.
      */
     function isKeystoreJson(json) {
@@ -24020,7 +24949,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @param {any} data - The data containing encryption parameters.
      * @param {Uint8Array} key - The key to use for decryption.
      * @param {Uint8Array} ciphertext - The ciphertext to decrypt.
-     *
      * @returns {string} The decrypted data as a hex string.
      */
     function decrypt(data, key, ciphertext) {
@@ -24039,7 +24967,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @param {any} data - The data containing account information.
      * @param {string} _key - The key to use for decryption.
-     *
      * @returns {KeystoreAccount} The decrypted account details.
      */
     function getAccount(data, _key) {
@@ -24076,7 +25003,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * Retrieves the key derivation function parameters from the given data.
      *
      * @param {any} data - The data containing KDF parameters.
-     *
      * @returns {KdfParams} The key derivation function parameters.
      */
     function getDecryptKdfParams(data) {
@@ -24119,7 +25045,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Wallet
      * @param {string} json - The JSON data to decrypt.
      * @param {string | Uint8Array} _password - The password to decrypt the JSON data.
-     *
      * @returns {KeystoreAccount} The decrypted account.
      */
     function decryptKeystoreJsonSync(json, _password) {
@@ -24140,7 +25065,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * Pauses execution for the specified duration.
      *
      * @param {number} duration - The duration to stall in milliseconds.
-     *
      * @returns {Promise<void>} A promise that resolves after the specified duration.
      */
     function stall$1(duration) {
@@ -24162,7 +25086,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @param {string} json - The JSON data to decrypt.
      * @param {string | Uint8Array} _password - The password to decrypt the JSON data.
      * @param {ProgressCallback} [progress] - The callback to receive progress updates.
-     *
      * @returns {Promise<KeystoreAccount>} The decrypted account.
      */
     async function decryptKeystoreJson(json, _password, progress) {
@@ -24191,7 +25114,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * Retrieves the key derivation function parameters for encryption.
      *
      * @param {EncryptOptions} options - The encryption options.
-     *
      * @returns {ScryptParams} The key derivation function parameters.
      */
     function getEncryptKdfParams(options) {
@@ -24223,7 +25145,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @param {ScryptParams} kdf - The key derivation function parameters.
      * @param {KeystoreAccount} account - The account to encrypt.
      * @param {EncryptOptions} options - The encryption options.
-     *
      * @returns {any} The encrypted keystore data.
      */
     function _encryptKeystore(key, kdf, account, options) {
@@ -24312,7 +25233,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @param {KeystoreAccount} account - The account to encrypt.
      * @param {string | Uint8Array} password - The password to encrypt the JSON data.
      * @param {EncryptOptions} [options] - The options to use when encrypting the JSON data.
-     *
      * @returns {string} The encrypted JSON data.
      */
     function encryptKeystoreJsonSync(account, password, options) {
@@ -24335,7 +25255,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @param {KeystoreAccount} account - The account to encrypt.
      * @param {string | Uint8Array} password - The password to encrypt the JSON data.
      * @param {EncryptOptions} [options] - The options to use when encrypting the JSON data.
-     *
      * @returns {Promise<string>} The encrypted JSON data.
      */
     async function encryptKeystoreJson(account, password, options) {
@@ -24482,6 +25401,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         depth;
         /**
+         * @ignore
          * @param {any} guard
          * @param {SigningKey} signingKey
          * @param {string} parentFingerprint
@@ -24491,7 +25411,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {number} depth
          * @param {null | Mnemonic} mnemonic
          * @param {null | Provider} provider
-         * @ignore
          */
         constructor(guard, signingKey, parentFingerprint, chainCode, path, index, depth, mnemonic, provider) {
             super(signingKey, provider);
@@ -24512,15 +25431,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Connects the wallet to a provider.
          *
          * @param {null | Provider} provider
-         *
          * @returns {HDNodeWallet}
          */
         connect(provider) {
             return new HDNodeWallet(_guard$1, this.signingKey, this.parentFingerprint, this.chainCode, this.path, this.index, this.depth, this.mnemonic, provider);
         }
         /**
-         * @returns {KeystoreAccount}
          * @ignore
+         * @returns {KeystoreAccount}
          */
         #account() {
             const account = { address: this.address, privateKey: this.privateKey };
@@ -24541,7 +25459,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @param {Uint8Array | string} password
          * @param {ProgressCallback} [progressCallback]
-         *
          * @returns {Promise<string>}
          */
         async encrypt(password, progressCallback) {
@@ -24557,7 +25474,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * duration.
          *
          * @param {Uint8Array | string} password
-         *
          * @returns {string}
          */
         encryptSync(password) {
@@ -24611,7 +25527,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return the child for `index`.
          *
          * @param {Numeric} _index
-         *
          * @returns {HDNodeWallet}
          */
         deriveChild(_index) {
@@ -24633,19 +25548,16 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return the HDNode for `path` from this node.
          *
          * @param {string} path
-         *
          * @returns {HDNodeWallet}
          */
         derivePath(path) {
             return derivePath(this, path);
         }
         /**
-
+         * @ignore
          * @param {BytesLike} _seed
          * @param {null | Mnemonic} mnemonic
-         *
          * @returns {HDNodeWallet}
-         * @ignore
          */
         static #fromSeed(_seed, mnemonic) {
             assertArgument(isBytesLike(_seed), 'invalid seed', 'seed', '[REDACTED]');
@@ -24662,7 +25574,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * ([[HDNodeVoidWallet]]) or full HD Node ([[HDNodeWallet]]) respectively.
          *
          * @param {string} extendedKey
-         *
          * @returns {HDNodeWallet | HDNodeVoidWallet}
          */
         static fromExtendedKey(extendedKey) {
@@ -24696,7 +25607,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {string} path
          * @param {string} [password]
          * @param {Wordlist} [wordlist]
-         *
          * @returns {HDNodeWallet}
          */
         static createRandom(path, password, wordlist) {
@@ -24714,7 +25624,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @param {Mnemonic} mnemonic
          * @param {string} path
-         *
          * @returns {HDNodeWallet}
          */
         static fromMnemonic(mnemonic, path) {
@@ -24727,7 +25636,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {string} path
          * @param {string} [password]
          * @param {Wordlist} [wordlist]
-         *
          * @returns {HDNodeWallet}
          */
         static fromPhrase(phrase, path, password, wordlist) {
@@ -24744,7 +25652,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Creates an HD Node from a `seed`.
          *
          * @param {BytesLike} seed
-         *
          * @returns {HDNodeWallet}
          */
         static fromSeed(seed) {
@@ -24808,6 +25715,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         depth;
         /**
+         * @ignore
          * @param {any} guard
          * @param {string} address
          * @param {string} publicKey
@@ -24817,7 +25725,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {number} index
          * @param {number} depth
          * @param {null | Provider} provider
-         * @ignore
          */
         constructor(guard, address, publicKey, parentFingerprint, chainCode, path, index, depth, provider) {
             super(address, provider);
@@ -24838,7 +25745,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Connects the wallet to a provider.
          *
          * @param {null | Provider} provider
-         *
          * @returns {HDNodeVoidWallet}
          */
         connect(provider) {
@@ -24880,7 +25786,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return the child for `index`.
          *
          * @param {Numeric} _index
-         *
          * @returns {HDNodeVoidWallet}
          */
         deriveChild(_index) {
@@ -24903,7 +25808,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Return the signer for `path` from this node.
          *
          * @param {string} path
-         *
          * @returns {HDNodeVoidWallet}
          */
         derivePath(path) {
@@ -25486,7 +26390,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Connects the wallet to a provider.
          *
          * @param {null | Provider} provider - The provider to connect to.
-         *
          * @returns {Wallet} The connected wallet.
          */
         connect(provider) {
@@ -25499,7 +26402,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @param {Uint8Array | string} password - The password to encrypt the wallet with.
          * @param {ProgressCallback} [progressCallback] - An optional callback to keep the user informed.
-         *
          * @returns {Promise<string>} The encrypted JSON wallet.
          */
         async encrypt(password, progressCallback) {
@@ -25516,7 +26418,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * duration.
          *
          * @param {Uint8Array | string} password - The password to encrypt the wallet with.
-         *
          * @returns {string} The encrypted JSON wallet.
          */
         encryptSync(password) {
@@ -25528,7 +26429,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @ignore
          * @param {KeystoreAccount} account - The keystore account.
-         *
          * @returns {Wallet} The wallet instance.
          */
         static #fromAccount(account) {
@@ -25545,7 +26445,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {string} json - The JSON data to decrypt.
          * @param {Uint8Array | string} password - The password to decrypt the JSON data.
          * @param {ProgressCallback} [progress] - An optional callback to keep the user informed.
-         *
          * @returns {Promise<QuaiHDWallet | Wallet>} The decrypted wallet.
          */
         static async fromEncryptedJson(json, password, progress) {
@@ -25564,7 +26463,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @param {string} json - The JSON data to decrypt.
          * @param {Uint8Array | string} password - The password to decrypt the JSON data.
-         *
          * @returns {QuaiHDWallet | Wallet} The decrypted wallet.
          */
         static fromEncryptedJsonSync(json, password) {
@@ -26501,6 +27399,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
 
     /**
      * A **Network** encapsulates the various properties required to interact with a specific chain.
+     *
      * @category Providers
      */
     const Networks = new Map();
@@ -26514,6 +27413,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         #chainId;
         /**
          * Creates a new **Network** for `name` and `chainId`.
+         *
          * @param {string} name - The network name.
          * @param {BigNumberish} chainId - The network chain ID.
          */
@@ -26523,6 +27423,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Returns a JSON-compatible representation of a Network.
+         *
          * @returns {Object} The JSON representation of the network.
          */
         toJSON() {
@@ -26532,6 +27433,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * The network common name.
          *
          * This is the canonical name, as networks might have multiple names.
+         *
          * @returns {string} The network name.
          */
         get name() {
@@ -26539,6 +27441,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Sets the network name.
+         *
          * @param {string} value - The new network name.
          */
         set name(value) {
@@ -26546,6 +27449,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * The network chain ID.
+         *
          * @returns {bigint} The network chain ID.
          */
         get chainId() {
@@ -26553,6 +27457,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Sets the network chain ID.
+         *
          * @param {BigNumberish} value - The new network chain ID.
          */
         set chainId(value) {
@@ -26564,9 +27469,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * This method does not currently check for additional properties, such as plug-in compatibility.
          *
+         * @ignore
          * @param {Networkish} other - The network to compare.
          * @returns {boolean} True if the networks match.
-         * @ignore
          */
         matches(other) {
             if (other == null) {
@@ -26606,6 +27511,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         /**
          * Create a copy of this Network.
+         *
          * @returns {Network} A new Network instance.
          */
         clone() {
@@ -29556,7 +30462,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 case 'getGasPrice':
                     return {
                         method: 'quai_gasPrice',
-                        args: [req.txType],
+                        args: [],
                     };
                 case 'getMinerTip':
                     return { method: 'quai_minerTip', args: [] };
@@ -31029,8 +31935,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
 
     const words = "0arertoiotadonoaRteirroenaNonaLsolocoiliaralaorrenadaChoN$n0A>Dom,EjaI!#Oga&O'Or#RazoR*Ue=U<0Ab Adem@Ce<C~Ei)ElgaEn#Ept I&L  NeOg!O<TivoToTrizTu Ud*U!&Us 0Ic#Mit*Opt Or'Ua`Ul#0Reo0Ect Ic~In Irm 0IlIt On@Os#Ot Reg R$UaU&U?aUja0OgoOr+0ReSl 0Ed_zE'Us)1Ac[nAmb_ArmaBaBumCaldeDeaEg_Ej Er%E%F?!GaGo&nIa&I,#Iv$MaMejaMib T TezaTivoToTu[Um'Z 0AbleAn)Apo]ArgoAs B Bi#E'IgoIs%dOrP oPl$0|oC@'C]D D,Em@Gu=Il=ImoIsOt T,aTiguoTojoUalUl Unc$Ad*EjoO1Ag A[#Eti#IoLic O&Or)OyoR,d!Rob Ues%U+1A&A`ArBit+BolBus#|ivoCoD!D?]DuoEaI&IesM.i-esOmaPaP.Reg=RozRugaTeTis%0AA&Al#C,<Egur EoE<rI,#I=Ist*NoOmb+P!oT?]T+Tu#Um*Un#0AjoAqueArEn#EoI>Le%OmoRa!RozUn0DazD$GeLaM,#S,)T^0AlAnceA+EEl]`E`EstruzI.I<2ErU{U'0Af[nArO)Uc Uf_Ul:BaB^|eH@IleJ Lanz/c.LdeMbuN>Nd-oRb(>RnizR+Scu]S#nSu[Tal]T!@T*Tu%UlZ 3BeBid/=S SoSt@3|oEnNgo2An>OqueUsa2ABi`BoCaCi`DaDegaIn//!oLsaMb-{dNi#N}saiRdeRr SqueTeTinVe{Zal2AvoAzoEchaEveIl=In>IsaOcaOmaOnceO)UjaUs>U#2CeoCleE'EyFan{F.HoIt_L#Rbuj(l(+Sc TacaZ.:Bal=BezaBi`B[CaoDav!D,aErFeI{ImanJaJ.LLam Lc$L&Li{dLleLm/^LvoMaMb$Mel=Mi'Mp}c!Nd?Nel-gu+Nic-#N-.ObaOsPazPi%nPo)Pt Puch((b.RcelRe%Rg(i'RneRpe%R+R%SaS>S!oSpaS#rT^ceT_U{lUsaZo3Bol]D!D+Ld/eb_Lo<Lu]M,#Niz-t+Rc(&Rez(oRr R)zaSpedT+2AcalAle>AmpuAnc]ApaAr]I>Is)IvoOqueOzaUle%Up 0Cl.EgoE=EnEr#F[G +M->NeN%P_sR>Rue]SneTaU{d2Am^AnA+AseAveI,)ImaInica2B_Cc~|i'Ci`CoDigoDoF_G!He)JinJoL/ch/eg$Lg Lin/l LmoLum`Mba)M!Mi{Mo&Mpr-deNej}g-oc!Nsej}t PaPi(az.Rba%RchoR&nR.(r!S!SmosS%2AneoAt!E Ec!Ei&EmaIaIm,Ip%IsisOmoOnicaOque%U&Uz2Ad+Ar#At+BoBr*| aEl=En#Er{Es%EvaId Lebr/p/#Mb_Mpl*N-e%O%P.Pul( R$<R<RvaTis:M-z(R&T?3B!B?Ca{C*DoF,saFin*J LfinLga&Li#M^-<N%lP^)RechoR+%Sayu'SeoSf?eSnu&Sti'Sv$TalleT,!U{3AAb=AdemaAman)A`Ar$BujoCt En)E%EzFic?G'Lem/u*N!oRec#Rig*S>Se'Sf[zVaVi'5BleCeL^Ming}N Ra&Rm*R<SSis2Ag.Oga2|aDaE=E'LceOQueR Rez(o:0A'R$0H OUa&r0AdIc~Ific$I#rUc 1Ec#Icaz3EEmp=1Efan)Eg*Em,#Ev IpseI)Ix*Og$Ud*0Bu&It*Oc~Pa)Pe'PleoP_sa0A'C go|ufeC@EmigoE+Fa&F!moGa'Igm/aceOrmeRe&SayoS, T!oTr VaseV$1Oca0Uipo0Izo0Ca]C,aCol Crib*Cu&Enc@F!aFu!zoPa{PejoP@PosaPumaQuiT TeTi=Tufa0ApaEr'Ic-@1Ad*Alu En#It 1Ac#Am,Ce<CusaEn#Ig*Il$Ist*I#P!#Plic P.!T_mo:BricaBu]|a{C?C#rE`J/d/=L<Lt MaM?@Mo<Ra.Rmaci(olRsaSeTigaU`V^X3Br!o|/izORi(ozRt?Rv^Stin3AbleAnzaArB[Cc~|aDeoEb_ElE[Es%Gu[J JoL/e)L@lLt+NNc-g*Ni#Rma2A>Au%EchaOrO%U*UjoU^2B@CaGa%G.L$Lle#N&Rm(+Rtun(z SaTo2Aca<Ag?AnjaAseAudeE*E'EsaIoI#U%2EgoEn)ErzaGaM Nc~Nd(g.R@S?TbolTu+:Ce]FasI%JoL/!i/=Mb- Nch}g-<RajeRzaSoli`St ToV?an3Me=M*NN!}$N)Ran$R,)Rm,S#3Gan)M`s$R Ro2Aci OboOr@2LLfoLo<LpeM(&R?([TaTeoZ 2A{Afi>A'AsaAtisAveIe%Il=IpeIsI#O<rUaUe<UmoUpo2An)ApoArd@Er[IaI'I.I<It [Sa'St :B!B?Bl C!|aD/l Mac(i`ZZa`3B?]B[|oLa&L$Mbr(*Rma'RoeRv*3E=Er+Ga&Gi,eJoM'S#r@5Ci>G Gu!aJaMb_Ng}^Nr((mig('St?Yo5E>ElgaEr%E<EvoI{IrMa'Me&M?deM}d*RacanR#:1O'0EalIomaO=2Lesi/uUal4EgalUs~0Ag,AnIt P P!$P.!Pul<0CapazDiceEr)FielF^meG,$Ic$M,<MuneNa#Sec#S%n)T!esTimoTu*Ut?Vi!'3AIsOn@0L/o):BaliB.M.RabeRdinR[U]Zmin3FeRinga3Ne)5R`d(obaV,Ya5ErgaEvesEzGa&rGoGue)Ic$N>Ngl-$Nt Pit!R S#V,?Zg :7Lo5A]:B$C$C[DoD+nG #GrimaGu`I>M!Mi`Mp --ch-gos%NzaPizRgoRvaStimaTaTexT*U_lV Zo3AlCc~|eC#rErG~Gumb_Ja'Ngu-#NaOnOp &S~TalT[VeY,{3B!%dB+C^D!Di EnzoGaG!oMaMi)M.Mp$NceN&Ne-go)N}t!`Qui&SoS%T!aT$T+2AgaAmaAn#AveEg En Ev Or Ov!Uv@2BoC~CoCu[GicaG+MbrizM}jaTe5|aC*G J}-esPaSt+ToZ:Ce%|oD!aD_Du+Est+F@G@GoIzL{dLe%Ll/oMaMboMutN>N&Nej Ng-iquiNj N}<N%Na`PaQuin(R>Re(f?Rg,Ri&RmolR+nR)sRzoSaSc aSivoT T!@TizTrizXimoY^Z^ca3|aDal]D$Du]J?]J^L,/.M^i-^NsajeN)NuRca&R,gueRi#SS.TaT!To&T+Zc]3E&ElEmb+G/Lag+Lit Ll.M}-!}im}u#OpeR SaS!@S?SmoTadTo5|?aC~DaDe=HoJ LdeL!Li'M,#Mi- c-ed-j-#NoRad(d!Re'R*R+Rs(%lScaStr TivoV!V?Zo5|oD EbleE]Er)Est[G_J!L/e%L%N&Nec(alRoScu=SeoSgoSicaS=:C C~D IpeRanj(izRr SalTalTivoTu[lUseaValVeVi{d3C$Ct G Goc$G+OnRv$ToUt+V V!a3|oDoEb]E#NezNoTi&Vel5Bleza|eMin(i(m()TaTic@Va#Ve]V$5BeCaCleoD?=DoE[EveEzLoM!oTr@:Sis0E<IspoJe#R(!oS!v T,!V$0AA<Ea'H,%HoIoReTavoTub_Ul#Up Urr*0I IoIsea0S)0EnsaEr%Ic$Rec!0Ro1DoR0O1AEa{Fa#IvoLaMoOrVi&0Bligo0DaZa1A>C~E[In On!T TicaUes#1Ac~A&rAlBi%CaD,EjaGa'G@Gul=I,)Ig,Il]OQues%Uga0Ad@Cu+Ez'OT[0O'Ro1EjaU=1I&Ige'0En)0O':C#D_El]Gi`GoIsJ oLabr/>Le%Li&Lm/om/p NNalNi>Nt!-ue=PaPelP?]Que)R Rcel(edR*RoRpa&RqueR[foR)S SeoS~SoS%TaT$Tr@UsaU%VoYa<3A#nCa&C!a|oDalD*G IneL L{'Le/ig+LlejoLoLuc--s N.OnOrPi'Que'R(ch(d!Rez(f?Ri>Rl(mi<R+Rs.aSaScaSimoS%`Ta=T+leoZZu`3C |.EEd[Er`EzaJam/ Lo#Mi,%N}#rNz-aOjoP(a%S Sci`SoS%T.Zca2AcaAnA%AyaAzaEi#E'OmoUmaU[l2B_CoD!D$EmaEs@E%L,Lici/=LvoMa{Me=MoMp-!Rc~R%lSa{Se!SibleS)T,c@T+Zo2A&E>zEgun%Em$EnsaE<Ev$ImoIncipeIs~Iv OaOb Oce<Oduc#OezaOfe<rOg[maOleOmesaOn#Op$OximoUeba2Bli>|!oD^Eb=Er%Es#Lg/*Lm.LpoL<M-#NalNoPaP?(e:99Ed EjaEm Er!E<Ie#ImicaInceIt :Ba'B@BoC~DicalIzMaMp-ch}goPazPi&P#SgoSpaToYoZaZ.3Acc~Ali{dBa'Bo)Ca!Ce%|azoCog!C_oC#Cur<DD.&Duc*FlejoF^maF[nFug$Ga=G*G]G_<H,I'IrJ/a#LevoLieveLle'LojM Med$M}>rNd*N%P #Pet*Po<Pt?SSca)Si`Spe#S#Sum,T*oT^'T[#Un*VesVis%YZ 3CoEgoEn{EsgoFaGi&G^Nc.N.OQuezaSaTmoToZo5BleCeCi D DeoD?]ErJizoJoM!oMp!NN>N{PaP!oSaScaSt+T 5BiB^DoE{G*I&In/e%LoMboM^Ptu[TaTi`:Ba&B!B$BleC GazG[&L/&L!oL*Lm.L.Ls/#LudLv Mb-c~Ndi-e Ng_Ni{dN}#PoQueRdin()nSt_TanU`Xof.3Cc~CoC_#C%DGu*IsL=LvaMa`M?l-d-<rNalN^P  P@Qui(RieRm.Rv*S,%S~TaT,%V!oXoX#3D[Es%E)G=G'Lab/b L,c$L]Mbo=M$R,aS)maT$Tu 5B_C$D$LLap/{&Le{dLi&Lt Luc~Mbr-de}i&No+NrisaPaPl P^)R&Rp_s()oS)nTa'5AveB*Ce<D^Eg[E=E'Er)Fr*Je#L%nM P! Pl*P.!P_moRR>Re'Rg*S#T?:Ba>BiqueB]BuCoC#JoL L>L,#Ll/.Ma'Mb^Ng}quePaPe)P@P.Qu?l(deRe(if(je%RotR+R%TuajeU+ZaZ.3At+|oC]CnicaJa&J!Ji&L/efo'MaM^Mp=NazNd!N!NisN<Ori(api(>Rmi'Rnur(+rSisSo+StigoT!aX#Z3B$Bu+nEmpoEn{Er[E<G_J!/deMb_Mi&M}%OPi>PoR(.TanT!eTu=Za5Al]B?=C Ci'DoG/&M N}#P PeQueRaxR!oRm,%RneoRoRpe&R_R<RtugaSS>S!Xi>2AbajoAc#rA!Afi>AgoAjeAmoAnceA#AumaAz EbolEguaEin%EnEp EsIbuIgoIpaIs)IunfoOfeoOmpaOn>OpaO)OzoU>Ue'Ufa2B!@BoEr#MbaM^NelNic(bin(ismoR'T^:0Ic 9C!a0B[l0I{dIrIv!<OT A3Ba'BeG,)Na0ArU $0IlOp@1A:CaC$Cu`G GoI`J?l/eLi&LleL^Lvu]Mp*oR(i R.So3Ci'C#rHicu=In)JezL/!oLozN-c!Nd-e'Ng N*N%NusRRa'RboRdeRed(j(<Rt!3AAjeBr C$CtimaDaDeoDr$EjoErnesG^LLl-ag_N}e&OlinRalRgoRtudS^Sp!aS%Tami`U&VazV!oV*Vo5LcanLum,Lv!RazT ToZ5E=Lg :::C!Te3GuaM('So9DoGaGur:F*}jaPa#Rza93N(+5MoR&";
-    const accents = "aeiou7695@@BZWWavwUJkO@Y-Kn))YEGq#E@O)cI@#ZkMHv$e*))M!!)D**$GW!oKm*Acoh^k&It-pi^SYW)$^n!G)bO!Wkzam(jS#X)Og*^l^RW!bQ#QygBKXfzE))hti!Qm)Cng%%c)mJiI*HJWbmYniCLwNdYyY%WKO^bnT$PuGOr!IvHu&G(GKbtBuhiW&!eO@XMeoYQeCa#!MrTJCq!OW&CHG(WCcW%%)$rfrIegu$)w!G)JGmWWw)MnD%SXXWIT^LWAZuVWB^W)eTL^x&$WGHW(nKWEMA)#$F$x$Waekqs,n7715)W*HM-$WAcCiu(a))VCZ)GG%(*CWWdW%$D!UCO$M";
-    const checksum = "0xf74fb7092aeacdfbf8959557de22098da512207fb9f109cb526994938cf40300";
+    const accents = 'aeiou7695@@BZWWavwUJkO@Y-Kn))YEGq#E@O)cI@#ZkMHv$e*))M!!)D**$GW!oKm*Acoh^k&It-pi^SYW)$^n!G)bO!Wkzam(jS#X)Og*^l^RW!bQ#QygBKXfzE))hti!Qm)Cng%%c)mJiI*HJWbmYniCLwNdYyY%WKO^bnT$PuGOr!IvHu&G(GKbtBuhiW&!eO@XMeoYQeCa#!MrTJCq!OW&CHG(WCcW%%)$rfrIegu$)w!G)JGmWWw)MnD%SXXWIT^LWAZuVWB^W)eTL^x&$WGHW(nKWEMA)#$F$x$Waekqs,n7715)W*HM-$WAcCiu(a))VCZ)GG%(*CWWdW%$D!UCO$M';
+    const checksum = '0xf74fb7092aeacdfbf8959557de22098da512207fb9f109cb526994938cf40300';
     let wordlist = null;
     /**
      * The [Spanish wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/spanish.txt) for [mnemonic

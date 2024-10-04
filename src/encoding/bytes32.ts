@@ -14,7 +14,6 @@ import type { BytesLike } from '../utils/index.js';
  *
  * @category Encoding
  * @param {string} text - The string to encode.
- *
  * @returns {string} The Bytes32-encoded string.
  * @throws {Error} If the string is too long to fit in a Bytes32 format.
  */
@@ -36,7 +35,6 @@ export function encodeBytes32(text: string): string {
  *
  * @category Encoding
  * @param {BytesLike} _bytes - The Bytes32-encoded data.
- *
  * @returns {string} The decoded string.
  * @throws {Error} If the input is not exactly 32 bytes long or lacks a null terminator.
  */

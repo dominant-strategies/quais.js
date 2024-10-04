@@ -31,7 +31,6 @@ function checkType(value: any, type: string, name: string): void {
  *
  * @category Utils
  * @param {Object} value - The object to resolve.
- *
  * @returns {Promise<Object>} The resolved object.
  */
 export async function resolveProperties<T>(value: { [P in keyof T]: T[P] | Promise<T[P]> }): Promise<T> {

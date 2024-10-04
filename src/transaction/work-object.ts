@@ -7,8 +7,8 @@ import { QuaiTransaction, QuaiTransactionLike } from './quai-transaction.js';
 /**
  * Interface representing a WorkObject, which includes header, body, and transaction information.
  *
- * @category Transaction
  * @ignore
+ * @category Transaction
  */
 export interface WorkObjectLike {
     /**
@@ -30,8 +30,8 @@ export interface WorkObjectLike {
 /**
  * Interface representing the header information of a WorkObject.
  *
- * @category Transaction
  * @ignore
+ * @category Transaction
  */
 export interface WorkObjectHeaderLike {
     /**
@@ -73,8 +73,8 @@ export interface WorkObjectHeaderLike {
 /**
  * Interface representing the body information of a WorkObject.
  *
- * @category Transaction
  * @ignore
+ * @category Transaction
  */
 export interface WorkObjectBodyLike {
     /**
@@ -106,8 +106,8 @@ export interface WorkObjectBodyLike {
 /**
  * Interface representing the header information within the body of a WorkObject.
  *
- * @category Transaction
  * @ignore
+ * @category Transaction
  */
 export interface HeaderLike {
     /**
@@ -459,7 +459,6 @@ export class WorkObject {
      * Creates a WorkObject instance from a WorkObjectLike object.
      *
      * @param {string | WorkObjectLike} wo The WorkObjectLike object to create the WorkObject from.
-     *
      * @returns {WorkObject} A new WorkObject instance.
      */
     static from(wo: string | WorkObjectLike): WorkObject {
@@ -475,7 +474,6 @@ export class WorkObject {
      * Creates a WorkObject instance from a ProtoWorkObject object.
      *
      * @param {ProtoWorkObject} protoWo The ProtoWorkObject object to create the WorkObject from.
-     *
      * @returns {WorkObject} A new WorkObject instance.
      */
     static fromProto(protoWo: ProtoWorkObject): WorkObject {

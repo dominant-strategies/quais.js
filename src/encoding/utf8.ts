@@ -279,7 +279,6 @@ function getUtf8CodePoints(_bytes: BytesLike, onError?: Utf8ErrorFunc): Array<nu
  * @category Encoding
  * @param {string} str - The string to convert.
  * @param {UnicodeNormalizationForm} [form] - The normalization form to use.
- *
  * @returns {Uint8Array} The UTF-8 byte representation.
  * @throws {Error} If the UTF-8 conversion fails.
  */
@@ -344,7 +343,6 @@ function _toUtf8String(codePoints: Array<number>): string {
  * @category Encoding
  * @param {BytesLike} bytes - The UTF-8 data to convert.
  * @param {Utf8ErrorFunc} [onError] - The error handling function.
- *
  * @returns {string} The string.
  */
 export function toUtf8String(bytes: BytesLike, onError?: Utf8ErrorFunc): string {
@@ -359,7 +357,6 @@ export function toUtf8String(bytes: BytesLike, onError?: Utf8ErrorFunc): string 
  * @category Encoding
  * @param {string} str - The string to convert.
  * @param {UnicodeNormalizationForm} [form] - The normalization form to use.
- *
  * @returns {number[]} The UTF-8 code-points.
  */
 export function toUtf8CodePoints(str: string, form?: UnicodeNormalizationForm): Array<number> {

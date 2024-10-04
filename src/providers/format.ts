@@ -304,7 +304,7 @@ const _formatTransactionReceipt = object(
         effectiveGasPrice: allowNull(getBigInt),
         status: allowNull(getNumber),
         type: allowNull(getNumber, 0),
-        outboundEtxs: (value) => (value === null ? [] : arrayOf(formatEtx)(value)),
+        outboundEtxs: (value) => (value ? arrayOf(formatEtx)(value) : value),
         originatingTxHash: allowNull(formatHash),
         etxType: allowNull(getNumber),
     },
