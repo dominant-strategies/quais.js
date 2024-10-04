@@ -8,8 +8,8 @@ import type { AccessList, AccessListish } from './index.js';
  * Converts an address and storage keys into an access set.
  *
  * @param {string} addr - The address to validate and convert.
- * @param {Array<string>} storageKeys - The storage keys to validate and convert.
- * @returns {{ address: string; storageKeys: Array<string> }} The access set.
+ * @param {string[]} storageKeys - The storage keys to validate and convert.
+ * @returns {{ address: string; storageKeys: string[] }} The access set.
  */
 function accessSetify(addr: string, storageKeys: Array<string>): { address: string; storageKeys: Array<string> } {
     validateAddress(addr);

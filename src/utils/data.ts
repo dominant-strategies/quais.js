@@ -34,7 +34,6 @@ export type BytesLike = DataHexString | Uint8Array;
  * @param {BytesLike} value - The value to convert.
  * @param {string} [name] - The name of the value for error context.
  * @param {boolean} [copy] - Whether to create a copy of the value.
- *
  * @returns {Uint8Array} The converted Uint8Array.
  * @throws {Error} If the value is not a valid BytesLike.
  */
@@ -66,7 +65,6 @@ function _getBytes(value: BytesLike, name?: string, copy?: boolean): Uint8Array 
  * @category Utils
  * @param {BytesLike} value - The value to convert to a Uint8Array.
  * @param {string} [name] - The name of the value for error context.
- *
  * @returns {Uint8Array} The typed Uint8Array.
  */
 export function getBytes(value: BytesLike, name?: string): Uint8Array {
@@ -80,7 +78,6 @@ export function getBytes(value: BytesLike, name?: string): Uint8Array {
  * @category Utils
  * @param {BytesLike} value - The value to convert to a Uint8Array.
  * @param {string} [name] - The name of the value for error context.
- *
  * @returns {Uint8Array} The typed Uint8Array.
  */
 export function getBytesCopy(value: BytesLike, name?: string): Uint8Array {
@@ -96,7 +93,6 @@ export function getBytesCopy(value: BytesLike, name?: string): Uint8Array {
  * @category Utils
  * @param {any} value - The value to check.
  * @param {number | boolean} [length] - The expected length of the data.
- *
  * @returns {boolean} True if the value is a valid {@link HexString | **HexString**}.
  */
 export function isHexString(value: any, length?: number | boolean): value is `0x${string}` {
@@ -120,7 +116,6 @@ export function isHexString(value: any, length?: number | boolean): value is `0x
  *
  * @category Utils
  * @param {any} value - The value to check.
- *
  * @returns {boolean} True if the value is a valid {@link DataHexString | **DataHexString**}.
  */
 export function isBytesLike(value: any): value is BytesLike {
@@ -134,7 +129,6 @@ const HexCharacters: string = '0123456789abcdef';
  *
  * @category Utils
  * @param {BytesLike} data - The data to convert to a hex string.
- *
  * @returns {string} The hex string.
  */
 export function hexlify(data: BytesLike): string {
@@ -153,7 +147,6 @@ export function hexlify(data: BytesLike): string {
  *
  * @category Utils
  * @param {ReadonlyArray<BytesLike>} datas - The data to concatenate.
- *
  * @returns {string} The concatenated data.
  */
 export function concat(datas: ReadonlyArray<BytesLike>): string {
@@ -165,7 +158,6 @@ export function concat(datas: ReadonlyArray<BytesLike>): string {
  *
  * @category Utils
  * @param {BytesLike} data - The data to get the length of.
- *
  * @returns {number} The length of the data.
  */
 export function dataLength(data: BytesLike): number {
@@ -184,7 +176,6 @@ export function dataLength(data: BytesLike): number {
  * @param {BytesLike} data - The data to slice.
  * @param {number} [start] - The start offset.
  * @param {number} [end] - The end offset.
- *
  * @returns {string} The sliced data.
  * @throws {Error} If the end offset is beyond the data bounds.
  */
@@ -205,7 +196,6 @@ export function dataSlice(data: BytesLike, start?: number, end?: number): string
  *
  * @category Utils
  * @param {BytesLike} data - The data to strip.
- *
  * @returns {string} The stripped data.
  */
 export function stripZerosLeft(data: BytesLike): string {
@@ -224,7 +214,6 @@ export function stripZerosLeft(data: BytesLike): string {
  * @param {BytesLike} data - The data to pad.
  * @param {number} length - The length to pad to.
  * @param {boolean} left - Whether to pad on the left.
- *
  * @returns {string} The padded data.
  * @throws {Error} If the padding exceeds data length.
  */
@@ -257,7 +246,6 @@ function zeroPad(data: BytesLike, length: number, left: boolean): string {
  * @category Utils
  * @param {BytesLike} data - The data to pad.
  * @param {number} length - The length to pad to.
- *
  * @returns {string} The padded data.
  */
 export function zeroPadValue(data: BytesLike, length: number): string {
@@ -274,7 +262,6 @@ export function zeroPadValue(data: BytesLike, length: number): string {
  * @category Utils
  * @param {BytesLike} data - The data to pad.
  * @param {number} length - The length to pad to.
- *
  * @returns {string} The padded data.
  */
 export function zeroPadBytes(data: BytesLike, length: number): string {

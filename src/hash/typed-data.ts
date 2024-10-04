@@ -361,7 +361,6 @@ export class TypedDataEncoder {
      * Returnthe encoder for the specific `type`.
      *
      * @param {string} type - The type to get the encoder for.
-     *
      * @returns {(value: any) => string} The encoder for the type.
      */
     getEncoder(type: string): (value: any) => string {
@@ -428,7 +427,6 @@ export class TypedDataEncoder {
      * Return the full type for `name`.
      *
      * @param {string} name - The name to get the full type for.
-     *
      * @returns {string} The full type.
      */
     encodeType(name: string): string {
@@ -442,7 +440,6 @@ export class TypedDataEncoder {
      *
      * @param {string} type - The type to encode the value for.
      * @param {any} value - The value to encode.
-     *
      * @returns {string} The encoded value.
      */
     encodeData(type: string, value: any): string {
@@ -454,7 +451,6 @@ export class TypedDataEncoder {
      *
      * @param {string} name - The name of the type.
      * @param {Record<string, any>} value - The value to hash.
-     *
      * @returns {string} The hash of the value.
      */
     hashStruct(name: string, value: Record<string, any>): string {
@@ -465,7 +461,6 @@ export class TypedDataEncoder {
      * Return the fulled encoded `value` for the {@link types | **types**}.
      *
      * @param {Record<string, any>} value - The value to encode.
-     *
      * @returns {string} The encoded value.
      */
     encode(value: Record<string, any>): string {
@@ -476,7 +471,6 @@ export class TypedDataEncoder {
      * Return the hash of the fully encoded `value` for the {@link types | **types**}.
      *
      * @param {Record<string, any>} value - The value to hash.
-     *
      * @returns {string} The hash of the value.
      */
     hash(value: Record<string, any>): string {
@@ -530,7 +524,6 @@ export class TypedDataEncoder {
      *
      * @param {Record<string, any>} value - The value to visit.
      * @param {(type: string, data: any) => any} callback - The callback to call for each value.
-     *
      * @returns {any} The result of the callback.
      */
     visit(value: Record<string, any>, callback: (type: string, data: any) => any): any {
@@ -541,7 +534,6 @@ export class TypedDataEncoder {
      * Create a new **TypedDataEncoder** for `types`.
      *
      * @param {Record<string, TypedDataField[]>} types - The types to encode.
-     *
      * @returns {TypedDataEncoder} The encoder for the types.
      * @throws {Error} If the types are invalid.
      */
@@ -553,7 +545,6 @@ export class TypedDataEncoder {
      * Return the primary type for `types`.
      *
      * @param {Record<string, TypedDataField[]>} types - The types to get the primary type for.
-     *
      * @returns {string} The primary type.
      * @throws {Error} If the types are invalid.
      */
@@ -567,7 +558,6 @@ export class TypedDataEncoder {
      * @param {string} name - The name of the type.
      * @param {Record<string, TypedDataField[]>} types - The types to hash.
      * @param {Record<string, any>} value - The value to hash.
-     *
      * @returns {string} The hash of the value.
      */
     static hashStruct(name: string, types: Record<string, Array<TypedDataField>>, value: Record<string, any>): string {
@@ -578,7 +568,6 @@ export class TypedDataEncoder {
      * Return the domain hash for `domain`.
      *
      * @param {TypedDataDomain} domain - The domain to hash.
-     *
      * @returns {string} The hash of the domain.
      * @throws {Error} If the domain is invalid.
      */
@@ -606,7 +595,6 @@ export class TypedDataEncoder {
      * @param {TypedDataDomain} domain - The domain to use.
      * @param {Record<string, TypedDataField[]>} types - The types to encode.
      * @param {Record<string, any>} value - The value to encode.
-     *
      * @returns {string} The encoded value.
      */
     static encode(
@@ -624,7 +612,6 @@ export class TypedDataEncoder {
      * @param {TypedDataDomain} domain - The domain to use.
      * @param {Record<string, TypedDataField[]>} types - The types to hash.
      * @param {Record<string, any>} value - The value to hash.
-     *
      * @returns {string} The hash of the value.
      */
     static hash(
@@ -642,7 +629,6 @@ export class TypedDataEncoder {
      * @param {TypedDataDomain} domain - The domain to use.
      * @param {Record<string, TypedDataField[]>} types - The types to encode.
      * @param {Record<string, any>} value - The value to encode.
-     *
      * @returns {any} The JSON-encoded payload.
      */
     static getPayload(
@@ -720,7 +706,6 @@ export class TypedDataEncoder {
  * @param {Record<string, TypedDataField[]>} types - The types of the typed data.
  * @param {Record<string, any>} value - The value of the typed data.
  * @param {SignatureLike} signature - The signature to verify.
- *
  * @returns {string} The address that signed the typed data.
  */
 export function verifyTypedData(
