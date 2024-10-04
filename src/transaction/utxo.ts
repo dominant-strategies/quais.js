@@ -53,6 +53,7 @@ export type TxInput = {
 export type TxOutput = {
     address: string;
     denomination: number;
+    lock?: string;
 };
 
 /**

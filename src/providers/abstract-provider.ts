@@ -55,14 +55,7 @@ import type { BigNumberish } from '../utils/index.js';
 import type { Listener } from '../utils/index.js';
 
 import type { Networkish } from './network.js';
-import type {
-    BlockParams,
-    LogParams,
-    OutpointResponseParams,
-    QiTransactionResponseParams,
-    TransactionReceiptParams,
-    TransactionResponseParams,
-} from './formatting.js';
+import type { BlockParams, LogParams, OutpointResponseParams, TransactionReceiptParams } from './formatting.js';
 
 import type {
     BlockTag,
@@ -1020,11 +1013,21 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      */
     // TODO: `newtork` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _wrapTransactionResponse(tx: TransactionResponseParams, network: Network): TransactionResponse {
-        if ('from' in tx) {
-            return new QuaiTransactionResponse(formatTransactionResponse(tx) as QuaiTransactionResponseParams, this);
-        } else {
-            return new QiTransactionResponse(formatTransactionResponse(tx) as QiTransactionResponseParams, this);
+    _wrapTransactionResponse(tx: any, network: Network): TransactionResponse {
+        try {
+            if (tx.type === 0 || tx.type === 1) {
+                // For QuaiTransaction, format and wrap as before
+                const formattedTx = formatTransactionResponse(tx) as QuaiTransactionResponseParams;
+                return new QuaiTransactionResponse(formattedTx, this);
+            } else if (tx.type === 2) {
+                // For QiTransaction, use fromProto() directly
+                return new QiTransactionResponse(tx, this);
+            } else {
+                throw new Error('Unknown transaction type');
+            }
+        } catch (error) {
+            console.error('Error in _wrapTransactionResponse:', error);
+            throw error;
         }
     }
 
@@ -1529,20 +1532,28 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     // Write
     async broadcastTransaction(zone: Zone, signedTx: string): Promise<TransactionResponse> {
         const type = decodeProtoTransaction(getBytes(signedTx)).type;
-        const { blockNumber, hash, network } = await resolveProperties({
-            blockNumber: this.getBlockNumber(toShard(zone)),
-            hash: this._perform({
-                method: 'broadcastTransaction',
-                signedTransaction: signedTx,
-                zone: zone,
-            }),
-            network: this.getNetwork(),
-        });
+        try {
+            const { blockNumber, hash, network } = await resolveProperties({
+                blockNumber: this.getBlockNumber(toShard(zone)),
+                hash: this._perform({
+                    method: 'broadcastTransaction',
+                    signedTransaction: signedTx,
+                    zone: zone,
+                }),
+                network: this.getNetwork(),
+            });
 
-        const tx = type == 2 ? QiTransaction.from(signedTx) : QuaiTransaction.from(signedTx);
+            const tx = type == 2 ? QiTransaction.from(signedTx) : QuaiTransaction.from(signedTx);
+            const txObj = tx.toJSON();
 
-        this.#validateTransactionHash(tx.hash || '', hash);
-        return this._wrapTransactionResponse(<any>tx, network).replaceableTransaction(blockNumber);
+            this.#validateTransactionHash(tx.hash || '', hash);
+
+            const wrappedTx = this._wrapTransactionResponse(<any>txObj, network);
+            return wrappedTx.replaceableTransaction(blockNumber);
+        } catch (error) {
+            console.error('Error in broadcastTransaction:', error);
+            throw error;
+        }
     }
 
     #validateTransactionHash(computedHash: string, nodehash: string) {
