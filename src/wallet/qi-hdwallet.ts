@@ -631,7 +631,6 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     private createSchnorrSignature(input: TxInput, hash: Uint8Array): string {
         const privKey = this.getPrivateKeyForTxInput(input);
-        console.log('---> QiHDWallet @ createSchnorrSignature: privKey: ', privKey);
         const signature = schnorr.sign(hash, getBytes(privKey));
         return hexlify(signature);
     }
