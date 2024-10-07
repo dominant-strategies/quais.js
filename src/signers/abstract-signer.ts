@@ -113,10 +113,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             pop.nonce = await this.getNonce('pending');
         }
 
-        if (pop.type == null) {
-            pop.type = getTxType(pop.from ?? null, pop.to ?? null);
-        }
-
         if (pop.gasLimit == null) {
             if (pop.type == 0) pop.gasLimit = await this.estimateGas(pop);
             else {
