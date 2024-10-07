@@ -53,7 +53,7 @@ interface paymentCodeInfo {
  * @property {NeuteredAddressInfo[]} gapChangeAddresses - Array of gap change addresses.
  * @interface SerializedQiHDWallet
  */
-interface SerializedQiHDWallet extends SerializedHDWallet {
+export interface SerializedQiHDWallet extends SerializedHDWallet {
     outpoints: OutpointInfo[];
     changeAddresses: NeuteredAddressInfo[];
     gapAddresses: NeuteredAddressInfo[];
