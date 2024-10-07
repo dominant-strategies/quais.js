@@ -4,6 +4,7 @@ import type { TransactionLike } from '../transaction/index.js';
 
 import type { ContractRunner } from '../contract/index.js';
 import type { BlockTag, Provider, TransactionRequest, TransactionResponse } from '../providers/provider.js';
+import { AccessList } from '../transaction';
 
 /**
  * A Signer represents an account on the Ethereum Blockchain, and is most often backed by a private key represented by a
@@ -102,6 +103,14 @@ export interface Signer extends Addressable, ContractRunner {
      *   made.
      */
     estimateGas(tx: TransactionRequest): Promise<bigint>;
+
+    /**
+     * Creates an AccessList for the transaction. This is used to specify which addresses the transaction might touch.
+     *
+     * @param tx
+     * @returns {Promise<AccessList>} A promise resolving to the access list.
+     */
+    createAccessList(tx: TransactionRequest): Promise<AccessList>;
 
     /**
      * Evaluates th tx by running it against the current Blockchain state. This cannot change state and has no cost in
