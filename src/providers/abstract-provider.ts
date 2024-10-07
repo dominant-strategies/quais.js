@@ -80,6 +80,7 @@ import {
 } from './subscriber-polling.js';
 import { getNodeLocationFromZone, getZoneFromNodeLocation } from '../utils/shards.js';
 import { fromShard } from '../constants/shards.js';
+import { AccessList } from '../transaction';
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -496,6 +497,11 @@ export type PerformActionRequest =
       }
     | {
           method: 'estimateGas';
+          transaction: PerformActionTransaction;
+          zone?: Zone;
+      }
+    | {
+          method: 'createAccessList';
           transaction: PerformActionTransaction;
           zone?: Zone;
       }
@@ -1435,6 +1441,19 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         );
     }
 
+    async createAccessList(_tx: TransactionRequest): Promise<AccessList> {
+        let tx = this._getTransactionRequest(_tx);
+        if (isPromise(tx)) {
+            tx = await tx;
+        }
+        const zone = await this.zoneFromAddress(addressFromTransactionRequest(tx));
+        return await this.#perform({
+            method: 'createAccessList',
+            transaction: tx,
+            zone: zone,
+        });
+    }
+
     // TODO: `attempt` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async #call(tx: PerformActionTransaction, blockTag: string, attempt: number, zone?: Zone): Promise<string> {
@@ -1456,10 +1475,13 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     async call(_tx: QuaiTransactionRequest): Promise<string> {
         const zone = await this.zoneFromAddress(addressFromTransactionRequest(_tx));
         const shard = toShard(zone);
+
         const { tx, blockTag } = await resolveProperties({
             tx: this._getTransactionRequest(_tx),
             blockTag: this._getBlockTag(shard, _tx.blockTag),
         });
+
+        tx.accessList = await this.createAccessList(tx);
 
         return await this.#checkNetwork(this.#call(tx, blockTag, -1, zone), shard);
     }
