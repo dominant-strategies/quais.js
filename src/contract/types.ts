@@ -8,6 +8,7 @@ import type {
     TransactionResponse,
     TransactionRequest,
 } from '../providers/index.js';
+import { AccessList } from '../transaction';
 
 /**
  * The name for an event used for subscribing to Contract events.
@@ -49,6 +50,7 @@ export interface ContractInterface {
 export interface DeferredTopicFilter {
     /**
      * Get the topic filter.
+     *
      * @returns {Promise<TopicFilter>} A promise resolving to the topic filter.
      */
     getTopicFilter(): Promise<TopicFilter>;
@@ -128,6 +130,7 @@ export interface BaseContractMethod<
 > {
     /**
      * Call the contract method with arguments.
+     *
      * @param {...ContractMethodArgs<A>} args - The arguments to call the method with.
      * @returns {Promise<D>} A promise resolving to the result of the call.
      */
@@ -228,6 +231,7 @@ export type ContractEventArgs<A extends Array<any>> = { [I in keyof A]?: A[I] | 
 export interface ContractEvent<A extends Array<any> = Array<any>> {
     /**
      * Create a deferred topic filter for the event.
+     *
      * @param {...ContractEventArgs<A>} args - The arguments to create the filter with.
      * @returns {DeferredTopicFilter} The deferred topic filter.
      */
@@ -260,6 +264,7 @@ export interface ContractEvent<A extends Array<any> = Array<any>> {
 export interface WrappedFallback {
     /**
      * Call the fallback method.
+     *
      * @param {Omit<TransactionRequest, 'to'>} [overrides] - The transaction overrides.
      * @returns {Promise<ContractTransactionResponse>} A promise resolving to the transaction response.
      */
@@ -349,4 +354,12 @@ export interface ContractRunner {
      * @returns {Promise<TransactionResponse>} A promise resolving to the transaction response.
      */
     sendTransaction?: (tx: TransactionRequest) => Promise<TransactionResponse>;
+
+    /**
+     * Required for populating access lists for state mutating calls
+     *
+     * @param tx
+     * @returns {Promise<AccessList>}
+     */
+    createAccessList?: (tx: QuaiTransactionRequest) => Promise<AccessList>;
 }
