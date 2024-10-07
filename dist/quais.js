@@ -1,5 +1,6 @@
 const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 'undefined' ? window: typeof global !== 'undefined' ? global: typeof self !== 'undefined' ? self: {});
 import * as pb_1 from 'google-protobuf';
+import ecc from '@bitcoinerlab/secp256k1';
 
 /* Do NOT modify this file; see /src/_admin/update-version.ts */
 /**
@@ -226,7 +227,7 @@ function makeError(message, code, info) {
  * @param {ErrorInfo<T>} [info] - Additional properties for the error.
  * @throws {T} Throws the error if `check` is falsish.
  */
-function assert(check, message, code, info) {
+function assert$1(check, message, code, info) {
     if (!check) {
         throw makeError(message, code, info);
     }
@@ -245,7 +246,7 @@ function assert(check, message, code, info) {
  * @throws {InvalidArgumentError} Throws if `check` is falsish.
  */
 function assertArgument(check, message, name, value) {
-    assert(check, message, 'INVALID_ARGUMENT', { argument: name, value: value });
+    assert$1(check, message, 'INVALID_ARGUMENT', { argument: name, value: value });
 }
 function assertArgumentCount(count, expectedCount, message) {
     if (message == null) {
@@ -254,11 +255,11 @@ function assertArgumentCount(count, expectedCount, message) {
     if (message) {
         message = ': ' + message;
     }
-    assert(count >= expectedCount, 'missing arguemnt' + message, 'MISSING_ARGUMENT', {
+    assert$1(count >= expectedCount, 'missing arguemnt' + message, 'MISSING_ARGUMENT', {
         count: count,
         expectedCount: expectedCount,
     });
-    assert(count <= expectedCount, 'too many arguemnts' + message, 'UNEXPECTED_ARGUMENT', {
+    assert$1(count <= expectedCount, 'too many arguemnts' + message, 'UNEXPECTED_ARGUMENT', {
         count: count,
         expectedCount: expectedCount,
     });
@@ -294,7 +295,7 @@ const _normalizeForms = ['NFD', 'NFC', 'NFKD', 'NFKC'].reduce((accum, form) => {
  * @throws {UnsupportedOperationError} Throws if the form is not supported.
  */
 function assertNormalize(form) {
-    assert(_normalizeForms.indexOf(form) >= 0, 'platform missing String.prototype.normalize', 'UNSUPPORTED_OPERATION', {
+    assert$1(_normalizeForms.indexOf(form) >= 0, 'platform missing String.prototype.normalize', 'UNSUPPORTED_OPERATION', {
         operation: 'String.prototype.normalize',
         info: { form },
     });
@@ -320,7 +321,7 @@ function assertPrivate(givenGuard, guard, className) {
             method += '.';
             operation += ' ' + className;
         }
-        assert(false, `private constructor; use ${method}from* methods`, 'UNSUPPORTED_OPERATION', {
+        assert$1(false, `private constructor; use ${method}from* methods`, 'UNSUPPORTED_OPERATION', {
             operation,
         });
     }
@@ -471,7 +472,7 @@ function dataLength(data) {
 function dataSlice(data, start, end) {
     const bytes = getBytes(data);
     if (end != null && end > bytes.length) {
-        assert(false, 'cannot slice beyond data bounds', 'BUFFER_OVERRUN', {
+        assert$1(false, 'cannot slice beyond data bounds', 'BUFFER_OVERRUN', {
             buffer: bytes,
             length: bytes.length,
             offset: end,
@@ -506,7 +507,7 @@ function stripZerosLeft(data) {
  */
 function zeroPad(data, length, left) {
     const bytes = getBytes(data);
-    assert(length >= bytes.length, 'padding exceeds data length', 'BUFFER_OVERRUN', {
+    assert$1(length >= bytes.length, 'padding exceeds data length', 'BUFFER_OVERRUN', {
         buffer: new Uint8Array(bytes),
         length: length,
         offset: length + 1,
@@ -674,7 +675,7 @@ const maxValue = 0x1fffffffffffff;
 function fromTwos(_value, _width) {
     const value = getUint(_value, 'value');
     const width = BigInt(getNumber(_width, 'width'));
-    assert(value >> width === BN_0$8, 'overflow', 'NUMERIC_FAULT', {
+    assert$1(value >> width === BN_0$8, 'overflow', 'NUMERIC_FAULT', {
         operation: 'fromTwos',
         fault: 'overflow',
         value: _value,
@@ -703,7 +704,7 @@ function toTwos(_value, _width) {
     const limit = BN_1$4 << (width - BN_1$4);
     if (value < BN_0$8) {
         value = -value;
-        assert(value <= limit, 'too low', 'NUMERIC_FAULT', {
+        assert$1(value <= limit, 'too low', 'NUMERIC_FAULT', {
             operation: 'toTwos',
             fault: 'overflow',
             value: _value,
@@ -712,7 +713,7 @@ function toTwos(_value, _width) {
         return (~value & mask) + BN_1$4;
     }
     else {
-        assert(value < limit, 'too high', 'NUMERIC_FAULT', {
+        assert$1(value < limit, 'too high', 'NUMERIC_FAULT', {
             operation: 'toTwos',
             fault: 'overflow',
             value: _value,
@@ -791,7 +792,7 @@ function bigIntAbs(value) {
  */
 function getUint(value, name) {
     const result = getBigInt(value, name);
-    assert(result >= BN_0$8, 'unsigned value cannot be negative', 'NUMERIC_FAULT', {
+    assert$1(result >= BN_0$8, 'unsigned value cannot be negative', 'NUMERIC_FAULT', {
         fault: 'overflow',
         operation: 'getUint',
         value,
@@ -881,7 +882,7 @@ function toBeHex(_value, _width) {
     }
     else {
         const width = getNumber(_width, 'width');
-        assert(width * 2 >= result.length, `value exceeds width (${width} bytes)`, 'NUMERIC_FAULT', {
+        assert$1(width * 2 >= result.length, `value exceeds width (${width} bytes)`, 'NUMERIC_FAULT', {
             operation: 'toBeHex',
             fault: 'overflow',
             value: _value,
@@ -1002,10 +1003,9 @@ function decodeBase58(value) {
 }
 
 /**
- * Generated by the protoc-gen-ts.  DO NOT EDIT!
- * compiler version: 5.28.2
- * source: proto_common.proto
- * git: https://github.com/thesayyn/protoc-gen-ts */
+ * Generated by the protoc-gen-ts. DO NOT EDIT! compiler version: 5.28.2 source: proto_common.proto git:
+ * https://github.com/thesayyn/protoc-gen-ts
+ */
 // eslint-disable-next-line
 var common;
 (function (common) {
@@ -1014,8 +1014,8 @@ var common;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("value" in data && data.value != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('value' in data && data.value != undefined) {
                     this.value = data.value;
                 }
             }
@@ -1056,7 +1056,8 @@ var common;
                     case 1:
                         message.value = reader.readBytes();
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -1074,8 +1075,8 @@ var common;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("value" in data && data.value != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('value' in data && data.value != undefined) {
                     this.value = data.value;
                 }
             }
@@ -1116,7 +1117,8 @@ var common;
                     case 1:
                         message.value = reader.readBytes();
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -1134,8 +1136,8 @@ var common;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("hashes" in data && data.hashes != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('hashes' in data && data.hashes != undefined) {
                     this.hashes = data.hashes;
                 }
             }
@@ -1149,7 +1151,7 @@ var common;
         static fromObject(data) {
             const message = new ProtoHashes({});
             if (data.hashes != null) {
-                message.hashes = data.hashes.map(item => ProtoHash.fromObject(item));
+                message.hashes = data.hashes.map((item) => ProtoHash.fromObject(item));
             }
             return message;
         }
@@ -1176,7 +1178,8 @@ var common;
                     case 1:
                         reader.readMessage(message.hashes, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoHash.deserialize(reader), ProtoHash));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -1194,8 +1197,8 @@ var common;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("value" in data && data.value != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('value' in data && data.value != undefined) {
                     this.value = data.value;
                 }
             }
@@ -1236,7 +1239,8 @@ var common;
                     case 1:
                         message.value = reader.readBytes();
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -1254,8 +1258,8 @@ var common;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("value" in data && data.value != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('value' in data && data.value != undefined) {
                     this.value = data.value;
                 }
             }
@@ -1296,7 +1300,8 @@ var common;
                     case 1:
                         message.value = reader.readUint64();
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -1314,8 +1319,8 @@ var common;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("locations" in data && data.locations != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('locations' in data && data.locations != undefined) {
                     this.locations = data.locations;
                 }
             }
@@ -1329,7 +1334,7 @@ var common;
         static fromObject(data) {
             const message = new ProtoLocations({});
             if (data.locations != null) {
-                message.locations = data.locations.map(item => ProtoLocation.fromObject(item));
+                message.locations = data.locations.map((item) => ProtoLocation.fromObject(item));
             }
             return message;
         }
@@ -1356,7 +1361,8 @@ var common;
                     case 1:
                         reader.readMessage(message.locations, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoLocation.deserialize(reader), ProtoLocation));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -1373,124 +1379,154 @@ var common;
 
 /* eslint-disable */
 /**
- * Generated by the protoc-gen-ts.  DO NOT EDIT!
- * compiler version: 5.28.2
- * source: proto_block.proto
- * git: https://github.com/thesayyn/protoc-gen-ts */
+ * Generated by the protoc-gen-ts. DO NOT EDIT! compiler version: 5.28.2 source: proto_block.proto git:
+ * https://github.com/thesayyn/protoc-gen-ts
+ */
 var block;
 (function (block) {
     class ProtoHeader extends pb_1.Message {
-        #one_of_decls = [[2], [3], [4], [5], [6], [8], [9], [13], [15], [16], [17], [18], [19], [20], [21], [22], [23], [24], [25], [26], [27], [28], [29], [30], [31], [32], [33], [34], [35], [36]];
+        #one_of_decls = [
+            [2],
+            [3],
+            [4],
+            [5],
+            [6],
+            [8],
+            [9],
+            [13],
+            [15],
+            [16],
+            [17],
+            [18],
+            [19],
+            [20],
+            [21],
+            [22],
+            [23],
+            [24],
+            [25],
+            [26],
+            [27],
+            [28],
+            [29],
+            [30],
+            [31],
+            [32],
+            [33],
+            [34],
+            [35],
+            [36],
+        ];
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1, 7, 10, 11, 12, 14], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("parent_hash" in data && data.parent_hash != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('parent_hash' in data && data.parent_hash != undefined) {
                     this.parent_hash = data.parent_hash;
                 }
-                if ("uncle_hash" in data && data.uncle_hash != undefined) {
+                if ('uncle_hash' in data && data.uncle_hash != undefined) {
                     this.uncle_hash = data.uncle_hash;
                 }
-                if ("evm_root" in data && data.evm_root != undefined) {
+                if ('evm_root' in data && data.evm_root != undefined) {
                     this.evm_root = data.evm_root;
                 }
-                if ("tx_hash" in data && data.tx_hash != undefined) {
+                if ('tx_hash' in data && data.tx_hash != undefined) {
                     this.tx_hash = data.tx_hash;
                 }
-                if ("outbound_etx_hash" in data && data.outbound_etx_hash != undefined) {
+                if ('outbound_etx_hash' in data && data.outbound_etx_hash != undefined) {
                     this.outbound_etx_hash = data.outbound_etx_hash;
                 }
-                if ("etx_rollup_hash" in data && data.etx_rollup_hash != undefined) {
+                if ('etx_rollup_hash' in data && data.etx_rollup_hash != undefined) {
                     this.etx_rollup_hash = data.etx_rollup_hash;
                 }
-                if ("manifest_hash" in data && data.manifest_hash != undefined) {
+                if ('manifest_hash' in data && data.manifest_hash != undefined) {
                     this.manifest_hash = data.manifest_hash;
                 }
-                if ("receipt_hash" in data && data.receipt_hash != undefined) {
+                if ('receipt_hash' in data && data.receipt_hash != undefined) {
                     this.receipt_hash = data.receipt_hash;
                 }
-                if ("difficulty" in data && data.difficulty != undefined) {
+                if ('difficulty' in data && data.difficulty != undefined) {
                     this.difficulty = data.difficulty;
                 }
-                if ("parent_entropy" in data && data.parent_entropy != undefined) {
+                if ('parent_entropy' in data && data.parent_entropy != undefined) {
                     this.parent_entropy = data.parent_entropy;
                 }
-                if ("parent_delta_entropy" in data && data.parent_delta_entropy != undefined) {
+                if ('parent_delta_entropy' in data && data.parent_delta_entropy != undefined) {
                     this.parent_delta_entropy = data.parent_delta_entropy;
                 }
-                if ("parent_uncled_delta_entropy" in data && data.parent_uncled_delta_entropy != undefined) {
+                if ('parent_uncled_delta_entropy' in data && data.parent_uncled_delta_entropy != undefined) {
                     this.parent_uncled_delta_entropy = data.parent_uncled_delta_entropy;
                 }
-                if ("uncled_entropy" in data && data.uncled_entropy != undefined) {
+                if ('uncled_entropy' in data && data.uncled_entropy != undefined) {
                     this.uncled_entropy = data.uncled_entropy;
                 }
-                if ("number" in data && data.number != undefined) {
+                if ('number' in data && data.number != undefined) {
                     this.number = data.number;
                 }
-                if ("gas_limit" in data && data.gas_limit != undefined) {
+                if ('gas_limit' in data && data.gas_limit != undefined) {
                     this.gas_limit = data.gas_limit;
                 }
-                if ("gas_used" in data && data.gas_used != undefined) {
+                if ('gas_used' in data && data.gas_used != undefined) {
                     this.gas_used = data.gas_used;
                 }
-                if ("base_fee" in data && data.base_fee != undefined) {
+                if ('base_fee' in data && data.base_fee != undefined) {
                     this.base_fee = data.base_fee;
                 }
-                if ("location" in data && data.location != undefined) {
+                if ('location' in data && data.location != undefined) {
                     this.location = data.location;
                 }
-                if ("extra" in data && data.extra != undefined) {
+                if ('extra' in data && data.extra != undefined) {
                     this.extra = data.extra;
                 }
-                if ("mix_hash" in data && data.mix_hash != undefined) {
+                if ('mix_hash' in data && data.mix_hash != undefined) {
                     this.mix_hash = data.mix_hash;
                 }
-                if ("nonce" in data && data.nonce != undefined) {
+                if ('nonce' in data && data.nonce != undefined) {
                     this.nonce = data.nonce;
                 }
-                if ("utxo_root" in data && data.utxo_root != undefined) {
+                if ('utxo_root' in data && data.utxo_root != undefined) {
                     this.utxo_root = data.utxo_root;
                 }
-                if ("etx_set_root" in data && data.etx_set_root != undefined) {
+                if ('etx_set_root' in data && data.etx_set_root != undefined) {
                     this.etx_set_root = data.etx_set_root;
                 }
-                if ("efficiency_score" in data && data.efficiency_score != undefined) {
+                if ('efficiency_score' in data && data.efficiency_score != undefined) {
                     this.efficiency_score = data.efficiency_score;
                 }
-                if ("threshold_count" in data && data.threshold_count != undefined) {
+                if ('threshold_count' in data && data.threshold_count != undefined) {
                     this.threshold_count = data.threshold_count;
                 }
-                if ("expansion_number" in data && data.expansion_number != undefined) {
+                if ('expansion_number' in data && data.expansion_number != undefined) {
                     this.expansion_number = data.expansion_number;
                 }
-                if ("etx_eligible_slices" in data && data.etx_eligible_slices != undefined) {
+                if ('etx_eligible_slices' in data && data.etx_eligible_slices != undefined) {
                     this.etx_eligible_slices = data.etx_eligible_slices;
                 }
-                if ("prime_terminus_hash" in data && data.prime_terminus_hash != undefined) {
+                if ('prime_terminus_hash' in data && data.prime_terminus_hash != undefined) {
                     this.prime_terminus_hash = data.prime_terminus_hash;
                 }
-                if ("interlink_root_hash" in data && data.interlink_root_hash != undefined) {
+                if ('interlink_root_hash' in data && data.interlink_root_hash != undefined) {
                     this.interlink_root_hash = data.interlink_root_hash;
                 }
-                if ("state_limit" in data && data.state_limit != undefined) {
+                if ('state_limit' in data && data.state_limit != undefined) {
                     this.state_limit = data.state_limit;
                 }
-                if ("state_used" in data && data.state_used != undefined) {
+                if ('state_used' in data && data.state_used != undefined) {
                     this.state_used = data.state_used;
                 }
-                if ("quai_state_size" in data && data.quai_state_size != undefined) {
+                if ('quai_state_size' in data && data.quai_state_size != undefined) {
                     this.quai_state_size = data.quai_state_size;
                 }
-                if ("secondary_coinbase" in data && data.secondary_coinbase != undefined) {
+                if ('secondary_coinbase' in data && data.secondary_coinbase != undefined) {
                     this.secondary_coinbase = data.secondary_coinbase;
                 }
-                if ("exchange_rate" in data && data.exchange_rate != undefined) {
+                if ('exchange_rate' in data && data.exchange_rate != undefined) {
                     this.exchange_rate = data.exchange_rate;
                 }
-                if ("quai_to_qi" in data && data.quai_to_qi != undefined) {
+                if ('quai_to_qi' in data && data.quai_to_qi != undefined) {
                     this.quai_to_qi = data.quai_to_qi;
                 }
-                if ("qi_to_quai" in data && data.qi_to_quai != undefined) {
+                if ('qi_to_quai' in data && data.qi_to_quai != undefined) {
                     this.qi_to_quai = data.qi_to_quai;
                 }
             }
@@ -1803,218 +1839,218 @@ var block;
         }
         get _uncle_hash() {
             const cases = {
-                0: "none",
-                2: "uncle_hash"
+                0: 'none',
+                2: 'uncle_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
         get _evm_root() {
             const cases = {
-                0: "none",
-                3: "evm_root"
+                0: 'none',
+                3: 'evm_root',
             };
             return cases[pb_1.Message.computeOneofCase(this, [3])];
         }
         get _tx_hash() {
             const cases = {
-                0: "none",
-                4: "tx_hash"
+                0: 'none',
+                4: 'tx_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [4])];
         }
         get _outbound_etx_hash() {
             const cases = {
-                0: "none",
-                5: "outbound_etx_hash"
+                0: 'none',
+                5: 'outbound_etx_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [5])];
         }
         get _etx_rollup_hash() {
             const cases = {
-                0: "none",
-                6: "etx_rollup_hash"
+                0: 'none',
+                6: 'etx_rollup_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [6])];
         }
         get _receipt_hash() {
             const cases = {
-                0: "none",
-                8: "receipt_hash"
+                0: 'none',
+                8: 'receipt_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [8])];
         }
         get _difficulty() {
             const cases = {
-                0: "none",
-                9: "difficulty"
+                0: 'none',
+                9: 'difficulty',
             };
             return cases[pb_1.Message.computeOneofCase(this, [9])];
         }
         get _uncled_entropy() {
             const cases = {
-                0: "none",
-                13: "uncled_entropy"
+                0: 'none',
+                13: 'uncled_entropy',
             };
             return cases[pb_1.Message.computeOneofCase(this, [13])];
         }
         get _gas_limit() {
             const cases = {
-                0: "none",
-                15: "gas_limit"
+                0: 'none',
+                15: 'gas_limit',
             };
             return cases[pb_1.Message.computeOneofCase(this, [15])];
         }
         get _gas_used() {
             const cases = {
-                0: "none",
-                16: "gas_used"
+                0: 'none',
+                16: 'gas_used',
             };
             return cases[pb_1.Message.computeOneofCase(this, [16])];
         }
         get _base_fee() {
             const cases = {
-                0: "none",
-                17: "base_fee"
+                0: 'none',
+                17: 'base_fee',
             };
             return cases[pb_1.Message.computeOneofCase(this, [17])];
         }
         get _location() {
             const cases = {
-                0: "none",
-                18: "location"
+                0: 'none',
+                18: 'location',
             };
             return cases[pb_1.Message.computeOneofCase(this, [18])];
         }
         get _extra() {
             const cases = {
-                0: "none",
-                19: "extra"
+                0: 'none',
+                19: 'extra',
             };
             return cases[pb_1.Message.computeOneofCase(this, [19])];
         }
         get _mix_hash() {
             const cases = {
-                0: "none",
-                20: "mix_hash"
+                0: 'none',
+                20: 'mix_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [20])];
         }
         get _nonce() {
             const cases = {
-                0: "none",
-                21: "nonce"
+                0: 'none',
+                21: 'nonce',
             };
             return cases[pb_1.Message.computeOneofCase(this, [21])];
         }
         get _utxo_root() {
             const cases = {
-                0: "none",
-                22: "utxo_root"
+                0: 'none',
+                22: 'utxo_root',
             };
             return cases[pb_1.Message.computeOneofCase(this, [22])];
         }
         get _etx_set_root() {
             const cases = {
-                0: "none",
-                23: "etx_set_root"
+                0: 'none',
+                23: 'etx_set_root',
             };
             return cases[pb_1.Message.computeOneofCase(this, [23])];
         }
         get _efficiency_score() {
             const cases = {
-                0: "none",
-                24: "efficiency_score"
+                0: 'none',
+                24: 'efficiency_score',
             };
             return cases[pb_1.Message.computeOneofCase(this, [24])];
         }
         get _threshold_count() {
             const cases = {
-                0: "none",
-                25: "threshold_count"
+                0: 'none',
+                25: 'threshold_count',
             };
             return cases[pb_1.Message.computeOneofCase(this, [25])];
         }
         get _expansion_number() {
             const cases = {
-                0: "none",
-                26: "expansion_number"
+                0: 'none',
+                26: 'expansion_number',
             };
             return cases[pb_1.Message.computeOneofCase(this, [26])];
         }
         get _etx_eligible_slices() {
             const cases = {
-                0: "none",
-                27: "etx_eligible_slices"
+                0: 'none',
+                27: 'etx_eligible_slices',
             };
             return cases[pb_1.Message.computeOneofCase(this, [27])];
         }
         get _prime_terminus_hash() {
             const cases = {
-                0: "none",
-                28: "prime_terminus_hash"
+                0: 'none',
+                28: 'prime_terminus_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [28])];
         }
         get _interlink_root_hash() {
             const cases = {
-                0: "none",
-                29: "interlink_root_hash"
+                0: 'none',
+                29: 'interlink_root_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [29])];
         }
         get _state_limit() {
             const cases = {
-                0: "none",
-                30: "state_limit"
+                0: 'none',
+                30: 'state_limit',
             };
             return cases[pb_1.Message.computeOneofCase(this, [30])];
         }
         get _state_used() {
             const cases = {
-                0: "none",
-                31: "state_used"
+                0: 'none',
+                31: 'state_used',
             };
             return cases[pb_1.Message.computeOneofCase(this, [31])];
         }
         get _quai_state_size() {
             const cases = {
-                0: "none",
-                32: "quai_state_size"
+                0: 'none',
+                32: 'quai_state_size',
             };
             return cases[pb_1.Message.computeOneofCase(this, [32])];
         }
         get _secondary_coinbase() {
             const cases = {
-                0: "none",
-                33: "secondary_coinbase"
+                0: 'none',
+                33: 'secondary_coinbase',
             };
             return cases[pb_1.Message.computeOneofCase(this, [33])];
         }
         get _exchange_rate() {
             const cases = {
-                0: "none",
-                34: "exchange_rate"
+                0: 'none',
+                34: 'exchange_rate',
             };
             return cases[pb_1.Message.computeOneofCase(this, [34])];
         }
         get _quai_to_qi() {
             const cases = {
-                0: "none",
-                35: "quai_to_qi"
+                0: 'none',
+                35: 'quai_to_qi',
             };
             return cases[pb_1.Message.computeOneofCase(this, [35])];
         }
         get _qi_to_quai() {
             const cases = {
-                0: "none",
-                36: "qi_to_quai"
+                0: 'none',
+                36: 'qi_to_quai',
             };
             return cases[pb_1.Message.computeOneofCase(this, [36])];
         }
         static fromObject(data) {
             const message = new ProtoHeader({});
             if (data.parent_hash != null) {
-                message.parent_hash = data.parent_hash.map(item => common.ProtoHash.fromObject(item));
+                message.parent_hash = data.parent_hash.map((item) => common.ProtoHash.fromObject(item));
             }
             if (data.uncle_hash != null) {
                 message.uncle_hash = common.ProtoHash.fromObject(data.uncle_hash);
@@ -2032,7 +2068,7 @@ var block;
                 message.etx_rollup_hash = common.ProtoHash.fromObject(data.etx_rollup_hash);
             }
             if (data.manifest_hash != null) {
-                message.manifest_hash = data.manifest_hash.map(item => common.ProtoHash.fromObject(item));
+                message.manifest_hash = data.manifest_hash.map((item) => common.ProtoHash.fromObject(item));
             }
             if (data.receipt_hash != null) {
                 message.receipt_hash = common.ProtoHash.fromObject(data.receipt_hash);
@@ -2322,25 +2358,25 @@ var block;
                         reader.readMessage(message.parent_hash, () => pb_1.Message.addToRepeatedWrapperField(message, 1, common.ProtoHash.deserialize(reader), common.ProtoHash));
                         break;
                     case 2:
-                        reader.readMessage(message.uncle_hash, () => message.uncle_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.uncle_hash, () => (message.uncle_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 3:
-                        reader.readMessage(message.evm_root, () => message.evm_root = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.evm_root, () => (message.evm_root = common.ProtoHash.deserialize(reader)));
                         break;
                     case 4:
-                        reader.readMessage(message.tx_hash, () => message.tx_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.tx_hash, () => (message.tx_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 5:
-                        reader.readMessage(message.outbound_etx_hash, () => message.outbound_etx_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.outbound_etx_hash, () => (message.outbound_etx_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 6:
-                        reader.readMessage(message.etx_rollup_hash, () => message.etx_rollup_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.etx_rollup_hash, () => (message.etx_rollup_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 7:
                         reader.readMessage(message.manifest_hash, () => pb_1.Message.addToRepeatedWrapperField(message, 7, common.ProtoHash.deserialize(reader), common.ProtoHash));
                         break;
                     case 8:
-                        reader.readMessage(message.receipt_hash, () => message.receipt_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.receipt_hash, () => (message.receipt_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 9:
                         message.difficulty = reader.readBytes();
@@ -2370,22 +2406,22 @@ var block;
                         message.base_fee = reader.readBytes();
                         break;
                     case 18:
-                        reader.readMessage(message.location, () => message.location = common.ProtoLocation.deserialize(reader));
+                        reader.readMessage(message.location, () => (message.location = common.ProtoLocation.deserialize(reader)));
                         break;
                     case 19:
                         message.extra = reader.readBytes();
                         break;
                     case 20:
-                        reader.readMessage(message.mix_hash, () => message.mix_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.mix_hash, () => (message.mix_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 21:
                         message.nonce = reader.readUint64();
                         break;
                     case 22:
-                        reader.readMessage(message.utxo_root, () => message.utxo_root = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.utxo_root, () => (message.utxo_root = common.ProtoHash.deserialize(reader)));
                         break;
                     case 23:
-                        reader.readMessage(message.etx_set_root, () => message.etx_set_root = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.etx_set_root, () => (message.etx_set_root = common.ProtoHash.deserialize(reader)));
                         break;
                     case 24:
                         message.efficiency_score = reader.readUint64();
@@ -2397,13 +2433,13 @@ var block;
                         message.expansion_number = reader.readUint64();
                         break;
                     case 27:
-                        reader.readMessage(message.etx_eligible_slices, () => message.etx_eligible_slices = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.etx_eligible_slices, () => (message.etx_eligible_slices = common.ProtoHash.deserialize(reader)));
                         break;
                     case 28:
-                        reader.readMessage(message.prime_terminus_hash, () => message.prime_terminus_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.prime_terminus_hash, () => (message.prime_terminus_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 29:
-                        reader.readMessage(message.interlink_root_hash, () => message.interlink_root_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.interlink_root_hash, () => (message.interlink_root_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 30:
                         message.state_limit = reader.readUint64();
@@ -2426,7 +2462,8 @@ var block;
                     case 36:
                         message.qi_to_quai = reader.readBytes();
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -2440,66 +2477,86 @@ var block;
     }
     block.ProtoHeader = ProtoHeader;
     class ProtoTransaction extends pb_1.Message {
-        #one_of_decls = [[1], [2], [3], [4], [5], [6], [7], [8], [9], [10], [11], [12], [13], [14], [15], [16], [17], [18], [19]];
+        #one_of_decls = [
+            [1],
+            [2],
+            [3],
+            [4],
+            [5],
+            [6],
+            [7],
+            [8],
+            [9],
+            [10],
+            [11],
+            [12],
+            [13],
+            [14],
+            [15],
+            [16],
+            [17],
+            [18],
+            [19],
+        ];
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("type" in data && data.type != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('type' in data && data.type != undefined) {
                     this.type = data.type;
                 }
-                if ("to" in data && data.to != undefined) {
+                if ('to' in data && data.to != undefined) {
                     this.to = data.to;
                 }
-                if ("nonce" in data && data.nonce != undefined) {
+                if ('nonce' in data && data.nonce != undefined) {
                     this.nonce = data.nonce;
                 }
-                if ("value" in data && data.value != undefined) {
+                if ('value' in data && data.value != undefined) {
                     this.value = data.value;
                 }
-                if ("gas" in data && data.gas != undefined) {
+                if ('gas' in data && data.gas != undefined) {
                     this.gas = data.gas;
                 }
-                if ("data" in data && data.data != undefined) {
+                if ('data' in data && data.data != undefined) {
                     this.data = data.data;
                 }
-                if ("chain_id" in data && data.chain_id != undefined) {
+                if ('chain_id' in data && data.chain_id != undefined) {
                     this.chain_id = data.chain_id;
                 }
-                if ("miner_tip" in data && data.miner_tip != undefined) {
+                if ('miner_tip' in data && data.miner_tip != undefined) {
                     this.miner_tip = data.miner_tip;
                 }
-                if ("gas_price" in data && data.gas_price != undefined) {
+                if ('gas_price' in data && data.gas_price != undefined) {
                     this.gas_price = data.gas_price;
                 }
-                if ("access_list" in data && data.access_list != undefined) {
+                if ('access_list' in data && data.access_list != undefined) {
                     this.access_list = data.access_list;
                 }
-                if ("v" in data && data.v != undefined) {
+                if ('v' in data && data.v != undefined) {
                     this.v = data.v;
                 }
-                if ("r" in data && data.r != undefined) {
+                if ('r' in data && data.r != undefined) {
                     this.r = data.r;
                 }
-                if ("s" in data && data.s != undefined) {
+                if ('s' in data && data.s != undefined) {
                     this.s = data.s;
                 }
-                if ("originating_tx_hash" in data && data.originating_tx_hash != undefined) {
+                if ('originating_tx_hash' in data && data.originating_tx_hash != undefined) {
                     this.originating_tx_hash = data.originating_tx_hash;
                 }
-                if ("tx_ins" in data && data.tx_ins != undefined) {
+                if ('tx_ins' in data && data.tx_ins != undefined) {
                     this.tx_ins = data.tx_ins;
                 }
-                if ("tx_outs" in data && data.tx_outs != undefined) {
+                if ('tx_outs' in data && data.tx_outs != undefined) {
                     this.tx_outs = data.tx_outs;
                 }
-                if ("signature" in data && data.signature != undefined) {
+                if ('signature' in data && data.signature != undefined) {
                     this.signature = data.signature;
                 }
-                if ("parent_hash" in data && data.parent_hash != undefined) {
+                if ('parent_hash' in data && data.parent_hash != undefined) {
                     this.parent_hash = data.parent_hash;
                 }
-                if ("mix_hash" in data && data.mix_hash != undefined) {
+                if ('mix_hash' in data && data.mix_hash != undefined) {
                     this.mix_hash = data.mix_hash;
                 }
             }
@@ -2677,134 +2734,134 @@ var block;
         }
         get _type() {
             const cases = {
-                0: "none",
-                1: "type"
+                0: 'none',
+                1: 'type',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
         get _to() {
             const cases = {
-                0: "none",
-                2: "to"
+                0: 'none',
+                2: 'to',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
         get _nonce() {
             const cases = {
-                0: "none",
-                3: "nonce"
+                0: 'none',
+                3: 'nonce',
             };
             return cases[pb_1.Message.computeOneofCase(this, [3])];
         }
         get _value() {
             const cases = {
-                0: "none",
-                4: "value"
+                0: 'none',
+                4: 'value',
             };
             return cases[pb_1.Message.computeOneofCase(this, [4])];
         }
         get _gas() {
             const cases = {
-                0: "none",
-                5: "gas"
+                0: 'none',
+                5: 'gas',
             };
             return cases[pb_1.Message.computeOneofCase(this, [5])];
         }
         get _data() {
             const cases = {
-                0: "none",
-                6: "data"
+                0: 'none',
+                6: 'data',
             };
             return cases[pb_1.Message.computeOneofCase(this, [6])];
         }
         get _chain_id() {
             const cases = {
-                0: "none",
-                7: "chain_id"
+                0: 'none',
+                7: 'chain_id',
             };
             return cases[pb_1.Message.computeOneofCase(this, [7])];
         }
         get _miner_tip() {
             const cases = {
-                0: "none",
-                8: "miner_tip"
+                0: 'none',
+                8: 'miner_tip',
             };
             return cases[pb_1.Message.computeOneofCase(this, [8])];
         }
         get _gas_price() {
             const cases = {
-                0: "none",
-                9: "gas_price"
+                0: 'none',
+                9: 'gas_price',
             };
             return cases[pb_1.Message.computeOneofCase(this, [9])];
         }
         get _access_list() {
             const cases = {
-                0: "none",
-                10: "access_list"
+                0: 'none',
+                10: 'access_list',
             };
             return cases[pb_1.Message.computeOneofCase(this, [10])];
         }
         get _v() {
             const cases = {
-                0: "none",
-                11: "v"
+                0: 'none',
+                11: 'v',
             };
             return cases[pb_1.Message.computeOneofCase(this, [11])];
         }
         get _r() {
             const cases = {
-                0: "none",
-                12: "r"
+                0: 'none',
+                12: 'r',
             };
             return cases[pb_1.Message.computeOneofCase(this, [12])];
         }
         get _s() {
             const cases = {
-                0: "none",
-                13: "s"
+                0: 'none',
+                13: 's',
             };
             return cases[pb_1.Message.computeOneofCase(this, [13])];
         }
         get _originating_tx_hash() {
             const cases = {
-                0: "none",
-                14: "originating_tx_hash"
+                0: 'none',
+                14: 'originating_tx_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [14])];
         }
         get _tx_ins() {
             const cases = {
-                0: "none",
-                15: "tx_ins"
+                0: 'none',
+                15: 'tx_ins',
             };
             return cases[pb_1.Message.computeOneofCase(this, [15])];
         }
         get _tx_outs() {
             const cases = {
-                0: "none",
-                16: "tx_outs"
+                0: 'none',
+                16: 'tx_outs',
             };
             return cases[pb_1.Message.computeOneofCase(this, [16])];
         }
         get _signature() {
             const cases = {
-                0: "none",
-                17: "signature"
+                0: 'none',
+                17: 'signature',
             };
             return cases[pb_1.Message.computeOneofCase(this, [17])];
         }
         get _parent_hash() {
             const cases = {
-                0: "none",
-                18: "parent_hash"
+                0: 'none',
+                18: 'parent_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [18])];
         }
         get _mix_hash() {
             const cases = {
-                0: "none",
-                19: "mix_hash"
+                0: 'none',
+                19: 'mix_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [19])];
         }
@@ -3007,7 +3064,7 @@ var block;
                         message.gas_price = reader.readBytes();
                         break;
                     case 10:
-                        reader.readMessage(message.access_list, () => message.access_list = ProtoAccessList.deserialize(reader));
+                        reader.readMessage(message.access_list, () => (message.access_list = ProtoAccessList.deserialize(reader)));
                         break;
                     case 11:
                         message.v = reader.readBytes();
@@ -3019,24 +3076,25 @@ var block;
                         message.s = reader.readBytes();
                         break;
                     case 14:
-                        reader.readMessage(message.originating_tx_hash, () => message.originating_tx_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.originating_tx_hash, () => (message.originating_tx_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 15:
-                        reader.readMessage(message.tx_ins, () => message.tx_ins = ProtoTxIns.deserialize(reader));
+                        reader.readMessage(message.tx_ins, () => (message.tx_ins = ProtoTxIns.deserialize(reader)));
                         break;
                     case 16:
-                        reader.readMessage(message.tx_outs, () => message.tx_outs = ProtoTxOuts.deserialize(reader));
+                        reader.readMessage(message.tx_outs, () => (message.tx_outs = ProtoTxOuts.deserialize(reader)));
                         break;
                     case 17:
                         message.signature = reader.readBytes();
                         break;
                     case 18:
-                        reader.readMessage(message.parent_hash, () => message.parent_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.parent_hash, () => (message.parent_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 19:
-                        reader.readMessage(message.mix_hash, () => message.mix_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.mix_hash, () => (message.mix_hash = common.ProtoHash.deserialize(reader)));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -3054,8 +3112,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("transactions" in data && data.transactions != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('transactions' in data && data.transactions != undefined) {
                     this.transactions = data.transactions;
                 }
             }
@@ -3069,7 +3127,7 @@ var block;
         static fromObject(data) {
             const message = new ProtoTransactions({});
             if (data.transactions != null) {
-                message.transactions = data.transactions.map(item => ProtoTransaction.fromObject(item));
+                message.transactions = data.transactions.map((item) => ProtoTransaction.fromObject(item));
             }
             return message;
         }
@@ -3096,7 +3154,8 @@ var block;
                     case 1:
                         reader.readMessage(message.transactions, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoTransaction.deserialize(reader), ProtoTransaction));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -3114,8 +3173,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("headers" in data && data.headers != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('headers' in data && data.headers != undefined) {
                     this.headers = data.headers;
                 }
             }
@@ -3129,7 +3188,7 @@ var block;
         static fromObject(data) {
             const message = new ProtoHeaders({});
             if (data.headers != null) {
-                message.headers = data.headers.map(item => ProtoHeader.fromObject(item));
+                message.headers = data.headers.map((item) => ProtoHeader.fromObject(item));
             }
             return message;
         }
@@ -3156,7 +3215,8 @@ var block;
                     case 1:
                         reader.readMessage(message.headers, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoHeader.deserialize(reader), ProtoHeader));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -3174,8 +3234,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("manifest" in data && data.manifest != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('manifest' in data && data.manifest != undefined) {
                     this.manifest = data.manifest;
                 }
             }
@@ -3189,7 +3249,7 @@ var block;
         static fromObject(data) {
             const message = new ProtoManifest({});
             if (data.manifest != null) {
-                message.manifest = data.manifest.map(item => common.ProtoHash.fromObject(item));
+                message.manifest = data.manifest.map((item) => common.ProtoHash.fromObject(item));
             }
             return message;
         }
@@ -3216,7 +3276,8 @@ var block;
                     case 1:
                         reader.readMessage(message.manifest, () => pb_1.Message.addToRepeatedWrapperField(message, 1, common.ProtoHash.deserialize(reader), common.ProtoHash));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -3234,8 +3295,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("access_tuples" in data && data.access_tuples != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('access_tuples' in data && data.access_tuples != undefined) {
                     this.access_tuples = data.access_tuples;
                 }
             }
@@ -3249,7 +3310,7 @@ var block;
         static fromObject(data) {
             const message = new ProtoAccessList({});
             if (data.access_tuples != null) {
-                message.access_tuples = data.access_tuples.map(item => ProtoAccessTuple.fromObject(item));
+                message.access_tuples = data.access_tuples.map((item) => ProtoAccessTuple.fromObject(item));
             }
             return message;
         }
@@ -3276,7 +3337,8 @@ var block;
                     case 1:
                         reader.readMessage(message.access_tuples, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoAccessTuple.deserialize(reader), ProtoAccessTuple));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -3294,41 +3356,41 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("header_hash" in data && data.header_hash != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('header_hash' in data && data.header_hash != undefined) {
                     this.header_hash = data.header_hash;
                 }
-                if ("parent_hash" in data && data.parent_hash != undefined) {
+                if ('parent_hash' in data && data.parent_hash != undefined) {
                     this.parent_hash = data.parent_hash;
                 }
-                if ("number" in data && data.number != undefined) {
+                if ('number' in data && data.number != undefined) {
                     this.number = data.number;
                 }
-                if ("difficulty" in data && data.difficulty != undefined) {
+                if ('difficulty' in data && data.difficulty != undefined) {
                     this.difficulty = data.difficulty;
                 }
-                if ("tx_hash" in data && data.tx_hash != undefined) {
+                if ('tx_hash' in data && data.tx_hash != undefined) {
                     this.tx_hash = data.tx_hash;
                 }
-                if ("nonce" in data && data.nonce != undefined) {
+                if ('nonce' in data && data.nonce != undefined) {
                     this.nonce = data.nonce;
                 }
-                if ("location" in data && data.location != undefined) {
+                if ('location' in data && data.location != undefined) {
                     this.location = data.location;
                 }
-                if ("mix_hash" in data && data.mix_hash != undefined) {
+                if ('mix_hash' in data && data.mix_hash != undefined) {
                     this.mix_hash = data.mix_hash;
                 }
-                if ("time" in data && data.time != undefined) {
+                if ('time' in data && data.time != undefined) {
                     this.time = data.time;
                 }
-                if ("prime_terminus_number" in data && data.prime_terminus_number != undefined) {
+                if ('prime_terminus_number' in data && data.prime_terminus_number != undefined) {
                     this.prime_terminus_number = data.prime_terminus_number;
                 }
-                if ("lock" in data && data.lock != undefined) {
+                if ('lock' in data && data.lock != undefined) {
                     this.lock = data.lock;
                 }
-                if ("primary_coinbase" in data && data.primary_coinbase != undefined) {
+                if ('primary_coinbase' in data && data.primary_coinbase != undefined) {
                     this.primary_coinbase = data.primary_coinbase;
                 }
             }
@@ -3443,85 +3505,85 @@ var block;
         }
         get _header_hash() {
             const cases = {
-                0: "none",
-                1: "header_hash"
+                0: 'none',
+                1: 'header_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
         get _parent_hash() {
             const cases = {
-                0: "none",
-                2: "parent_hash"
+                0: 'none',
+                2: 'parent_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
         get _number() {
             const cases = {
-                0: "none",
-                3: "number"
+                0: 'none',
+                3: 'number',
             };
             return cases[pb_1.Message.computeOneofCase(this, [3])];
         }
         get _difficulty() {
             const cases = {
-                0: "none",
-                4: "difficulty"
+                0: 'none',
+                4: 'difficulty',
             };
             return cases[pb_1.Message.computeOneofCase(this, [4])];
         }
         get _tx_hash() {
             const cases = {
-                0: "none",
-                5: "tx_hash"
+                0: 'none',
+                5: 'tx_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [5])];
         }
         get _nonce() {
             const cases = {
-                0: "none",
-                6: "nonce"
+                0: 'none',
+                6: 'nonce',
             };
             return cases[pb_1.Message.computeOneofCase(this, [6])];
         }
         get _location() {
             const cases = {
-                0: "none",
-                7: "location"
+                0: 'none',
+                7: 'location',
             };
             return cases[pb_1.Message.computeOneofCase(this, [7])];
         }
         get _mix_hash() {
             const cases = {
-                0: "none",
-                8: "mix_hash"
+                0: 'none',
+                8: 'mix_hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [8])];
         }
         get _time() {
             const cases = {
-                0: "none",
-                9: "time"
+                0: 'none',
+                9: 'time',
             };
             return cases[pb_1.Message.computeOneofCase(this, [9])];
         }
         get _prime_terminus_number() {
             const cases = {
-                0: "none",
-                10: "prime_terminus_number"
+                0: 'none',
+                10: 'prime_terminus_number',
             };
             return cases[pb_1.Message.computeOneofCase(this, [10])];
         }
         get _lock() {
             const cases = {
-                0: "none",
-                11: "lock"
+                0: 'none',
+                11: 'lock',
             };
             return cases[pb_1.Message.computeOneofCase(this, [11])];
         }
         get _primary_coinbase() {
             const cases = {
-                0: "none",
-                12: "primary_coinbase"
+                0: 'none',
+                12: 'primary_coinbase',
             };
             return cases[pb_1.Message.computeOneofCase(this, [12])];
         }
@@ -3641,10 +3703,10 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.header_hash, () => message.header_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.header_hash, () => (message.header_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 2:
-                        reader.readMessage(message.parent_hash, () => message.parent_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.parent_hash, () => (message.parent_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 3:
                         message.number = reader.readBytes();
@@ -3653,16 +3715,16 @@ var block;
                         message.difficulty = reader.readBytes();
                         break;
                     case 5:
-                        reader.readMessage(message.tx_hash, () => message.tx_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.tx_hash, () => (message.tx_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 6:
                         message.nonce = reader.readUint64();
                         break;
                     case 7:
-                        reader.readMessage(message.location, () => message.location = common.ProtoLocation.deserialize(reader));
+                        reader.readMessage(message.location, () => (message.location = common.ProtoLocation.deserialize(reader)));
                         break;
                     case 8:
-                        reader.readMessage(message.mix_hash, () => message.mix_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.mix_hash, () => (message.mix_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 9:
                         message.time = reader.readUint64();
@@ -3674,9 +3736,10 @@ var block;
                         message.lock = reader.readUint32();
                         break;
                     case 12:
-                        reader.readMessage(message.primary_coinbase, () => message.primary_coinbase = common.ProtoAddress.deserialize(reader));
+                        reader.readMessage(message.primary_coinbase, () => (message.primary_coinbase = common.ProtoAddress.deserialize(reader)));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -3694,8 +3757,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("wo_headers" in data && data.wo_headers != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('wo_headers' in data && data.wo_headers != undefined) {
                     this.wo_headers = data.wo_headers;
                 }
             }
@@ -3709,7 +3772,7 @@ var block;
         static fromObject(data) {
             const message = new ProtoWorkObjectHeaders({});
             if (data.wo_headers != null) {
-                message.wo_headers = data.wo_headers.map(item => ProtoWorkObjectHeader.fromObject(item));
+                message.wo_headers = data.wo_headers.map((item) => ProtoWorkObjectHeader.fromObject(item));
             }
             return message;
         }
@@ -3736,7 +3799,8 @@ var block;
                     case 1:
                         reader.readMessage(message.wo_headers, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoWorkObjectHeader.deserialize(reader), ProtoWorkObjectHeader));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -3754,23 +3818,23 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("header" in data && data.header != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('header' in data && data.header != undefined) {
                     this.header = data.header;
                 }
-                if ("transactions" in data && data.transactions != undefined) {
+                if ('transactions' in data && data.transactions != undefined) {
                     this.transactions = data.transactions;
                 }
-                if ("uncles" in data && data.uncles != undefined) {
+                if ('uncles' in data && data.uncles != undefined) {
                     this.uncles = data.uncles;
                 }
-                if ("outbound_etxs" in data && data.outbound_etxs != undefined) {
+                if ('outbound_etxs' in data && data.outbound_etxs != undefined) {
                     this.outbound_etxs = data.outbound_etxs;
                 }
-                if ("manifest" in data && data.manifest != undefined) {
+                if ('manifest' in data && data.manifest != undefined) {
                     this.manifest = data.manifest;
                 }
-                if ("interlink_hashes" in data && data.interlink_hashes != undefined) {
+                if ('interlink_hashes' in data && data.interlink_hashes != undefined) {
                     this.interlink_hashes = data.interlink_hashes;
                 }
             }
@@ -3831,43 +3895,43 @@ var block;
         }
         get _header() {
             const cases = {
-                0: "none",
-                1: "header"
+                0: 'none',
+                1: 'header',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
         get _transactions() {
             const cases = {
-                0: "none",
-                2: "transactions"
+                0: 'none',
+                2: 'transactions',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
         get _uncles() {
             const cases = {
-                0: "none",
-                3: "uncles"
+                0: 'none',
+                3: 'uncles',
             };
             return cases[pb_1.Message.computeOneofCase(this, [3])];
         }
         get _outbound_etxs() {
             const cases = {
-                0: "none",
-                4: "outbound_etxs"
+                0: 'none',
+                4: 'outbound_etxs',
             };
             return cases[pb_1.Message.computeOneofCase(this, [4])];
         }
         get _manifest() {
             const cases = {
-                0: "none",
-                5: "manifest"
+                0: 'none',
+                5: 'manifest',
             };
             return cases[pb_1.Message.computeOneofCase(this, [5])];
         }
         get _interlink_hashes() {
             const cases = {
-                0: "none",
-                6: "interlink_hashes"
+                0: 'none',
+                6: 'interlink_hashes',
             };
             return cases[pb_1.Message.computeOneofCase(this, [6])];
         }
@@ -3939,24 +4003,25 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.header, () => message.header = ProtoHeader.deserialize(reader));
+                        reader.readMessage(message.header, () => (message.header = ProtoHeader.deserialize(reader)));
                         break;
                     case 2:
-                        reader.readMessage(message.transactions, () => message.transactions = ProtoTransactions.deserialize(reader));
+                        reader.readMessage(message.transactions, () => (message.transactions = ProtoTransactions.deserialize(reader)));
                         break;
                     case 3:
-                        reader.readMessage(message.uncles, () => message.uncles = ProtoWorkObjectHeaders.deserialize(reader));
+                        reader.readMessage(message.uncles, () => (message.uncles = ProtoWorkObjectHeaders.deserialize(reader)));
                         break;
                     case 4:
-                        reader.readMessage(message.outbound_etxs, () => message.outbound_etxs = ProtoTransactions.deserialize(reader));
+                        reader.readMessage(message.outbound_etxs, () => (message.outbound_etxs = ProtoTransactions.deserialize(reader)));
                         break;
                     case 5:
-                        reader.readMessage(message.manifest, () => message.manifest = ProtoManifest.deserialize(reader));
+                        reader.readMessage(message.manifest, () => (message.manifest = ProtoManifest.deserialize(reader)));
                         break;
                     case 6:
-                        reader.readMessage(message.interlink_hashes, () => message.interlink_hashes = common.ProtoHashes.deserialize(reader));
+                        reader.readMessage(message.interlink_hashes, () => (message.interlink_hashes = common.ProtoHashes.deserialize(reader)));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -3974,14 +4039,14 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("wo_header" in data && data.wo_header != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('wo_header' in data && data.wo_header != undefined) {
                     this.wo_header = data.wo_header;
                 }
-                if ("wo_body" in data && data.wo_body != undefined) {
+                if ('wo_body' in data && data.wo_body != undefined) {
                     this.wo_body = data.wo_body;
                 }
-                if ("tx" in data && data.tx != undefined) {
+                if ('tx' in data && data.tx != undefined) {
                     this.tx = data.tx;
                 }
             }
@@ -4015,22 +4080,22 @@ var block;
         }
         get _wo_header() {
             const cases = {
-                0: "none",
-                1: "wo_header"
+                0: 'none',
+                1: 'wo_header',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
         get _wo_body() {
             const cases = {
-                0: "none",
-                2: "wo_body"
+                0: 'none',
+                2: 'wo_body',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
         get _tx() {
             const cases = {
-                0: "none",
-                3: "tx"
+                0: 'none',
+                3: 'tx',
             };
             return cases[pb_1.Message.computeOneofCase(this, [3])];
         }
@@ -4078,15 +4143,16 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.wo_header, () => message.wo_header = ProtoWorkObjectHeader.deserialize(reader));
+                        reader.readMessage(message.wo_header, () => (message.wo_header = ProtoWorkObjectHeader.deserialize(reader)));
                         break;
                     case 2:
-                        reader.readMessage(message.wo_body, () => message.wo_body = ProtoWorkObjectBody.deserialize(reader));
+                        reader.readMessage(message.wo_body, () => (message.wo_body = ProtoWorkObjectBody.deserialize(reader)));
                         break;
                     case 3:
-                        reader.readMessage(message.tx, () => message.tx = ProtoTransaction.deserialize(reader));
+                        reader.readMessage(message.tx, () => (message.tx = ProtoTransaction.deserialize(reader)));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -4104,8 +4170,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("work_objects" in data && data.work_objects != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('work_objects' in data && data.work_objects != undefined) {
                     this.work_objects = data.work_objects;
                 }
             }
@@ -4119,7 +4185,7 @@ var block;
         static fromObject(data) {
             const message = new ProtoWorkObjects({});
             if (data.work_objects != null) {
-                message.work_objects = data.work_objects.map(item => ProtoWorkObject.fromObject(item));
+                message.work_objects = data.work_objects.map((item) => ProtoWorkObject.fromObject(item));
             }
             return message;
         }
@@ -4146,7 +4212,8 @@ var block;
                     case 1:
                         reader.readMessage(message.work_objects, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoWorkObject.deserialize(reader), ProtoWorkObject));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -4164,8 +4231,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("work_object" in data && data.work_object != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('work_object' in data && data.work_object != undefined) {
                     this.work_object = data.work_object;
                 }
             }
@@ -4181,8 +4248,8 @@ var block;
         }
         get _work_object() {
             const cases = {
-                0: "none",
-                1: "work_object"
+                0: 'none',
+                1: 'work_object',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
@@ -4214,9 +4281,10 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.work_object, () => message.work_object = ProtoWorkObject.deserialize(reader));
+                        reader.readMessage(message.work_object, () => (message.work_object = ProtoWorkObject.deserialize(reader)));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -4234,8 +4302,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("work_objects" in data && data.work_objects != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('work_objects' in data && data.work_objects != undefined) {
                     this.work_objects = data.work_objects;
                 }
             }
@@ -4249,7 +4317,7 @@ var block;
         static fromObject(data) {
             const message = new ProtoWorkObjectBlocksView({});
             if (data.work_objects != null) {
-                message.work_objects = data.work_objects.map(item => ProtoWorkObjectBlockView.fromObject(item));
+                message.work_objects = data.work_objects.map((item) => ProtoWorkObjectBlockView.fromObject(item));
             }
             return message;
         }
@@ -4276,7 +4344,8 @@ var block;
                     case 1:
                         reader.readMessage(message.work_objects, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoWorkObjectBlockView.deserialize(reader), ProtoWorkObjectBlockView));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -4294,8 +4363,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("work_object" in data && data.work_object != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('work_object' in data && data.work_object != undefined) {
                     this.work_object = data.work_object;
                 }
             }
@@ -4311,8 +4380,8 @@ var block;
         }
         get _work_object() {
             const cases = {
-                0: "none",
-                1: "work_object"
+                0: 'none',
+                1: 'work_object',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
@@ -4344,9 +4413,10 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.work_object, () => message.work_object = ProtoWorkObject.deserialize(reader));
+                        reader.readMessage(message.work_object, () => (message.work_object = ProtoWorkObject.deserialize(reader)));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -4364,8 +4434,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("work_object" in data && data.work_object != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('work_object' in data && data.work_object != undefined) {
                     this.work_object = data.work_object;
                 }
             }
@@ -4381,8 +4451,8 @@ var block;
         }
         get _work_object() {
             const cases = {
-                0: "none",
-                1: "work_object"
+                0: 'none',
+                1: 'work_object',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
@@ -4414,9 +4484,10 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.work_object, () => message.work_object = ProtoWorkObject.deserialize(reader));
+                        reader.readMessage(message.work_object, () => (message.work_object = ProtoWorkObject.deserialize(reader)));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -4434,11 +4505,11 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [2], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("address" in data && data.address != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('address' in data && data.address != undefined) {
                     this.address = data.address;
                 }
-                if ("storage_key" in data && data.storage_key != undefined) {
+                if ('storage_key' in data && data.storage_key != undefined) {
                     this.storage_key = data.storage_key;
                 }
             }
@@ -4461,7 +4532,7 @@ var block;
                 message.address = data.address;
             }
             if (data.storage_key != null) {
-                message.storage_key = data.storage_key.map(item => common.ProtoHash.fromObject(item));
+                message.storage_key = data.storage_key.map((item) => common.ProtoHash.fromObject(item));
             }
             return message;
         }
@@ -4496,7 +4567,8 @@ var block;
                     case 2:
                         reader.readMessage(message.storage_key, () => pb_1.Message.addToRepeatedWrapperField(message, 2, common.ProtoHash.deserialize(reader), common.ProtoHash));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -4514,26 +4586,26 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("post_state_or_status" in data && data.post_state_or_status != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('post_state_or_status' in data && data.post_state_or_status != undefined) {
                     this.post_state_or_status = data.post_state_or_status;
                 }
-                if ("cumulative_gas_used" in data && data.cumulative_gas_used != undefined) {
+                if ('cumulative_gas_used' in data && data.cumulative_gas_used != undefined) {
                     this.cumulative_gas_used = data.cumulative_gas_used;
                 }
-                if ("logs" in data && data.logs != undefined) {
+                if ('logs' in data && data.logs != undefined) {
                     this.logs = data.logs;
                 }
-                if ("tx_hash" in data && data.tx_hash != undefined) {
+                if ('tx_hash' in data && data.tx_hash != undefined) {
                     this.tx_hash = data.tx_hash;
                 }
-                if ("contract_address" in data && data.contract_address != undefined) {
+                if ('contract_address' in data && data.contract_address != undefined) {
                     this.contract_address = data.contract_address;
                 }
-                if ("gas_used" in data && data.gas_used != undefined) {
+                if ('gas_used' in data && data.gas_used != undefined) {
                     this.gas_used = data.gas_used;
                 }
-                if ("outbound_etxs" in data && data.outbound_etxs != undefined) {
+                if ('outbound_etxs' in data && data.outbound_etxs != undefined) {
                     this.outbound_etxs = data.outbound_etxs;
                 }
             }
@@ -4674,21 +4746,22 @@ var block;
                         message.cumulative_gas_used = reader.readUint64();
                         break;
                     case 3:
-                        reader.readMessage(message.logs, () => message.logs = ProtoLogsForStorage.deserialize(reader));
+                        reader.readMessage(message.logs, () => (message.logs = ProtoLogsForStorage.deserialize(reader)));
                         break;
                     case 4:
-                        reader.readMessage(message.tx_hash, () => message.tx_hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.tx_hash, () => (message.tx_hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 5:
-                        reader.readMessage(message.contract_address, () => message.contract_address = common.ProtoAddress.deserialize(reader));
+                        reader.readMessage(message.contract_address, () => (message.contract_address = common.ProtoAddress.deserialize(reader)));
                         break;
                     case 6:
                         message.gas_used = reader.readUint64();
                         break;
                     case 7:
-                        reader.readMessage(message.outbound_etxs, () => message.outbound_etxs = ProtoTransactions.deserialize(reader));
+                        reader.readMessage(message.outbound_etxs, () => (message.outbound_etxs = ProtoTransactions.deserialize(reader)));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -4706,8 +4779,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("receipts" in data && data.receipts != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('receipts' in data && data.receipts != undefined) {
                     this.receipts = data.receipts;
                 }
             }
@@ -4721,7 +4794,7 @@ var block;
         static fromObject(data) {
             const message = new ProtoReceiptsForStorage({});
             if (data.receipts != null) {
-                message.receipts = data.receipts.map(item => ProtoReceiptForStorage.fromObject(item));
+                message.receipts = data.receipts.map((item) => ProtoReceiptForStorage.fromObject(item));
             }
             return message;
         }
@@ -4748,7 +4821,8 @@ var block;
                     case 1:
                         reader.readMessage(message.receipts, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoReceiptForStorage.deserialize(reader), ProtoReceiptForStorage));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -4766,14 +4840,14 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [2], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("address" in data && data.address != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('address' in data && data.address != undefined) {
                     this.address = data.address;
                 }
-                if ("topics" in data && data.topics != undefined) {
+                if ('topics' in data && data.topics != undefined) {
                     this.topics = data.topics;
                 }
-                if ("data" in data && data.data != undefined) {
+                if ('data' in data && data.data != undefined) {
                     this.data = data.data;
                 }
             }
@@ -4805,7 +4879,7 @@ var block;
                 message.address = common.ProtoAddress.fromObject(data.address);
             }
             if (data.topics != null) {
-                message.topics = data.topics.map(item => common.ProtoHash.fromObject(item));
+                message.topics = data.topics.map((item) => common.ProtoHash.fromObject(item));
             }
             if (data.data != null) {
                 message.data = data.data;
@@ -4843,7 +4917,7 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.address, () => message.address = common.ProtoAddress.deserialize(reader));
+                        reader.readMessage(message.address, () => (message.address = common.ProtoAddress.deserialize(reader)));
                         break;
                     case 2:
                         reader.readMessage(message.topics, () => pb_1.Message.addToRepeatedWrapperField(message, 2, common.ProtoHash.deserialize(reader), common.ProtoHash));
@@ -4851,7 +4925,8 @@ var block;
                     case 3:
                         message.data = reader.readBytes();
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -4869,8 +4944,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("logs" in data && data.logs != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('logs' in data && data.logs != undefined) {
                     this.logs = data.logs;
                 }
             }
@@ -4884,7 +4959,7 @@ var block;
         static fromObject(data) {
             const message = new ProtoLogsForStorage({});
             if (data.logs != null) {
-                message.logs = data.logs.map(item => ProtoLogForStorage.fromObject(item));
+                message.logs = data.logs.map((item) => ProtoLogForStorage.fromObject(item));
             }
             return message;
         }
@@ -4911,7 +4986,8 @@ var block;
                     case 1:
                         reader.readMessage(message.logs, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoLogForStorage.deserialize(reader), ProtoLogForStorage));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -4929,11 +5005,11 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("wo" in data && data.wo != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('wo' in data && data.wo != undefined) {
                     this.wo = data.wo;
                 }
-                if ("termini" in data && data.termini != undefined) {
+                if ('termini' in data && data.termini != undefined) {
                     this.termini = data.termini;
                 }
             }
@@ -4958,15 +5034,15 @@ var block;
         }
         get _wo() {
             const cases = {
-                0: "none",
-                1: "wo"
+                0: 'none',
+                1: 'wo',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
         get _termini() {
             const cases = {
-                0: "none",
-                2: "termini"
+                0: 'none',
+                2: 'termini',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
@@ -5006,12 +5082,13 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.wo, () => message.wo = ProtoWorkObject.deserialize(reader));
+                        reader.readMessage(message.wo, () => (message.wo = ProtoWorkObject.deserialize(reader)));
                         break;
                     case 2:
-                        reader.readMessage(message.termini, () => message.termini = ProtoTermini.deserialize(reader));
+                        reader.readMessage(message.termini, () => (message.termini = ProtoTermini.deserialize(reader)));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -5029,11 +5106,11 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1, 2], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("dom_termini" in data && data.dom_termini != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('dom_termini' in data && data.dom_termini != undefined) {
                     this.dom_termini = data.dom_termini;
                 }
-                if ("sub_termini" in data && data.sub_termini != undefined) {
+                if ('sub_termini' in data && data.sub_termini != undefined) {
                     this.sub_termini = data.sub_termini;
                 }
             }
@@ -5053,10 +5130,10 @@ var block;
         static fromObject(data) {
             const message = new ProtoTermini({});
             if (data.dom_termini != null) {
-                message.dom_termini = data.dom_termini.map(item => common.ProtoHash.fromObject(item));
+                message.dom_termini = data.dom_termini.map((item) => common.ProtoHash.fromObject(item));
             }
             if (data.sub_termini != null) {
-                message.sub_termini = data.sub_termini.map(item => common.ProtoHash.fromObject(item));
+                message.sub_termini = data.sub_termini.map((item) => common.ProtoHash.fromObject(item));
             }
             return message;
         }
@@ -5091,7 +5168,8 @@ var block;
                     case 2:
                         reader.readMessage(message.sub_termini, () => pb_1.Message.addToRepeatedWrapperField(message, 2, common.ProtoHash.deserialize(reader), common.ProtoHash));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -5109,8 +5187,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("etx_hashes" in data && data.etx_hashes != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('etx_hashes' in data && data.etx_hashes != undefined) {
                     this.etx_hashes = data.etx_hashes;
                 }
             }
@@ -5126,8 +5204,8 @@ var block;
         }
         get _etx_hashes() {
             const cases = {
-                0: "none",
-                1: "etx_hashes"
+                0: 'none',
+                1: 'etx_hashes',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
@@ -5161,7 +5239,8 @@ var block;
                     case 1:
                         message.etx_hashes = reader.readBytes();
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -5179,11 +5258,11 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("header" in data && data.header != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('header' in data && data.header != undefined) {
                     this.header = data.header;
                 }
-                if ("outbound_etxs" in data && data.outbound_etxs != undefined) {
+                if ('outbound_etxs' in data && data.outbound_etxs != undefined) {
                     this.outbound_etxs = data.outbound_etxs;
                 }
             }
@@ -5208,15 +5287,15 @@ var block;
         }
         get _header() {
             const cases = {
-                0: "none",
-                1: "header"
+                0: 'none',
+                1: 'header',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
         get _outbound_etxs() {
             const cases = {
-                0: "none",
-                2: "outbound_etxs"
+                0: 'none',
+                2: 'outbound_etxs',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
@@ -5256,12 +5335,13 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.header, () => message.header = ProtoWorkObject.deserialize(reader));
+                        reader.readMessage(message.header, () => (message.header = ProtoWorkObject.deserialize(reader)));
                         break;
                     case 2:
-                        reader.readMessage(message.outbound_etxs, () => message.outbound_etxs = ProtoTransactions.deserialize(reader));
+                        reader.readMessage(message.outbound_etxs, () => (message.outbound_etxs = ProtoTransactions.deserialize(reader)));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -5279,11 +5359,11 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("header" in data && data.header != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('header' in data && data.header != undefined) {
                     this.header = data.header;
                 }
-                if ("etxs_rollup" in data && data.etxs_rollup != undefined) {
+                if ('etxs_rollup' in data && data.etxs_rollup != undefined) {
                     this.etxs_rollup = data.etxs_rollup;
                 }
             }
@@ -5308,15 +5388,15 @@ var block;
         }
         get _header() {
             const cases = {
-                0: "none",
-                1: "header"
+                0: 'none',
+                1: 'header',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
         get _etxs_rollup() {
             const cases = {
-                0: "none",
-                2: "etxs_rollup"
+                0: 'none',
+                2: 'etxs_rollup',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
@@ -5356,12 +5436,13 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.header, () => message.header = ProtoWorkObject.deserialize(reader));
+                        reader.readMessage(message.header, () => (message.header = ProtoWorkObject.deserialize(reader)));
                         break;
                     case 2:
-                        reader.readMessage(message.etxs_rollup, () => message.etxs_rollup = ProtoTransactions.deserialize(reader));
+                        reader.readMessage(message.etxs_rollup, () => (message.etxs_rollup = ProtoTransactions.deserialize(reader)));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -5379,8 +5460,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("tx_ins" in data && data.tx_ins != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('tx_ins' in data && data.tx_ins != undefined) {
                     this.tx_ins = data.tx_ins;
                 }
             }
@@ -5394,7 +5475,7 @@ var block;
         static fromObject(data) {
             const message = new ProtoTxIns({});
             if (data.tx_ins != null) {
-                message.tx_ins = data.tx_ins.map(item => ProtoTxIn.fromObject(item));
+                message.tx_ins = data.tx_ins.map((item) => ProtoTxIn.fromObject(item));
             }
             return message;
         }
@@ -5421,7 +5502,8 @@ var block;
                     case 1:
                         reader.readMessage(message.tx_ins, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoTxIn.deserialize(reader), ProtoTxIn));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -5439,8 +5521,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("tx_outs" in data && data.tx_outs != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('tx_outs' in data && data.tx_outs != undefined) {
                     this.tx_outs = data.tx_outs;
                 }
             }
@@ -5454,7 +5536,7 @@ var block;
         static fromObject(data) {
             const message = new ProtoTxOuts({});
             if (data.tx_outs != null) {
-                message.tx_outs = data.tx_outs.map(item => ProtoTxOut.fromObject(item));
+                message.tx_outs = data.tx_outs.map((item) => ProtoTxOut.fromObject(item));
             }
             return message;
         }
@@ -5481,7 +5563,8 @@ var block;
                     case 1:
                         reader.readMessage(message.tx_outs, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoTxOut.deserialize(reader), ProtoTxOut));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -5499,11 +5582,11 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("previous_out_point" in data && data.previous_out_point != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('previous_out_point' in data && data.previous_out_point != undefined) {
                     this.previous_out_point = data.previous_out_point;
                 }
-                if ("pub_key" in data && data.pub_key != undefined) {
+                if ('pub_key' in data && data.pub_key != undefined) {
                     this.pub_key = data.pub_key;
                 }
             }
@@ -5528,15 +5611,15 @@ var block;
         }
         get _previous_out_point() {
             const cases = {
-                0: "none",
-                1: "previous_out_point"
+                0: 'none',
+                1: 'previous_out_point',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
         get _pub_key() {
             const cases = {
-                0: "none",
-                2: "pub_key"
+                0: 'none',
+                2: 'pub_key',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
@@ -5576,12 +5659,13 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.previous_out_point, () => message.previous_out_point = ProtoOutPoint.deserialize(reader));
+                        reader.readMessage(message.previous_out_point, () => (message.previous_out_point = ProtoOutPoint.deserialize(reader)));
                         break;
                     case 2:
                         message.pub_key = reader.readBytes();
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -5599,11 +5683,11 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("hash" in data && data.hash != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('hash' in data && data.hash != undefined) {
                     this.hash = data.hash;
                 }
-                if ("index" in data && data.index != undefined) {
+                if ('index' in data && data.index != undefined) {
                     this.index = data.index;
                 }
             }
@@ -5628,15 +5712,15 @@ var block;
         }
         get _hash() {
             const cases = {
-                0: "none",
-                1: "hash"
+                0: 'none',
+                1: 'hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
         get _index() {
             const cases = {
-                0: "none",
-                2: "index"
+                0: 'none',
+                2: 'index',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
@@ -5676,12 +5760,13 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.hash, () => message.hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.hash, () => (message.hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 2:
                         message.index = reader.readUint32();
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -5699,14 +5784,14 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("denomination" in data && data.denomination != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('denomination' in data && data.denomination != undefined) {
                     this.denomination = data.denomination;
                 }
-                if ("address" in data && data.address != undefined) {
+                if ('address' in data && data.address != undefined) {
                     this.address = data.address;
                 }
-                if ("lock" in data && data.lock != undefined) {
+                if ('lock' in data && data.lock != undefined) {
                     this.lock = data.lock;
                 }
             }
@@ -5740,22 +5825,22 @@ var block;
         }
         get _denomination() {
             const cases = {
-                0: "none",
-                1: "denomination"
+                0: 'none',
+                1: 'denomination',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
         get _address() {
             const cases = {
-                0: "none",
-                2: "address"
+                0: 'none',
+                2: 'address',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
         get _lock() {
             const cases = {
-                0: "none",
-                3: "lock"
+                0: 'none',
+                3: 'lock',
             };
             return cases[pb_1.Message.computeOneofCase(this, [3])];
         }
@@ -5811,7 +5896,8 @@ var block;
                     case 3:
                         message.lock = reader.readBytes();
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -5829,14 +5915,14 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("hash" in data && data.hash != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('hash' in data && data.hash != undefined) {
                     this.hash = data.hash;
                 }
-                if ("index" in data && data.index != undefined) {
+                if ('index' in data && data.index != undefined) {
                     this.index = data.index;
                 }
-                if ("denomination" in data && data.denomination != undefined) {
+                if ('denomination' in data && data.denomination != undefined) {
                     this.denomination = data.denomination;
                 }
             }
@@ -5870,22 +5956,22 @@ var block;
         }
         get _hash() {
             const cases = {
-                0: "none",
-                1: "hash"
+                0: 'none',
+                1: 'hash',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
         get _index() {
             const cases = {
-                0: "none",
-                2: "index"
+                0: 'none',
+                2: 'index',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
         get _denomination() {
             const cases = {
-                0: "none",
-                3: "denomination"
+                0: 'none',
+                3: 'denomination',
             };
             return cases[pb_1.Message.computeOneofCase(this, [3])];
         }
@@ -5933,7 +6019,7 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.hash, () => message.hash = common.ProtoHash.deserialize(reader));
+                        reader.readMessage(message.hash, () => (message.hash = common.ProtoHash.deserialize(reader)));
                         break;
                     case 2:
                         message.index = reader.readUint32();
@@ -5941,7 +6027,8 @@ var block;
                     case 3:
                         message.denomination = reader.readUint32();
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -5959,8 +6046,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("out_points" in data && data.out_points != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('out_points' in data && data.out_points != undefined) {
                     this.out_points = data.out_points;
                 }
             }
@@ -5975,15 +6062,18 @@ var block;
         }
         static fromObject(data) {
             const message = new ProtoAddressOutPoints({});
-            if (typeof data.out_points == "object") {
-                message.out_points = new Map(Object.entries(data.out_points).map(([key, value]) => [key, ProtoOutPointAndDenomination.fromObject(value)]));
+            if (typeof data.out_points == 'object') {
+                message.out_points = new Map(Object.entries(data.out_points).map(([key, value]) => [
+                    key,
+                    ProtoOutPointAndDenomination.fromObject(value),
+                ]));
             }
             return message;
         }
         toObject() {
             const data = {};
             if (this.out_points != null) {
-                data.out_points = (Object.fromEntries)((Array.from)(this.out_points).map(([key, value]) => [key, value.toObject()]));
+                data.out_points = Object.fromEntries(Array.from(this.out_points).map(([key, value]) => [key, value.toObject()]));
             }
             return data;
         }
@@ -6007,11 +6097,12 @@ var block;
                     case 1:
                         reader.readMessage(message, () => pb_1.Map.deserializeBinary(message.out_points, reader, reader.readString, () => {
                             let value;
-                            reader.readMessage(message, () => value = ProtoOutPointAndDenomination.deserialize(reader));
+                            reader.readMessage(message, () => (value = ProtoOutPointAndDenomination.deserialize(reader)));
                             return value;
                         }));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -6029,8 +6120,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("entries" in data && data.entries != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('entries' in data && data.entries != undefined) {
                     this.entries = data.entries;
                 }
             }
@@ -6045,7 +6136,7 @@ var block;
         }
         static fromObject(data) {
             const message = new ProtoOutPointsMap({});
-            if (typeof data.entries == "object") {
+            if (typeof data.entries == 'object') {
                 message.entries = new Map(Object.entries(data.entries).map(([key, value]) => [key, ProtoAddressOutPoints.fromObject(value)]));
             }
             return message;
@@ -6053,7 +6144,7 @@ var block;
         toObject() {
             const data = {};
             if (this.entries != null) {
-                data.entries = (Object.fromEntries)((Array.from)(this.entries).map(([key, value]) => [key, value.toObject()]));
+                data.entries = Object.fromEntries(Array.from(this.entries).map(([key, value]) => [key, value.toObject()]));
             }
             return data;
         }
@@ -6077,11 +6168,12 @@ var block;
                     case 1:
                         reader.readMessage(message, () => pb_1.Map.deserializeBinary(message.entries, reader, reader.readString, () => {
                             let value;
-                            reader.readMessage(message, () => value = ProtoAddressOutPoints.deserialize(reader));
+                            reader.readMessage(message, () => (value = ProtoAddressOutPoints.deserialize(reader)));
                             return value;
                         }));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -6099,11 +6191,11 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("outpoint" in data && data.outpoint != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('outpoint' in data && data.outpoint != undefined) {
                     this.outpoint = data.outpoint;
                 }
-                if ("sutxo" in data && data.sutxo != undefined) {
+                if ('sutxo' in data && data.sutxo != undefined) {
                     this.sutxo = data.sutxo;
                 }
             }
@@ -6128,15 +6220,15 @@ var block;
         }
         get _outpoint() {
             const cases = {
-                0: "none",
-                1: "outpoint"
+                0: 'none',
+                1: 'outpoint',
             };
             return cases[pb_1.Message.computeOneofCase(this, [1])];
         }
         get _sutxo() {
             const cases = {
-                0: "none",
-                2: "sutxo"
+                0: 'none',
+                2: 'sutxo',
             };
             return cases[pb_1.Message.computeOneofCase(this, [2])];
         }
@@ -6176,12 +6268,13 @@ var block;
                     break;
                 switch (reader.getFieldNumber()) {
                     case 1:
-                        reader.readMessage(message.outpoint, () => message.outpoint = ProtoOutPoint.deserialize(reader));
+                        reader.readMessage(message.outpoint, () => (message.outpoint = ProtoOutPoint.deserialize(reader)));
                         break;
                     case 2:
-                        reader.readMessage(message.sutxo, () => message.sutxo = ProtoTxOut.deserialize(reader));
+                        reader.readMessage(message.sutxo, () => (message.sutxo = ProtoTxOut.deserialize(reader)));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -6199,8 +6292,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("sutxos" in data && data.sutxos != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('sutxos' in data && data.sutxos != undefined) {
                     this.sutxos = data.sutxos;
                 }
             }
@@ -6214,7 +6307,7 @@ var block;
         static fromObject(data) {
             const message = new ProtoSpentUTXOs({});
             if (data.sutxos != null) {
-                message.sutxos = data.sutxos.map(item => ProtoSpentUTXO.fromObject(item));
+                message.sutxos = data.sutxos.map((item) => ProtoSpentUTXO.fromObject(item));
             }
             return message;
         }
@@ -6241,7 +6334,8 @@ var block;
                     case 1:
                         reader.readMessage(message.sutxos, () => pb_1.Message.addToRepeatedWrapperField(message, 1, ProtoSpentUTXO.deserialize(reader), ProtoSpentUTXO));
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -6259,8 +6353,8 @@ var block;
         constructor(data) {
             super();
             pb_1.Message.initialize(this, Array.isArray(data) ? data : [], 0, -1, [1], this.#one_of_decls);
-            if (!Array.isArray(data) && typeof data == "object") {
-                if ("keys" in data && data.keys != undefined) {
+            if (!Array.isArray(data) && typeof data == 'object') {
+                if ('keys' in data && data.keys != undefined) {
                     this.keys = data.keys;
                 }
             }
@@ -6301,7 +6395,8 @@ var block;
                     case 1:
                         pb_1.Message.addToRepeatedField(message, 1, reader.readBytes());
                         break;
-                    default: reader.skipField();
+                    default:
+                        reader.skipField();
                 }
             }
             return message;
@@ -6587,11 +6682,11 @@ function toUtf8CodePoints(str, form) {
 function createGetUrl(options) {
     async function getUrl(req, _signal) {
         const protocol = req.url.split(':')[0].toLowerCase();
-        assert(protocol === 'http' || protocol === 'https', `unsupported protocol ${protocol}`, 'UNSUPPORTED_OPERATION', {
+        assert$1(protocol === 'http' || protocol === 'https', `unsupported protocol ${protocol}`, 'UNSUPPORTED_OPERATION', {
             info: { protocol },
             operation: 'request',
         });
-        assert(protocol === 'https' || !req.credentials || req.allowInsecureAuthentication, 'insecure authorized connections unsupported', 'UNSUPPORTED_OPERATION', {
+        assert$1(protocol === 'https' || !req.credentials || req.allowInsecureAuthentication, 'insecure authorized connections unsupported', 'UNSUPPORTED_OPERATION', {
             operation: 'request',
         });
         let signal = undefined;
@@ -6718,7 +6813,7 @@ class FetchCancelSignal {
         });
     }
     addListener(listener) {
-        assert(!this.#cancelled, 'singal already cancelled', 'UNSUPPORTED_OPERATION', {
+        assert$1(!this.#cancelled, 'singal already cancelled', 'UNSUPPORTED_OPERATION', {
             operation: 'fetchCancelSignal.addCancelListener',
         });
         this.#listeners.push(listener);
@@ -6727,7 +6822,7 @@ class FetchCancelSignal {
         return this.#cancelled;
     }
     checkSignal() {
-        assert(!this.cancelled, 'cancelled', 'CANCELLED', {});
+        assert$1(!this.cancelled, 'cancelled', 'CANCELLED', {});
     }
 }
 // Check the signal, throwing if it is cancelled
@@ -7049,7 +7144,7 @@ class FetchRequest {
         if (attempt >= this.#throttle.maxAttempts) {
             return _response.makeServerError('exceeded maximum retry limit');
         }
-        assert(getTime$1() <= expires, 'timeout', 'TIMEOUT', {
+        assert$1(getTime$1() <= expires, 'timeout', 'TIMEOUT', {
             operation: 'request.send',
             reason: 'timeout',
             request: _request,
@@ -7133,7 +7228,7 @@ class FetchRequest {
      * Resolves to the response by sending the request.
      */
     send() {
-        assert(this.#signal == null, 'request already sent', 'UNSUPPORTED_OPERATION', {
+        assert$1(this.#signal == null, 'request already sent', 'UNSUPPORTED_OPERATION', {
             operation: 'fetchRequest.send',
         });
         this.#signal = new FetchCancelSignal(this);
@@ -7144,7 +7239,7 @@ class FetchRequest {
      * {@link FetchRequest.send | **send**}.
      */
     cancel() {
-        assert(this.#signal != null, 'request has not been sent', 'UNSUPPORTED_OPERATION', {
+        assert$1(this.#signal != null, 'request has not been sent', 'UNSUPPORTED_OPERATION', {
             operation: 'fetchRequest.cancel',
         });
         const signal = fetchSignals.get(this);
@@ -7167,7 +7262,7 @@ class FetchRequest {
         // - non-GET requests
         // - downgrading the security (e.g. https => http)
         // - to non-HTTP (or non-HTTPS) protocols [this could be relaxed?]
-        assert(this.method === 'GET' && (current !== 'https' || target !== 'http') && location.match(/^https?:/), `unsupported redirect`, 'UNSUPPORTED_OPERATION', {
+        assert$1(this.method === 'GET' && (current !== 'https' || target !== 'http') && location.match(/^https?:/), `unsupported redirect`, 'UNSUPPORTED_OPERATION', {
             operation: `redirect(${this.method} ${JSON.stringify(this.url)} => ${JSON.stringify(location)})`,
         });
         // Create a copy of this request, with a new URL
@@ -7354,7 +7449,7 @@ class FetchResponse {
             return this.#body == null ? '' : toUtf8String(this.#body);
         }
         catch (error) {
-            assert(false, 'response body is not valid UTF-8 data', 'UNSUPPORTED_OPERATION', {
+            assert$1(false, 'response body is not valid UTF-8 data', 'UNSUPPORTED_OPERATION', {
                 operation: 'bodyText',
                 info: { response: this },
             });
@@ -7370,7 +7465,7 @@ class FetchResponse {
             return JSON.parse(this.bodyText);
         }
         catch (error) {
-            assert(false, 'response body is not valid JSON', 'UNSUPPORTED_OPERATION', {
+            assert$1(false, 'response body is not valid JSON', 'UNSUPPORTED_OPERATION', {
                 operation: 'bodyJson',
                 info: { response: this },
             });
@@ -7488,7 +7583,7 @@ class FetchResponse {
         if (message === '') {
             message = `server response ${this.statusCode} ${this.statusMessage}`;
         }
-        assert(false, message, 'SERVER_ERROR', {
+        assert$1(false, message, 'SERVER_ERROR', {
             request: this.request || 'unknown request',
             response: this,
             error,
@@ -7535,7 +7630,7 @@ function checkValue(val, format, safeOp) {
     const width = BigInt(format.width);
     if (format.signed) {
         const limit = BN_1$3 << (width - BN_1$3);
-        assert(safeOp == null || (val >= -limit && val < limit), 'overflow', 'NUMERIC_FAULT', {
+        assert$1(safeOp == null || (val >= -limit && val < limit), 'overflow', 'NUMERIC_FAULT', {
             operation: safeOp,
             fault: 'overflow',
             value: val,
@@ -7549,7 +7644,7 @@ function checkValue(val, format, safeOp) {
     }
     else {
         const limit = BN_1$3 << width;
-        assert(safeOp == null || (val >= 0 && val < limit), 'overflow', 'NUMERIC_FAULT', {
+        assert$1(safeOp == null || (val >= 0 && val < limit), 'overflow', 'NUMERIC_FAULT', {
             operation: safeOp,
             fault: 'overflow',
             value: val,
@@ -7801,7 +7896,7 @@ class FixedNumber {
     mulSignal(other) {
         this.#checkFormat(other);
         const value = this.#val * other.#val;
-        assert(value % this.#tens === BN_0$6, 'precision lost during signalling mul', 'NUMERIC_FAULT', {
+        assert$1(value % this.#tens === BN_0$6, 'precision lost during signalling mul', 'NUMERIC_FAULT', {
             operation: 'mulSignal',
             fault: 'underflow',
             value: this,
@@ -7809,7 +7904,7 @@ class FixedNumber {
         return this.#checkValue(value / this.#tens, 'mulSignal');
     }
     #div(o, safeOp) {
-        assert(o.#val !== BN_0$6, 'division by zero', 'NUMERIC_FAULT', {
+        assert$1(o.#val !== BN_0$6, 'division by zero', 'NUMERIC_FAULT', {
             operation: 'div',
             fault: 'divide-by-zero',
             value: this,
@@ -7846,14 +7941,14 @@ class FixedNumber {
      * @throws {NumericFaultError} Thrown if underflow occurs.
      */
     divSignal(other) {
-        assert(other.#val !== BN_0$6, 'division by zero', 'NUMERIC_FAULT', {
+        assert$1(other.#val !== BN_0$6, 'division by zero', 'NUMERIC_FAULT', {
             operation: 'div',
             fault: 'divide-by-zero',
             value: this,
         });
         this.#checkFormat(other);
         const value = this.#val * this.#tens;
-        assert(value % other.#val === BN_0$6, 'precision lost during signalling div', 'NUMERIC_FAULT', {
+        assert$1(value % other.#val === BN_0$6, 'precision lost during signalling div', 'NUMERIC_FAULT', {
             operation: 'divSignal',
             fault: 'underflow',
             value: this,
@@ -8051,7 +8146,7 @@ class FixedNumber {
         const delta = decimals - format.decimals;
         if (delta > 0) {
             const tens = getTens(delta);
-            assert(value % tens === BN_0$6, 'value loses precision for format', 'NUMERIC_FAULT', {
+            assert$1(value % tens === BN_0$6, 'value loses precision for format', 'NUMERIC_FAULT', {
                 operation: 'fromValue',
                 fault: 'underflow',
                 value: _value,
@@ -8085,7 +8180,7 @@ class FixedNumber {
             decimal += Zeros;
         }
         // Check precision is safe
-        assert(decimal.substring(format.decimals).match(/^0*$/), 'too many decimals for format', 'NUMERIC_FAULT', {
+        assert$1(decimal.substring(format.decimals).match(/^0*$/), 'too many decimals for format', 'NUMERIC_FAULT', {
             operation: 'fromString',
             fault: 'underflow',
             value: _value,
@@ -8396,6 +8491,26 @@ const rotr = (word, shift) => (word << (32 - shift)) | (word >>> shift);
 const isLE = new Uint8Array(new Uint32Array([0x11223344]).buffer)[0] === 0x44;
 if (!isLE)
     throw new Error('Non little-endian hardware is not supported');
+/**
+ * @example hexToBytes('cafe0123') // Uint8Array.from([0xca, 0xfe, 0x01, 0x23])
+ */
+function hexToBytes$1(hex) {
+    if (typeof hex !== 'string')
+        throw new Error('hex string expected, got ' + typeof hex);
+    const len = hex.length;
+    if (len % 2)
+        throw new Error('padded hex string expected, got unpadded hex of length ' + len);
+    const array = new Uint8Array(len / 2);
+    for (let i = 0; i < array.length; i++) {
+        const j = i * 2;
+        const hexByte = hex.slice(j, j + 2);
+        const byte = Number.parseInt(hexByte, 16);
+        if (Number.isNaN(byte) || byte < 0)
+            throw new Error('Invalid byte sequence');
+        array[i] = byte;
+    }
+    return array;
+}
 // There is no setImmediate in browser and setTimeout is slow.
 // call of async fn will return Promise, which will be fullfiled only on
 // next scheduler queue processing step and this is exactly what we need.
@@ -9083,7 +9198,7 @@ function pbkdf2Sync(password, salt, iterations, keylen, _algo) {
     return pbkdf2$1(algo, password, salt, { c: iterations, dkLen: keylen });
 }
 function randomBytes$1(length) {
-    assert(crypto != null, 'platform does not support secure random numbers', 'UNSUPPORTED_OPERATION', {
+    assert$1(crypto != null, 'platform does not support secure random numbers', 'UNSUPPORTED_OPERATION', {
         operation: 'randomBytes',
     });
     assertArgument(Number.isInteger(length) && length > 0 && length <= 1024, 'invalid length', 'length', length);
@@ -13389,7 +13504,7 @@ class Result extends Array {
         return this.#names.reduce(
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         (accum, name, index) => {
-            assert(name != null, 'value at index ${ index } unnamed', 'UNSUPPORTED_OPERATION', {
+            assert$1(name != null, 'value at index ${ index } unnamed', 'UNSUPPORTED_OPERATION', {
                 operation: 'toObject()',
             });
             // Add values for names that don't conflict
@@ -13534,7 +13649,7 @@ function checkResultErrors(result) {
 }
 function getValue$1(value) {
     let bytes = toBeArray(value);
-    assert(bytes.length <= WordSize, 'value out-of-bounds', 'BUFFER_OVERRUN', {
+    assert$1(bytes.length <= WordSize, 'value out-of-bounds', 'BUFFER_OVERRUN', {
         buffer: bytes,
         length: WordSize,
         offset: bytes.length,
@@ -13662,7 +13777,7 @@ class Reader {
         }
         this.#bytesRead += count;
         // Check for excessive inflation (see: #4537)
-        assert(this.#maxInflation < 1 || this.#bytesRead <= this.#maxInflation * this.dataLength, 
+        assert$1(this.#maxInflation < 1 || this.#bytesRead <= this.#maxInflation * this.dataLength, 
         // eslint-disable-next-line no-useless-escape
         `compressed ABI data exceeds inflation ratio of ${this.#maxInflation} ( see: https:/\/github.com/ethers-io/ethers.js/issues/4537 )`, 'BUFFER_OVERRUN', {
             buffer: getBytesCopy(this.#data),
@@ -13681,7 +13796,7 @@ class Reader {
                 alignedLength = length;
             }
             else {
-                assert(false, 'data out-of-bounds', 'BUFFER_OVERRUN', {
+                assert$1(false, 'data out-of-bounds', 'BUFFER_OVERRUN', {
                     buffer: getBytesCopy(this.#data),
                     length: this.#data.length,
                     offset: this.#offset + alignedLength,
@@ -14994,8 +15109,8 @@ function pack(writer, coders, values) {
         let unique = {};
         arrayValues = coders.map((coder) => {
             const name = coder.localName;
-            assert(name, "cannot encode object for signature with missing names", "INVALID_ARGUMENT", { argument: "values", info: { coder }, value: values });
-            assert(!unique[name], "cannot encode object for signature with duplicate names", "INVALID_ARGUMENT", { argument: "values", info: { coder }, value: values });
+            assert$1(name, "cannot encode object for signature with missing names", "INVALID_ARGUMENT", { argument: "values", info: { coder }, value: values });
+            assert$1(!unique[name], "cannot encode object for signature with duplicate names", "INVALID_ARGUMENT", { argument: "values", info: { coder }, value: values });
             unique[name] = true;
             return values[name];
         });
@@ -15127,7 +15242,7 @@ class ArrayCoder extends Coder {
             // slot requires at least 32 bytes for their value (or 32
             // bytes as a link to the data). This could use a much
             // tighter bound, but we are erroring on the side of safety.
-            assert(count * WordSize <= reader.dataLength, "insufficient data length", "BUFFER_OVERRUN", { buffer: reader.bytes, offset: count * WordSize, length: reader.dataLength });
+            assert$1(count * WordSize <= reader.dataLength, "insufficient data length", "BUFFER_OVERRUN", { buffer: reader.bytes, offset: count * WordSize, length: reader.dataLength });
         }
         let coders = [];
         for (let i = 0; i < count; i++) {
@@ -16889,7 +17004,7 @@ class Fragment {
                 case 'struct':
                     return StructFragment.from(obj);
             }
-            assert(false, `unsupported type: ${obj.type}`, 'UNSUPPORTED_OPERATION', {
+            assert$1(false, `unsupported type: ${obj.type}`, 'UNSUPPORTED_OPERATION', {
                 operation: 'Fragment.from',
             });
         }
@@ -17128,7 +17243,7 @@ class ConstructorFragment extends Fragment {
      * Returns a string representation of this constructor as `format`.
      */
     format(format) {
-        assert(format != null && format !== 'sighash', 'cannot format a constructor for sighash', 'UNSUPPORTED_OPERATION', { operation: 'format(sighash)' });
+        assert$1(format != null && format !== 'sighash', 'cannot format a constructor for sighash', 'UNSUPPORTED_OPERATION', { operation: 'format(sighash)' });
         if (format === 'json') {
             return JSON.stringify({
                 type: 'constructor',
@@ -18407,7 +18522,7 @@ class Interface {
             }
         }
         // Call returned data with no error, but the data is junk
-        assert(false, message, 'BAD_DATA', {
+        assert$1(false, message, 'BAD_DATA', {
             value: hexlify(bytes),
             info: { method: fragment.name, signature: fragment.format() },
         });
@@ -18468,7 +18583,7 @@ class Interface {
             assertArgument(f, 'unknown event', 'eventFragment', fragment);
             fragment = f;
         }
-        assert(values.length <= fragment.inputs.length, `too many arguments for ${fragment.format()}`, 'UNEXPECTED_ARGUMENT', { count: values.length, expectedCount: fragment.inputs.length });
+        assert$1(values.length <= fragment.inputs.length, `too many arguments for ${fragment.format()}`, 'UNEXPECTED_ARGUMENT', { count: values.length, expectedCount: fragment.inputs.length });
         const topics = [];
         if (!fragment.anonymous) {
             topics.push(fragment.topicHash);
@@ -18861,7 +18976,7 @@ class AbstractTransaction {
      * {@link AbstractTransaction.unsignedSerialized | **unsignedSerialized** }.
      */
     get serialized() {
-        assert(this.signature != null, 'cannot serialize unsigned transaction; maybe you meant .unsignedSerialized', 'UNSUPPORTED_OPERATION', { operation: '.serialized' });
+        assert$1(this.signature != null, 'cannot serialize unsigned transaction; maybe you meant .unsignedSerialized', 'UNSUPPORTED_OPERATION', { operation: '.serialized' });
         return encodeProtoTransaction(this.toProtobuf(true));
     }
     /**
@@ -18915,29 +19030,14 @@ const denominations = [
     BigInt(1000000000), // 1000000 Qi
 ];
 /**
- * Checks if the provided denomination is valid.
+ * Checks if the provided denomination index is valid.
  *
  * @category Transaction
- * @param {bigint} denomination - The denomination to check.
- * @returns {boolean} True if the denomination is valid, false otherwise.
+ * @param {number} index - The denomination index to check.
+ * @returns {boolean} True if the denomination index is valid, false otherwise.
  */
-function isValidDenomination(denomination) {
-    return denominations.includes(denomination);
-}
-/**
- * Handles conversion of string to bigint, specifically for transaction parameters.
- *
- * @ignore
- * @category Transaction
- * @param {string} value - The value to convert.
- * @param {string} param - The parameter name.
- * @returns {bigint} The converted value.
- */
-function handleBigInt(value, param) {
-    if (value === '0x') {
-        return BigInt(0);
-    }
-    return getBigInt(value, param);
+function isValidDenominationIndex(index) {
+    return index >= 0 && index < denominations.length;
 }
 /**
  * Given a value, returns an array of supported denominations that sum to the value.
@@ -19031,7 +19131,7 @@ class UTXO {
     /**
      * Gets the denomination.
      *
-     * @returns {null | bigint} The denomination.
+     * @returns {null | number} The denomination.
      */
     get denomination() {
         return this.#denomination;
@@ -19039,7 +19139,7 @@ class UTXO {
     /**
      * Sets the denomination.
      *
-     * @param {null | BigNumberish} value - The denomination.
+     * @param {null | number} value - The denomination.
      * @throws {Error} If the denomination value is invalid.
      */
     set denomination(value) {
@@ -19047,11 +19147,10 @@ class UTXO {
             this.#denomination = null;
             return;
         }
-        const denominationBigInt = handleBigInt(value.toString(), 'denomination');
-        if (!isValidDenomination(denominationBigInt)) {
+        if (!isValidDenominationIndex(value)) {
             throw new Error('Invalid denomination value');
         }
-        this.#denomination = denominationBigInt;
+        this.#denomination = value;
     }
     /**
      * Constructs a new UTXO instance with null properties.
@@ -19114,7 +19213,7 @@ class UTXO {
  * @abstract
  */
 class AbstractCoinSelector {
-    #availableUXTOs;
+    #availableUTXOs;
     #spendOutputs;
     #changeOutputs;
     /**
@@ -19122,16 +19221,16 @@ class AbstractCoinSelector {
      *
      * @returns {UTXO[]} The available UTXOs.
      */
-    get availableUXTOs() {
-        return this.#availableUXTOs;
+    get availableUTXOs() {
+        return this.#availableUTXOs;
     }
     /**
      * Sets the available UTXOs.
      *
      * @param {UTXOLike[]} value - The UTXOs to set.
      */
-    set availableUXTOs(value) {
-        this.#availableUXTOs = value.map((val) => {
+    set availableUTXOs(value) {
+        this.#availableUTXOs = value.map((val) => {
             const utxo = UTXO.from(val);
             this._validateUTXO(utxo);
             return utxo;
@@ -19174,9 +19273,8 @@ class AbstractCoinSelector {
      *
      * @param {UTXOEntry[]} [availableUXTOs=[]] - The initial available UTXOs. Default is `[]`
      */
-    constructor(availableUXTOs = []) {
-        this.#availableUXTOs = availableUXTOs.map((val) => {
-            const utxo = UTXO.from(val);
+    constructor(availableUTXOs = []) {
+        this.#availableUTXOs = availableUTXOs.map((utxo) => {
             this._validateUTXO(utxo);
             return utxo;
         });
@@ -19197,6 +19295,12 @@ class AbstractCoinSelector {
         }
         if (utxo.denomination == null) {
             throw new Error('UTXO denomination is required');
+        }
+        if (utxo.txhash == null) {
+            throw new Error('UTXO txhash is required');
+        }
+        if (utxo.index == null) {
+            throw new Error('UTXO index is required');
         }
     }
 }
@@ -19225,74 +19329,76 @@ class FewestCoinSelector extends AbstractCoinSelector {
     performSelection(target) {
         this.validateTarget(target);
         this.validateUTXOs();
-        const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUXTOs, 'desc');
+        const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUTXOs, 'desc');
         let totalValue = BigInt(0);
         let selectedUTXOs = [];
         // Get UTXOs that meets or exceeds the target value
-        const UTXOsEqualOrGreaterThanTarget = sortedUTXOs.filter((utxo) => utxo.denomination && utxo.denomination >= target.value);
+        const UTXOsEqualOrGreaterThanTarget = sortedUTXOs.filter((utxo) => utxo.denomination !== null && denominations[utxo.denomination] >= target.value);
         if (UTXOsEqualOrGreaterThanTarget.length > 0) {
             // Find the smallest UTXO that meets or exceeds the target value
             const optimalUTXO = UTXOsEqualOrGreaterThanTarget.reduce((minDenominationUTXO, currentUTXO) => {
-                if (!currentUTXO.denomination)
+                if (currentUTXO.denomination === null)
                     return minDenominationUTXO;
-                return currentUTXO.denomination < minDenominationUTXO.denomination ? currentUTXO : minDenominationUTXO;
-            }, UTXOsEqualOrGreaterThanTarget[0]); // Initialize with the first UTXO in the list
+                return denominations[currentUTXO.denomination] < denominations[minDenominationUTXO.denomination]
+                    ? currentUTXO
+                    : minDenominationUTXO;
+            }, UTXOsEqualOrGreaterThanTarget[0]);
             selectedUTXOs.push(optimalUTXO);
-            totalValue += optimalUTXO.denomination;
+            totalValue += denominations[optimalUTXO.denomination];
         }
         else {
             // If no single UTXO meets or exceeds the target, aggregate smaller denominations
             // until the target is met/exceeded or there are no more UTXOs to aggregate
             while (sortedUTXOs.length > 0 && totalValue < target.value) {
                 const nextOptimalUTXO = sortedUTXOs.reduce((closest, utxo) => {
-                    if (!utxo.denomination)
+                    if (utxo.denomination === null)
                         return closest;
                     // Prioritize UTXOs that bring totalValue closer to target.value
-                    const absThisDiff = bigIntAbs(target.value - (totalValue + utxo.denomination));
-                    const currentClosestDiff = closest && closest.denomination
-                        ? bigIntAbs(target.value - (totalValue + closest.denomination))
+                    const absThisDiff = bigIntAbs(target.value - (totalValue + denominations[utxo.denomination]));
+                    const currentClosestDiff = closest && closest.denomination !== null
+                        ? bigIntAbs(target.value - (totalValue + denominations[closest.denomination]))
                         : BigInt(Infinity);
                     return absThisDiff < currentClosestDiff ? utxo : closest;
                 }, sortedUTXOs[0]);
                 // Add the selected UTXO to the selection and update totalValue
                 selectedUTXOs.push(nextOptimalUTXO);
-                totalValue += nextOptimalUTXO.denomination;
+                totalValue += denominations[nextOptimalUTXO.denomination];
                 // Remove the selected UTXO from the list of available UTXOs
                 const index = sortedUTXOs.findIndex((utxo) => utxo.denomination === nextOptimalUTXO.denomination && utxo.address === nextOptimalUTXO.address);
                 sortedUTXOs.splice(index, 1);
             }
         }
+        // Replace the existing optimization code with this new implementation
+        selectedUTXOs = this.sortUTXOsByDenomination(selectedUTXOs, 'desc');
+        let runningTotal = totalValue;
+        for (let i = selectedUTXOs.length - 1; i >= 0; i--) {
+            const utxo = selectedUTXOs[i];
+            if (utxo.denomination !== null && runningTotal - denominations[utxo.denomination] >= target.value) {
+                runningTotal -= denominations[utxo.denomination];
+                selectedUTXOs.splice(i, 1);
+            }
+            else {
+                break;
+            }
+        }
+        totalValue = runningTotal;
+        // Ensure that selectedUTXOs contain all required properties
+        const completeSelectedUTXOs = selectedUTXOs.map((utxo) => {
+            const originalUTXO = this.availableUTXOs.find((availableUTXO) => availableUTXO.denomination === utxo.denomination && availableUTXO.address === utxo.address);
+            if (!originalUTXO) {
+                throw new Error('Selected UTXO not found in available UTXOs');
+            }
+            return originalUTXO;
+        });
         // Check if the selected UTXOs meet or exceed the target amount
         if (totalValue < target.value) {
             throw new Error('Insufficient funds');
-        }
-        // Check if any denominations can be removed from the input set and it still remain valid
-        selectedUTXOs = this.sortUTXOsByDenomination(selectedUTXOs, 'asc');
-        let runningTotal = totalValue;
-        let lastRemovableIndex = -1; // Index of the last UTXO that can be removed
-        // Iterate through selectedUTXOs to find the last removable UTXO
-        for (let i = 0; i < selectedUTXOs.length; i++) {
-            const utxo = selectedUTXOs[i];
-            if (utxo.denomination) {
-                if (runningTotal - utxo.denomination >= target.value) {
-                    runningTotal -= utxo.denomination;
-                    lastRemovableIndex = i;
-                }
-                else {
-                    // Once a UTXO makes the total less than target.value, stop the loop
-                    break;
-                }
-            }
-        }
-        if (lastRemovableIndex >= 0) {
-            totalValue -= selectedUTXOs[lastRemovableIndex].denomination;
-            selectedUTXOs.splice(lastRemovableIndex, 1);
         }
         // Break down the total spend into properly denominatated UTXOs
         const spendDenominations = denominate(target.value);
         this.spendOutputs = spendDenominations.map((denomination) => {
             const utxo = new UTXO();
-            utxo.denomination = denomination;
+            utxo.denomination = denominations.indexOf(denomination);
             utxo.address = target.address;
             return utxo;
         });
@@ -19303,7 +19409,7 @@ class FewestCoinSelector extends AbstractCoinSelector {
             const changeDenominations = denominate(change);
             this.changeOutputs = changeDenominations.map((denomination) => {
                 const utxo = new UTXO();
-                utxo.denomination = denomination;
+                utxo.denomination = denominations.indexOf(denomination);
                 // We do not have access to change addresses here so leave it null
                 return utxo;
             });
@@ -19312,7 +19418,7 @@ class FewestCoinSelector extends AbstractCoinSelector {
             this.changeOutputs = [];
         }
         return {
-            inputs: selectedUTXOs,
+            inputs: completeSelectedUTXOs,
             spendOutputs: this.spendOutputs,
             changeOutputs: this.changeOutputs,
         };
@@ -19327,12 +19433,14 @@ class FewestCoinSelector extends AbstractCoinSelector {
     sortUTXOsByDenomination(utxos, direction) {
         if (direction === 'asc') {
             return [...utxos].sort((a, b) => {
-                const diff = (a.denomination ?? BigInt(0)) - (b.denomination ?? BigInt(0));
+                const diff = (a.denomination !== null ? denominations[a.denomination] : BigInt(0)) -
+                    (b.denomination !== null ? denominations[b.denomination] : BigInt(0));
                 return diff > 0 ? 1 : diff < 0 ? -1 : 0;
             });
         }
         return [...utxos].sort((a, b) => {
-            const diff = (b.denomination ?? BigInt(0)) - (a.denomination ?? BigInt(0));
+            const diff = (b.denomination !== null ? denominations[b.denomination] : BigInt(0)) -
+                (a.denomination !== null ? denominations[a.denomination] : BigInt(0));
             return diff > 0 ? 1 : diff < 0 ? -1 : 0;
         });
     }
@@ -19353,7 +19461,7 @@ class FewestCoinSelector extends AbstractCoinSelector {
      * @throws Will throw an error if there are no available UTXOs.
      */
     validateUTXOs() {
-        if (this.availableUXTOs.length === 0) {
+        if (this.availableUTXOs.length === 0) {
             throw new Error('No UTXOs available');
         }
     }
@@ -19403,7 +19511,7 @@ function object(format, altNames) {
             }
             catch (error) {
                 const message = error instanceof Error ? error.message : 'not-an-error';
-                assert(false, `invalid value for value.${key} (${message})`, 'BAD_DATA', { value });
+                assert$1(false, `invalid value for value.${key} (${message})`, 'BAD_DATA', { value });
             }
         }
         return result;
@@ -20229,11 +20337,11 @@ class QuaiTransaction extends AbstractTransaction {
      */
     inferTypes() {
         if (this.gasPrice != null && this.minerTip != null) {
-            assert(this.gasPrice >= this.minerTip, 'priorityFee cannot be more than maxFee', 'BAD_DATA', {
+            assert$1(this.gasPrice >= this.minerTip, 'priorityFee cannot be more than maxFee', 'BAD_DATA', {
                 value: this,
             });
         }
-        assert(this.type !== 0 && this.type !== 1, 'transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList', 'BAD_DATA', { value: this });
+        assert$1(this.type !== 0 && this.type !== 1, 'transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList', 'BAD_DATA', { value: this });
         const types = [];
         // Explicit type
         if (this.type != null) {
@@ -20797,7 +20905,7 @@ class Block {
             return [];
         }
         // Make sure we prefetched the transactions
-        assert(typeof txs[0] === 'object', 'transactions were not prefetched with block request', 'UNSUPPORTED_OPERATION', {
+        assert$1(typeof txs[0] === 'object', 'transactions were not prefetched with block request', 'UNSUPPORTED_OPERATION', {
             operation: 'transactionResponses()',
         });
         return txs;
@@ -20818,7 +20926,7 @@ class Block {
             return [];
         }
         // Make sure we prefetched the transactions
-        assert(typeof txs[0] === 'object', 'transactions were not prefetched with block request', 'UNSUPPORTED_OPERATION', {
+        assert$1(typeof txs[0] === 'object', 'transactions were not prefetched with block request', 'UNSUPPORTED_OPERATION', {
             operation: 'transactionResponses()',
         });
         return txs;
@@ -21127,7 +21235,7 @@ class Log {
      */
     async getBlock(shard) {
         const block = await this.provider.getBlock(shard, this.blockHash);
-        assert(!!block, 'failed to find transaction', 'UNKNOWN_ERROR', {});
+        assert$1(!!block, 'failed to find transaction', 'UNKNOWN_ERROR', {});
         return block;
     }
     /**
@@ -21137,7 +21245,7 @@ class Log {
      */
     async getTransaction() {
         const tx = await this.provider.getTransaction(this.transactionHash);
-        assert(!!tx, 'failed to find transaction', 'UNKNOWN_ERROR', {});
+        assert$1(!!tx, 'failed to find transaction', 'UNKNOWN_ERROR', {});
         return tx;
     }
     /**
@@ -21147,7 +21255,7 @@ class Log {
      */
     async getTransactionReceipt() {
         const receipt = await this.provider.getTransactionReceipt(this.transactionHash);
-        assert(!!receipt, 'failed to find transaction receipt', 'UNKNOWN_ERROR', {});
+        assert$1(!!receipt, 'failed to find transaction receipt', 'UNKNOWN_ERROR', {});
         return receipt;
     }
     /**
@@ -21426,7 +21534,7 @@ class TransactionReceipt {
      * @ignore
      */
     reorderedEvent(other) {
-        assert(!other || other.isMined(), "unmined 'other' transction cannot be orphaned", 'UNSUPPORTED_OPERATION', {
+        assert$1(!other || other.isMined(), "unmined 'other' transction cannot be orphaned", 'UNSUPPORTED_OPERATION', {
             operation: 'reorderedEvent(other)',
         });
         return createReorderedTransactionFilter(this, other);
@@ -21876,7 +21984,7 @@ class QuaiTransactionResponse {
                         else if (tx.data === '0x' && tx.from === tx.to && tx.value === BN_0$1) {
                             reason = 'cancelled';
                         }
-                        assert(false, 'transaction was replaced', 'TRANSACTION_REPLACED', {
+                        assert$1(false, 'transaction was replaced', 'TRANSACTION_REPLACED', {
                             cancelled: reason === 'replaced' || reason === 'cancelled',
                             reason,
                             replacement: tx.replaceableTransaction(startBlock),
@@ -21893,7 +22001,7 @@ class QuaiTransactionResponse {
             if (receipt == null || receipt.status !== 0) {
                 return receipt;
             }
-            assert(false, 'transaction execution reverted', 'CALL_EXCEPTION', {
+            assert$1(false, 'transaction execution reverted', 'CALL_EXCEPTION', {
                 action: 'sendTransaction',
                 data: null,
                 reason: null,
@@ -22009,7 +22117,7 @@ class QuaiTransactionResponse {
      * @returns {OrphanFilter} The orphan filter.
      */
     removedEvent() {
-        assert(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
+        assert$1(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
             operation: 'removeEvent()',
         });
         return createRemovedTransactionFilter(this);
@@ -22021,10 +22129,10 @@ class QuaiTransactionResponse {
      * @returns {OrphanFilter} The orphan filter.
      */
     reorderedEvent(other) {
-        assert(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
+        assert$1(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
             operation: 'removeEvent()',
         });
-        assert(!other || other.isMined(), "unmined 'other' transaction canot be orphaned", 'UNSUPPORTED_OPERATION', {
+        assert$1(!other || other.isMined(), "unmined 'other' transaction canot be orphaned", 'UNSUPPORTED_OPERATION', {
             operation: 'removeEvent()',
         });
         return createReorderedTransactionFilter(this, other);
@@ -22214,7 +22322,7 @@ class QiTransactionResponse {
      * @returns {OrphanFilter} The orphan filter.
      */
     removedEvent() {
-        assert(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
+        assert$1(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
             operation: 'removeEvent()',
         });
         return createRemovedTransactionFilter(this);
@@ -22226,10 +22334,10 @@ class QiTransactionResponse {
      * @returns {OrphanFilter} The orphan filter.
      */
     reorderedEvent(other) {
-        assert(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
+        assert$1(this.isMined(), 'unmined transaction canot be orphaned', 'UNSUPPORTED_OPERATION', {
             operation: 'removeEvent()',
         });
-        assert(!other || other.isMined(), "unmined 'other' transaction canot be orphaned", 'UNSUPPORTED_OPERATION', {
+        assert$1(!other || other.isMined(), "unmined 'other' transaction canot be orphaned", 'UNSUPPORTED_OPERATION', {
             operation: 'removeEvent()',
         });
         return createReorderedTransactionFilter(this, other);
@@ -22683,7 +22791,7 @@ function buildWrappedFallback(contract) {
      */
     const staticCall = async function (overrides) {
         const runner = getRunner(contract.runner, 'call');
-        assert(canCall(runner), 'contract runner does not support calling', 'UNSUPPORTED_OPERATION', {
+        assert$1(canCall(runner), 'contract runner does not support calling', 'UNSUPPORTED_OPERATION', {
             operation: 'call',
         });
         const tx = await populateTransaction(overrides);
@@ -22706,7 +22814,7 @@ function buildWrappedFallback(contract) {
      */
     const send = async function (overrides) {
         const runner = contract.runner;
-        assert(canSend(runner), 'contract runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
+        assert$1(canSend(runner), 'contract runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
             operation: 'sendTransaction',
         });
         const tx = (await runner.sendTransaction(await populateTransaction(overrides)));
@@ -22724,7 +22832,7 @@ function buildWrappedFallback(contract) {
      */
     const estimateGas = async function (overrides) {
         const runner = getRunner(contract.runner, 'estimateGas');
-        assert(canEstimate(runner), 'contract runner does not support gas estimation', 'UNSUPPORTED_OPERATION', {
+        assert$1(canEstimate(runner), 'contract runner does not support gas estimation', 'UNSUPPORTED_OPERATION', {
             operation: 'estimateGas',
         });
         return await runner.estimateGas(await populateTransaction(overrides));
@@ -22765,7 +22873,7 @@ function buildWrappedMethod(contract, key) {
      */
     const getFragment = function (...args) {
         const fragment = contract.interface.getFunction(key, args);
-        assert(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
+        assert$1(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
             operation: 'fragment',
             info: { key, args },
         });
@@ -22823,7 +22931,7 @@ function buildWrappedMethod(contract, key) {
      */
     const send = async function (...args) {
         const runner = contract.runner;
-        assert(canSend(runner), 'contract runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
+        assert$1(canSend(runner), 'contract runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
             operation: 'sendTransaction',
         });
         const pop = await populateTransaction(...args);
@@ -22845,7 +22953,7 @@ function buildWrappedMethod(contract, key) {
      */
     const estimateGas = async function (...args) {
         const runner = getRunner(contract.runner, 'estimateGas');
-        assert(canEstimate(runner), 'contract runner does not support gas estimation', 'UNSUPPORTED_OPERATION', {
+        assert$1(canEstimate(runner), 'contract runner does not support gas estimation', 'UNSUPPORTED_OPERATION', {
             operation: 'estimateGas',
         });
         return await runner.estimateGas(await populateTransaction(...args));
@@ -22859,7 +22967,7 @@ function buildWrappedMethod(contract, key) {
      */
     const staticCallResult = async function (...args) {
         const runner = getRunner(contract.runner, 'call');
-        assert(canCall(runner), 'contract runner does not support calling', 'UNSUPPORTED_OPERATION', {
+        assert$1(canCall(runner), 'contract runner does not support calling', 'UNSUPPORTED_OPERATION', {
             operation: 'call',
         });
         const tx = await populateTransaction(...args);
@@ -22910,7 +23018,7 @@ function buildWrappedMethod(contract, key) {
         enumerable: true,
         get: () => {
             const fragment = contract.interface.getFunction(key);
-            assert(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
+            assert$1(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
                 operation: 'fragment',
                 info: { key },
             });
@@ -22936,7 +23044,7 @@ function buildWrappedEvent(contract, key) {
      */
     const getFragment = function (...args) {
         const fragment = contract.interface.getEvent(key, args);
-        assert(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
+        assert$1(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
             operation: 'fragment',
             info: { key, args },
         });
@@ -22963,7 +23071,7 @@ function buildWrappedEvent(contract, key) {
         enumerable: true,
         get: () => {
             const fragment = contract.interface.getEvent(key);
-            assert(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
+            assert$1(fragment, 'no matching fragment', 'UNSUPPORTED_OPERATION', {
                 operation: 'fragment',
                 info: { key },
             });
@@ -23121,7 +23229,7 @@ async function hasSub(contract, event) {
 async function getSub(contract, operation, event) {
     // Make sure our runner can actually subscribe to events
     const provider = getProvider(contract.runner);
-    assert(provider, 'contract runner does not support subscribing', 'UNSUPPORTED_OPERATION', { operation });
+    assert$1(provider, 'contract runner does not support subscribing', 'UNSUPPORTED_OPERATION', { operation });
     const { fragment, tag, topics } = await getSubInfo(contract, event);
     const { addr, subs } = getInternal(contract);
     let sub = subs.get(tag);
@@ -23399,7 +23507,7 @@ class BaseContract {
      */
     async getDeployedCode() {
         const provider = getProvider(this.runner);
-        assert(provider, 'runner does not support .provider', 'UNSUPPORTED_OPERATION', {
+        assert$1(provider, 'runner does not support .provider', 'UNSUPPORTED_OPERATION', {
             operation: 'getDeployedCode',
         });
         const code = await provider.getCode(await this.getAddress());
@@ -23428,7 +23536,7 @@ class BaseContract {
         }
         // Make sure we can subscribe to a provider event
         const provider = getProvider(this.runner);
-        assert(provider != null, 'contract runner does not support .provider', 'UNSUPPORTED_OPERATION', {
+        assert$1(provider != null, 'contract runner does not support .provider', 'UNSUPPORTED_OPERATION', {
             operation: 'waitForDeployment',
         });
         return new Promise((resolve, reject) => {
@@ -23515,7 +23623,7 @@ class BaseContract {
         const zone = getZoneForAddress(address);
         const filter = { address, topics, fromBlock, toBlock, nodeLocation: getNodeLocationFromZone(zone) };
         const provider = getProvider(this.runner);
-        assert(provider, 'contract runner does not have a provider', 'UNSUPPORTED_OPERATION', {
+        assert$1(provider, 'contract runner does not have a provider', 'UNSUPPORTED_OPERATION', {
             operation: 'queryFilter',
         });
         return (await provider.getLogs(filter)).map((log) => {
@@ -23732,7 +23840,7 @@ function checkProvider(signer, operation) {
     if (signer.provider) {
         return signer.provider;
     }
-    assert(false, 'missing provider', 'UNSUPPORTED_OPERATION', { operation });
+    assert$1(false, 'missing provider', 'UNSUPPORTED_OPERATION', { operation });
 }
 async function populate(signer, tx) {
     const pop = copyRequest(tx);
@@ -23836,6 +23944,9 @@ class AbstractSigner {
     async estimateGas(tx) {
         return checkProvider(this, 'estimateGas').estimateGas(await this.populateCall(tx));
     }
+    async createAccessList(tx) {
+        return checkProvider(this, 'createAccessList').createAccessList((await this.populateCall(tx)));
+    }
     async call(tx) {
         return checkProvider(this, 'call').call(await this.populateCall(tx));
     }
@@ -23877,7 +23988,7 @@ class VoidSigner extends AbstractSigner {
         return new VoidSigner(this.address, provider);
     }
     #throwUnsupported(suffix, operation) {
-        assert(false, `VoidSigner cannot sign ${suffix}`, 'UNSUPPORTED_OPERATION', { operation });
+        assert$1(false, `VoidSigner cannot sign ${suffix}`, 'UNSUPPORTED_OPERATION', { operation });
     }
     // TODO: `domain`, `types` and `value` are not used, remove?
     // TODO: this function only throws, remove?
@@ -24218,7 +24329,7 @@ class WordlistOwl extends Wordlist {
 }
 
 const words$1 = "0erleonalorenseinceregesticitStanvetearctssi#ch2Athck&tneLl0And#Il.yLeOutO=S|S%b/ra@SurdU'0Ce[Cid|CountCu'Hie=IdOu,-Qui*Ro[TT]T%T*[Tu$0AptDD-tD*[Ju,M.UltV<)Vi)0Rob-0FairF%dRaid0A(EEntRee0Ead0MRRp%tS!_rmBumCoholErtI&LLeyLowMo,O}PhaReadySoT Ways0A>urAz(gOngOuntU'd0Aly,Ch%Ci|G G!GryIm$K!Noun)Nu$O` Sw T&naTiqueXietyY1ArtOlogyPe?P!Pro=Ril1ChCt-EaEnaGueMMedM%MyOundR<+Re,Ri=RowTTefa@Ti,Tw%k0KPe@SaultSetSi,SumeThma0H!>OmTa{T&dT.udeTra@0Ct]D.Gu,NtTh%ToTumn0Era+OcadoOid0AkeA*AyEsomeFulKw?d0Is:ByChel%C#D+GL<)Lc#y~MbooN<aNn RRelyRga(R*lSeS-SketTt!3A^AnAutyCau'ComeEfF%eG(Ha=H(dLie=LowLtN^Nef./TrayTt Twe&Y#d3Cyc!DKeNdOlogyRdR`Tt _{AdeAmeAnketA,EakE[IndOodO[omOu'UeUrUsh_rdAtDyIlMbNeNusOkO,Rd R(gRrowSsTtomUn)XY_{etA(AndA[A=EadEezeI{Id+IefIghtIngIskOccoliOk&OnzeOomO` OwnUsh2Bb!DdyD+tFf$oIldLbLkL!tNd!Nk Rd&Rg R,SS(e[SyTt Y Zz:Bba+B(B!CtusGeKe~LmM aMpNN$N)lNdyNn#NoeNvasNy#Pab!P.$Pta(RRb#RdRgoRpetRryRtSeShS(o/!Su$TT$ogT^Teg%yTt!UghtU'Ut]Ve3Il(gL yM|NsusNturyRe$Rta(_irAlkAmp]An+AosApt Ar+A'AtEapE{Ee'EfErryE,I{&IefIldIm}yOi)Oo'R#-U{!UnkUrn0G?Nnam#Rc!Tiz&TyVil_imApArifyAwAyE<ErkEv I{I|IffImbIn-IpO{OgO'O`OudOwnUbUmpU, Ut^_^A,C#utDeFfeeIlInL!@L%LumnMb(eMeMf%tM-Mm#Mp<yNc tNdu@NfirmNg*[N}@Nsid NtrolNv()OkOlPp PyR$ReRnR*@/Tt#U^UntryUp!Ur'Us(V Yo>_{Ad!AftAmA}AshAt AwlAzyEamEd.EekEwI{etImeIspIt-OpO[Ou^OwdUci$UelUi'Umb!Un^UshYY,$2BeLtu*PPbo?dRiousRr|Rta(R=Sh]/omTe3C!:DMa+MpN)Ng R(gShUght WnY3AlBa>BrisCadeCemb CideCl(eC%a>C*a'ErF&'F(eFyG*eLayLiv M<dMi'Ni$Nti,NyP?tP&dPos.P`PutyRi=ScribeS tSignSkSpair/royTailTe@VelopVi)Vo>3AgramAlAm#dAryCeE'lEtFf G.$Gn.yLemmaNn NosaurRe@RtSag*eScov Sea'ShSmi[S%d Splay/<)V tVideV%)Zzy5Ct%Cum|G~Lph(Ma(Na>NkeyN%OrSeUb!Ve_ftAg#AmaA,-AwEamE[IftIllInkIpI=OpUmY2CkMbNeR(g/T^Ty1Arf1Nam-:G G!RlyRnR`Sily/Sy1HoOlogyOnomy0GeItUca>1F%t0G1GhtTh 2BowD E@r-Eg<tEm|Eph<tEvat%I>Se0B?kBodyBra)Er+Ot]PloyPow Pty0Ab!A@DD![D%'EmyErgyF%)Ga+G(eH<)JoyLi,OughR-hRollSu*T Ti*TryVelope1Isode0U$Uip0AA'OdeOs]R%Upt0CapeSayS&)Ta>0Ern$H-s1Id&)IlOkeOl=1A@Amp!Ce[Ch<+C.eCludeCu'Ecu>Erci'Hau,Hib.I!I,ItOt-P<dPe@Pi*Pla(Po'P*[T&dTra0EEbrow:Br-CeCultyDeIntI`~L'MeMilyMousNNcyNtasyRmSh]TT$Th TigueUltV%.e3Atu*Bru?yD $EEdElMa!N)/iv$T^V W3B Ct]EldGu*LeLmLt N$NdNeNg NishReRmR,Sc$ShTT}[X_gAmeAshAtAv%EeIghtIpOatO{O%Ow UidUshY_mCusGIlLd~owOdOtR)Re,R+tRkRtu}RumRw?dSsil/ UndX_gi!AmeEqu|EshI&dIn+OgOntO,OwnOz&U.2ElNNnyRna)RyTu*:D+tInLaxy~ yMePRa+Rba+Rd&Rl-Rm|SSpTeTh U+Ze3N $NiusN*Nt!Nu(e/u*2O,0AntFtGg!Ng RaffeRlVe_dAn)A*A[IdeImp'ObeOomOryO=OwUe_tDde[LdOdO'RillaSpelSsipV nWn_bA)A(AntApeA[Av.yEatE&IdIefItOc yOupOwUnt_rdE[IdeIltIt?N3M:B.IrLfMm M, NdPpyRb%RdRshR=,TVeWkZ?d3AdAl`ArtAvyD+hogIght~oLmetLpNRo3Dd&Gh~NtPRe/%y5BbyCkeyLdLeLiday~owMeNeyOdPeRnRr%R'Sp.$/TelUrV 5BGeM<Mb!M%Nd*dNgryNtRd!RryRtSb<d3Brid:1EOn0EaEntifyLe2N%e4LLeg$L}[0A+Ita>M&'Mu}Pa@Po'Pro=Pul'0ChCludeComeC*a'DexD-a>Do%Du,ryF<tFl-tF%mHa!H .Iti$Je@JuryMa>N Noc|PutQuiryS<eSe@SideSpi*/$lTa@T e,ToVe,V.eVol=3On0L<dOla>Sue0Em1Ory:CketGu?RZz3AlousAns~yWel9BInKeUr}yY5D+I)MpNg!Ni%Nk/:Ng?oo3EnEpT^upY3CkDD}yNdNgdomSsTT^&TeTt&Wi4EeIfeO{Ow:BBelB%Dd DyKeMpNgua+PtopR+T T(UghUndryVaWWnWsu.Y Zy3Ad AfArnA=Ctu*FtGG$G&dIsu*M#NdNg`NsOp?dSs#Tt Vel3ArB tyBr?yC&'FeFtGhtKeMbM.NkOnQuid/Tt!VeZ?d5AdAnB, C$CkG-NelyNgOpTt yUdUn+VeY$5CkyGga+Mb N?N^Xury3R-s:Ch(eDG-G}tIdIlInJ%KeMm$NNa+Nda>NgoNs]Nu$P!Rb!R^Rg(R(eRketRria+SkSs/ T^T i$ThTrixTt XimumZe3AdowAnAsu*AtCh<-D$DiaLodyLtMb M%yNt]NuRcyR+R.RryShSsa+T$Thod3Dd!DnightLk~]M-NdNimumN%Nu>Rac!Rr%S ySs/akeXXedXtu*5Bi!DelDifyMM|N.%NkeyN, N`OnR$ReRn(gSqu.oTh T]T%Unta(U'VeVie5ChFf(LeLtiplySc!SeumShroomS-/Tu$3Self/ yTh:I=MePk(Rrow/yT]Tu*3ArCkEdGati=G!@I` PhewR=/TTw%kUtr$V WsXt3CeGht5B!I'M(eeOd!Rm$R`SeTab!TeTh(gTi)VelW5C!?Mb R'T:K0EyJe@Li+Scu*S =Ta(Vious0CurE<Tob 0Or1FF Fi)T&2L1Ay0DI=Ymp-0It0CeEI#L(eLy1EnEraIn]Po'T]1An+B.Ch?dD D(?yG<I|Ig($Ph<0Tr-h0H 0Tdo%T TputTside0AlEnEr0NN 0Yg&0/ 0O}:CtDd!GeIrLa)LmNdaNelN-N` P RadeR|RkRrotRtySsT^ThTi|TrolTt nU'VeYm|3A)AnutArAs<tL-<NN$tyNcilOp!Pp Rfe@Rm.Rs#T2O}OtoRa'Ys-$0AnoCn-Ctu*E)GGe#~LotNkO} Pe/olT^Zza_)A}tA,-A>AyEa'Ed+U{UgUn+2EmEtIntL?LeLi)NdNyOlPul?Rt]S.]Ssib!/TatoTt yV tyWd W _@i)Ai'Ed-tEf Epa*Es|EttyEv|I)IdeIm?yIntI%.yIs#Iva>IzeOb!mO)[Odu)Of.OgramOje@Omo>OofOp tyOsp O>@OudOvide2Bl-Dd(g~LpL'Mpk(N^PilPpyR^a'R.yRpo'R'ShTZz!3Ramid:99Al.yAntumArt E,]I{ItIzO>:Bb.Cco#CeCkD?DioIlInI'~yMpN^NdomN+PidReTeTh V&WZ%3AdyAlAs#BelBuildC$lCei=CipeC%dCyc!Du)F!@F%mFu'G]G*tGul?Je@LaxLea'LiefLyMa(Memb M(dMo=Nd NewNtOp&PairPeatPla)P%tQui*ScueSemb!Si,Sour)Sp#'SultTi*T*atTurnUn]Ve$ViewW?d2Y`m0BBb#CeChDeD+F!GhtGidNgOtPp!SkTu$V$V 5AdA,BotBu,CketM<)OfOkieOmSeTa>UghUndU>Y$5Bb DeGLeNNwayR$:DDd!D}[FeIlLadLm#L#LtLu>MeMp!NdTisfyToshiU)Usa+VeY1A!AnA*Att E}HemeHoolI&)I[%sOrp]OutRapRe&RiptRub1AAr^As#AtC#dC*tCt]Cur.yEdEkGm|Le@~M(?Ni%N'Nt&)RiesRvi)Ss]Tt!TupV&_dowAftAllowA*EdEllEriffIeldIftI}IpIv O{OeOotOpOrtOuld O=RimpRugUff!Y0Bl(gCkDeE+GhtGnL|Lk~yLv Mil?Mp!N)NgR&/ Tua>XZe1A>Et^IIllInIrtUll0AbAmEepEnd I)IdeIghtImOg<OtOwUsh0AllArtI!OkeOo`0A{AkeApIffOw0ApCc Ci$CkDaFtL?Ldi LidLut]L=Me#eNgOnRryRtUlUndUpUr)U`0A)A*Ati$AwnEakEci$EedEllEndH eI)Id IkeInIr.L.OilOns%O#OrtOtRayReadR(gY0Ua*UeezeUir*l_b!AdiumAffA+AirsAmpAndArtA>AyEakEelEmEpE*oI{IllIngO{Oma^O}OolOryO=Ra>gyReetRikeR#gRugg!Ud|UffUmb!Y!0Bje@Bm.BwayC)[ChDd&Ff G?G+,ItMm NNnyN'tP PplyP*meReRfa)R+Rpri'RroundR=ySpe@/a(1AllowAmpApArmE?EetIftImIngIt^Ord1MbolMptomRup/em:B!Ck!GIlL|LkNkPeR+tSk/eTtooXi3A^Am~NN<tNnisNtRm/Xt_nkAtEmeEnE%yE*EyIngIsOughtReeRi=RowUmbUnd 0CketDeG LtMb MeNyPRedSsueT!5A,BaccoDayDdl EGe` I!tK&MatoM%rowNeNgueNightOlO`PP-Pp!R^RnadoRtoi'SsT$Uri,W?dW WnY_{AdeAff-Ag-A(Ansf ApAshA=lAyEatEeEndI$IbeI{Igg ImIpOphyOub!U{UeUlyUmpetU,U`Y2BeIt]Mb!NaN}lRkeyRnRt!1El=EntyI)InI,O1PeP-$:5Ly5B*lla0Ab!Awa*C!Cov D DoFairFoldHappyIf%mIqueItIv 'KnownLo{TilUsu$Veil1Da>GradeHoldOnP Set1B<Ge0A+EEdEfulE![U$0Il.y:C<tCuumGueLidL!yL=NNishP%Rious/Ult3H-!L=tNd%Ntu*NueRbRifyRs]RyS'lT <3Ab!Br<tCiousCt%yDeoEw~a+Nta+Ol(Rtu$RusSaS.Su$T$Vid5C$I)IdLc<oLumeTeYa+:GeG#ItLk~LnutNtRfa*RmRri%ShSp/eT VeY3Al`Ap#ArA'lA` BDd(gEk&dIrdLcome/T_!AtEatEelEnE*IpIsp 0DeD`FeLd~NNdowNeNgNkNn Nt ReSdomSeShT}[5LfM<Nd OdOlRdRkRldRryR`_pE{E,!I,I>Ong::Rd3Ar~ow9UUngU`:3BraRo9NeO";
-const checksum$1 = '0x3c8acc1e7b08d8e76f9fda015ef48dc8c710a73cb7e0f77b2c18a9b5a7adde60';
+const checksum$2 = '0x3c8acc1e7b08d8e76f9fda015ef48dc8c710a73cb7e0f77b2c18a9b5a7adde60';
 let wordlist$1 = null;
 /**
  * The [English wordlist](https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt) for [mnemonic
@@ -24235,7 +24346,7 @@ class LangEn extends WordlistOwl {
      * @ignore
      */
     constructor() {
-        super('en', words$1, checksum$1);
+        super('en', words$1, checksum$2);
     }
     /**
      * Returns a singleton instance of a `LangEn`, creating it if this is the first time being called.
@@ -24935,7 +25046,7 @@ function decrypt(data, key, ciphertext) {
         const aesCtr = new CTR(key, iv);
         return hexlify(aesCtr.decrypt(ciphertext));
     }
-    assert(false, 'unsupported cipher', 'UNSUPPORTED_OPERATION', {
+    assert$1(false, 'unsupported cipher', 'UNSUPPORTED_OPERATION', {
         operation: 'decrypt',
     });
 }
@@ -25033,7 +25144,7 @@ function decryptKeystoreJsonSync(json, _password) {
         const key = pbkdf2(password, salt, count, dkLen, algorithm);
         return getAccount(data, key);
     }
-    assert(params.name === 'scrypt', 'cannot be reached', 'UNKNOWN_ERROR', { params });
+    assert$1(params.name === 'scrypt', 'cannot be reached', 'UNKNOWN_ERROR', { params });
     const { salt, N, r, p, dkLen } = params;
     const key = scryptSync(password, salt, N, r, p, dkLen);
     return getAccount(data, key);
@@ -25082,7 +25193,7 @@ async function decryptKeystoreJson(json, _password, progress) {
         }
         return getAccount(data, key);
     }
-    assert(params.name === 'scrypt', 'cannot be reached', 'UNKNOWN_ERROR', { params });
+    assert$1(params.name === 'scrypt', 'cannot be reached', 'UNKNOWN_ERROR', { params });
     const { salt, N, r, p, dkLen } = params;
     const key = await scrypt(password, salt, N, r, p, dkLen, progress);
     return getAccount(data, key);
@@ -25270,7 +25381,7 @@ const _guard$1 = {};
 function ser_I(index, chainCode, publicKey, privateKey) {
     const data = new Uint8Array(37);
     if (index & HardenedBit) {
-        assert(privateKey != null, 'cannot derive child of neutered node', 'UNSUPPORTED_OPERATION', {
+        assert$1(privateKey != null, 'cannot derive child of neutered node', 'UNSUPPORTED_OPERATION', {
             operation: 'deriveChild',
         });
         // Data = 0x00 || ser_256(k_par)
@@ -25469,7 +25580,7 @@ class HDNodeWallet extends BaseWallet {
         // we should always use mainnet, and use BIP-44 to derive the network
         //   - Mainnet: public=0x0488B21E, private=0x0488ADE4
         //   - Testnet: public=0x043587CF, private=0x04358394
-        assert(this.depth < 256, 'Depth too deep', 'UNSUPPORTED_OPERATION', {
+        assert$1(this.depth < 256, 'Depth too deep', 'UNSUPPORTED_OPERATION', {
             operation: 'extendedKey',
         });
         return encodeBase58Check(concat([
@@ -25741,7 +25852,7 @@ class HDNodeVoidWallet extends VoidSigner {
         // we should always use mainnet, and use BIP-44 to derive the network
         //   - Mainnet: public=0x0488B21E, private=0x0488ADE4
         //   - Testnet: public=0x043587CF, private=0x04358394
-        assert(this.depth < 256, 'Depth too deep', 'UNSUPPORTED_OPERATION', { operation: 'extendedKey' });
+        assert$1(this.depth < 256, 'Depth too deep', 'UNSUPPORTED_OPERATION', { operation: 'extendedKey' });
         return encodeBase58Check(concat([
             '0x0488B21E',
             zpad(this.depth, 1),
@@ -25844,6 +25955,16 @@ class AbstractHDWallet {
     get xPub() {
         return this._root.extendedKey;
     }
+    // helper method to check if an address is valid for a given zone
+    isValidAddressForZone(address, zone) {
+        const addressZone = getZoneForAddress(address);
+        if (!addressZone) {
+            return false;
+        }
+        const isCorrectShard = addressZone === zone;
+        const isCorrectLedger = this.coinType() === 969 ? isQiAddress(address) : !isQiAddress(address);
+        return isCorrectShard && isCorrectLedger;
+    }
     /**
      * Derives the next valid address node for a specified account, starting index, and zone. The method ensures the
      * derived address belongs to the correct shard and ledger, as defined by the Quai blockchain specifications.
@@ -25860,18 +25981,9 @@ class AbstractHDWallet {
         const changeNode = this._root.deriveChild(account).deriveChild(changeIndex);
         let addrIndex = startingIndex;
         let addressNode;
-        const isValidAddressForZone = (address) => {
-            const addressZone = getZoneForAddress(address);
-            if (!addressZone) {
-                return false;
-            }
-            const isCorrectShard = addressZone === zone;
-            const isCorrectLedger = this.coinType() === 969 ? isQiAddress(address) : !isQiAddress(address);
-            return isCorrectShard && isCorrectLedger;
-        };
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             addressNode = changeNode.deriveChild(addrIndex++);
-            if (isValidAddressForZone(addressNode.address)) {
+            if (this.isValidAddressForZone(addressNode.address, zone)) {
                 return addressNode;
             }
         }
@@ -26864,6 +26976,970 @@ function MuSigFactory(ecc) {
   };
 }
 
+/*! scure-base - MIT License (c) 2022 Paul Miller (paulmillr.com) */
+// Utilities
+
+function isBytes(a) {
+    return (a instanceof Uint8Array ||
+        (a != null && typeof a === 'object' && a.constructor.name === 'Uint8Array'));
+}
+/**
+ * @__NO_SIDE_EFFECTS__
+ */
+function chain(...args) {
+    const id = (a) => a;
+    // Wrap call in closure so JIT can inline calls
+    const wrap = (a, b) => (c) => a(b(c));
+    // Construct chain of args[-1].encode(args[-2].encode([...]))
+    const encode = args.map((x) => x.encode).reduceRight(wrap, id);
+    // Construct chain of args[0].decode(args[1].decode(...))
+    const decode = args.map((x) => x.decode).reduce(wrap, id);
+    return { encode, decode };
+}
+/**
+ * Encodes integer radix representation to array of strings using alphabet and back
+ * @__NO_SIDE_EFFECTS__
+ */
+function alphabet(alphabet) {
+    return {
+        encode: (digits) => {
+            if (!Array.isArray(digits) || (digits.length && typeof digits[0] !== 'number'))
+                throw new Error('alphabet.encode input should be an array of numbers');
+            return digits.map((i) => {
+                if (i < 0 || i >= alphabet.length)
+                    throw new Error(`Digit index outside alphabet: ${i} (alphabet: ${alphabet.length})`);
+                return alphabet[i];
+            });
+        },
+        decode: (input) => {
+            if (!Array.isArray(input) || (input.length && typeof input[0] !== 'string'))
+                throw new Error('alphabet.decode input should be array of strings');
+            return input.map((letter) => {
+                if (typeof letter !== 'string')
+                    throw new Error(`alphabet.decode: not string element=${letter}`);
+                const index = alphabet.indexOf(letter);
+                if (index === -1)
+                    throw new Error(`Unknown letter: "${letter}". Allowed: ${alphabet}`);
+                return index;
+            });
+        },
+    };
+}
+/**
+ * @__NO_SIDE_EFFECTS__
+ */
+function join(separator = '') {
+    if (typeof separator !== 'string')
+        throw new Error('join separator should be string');
+    return {
+        encode: (from) => {
+            if (!Array.isArray(from) || (from.length && typeof from[0] !== 'string'))
+                throw new Error('join.encode input should be array of strings');
+            for (let i of from)
+                if (typeof i !== 'string')
+                    throw new Error(`join.encode: non-string input=${i}`);
+            return from.join(separator);
+        },
+        decode: (to) => {
+            if (typeof to !== 'string')
+                throw new Error('join.decode input should be string');
+            return to.split(separator);
+        },
+    };
+}
+/**
+ * Slow: O(n^2) time complexity
+ * @__NO_SIDE_EFFECTS__
+ */
+function convertRadix(data, from, to) {
+    // base 1 is impossible
+    if (from < 2)
+        throw new Error(`convertRadix: wrong from=${from}, base cannot be less than 2`);
+    if (to < 2)
+        throw new Error(`convertRadix: wrong to=${to}, base cannot be less than 2`);
+    if (!Array.isArray(data))
+        throw new Error('convertRadix: data should be array');
+    if (!data.length)
+        return [];
+    let pos = 0;
+    const res = [];
+    const digits = Array.from(data);
+    digits.forEach((d) => {
+        if (d < 0 || d >= from)
+            throw new Error(`Wrong integer: ${d}`);
+    });
+    while (true) {
+        let carry = 0;
+        let done = true;
+        for (let i = pos; i < digits.length; i++) {
+            const digit = digits[i];
+            const digitBase = from * carry + digit;
+            if (!Number.isSafeInteger(digitBase) ||
+                (from * carry) / from !== carry ||
+                digitBase - digit !== from * carry) {
+                throw new Error('convertRadix: carry overflow');
+            }
+            carry = digitBase % to;
+            const rounded = Math.floor(digitBase / to);
+            digits[i] = rounded;
+            if (!Number.isSafeInteger(rounded) || rounded * to + carry !== digitBase)
+                throw new Error('convertRadix: carry overflow');
+            if (!done)
+                continue;
+            else if (!rounded)
+                pos = i;
+            else
+                done = false;
+        }
+        res.push(carry);
+        if (done)
+            break;
+    }
+    for (let i = 0; i < data.length - 1 && data[i] === 0; i++)
+        res.push(0);
+    return res.reverse();
+}
+/**
+ * @__NO_SIDE_EFFECTS__
+ */
+function radix(num) {
+    return {
+        encode: (bytes) => {
+            if (!isBytes(bytes))
+                throw new Error('radix.encode input should be Uint8Array');
+            return convertRadix(Array.from(bytes), 2 ** 8, num);
+        },
+        decode: (digits) => {
+            if (!Array.isArray(digits) || (digits.length && typeof digits[0] !== 'number'))
+                throw new Error('radix.decode input should be array of numbers');
+            return Uint8Array.from(convertRadix(digits, num, 2 ** 8));
+        },
+    };
+}
+/**
+ * @__NO_SIDE_EFFECTS__
+ */
+function checksum$1(len, fn) {
+    if (typeof fn !== 'function')
+        throw new Error('checksum fn should be function');
+    return {
+        encode(data) {
+            if (!isBytes(data))
+                throw new Error('checksum.encode: input should be Uint8Array');
+            const checksum = fn(data).slice(0, len);
+            const res = new Uint8Array(data.length + len);
+            res.set(data);
+            res.set(checksum, data.length);
+            return res;
+        },
+        decode(data) {
+            if (!isBytes(data))
+                throw new Error('checksum.decode: input should be Uint8Array');
+            const payload = data.slice(0, -len);
+            const newChecksum = fn(payload).slice(0, len);
+            const oldChecksum = data.slice(-len);
+            for (let i = 0; i < len; i++)
+                if (newChecksum[i] !== oldChecksum[i])
+                    throw new Error('Invalid checksum');
+            return payload;
+        },
+    };
+}
+// base58 code
+// -----------
+const genBase58 = (abc) => chain(radix(58), alphabet(abc), join(''));
+const base58 = /* @__PURE__ */ genBase58('123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz');
+const createBase58check = (sha256) => chain(checksum$1(4, (data) => sha256(sha256(data))), base58);
+// legacy export, bad name
+const base58check = createBase58check;
+
+const bs58check = base58check(sha256$1);
+function hash160(buffer) {
+    return ripemd160$1(sha256$1(buffer));
+}
+function hmacSHA512(key, data) {
+    return hmac(sha512$1, key, data);
+}
+
+const PC_VERSION = 0x47;
+class PaymentCodePublic {
+    ecc;
+    bip32;
+    buf;
+    root;
+    hasPrivKeys;
+    /**
+     * Constructor for the PaymentCode class.
+     *
+     * @param {TinySecp256k1Interface} ecc - Implementation of secp256k1 elliptic curve
+     * @param {BIP32API} bip32 - Bip32 instance
+     * @param {Uint8Array} buf - The buffer representing the payment code.
+     * @throws {Error} Invalid buffer length - If the length of the buffer is not 80.
+     * @throws {Error} Only payment codes version 1 are supported - If the version of the payment code is not 1.
+     */
+    constructor(ecc, bip32, buf) {
+        this.ecc = ecc;
+        this.bip32 = bip32;
+        this.hasPrivKeys = false;
+        if (buf.length !== 80)
+            throw new Error('Invalid buffer length');
+        if (buf[0] !== 1)
+            throw new Error('Only payment codes version 1 are supported');
+        this.buf = buf;
+        this.root = bip32.fromPublicKey(this.pubKey, this.chainCode);
+    }
+    /**
+     * Get the features of PaymentCode.
+     *
+     * @returns {Uint8Array} The features as a Uint8Array object.
+     */
+    get features() {
+        return this.buf.subarray(1, 2);
+    }
+    /**
+     * Returns the public key.
+     *
+     * @returns {Uint8Array} The public key as a Uint8Array.
+     */
+    get pubKey() {
+        return this.buf.subarray(2, 2 + 33);
+    }
+    /**
+     * Retrieves the chain code of the payment code.
+     *
+     * @returns {Uint8Array} - The extracted chain code as a Uint8Array.
+     */
+    get chainCode() {
+        return this.buf.subarray(35, 35 + 32);
+    }
+    /**
+     * Retrieves the payment code buffer.
+     *
+     * @returns {Uint8Array} The payment code buffer.
+     */
+    get paymentCode() {
+        return this.buf;
+    }
+    /**
+     * Creates a base58 representation of the payment code.
+     *
+     * @returns {string} - The Base58 representation of PaymentCode.
+     */
+    async toBase58() {
+        const version = new Uint8Array([PC_VERSION]);
+        const buf = new Uint8Array(version.length + this.buf.length);
+        buf.set(version);
+        buf.set(this.buf, version.length);
+        // const { bs58check } = await import('@samouraiwallet/bip32/crypto');
+        return bs58check.encode(buf);
+    }
+    /**
+     * Derives a child from the root BIP32 node at the specified index.
+     *
+     * @param {number} index - The index of the child BIP32Interface object to be derived.
+     * @returns {BIP32Interface} - The derived child BIP32Interface object.
+     */
+    derive(index) {
+        return this.root.derive(index);
+    }
+    /**
+     * Retrieves the public key for notification.
+     *
+     * @returns {Uint8Array} The public key for notification.
+     */
+    getNotificationPublicKey() {
+        return getBytes(this.derive(0).publicKey);
+    }
+    /**
+     * Derives a public key from the shared secret.
+     *
+     * @param {Uint8Array} B - Public key
+     * @param {Uint8Array} S - Shared secret point
+     * @returns {Uint8Array} The derived public key.
+     * @throws {Error} If the shared secret is invalid or unable to derive the public key.
+     */
+    derivePublicKeyFromSharedSecret(B, S) {
+        const Sx = S.subarray(1, 33);
+        const s = sha256$1(Sx);
+        if (!this.ecc.isPrivate(s))
+            throw new Error('Invalid shared secret');
+        const P = this.ecc.pointAddScalar(B, s, true);
+        if (!P)
+            throw new Error('Unable to derive public key');
+        return P;
+    }
+    /**
+     * Derives a payment public key based on the given public payment code.
+     *
+     * @param {PaymentCodePublic} paymentCode - The public payment code to derive the payment public key from.
+     * @param {number} idx - The index used for derivation.
+     * @returns {Uint8Array} The derived payment public key.
+     * @throws {Error} If the payment code does not contain a valid public key, or if any step in the derivation process
+     *   fails.
+     */
+    derivePaymentPublicKey(paymentCode, idx) {
+        const a = paymentCode.getNotificationPrivateKey();
+        if (!this.ecc.isPrivate(a))
+            throw new Error('Received invalid private key');
+        const B = this.derive(idx).publicKey;
+        const S = this.ecc.pointMultiply(B, a);
+        if (!S)
+            throw new Error('Unable to compute secret point');
+        return this.derivePublicKeyFromSharedSecret(B, S);
+    }
+    /**
+     * Retrieves the address from a given public key.
+     *
+     * @param {Uint8Array} pubKey - The public key.
+     * @returns {string} The generated address.
+     * @throws {Error} - When unsupported address type is passed
+     * @protected
+     */
+    getAddressFromPubkey(pubKey) {
+        return getAddress(keccak256('0x' + hexlify(pubKey).substring(4)).substring(26));
+    }
+    /**
+     * Retrieves a payment address based on the provided parameters.
+     *
+     * @param {PaymentCodePublic} paymentCode - The public payment code to derive the payment address from.
+     * @param {number} idx - The index used in the derivation process.
+     * @returns {string} - The generated payment address.
+     * @throws {Error} - If unable to derive public key or if an unknown address type is specified.
+     */
+    getPaymentAddress(paymentCode, idx) {
+        const pubkey = hexlify(this.derivePaymentPublicKey(paymentCode, idx));
+        return getAddress(keccak256('0x' + pubkey.substring(4)).substring(26));
+    }
+}
+class PaymentCodePrivate extends PaymentCodePublic {
+    /**
+     * Constructor for the PaymentCodePrivate class.
+     *
+     * @param {HDNodeBIP32Adapter} root - The root HDNodeWallet as a HDNodeBIP32Adapter.
+     * @param {TinySecp256k1Interface} ecc - Implementation of secp256k1 elliptic curve.
+     * @param {BIP32API} bip32 - An instance implementing the bip32 API methods.
+     * @param {Uint8Array} buf - The buffer representing the payment code.
+     */
+    constructor(root, ecc, bip32, buf) {
+        super(ecc, bip32, buf);
+        this.root = root;
+        this.hasPrivKeys = true;
+    }
+    /**
+     * Derives a payment public key based on the given public payment code.
+     *
+     * @param {PaymentCodePublic} paymentCode - The public payment code to derive the payment public key from.
+     * @param {number} idx - The index used for derivation.
+     * @returns {Uint8Array} The derived payment public key.
+     * @throws {Error} If the payment code does not contain a valid public key or unable to derive the node with private
+     *   key.
+     */
+    derivePaymentPublicKey(paymentCode, idx) {
+        const A = paymentCode.getNotificationPublicKey();
+        if (!this.ecc.isPoint(A))
+            throw new Error('Received invalid public key');
+        const b_node = this.derive(idx);
+        if (!b_node.privateKey)
+            throw new Error('Unable to derive node with private key');
+        const b = getBytes(b_node.privateKey);
+        const B = getBytes(b_node.publicKey);
+        const S = this.ecc.pointMultiply(A, b);
+        if (!S)
+            throw new Error('Unable to compute resulting point');
+        return this.derivePublicKeyFromSharedSecret(B, S);
+    }
+    /**
+     * Retrieves a payment address based on the provided parameters.
+     *
+     * @param {PaymentCodePublic} paymentCode - The public payment code to derive the payment address from.
+     * @param {number} idx - The index used in the derivation process.
+     * @returns {string} - The generated payment address.
+     * @throws {Error} - If unable to derive public key or if an unknown address type is specified.
+     */
+    getPaymentAddress(paymentCode, idx) {
+        const pubKey = this.derivePaymentPublicKey(paymentCode, idx);
+        return this.getAddressFromPubkey(pubKey);
+    }
+    /**
+     * Derives a payment private key based on the given public payment code.
+     *
+     * @param {PaymentCodePublic} paymentCodePublic - The public payment code to derive the payment private key from.
+     * @param {number} idx - The index used for derivation.
+     * @returns {Uint8Array} The derived payment private key.
+     * @throws {Error} If the payment code does not contain a valid public key, unable to derive the node without
+     *   private key, unable to compute the resulting point, or invalid shared secret.
+     */
+    derivePaymentPrivateKey(paymentCodePublic, idx) {
+        const A = paymentCodePublic.getNotificationPublicKey();
+        if (!this.ecc.isPoint(A))
+            throw new Error('Argument is not a valid public key');
+        const b_node = this.derive(idx);
+        if (!b_node.privateKey)
+            throw new Error('Unable to derive node without private key');
+        const b = getBytes(b_node.privateKey);
+        const S = this.ecc.pointMultiply(A, b);
+        if (!S)
+            throw new Error('Unable to compute resulting point');
+        const Sx = S.subarray(1, 33);
+        const s = sha256$1(Sx);
+        if (!this.ecc.isPrivate(s))
+            throw new Error('Invalid shared secret');
+        const paymentPrivateKey = this.ecc.privateAdd(b, s);
+        if (!paymentPrivateKey)
+            throw new Error('Unable to compute payment private key');
+        return paymentPrivateKey;
+    }
+    /**
+     * Retrieves the notification private key.
+     *
+     * @returns {Uint8Array} The notification private key.
+     */
+    getNotificationPrivateKey() {
+        const child = this.derive(0);
+        return child.privateKey;
+    }
+}
+/**
+ * Validates a payment code base58 encoded string.
+ *
+ * @param {string} paymentCode - The payment code to validate.
+ * @throws {Error} If the payment code is invalid.
+ */
+function validatePaymentCode(paymentCode) {
+    const VERSION_BYTE = 0x47;
+    const FEATURE_BYTE = 0x00;
+    try {
+        const decoded = bs58check.decode(paymentCode);
+        if (decoded.length !== 81) {
+            return false;
+        }
+        if (decoded[0] !== VERSION_BYTE) {
+            return false;
+        }
+        const paymentCodeBytes = decoded.slice(1);
+        if (paymentCodeBytes[0] !== 0x01) {
+            return false;
+        }
+        // Check if the second byte is 0 (features byte)
+        if (paymentCodeBytes[1] !== FEATURE_BYTE) {
+            return false;
+        }
+        // Check if the public key starts with 0x02 or 0x03
+        if (paymentCodeBytes[2] !== 0x02 && paymentCodeBytes[2] !== 0x03) {
+            return false;
+        }
+        const pubKey = paymentCodeBytes.slice(2, 35);
+        try {
+            secp256k1.ProjectivePoint.fromHex(Buffer.from(pubKey).toString('hex')).assertValidity();
+        }
+        catch (error) {
+            return false;
+        }
+        if (!paymentCodeBytes.slice(67).every((byte) => byte === 0)) {
+            return false;
+        }
+        return true;
+    }
+    catch (error) {
+        return false;
+    }
+}
+
+/**
+ * Uint8Array comparison
+ */
+function areUint8ArraysEqual(a, b) {
+    if (a === b) {
+        return true;
+    }
+    if (a.length !== b.length) {
+        return false;
+    }
+    for (let index = 0; index < a.length; index++) {
+        if (a[index] !== b[index]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+const h = (hex) => hexToBytes$1(hex);
+function testEcc(ecc) {
+    assert(ecc.isPoint(h('0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798')));
+    assert(!ecc.isPoint(h('030000000000000000000000000000000000000000000000000000000000000005')));
+    assert(ecc.isPrivate(h('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798')));
+    // order - 1
+    assert(ecc.isPrivate(h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140')));
+    // 0
+    assert(!ecc.isPrivate(h('0000000000000000000000000000000000000000000000000000000000000000')));
+    // order
+    assert(!ecc.isPrivate(h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141')));
+    // order + 1
+    assert(!ecc.isPrivate(h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364142')));
+    assert(areUint8ArraysEqual(ecc.pointFromScalar(h('b1121e4088a66a28f5b6b0f5844943ecd9f610196d7bb83b25214b60452c09af')), h('02b07ba9dca9523b7ef4bd97703d43d20399eb698e194704791a25ce77a400df99')));
+    if (ecc.xOnlyPointAddTweak) {
+        assert(ecc.xOnlyPointAddTweak(h('79be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'), h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140')) === null);
+        let xOnlyRes = ecc.xOnlyPointAddTweak(h('1617d38ed8d8657da4d4761e8057bc396ea9e4b9d29776d4be096016dbd2509b'), h('a8397a935f0dfceba6ba9618f6451ef4d80637abf4e6af2669fbc9de6a8fd2ac'));
+        assert(areUint8ArraysEqual(xOnlyRes.xOnlyPubkey, h('e478f99dab91052ab39a33ea35fd5e6e4933f4d28023cd597c9a1f6760346adf')) && xOnlyRes.parity === 1);
+        xOnlyRes = ecc.xOnlyPointAddTweak(h('2c0b7cf95324a07d05398b240174dc0c2be444d96b159aa6c7f7b1e668680991'), h('823c3cd2142744b075a87eade7e1b8678ba308d566226a0056ca2b7a76f86b47'));
+    }
+    assert(areUint8ArraysEqual(ecc.pointAddScalar(h('0379be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'), h('0000000000000000000000000000000000000000000000000000000000000003')), h('02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5')));
+    assert(areUint8ArraysEqual(ecc.privateAdd(h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036413e'), h('0000000000000000000000000000000000000000000000000000000000000002')), h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140')));
+    if (ecc.privateNegate) {
+        assert(areUint8ArraysEqual(ecc.privateNegate(h('0000000000000000000000000000000000000000000000000000000000000001')), h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140')));
+        assert(areUint8ArraysEqual(ecc.privateNegate(h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd036413e')), h('0000000000000000000000000000000000000000000000000000000000000003')));
+        assert(areUint8ArraysEqual(ecc.privateNegate(h('b1121e4088a66a28f5b6b0f5844943ecd9f610196d7bb83b25214b60452c09af')), h('4eede1bf775995d70a494f0a7bb6bc11e0b8cccd41cce8009ab1132c8b0a3792')));
+    }
+    assert(areUint8ArraysEqual(ecc.sign(h('5e9f0a0d593efdcf78ac923bc3313e4e7d408d574354ee2b3288c0da9fbba6ed'), h('fffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364140')), h('54c4a33c6423d689378f160a7ff8b61330444abb58fb470f96ea16d99d4a2fed07082304410efa6b2943111b6a4e0aaa7b7db55a07e9861d1fb3cb1f421044a5')));
+    assert(ecc.verify(h('5e9f0a0d593efdcf78ac923bc3313e4e7d408d574354ee2b3288c0da9fbba6ed'), h('0379be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798'), h('54c4a33c6423d689378f160a7ff8b61330444abb58fb470f96ea16d99d4a2fed07082304410efa6b2943111b6a4e0aaa7b7db55a07e9861d1fb3cb1f421044a5')));
+    if (ecc.signSchnorr) {
+        assert(areUint8ArraysEqual(ecc.signSchnorr(h('7e2d58d8b3bcdf1abadec7829054f90dda9805aab56c77333024b9d0a508b75c'), h('c90fdaa22168c234c4c6628b80dc1cd129024e088a67cc74020bbea63b14e5c9'), h('c87aa53824b4d7ae2eb035a2b5bbbccc080e76cdc6d1692c4b0b62d798e6d906')), h('5831aaeed7b44bb74e5eab94ba9d4294c49bcf2a60728d8b4c200f50dd313c1bab745879a5ad954a72c45a91c3a51d3c7adea98d82f8481e0e1e03674a6f3fb7')));
+    }
+    if (ecc.verifySchnorr) {
+        assert(ecc.verifySchnorr(h('7e2d58d8b3bcdf1abadec7829054f90dda9805aab56c77333024b9d0a508b75c'), h('dd308afec5777e13121fa72b9cc1b7cc0139715309b086c960e18fd969774eb8'), h('5831aaeed7b44bb74e5eab94ba9d4294c49bcf2a60728d8b4c200f50dd313c1bab745879a5ad954a72c45a91c3a51d3c7adea98d82f8481e0e1e03674a6f3fb7')));
+    }
+}
+function assert(bool) {
+    if (!bool)
+        throw new Error('ecc library invalid');
+}
+
+function BIP32Factory(ecc) {
+    testEcc(ecc);
+    // const UINT256_TYPE = ow.uint8Array.length(32);
+    // const NETWORK_TYPE = ow.object.partialShape({
+    //     wif: ow.number.uint8,
+    //     bip32: ow.object.exactShape({
+    //         public: ow.number.uint32,
+    //         private: ow.number.uint32,
+    //     }),
+    // });
+    const BITCOIN = {
+        bip32: {
+            public: 0x0488b21e,
+            private: 0x0488ade4,
+        },
+        wif: 0x80,
+    };
+    const HIGHEST_BIT = 0x80000000;
+    // const UINT31_MAX = Math.pow(2, 31) - 1;
+    function toXOnly(pubKey) {
+        return pubKey.length === 32 ? pubKey : pubKey.subarray(1, 33);
+    }
+    class Bip32Signer {
+        __D;
+        __Q;
+        lowR;
+        constructor({ __D, __Q }) {
+            this.__D = __D;
+            this.__Q = __Q;
+            this.lowR = false;
+        }
+        get publicKey() {
+            if (this.__Q === undefined)
+                this.__Q = ecc.pointFromScalar(this.__D, true);
+            return this.__Q;
+        }
+        get privateKey() {
+            return this.__D;
+        }
+        sign(hash, lowR) {
+            if (!this.privateKey)
+                throw new Error('Missing private key');
+            if (lowR === undefined)
+                lowR = this.lowR;
+            if (lowR === false) {
+                return ecc.sign(hash, this.privateKey);
+            }
+            else {
+                let sig = ecc.sign(hash, this.privateKey);
+                const extraData = new Uint8Array(32);
+                const extraDataView = new DataView(extraData.buffer);
+                let counter = 0;
+                // if first try is lowR, skip the loop
+                // for second try and on, add extra entropy counting up
+                while (sig[0] > 0x7f) {
+                    counter++;
+                    extraDataView.setUint32(0, counter, true);
+                    sig = ecc.sign(hash, this.privateKey, extraData);
+                }
+                return sig;
+            }
+        }
+        signSchnorr(hash) {
+            if (!this.privateKey)
+                throw new Error('Missing private key');
+            if (!ecc.signSchnorr)
+                throw new Error('signSchnorr not supported by ecc library');
+            return ecc.signSchnorr(hash, this.privateKey);
+        }
+        verify(hash, signature) {
+            return ecc.verify(hash, this.publicKey, signature);
+        }
+        verifySchnorr(hash, signature) {
+            if (!ecc.verifySchnorr)
+                throw new Error('verifySchnorr not supported by ecc library');
+            return ecc.verifySchnorr(hash, this.publicKey.subarray(1, 33), signature);
+        }
+    }
+    class BIP32 extends Bip32Signer {
+        chainCode;
+        network;
+        __DEPTH;
+        __INDEX;
+        __PARENT_FINGERPRINT;
+        constructor({ __D, __Q, chainCode, network, __DEPTH = 0, __INDEX = 0, __PARENT_FINGERPRINT = 0x00000000, }) {
+            super({ __D, __Q });
+            this.chainCode = chainCode;
+            this.network = network;
+            this.__DEPTH = __DEPTH;
+            this.__INDEX = __INDEX;
+            this.__PARENT_FINGERPRINT = __PARENT_FINGERPRINT;
+            // ow(network, NETWORK_TYPE);
+        }
+        get depth() {
+            return this.__DEPTH;
+        }
+        get index() {
+            return this.__INDEX;
+        }
+        get parentFingerprint() {
+            return this.__PARENT_FINGERPRINT;
+        }
+        get identifier() {
+            return hash160(this.publicKey);
+        }
+        get fingerprint() {
+            return this.identifier.subarray(0, 4);
+        }
+        get compressed() {
+            return true;
+        }
+        isNeutered() {
+            return this.__D === undefined;
+        }
+        neutered() {
+            return fromPublicKeyLocal(this.publicKey, this.chainCode, this.network, this.depth, this.index, this.parentFingerprint);
+        }
+        toBase58() {
+            const network = this.network;
+            const version = !this.isNeutered() ? network.bip32.private : network.bip32.public;
+            const buffer = new Uint8Array(78);
+            const bufferView = new DataView(buffer.buffer);
+            // 4 bytes: version bytes
+            bufferView.setUint32(0, version, false);
+            // 1 byte: depth: 0x00 for master nodes, 0x01 for level-1 descendants, ....
+            bufferView.setUint8(4, this.depth);
+            // 4 bytes: the fingerprint of the parent's key (0x00000000 if master key)
+            bufferView.setUint32(5, this.parentFingerprint, false);
+            // 4 bytes: child number. This is the number i in xi = xpar/i, with xi the key being serialized.
+            // This is encoded in big endian. (0x00000000 if master key)
+            bufferView.setUint32(9, this.index, false);
+            // 32 bytes: the chain code
+            buffer.set(this.chainCode, 13);
+            // 33 bytes: the public key or private key data
+            if (!this.isNeutered()) {
+                // 0x00 + k for private keys
+                bufferView.setUint8(45, 0);
+                buffer.set(this.privateKey, 46);
+                // 33 bytes: the public key
+            }
+            else {
+                // X9.62 encoding for public keys
+                buffer.set(this.publicKey, 45);
+            }
+            return bs58check.encode(buffer);
+        }
+        derive(index) {
+            // ow(index, ow.number.message('Expected UInt32').uint32.message('Expected UInt32'));
+            const isHardened = index >= HIGHEST_BIT;
+            const data = new Uint8Array(37);
+            const dataView = new DataView(data.buffer);
+            // Hardened child
+            if (isHardened) {
+                if (this.isNeutered())
+                    throw new TypeError('Missing private key for hardened child key');
+                // data = 0x00 || ser256(kpar) || ser32(index)
+                data[0] = 0x00;
+                data.set(this.privateKey, 1);
+                dataView.setUint32(33, index, false);
+                // Normal child
+            }
+            else {
+                // data = serP(point(kpar)) || ser32(index)
+                //      = serP(Kpar) || ser32(index)
+                data.set(this.publicKey, 0);
+                dataView.setUint32(33, index, false);
+            }
+            const I = hmacSHA512(this.chainCode, data);
+            const IL = I.slice(0, 32);
+            const IR = I.slice(32);
+            // if parse256(IL) >= n, proceed with the next value for i
+            if (!ecc.isPrivate(IL))
+                return this.derive(index + 1);
+            // Private parent key -> private child key
+            let hd;
+            if (!this.isNeutered()) {
+                // ki = parse256(IL) + kpar (mod n)
+                const ki = ecc.privateAdd(this.privateKey, IL);
+                // In case ki == 0, proceed with the next value for i
+                if (ki == null)
+                    return this.derive(index + 1);
+                hd = fromPrivateKeyLocal(ki, IR, this.network, this.depth + 1, index, new DataView(this.fingerprint.buffer).getUint32(0, false));
+                // Public parent key -> public child key
+            }
+            else {
+                // Ki = point(parse256(IL)) + Kpar
+                //    = G*IL + Kpar
+                const Ki = ecc.pointAddScalar(this.publicKey, IL, true);
+                // In case Ki is the point at infinity, proceed with the next value for i
+                if (Ki === null)
+                    return this.derive(index + 1);
+                hd = fromPublicKeyLocal(Ki, IR, this.network, this.depth + 1, index, new DataView(this.fingerprint.buffer).getUint32(0, false));
+            }
+            return hd;
+        }
+        deriveHardened(index) {
+            // ow(index, ow.number
+            //     .message('Expected UInt31')
+            //     .uint32.message('Expected UInt31')
+            //     .is(value => value <= UINT31_MAX)
+            //     .message('Expected UInt31'));
+            // Only derives hardened private keys by default
+            return this.derive(index + HIGHEST_BIT);
+        }
+        derivePath(path) {
+            // ow(path, ow.string
+            //     .is(value => value.match(/^(m\/)?(\d+'?\/)*\d+'?$/) !== null)
+            //     .message(value => `Expected BIP32Path, got ${value}`));
+            let splitPath = path.split('/');
+            if (splitPath[0] === 'm') {
+                if (this.parentFingerprint)
+                    throw new TypeError('Expected master, got child');
+                splitPath = splitPath.slice(1);
+            }
+            return splitPath.reduce((prevHd, indexStr) => {
+                let index;
+                if (indexStr.slice(-1) === `'`) {
+                    index = parseInt(indexStr.slice(0, -1), 10);
+                    return prevHd.deriveHardened(index);
+                }
+                else {
+                    index = parseInt(indexStr, 10);
+                    return prevHd.derive(index);
+                }
+            }, this);
+        }
+        tweak(t) {
+            if (this.privateKey)
+                return this.tweakFromPrivateKey(t);
+            return this.tweakFromPublicKey(t);
+        }
+        tweakFromPublicKey(t) {
+            const xOnlyPubKey = toXOnly(this.publicKey);
+            if (!ecc.xOnlyPointAddTweak)
+                throw new Error('xOnlyPointAddTweak not supported by ecc library');
+            const tweakedPublicKey = ecc.xOnlyPointAddTweak(xOnlyPubKey, t);
+            if (!tweakedPublicKey || tweakedPublicKey.xOnlyPubkey === null)
+                throw new Error('Cannot tweak public key!');
+            const parityByte = Uint8Array.from([tweakedPublicKey.parity === 0 ? 0x02 : 0x03]);
+            const tweakedPublicKeyCompresed = new Uint8Array(tweakedPublicKey.xOnlyPubkey.length + 1);
+            tweakedPublicKeyCompresed.set(parityByte);
+            tweakedPublicKeyCompresed.set(tweakedPublicKey.xOnlyPubkey, 1);
+            return new Bip32Signer({ __Q: tweakedPublicKeyCompresed });
+        }
+        tweakFromPrivateKey(t) {
+            const hasOddY = this.publicKey[0] === 3 || (this.publicKey[0] === 4 && (this.publicKey[64] & 1) === 1);
+            const privateKey = (() => {
+                if (!hasOddY)
+                    return this.privateKey;
+                else if (!ecc.privateNegate)
+                    throw new Error('privateNegate not supported by ecc library');
+                else
+                    return ecc.privateNegate(this.privateKey);
+            })();
+            const tweakedPrivateKey = ecc.privateAdd(privateKey, t);
+            if (!tweakedPrivateKey)
+                throw new Error('Invalid tweaked private key!');
+            return new Bip32Signer({ __D: tweakedPrivateKey });
+        }
+    }
+    function fromBase58(inString, network) {
+        const buffer = bs58check.decode(inString);
+        const bufferView = new DataView(buffer.buffer);
+        if (buffer.length !== 78)
+            throw new TypeError('Invalid buffer length');
+        network = network || BITCOIN;
+        // 4 bytes: version bytes
+        const version = bufferView.getUint32(0, false);
+        if (version !== network.bip32.private && version !== network.bip32.public)
+            throw new TypeError('Invalid network version');
+        // 1 byte: depth: 0x00 for master nodes, 0x01 for level-1 descendants, ...
+        const depth = buffer[4];
+        // 4 bytes: the fingerprint of the parent's key (0x00000000 if master key)
+        const parentFingerprint = bufferView.getUint32(5, false);
+        if (depth === 0) {
+            if (parentFingerprint !== 0x00000000)
+                throw new TypeError('Invalid parent fingerprint');
+        }
+        // 4 bytes: child number. This is the number i in xi = xpar/i, with xi the key being serialized.
+        // This is encoded in MSB order. (0x00000000 if master key)
+        const index = bufferView.getUint32(9, false);
+        if (depth === 0 && index !== 0)
+            throw new TypeError('Invalid index');
+        // 32 bytes: the chain code
+        const chainCode = buffer.subarray(13, 45);
+        let hd;
+        // 33 bytes: private key data (0x00 + k)
+        if (version === network.bip32.private) {
+            if (bufferView.getUint8(45) !== 0x00)
+                throw new TypeError('Invalid private key');
+            const k = buffer.subarray(46, 78);
+            hd = fromPrivateKeyLocal(k, chainCode, network, depth, index, parentFingerprint);
+            // 33 bytes: public key data (0x02 + X or 0x03 + X)
+        }
+        else {
+            const X = buffer.subarray(45, 78);
+            hd = fromPublicKeyLocal(X, chainCode, network, depth, index, parentFingerprint);
+        }
+        return hd;
+    }
+    function fromPrivateKey(privateKey, chainCode, network) {
+        return fromPrivateKeyLocal(privateKey, chainCode, network || BITCOIN, 0, 0, 0);
+    }
+    function fromPrivateKeyLocal(privateKey, chainCode, network, depth, index, parentFingerprint) {
+        // ow({ privateKey, chainCode }, ow.object.exactShape({
+        //     privateKey: UINT256_TYPE,
+        //     chainCode: UINT256_TYPE,
+        // }));
+        network = network || BITCOIN;
+        if (!ecc.isPrivate(privateKey))
+            throw new TypeError('Private key not in range [1, n)');
+        return new BIP32({
+            __D: privateKey,
+            chainCode,
+            network,
+            __DEPTH: depth,
+            __INDEX: index,
+            __PARENT_FINGERPRINT: parentFingerprint,
+        });
+    }
+    function fromPublicKey(publicKey, chainCode, network) {
+        return fromPublicKeyLocal(publicKey, chainCode, network || BITCOIN, 0, 0, 0);
+    }
+    function fromPublicKeyLocal(publicKey, chainCode, network, depth, index, parentFingerprint) {
+        // ow({ publicKey, chainCode }, ow.object.exactShape({
+        //     publicKey: ow.uint8Array.length(33),
+        //     chainCode: UINT256_TYPE,
+        // }));
+        network = network || BITCOIN;
+        // verify the X coordinate is a point on the curve
+        if (!ecc.isPoint(publicKey))
+            throw new TypeError('Point is not on the curve');
+        return new BIP32({
+            __Q: publicKey,
+            chainCode,
+            network,
+            __DEPTH: depth,
+            __INDEX: index,
+            __PARENT_FINGERPRINT: parentFingerprint,
+        });
+    }
+    function fromSeed(seed, network) {
+        // ow(seed, ow.uint8Array);
+        if (seed.length < 16)
+            throw new TypeError('Seed should be at least 128 bits');
+        if (seed.length > 64)
+            throw new TypeError('Seed should be at most 512 bits');
+        network = network || BITCOIN;
+        const encoder = new TextEncoder();
+        const I = hmacSHA512(encoder.encode('Bitcoin seed'), seed);
+        const IL = I.slice(0, 32);
+        const IR = I.slice(32);
+        return fromPrivateKey(IL, IR, network);
+    }
+    return {
+        fromSeed,
+        fromBase58,
+        fromPublicKey,
+        fromPrivateKey,
+    };
+}
+
+class HDNodeBIP32Adapter {
+    hdNodeWallet;
+    constructor(hdNodeWallet) {
+        this.hdNodeWallet = hdNodeWallet;
+    }
+    get chainCode() {
+        return getBytes(this.hdNodeWallet.chainCode);
+    }
+    get network() {
+        throw 'Not implemented';
+    }
+    get depth() {
+        return this.hdNodeWallet.depth;
+    }
+    get index() {
+        return this.hdNodeWallet.index;
+    }
+    get parentFingerprint() {
+        return parseInt(this.hdNodeWallet.parentFingerprint);
+    }
+    get privateKey() {
+        return getBytes(this.hdNodeWallet.privateKey);
+    }
+    get identifier() {
+        throw 'Not implemented';
+    }
+    get fingerprint() {
+        throw 'Not implemented';
+    }
+    isNeutered() {
+        throw 'Not implemented';
+    }
+    neutered() {
+        throw 'Not implemented';
+    }
+    toBase58() {
+        throw 'Not implemented';
+    }
+    // Map `derive` to `deriveChild`
+    derive(index) {
+        const derivedNode = this.hdNodeWallet.deriveChild(index);
+        return new HDNodeBIP32Adapter(derivedNode);
+    }
+    deriveHardened(index) {
+        throw 'Not implemented';
+    }
+    derivePath(path) {
+        const derivedNode = this.hdNodeWallet.derivePath(path);
+        return new HDNodeBIP32Adapter(derivedNode);
+    }
+    tweak(t) {
+        throw 'Not implemented';
+    }
+    get publicKey() {
+        return getBytes(this.hdNodeWallet.publicKey);
+    }
+    get lowR() {
+        throw 'Not implemented';
+    }
+    sign(hash) {
+        const sig = this.hdNodeWallet.signingKey.sign(hash);
+        return getBytes(sig.serialized);
+    }
+    verify(hash, signature) {
+        throw 'Not implemented';
+    }
+    signSchnorr(hash) {
+        throw 'Not implemented';
+    }
+    verifySchnorr(hash, signature) {
+        throw 'Not implemented';
+    }
+}
+
 /**
  * The Qi HD wallet is a BIP44-compliant hierarchical deterministic wallet used for managing a set of addresses in the
  * Qi ledger. This is wallet implementation is the primary way to interact with the Qi UTXO ledger on the Quai network.
@@ -26936,12 +28012,27 @@ class QiHDWallet extends AbstractHDWallet {
      */
     _outpoints = [];
     /**
+     * Map of paymentcodes to paymentCodeInfo for the receiver
+     */
+    _receiverPaymentCodeInfo = new Map();
+    /**
+     * Map of paymentcodes to paymentCodeInfo for the sender
+     */
+    _senderPaymentCodeInfo = new Map();
+    /**
      * @ignore
      * @param {HDNodeWallet} root - The root HDNodeWallet.
      * @param {Provider} [provider] - The provider (optional).
      */
     constructor(guard, root, provider) {
         super(guard, root, provider);
+    }
+    // getters for the payment code info maps
+    get receiverPaymentCodeInfo() {
+        return Object.fromEntries(this._receiverPaymentCodeInfo);
+    }
+    get senderPaymentCodeInfo() {
+        return Object.fromEntries(this._senderPaymentCodeInfo);
     }
     /**
      * Promise that resolves to the next change address for the specified account and zone.
@@ -27005,31 +28096,57 @@ class QiHDWallet extends AbstractHDWallet {
         return txobj.serialized;
     }
     /**
-     * Sends a Qi transaction.
-     *
-     * @param {QiTransactionRequest} tx - The transaction to send.
-     * @returns {Promise<TransactionResponse>} The transaction response.
-     * @throws {Error} If the provider is not set or if the transaction has no inputs.
+     * Implementation of the sendTransaction method.
      */
-    async sendTransaction(tx) {
+    async sendTransaction(...args) {
         if (!this.provider) {
             throw new Error('Provider is not set');
         }
-        if (!tx.txInputs || tx.txInputs.length === 0) {
-            throw new Error('Transaction has no inputs');
+        if (args.length === 1 && typeof args[0] === 'object') {
+            // This is the traditional method call (tx: TransactionRequest)
+            const tx = args[0];
+            if (!tx.txInputs || tx.txInputs.length === 0) {
+                throw new Error('Transaction has no inputs');
+            }
+            const input = tx.txInputs[0];
+            const address = computeAddress(input.pubkey);
+            const shard = getZoneForAddress(address);
+            if (!shard) {
+                throw new Error(`Address ${address} not found in any shard`);
+            }
+            // verify all inputs are from the same shard
+            if (tx.txInputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
+                throw new Error('All inputs must be from the same shard');
+            }
+            const signedTx = await this.signTransaction(tx);
+            return await this.provider.broadcastTransaction(shard, signedTx);
         }
-        const input = tx.txInputs[0];
-        const address = computeAddress(input.pubkey);
-        const shard = getZoneForAddress(address);
-        if (!shard) {
-            throw new Error(`Address ${address} not found in any shard`);
+        else if (args.length === 4) {
+            // This is the new method call (recipientPaymentCode, amount, originZone, destinationZone)
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const [recipientPaymentCode, amount, originZone, destinationZone] = args;
+            // !TODO: Implement the logic for sending a transaction using payment codes
+            if (!validatePaymentCode(recipientPaymentCode)) {
+                throw new Error('Invalid payment code');
+            }
+            if (amount <= 0) {
+                throw new Error('Amount must be greater than 0');
+            }
+            if (!Object.values(Zone).includes(originZone) || !Object.values(Zone).includes(destinationZone)) {
+                throw new Error('Invalid zone');
+            }
+            // 1. Check the wallet has enough balance in the originating zone to send the transaction
+            // 2. Use the FewestCoinSelector.perform method to select the UXTOs from the specified zone to use as inputs,
+            // and generate the spend and change outputs
+            // 3. Use the generateSendAddress method to generate as many unused addresses as required to populate the spend outputs
+            // 4. Use the getNextChangeAddress method to generate as many addresses as required to populate the change outputs
+            // 5. Create the transaction and sign it using the signTransaction method
+            // 6. Broadcast the transaction to the network using the provider
+            throw new Error('Payment code sendTransaction not implemented');
         }
-        // verify all inputs are from the same shard
-        if (tx.txInputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
-            throw new Error('All inputs must be from the same shard');
+        else {
+            throw new Error('Invalid arguments for sendTransaction');
         }
-        const signedTx = await this.signTransaction(tx);
-        return await this.provider.broadcastTransaction(shard, signedTx);
     }
     /**
      * Returns a schnorr signature for the given message and private key.
@@ -27227,11 +28344,7 @@ class QiHDWallet extends AbstractHDWallet {
      */
     async getOutpointsByAddress(address) {
         try {
-            const outpointsMap = await this.provider.getOutpointsByAddress(address);
-            if (!outpointsMap) {
-                return [];
-            }
-            return Object.values(outpointsMap);
+            return await this.provider.getOutpointsByAddress(address);
         }
         catch (error) {
             throw new Error(`Failed to get outpoints for address: ${address} - error: ${error}`);
@@ -27298,6 +28411,8 @@ class QiHDWallet extends AbstractHDWallet {
             changeAddresses: Array.from(this._changeAddresses.values()),
             gapAddresses: this._gapAddresses,
             gapChangeAddresses: this._gapChangeAddresses,
+            receiverPaymentCodeInfo: Object.fromEntries(this._receiverPaymentCodeInfo),
+            senderPaymentCodeInfo: Object.fromEntries(this._senderPaymentCodeInfo),
             ...hdwalletSerialized,
         };
     }
@@ -27339,7 +28454,52 @@ class QiHDWallet extends AbstractHDWallet {
         // validate the outpoints and import them
         wallet.validateOutpointInfo(serialized.outpoints);
         wallet._outpoints.push(...serialized.outpoints);
+        // validate and import the payment code info
+        wallet.validateAndImportPaymentCodeInfo(serialized.receiverPaymentCodeInfo, 'receiver');
+        wallet.validateAndImportPaymentCodeInfo(serialized.senderPaymentCodeInfo, 'sender');
         return wallet;
+    }
+    /**
+     * Validates and imports a map of payment code info.
+     *
+     * @param {Map<string, paymentCodeInfo[]>} paymentCodeInfoMap - The map of payment code info to validate and import.
+     * @param {'receiver' | 'sender'} target - The target map to update ('receiver' or 'sender').
+     * @throws {Error} If any of the payment code info is invalid.
+     */
+    validateAndImportPaymentCodeInfo(paymentCodeInfoMap, target) {
+        const targetMap = target === 'receiver' ? this._receiverPaymentCodeInfo : this._senderPaymentCodeInfo;
+        for (const [paymentCode, paymentCodeInfoArray] of Object.entries(paymentCodeInfoMap)) {
+            if (!validatePaymentCode(paymentCode)) {
+                throw new Error(`Invalid payment code: ${paymentCode}`);
+            }
+            for (const pcInfo of paymentCodeInfoArray) {
+                this.validatePaymentCodeInfo(pcInfo);
+            }
+            targetMap.set(paymentCode, paymentCodeInfoArray);
+        }
+    }
+    /**
+     * Validates a payment code info object.
+     *
+     * @param {paymentCodeInfo} pcInfo - The payment code info to validate.
+     * @throws {Error} If the payment code info is invalid.
+     */
+    validatePaymentCodeInfo(pcInfo) {
+        if (!/^(0x)?[0-9a-fA-F]{40}$/.test(pcInfo.address)) {
+            throw new Error('Invalid payment code info: address must be a 40-character hexadecimal string');
+        }
+        if (!Number.isInteger(pcInfo.index) || pcInfo.index < 0) {
+            throw new Error('Invalid payment code info: index must be a non-negative integer');
+        }
+        if (typeof pcInfo.isUsed !== 'boolean') {
+            throw new Error('Invalid payment code info: isUsed must be a boolean');
+        }
+        if (!Object.values(Zone).includes(pcInfo.zone)) {
+            throw new Error(`Invalid payment code info: zone '${pcInfo.zone}' is not a valid Zone`);
+        }
+        if (!Number.isInteger(pcInfo.account) || pcInfo.account < 0) {
+            throw new Error('Invalid payment code info: account must be a non-negative integer');
+        }
     }
     /**
      * Validates an array of OutpointInfo objects. This method checks the validity of each OutpointInfo object by
@@ -27371,6 +28531,157 @@ class QiHDWallet extends AbstractHDWallet {
                 throw new Error(`Invalid Outpoint: ${JSON.stringify(info)} `);
             }
         });
+    }
+    /**
+     * Creates a new BIP47 payment code for the specified account. The payment code is derived from the account's BIP32
+     * root key.
+     *
+     * @param {number} account - The account index to derive the payment code from.
+     * @returns {Promise<string>} A promise that resolves to the Base58-encoded BIP47 payment code.
+     */
+    async getPaymentCode(account = 0) {
+        const privatePcode = await this._getPaymentCodePrivate(account);
+        return privatePcode.toBase58();
+    }
+    // helper method to get a bip32 API instance
+    async _getBIP32API() {
+        return BIP32Factory(ecc);
+    }
+    // helper method to decode a base58 string into a Uint8Array
+    async _decodeBase58(base58) {
+        return bs58check.decode(base58);
+    }
+    /**
+     * Generates a BIP47 private payment code for the specified account. The payment code is created by combining the
+     * account's public key and chain code.
+     *
+     * @private
+     * @param {number} account - The account index for which to generate the private payment code.
+     * @returns {Promise<PaymentCodePrivate>} A promise that resolves to the PaymentCodePrivate instance.
+     */
+    async _getPaymentCodePrivate(account) {
+        const bip32 = await this._getBIP32API();
+        const accountNode = this._root.deriveChild(account);
+        // payment code array
+        const pc = new Uint8Array(80);
+        // set version + options
+        pc.set([1, 0]);
+        // set the public key
+        const pubKey = accountNode.publicKey;
+        pc.set(getBytes(pubKey), 2);
+        // set the chain code
+        const chainCode = accountNode.chainCode;
+        pc.set(getBytes(chainCode), 35);
+        const adapter = new HDNodeBIP32Adapter(accountNode);
+        return new PaymentCodePrivate(adapter, ecc, bip32, pc);
+    }
+    /**
+     * Generates a payment address for sending funds to the specified receiver's BIP47 payment code. Uses Diffie-Hellman
+     * key exchange to derive the address from the receiver's public key and sender's private key.
+     *
+     * @param {string} receiverPaymentCode - The Base58-encoded BIP47 payment code of the receiver.
+     * @returns {Promise<string>} A promise that resolves to the payment address for sending funds.
+     * @throws {Error} Throws an error if the payment code version is invalid.
+     */
+    async getNextSendAddress(receiverPaymentCode, zone, account = 0) {
+        const bip32 = await this._getBIP32API();
+        const buf = await this._decodeBase58(receiverPaymentCode);
+        const version = buf[0];
+        if (version !== PC_VERSION)
+            throw new Error('Invalid payment code version');
+        const receiverPCodePrivate = await this._getPaymentCodePrivate(account);
+        const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
+        const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(receiverPaymentCode);
+        const lastIndex = paymentCodeInfoArray && paymentCodeInfoArray.length > 0
+            ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
+            : 0;
+        let addrIndex = lastIndex;
+        for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
+            const address = senderPCodePublic.getPaymentAddress(receiverPCodePrivate, addrIndex++);
+            if (this.isValidAddressForZone(address, zone)) {
+                const pcInfo = {
+                    address,
+                    index: addrIndex,
+                    account,
+                    zone,
+                    isUsed: false,
+                };
+                if (paymentCodeInfoArray) {
+                    paymentCodeInfoArray.push(pcInfo);
+                }
+                else {
+                    this._receiverPaymentCodeInfo.set(receiverPaymentCode, [pcInfo]);
+                }
+                return address;
+            }
+        }
+        throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
+    }
+    /**
+     * Generates a payment address for receiving funds from the specified sender's BIP47 payment code. Uses
+     * Diffie-Hellman key exchange to derive the address from the sender's public key and receiver's private key.
+     *
+     * @param {string} senderPaymentCode - The Base58-encoded BIP47 payment code of the sender.
+     * @returns {Promise<string>} A promise that resolves to the payment address for receiving funds.
+     * @throws {Error} Throws an error if the payment code version is invalid.
+     */
+    async getNextReceiveAddress(senderPaymentCode, zone, account = 0) {
+        const bip32 = await this._getBIP32API();
+        const buf = await this._decodeBase58(senderPaymentCode);
+        const version = buf[0];
+        if (version !== PC_VERSION)
+            throw new Error('Invalid payment code version');
+        const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
+        const receiverPCodePrivate = await this._getPaymentCodePrivate(account);
+        const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(senderPaymentCode);
+        const lastIndex = paymentCodeInfoArray && paymentCodeInfoArray.length > 0
+            ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
+            : 0;
+        let addrIndex = lastIndex;
+        for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
+            const address = receiverPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex++);
+            if (this.isValidAddressForZone(address, zone)) {
+                const pcInfo = {
+                    address,
+                    index: addrIndex,
+                    account,
+                    zone,
+                    isUsed: false,
+                };
+                if (paymentCodeInfoArray) {
+                    paymentCodeInfoArray.push(pcInfo);
+                }
+                else {
+                    this._senderPaymentCodeInfo.set(senderPaymentCode, [pcInfo]);
+                }
+                return address;
+            }
+        }
+        throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
+    }
+    /**
+     * Receives a payment code and stores it in the wallet for future use. If the payment code is already in the wallet,
+     * it will be ignored.
+     *
+     * @param {string} paymentCode - The payment code to store.
+     * @param {'receiver' | 'sender'} type - The type of payment code ('receiver' or 'sender').
+     */
+    openChannel(paymentCode, type) {
+        if (!validatePaymentCode(paymentCode)) {
+            throw new Error(`Invalid payment code: ${paymentCode}`);
+        }
+        if (type === 'receiver') {
+            if (this._receiverPaymentCodeInfo.has(paymentCode)) {
+                return;
+            }
+            this._receiverPaymentCodeInfo.set(paymentCode, []);
+        }
+        else {
+            if (this._senderPaymentCodeInfo.has(paymentCode)) {
+                return;
+            }
+            this._senderPaymentCodeInfo.set(paymentCode, []);
+        }
     }
 }
 
@@ -28483,7 +29794,7 @@ class AbstractProvider {
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _detectNetwork() {
-        assert(false, 'sub-classes must implement this', 'UNSUPPORTED_OPERATION', {
+        assert$1(false, 'sub-classes must implement this', 'UNSUPPORTED_OPERATION', {
             operation: '_detectNetwork',
         });
     }
@@ -28498,7 +29809,7 @@ class AbstractProvider {
      * @returns {Promise<T>} A promise resolving to the result of the operation.
      */
     async _perform(req) {
-        assert(false, `unsupported method: ${req.method}`, 'UNSUPPORTED_OPERATION', {
+        assert$1(false, `unsupported method: ${req.method}`, 'UNSUPPORTED_OPERATION', {
             operation: req.method,
             info: req,
         });
@@ -28750,7 +30061,7 @@ class AbstractProvider {
             }
             else {
                 // Otherwise, we do not allow changes to the underlying network
-                assert(false, `network changed: ${expected.chainId} => ${actual.chainId} `, 'NETWORK_ERROR', {
+                assert$1(false, `network changed: ${expected.chainId} => ${actual.chainId} `, 'NETWORK_ERROR', {
                     event: 'changed',
                 });
             }
@@ -28814,6 +30125,18 @@ class AbstractProvider {
             zone: zone,
         }), '%response');
     }
+    async createAccessList(_tx) {
+        let tx = this._getTransactionRequest(_tx);
+        if (isPromise(tx)) {
+            tx = await tx;
+        }
+        const zone = await this.zoneFromAddress(addressFromTransactionRequest(tx));
+        return (await this.#perform({
+            method: 'createAccessList',
+            transaction: tx,
+            zone: zone,
+        })).accessList;
+    }
     // TODO: `attempt` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async #call(tx, blockTag, attempt, zone) {
@@ -28837,6 +30160,10 @@ class AbstractProvider {
             tx: this._getTransactionRequest(_tx),
             blockTag: this._getBlockTag(shard, _tx.blockTag),
         });
+        tx.accessList = (await this.createAccessList(tx)).map(it => {
+            it.address = formatMixedCaseChecksumAddress(it.address);
+            return it;
+        });
         return await this.#checkNetwork(this.#call(tx, blockTag, -1, zone), shard);
     }
     // Account
@@ -28854,10 +30181,10 @@ class AbstractProvider {
         return getBigInt(await this.#getAccountValue({ method: 'getBalance' }, address, blockTag), '%response');
     }
     async getOutpointsByAddress(address) {
-        const outpoints = await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest');
-        const outpointsArray = Array.isArray(outpoints) ? outpoints : [];
-        return outpointsArray.map((outpoint) => ({
-            txhash: outpoint.Txhash,
+        const outpointsObj = await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest');
+        // Convert the object to an array of Outpoint objects
+        return Object.values(outpointsObj).map((outpoint) => ({
+            txhash: outpoint.TxHash,
             index: outpoint.Index,
             denomination: outpoint.Denomination,
         }));
@@ -29013,7 +30340,7 @@ class AbstractProvider {
     // TODO: unsupported, remove?
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _getProvider(chainId) {
-        assert(false, 'provider cannot connect to target network', 'UNSUPPORTED_OPERATION', {
+        assert$1(false, 'provider cannot connect to target network', 'UNSUPPORTED_OPERATION', {
             operation: '_getProvider()',
         });
     }
@@ -29062,7 +30389,7 @@ class AbstractProvider {
     // TODO: not implemented yet
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     async waitForBlock(shard, blockTag) {
-        assert(false, 'not implemented yet', 'NOT_IMPLEMENTED', {
+        assert$1(false, 'not implemented yet', 'NOT_IMPLEMENTED', {
             operation: 'waitForBlock',
         });
     }
@@ -29383,7 +30710,7 @@ class AbstractProvider {
             if (this.#pausedState == !!dropWhilePaused) {
                 return;
             }
-            assert(false, 'cannot change pause type; resume first', 'UNSUPPORTED_OPERATION', {
+            assert$1(false, 'cannot change pause type; resume first', 'UNSUPPORTED_OPERATION', {
                 operation: 'pause',
             });
         }
@@ -29774,7 +31101,7 @@ class JsonRpcSigner extends AbstractSigner {
      */
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     connect(provider) {
-        assert(false, 'cannot reconnect JsonRpcSigner', 'UNSUPPORTED_OPERATION', {
+        assert$1(false, 'cannot reconnect JsonRpcSigner', 'UNSUPPORTED_OPERATION', {
             operation: 'signer.connect',
         });
     }
@@ -30181,7 +31508,7 @@ class JsonRpcApiProvider extends AbstractProvider {
      * @throws {Error} If the network is not available yet.
      */
     get _network() {
-        assert(this.#network, 'network is not available yet', 'NETWORK_ERROR');
+        assert$1(this.#network, 'network is not available yet', 'NETWORK_ERROR');
         return this.#network;
     }
     /**
@@ -30507,6 +31834,12 @@ class JsonRpcApiProvider extends AbstractProvider {
             case 'estimateGas': {
                 return {
                     method: 'quai_estimateGas',
+                    args: [this.getRpcTransaction(req.transaction)],
+                };
+            }
+            case 'createAccessList': {
+                return {
+                    method: 'quai_createAccessList',
                     args: [this.getRpcTransaction(req.transaction)],
                 };
             }
@@ -30966,7 +32299,7 @@ class ContractFactory {
      */
     async deploy(...args) {
         const tx = await this.getDeployTransaction(...args);
-        assert(this.runner && typeof this.runner.sendTransaction === 'function', 'factory runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
+        assert$1(this.runner && typeof this.runner.sendTransaction === 'function', 'factory runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
             operation: 'sendTransaction',
         });
         if (this.runner instanceof Wallet || this.runner instanceof JsonRpcSigner) {
@@ -30974,6 +32307,10 @@ class ContractFactory {
             tx.from = this.runner.address;
         }
         const grindedTx = await this.grindContractAddress(tx);
+        grindedTx.accessList = (await this.runner.createAccessList?.(grindedTx))?.map(it => {
+            it.address = formatMixedCaseChecksumAddress(it.address);
+            return it;
+        });
         const sentTx = await this.runner.sendTransaction(grindedTx);
         const address = getStatic(this.constructor, 'getContractAddress')?.(tx);
         return new BaseContract(address, this.interface, this.runner, sentTx);
@@ -30990,15 +32327,21 @@ class ContractFactory {
         const toShard = getZoneForAddress(sender);
         let i = 0;
         const startingData = tx.data;
+        const salt = new Uint8Array(4);
+        // initialize salt with the lower 32 bits of the nonce
+        new DataView(salt.buffer).setUint32(0, Number(tx.nonce) & 0xffffffff, false);
         while (i < 10000) {
+            tx.data = hexlify(concat([String(startingData), salt]));
             const contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
             const contractShard = getZoneForAddress(contractAddress);
             const utxo = isQiAddress(contractAddress);
             if (contractShard === toShard && !utxo) {
                 return tx;
             }
-            const salt = randomBytes(32);
-            tx.data = hexlify(concat([String(startingData), salt]));
+            // Increment the salt
+            let saltValue = new DataView(salt.buffer).getUint32(0, false);
+            saltValue++;
+            new DataView(salt.buffer).setUint32(0, saltValue, false);
             i++;
         }
         return tx;
@@ -31055,8 +32398,10 @@ class BrowserProvider extends JsonRpcApiProvider {
      */
     constructor(ethereum, network) {
         super(network, { batchMaxCount: 1 });
-        this.#request = async (method, params) => {
-            const payload = { method, params };
+        if (this.initResolvePromise)
+            this.initResolvePromise();
+        this.#request = async (method, params, shard) => {
+            const payload = { method, params, shard };
             this.emit('debug', undefined, { action: 'sendEip1193Request', payload });
             try {
                 const result = await ethereum.request(payload);
@@ -31097,9 +32442,9 @@ class BrowserProvider extends JsonRpcApiProvider {
      * @param {any[] | Record<string, any>} params - The parameters for the method.
      * @returns {Promise<any>} The result of the request.
      */
-    async send(method, params) {
+    async send(method, params, shard) {
         await this._start();
-        return await super.send(method, params);
+        return await super.send(method, params, shard);
     }
     /**
      * Sends a JSON-RPC payload.
@@ -31109,17 +32454,17 @@ class BrowserProvider extends JsonRpcApiProvider {
      * @param {JsonRpcPayload | JsonRpcPayload[]} payload - The JSON-RPC payload.
      * @returns {Promise<(JsonRpcResult | JsonRpcError)[]>} The result of the request.
      */
-    async _send(payload) {
+    async _send(payload, shard) {
         assertArgument(!Array.isArray(payload), 'EIP-1193 does not support batch request', 'payload', payload);
         try {
-            const result = await this.#request(payload.method, payload.params || []);
+            const result = await this.#request(payload.method, payload.params || [], shard);
             return [{ id: payload.id, result }];
         }
         catch (e) {
             return [
                 {
                     id: payload.id,
-                    error: { code: e.code, data: e.data, message: e.message },
+                    error: { code: e.code, data: e.data, message: e.message, shard: shard || undefined },
                 },
             ];
         }
@@ -31233,7 +32578,7 @@ class SocketSubscriber {
      * @param {boolean} [dropWhilePaused] - Whether to drop logs while paused.
      */
     pause(dropWhilePaused) {
-        assert(dropWhilePaused, 'preserve logs while paused not supported by SocketSubscriber yet', 'UNSUPPORTED_OPERATION', { operation: 'pause(false)' });
+        assert$1(dropWhilePaused, 'preserve logs while paused not supported by SocketSubscriber yet', 'UNSUPPORTED_OPERATION', { operation: 'pause(false)' });
         this.#paused = !!dropWhilePaused;
     }
     /**
@@ -31565,11 +32910,11 @@ class SocketProvider extends JsonRpcApiProvider {
         throw new Error('sub-classes must override this');
     }
     validateUrl(url) {
-        const urlPattern = /^(ws):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
+        const urlPattern = /^(wss?):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
         if (!urlPattern.test(url)) {
             let errorMessage = 'Invalid URL: ';
-            if (!/^ws:\/\//.test(url)) {
-                errorMessage += 'URL must start with ws://. ';
+            if (!/^wss?:\/\//.test(url)) {
+                errorMessage += 'URL must start with ws:// or wss://. ';
             }
             if (url.endsWith('/')) {
                 errorMessage += 'URL should not end with a /. ';
@@ -32016,6 +33361,7 @@ var quais = /*#__PURE__*/Object.freeze({
     TransactionReceipt: TransactionReceipt,
     Typed: Typed,
     TypedDataEncoder: TypedDataEncoder,
+    UTXO: UTXO,
     UndecodedEventLog: UndecodedEventLog,
     UnmanagedSubscriber: UnmanagedSubscriber,
     VoidSigner: VoidSigner,
@@ -32041,6 +33387,7 @@ var quais = /*#__PURE__*/Object.freeze({
     decodeBytes32: decodeBytes32,
     decryptKeystoreJson: decryptKeystoreJson,
     decryptKeystoreJsonSync: decryptKeystoreJsonSync,
+    denominations: denominations,
     encodeBase58: encodeBase58,
     encodeBase64: encodeBase64,
     encodeBytes32: encodeBytes32,
@@ -32117,5 +33464,5 @@ var quais = /*#__PURE__*/Object.freeze({
     zeroPadValue: zeroPadValue
 });
 
-export { AbiCoder, AbstractProvider, AbstractSigner, BaseContract, Block, BrowserProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, ErrorDescription, ErrorFragment, EventFragment, EventLog, EventPayload, FallbackFragment, FeeData, FetchCancelSignal, FetchRequest, FetchResponse, FewestCoinSelector, FixedNumber, Fragment, FunctionFragment, Indexed, Interface, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, LangEs, Ledger, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, N$1 as N, NamedFragment, Network, ParamType, QiHDWallet, QiTransaction, QuaiHDWallet, QuaiTransaction, Result, Shard, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, TransactionDescription, TransactionReceipt, Typed, TypedDataEncoder, UndecodedEventLog, UnmanagedSubscriber, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, Zone, accessListify, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32, decryptKeystoreJson, decryptKeystoreJsonSync, encodeBase58, encodeBase64, encodeBytes32, encryptKeystoreJson, encryptKeystoreJsonSync, ethHashMessage, ethVerifyMessage, formatMixedCaseChecksumAddress, formatQuai, formatUnits, fromTwos, getAddress, getAddressDetails, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getNumber, getTxType, getUint, getZoneForAddress, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isError, isHexString, isKeystoreJson, isQiAddress, isQuaiAddress, keccak256, lock, makeError, mask, musigCrypto, parseQuai, parseUnits, pbkdf2, quais, quaisymbol, randomBytes, recoverAddress, resolveAddress, ripemd160, scrypt, scryptSync, sha256, sha512, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toShard, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, toZone, uuidV4, validateAddress, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
+export { AbiCoder, AbstractProvider, AbstractSigner, BaseContract, Block, BrowserProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, ErrorDescription, ErrorFragment, EventFragment, EventLog, EventPayload, FallbackFragment, FeeData, FetchCancelSignal, FetchRequest, FetchResponse, FewestCoinSelector, FixedNumber, Fragment, FunctionFragment, Indexed, Interface, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, LangEs, Ledger, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, N$1 as N, NamedFragment, Network, ParamType, QiHDWallet, QiTransaction, QuaiHDWallet, QuaiTransaction, Result, Shard, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, TransactionDescription, TransactionReceipt, Typed, TypedDataEncoder, UTXO, UndecodedEventLog, UnmanagedSubscriber, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, Zone, accessListify, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32, decryptKeystoreJson, decryptKeystoreJsonSync, denominations, encodeBase58, encodeBase64, encodeBytes32, encryptKeystoreJson, encryptKeystoreJsonSync, ethHashMessage, ethVerifyMessage, formatMixedCaseChecksumAddress, formatQuai, formatUnits, fromTwos, getAddress, getAddressDetails, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getNumber, getTxType, getUint, getZoneForAddress, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isError, isHexString, isKeystoreJson, isQiAddress, isQuaiAddress, keccak256, lock, makeError, mask, musigCrypto, parseQuai, parseUnits, pbkdf2, quais, quaisymbol, randomBytes, recoverAddress, resolveAddress, ripemd160, scrypt, scryptSync, sha256, sha512, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toShard, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, toZone, uuidV4, validateAddress, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
 //# sourceMappingURL=quais.js.map
