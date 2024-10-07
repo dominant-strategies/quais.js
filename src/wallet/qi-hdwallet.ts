@@ -225,9 +225,15 @@ export class QiHDWallet extends AbstractHDWallet {
 
         const hash = getBytes(keccak256(txobj.unsignedSerialized));
 
+        const shouldUseSchnorrSignature = (inputs: TxInput[]): boolean => {
+            if (inputs.length === 1) return true;
+            const firstPubKey = inputs[0].pubkey;
+            return inputs.every((input) => input.pubkey === firstPubKey);
+        };
+
         let signature: string;
 
-        if (txobj.txInputs.length == 1) {
+        if (shouldUseSchnorrSignature(txobj.txInputs)) {
             signature = this.createSchnorrSignature(txobj.txInputs[0], hash);
         } else {
             signature = this.createMuSigSignature(txobj, hash);
