@@ -1438,11 +1438,13 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             tx = await tx;
         }
         const zone = await this.zoneFromAddress(addressFromTransactionRequest(tx));
-        return await this.#perform({
-            method: 'createAccessList',
-            transaction: tx,
-            zone: zone,
-        });
+        return (
+            await this.#perform({
+                method: 'createAccessList',
+                transaction: tx,
+                zone: zone,
+            })
+        ).accessList;
     }
 
     // TODO: `attempt` is not used, remove or re-write
@@ -1472,7 +1474,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             blockTag: this._getBlockTag(shard, _tx.blockTag),
         });
 
-        tx.accessList = await this.createAccessList(tx);
+        tx.accessList = (await this.createAccessList(tx)).map((it) => {
+            it.address = formatMixedCaseChecksumAddress(it.address);
+            return it;
+        });
 
         return await this.#checkNetwork(this.#call(tx, blockTag, -1, zone), shard);
     }
