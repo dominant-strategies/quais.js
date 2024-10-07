@@ -1239,6 +1239,13 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                 };
             }
 
+            case 'createAccessList': {
+                return {
+                    method: 'quai_createAccessList',
+                    args: [this.getRpcTransaction(req.transaction)],
+                };
+            }
+
             case 'getRunningLocations': {
                 return {
                     method: 'quai_listRunningChains',

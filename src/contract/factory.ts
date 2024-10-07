@@ -11,7 +11,6 @@ import { getZoneForAddress } from '../utils/index.js';
 import type { ContractInterface, ContractMethodArgs, ContractDeployTransaction, ContractRunner } from './types.js';
 import type { ContractTransactionResponse } from './wrappers.js';
 import { Wallet } from '../wallet/index.js';
-import { randomBytes } from '../crypto/index.js';
 import { getContractAddress, isQiAddress } from '../address/index.js';
 import { getStatic } from '../utils/properties.js';
 import { QuaiTransactionRequest } from '../providers/provider.js';
@@ -139,6 +138,9 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
             tx.from = this.runner.address;
         }
         const grindedTx = await this.grindContractAddress(tx);
+
+        grindedTx.accessList = await this.runner.createAccessList?.(grindedTx);
+
         const sentTx = await this.runner.sendTransaction(grindedTx);
         const address = getStatic<(tx: ContractDeployTransaction) => string>(
             this.constructor,
@@ -169,15 +171,22 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         const toShard = getZoneForAddress(sender);
         let i = 0;
         const startingData = tx.data;
+        const salt = new Uint8Array(4);
+        // initialize salt with the lower 32 bits of the nonce
+        new DataView(salt.buffer).setUint32(0, Number(tx.nonce) & 0xffffffff, false);
+
         while (i < 10000) {
+            tx.data = hexlify(concat([String(startingData), salt]));
             const contractAddress = getContractAddress(sender, BigInt(tx.nonce || 0), tx.data || '');
             const contractShard = getZoneForAddress(contractAddress);
             const utxo = isQiAddress(contractAddress);
             if (contractShard === toShard && !utxo) {
                 return tx;
             }
-            const salt = randomBytes(32);
-            tx.data = hexlify(concat([String(startingData), salt]));
+            // Increment the salt
+            let saltValue = new DataView(salt.buffer).getUint32(0, false);
+            saltValue++;
+            new DataView(salt.buffer).setUint32(0, saltValue, false);
             i++;
         }
         return tx;

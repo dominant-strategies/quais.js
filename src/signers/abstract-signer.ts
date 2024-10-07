@@ -14,6 +14,7 @@ import type { Signer } from './signer.js';
 import { getTxType } from '../utils/index.js';
 import { QuaiTransaction, QuaiTransactionLike } from '../transaction/index.js';
 import { toZone, Zone } from '../constants/index.js';
+import { AccessList } from '../transaction';
 
 function checkProvider(signer: AbstractSigner, operation: string): Provider {
     if (signer.provider) {
@@ -154,6 +155,12 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
     async estimateGas(tx: TransactionRequest): Promise<bigint> {
         return checkProvider(this, 'estimateGas').estimateGas(await this.populateCall(tx));
+    }
+
+    async createAccessList(tx: QuaiTransactionRequest): Promise<AccessList> {
+        return checkProvider(this, 'createAccessList').createAccessList(
+            (await this.populateCall(tx)) as QuaiTransactionRequest,
+        );
     }
 
     async call(tx: TransactionRequest): Promise<string> {
