@@ -2829,6 +2829,14 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
     estimateGas(tx: TransactionRequest): Promise<bigint>;
 
     /**
+     * Required for populating access lists for state mutating calls
+     *
+     * @param tx
+     * @returns {Promise<AccessList>}
+     */
+    createAccessList(tx: QuaiTransactionRequest): Promise<AccessList>;
+
+    /**
      * Simulate the execution of `tx`. If the call reverts, it will throw a
      * [CallExceptionError](../interfaces/CallExceptionError) which includes the revert data.
      *
