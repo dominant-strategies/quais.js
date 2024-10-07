@@ -134,7 +134,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             pop.chainId = network.chainId;
         }
         if (pop.maxFeePerGas == null || pop.maxPriorityFeePerGas == null) {
-            const feeData = await provider.getFeeData(zone);
+            const feeData = await provider.getFeeData(zone, true);
 
             if (pop.maxFeePerGas == null) {
                 pop.maxFeePerGas = feeData.maxFeePerGas;

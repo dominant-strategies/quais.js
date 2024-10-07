@@ -1,4 +1,4 @@
-import { UTXO, UTXOLike } from './utxo.js';
+import { UTXO } from './utxo.js';
 
 /**
  * Represents a target for spending.
@@ -38,80 +38,25 @@ export type SelectedCoinsResult = {
  * @abstract
  */
 export abstract class AbstractCoinSelector {
-    #availableUTXOs: UTXO[];
-    #spendOutputs: UTXO[];
-    #changeOutputs: UTXO[];
-
-    /**
-     * Gets the available UTXOs.
-     *
-     * @returns {UTXO[]} The available UTXOs.
-     */
-    get availableUTXOs(): UTXO[] {
-        return this.#availableUTXOs;
-    }
-
-    /**
-     * Sets the available UTXOs.
-     *
-     * @param {UTXOLike[]} value - The UTXOs to set.
-     */
-    set availableUTXOs(value: UTXOLike[]) {
-        this.#availableUTXOs = value.map((val) => {
-            const utxo = UTXO.from(val);
-            this._validateUTXO(utxo);
-            return utxo;
-        });
-    }
-
-    /**
-     * Gets the spend outputs.
-     *
-     * @returns {UTXO[]} The spend outputs.
-     */
-    get spendOutputs(): UTXO[] {
-        return this.#spendOutputs;
-    }
-
-    /**
-     * Sets the spend outputs.
-     *
-     * @param {UTXOLike[]} value - The spend outputs to set.
-     */
-    set spendOutputs(value: UTXOLike[]) {
-        this.#spendOutputs = value.map((utxo) => UTXO.from(utxo));
-    }
-
-    /**
-     * Gets the change outputs.
-     *
-     * @returns {UTXO[]} The change outputs.
-     */
-    get changeOutputs(): UTXO[] {
-        return this.#changeOutputs;
-    }
-
-    /**
-     * Sets the change outputs.
-     *
-     * @param {UTXOLike[]} value - The change outputs to set.
-     */
-    set changeOutputs(value: UTXOLike[]) {
-        this.#changeOutputs = value.map((utxo) => UTXO.from(utxo));
-    }
+    public availableUTXOs: UTXO[];
+    public totalInputValue: bigint = BigInt(0);
+    public spendOutputs: UTXO[] = [];
+    public changeOutputs: UTXO[] = [];
+    public selectedUTXOs: UTXO[] = [];
+    public target: bigint | null = null;
 
     /**
      * Constructs a new AbstractCoinSelector instance with an empty UTXO array.
      *
-     * @param {UTXOEntry[]} [availableUXTOs=[]] - The initial available UTXOs. Default is `[]`
+     * @param {UTXO[]} [availableUXTOs=[]] - The initial available UTXOs. Default is `[]`
      */
     constructor(availableUTXOs: UTXO[] = []) {
-        this.#availableUTXOs = availableUTXOs.map((utxo: UTXO) => {
+        this.availableUTXOs = availableUTXOs.map((utxo: UTXO) => {
             this._validateUTXO(utxo);
             return utxo;
         });
-        this.#spendOutputs = [];
-        this.#changeOutputs = [];
+        this.spendOutputs = [];
+        this.changeOutputs = [];
     }
 
     /**
@@ -123,7 +68,7 @@ export abstract class AbstractCoinSelector {
      * @param {SpendTarget} target - The target address and value to spend.
      * @returns {SelectedCoinsResult} The selected UTXOs and outputs.
      */
-    abstract performSelection(target: SpendTarget): SelectedCoinsResult;
+    abstract performSelection(target: bigint): SelectedCoinsResult;
 
     /**
      * Validates the provided UTXO instance. In order to be valid for coin selection, the UTXO must have a valid address

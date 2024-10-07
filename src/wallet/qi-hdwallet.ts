@@ -9,12 +9,11 @@ import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress } from '../address/index.js';
 import { getBytes, hexlify } from '../utils/index.js';
-import { TransactionLike, QiTransaction, TxInput, FewestCoinSelector, SpendTarget } from '../transaction/index.js';
+import { TransactionLike, QiTransaction, TxInput, FewestCoinSelector } from '../transaction/index.js';
 import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
 import { keccak256, musigCrypto } from '../crypto/index.js';
 import { Outpoint, UTXO, denominations } from '../transaction/utxo.js';
-import { getZoneForAddress } from '../utils/index.js';
 import { AllowedCoinType, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
 import { PaymentCodePrivate, PaymentCodePublic, PC_VERSION, validatePaymentCode } from './payment-codes.js';
@@ -22,6 +21,7 @@ import { BIP32Factory } from './bip32/bip32.js';
 import { bs58check } from './bip32/crypto.js';
 import { type BIP32API, HDNodeBIP32Adapter } from './bip32/types.js';
 import ecc from '@bitcoinerlab/secp256k1';
+import { SelectedCoinsResult } from '../transaction/abstract-coinselector.js';
 
 /**
  * @property {Outpoint} outpoint - The outpoint object.
@@ -278,136 +278,141 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @param tx The transaction request.
      */
-    public async sendTransaction(tx: QiTransactionRequest): Promise<TransactionResponse>;
-
-    /**
-     * Sends a transaction using payment codes and specific parameters.
-     *
-     * @param recipientPaymentCode The payment code of the recipient.
-     * @param amount The amount to send.
-     * @param originZone The origin zone of the transaction.
-     * @param destinationZone The destination zone of the transaction.
-     */
     public async sendTransaction(
         recipientPaymentCode: string,
         amount: bigint,
         originZone: Zone,
         destinationZone: Zone,
-    ): Promise<TransactionResponse>;
-
-    /**
-     * Implementation of the sendTransaction method.
-     */
-    public async sendTransaction(...args: any[]): Promise<TransactionResponse> {
+    ): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
         }
+        // This is the new method call (recipientPaymentCode, amount, originZone, destinationZone)
+        if (!validatePaymentCode(recipientPaymentCode)) {
+            throw new Error('Invalid payment code');
+        }
+        if (amount <= 0) {
+            throw new Error('Amount must be greater than 0');
+        }
+        if (!Object.values(Zone).includes(originZone) || !Object.values(Zone).includes(destinationZone)) {
+            throw new Error('Invalid zone');
+        }
 
-        if (args.length === 1 && typeof args[0] === 'object') {
-            // This is the traditional method call (tx: TransactionRequest)
-            const tx = args[0] as QiTransactionRequest;
-            if (!tx.txInputs || tx.txInputs.length === 0) {
-                throw new Error('Transaction has no inputs');
-            }
-            const input = tx.txInputs[0];
-            const address = computeAddress(input.pubkey);
-            const shard = getZoneForAddress(address);
-            if (!shard) {
-                throw new Error(`Address ${address} not found in any shard`);
-            }
+        // 1. Check the wallet has enough balance in the originating zone to send the transaction
+        const balance = this.getBalanceForZone(originZone);
+        if (balance < amount) {
+            throw new Error(`Insufficient balance in the originating zone: want ${amount} Qi got ${balance} Qi`);
+        }
 
-            // verify all inputs are from the same shard
-            if (tx.txInputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
-                throw new Error('All inputs must be from the same shard');
-            }
-            const signedTx = await this.signTransaction(tx);
-            return await this.provider.broadcastTransaction(shard, signedTx);
-        } else if (args.length === 4) {
-            // This is the new method call (recipientPaymentCode, amount, originZone, destinationZone)
-            const [recipientPaymentCode, amount, originZone, destinationZone] = args;
-            if (!validatePaymentCode(recipientPaymentCode)) {
-                throw new Error('Invalid payment code');
-            }
-            if (amount <= 0) {
-                throw new Error('Amount must be greater than 0');
-            }
-            if (!Object.values(Zone).includes(originZone) || !Object.values(Zone).includes(destinationZone)) {
-                throw new Error('Invalid zone');
-            }
+        // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
+        const zoneUTXOs = this.outpointsToUTXOs(originZone);
+        const fewestCoinSelector = new FewestCoinSelector(zoneUTXOs);
 
-            // 1. Check the wallet has enough balance in the originating zone to send the transaction
-            const balance = this.getBalanceForZone(originZone);
-            if (balance < amount) {
-                throw new Error(`Insufficient balance in the originating zone: want ${amount} Qi got ${balance} Qi`);
-            }
+        const spendTarget: bigint = amount;
+        let selection = fewestCoinSelector.performSelection(spendTarget);
 
-            // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
-            const zoneUTXOs = this.outpointsToUTXOs(originZone);
-            const fewestCoinSelector = new FewestCoinSelector(zoneUTXOs);
+        // 3. Generate as many unused addresses as required to populate the spend outputs
+        const sendAddresses: string[] = [];
+        for (let i = 0; i < selection.spendOutputs.length; i++) {
+            sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
+        }
+        // 4. Generate as many addresses as required to populate the change outputs
+        const changeAddresses: string[] = [];
+        for (let i = 0; i < selection.changeOutputs.length; i++) {
+            changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
+        }
+        // 5. Create the transaction and sign it using the signTransaction method
 
-            const senderAddress = await this.getNextSendAddress(recipientPaymentCode, destinationZone);
-            const spendTarget: SpendTarget = {
-                address: senderAddress,
-                value: BigInt(amount),
-            };
-            const selectedUTXOs = fewestCoinSelector.performSelection(spendTarget);
+        // 5.1 Fetch the public keys for the input addresses
+        let inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
+        if (inputPubKeys.some((pubkey) => !pubkey)) {
+            throw new Error('Missing public key for input address');
+        }
 
-            // 3. Generate as many unused addresses as required to populate the spend outputs
-            const sendAddresses: string[] = [];
-            for (let i = 0; i < selectedUTXOs.spendOutputs.length; i++) {
-                sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
-            }
-            // 4. Generate as many addresses as required to populate the change outputs
-            const changeAddresses: string[] = [];
-            for (let i = 0; i < selectedUTXOs.changeOutputs.length; i++) {
+        const chainId = (await this.provider.getNetwork()).chainId;
+        let tx = await this.prepareTransaction(
+            selection,
+            inputPubKeys.map((pubkey) => pubkey!),
+            sendAddresses,
+            changeAddresses,
+            Number(chainId),
+        );
+
+        const gasLimit = await this.provider.estimateGas(tx);
+        const feeData = await this.provider.getFeeData(originZone, false);
+
+        // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, maxFeePerGas and maxPriorityFeePerGas
+        const totalFee =
+            gasLimit * (feeData.gasPrice ?? 1n) + (feeData.maxFeePerGas ?? 0n) + (feeData.maxPriorityFeePerGas ?? 0n);
+
+        // Get new selection with increased fee
+        selection = fewestCoinSelector.increaseFee(totalFee);
+
+        // 5.7 Determine if new addresses are needed for the change outputs
+        const changeAddressesNeeded = selection.changeOutputs.length > changeAddresses.length;
+        if (changeAddressesNeeded) {
+            console.log(`Need ${selection.changeOutputs.length - changeAddresses.length} new change addresses`);
+            for (let i = 0; i < selection.changeOutputs.length; i++) {
                 changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
             }
-            // 5. Create the transaction and sign it using the signTransaction method
-
-            // 5.1 Fetch the public keys for the input addresses
-            const inputPubKeys = selectedUTXOs.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
-            if (inputPubKeys.some((pubkey) => !pubkey)) {
-                throw new Error('Missing public key for input address');
-            }
-            // 5.2 Create the inputs with: txhash, index, pubkey
-            const inputs = selectedUTXOs.inputs.map((input, pubKeyIndex) => ({
-                txhash: input.txhash,
-                index: input.index,
-                pubkey: inputPubKeys[pubKeyIndex],
-            }));
-
-            // 5.3 Create the "sender" outputs
-            const senderOutputs = selectedUTXOs.spendOutputs.map((output, index) => ({
-                address: sendAddresses[index],
-                denomination: output.denomination,
-            }));
-            
-            // 5.4 Create the "change" outputs
-            const changeOutputs = selectedUTXOs.changeOutputs.map((output, index) => ({
-                address: changeAddresses[index],
-                denomination: output.denomination,
-            }));
-
-            // 5.5 Create a Qi tx with the inputs, sender outputs and change outputs
-            const tx = new QiTransaction();
-            tx.txInputs = inputs.map((input) => ({
-                txhash: input.txhash!,
-                index: input.index!,
-                pubkey: input.pubkey!,
-            }));
-            tx.txOutputs = [...senderOutputs, ...changeOutputs].map((output) => ({
-                address: output.address,
-                denomination: output.denomination!,
-            }));
-            tx.chainId = (await this.provider.getNetwork()).chainId;
-
-            // 5.6 Sign the transaction
-            const signedTx = await this.signTransaction(tx);
-
-            // 6. Broadcast the transaction to the network using the provider
-            return this.provider.broadcastTransaction(originZone, signedTx);
         }
-        throw new Error('Invalid arguments');
+
+        const spendAddressesNeeded = selection.spendOutputs.length > sendAddresses.length;
+        if (spendAddressesNeeded) {
+            console.log(`Need ${selection.spendOutputs.length - sendAddresses.length} new send addresses`);
+            for (let i = 0; i < selection.spendOutputs.length; i++) {
+                sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
+            }
+        }
+
+        inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
+
+        tx = await this.prepareTransaction(
+            selection,
+            inputPubKeys.map((pubkey) => pubkey!),
+            sendAddresses,
+            changeAddresses,
+            Number(chainId),
+        );
+
+        // 5.6 Sign the transaction
+        const signedTx = await this.signTransaction(tx);
+
+        // 6. Broadcast the transaction to the network using the provider
+        return this.provider.broadcastTransaction(originZone, signedTx);
+    }
+
+    private async prepareTransaction(
+        selection: SelectedCoinsResult,
+        inputPubKeys: string[],
+        sendAddresses: string[],
+        changeAddresses: string[],
+        chainId: number,
+    ): Promise<QiTransaction> {
+        const tx = new QiTransaction();
+        tx.txInputs = selection.inputs.map((input, index) => ({
+            txhash: input.txhash!,
+            index: input.index!,
+            pubkey: inputPubKeys[index],
+        }));
+        // 5.3 Create the "sender" outputs
+        const senderOutputs = selection.spendOutputs.map((output, index) => ({
+            address: sendAddresses[index],
+            denomination: output.denomination,
+        }));
+
+        // 5.4 Create the "change" outputs
+        const changeOutputs = selection.changeOutputs.map((output, index) => ({
+            address: changeAddresses[index],
+            denomination: output.denomination,
+        }));
+
+        tx.txOutputs = [...senderOutputs, ...changeOutputs].map((output) => ({
+            address: output.address,
+            denomination: output.denomination!,
+        }));
+        tx.chainId = chainId;
+        return tx;
     }
 
     /**
