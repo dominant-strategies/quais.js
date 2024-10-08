@@ -357,7 +357,6 @@ export class QiHDWallet extends AbstractHDWallet {
         // 5.7 Determine if new addresses are needed for the change outputs
         const changeAddressesNeeded = selection.changeOutputs.length > changeAddresses.length;
         if (changeAddressesNeeded) {
-            console.log(`Need ${selection.changeOutputs.length - changeAddresses.length} new change addresses`);
             for (let i = 0; i < selection.changeOutputs.length; i++) {
                 changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
             }
@@ -365,7 +364,6 @@ export class QiHDWallet extends AbstractHDWallet {
 
         const spendAddressesNeeded = selection.spendOutputs.length > sendAddresses.length;
         if (spendAddressesNeeded) {
-            console.log(`Need ${selection.spendOutputs.length - sendAddresses.length} new send addresses`);
             for (let i = 0; i < selection.spendOutputs.length; i++) {
                 sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
             }
