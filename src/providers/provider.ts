@@ -2743,9 +2743,10 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * Get the best guess at the recommended {@link FeeData | **FeeData**}.
      *
      * @param {Zone} zone - The shard to fetch the fee data from.
+     * @param {boolean} txType - The transaction type to fetch the fee data for (true for Quai, false for Qi)
      * @returns {Promise<FeeData>} A promise resolving to the fee data.
      */
-    getFeeData(zone: Zone): Promise<FeeData>;
+    getFeeData(zone: Zone, txType: boolean): Promise<FeeData>;
 
     /**
      * Get a work object to package a transaction in.

@@ -62,23 +62,23 @@ export type TxOutput = {
  * @category Transaction
  */
 export const denominations: bigint[] = [
-    BigInt(1), // 0.001 Qi
-    BigInt(5), // 0.005 Qi
-    BigInt(10), // 0.01 Qi
-    BigInt(50), // 0.05 Qi
-    BigInt(100), // 0.1 Qi
-    BigInt(250), // 0.25 Qi
-    BigInt(500), // 0.5 Qi
-    BigInt(1000), // 1 Qi
-    BigInt(5000), // 5 Qi
-    BigInt(10000), // 10 Qi
-    BigInt(20000), // 20 Qi
-    BigInt(50000), // 50 Qi
-    BigInt(100000), // 100 Qi
-    BigInt(1000000), // 1000 Qi
-    BigInt(10000000), // 10000 Qi
-    BigInt(100000000), // 100000 Qi
-    BigInt(1000000000), // 1000000 Qi
+    BigInt(1), // 0.001 Qi (1 Qit)
+    BigInt(5), // 0.005 Qi (5 Qit)
+    BigInt(10), // 0.01 Qi (10 Qit)
+    BigInt(50), // 0.05 Qi (50 Qit)
+    BigInt(100), // 0.1 Qi (100 Qit)
+    BigInt(250), // 0.25 Qi (250 Qit)
+    BigInt(500), // 0.5 Qi (500 Qit)
+    BigInt(1000), // 1 Qi (1000 Qit)
+    BigInt(5000), // 5 Qi (5000 Qit)
+    BigInt(10000), // 10 Qi (10000 Qit)
+    BigInt(20000), // 20 Qi (20000 Qit)
+    BigInt(50000), // 50 Qi (50000 Qit)
+    BigInt(100000), // 100 Qi (100000 Qit)
+    BigInt(1000000), // 1,000 Qi (1,000,000 Qit)
+    BigInt(10000000), // 10,000 Qi (10,000,000 Qit)
+    BigInt(100000000), // 100,000 Qi (100,000,000 Qit)
+    BigInt(1000000000), // 1,000,000 Qi (1,000,000,000 Qit)
 ];
 
 /**
@@ -100,22 +100,34 @@ function isValidDenominationIndex(index: number): boolean {
  * @returns {bigint[]} An array of denominations that sum to the value.
  * @throws {Error} If the value is less than or equal to 0 or cannot be matched with available denominations.
  */
-export function denominate(value: bigint): bigint[] {
+export function denominate(value: bigint, maxDenomination?: bigint): bigint[] {
     if (value <= BigInt(0)) {
         throw new Error('Value must be greater than 0');
     }
 
     const result: bigint[] = [];
-    let remainingValue = value;
+    let remainingValue = BigInt(value);
 
-    // Iterate through denominations in descending order
-    for (let i = denominations.length - 1; i >= 0; i--) {
+    // Find the index of the maximum allowed denomination
+    let maxDenominationIndex: number;
+    if (maxDenomination != null) {
+        maxDenominationIndex = denominations.findIndex((d) => d === maxDenomination);
+        if (maxDenominationIndex === -1) {
+            throw new Error('Invalid maximum denomination');
+        }
+    } else {
+        // No maximum denomination set, use the highest denomination
+        maxDenominationIndex = denominations.length - 1;
+    }
+
+    // Iterate through denominations in descending order, up to the maximum allowed denomination
+    for (let i = maxDenominationIndex; i >= 0; i--) {
         const denomination = denominations[i];
 
         // Add the denomination to the result array as many times as possible
         while (remainingValue >= denomination) {
             result.push(denomination);
-            remainingValue -= denomination;
+            remainingValue -= BigInt(denomination);
         }
     }
 

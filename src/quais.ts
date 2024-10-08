@@ -214,6 +214,8 @@ export {
     decryptKeystoreJson,
     encryptKeystoreJson,
     encryptKeystoreJsonSync,
+    SerializedHDWallet,
+    SerializedQiHDWallet,
 } from './wallet/index.js';
 
 // WORDLIST

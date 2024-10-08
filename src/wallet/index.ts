@@ -13,6 +13,8 @@
 
 export { BaseWallet } from './base-wallet.js';
 
+export type { SerializedHDWallet } from './hdwallet.js';
+
 export { QuaiHDWallet } from './quai-hdwallet.js';
 
 export {
@@ -29,6 +31,6 @@ export { Wallet } from './wallet.js';
 
 export type { KeystoreAccount, EncryptOptions } from './json-keystore.js';
 
-export { QiHDWallet } from './qi-hdwallet.js';
+export { QiHDWallet, SerializedQiHDWallet } from './qi-hdwallet.js';
 
 export { HDNodeVoidWallet, HDNodeWallet } from './hdnodewallet.js';
