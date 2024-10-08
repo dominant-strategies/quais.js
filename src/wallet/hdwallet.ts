@@ -6,7 +6,7 @@ import { randomBytes } from '../crypto/index.js';
 import { getZoneForAddress, assertPrivate } from '../utils/index.js';
 import { isQiAddress } from '../address/index.js';
 import { Zone } from '../constants/index.js';
-import { TransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
+import { TransactionRequest, Provider } from '../providers/index.js';
 import { AllowedCoinType } from '../constants/index.js';
 
 /**
@@ -365,13 +365,13 @@ export abstract class AbstractHDWallet {
      */
     abstract signTransaction(tx: TransactionRequest): Promise<string>;
 
-    /**
-     * Abstract method to send a transaction.
-     *
-     * @param {TransactionRequest} tx - The transaction request.
-     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
-     */
-    abstract sendTransaction(tx: TransactionRequest): Promise<TransactionResponse>;
+    // /**
+    //  * Abstract method to send a transaction.
+    //  *
+    //  * @param {TransactionRequest} tx - The transaction request.
+    //  * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+    //  */
+    // abstract sendTransaction(tx: TransactionRequest): Promise<TransactionResponse>;
 
     /**
      * Connects the wallet to a provider.

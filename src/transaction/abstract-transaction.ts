@@ -150,6 +150,11 @@ export type ProtoTxOutput = {
      * The denomination of the output.
      */
     denomination: number;
+
+    /**
+     * The lock of the output.
+     */
+    lock?: Uint8Array;
 };
 
 /**

@@ -884,7 +884,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             if (tx && tx.type != null && getBigInt(tx.type)) {
                 // If there are no EIP-1559 properties, it might be non-EIP-a559
                 if (tx.maxFeePerGas == null && tx.maxPriorityFeePerGas == null) {
-                    const feeData = await this.getFeeData(req.zone);
+                    const feeData = await this.getFeeData(req.zone, tx.type === 1); // tx type 1 is Quai and 2 is Qi
                     if (feeData.maxFeePerGas == null && feeData.maxPriorityFeePerGas == null) {
                         // Network doesn't know about EIP-1559 (and hence type)
                         req = Object.assign({}, req, {
@@ -1119,7 +1119,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                 (<any>result)[dstKey] = toQuantity(getBigInt((<any>tx)[key], `tx.${key}`));
             });
 
-            // Make sure addresses and data are lowercase
             ['from', 'to', 'data'].forEach((key) => {
                 if ((<any>tx)[key] == null) {
                     return;
@@ -1132,8 +1131,22 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                 (result as QuaiJsonRpcTransactionRequest)['accessList'] = accessListify(tx.accessList);
             }
         } else {
-            throw new Error('No Qi getRPCTransaction implementation yet');
+            if ((<any>tx).txInputs != null) {
+                (result as QiJsonRpcTransactionRequest)['txInputs'] = (<any>tx).txInputs.map((input: TxInput) => ({
+                    txhash: hexlify(input.txhash),
+                    index: toQuantity(getBigInt(input.index, `tx.txInputs.${input.index}`)),
+                    pubkey: hexlify(input.pubkey),
+                }));
+            }
+
+            if ((<any>tx).txOutputs != null) {
+                (result as QiJsonRpcTransactionRequest)['txOutputs'] = (<any>tx).txOutputs.map((output: TxOutput) => ({
+                    address: hexlify(output.address),
+                    denomination: toQuantity(getBigInt(output.denomination, `tx.txOutputs.${output.denomination}`)),
+                }));
+            }
         }
+
         return result;
     }
 

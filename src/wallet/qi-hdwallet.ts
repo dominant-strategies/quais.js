@@ -9,13 +9,11 @@ import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress } from '../address/index.js';
 import { getBytes, hexlify } from '../utils/index.js';
-import { TransactionLike, QiTransaction, TxInput } from '../transaction/index.js';
+import { TransactionLike, QiTransaction, TxInput, FewestCoinSelector } from '../transaction/index.js';
 import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
-import { keccak_256 } from '@noble/hashes/sha3';
-import { musigCrypto } from '../crypto/index.js';
-import { Outpoint } from '../transaction/utxo.js';
-import { getZoneForAddress } from '../utils/index.js';
+import { keccak256, musigCrypto } from '../crypto/index.js';
+import { Outpoint, UTXO, denominations } from '../transaction/utxo.js';
 import { AllowedCoinType, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
 import { PaymentCodePrivate, PaymentCodePublic, PC_VERSION, validatePaymentCode } from './payment-codes.js';
@@ -23,6 +21,7 @@ import { BIP32Factory } from './bip32/bip32.js';
 import { bs58check } from './bip32/crypto.js';
 import { type BIP32API, HDNodeBIP32Adapter } from './bip32/types.js';
 import ecc from '@bitcoinerlab/secp256k1';
+import { SelectedCoinsResult } from '../transaction/abstract-coinselector.js';
 
 /**
  * @property {Outpoint} outpoint - The outpoint object.
@@ -31,7 +30,7 @@ import ecc from '@bitcoinerlab/secp256k1';
  * @property {number} [account] - The account number (optional).
  * @interface OutpointInfo
  */
-interface OutpointInfo {
+export interface OutpointInfo {
     outpoint: Outpoint;
     address: string;
     zone: Zone;
@@ -54,7 +53,7 @@ interface paymentCodeInfo {
  * @property {NeuteredAddressInfo[]} gapChangeAddresses - Array of gap change addresses.
  * @interface SerializedQiHDWallet
  */
-interface SerializedQiHDWallet extends SerializedHDWallet {
+export interface SerializedQiHDWallet extends SerializedHDWallet {
     outpoints: OutpointInfo[];
     changeAddresses: NeuteredAddressInfo[];
     gapAddresses: NeuteredAddressInfo[];
@@ -224,18 +223,60 @@ export class QiHDWallet extends AbstractHDWallet {
         if (!txobj.txInputs || txobj.txInputs.length == 0 || !txobj.txOutputs)
             throw new Error('Invalid UTXO transaction, missing inputs or outputs');
 
-        const hash = keccak_256(txobj.unsignedSerialized);
+        const hash = getBytes(keccak256(txobj.unsignedSerialized));
+
+        const shouldUseSchnorrSignature = (inputs: TxInput[]): boolean => {
+            if (inputs.length === 1) return true;
+            const firstPubKey = inputs[0].pubkey;
+            return inputs.every((input) => input.pubkey === firstPubKey);
+        };
 
         let signature: string;
 
-        if (txobj.txInputs.length == 1) {
+        if (shouldUseSchnorrSignature(txobj.txInputs)) {
             signature = this.createSchnorrSignature(txobj.txInputs[0], hash);
         } else {
             signature = this.createMuSigSignature(txobj, hash);
         }
-
         txobj.signature = signature;
         return txobj.serialized;
+    }
+
+    /**
+     * Gets the balance for the specified zone.
+     *
+     * @param {Zone} zone - The zone to get the balance for.
+     * @returns {bigint} The total balance for the zone.
+     */
+    public getBalanceForZone(zone: Zone): bigint {
+        this.validateZone(zone);
+
+        return this._outpoints
+            .filter((outpoint) => outpoint.zone === zone)
+            .reduce((total, outpoint) => {
+                const denominationValue = denominations[outpoint.outpoint.denomination];
+                return total + denominationValue;
+            }, BigInt(0));
+    }
+
+    /**
+     * Converts outpoints for a specific zone to UTXO format.
+     *
+     * @param {Zone} zone - The zone to filter outpoints for.
+     * @returns {UTXO[]} An array of UTXO objects.
+     */
+    private outpointsToUTXOs(zone: Zone): UTXO[] {
+        this.validateZone(zone);
+        return this._outpoints
+            .filter((outpointInfo) => outpointInfo.zone === zone)
+            .map((outpointInfo) => {
+                const utxo = new UTXO();
+                utxo.txhash = outpointInfo.outpoint.txhash;
+                utxo.index = outpointInfo.outpoint.index;
+                utxo.address = outpointInfo.address;
+                utxo.denomination = outpointInfo.outpoint.denomination;
+                return utxo;
+            });
     }
 
     /**
@@ -243,82 +284,139 @@ export class QiHDWallet extends AbstractHDWallet {
      *
      * @param tx The transaction request.
      */
-    public async sendTransaction(tx: QiTransactionRequest): Promise<TransactionResponse>;
-
-    /**
-     * Sends a transaction using payment codes and specific parameters.
-     *
-     * @param recipientPaymentCode The payment code of the recipient.
-     * @param amount The amount to send.
-     * @param originZone The origin zone of the transaction.
-     * @param destinationZone The destination zone of the transaction.
-     */
     public async sendTransaction(
         recipientPaymentCode: string,
         amount: bigint,
         originZone: Zone,
         destinationZone: Zone,
-    ): Promise<TransactionResponse>;
-
-    /**
-     * Implementation of the sendTransaction method.
-     */
-    public async sendTransaction(...args: any[]): Promise<TransactionResponse> {
+    ): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
         }
-
-        if (args.length === 1 && typeof args[0] === 'object') {
-            // This is the traditional method call (tx: TransactionRequest)
-            const tx = args[0] as QiTransactionRequest;
-            if (!tx.txInputs || tx.txInputs.length === 0) {
-                throw new Error('Transaction has no inputs');
-            }
-            const input = tx.txInputs[0];
-            const address = computeAddress(input.pubkey);
-            const shard = getZoneForAddress(address);
-            if (!shard) {
-                throw new Error(`Address ${address} not found in any shard`);
-            }
-
-            // verify all inputs are from the same shard
-            if (tx.txInputs.some((input) => getZoneForAddress(computeAddress(input.pubkey)) !== shard)) {
-                throw new Error('All inputs must be from the same shard');
-            }
-            const signedTx = await this.signTransaction(tx);
-            return await this.provider.broadcastTransaction(shard, signedTx);
-        } else if (args.length === 4) {
-            // This is the new method call (recipientPaymentCode, amount, originZone, destinationZone)
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const [recipientPaymentCode, amount, originZone, destinationZone] = args;
-            // !TODO: Implement the logic for sending a transaction using payment codes
-            if (!validatePaymentCode(recipientPaymentCode)) {
-                throw new Error('Invalid payment code');
-            }
-            if (amount <= 0) {
-                throw new Error('Amount must be greater than 0');
-            }
-            if (!Object.values(Zone).includes(originZone) || !Object.values(Zone).includes(destinationZone)) {
-                throw new Error('Invalid zone');
-            }
-
-            // 1. Check the wallet has enough balance in the originating zone to send the transaction
-
-            // 2. Use the FewestCoinSelector.perform method to select the UXTOs from the specified zone to use as inputs,
-            // and generate the spend and change outputs
-
-            // 3. Use the generateSendAddress method to generate as many unused addresses as required to populate the spend outputs
-
-            // 4. Use the getNextChangeAddress method to generate as many addresses as required to populate the change outputs
-
-            // 5. Create the transaction and sign it using the signTransaction method
-
-            // 6. Broadcast the transaction to the network using the provider
-
-            throw new Error('Payment code sendTransaction not implemented');
-        } else {
-            throw new Error('Invalid arguments for sendTransaction');
+        // This is the new method call (recipientPaymentCode, amount, originZone, destinationZone)
+        if (!validatePaymentCode(recipientPaymentCode)) {
+            throw new Error('Invalid payment code');
         }
+        if (amount <= 0) {
+            throw new Error('Amount must be greater than 0');
+        }
+        if (!Object.values(Zone).includes(originZone) || !Object.values(Zone).includes(destinationZone)) {
+            throw new Error('Invalid zone');
+        }
+
+        // 1. Check the wallet has enough balance in the originating zone to send the transaction
+        const balance = this.getBalanceForZone(originZone);
+        if (balance < amount) {
+            throw new Error(`Insufficient balance in the originating zone: want ${amount} Qi got ${balance} Qi`);
+        }
+
+        // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
+        const zoneUTXOs = this.outpointsToUTXOs(originZone);
+        const fewestCoinSelector = new FewestCoinSelector(zoneUTXOs);
+
+        const spendTarget: bigint = amount;
+        let selection = fewestCoinSelector.performSelection(spendTarget);
+
+        // 3. Generate as many unused addresses as required to populate the spend outputs
+        const sendAddresses: string[] = [];
+        for (let i = 0; i < selection.spendOutputs.length; i++) {
+            sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
+        }
+        // 4. Generate as many addresses as required to populate the change outputs
+        const changeAddresses: string[] = [];
+        for (let i = 0; i < selection.changeOutputs.length; i++) {
+            changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
+        }
+        // 5. Create the transaction and sign it using the signTransaction method
+
+        // 5.1 Fetch the public keys for the input addresses
+        let inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
+        if (inputPubKeys.some((pubkey) => !pubkey)) {
+            throw new Error('Missing public key for input address');
+        }
+
+        const chainId = (await this.provider.getNetwork()).chainId;
+        let tx = await this.prepareTransaction(
+            selection,
+            inputPubKeys.map((pubkey) => pubkey!),
+            sendAddresses,
+            changeAddresses,
+            Number(chainId),
+        );
+
+        const gasLimit = await this.provider.estimateGas(tx);
+        const feeData = await this.provider.getFeeData(originZone, false);
+
+        // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, maxFeePerGas and maxPriorityFeePerGas
+        const totalFee =
+            gasLimit * (feeData.gasPrice ?? 1n) + (feeData.maxFeePerGas ?? 0n) + (feeData.maxPriorityFeePerGas ?? 0n);
+
+        // Get new selection with increased fee
+        selection = fewestCoinSelector.increaseFee(totalFee);
+
+        // 5.7 Determine if new addresses are needed for the change outputs
+        const changeAddressesNeeded = selection.changeOutputs.length > changeAddresses.length;
+        if (changeAddressesNeeded) {
+            for (let i = 0; i < selection.changeOutputs.length; i++) {
+                changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
+            }
+        }
+
+        const spendAddressesNeeded = selection.spendOutputs.length > sendAddresses.length;
+        if (spendAddressesNeeded) {
+            for (let i = 0; i < selection.spendOutputs.length; i++) {
+                sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
+            }
+        }
+
+        inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
+
+        tx = await this.prepareTransaction(
+            selection,
+            inputPubKeys.map((pubkey) => pubkey!),
+            sendAddresses,
+            changeAddresses,
+            Number(chainId),
+        );
+
+        // 5.6 Sign the transaction
+        const signedTx = await this.signTransaction(tx);
+
+        // 6. Broadcast the transaction to the network using the provider
+        return this.provider.broadcastTransaction(originZone, signedTx);
+    }
+
+    private async prepareTransaction(
+        selection: SelectedCoinsResult,
+        inputPubKeys: string[],
+        sendAddresses: string[],
+        changeAddresses: string[],
+        chainId: number,
+    ): Promise<QiTransaction> {
+        const tx = new QiTransaction();
+        tx.txInputs = selection.inputs.map((input, index) => ({
+            txhash: input.txhash!,
+            index: input.index!,
+            pubkey: inputPubKeys[index],
+        }));
+        // 5.3 Create the "sender" outputs
+        const senderOutputs = selection.spendOutputs.map((output, index) => ({
+            address: sendAddresses[index],
+            denomination: output.denomination,
+        }));
+
+        // 5.4 Create the "change" outputs
+        const changeOutputs = selection.changeOutputs.map((output, index) => ({
+            address: changeAddresses[index],
+            denomination: output.denomination,
+        }));
+
+        tx.txOutputs = [...senderOutputs, ...changeOutputs].map((output) => ({
+            address: output.address,
+            denomination: output.denomination!,
+        }));
+        tx.chainId = chainId;
+        return tx;
     }
 
     /**
@@ -587,7 +685,7 @@ export class QiHDWallet extends AbstractHDWallet {
     public async signMessage(address: string, message: string | Uint8Array): Promise<string> {
         const addrNode = this._getHDNodeForAddress(address);
         const privKey = addrNode.privateKey;
-        const digest = keccak_256(message);
+        const digest = keccak256(message);
         const signature = schnorr.sign(digest, getBytes(privKey));
         return hexlify(signature);
     }
