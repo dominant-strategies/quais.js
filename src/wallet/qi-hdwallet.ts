@@ -249,7 +249,7 @@ export class QiHDWallet extends AbstractHDWallet {
             const firstPubKey = inputs[0].pubkey;
             return inputs.every((input) => input.pubkey === firstPubKey);
         };
-    
+
         let signature: string;
         if (shouldUseSchnorrSignature(txobj.txInputs)) {
             signature = this.createSchnorrSignature(txobj.txInputs[0], hash);
@@ -996,19 +996,59 @@ export class QiHDWallet extends AbstractHDWallet {
         outpointInfo.forEach((info) => {
             // validate zone
             this.validateZone(info.zone);
+
             // validate address and account
-            const addressInfo = this.getAddressInfo(info.address);
-            if (!addressInfo) {
-                throw new Error(`Address ${info.address} not found in wallet`);
-            }
-            if (info.account !== undefined && info.account !== addressInfo.account) {
-                throw new Error(`Account ${info.account} not found for address ${info.address}`);
-            }
+            this.validateAddressAndAccount(info.address, info.account);
+
             // validate Outpoint
             if (info.outpoint.txhash == null || info.outpoint.index == null || info.outpoint.denomination == null) {
                 throw new Error(`Invalid Outpoint: ${JSON.stringify(info)} `);
             }
         });
+    }
+
+    private validateAddressAndAccount(address: string, account?: number): void {
+        let addressFound = false;
+        let foundAccount: number | undefined;
+
+        // Check in the main address list
+        const addressInfo = this.getAddressInfo(address);
+        if (addressInfo) {
+            addressFound = true;
+            foundAccount = addressInfo.account;
+        }
+
+        // Check in _receiverPaymentCodeInfo
+        if (!addressFound) {
+            for (const pcInfoArray of this._receiverPaymentCodeInfo.values()) {
+                const pcInfo = pcInfoArray.find((pcInfo) => pcInfo.address === address);
+                if (pcInfo) {
+                    addressFound = true;
+                    foundAccount = pcInfo.account;
+                    break;
+                }
+            }
+        }
+
+        // Check in _senderPaymentCodeInfo
+        if (!addressFound) {
+            for (const pcInfoArray of this._senderPaymentCodeInfo.values()) {
+                const pcInfo = pcInfoArray.find((pcInfo) => pcInfo.address === address);
+                if (pcInfo) {
+                    addressFound = true;
+                    foundAccount = pcInfo.account;
+                    break;
+                }
+            }
+        }
+
+        if (!addressFound) {
+            throw new Error(`Address ${address} not found in wallet`);
+        }
+
+        if (account !== undefined && account !== foundAccount) {
+            throw new Error(`Account ${account} not found for address ${address}`);
+        }
     }
 
     /**
