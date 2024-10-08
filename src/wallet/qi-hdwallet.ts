@@ -102,7 +102,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @ignore
      * @type {number}
      */
-    protected static _GAP_LIMIT: number = 20;
+    protected static _GAP_LIMIT: number = 5;
 
     /**
      * @ignore
@@ -135,7 +135,25 @@ export class QiHDWallet extends AbstractHDWallet {
     protected _gapAddresses: NeuteredAddressInfo[] = [];
 
     /**
-     * Array of outpoint information.
+     * This array is used to keep track of gap addresses that have been included in a transaction, but whose outpoints
+     * have not been imported into the wallet.
+     *
+     * @ignore
+     * @type {Map<string, NeuteredAddressInfo>}
+     */
+    protected _usedGapAddresses: NeuteredAddressInfo[] = [];
+
+    /**
+     * This array is used to keep track of gap change addresses that have been included in a transaction, but whose
+     * outpoints have not been imported into the wallet.
+     *
+     * @ignore
+     * @type {NeuteredAddressInfo[]}
+     */
+    protected _usedGapChangeAddresses: NeuteredAddressInfo[] = [];
+
+    /**
+     * Map of used gap change addresses. /** Array of outpoint information.
      *
      * @ignore
      * @type {OutpointInfo[]}
@@ -340,10 +358,19 @@ export class QiHDWallet extends AbstractHDWallet {
         for (let i = 0; i < selection.spendOutputs.length; i++) {
             sendAddresses.push((await this.getNextSendAddress(recipientPaymentCode, destinationZone)).address);
         }
-        // 4. Generate as many addresses as required to populate the change outputs
+        // 4. get known change addresses, then populate with new ones as needed
         const changeAddresses: string[] = [];
         for (let i = 0; i < selection.changeOutputs.length; i++) {
-            changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
+            if (this._gapChangeAddresses.length > 0) {
+                // 1. get next change address from gap addresses array
+                // 2. remove it from the gap change addresses array
+                // 3. add it to the change addresses array
+                const nextChangeAddressInfo = this._gapChangeAddresses.shift()!;
+                changeAddresses.push(nextChangeAddressInfo!.address);
+                this._usedGapChangeAddresses.push(nextChangeAddressInfo);
+            } else {
+                changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
+            }
         }
         // 5. Create the transaction and sign it using the signTransaction method
 
@@ -626,6 +653,7 @@ export class QiHDWallet extends AbstractHDWallet {
             const outpoints = await this.getOutpointsByAddress(addressInfo.address);
             if (outpoints.length > 0) {
                 // Address has been used since last scan
+                this._addAddress(addressMap, account, addressInfo.index, isChange);
                 this.importOutpoints(
                     outpoints.map((outpoint) => ({
                         outpoint,
@@ -1211,5 +1239,19 @@ export class QiHDWallet extends AbstractHDWallet {
                 this._senderPaymentCodeInfo.set(paymentCode, []);
             }
         }
+    }
+
+    /**
+     * Gets the address info for a given address.
+     *
+     * @param {string} address - The address.
+     * @returns {NeuteredAddressInfo | null} The address info or null if not found.
+     */
+    public getChangeAddressInfo(address: string): NeuteredAddressInfo | null {
+        const changeAddressInfo = this._changeAddresses.get(address);
+        if (!changeAddressInfo) {
+            return null;
+        }
+        return changeAddressInfo;
     }
 }

@@ -15,7 +15,7 @@ async function main() {
 
     // Initialize Qi wallet
     console.log('Initializing Alice wallet...');
-    await aliceQiWallet.scan(quais.Zone.Cyprus1);
+    await aliceQiWallet.sync(quais.Zone.Cyprus1);
     console.log('Alice wallet scan complete');
     console.log('Serializing Alice wallet...');
     const serializedWallet = aliceQiWallet.serialize();
@@ -65,11 +65,40 @@ async function main() {
     console.log('Bob Payment code: ', bobPaymentCode);
 
     // Alice opens a channel to send Qi to Bob
-    aliceQiWallet.openChannel(bobPaymentCode, 'sender');
+    aliceQiWallet.openChannel(bobPaymentCode, 'receiver');
 
     // Alice sends 1000 Qi to Bob
     const tx = await aliceQiWallet.sendTransaction(bobPaymentCode, 750000, quais.Zone.Cyprus1, quais.Zone.Cyprus1);
     console.log('Transaction sent: ', tx);
+
+    console.log('Syncing Alice wallet...');
+    await aliceQiWallet.sync(quais.Zone.Cyprus1);
+
+    console.log('Alice Wallet Summary:');
+    console.table(summary);
+
+    const addressTable2 = aliceQiWallet.serialize().addresses.map((addr) => ({
+        PubKey: addr.pubKey,
+        Address: addr.address,
+        Index: addr.index,
+        Change: addr.change ? 'Yes' : 'No',
+        Zone: addr.zone,
+    }));
+
+    console.log('\nAlice Wallet Addresses (first 10):');
+    console.table(addressTable2.slice(0, 10));
+
+    const outpointsInfoTable2 = aliceQiWallet.serialize().outpoints.map((outpoint) => ({
+        Address: outpoint.address,
+        Denomination: outpoint.outpoint.denomination,
+        Index: outpoint.outpoint.index,
+        TxHash: outpoint.outpoint.txhash,
+        Zone: outpoint.zone,
+        Account: outpoint.account,
+    }));
+
+    console.log('\nAlice Outpoints Info (first 10):');
+    console.table(outpointsInfoTable2.slice(0, 10));
 }
 
 main()
