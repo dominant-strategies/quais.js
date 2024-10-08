@@ -594,7 +594,7 @@ export class QiHDWallet extends AbstractHDWallet {
         ];
 
         // Add scanning processes for each payment channel
-        for (const paymentCode of this._senderPaymentCodeInfo.keys()) {
+        for (const paymentCode of this._receiverPaymentCodeInfo.keys()) {
             scans.push(this.scanPaymentChannel(zone, account, paymentCode));
         }
 
@@ -701,11 +701,10 @@ export class QiHDWallet extends AbstractHDWallet {
         const gapLimit = QiHDWallet._GAP_LIMIT;
         let gapCount = 0;
 
-        const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(paymentCode);
+        const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(paymentCode);
         if (!paymentCodeInfoArray) {
             throw new Error(`Payment code ${paymentCode} not found`);
         }
-
         // first, re-examine existing unused addresses
         const newlyUsedAddresses: PaymentChannelAddressInfo[] = [];
         const unusedAddresses = paymentCodeInfoArray.filter((info) => !info.isUsed);
@@ -738,13 +737,11 @@ export class QiHDWallet extends AbstractHDWallet {
                 i++;
             }
         }
-
         // remove the addresses that have been used from the payment code info array
         const updatedPaymentCodeInfoArray = paymentCodeInfoArray.filter(
             (addressInfo: PaymentChannelAddressInfo) =>
                 !newlyUsedAddresses.some((usedAddress) => usedAddress.index === addressInfo.index),
         );
-
         // Then, scan for new gap addresses
         while (gapCount < gapLimit) {
             const pcAddressInfo = await this.getNextReceiveAddress(paymentCode, zone, account);
@@ -782,16 +779,13 @@ export class QiHDWallet extends AbstractHDWallet {
                 if (pcAddressInfoIndex !== -1) {
                     updatedPaymentCodeInfoArray[pcAddressInfoIndex] = pcAddressInfo;
                 } else {
-                    // this should never happen because the `getNextReceiveAddress` method pushes the address info to the array
-                    throw new Error(
-                        `Error occurred while scanning payment channel ${paymentCode}. Address info not found: ${pcAddressInfo.address}`,
-                    );
+                    updatedPaymentCodeInfoArray.push(pcAddressInfo);
                 }
             }
         }
 
-        // update the payment code info array
-        this._senderPaymentCodeInfo.set(paymentCode, updatedPaymentCodeInfoArray);
+        // update the payment code info map
+        this._receiverPaymentCodeInfo.set(paymentCode, updatedPaymentCodeInfoArray);
     }
 
     /**
@@ -1030,18 +1024,6 @@ export class QiHDWallet extends AbstractHDWallet {
             }
         }
 
-        // Check in _senderPaymentCodeInfo
-        if (!addressFound) {
-            for (const pcInfoArray of this._senderPaymentCodeInfo.values()) {
-                const pcInfo = pcInfoArray.find((pcInfo) => pcInfo.address === address);
-                if (pcInfo) {
-                    addressFound = true;
-                    foundAccount = pcInfo.account;
-                    break;
-                }
-            }
-        }
-
         if (!addressFound) {
             throw new Error(`Address ${address} not found in wallet`);
         }
@@ -1126,7 +1108,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const receiverPCodePrivate = await this._getPaymentCodePrivate(account);
         const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
 
-        const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(receiverPaymentCode);
+        const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(receiverPaymentCode);
         const lastIndex =
             paymentCodeInfoArray && paymentCodeInfoArray.length > 0
                 ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
@@ -1146,7 +1128,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 if (paymentCodeInfoArray) {
                     paymentCodeInfoArray.push(pcInfo);
                 } else {
-                    this._receiverPaymentCodeInfo.set(receiverPaymentCode, [pcInfo]);
+                    this._senderPaymentCodeInfo.set(receiverPaymentCode, [pcInfo]);
                 }
                 return pcInfo;
             }
@@ -1178,7 +1160,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
         const receiverPCodePrivate = await this._getPaymentCodePrivate(account);
 
-        const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(senderPaymentCode);
+        const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(senderPaymentCode);
         const lastIndex =
             paymentCodeInfoArray && paymentCodeInfoArray.length > 0
                 ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
@@ -1198,7 +1180,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 if (paymentCodeInfoArray) {
                     paymentCodeInfoArray.push(pcInfo);
                 } else {
-                    this._senderPaymentCodeInfo.set(senderPaymentCode, [pcInfo]);
+                    this._receiverPaymentCodeInfo.set(senderPaymentCode, [pcInfo]);
                 }
                 return pcInfo;
             }
