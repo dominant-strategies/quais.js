@@ -119,7 +119,9 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         const hashHex = keccak256(dataBuffer);
         const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
 
-        const origin = this.originZone ? parseInt(this.originZone.slice(2), 16) : 0;
+        const prevTxHash = this.txInputs[0].txhash;
+        const prevTxHashBytes = getBytes(prevTxHash);
+        const origin = prevTxHashBytes[1]; // Get the second byte (0-based index)
         hashBuffer[0] = origin;
         hashBuffer[1] |= 0x80;
         hashBuffer[2] = origin;
@@ -234,6 +236,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
                 tx_outs: this.txOutputs.map((output) => ({
                     address: getBytes(output.address),
                     denomination: output.denomination,
+                    lock: new Uint8Array(),
                 })),
             },
         };
@@ -241,7 +244,6 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         if (this.signature && includeSignature) {
             protoTx.signature = getBytes(this.signature);
         }
-
         return protoTx;
     }
 
@@ -294,20 +296,18 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         tx.type = protoTx.type;
         tx.chainId = toBigInt(protoTx.chain_id);
 
-        if (protoTx.type == 2) {
-            tx.txInputs =
-                protoTx.tx_ins?.tx_ins.map((input) => ({
-                    txhash: hexlify(input.previous_out_point.hash.value),
-                    index: input.previous_out_point.index,
-                    pubkey: hexlify(input.pub_key),
-                })) ?? [];
-            tx.txOutputs =
-                protoTx.tx_outs?.tx_outs.map((output) => ({
-                    address: hexlify(output.address),
-                    denomination: output.denomination,
-                })) ?? [];
-        }
-
+        tx.txInputs =
+            protoTx.tx_ins?.tx_ins.map((input) => ({
+                txhash: hexlify(input.previous_out_point.hash.value),
+                index: input.previous_out_point.index,
+                pubkey: hexlify(input.pub_key),
+            })) ?? [];
+        tx.txOutputs =
+            protoTx.tx_outs?.tx_outs.map((output) => ({
+                address: hexlify(output.address),
+                denomination: output.denomination,
+                lock: output.lock ? hexlify(output.lock) : '',
+            })) ?? [];
         if (protoTx.signature) {
             tx.signature = hexlify(protoTx.signature);
         }

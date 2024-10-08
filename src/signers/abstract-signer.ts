@@ -113,10 +113,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             pop.nonce = await this.getNonce('pending');
         }
 
-        if (pop.type == null) {
-            pop.type = getTxType(pop.from ?? null, pop.to ?? null);
-        }
-
         if (pop.gasLimit == null) {
             if (pop.type == 0) pop.gasLimit = await this.estimateGas(pop);
             else {
@@ -138,7 +134,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             pop.chainId = network.chainId;
         }
         if (pop.maxFeePerGas == null || pop.maxPriorityFeePerGas == null) {
-            const feeData = await provider.getFeeData(zone);
+            const feeData = await provider.getFeeData(zone, true);
 
             if (pop.maxFeePerGas == null) {
                 pop.maxFeePerGas = feeData.maxFeePerGas;
