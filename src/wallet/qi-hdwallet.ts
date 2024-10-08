@@ -338,7 +338,7 @@ export class QiHDWallet extends AbstractHDWallet {
         // 3. Generate as many unused addresses as required to populate the spend outputs
         const sendAddresses: string[] = [];
         for (let i = 0; i < selection.spendOutputs.length; i++) {
-            sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
+            sendAddresses.push((await this.getNextSendAddress(recipientPaymentCode, destinationZone)).address);
         }
         // 4. Generate as many addresses as required to populate the change outputs
         const changeAddresses: string[] = [];
@@ -383,7 +383,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const spendAddressesNeeded = selection.spendOutputs.length > sendAddresses.length;
         if (spendAddressesNeeded) {
             for (let i = 0; i < selection.spendOutputs.length; i++) {
-                sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
+                sendAddresses.push((await this.getNextSendAddress(recipientPaymentCode, destinationZone)).address);
             }
         }
 
