@@ -39,10 +39,15 @@ export interface OutpointInfo {
 
 interface PaymentChannelAddressInfo {
     address: string;
+    pubKey: string;
     index: number;
     isUsed: boolean;
     zone: Zone;
     account: number;
+}
+
+interface PaymentChannelAddressExtendedInfo extends PaymentChannelAddressInfo {
+    counterpartyPaymentCode: string;
 }
 
 /**
@@ -55,6 +60,7 @@ interface PaymentChannelAddressInfo {
  */
 export interface SerializedQiHDWallet extends SerializedHDWallet {
     outpoints: OutpointInfo[];
+    pendingOutpoints: OutpointInfo[];
     changeAddresses: NeuteredAddressInfo[];
     gapAddresses: NeuteredAddressInfo[];
     gapChangeAddresses: NeuteredAddressInfo[];
@@ -139,7 +145,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * have not been imported into the wallet.
      *
      * @ignore
-     * @type {Map<string, NeuteredAddressInfo>}
+     * @type {NeuteredAddressInfo[]}
      */
     protected _usedGapAddresses: NeuteredAddressInfo[] = [];
 
@@ -153,12 +159,17 @@ export class QiHDWallet extends AbstractHDWallet {
     protected _usedGapChangeAddresses: NeuteredAddressInfo[] = [];
 
     /**
-     * Map of used gap change addresses. /** Array of outpoint information.
+     * Array of outpoint information.
      *
      * @ignore
      * @type {OutpointInfo[]}
      */
-    protected _outpoints: OutpointInfo[] = [];
+    protected _availableOutpoints: OutpointInfo[] = [];
+
+    /**
+     * Map of outpoints that are pending confirmation of being spent.
+     */
+    protected _pendingOutpoints: OutpointInfo[] = [];
 
     /**
      * @ignore
@@ -234,7 +245,7 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     public importOutpoints(outpoints: OutpointInfo[]): void {
         this.validateOutpointInfo(outpoints);
-        this._outpoints.push(...outpoints);
+        this._availableOutpoints.push(...outpoints);
     }
 
     /**
@@ -245,7 +256,7 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     public getOutpoints(zone: Zone): OutpointInfo[] {
         this.validateZone(zone);
-        return this._outpoints.filter((outpoint) => outpoint.zone === zone);
+        return this._availableOutpoints.filter((outpoint) => outpoint.zone === zone);
     }
 
     /**
@@ -279,6 +290,52 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     /**
+     * Gets the payment channel address info for a given address.
+     *
+     * @param {string} address - The address to look up.
+     * @returns {PaymentChannelAddressInfo | null} The address info or null if not found.
+     */
+    public getPaymentChannelAddressInfo(address: string): PaymentChannelAddressExtendedInfo | null {
+        for (const [paymentCode, pcInfoArray] of this._receiverPaymentCodeInfo.entries()) {
+            const pcInfo = pcInfoArray.find((info) => info.address === address);
+            if (pcInfo) {
+                return { ...pcInfo, counterpartyPaymentCode: paymentCode };
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Locates the address information for the given address, searching through standard addresses, change addresses,
+     * and payment channel addresses.
+     *
+     * @param {string} address - The address to locate.
+     * @returns {NeuteredAddressInfo | PaymentChannelAddressInfo | null} The address info or null if not found.
+     */
+    public locateAddressInfo(address: string): NeuteredAddressInfo | PaymentChannelAddressExtendedInfo | null {
+        // First, try to get standard address info
+        let addressInfo = this.getAddressInfo(address);
+        if (addressInfo) {
+            return addressInfo;
+        }
+
+        // Next, try to get change address info
+        addressInfo = this.getChangeAddressInfo(address);
+        if (addressInfo) {
+            return addressInfo;
+        }
+
+        // Finally, try to get payment channel address info
+        const pcAddressInfo = this.getPaymentChannelAddressInfo(address);
+        if (pcAddressInfo) {
+            return pcAddressInfo;
+        }
+
+        // Address not found
+        return null;
+    }
+
+    /**
      * Gets the balance for the specified zone.
      *
      * @param {Zone} zone - The zone to get the balance for.
@@ -287,7 +344,7 @@ export class QiHDWallet extends AbstractHDWallet {
     public getBalanceForZone(zone: Zone): bigint {
         this.validateZone(zone);
 
-        return this._outpoints
+        return this._availableOutpoints
             .filter((outpoint) => outpoint.zone === zone)
             .reduce((total, outpoint) => {
                 const denominationValue = denominations[outpoint.outpoint.denomination];
@@ -303,7 +360,7 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     private outpointsToUTXOs(zone: Zone): UTXO[] {
         this.validateZone(zone);
-        return this._outpoints
+        return this._availableOutpoints
             .filter((outpointInfo) => outpointInfo.zone === zone)
             .map((outpointInfo) => {
                 const utxo = new UTXO();
@@ -365,6 +422,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 // 1. get next change address from gap addresses array
                 // 2. remove it from the gap change addresses array
                 // 3. add it to the change addresses array
+                // 4. add it to the used gap change addresses array
                 const nextChangeAddressInfo = this._gapChangeAddresses.shift()!;
                 changeAddresses.push(nextChangeAddressInfo!.address);
                 this._usedGapChangeAddresses.push(nextChangeAddressInfo);
@@ -375,7 +433,7 @@ export class QiHDWallet extends AbstractHDWallet {
         // 5. Create the transaction and sign it using the signTransaction method
 
         // 5.1 Fetch the public keys for the input addresses
-        let inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
+        let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
         if (inputPubKeys.some((pubkey) => !pubkey)) {
             throw new Error('Missing public key for input address');
         }
@@ -414,7 +472,7 @@ export class QiHDWallet extends AbstractHDWallet {
             }
         }
 
-        inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
+        inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
 
         tx = await this.prepareTransaction(
             selection,
@@ -423,6 +481,9 @@ export class QiHDWallet extends AbstractHDWallet {
             changeAddresses,
             Number(chainId),
         );
+
+        // Move used outpoints to pendingOutpoints
+        this.moveOutpointsToPending(tx.txInputs);
 
         // 5.6 Sign the transaction
         const signedTx = await this.signTransaction(tx);
@@ -462,6 +523,79 @@ export class QiHDWallet extends AbstractHDWallet {
         }));
         tx.chainId = chainId;
         return tx;
+    }
+
+    /**
+     * Checks the status of pending outpoints and updates the wallet's UTXO set accordingly.
+     *
+     * @param zone The zone in which to check the pending outpoints.
+     */
+    private async checkPendingOutpoints(zone: Zone): Promise<void> {
+        // Create a copy to iterate over, as we'll be modifying the _pendingOutpoints array
+        const pendingOutpoints = [...this._pendingOutpoints.filter((info) => info.zone === zone)];
+
+        const uniqueAddresses = new Set<string>(pendingOutpoints.map((info) => info.address));
+        const outpointsByAddress = await Promise.all(
+            Array.from(uniqueAddresses).map((address) => this.getOutpointsByAddress(address)),
+        );
+
+        const allOutpointsByAddress = outpointsByAddress.flat();
+
+        for (const outpointInfo of pendingOutpoints) {
+            const isSpent = !allOutpointsByAddress.some(
+                (outpoint) =>
+                    outpoint.txhash === outpointInfo.outpoint.txhash && outpoint.index === outpointInfo.outpoint.index,
+            );
+
+            if (isSpent) {
+                // Outpoint has been spent; remove it from pendingOutpoints
+                console.log('Outpoint has been spent; removing from pendingOutpoints');
+                this.removeOutpointFromPending(outpointInfo.outpoint);
+            } else {
+                // Outpoint is still unspent; move it back to available outpoints
+                console.log('Outpoint is still unspent; moving back to available outpoints');
+                this.moveOutpointToAvailable(outpointInfo);
+            }
+        }
+    }
+
+    /**
+     * Moves specified inputs to pending outpoints.
+     *
+     * @param inputs List of inputs used in the transaction.
+     */
+    private moveOutpointsToPending(inputs: TxInput[]): void {
+        inputs.forEach((input) => {
+            const index = this._availableOutpoints.findIndex(
+                (outpointInfo) =>
+                    outpointInfo.outpoint.txhash === input.txhash && outpointInfo.outpoint.index === input.index,
+            );
+            if (index !== -1) {
+                const [outpointInfo] = this._availableOutpoints.splice(index, 1);
+                this._pendingOutpoints.push(outpointInfo);
+            }
+        });
+    }
+
+    /**
+     * Removes an outpoint from the pending outpoints.
+     *
+     * @param outpoint The outpoint to remove.
+     */
+    private removeOutpointFromPending(outpoint: Outpoint): void {
+        this._pendingOutpoints = this._pendingOutpoints.filter(
+            (info) => !(info.outpoint.txhash === outpoint.txhash && info.outpoint.index === outpoint.index),
+        );
+    }
+
+    /**
+     * Moves an outpoint from pending back to available outpoints.
+     *
+     * @param outpointInfo The outpoint info to move.
+     */
+    private moveOutpointToAvailable(outpointInfo: OutpointInfo): void {
+        this.removeOutpointFromPending(outpointInfo.outpoint);
+        this._availableOutpoints.push(outpointInfo);
     }
 
     /**
@@ -527,32 +661,55 @@ export class QiHDWallet extends AbstractHDWallet {
     /**
      * Retrieves the private key for a given transaction input.
      *
-     * This method derives the private key for a transaction input by following these steps:
+     * This method derives the private key for a transaction input by locating the address info and then deriving the
+     * private key based on where the address info was found:
      *
-     * 1. Ensures the input contains a public key.
-     * 2. Computes the address from the public key.
-     * 3. Fetches address information associated with the computed address.
-     * 4. Derives the hierarchical deterministic (HD) node corresponding to the address.
-     * 5. Returns the private key of the derived HD node.
+     * - For BIP44 addresses (standard or change), it uses the HD wallet to derive the private key.
+     * - For payment channel addresses (BIP47), it uses PaymentCodePrivate to derive the private key.
      *
-     * @ignore
      * @param {TxInput} input - The transaction input containing the public key.
      * @returns {string} The private key corresponding to the transaction input.
      * @throws {Error} If the input does not contain a public key or if the address information cannot be found.
      */
     private getPrivateKeyForTxInput(input: TxInput): string {
         if (!input.pubkey) throw new Error('Missing public key for input');
+
         const address = computeAddress(input.pubkey);
-        // get address info
-        const addressInfo = this.getAddressInfo(address);
-        if (!addressInfo) throw new Error(`Address not found: ${address}`);
-        // derive an HDNode for the address and get the private key
-        const changeIndex = addressInfo.change ? 1 : 0;
-        const addressNode = this._root
-            .deriveChild(addressInfo.account)
-            .deriveChild(changeIndex)
-            .deriveChild(addressInfo.index);
-        return addressNode.privateKey;
+        const addressInfo = this.locateAddressInfo(address);
+
+        if (!addressInfo) {
+            throw new Error(`Address not found: ${address}`);
+        }
+
+        if ('change' in addressInfo) {
+            // NeuteredAddressInfo (BIP44 addresses)
+            const changeIndex = addressInfo.change ? 1 : 0;
+            const addressNode = this._root
+                .deriveChild(addressInfo.account)
+                .deriveChild(changeIndex)
+                .deriveChild(addressInfo.index);
+            return addressNode.privateKey;
+        } else {
+            // PaymentChannelAddressInfo (BIP47 addresses)
+            const pcAddressInfo = addressInfo as PaymentChannelAddressExtendedInfo;
+            const account = pcAddressInfo.account;
+            const index = pcAddressInfo.index - 1;
+
+            const counterpartyPaymentCode = pcAddressInfo.counterpartyPaymentCode;
+            if (!counterpartyPaymentCode) {
+                throw new Error('Counterparty payment code not found for payment channel address');
+            }
+
+            const bip32 = BIP32Factory(ecc);
+            const buf = bs58check.decode(counterpartyPaymentCode);
+            const version = buf[0];
+            if (version !== PC_VERSION) throw new Error('Invalid payment code version');
+
+            const counterpartyPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
+            const paymentCodePrivate = this._getPaymentCodePrivate(account);
+            const paymentPrivateKey = paymentCodePrivate.derivePaymentPrivateKey(counterpartyPCodePublic, index);
+            return hexlify(paymentPrivateKey);
+        }
     }
 
     /**
@@ -571,7 +728,7 @@ export class QiHDWallet extends AbstractHDWallet {
         this._changeAddresses = new Map();
         this._gapAddresses = [];
         this._gapChangeAddresses = [];
-        this._outpoints = [];
+        this._availableOutpoints = [];
 
         // Reset each map so that all keys have empty array values but keys are preserved
         const resetSenderPaymentCodeInfo = new Map(
@@ -600,6 +757,7 @@ export class QiHDWallet extends AbstractHDWallet {
     public async sync(zone: Zone, account: number = 0): Promise<void> {
         this.validateZone(zone);
         await this._scan(zone, account);
+        await this.checkPendingOutpoints(zone);
     }
 
     /**
@@ -642,11 +800,26 @@ export class QiHDWallet extends AbstractHDWallet {
     private async scanBIP44Addresses(zone: Zone, account: number, isChange: boolean): Promise<void> {
         const addressMap = isChange ? this._changeAddresses : this._addresses;
         const gapAddresses = isChange ? this._gapChangeAddresses : this._gapAddresses;
-        const gapLimit = QiHDWallet._GAP_LIMIT;
+        const usedGapAddresses = isChange ? this._usedGapChangeAddresses : this._usedGapAddresses;
+
+        // First, add all used gap addresses to the address map and import their outpoints
+        for (const addressInfo of usedGapAddresses) {
+            this._addAddress(addressMap, account, addressInfo.index, isChange);
+            const outpoints = await this.getOutpointsByAddress(addressInfo.address);
+            if (outpoints.length > 0) {
+                this.importOutpoints(
+                    outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: addressInfo.address,
+                        zone,
+                        account,
+                    })),
+                );
+            }
+        }
 
         let gapCount = 0;
-
-        // First, re-examine existing gap addresses
+        // Second, re-examine existing gap addresses
         const newlyUsedAddresses: NeuteredAddressInfo[] = [];
         for (let i: number = 0; i < gapAddresses.length; ) {
             const addressInfo = gapAddresses[i];
@@ -662,6 +835,7 @@ export class QiHDWallet extends AbstractHDWallet {
                         account,
                     })),
                 );
+
                 // Remove from gap addresses
                 newlyUsedAddresses.push(addressInfo);
                 gapCount = 0;
@@ -682,7 +856,7 @@ export class QiHDWallet extends AbstractHDWallet {
 
         // Scan for new gap addresses
         const newGapAddresses: NeuteredAddressInfo[] = [];
-        while (gapCount < gapLimit) {
+        while (gapCount < QiHDWallet._GAP_LIMIT) {
             const addressInfo = this._getNextAddress(account, zone, isChange, addressMap);
             const outpoints = await this.getOutpointsByAddress(addressInfo.address);
             if (outpoints.length > 0) {
@@ -726,7 +900,6 @@ export class QiHDWallet extends AbstractHDWallet {
      * @throws {Error} If the zone is invalid.
      */
     private async scanPaymentChannel(zone: Zone, account: number, paymentCode: string): Promise<void> {
-        const gapLimit = QiHDWallet._GAP_LIMIT;
         let gapCount = 0;
 
         const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(paymentCode);
@@ -771,7 +944,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 !newlyUsedAddresses.some((usedAddress) => usedAddress.index === addressInfo.index),
         );
         // Then, scan for new gap addresses
-        while (gapCount < gapLimit) {
+        while (gapCount < QiHDWallet._GAP_LIMIT) {
             const pcAddressInfo = await this.getNextReceiveAddress(paymentCode, zone, account);
             const outpoints = await this.getOutpointsByAddress(pcAddressInfo.address);
 
@@ -893,7 +1066,8 @@ export class QiHDWallet extends AbstractHDWallet {
     public serialize(): SerializedQiHDWallet {
         const hdwalletSerialized = super.serialize();
         return {
-            outpoints: this._outpoints,
+            outpoints: this._availableOutpoints,
+            pendingOutpoints: this._pendingOutpoints,
             changeAddresses: Array.from(this._changeAddresses.values()),
             gapAddresses: this._gapAddresses,
             gapChangeAddresses: this._gapChangeAddresses,
@@ -941,9 +1115,13 @@ export class QiHDWallet extends AbstractHDWallet {
             wallet._gapChangeAddresses.push(gapChangeAddressInfo);
         }
 
-        // validate the outpoints and import them
+        // validate the available outpoints and import them
         wallet.validateOutpointInfo(serialized.outpoints);
-        wallet._outpoints.push(...serialized.outpoints);
+        wallet._availableOutpoints.push(...serialized.outpoints);
+
+        // validate the pending outpoints and import them
+        wallet.validateOutpointInfo(serialized.pendingOutpoints);
+        wallet._pendingOutpoints.push(...serialized.pendingOutpoints);
 
         // validate and import the payment code info
         wallet.validateAndImportPaymentCodeInfo(serialized.receiverPaymentCodeInfo, 'receiver');
@@ -1030,34 +1208,9 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     private validateAddressAndAccount(address: string, account?: number): void {
-        let addressFound = false;
-        let foundAccount: number | undefined;
-
-        // Check in the main address list
-        const addressInfo = this.getAddressInfo(address);
-        if (addressInfo) {
-            addressFound = true;
-            foundAccount = addressInfo.account;
-        }
-
-        // Check in _receiverPaymentCodeInfo
-        if (!addressFound) {
-            for (const pcInfoArray of this._receiverPaymentCodeInfo.values()) {
-                const pcInfo = pcInfoArray.find((pcInfo) => pcInfo.address === address);
-                if (pcInfo) {
-                    addressFound = true;
-                    foundAccount = pcInfo.account;
-                    break;
-                }
-            }
-        }
-
-        if (!addressFound) {
+        const addressInfo = this.locateAddressInfo(address);
+        if (!addressInfo) {
             throw new Error(`Address ${address} not found in wallet`);
-        }
-
-        if (account !== undefined && account !== foundAccount) {
-            throw new Error(`Account ${account} not found for address ${address}`);
         }
     }
 
@@ -1074,12 +1227,12 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     // helper method to get a bip32 API instance
-    private async _getBIP32API(): Promise<BIP32API> {
+    private _getBIP32API(): BIP32API {
         return BIP32Factory(ecc) as BIP32API;
     }
 
     // helper method to decode a base58 string into a Uint8Array
-    private async _decodeBase58(base58: string): Promise<Uint8Array> {
+    private _decodeBase58(base58: string): Uint8Array {
         return bs58check.decode(base58);
     }
 
@@ -1091,8 +1244,8 @@ export class QiHDWallet extends AbstractHDWallet {
      * @param {number} account - The account index for which to generate the private payment code.
      * @returns {Promise<PaymentCodePrivate>} A promise that resolves to the PaymentCodePrivate instance.
      */
-    private async _getPaymentCodePrivate(account: number): Promise<PaymentCodePrivate> {
-        const bip32 = await this._getBIP32API();
+    private _getPaymentCodePrivate(account: number): PaymentCodePrivate {
+        const bip32 = this._getBIP32API();
 
         const accountNode = this._root.deriveChild(account);
 
@@ -1148,6 +1301,7 @@ export class QiHDWallet extends AbstractHDWallet {
             if (this.isValidAddressForZone(address, zone)) {
                 const pcInfo: PaymentChannelAddressInfo = {
                     address,
+                    pubKey: hexlify(senderPCodePublic.pubKey),
                     index: addrIndex,
                     account,
                     zone,
@@ -1200,6 +1354,7 @@ export class QiHDWallet extends AbstractHDWallet {
             if (this.isValidAddressForZone(address, zone)) {
                 const pcInfo: PaymentChannelAddressInfo = {
                     address,
+                    pubKey: hexlify(receiverPCodePrivate.pubKey),
                     index: addrIndex,
                     account,
                     zone,
