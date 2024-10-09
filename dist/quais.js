@@ -783,21 +783,6 @@ function getBigInt(value, name) {
     assertArgument(false, 'invalid BigNumberish value', name || 'value', value);
 }
 /**
- * Returns absolute value of bigint `value`.
- *
- * @category Utils
- * @param {BigNumberish} value - The value to convert.
- * @returns {bigint} The absolute value.
- */
-function bigIntAbs(value) {
-    value = getBigInt(value);
-    // if value is negative (including -0), return -value, else return value
-    if (value === -BN_0$8 || value < BN_0$8) {
-        return -value;
-    }
-    return value;
-}
-/**
  * Returns `value` as a bigint, validating it is valid as a bigint value and that it is positive.
  *
  * @category Utils
@@ -18286,6 +18271,7 @@ class UTXO {
     }
 }
 
+// import { bigIntAbs } from '../utils/maths.js';
 /**
  * The FewestCoinSelector class provides a coin selection algorithm that selects the fewest UTXOs required to meet the
  * target amount. This algorithm is useful for minimizing the size of the transaction and the fees associated with it.
@@ -18298,114 +18284,170 @@ class UTXO {
  */
 class FewestCoinSelector extends AbstractCoinSelector {
     /**
-     * The coin selection algorithm considering transaction fees.
+     * Performs coin selection to meet the target amount plus fee, using the smallest possible denominations and
+     * minimizing the number of inputs and outputs.
      *
      * @param {bigint} target - The target amount to spend.
-     * @returns {SelectedCoinsResult} The selected UTXOs and change outputs.
+     * @param {bigint} fee - The fee amount to include in the selection.
+     * @returns {SelectedCoinsResult} The selected UTXOs and outputs.
      */
-    performSelection(target) {
+    performSelection(target, fee = BigInt(0)) {
         if (target <= BigInt(0)) {
             throw new Error('Target amount must be greater than 0');
         }
+        if (fee < BigInt(0)) {
+            throw new Error('Fee amount cannot be negative');
+        }
         this.validateUTXOs();
         this.target = target;
+        const totalRequired = BigInt(target) + BigInt(fee);
         // Initialize selection state
         this.selectedUTXOs = [];
         this.totalInputValue = BigInt(0);
-        const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUTXOs, 'desc');
-        let totalValue = BigInt(0);
-        let selectedUTXOs = [];
-        // Get UTXOs that meets or exceeds the target value
-        const UTXOsEqualOrGreaterThanTarget = sortedUTXOs.filter((utxo) => utxo.denomination !== null && BigInt(denominations[utxo.denomination]) >= target);
-        if (UTXOsEqualOrGreaterThanTarget.length > 0) {
-            // Find the smallest UTXO that meets or exceeds the target value
-            const optimalUTXO = UTXOsEqualOrGreaterThanTarget.reduce((minDenominationUTXO, currentUTXO) => {
-                if (currentUTXO.denomination === null)
-                    return minDenominationUTXO;
-                return BigInt(denominations[currentUTXO.denomination]) <
-                    BigInt(denominations[minDenominationUTXO.denomination])
-                    ? currentUTXO
-                    : minDenominationUTXO;
-            }, UTXOsEqualOrGreaterThanTarget[0]);
-            selectedUTXOs.push(optimalUTXO);
-            totalValue += BigInt(denominations[optimalUTXO.denomination]);
+        // Sort available UTXOs by denomination in ascending order
+        const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUTXOs, 'asc');
+        // Attempt to find a single UTXO that can cover the total required amount
+        const singleUTXO = sortedUTXOs.find((utxo) => BigInt(denominations[utxo.denomination]) >= totalRequired);
+        if (singleUTXO) {
+            // Use the smallest UTXO that can cover the total required amount
+            this.selectedUTXOs.push(singleUTXO);
+            this.totalInputValue = BigInt(denominations[singleUTXO.denomination]);
         }
         else {
-            // If no single UTXO meets or exceeds the target, aggregate smaller denominations
-            // until the target is met/exceeded or there are no more UTXOs to aggregate
-            while (sortedUTXOs.length > 0 && totalValue < target) {
-                const nextOptimalUTXO = sortedUTXOs.reduce((closest, utxo) => {
-                    if (utxo.denomination === null)
-                        return closest;
-                    // Prioritize UTXOs that bring totalValue closer to target.value
-                    const absThisDiff = bigIntAbs(BigInt(target) - (BigInt(totalValue) + BigInt(denominations[utxo.denomination])));
-                    const currentClosestDiff = closest && closest.denomination !== null
-                        ? bigIntAbs(BigInt(target) - (BigInt(totalValue) + BigInt(denominations[closest.denomination])))
-                        : BigInt(Number.MAX_SAFE_INTEGER);
-                    return absThisDiff < currentClosestDiff ? utxo : closest;
-                }, sortedUTXOs[0]);
-                // Add the selected UTXO to the selection and update totalValue
-                selectedUTXOs.push(nextOptimalUTXO);
-                totalValue += BigInt(denominations[nextOptimalUTXO.denomination]);
-                // Remove the selected UTXO from the list of available UTXOs
-                const index = sortedUTXOs.findIndex((utxo) => utxo.denomination === nextOptimalUTXO.denomination && utxo.address === nextOptimalUTXO.address);
-                sortedUTXOs.splice(index, 1);
+            // If no single UTXO can cover the total required amount, find the minimal set
+            this.selectedUTXOs = this.findMinimalUTXOSet(sortedUTXOs, totalRequired);
+            if (this.selectedUTXOs.length === 0) {
+                throw new Error('Insufficient funds');
             }
+            // Calculate total input value
+            this.totalInputValue = this.selectedUTXOs.reduce((sum, utxo) => sum + BigInt(denominations[utxo.denomination]), BigInt(0));
         }
-        // Optimize the selection process
-        let optimalSelection = selectedUTXOs;
-        let minExcess = BigInt(totalValue) - BigInt(target);
-        for (let i = 0; i < selectedUTXOs.length; i++) {
-            const subsetUTXOs = selectedUTXOs.slice(0, i).concat(selectedUTXOs.slice(i + 1));
-            const subsetTotal = subsetUTXOs.reduce((sum, utxo) => BigInt(sum) + BigInt(denominations[utxo.denomination]), BigInt(0));
-            if (subsetTotal >= target) {
-                const excess = BigInt(subsetTotal) - BigInt(target);
-                if (excess < minExcess) {
-                    optimalSelection = subsetUTXOs;
-                    minExcess = excess;
-                    totalValue = subsetTotal;
-                }
-            }
-        }
-        selectedUTXOs = optimalSelection;
-        // Find the largest denomination used in the inputs
-        // Store the selected UTXOs and total input value
-        this.selectedUTXOs = selectedUTXOs;
-        this.totalInputValue = totalValue;
-        // Check if the selected UTXOs meet or exceed the target amount
-        if (totalValue < target) {
-            throw new Error('Insufficient funds');
-        }
-        // Store spendOutputs and changeOutputs
+        // Create outputs
+        const changeAmount = this.totalInputValue - BigInt(target) - BigInt(fee);
+        // Create spend outputs (to the recipient)
         this.spendOutputs = this.createSpendOutputs(target);
-        this.changeOutputs = this.createChangeOutputs(BigInt(totalValue) - BigInt(target));
+        // Create change outputs (to ourselves), if any
+        this.changeOutputs = this.createChangeOutputs(changeAmount);
+        // Verify that sum of outputs does not exceed sum of inputs
+        const totalOutputValue = this.calculateTotalOutputValue();
+        if (totalOutputValue > this.totalInputValue) {
+            throw new Error('Total output value exceeds total input value');
+        }
+        // Ensure largest output denomination ≤ largest input denomination
+        const maxInputDenomination = this.getMaxInputDenomination();
+        const maxOutputDenomination = this.getMaxOutputDenomination();
+        if (maxOutputDenomination > maxInputDenomination) {
+            throw new Error('Largest output denomination exceeds largest input denomination');
+        }
         return {
-            inputs: selectedUTXOs,
+            inputs: this.selectedUTXOs,
             spendOutputs: this.spendOutputs,
             changeOutputs: this.changeOutputs,
         };
     }
-    // Helper methods to create spend and change outputs
+    /**
+     * Finds the minimal set of UTXOs that can cover the total required amount.
+     *
+     * @param {UTXO[]} sortedUTXOs - Available UTXOs sorted by denomination (ascending).
+     * @param {bigint} totalRequired - The total amount required (target + fee).
+     * @returns {UTXO[]} The minimal set of UTXOs.
+     */
+    findMinimalUTXOSet(sortedUTXOs, totalRequired) {
+        // Use a greedy algorithm to select the fewest UTXOs
+        // Starting from the largest denominations to minimize the number of inputs
+        const utxos = [...sortedUTXOs].reverse(); // Largest to smallest
+        let totalValue = BigInt(0);
+        const selectedUTXOs = [];
+        for (const utxo of utxos) {
+            if (totalValue >= totalRequired) {
+                break;
+            }
+            selectedUTXOs.push(utxo);
+            totalValue += BigInt(denominations[utxo.denomination]);
+        }
+        if (totalValue >= totalRequired) {
+            return selectedUTXOs;
+        }
+        else {
+            return []; // Insufficient funds
+        }
+    }
+    /**
+     * Creates spend outputs based on the target amount and input denominations.
+     *
+     * @param {bigint} amount - The target amount to spend.
+     * @param {UTXO[]} inputs - The selected inputs.
+     * @returns {UTXO[]} The spend outputs.
+     */
     createSpendOutputs(amount) {
-        const maxDenomination = this.getMaxInputDenomination();
-        const spendDenominations = denominate(amount, maxDenomination);
-        return spendDenominations.map((denomination) => {
+        const maxInputDenomination = this.getMaxInputDenomination();
+        // Denominate the amount using available denominations up to the max input denomination
+        const spendDenominations = denominate(amount, maxInputDenomination);
+        return spendDenominations.map((denominationValue) => {
             const utxo = new UTXO();
-            utxo.denomination = denominations.indexOf(denomination);
+            utxo.denomination = denominations.indexOf(denominationValue);
             return utxo;
         });
     }
+    /**
+     * Creates change outputs based on the change amount and input denominations.
+     *
+     * @param {bigint} change - The change amount to return.
+     * @param {UTXO[]} inputs - The selected inputs.
+     * @returns {UTXO[]} The change outputs.
+     */
     createChangeOutputs(change) {
         if (change <= BigInt(0)) {
             return [];
         }
-        const maxDenomination = this.getMaxInputDenomination();
-        const changeDenominations = denominate(change, maxDenomination);
-        return changeDenominations.map((denomination) => {
+        const maxInputDenomination = this.getMaxInputDenomination();
+        // Denominate the change amount using available denominations up to the max input denomination
+        const changeDenominations = denominate(change, maxInputDenomination);
+        return changeDenominations.map((denominationValue) => {
             const utxo = new UTXO();
-            utxo.denomination = denominations.indexOf(denomination);
+            utxo.denomination = denominations.indexOf(denominationValue);
             return utxo;
         });
+    }
+    /**
+     * Calculates the total value of outputs (spend + change).
+     *
+     * @returns {bigint} The total output value.
+     */
+    calculateTotalOutputValue() {
+        const spendValue = this.spendOutputs.reduce((sum, output) => sum + BigInt(denominations[output.denomination]), BigInt(0));
+        const changeValue = this.changeOutputs.reduce((sum, output) => sum + BigInt(denominations[output.denomination]), BigInt(0));
+        return spendValue + changeValue;
+    }
+    /**
+     * Gets the maximum denomination value from the selected UTXOs.
+     *
+     * @returns {bigint} The maximum input denomination value.
+     */
+    getMaxInputDenomination() {
+        const inputs = [...this.selectedUTXOs];
+        return this.getMaxDenomination(inputs);
+    }
+    /**
+     * Gets the maximum denomination value from the spend and change outputs.
+     *
+     * @returns {bigint} The maximum output denomination value.
+     */
+    getMaxOutputDenomination() {
+        const outputs = [...this.spendOutputs, ...this.changeOutputs];
+        return this.getMaxDenomination(outputs);
+    }
+    /**
+     * Gets the maximum denomination value from a list of UTXOs.
+     *
+     * @param {UTXO[]} utxos - The list of UTXOs.
+     * @returns {bigint} The maximum denomination value.
+     */
+    getMaxDenomination(utxos) {
+        return utxos.reduce((max, utxo) => {
+            const denomValue = BigInt(denominations[utxo.denomination]);
+            return denomValue > max ? denomValue : max;
+        }, BigInt(0));
     }
     /**
      * Increases the total fee by first reducing change outputs, then selecting additional inputs if necessary.
@@ -18439,9 +18481,7 @@ class FewestCoinSelector extends AbstractCoinSelector {
             if (remainingFee <= BigInt(0)) {
                 // If we have excess, create a new change output
                 if (remainingFee < BigInt(0)) {
-                    const change = BigInt(this.totalInputValue) -
-                        BigInt(this.target) -
-                        (BigInt(additionalFeeNeeded) - BigInt(remainingFee));
+                    const change = BigInt(this.totalInputValue) - BigInt(this.target) - BigInt(additionalFeeNeeded);
                     this.adjustChangeOutputs(change);
                 }
             }
@@ -18484,12 +18524,6 @@ class FewestCoinSelector extends AbstractCoinSelector {
             spendOutputs: this.spendOutputs,
             changeOutputs: this.changeOutputs,
         };
-    }
-    getMaxInputDenomination() {
-        return this.selectedUTXOs.reduce((max, utxo) => {
-            const denomValue = BigInt(denominations[utxo.denomination]);
-            return denomValue > max ? denomValue : max;
-        }, BigInt(0));
     }
     /**
      * Helper method to adjust change outputs.
@@ -27071,6 +27105,15 @@ class HDNodeBIP32Adapter {
 }
 
 /**
+ * Current known issues:
+ *
+ * - When generating send addresses we are not checking if the address has already been used before
+ * - When syncing is seems like we are adding way too many change addresses
+ * - Bip44 external and change address maps also have gap addresses in them
+ * - It is unclear if we have checked if addresses have been used and if they are used
+ * - We should always check all addresses that were previously included in a transaction to see if they have been used
+ */
+/**
  * The Qi HD wallet is a BIP44-compliant hierarchical deterministic wallet used for managing a set of addresses in the
  * Qi ledger. This is wallet implementation is the primary way to interact with the Qi UTXO ledger on the Quai network.
  *
@@ -27107,7 +27150,7 @@ class QiHDWallet extends AbstractHDWallet {
      * @ignore
      * @type {number}
      */
-    static _GAP_LIMIT = 20;
+    static _GAP_LIMIT = 5;
     /**
      * @ignore
      * @type {AllowedCoinType}
@@ -27135,18 +27178,43 @@ class QiHDWallet extends AbstractHDWallet {
      */
     _gapAddresses = [];
     /**
+     * This array is used to keep track of gap addresses that have been included in a transaction, but whose outpoints
+     * have not been imported into the wallet.
+     *
+     * @ignore
+     * @type {NeuteredAddressInfo[]}
+     */
+    _usedGapAddresses = [];
+    /**
+     * This array is used to keep track of gap change addresses that have been included in a transaction, but whose
+     * outpoints have not been imported into the wallet.
+     *
+     * @ignore
+     * @type {NeuteredAddressInfo[]}
+     */
+    _usedGapChangeAddresses = [];
+    /**
      * Array of outpoint information.
      *
      * @ignore
      * @type {OutpointInfo[]}
      */
-    _outpoints = [];
+    _availableOutpoints = [];
     /**
-     * Map of paymentcodes to paymentCodeInfo for the receiver
+     * Map of outpoints that are pending confirmation of being spent.
+     */
+    _pendingOutpoints = [];
+    /**
+     * @ignore
+     * @type {AddressUsageCallback}
+     */
+    _addressUseChecker;
+    /**
+     * Map of paymentcodes to PaymentChannelAddressInfo for the receiver
      */
     _receiverPaymentCodeInfo = new Map();
     /**
-     * Map of paymentcodes to paymentCodeInfo for the sender
+     * Map of paymentcodes to PaymentChannelAddressInfo for the sender
      */
     _senderPaymentCodeInfo = new Map();
     /**
@@ -27156,6 +27224,16 @@ class QiHDWallet extends AbstractHDWallet {
      */
     constructor(guard, root, provider) {
         super(guard, root, provider);
+    }
+    /**
+     * Sets the address use checker. The provided callback function should accept an address as input and return a
+     * boolean indicating whether the address is in use. If the callback returns true, the address is considered used
+     * and if it returns false, the address is considered unused.
+     *
+     * @param {AddressUsageCallback} checker - The address use checker.
+     */
+    setAddressUseChecker(checker) {
+        this._addressUseChecker = checker;
     }
     // getters for the payment code info maps
     get receiverPaymentCodeInfo() {
@@ -27191,7 +27269,7 @@ class QiHDWallet extends AbstractHDWallet {
      */
     importOutpoints(outpoints) {
         this.validateOutpointInfo(outpoints);
-        this._outpoints.push(...outpoints);
+        this._availableOutpoints.push(...outpoints);
     }
     /**
      * Gets the outpoints for the specified zone.
@@ -27201,7 +27279,7 @@ class QiHDWallet extends AbstractHDWallet {
      */
     getOutpoints(zone) {
         this.validateZone(zone);
-        return this._outpoints.filter((outpoint) => outpoint.zone === zone);
+        return this._availableOutpoints.filter((outpoint) => outpoint.zone === zone);
     }
     /**
      * Signs a Qi transaction and returns the serialized transaction.
@@ -27232,6 +27310,47 @@ class QiHDWallet extends AbstractHDWallet {
         return txobj.serialized;
     }
     /**
+     * Gets the payment channel address info for a given address.
+     *
+     * @param {string} address - The address to look up.
+     * @returns {PaymentChannelAddressInfo | null} The address info or null if not found.
+     */
+    getPaymentChannelAddressInfo(address) {
+        for (const [paymentCode, pcInfoArray] of this._receiverPaymentCodeInfo.entries()) {
+            const pcInfo = pcInfoArray.find((info) => info.address === address);
+            if (pcInfo) {
+                return { ...pcInfo, counterpartyPaymentCode: paymentCode };
+            }
+        }
+        return null;
+    }
+    /**
+     * Locates the address information for the given address, searching through standard addresses, change addresses,
+     * and payment channel addresses.
+     *
+     * @param {string} address - The address to locate.
+     * @returns {NeuteredAddressInfo | PaymentChannelAddressInfo | null} The address info or null if not found.
+     */
+    locateAddressInfo(address) {
+        // First, try to get standard address info
+        let addressInfo = this.getAddressInfo(address);
+        if (addressInfo) {
+            return addressInfo;
+        }
+        // Next, try to get change address info
+        addressInfo = this.getChangeAddressInfo(address);
+        if (addressInfo) {
+            return addressInfo;
+        }
+        // Finally, try to get payment channel address info
+        const pcAddressInfo = this.getPaymentChannelAddressInfo(address);
+        if (pcAddressInfo) {
+            return pcAddressInfo;
+        }
+        // Address not found
+        return null;
+    }
+    /**
      * Gets the balance for the specified zone.
      *
      * @param {Zone} zone - The zone to get the balance for.
@@ -27239,7 +27358,7 @@ class QiHDWallet extends AbstractHDWallet {
      */
     getBalanceForZone(zone) {
         this.validateZone(zone);
-        return this._outpoints
+        return this._availableOutpoints
             .filter((outpoint) => outpoint.zone === zone)
             .reduce((total, outpoint) => {
             const denominationValue = denominations[outpoint.outpoint.denomination];
@@ -27254,7 +27373,7 @@ class QiHDWallet extends AbstractHDWallet {
      */
     outpointsToUTXOs(zone) {
         this.validateZone(zone);
-        return this._outpoints
+        return this._availableOutpoints
             .filter((outpointInfo) => outpointInfo.zone === zone)
             .map((outpointInfo) => {
             const utxo = new UTXO();
@@ -27296,17 +27415,32 @@ class QiHDWallet extends AbstractHDWallet {
         let selection = fewestCoinSelector.performSelection(spendTarget);
         // 3. Generate as many unused addresses as required to populate the spend outputs
         const sendAddresses = [];
-        for (let i = 0; i < selection.spendOutputs.length; i++) {
-            sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
+        while (sendAddresses.length < selection.spendOutputs.length) {
+            const address = this.getNextSendAddress(recipientPaymentCode, destinationZone).address;
+            const { isUsed } = await this.checkAddressUse(address);
+            if (!isUsed) {
+                sendAddresses.push(address);
+            }
         }
-        // 4. Generate as many addresses as required to populate the change outputs
+        // 4. get known change addresses, then populate with new ones as needed
         const changeAddresses = [];
         for (let i = 0; i < selection.changeOutputs.length; i++) {
-            changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
+            if (this._gapChangeAddresses.length > 0) {
+                // 1. get next change address from gap addresses array
+                // 2. remove it from the gap change addresses array
+                // 3. add it to the change addresses array
+                // 4. add it to the used gap change addresses array
+                const nextChangeAddressInfo = this._gapChangeAddresses.shift();
+                changeAddresses.push(nextChangeAddressInfo.address);
+                this._usedGapChangeAddresses.push(nextChangeAddressInfo);
+            }
+            else {
+                changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
+            }
         }
         // 5. Create the transaction and sign it using the signTransaction method
         // 5.1 Fetch the public keys for the input addresses
-        let inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
+        let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
         if (inputPubKeys.some((pubkey) => !pubkey)) {
             throw new Error('Missing public key for input address');
         }
@@ -27316,23 +27450,25 @@ class QiHDWallet extends AbstractHDWallet {
         const feeData = await this.provider.getFeeData(originZone, false);
         // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, maxFeePerGas and maxPriorityFeePerGas
         const totalFee = gasLimit * (feeData.gasPrice ?? 1n) + (feeData.maxFeePerGas ?? 0n) + (feeData.maxPriorityFeePerGas ?? 0n);
-        // Get new selection with increased fee
-        selection = fewestCoinSelector.increaseFee(totalFee);
+        // Get new selection with fee
+        selection = fewestCoinSelector.performSelection(spendTarget, totalFee);
         // 5.7 Determine if new addresses are needed for the change outputs
-        const changeAddressesNeeded = selection.changeOutputs.length > changeAddresses.length;
-        if (changeAddressesNeeded) {
-            for (let i = 0; i < selection.changeOutputs.length; i++) {
+        const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
+        if (changeAddressesNeeded > 0) {
+            for (let i = 0; i < changeAddressesNeeded; i++) {
                 changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
             }
         }
-        const spendAddressesNeeded = selection.spendOutputs.length > sendAddresses.length;
-        if (spendAddressesNeeded) {
-            for (let i = 0; i < selection.spendOutputs.length; i++) {
-                sendAddresses.push(await this.getNextSendAddress(recipientPaymentCode, destinationZone));
+        const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
+        if (spendAddressesNeeded > 0) {
+            for (let i = 0; i < spendAddressesNeeded; i++) {
+                sendAddresses.push(this.getNextSendAddress(recipientPaymentCode, destinationZone).address);
             }
         }
-        inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
+        inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
         tx = await this.prepareTransaction(selection, inputPubKeys.map((pubkey) => pubkey), sendAddresses, changeAddresses, Number(chainId));
+        // Move used outpoints to pendingOutpoints
+        this.moveOutpointsToPending(tx.txInputs);
         // 5.6 Sign the transaction
         const signedTx = await this.signTransaction(tx);
         // 6. Broadcast the transaction to the network using the provider
@@ -27361,6 +27497,60 @@ class QiHDWallet extends AbstractHDWallet {
         }));
         tx.chainId = chainId;
         return tx;
+    }
+    /**
+     * Checks the status of pending outpoints and updates the wallet's UTXO set accordingly.
+     *
+     * @param zone The zone in which to check the pending outpoints.
+     */
+    async checkPendingOutpoints(zone) {
+        // Create a copy to iterate over, as we'll be modifying the _pendingOutpoints array
+        const pendingOutpoints = [...this._pendingOutpoints.filter((info) => info.zone === zone)];
+        const uniqueAddresses = new Set(pendingOutpoints.map((info) => info.address));
+        const outpointsByAddress = await Promise.all(Array.from(uniqueAddresses).map((address) => this.getOutpointsByAddress(address)));
+        const allOutpointsByAddress = outpointsByAddress.flat();
+        for (const outpointInfo of pendingOutpoints) {
+            const isSpent = !allOutpointsByAddress.some((outpoint) => outpoint.txhash === outpointInfo.outpoint.txhash && outpoint.index === outpointInfo.outpoint.index);
+            if (isSpent) {
+                // Outpoint has been spent; remove it from pendingOutpoints
+                this.removeOutpointFromPending(outpointInfo.outpoint);
+            }
+            else {
+                // Outpoint is still unspent; move it back to available outpoints
+                this.moveOutpointToAvailable(outpointInfo);
+            }
+        }
+    }
+    /**
+     * Moves specified inputs to pending outpoints.
+     *
+     * @param inputs List of inputs used in the transaction.
+     */
+    moveOutpointsToPending(inputs) {
+        inputs.forEach((input) => {
+            const index = this._availableOutpoints.findIndex((outpointInfo) => outpointInfo.outpoint.txhash === input.txhash && outpointInfo.outpoint.index === input.index);
+            if (index !== -1) {
+                const [outpointInfo] = this._availableOutpoints.splice(index, 1);
+                this._pendingOutpoints.push(outpointInfo);
+            }
+        });
+    }
+    /**
+     * Removes an outpoint from the pending outpoints.
+     *
+     * @param outpoint The outpoint to remove.
+     */
+    removeOutpointFromPending(outpoint) {
+        this._pendingOutpoints = this._pendingOutpoints.filter((info) => !(info.outpoint.txhash === outpoint.txhash && info.outpoint.index === outpoint.index));
+    }
+    /**
+     * Moves an outpoint from pending back to available outpoints.
+     *
+     * @param outpointInfo The outpoint info to move.
+     */
+    moveOutpointToAvailable(outpointInfo) {
+        this.removeOutpointFromPending(outpointInfo.outpoint);
+        this._availableOutpoints.push(outpointInfo);
     }
     /**
      * Returns a schnorr signature for the given message and private key.
@@ -27414,15 +27604,12 @@ class QiHDWallet extends AbstractHDWallet {
     /**
      * Retrieves the private key for a given transaction input.
      *
-     * This method derives the private key for a transaction input by following these steps:
+     * This method derives the private key for a transaction input by locating the address info and then deriving the
+     * private key based on where the address info was found:
      *
-     * 1. Ensures the input contains a public key.
-     * 2. Computes the address from the public key.
-     * 3. Fetches address information associated with the computed address.
-     * 4. Derives the hierarchical deterministic (HD) node corresponding to the address.
-     * 5. Returns the private key of the derived HD node.
+     * - For BIP44 addresses (standard or change), it uses the HD wallet to derive the private key.
+     * - For payment channel addresses (BIP47), it uses PaymentCodePrivate to derive the private key.
      *
-     * @ignore
      * @param {TxInput} input - The transaction input containing the public key.
      * @returns {string} The private key corresponding to the transaction input.
      * @throws {Error} If the input does not contain a public key or if the address information cannot be found.
@@ -27431,21 +27618,42 @@ class QiHDWallet extends AbstractHDWallet {
         if (!input.pubkey)
             throw new Error('Missing public key for input');
         const address = computeAddress(input.pubkey);
-        // get address info
-        const addressInfo = this.getAddressInfo(address);
-        if (!addressInfo)
+        const addressInfo = this.locateAddressInfo(address);
+        if (!addressInfo) {
             throw new Error(`Address not found: ${address}`);
-        // derive an HDNode for the address and get the private key
-        const changeIndex = addressInfo.change ? 1 : 0;
-        const addressNode = this._root
-            .deriveChild(addressInfo.account)
-            .deriveChild(changeIndex)
-            .deriveChild(addressInfo.index);
-        return addressNode.privateKey;
+        }
+        if ('change' in addressInfo) {
+            // NeuteredAddressInfo (BIP44 addresses)
+            const changeIndex = addressInfo.change ? 1 : 0;
+            const addressNode = this._root
+                .deriveChild(addressInfo.account)
+                .deriveChild(changeIndex)
+                .deriveChild(addressInfo.index);
+            return addressNode.privateKey;
+        }
+        else {
+            // PaymentChannelAddressInfo (BIP47 addresses)
+            const pcAddressInfo = addressInfo;
+            const account = pcAddressInfo.account;
+            const index = pcAddressInfo.index - 1;
+            const counterpartyPaymentCode = pcAddressInfo.counterpartyPaymentCode;
+            if (!counterpartyPaymentCode) {
+                throw new Error('Counterparty payment code not found for payment channel address');
+            }
+            const bip32 = BIP32Factory(ecc);
+            const buf = bs58check.decode(counterpartyPaymentCode);
+            const version = buf[0];
+            if (version !== PC_VERSION)
+                throw new Error('Invalid payment code version');
+            const counterpartyPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
+            const paymentCodePrivate = this._getPaymentCodePrivate(account);
+            const paymentPrivateKey = paymentCodePrivate.derivePaymentPrivateKey(counterpartyPCodePublic, index);
+            return hexlify(paymentPrivateKey);
+        }
     }
     /**
      * Scans the specified zone for addresses with unspent outputs. Starting at index 0, it will generate new addresses
-     * until the gap limit is reached for both gap and change addresses.
+     * until the gap limit is reached for external and change BIP44 addresses and payment channel addresses.
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
      * @param {number} [account=0] - The index of the account to scan. Default is `0`
@@ -27459,38 +27667,28 @@ class QiHDWallet extends AbstractHDWallet {
         this._changeAddresses = new Map();
         this._gapAddresses = [];
         this._gapChangeAddresses = [];
-        this._outpoints = [];
+        this._availableOutpoints = [];
+        // Reset each map so that all keys have empty array values but keys are preserved
+        const resetSenderPaymentCodeInfo = new Map(Array.from(this._senderPaymentCodeInfo.keys()).map((key) => [key, []]));
+        const resetReceiverPaymentCodeInfo = new Map(Array.from(this._receiverPaymentCodeInfo.keys()).map((key) => [key, []]));
+        this._senderPaymentCodeInfo = resetSenderPaymentCodeInfo;
+        this._receiverPaymentCodeInfo = resetReceiverPaymentCodeInfo;
         await this._scan(zone, account);
     }
     /**
      * Scans the specified zone for addresses with unspent outputs. Starting at the last address index, it will generate
-     * new addresses until the gap limit is reached for both gap and change addresses. If no account is specified, it
-     * will scan all accounts known to the wallet.
+     * new addresses until the gap limit is reached for external and change BIP44 addresses and payment channel
+     * addresses.
      *
      * @param {Zone} zone - The zone in which to sync addresses.
-     * @param {number} [account] - The index of the account to sync. If not specified, all accounts will be scanned.
+     * @param {number} [account=0] - The index of the account to sync. Default is `0`
      * @returns {Promise<void>} A promise that resolves when the sync is complete.
      * @throws {Error} If the zone is invalid.
      */
-    async sync(zone, account) {
+    async sync(zone, account = 0) {
         this.validateZone(zone);
-        // if no account is specified, scan all accounts.
-        if (account === undefined) {
-            const addressInfos = Array.from(this._addresses.values());
-            const accounts = addressInfos.reduce((unique, info) => {
-                if (!unique.includes(info.account)) {
-                    unique.push(info.account);
-                }
-                return unique;
-            }, []);
-            for (const acc of accounts) {
-                await this._scan(zone, acc);
-            }
-        }
-        else {
-            await this._scan(zone, account);
-        }
-        return;
+        await this._scan(zone, account);
+        await this.checkPendingOutpoints(zone);
     }
     /**
      * Internal method to scan the specified zone for addresses with unspent outputs. This method handles the actual
@@ -27504,18 +27702,17 @@ class QiHDWallet extends AbstractHDWallet {
     async _scan(zone, account = 0) {
         if (!this.provider)
             throw new Error('Provider not set');
-        let gapAddressesCount = 0;
-        let changeGapAddressesCount = 0;
-        while (gapAddressesCount < QiHDWallet._GAP_LIMIT || changeGapAddressesCount < QiHDWallet._GAP_LIMIT) {
-            [gapAddressesCount, changeGapAddressesCount] = await Promise.all([
-                gapAddressesCount < QiHDWallet._GAP_LIMIT
-                    ? this.scanAddress(zone, account, false, gapAddressesCount)
-                    : gapAddressesCount,
-                changeGapAddressesCount < QiHDWallet._GAP_LIMIT
-                    ? this.scanAddress(zone, account, true, changeGapAddressesCount)
-                    : changeGapAddressesCount,
-            ]);
+        // Start scanning processes for each derivation tree
+        const scans = [
+            this.scanBIP44Addresses(zone, account, false),
+            this.scanBIP44Addresses(zone, account, true), // Change addresses
+        ];
+        // Add scanning processes for each payment channel
+        for (const paymentCode of this._receiverPaymentCodeInfo.keys()) {
+            scans.push(this.scanPaymentChannel(zone, account, paymentCode));
         }
+        // Run all scans in parallel
+        await Promise.all(scans);
     }
     /**
      * Scans for the next address in the specified zone and account, checking for associated outpoints, and updates the
@@ -27524,29 +27721,169 @@ class QiHDWallet extends AbstractHDWallet {
      * @param {Zone} zone - The zone in which the address is being scanned.
      * @param {number} account - The index of the account for which the address is being scanned.
      * @param {boolean} isChange - A flag indicating whether the address is a change address.
-     * @param {number} addressesCount - The current count of addresses scanned.
-     * @returns {Promise<number>} A promise that resolves to the updated address count.
+     * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If an error occurs during the address scanning or outpoints retrieval process.
      */
-    async scanAddress(zone, account, isChange, addressesCount) {
+    async scanBIP44Addresses(zone, account, isChange) {
         const addressMap = isChange ? this._changeAddresses : this._addresses;
-        const addressInfo = this._getNextAddress(account, zone, isChange, addressMap);
-        const outpoints = await this.getOutpointsByAddress(addressInfo.address);
-        if (outpoints.length > 0) {
-            this.importOutpoints(outpoints.map((outpoint) => ({
-                outpoint,
-                address: addressInfo.address,
-                zone,
-                account,
-            })));
-            addressesCount = 0;
-            isChange ? (this._gapChangeAddresses = []) : (this._gapAddresses = []);
+        const gapAddresses = isChange ? this._gapChangeAddresses : this._gapAddresses;
+        const usedGapAddresses = isChange ? this._usedGapChangeAddresses : this._usedGapAddresses;
+        // First, add all used gap addresses to the address map and import their outpoints
+        for (const addressInfo of usedGapAddresses) {
+            this._addAddress(addressMap, account, addressInfo.index, isChange);
+            const outpoints = await this.getOutpointsByAddress(addressInfo.address);
+            if (outpoints.length > 0) {
+                this.importOutpoints(outpoints.map((outpoint) => ({
+                    outpoint,
+                    address: addressInfo.address,
+                    zone,
+                    account,
+                })));
+            }
+        }
+        let gapCount = 0;
+        // Second, re-examine existing gap addresses
+        const newlyUsedAddresses = [];
+        for (let i = 0; i < gapAddresses.length;) {
+            const addressInfo = gapAddresses[i];
+            const { isUsed, outpoints } = await this.checkAddressUse(addressInfo.address);
+            if (isUsed) {
+                // Address has been used since last scan
+                this._addAddress(addressMap, account, addressInfo.index, isChange);
+                if (outpoints.length > 0) {
+                    this.importOutpoints(outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: addressInfo.address,
+                        zone,
+                        account,
+                    })));
+                }
+                // Remove from gap addresses
+                newlyUsedAddresses.push(addressInfo);
+                gapCount = 0;
+            }
+            else {
+                gapCount++;
+                i++;
+            }
+        }
+        // remove addresses that have been used from the gap addresses
+        const updatedGapAddresses = gapAddresses.filter((addressInfo) => !newlyUsedAddresses.some((usedAddress) => usedAddress.address === addressInfo.address));
+        // Scan for new gap addresses
+        const newGapAddresses = [];
+        while (gapCount < QiHDWallet._GAP_LIMIT) {
+            const addressInfo = this._getNextAddress(account, zone, isChange, addressMap);
+            const { isUsed, outpoints } = await this.checkAddressUse(addressInfo.address);
+            if (isUsed) {
+                if (outpoints.length > 0) {
+                    this.importOutpoints(outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: addressInfo.address,
+                        zone,
+                        account,
+                    })));
+                }
+                gapCount = 0;
+            }
+            else {
+                gapCount++;
+                // check if the address is already in the updated gap addresses array
+                if (!updatedGapAddresses.some((usedAddress) => usedAddress.address === addressInfo.address)) {
+                    newGapAddresses.push(addressInfo);
+                }
+            }
+        }
+        // update the gap addresses
+        if (isChange) {
+            this._gapChangeAddresses = [...updatedGapAddresses, ...newGapAddresses];
         }
         else {
-            addressesCount++;
-            isChange ? this._gapChangeAddresses.push(addressInfo) : this._gapAddresses.push(addressInfo);
+            this._gapAddresses = [...updatedGapAddresses, ...newGapAddresses];
         }
-        return addressesCount;
+    }
+    /**
+     * Scans the specified payment channel for addresses with unspent outputs. Starting at the last address index, it
+     * will generate new addresses until the gap limit is reached.
+     *
+     * @param {Zone} zone - The zone in which to scan for addresses.
+     * @param {number} account - The index of the account to scan.
+     * @param {string} paymentCode - The payment code to scan.
+     * @returns {Promise<void>} A promise that resolves when the scan is complete.
+     * @throws {Error} If the zone is invalid.
+     */
+    async scanPaymentChannel(zone, account, paymentCode) {
+        let gapCount = 0;
+        const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(paymentCode);
+        if (!paymentCodeInfoArray) {
+            throw new Error(`Payment code ${paymentCode} not found`);
+        }
+        // first, re-examine existing unused addresses
+        const newlyUsedAddresses = [];
+        const unusedAddresses = paymentCodeInfoArray.filter((info) => !info.isUsed);
+        for (let i = 0; i < unusedAddresses.length;) {
+            const addressInfo = unusedAddresses[i];
+            const { isUsed, outpoints } = await this.checkAddressUse(addressInfo.address);
+            if (outpoints.length > 0 || isUsed) {
+                // Address has been used since last scan
+                addressInfo.isUsed = true;
+                const pcAddressInfoIndex = paymentCodeInfoArray.findIndex((info) => info.index === addressInfo.index);
+                paymentCodeInfoArray[pcAddressInfoIndex] = addressInfo;
+                this.importOutpoints(outpoints.map((outpoint) => ({
+                    outpoint,
+                    address: addressInfo.address,
+                    zone,
+                    account,
+                })));
+                // Remove from gap addresses
+                newlyUsedAddresses.push(addressInfo);
+                gapCount = 0;
+            }
+            else {
+                // Address is still unused
+                gapCount++;
+                i++;
+            }
+        }
+        // remove the addresses that have been used from the payment code info array
+        const updatedPaymentCodeInfoArray = paymentCodeInfoArray.filter((addressInfo) => !newlyUsedAddresses.some((usedAddress) => usedAddress.index === addressInfo.index));
+        // Then, scan for new gap addresses
+        while (gapCount < QiHDWallet._GAP_LIMIT) {
+            const pcAddressInfo = this.getNextReceiveAddress(paymentCode, zone, account);
+            const outpoints = await this.getOutpointsByAddress(pcAddressInfo.address);
+            let isUsed = false;
+            if (outpoints.length > 0) {
+                isUsed = true;
+                this.importOutpoints(outpoints.map((outpoint) => ({
+                    outpoint,
+                    address: pcAddressInfo.address,
+                    zone,
+                    account,
+                })));
+                gapCount = 0;
+            }
+            else if (this._addressUseChecker !== undefined &&
+                (await this._addressUseChecker(pcAddressInfo.address))) {
+                // address checker returned true, so the address is used
+                isUsed = true;
+                gapCount = 0;
+            }
+            else {
+                gapCount++;
+            }
+            if (isUsed) {
+                // update the payment code info array if the address has been used
+                pcAddressInfo.isUsed = isUsed;
+                const pcAddressInfoIndex = updatedPaymentCodeInfoArray.findIndex((info) => info.index === pcAddressInfo.index);
+                if (pcAddressInfoIndex !== -1) {
+                    updatedPaymentCodeInfoArray[pcAddressInfoIndex] = pcAddressInfo;
+                }
+                else {
+                    updatedPaymentCodeInfoArray.push(pcAddressInfo);
+                }
+            }
+        }
+        // update the payment code info map
+        this._receiverPaymentCodeInfo.set(paymentCode, updatedPaymentCodeInfoArray);
     }
     /**
      * Queries the network node for the outpoints of the specified address.
@@ -27563,6 +27900,24 @@ class QiHDWallet extends AbstractHDWallet {
         catch (error) {
             throw new Error(`Failed to get outpoints for address: ${address} - error: ${error}`);
         }
+    }
+    async checkAddressUse(address) {
+        let isUsed = false;
+        let outpoints = [];
+        try {
+            outpoints = await this.getOutpointsByAddress(address);
+            if (outpoints.length > 0) {
+                isUsed = true;
+            }
+            else if (this._addressUseChecker !== undefined && (await this._addressUseChecker(address))) {
+                // address checker returned true, so the address is used
+                isUsed = true;
+            }
+        }
+        catch (error) {
+            throw new Error(`Failed to get outpoints for address: ${address} - error: ${error}`);
+        }
+        return { isUsed, outpoints };
     }
     /**
      * Gets the change addresses for the specified zone.
@@ -27621,10 +27976,13 @@ class QiHDWallet extends AbstractHDWallet {
     serialize() {
         const hdwalletSerialized = super.serialize();
         return {
-            outpoints: this._outpoints,
+            outpoints: this._availableOutpoints,
+            pendingOutpoints: this._pendingOutpoints,
             changeAddresses: Array.from(this._changeAddresses.values()),
             gapAddresses: this._gapAddresses,
             gapChangeAddresses: this._gapChangeAddresses,
+            usedGapAddresses: this._usedGapAddresses,
+            usedGapChangeAddresses: this._usedGapChangeAddresses,
             receiverPaymentCodeInfo: Object.fromEntries(this._receiverPaymentCodeInfo),
             senderPaymentCodeInfo: Object.fromEntries(this._senderPaymentCodeInfo),
             ...hdwalletSerialized,
@@ -27665,9 +28023,26 @@ class QiHDWallet extends AbstractHDWallet {
             }
             wallet._gapChangeAddresses.push(gapChangeAddressInfo);
         }
-        // validate the outpoints and import them
+        // validate the used gap addresses and import them
+        for (const usedGapAddressInfo of serialized.usedGapAddresses) {
+            if (!wallet._addresses.has(usedGapAddressInfo.address)) {
+                throw new Error(`Address ${usedGapAddressInfo.address} not found in wallet`);
+            }
+            wallet._usedGapAddresses.push(usedGapAddressInfo);
+        }
+        // validate the used gap change addresses and import them
+        for (const usedGapChangeAddressInfo of serialized.usedGapChangeAddresses) {
+            if (!wallet._changeAddresses.has(usedGapChangeAddressInfo.address)) {
+                throw new Error(`Address ${usedGapChangeAddressInfo.address} not found in wallet`);
+            }
+            wallet._usedGapChangeAddresses.push(usedGapChangeAddressInfo);
+        }
+        // validate the available outpoints and import them
         wallet.validateOutpointInfo(serialized.outpoints);
-        wallet._outpoints.push(...serialized.outpoints);
+        wallet._availableOutpoints.push(...serialized.outpoints);
+        // validate the pending outpoints and import them
+        wallet.validateOutpointInfo(serialized.pendingOutpoints);
+        wallet._pendingOutpoints.push(...serialized.pendingOutpoints);
         // validate and import the payment code info
         wallet.validateAndImportPaymentCodeInfo(serialized.receiverPaymentCodeInfo, 'receiver');
         wallet.validateAndImportPaymentCodeInfo(serialized.senderPaymentCodeInfo, 'sender');
@@ -27676,7 +28051,8 @@ class QiHDWallet extends AbstractHDWallet {
     /**
      * Validates and imports a map of payment code info.
      *
-     * @param {Map<string, paymentCodeInfo[]>} paymentCodeInfoMap - The map of payment code info to validate and import.
+     * @param {Map<string, PaymentChannelAddressInfo[]>} paymentCodeInfoMap - The map of payment code info to validate
+     *   and import.
      * @param {'receiver' | 'sender'} target - The target map to update ('receiver' or 'sender').
      * @throws {Error} If any of the payment code info is invalid.
      */
@@ -27695,7 +28071,7 @@ class QiHDWallet extends AbstractHDWallet {
     /**
      * Validates a payment code info object.
      *
-     * @param {paymentCodeInfo} pcInfo - The payment code info to validate.
+     * @param {PaymentChannelAddressInfo} pcInfo - The payment code info to validate.
      * @throws {Error} If the payment code info is invalid.
      */
     validatePaymentCodeInfo(pcInfo) {
@@ -27733,18 +28109,21 @@ class QiHDWallet extends AbstractHDWallet {
             // validate zone
             this.validateZone(info.zone);
             // validate address and account
-            const addressInfo = this.getAddressInfo(info.address);
-            if (!addressInfo) {
-                throw new Error(`Address ${info.address} not found in wallet`);
-            }
-            if (info.account !== undefined && info.account !== addressInfo.account) {
-                throw new Error(`Account ${info.account} not found for address ${info.address}`);
-            }
+            this.validateAddressAndAccount(info.address, info.account);
             // validate Outpoint
             if (info.outpoint.txhash == null || info.outpoint.index == null || info.outpoint.denomination == null) {
                 throw new Error(`Invalid Outpoint: ${JSON.stringify(info)} `);
             }
         });
+    }
+    validateAddressAndAccount(address, account) {
+        const addressInfo = this.locateAddressInfo(address);
+        if (!addressInfo) {
+            throw new Error(`Address ${address} not found in wallet`);
+        }
+        if (account && account !== addressInfo.account) {
+            throw new Error(`Address ${address} does not match account ${account}`);
+        }
     }
     /**
      * Creates a new BIP47 payment code for the specified account. The payment code is derived from the account's BIP32
@@ -27758,11 +28137,11 @@ class QiHDWallet extends AbstractHDWallet {
         return privatePcode.toBase58();
     }
     // helper method to get a bip32 API instance
-    async _getBIP32API() {
+    _getBIP32API() {
         return BIP32Factory(ecc);
     }
     // helper method to decode a base58 string into a Uint8Array
-    async _decodeBase58(base58) {
+    _decodeBase58(base58) {
         return bs58check.decode(base58);
     }
     /**
@@ -27773,8 +28152,8 @@ class QiHDWallet extends AbstractHDWallet {
      * @param {number} account - The account index for which to generate the private payment code.
      * @returns {Promise<PaymentCodePrivate>} A promise that resolves to the PaymentCodePrivate instance.
      */
-    async _getPaymentCodePrivate(account) {
-        const bip32 = await this._getBIP32API();
+    _getPaymentCodePrivate(account) {
+        const bip32 = this._getBIP32API();
         const accountNode = this._root.deriveChild(account);
         // payment code array
         const pc = new Uint8Array(80);
@@ -27797,15 +28176,15 @@ class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<string>} A promise that resolves to the payment address for sending funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    async getNextSendAddress(receiverPaymentCode, zone, account = 0) {
-        const bip32 = await this._getBIP32API();
-        const buf = await this._decodeBase58(receiverPaymentCode);
+    getNextSendAddress(receiverPaymentCode, zone, account = 0) {
+        const bip32 = this._getBIP32API();
+        const buf = this._decodeBase58(receiverPaymentCode);
         const version = buf[0];
         if (version !== PC_VERSION)
             throw new Error('Invalid payment code version');
-        const receiverPCodePrivate = await this._getPaymentCodePrivate(account);
+        const receiverPCodePrivate = this._getPaymentCodePrivate(account);
         const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
-        const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(receiverPaymentCode);
+        const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(receiverPaymentCode);
         const lastIndex = paymentCodeInfoArray && paymentCodeInfoArray.length > 0
             ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
             : 0;
@@ -27815,6 +28194,7 @@ class QiHDWallet extends AbstractHDWallet {
             if (this.isValidAddressForZone(address, zone)) {
                 const pcInfo = {
                     address,
+                    pubKey: hexlify(senderPCodePublic.pubKey),
                     index: addrIndex,
                     account,
                     zone,
@@ -27824,9 +28204,9 @@ class QiHDWallet extends AbstractHDWallet {
                     paymentCodeInfoArray.push(pcInfo);
                 }
                 else {
-                    this._receiverPaymentCodeInfo.set(receiverPaymentCode, [pcInfo]);
+                    this._senderPaymentCodeInfo.set(receiverPaymentCode, [pcInfo]);
                 }
-                return address;
+                return pcInfo;
             }
         }
         throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
@@ -27839,15 +28219,15 @@ class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<string>} A promise that resolves to the payment address for receiving funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    async getNextReceiveAddress(senderPaymentCode, zone, account = 0) {
-        const bip32 = await this._getBIP32API();
-        const buf = await this._decodeBase58(senderPaymentCode);
+    getNextReceiveAddress(senderPaymentCode, zone, account = 0) {
+        const bip32 = this._getBIP32API();
+        const buf = this._decodeBase58(senderPaymentCode);
         const version = buf[0];
         if (version !== PC_VERSION)
             throw new Error('Invalid payment code version');
         const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
-        const receiverPCodePrivate = await this._getPaymentCodePrivate(account);
-        const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(senderPaymentCode);
+        const receiverPCodePrivate = this._getPaymentCodePrivate(account);
+        const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(senderPaymentCode);
         const lastIndex = paymentCodeInfoArray && paymentCodeInfoArray.length > 0
             ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
             : 0;
@@ -27857,6 +28237,7 @@ class QiHDWallet extends AbstractHDWallet {
             if (this.isValidAddressForZone(address, zone)) {
                 const pcInfo = {
                     address,
+                    pubKey: hexlify(receiverPCodePrivate.pubKey),
                     index: addrIndex,
                     account,
                     zone,
@@ -27866,9 +28247,9 @@ class QiHDWallet extends AbstractHDWallet {
                     paymentCodeInfoArray.push(pcInfo);
                 }
                 else {
-                    this._senderPaymentCodeInfo.set(senderPaymentCode, [pcInfo]);
+                    this._receiverPaymentCodeInfo.set(senderPaymentCode, [pcInfo]);
                 }
-                return address;
+                return pcInfo;
             }
         }
         throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
@@ -27885,17 +28266,28 @@ class QiHDWallet extends AbstractHDWallet {
             throw new Error(`Invalid payment code: ${paymentCode}`);
         }
         if (type === 'receiver') {
-            if (this._receiverPaymentCodeInfo.has(paymentCode)) {
-                return;
+            if (!this._receiverPaymentCodeInfo.has(paymentCode)) {
+                this._receiverPaymentCodeInfo.set(paymentCode, []);
             }
-            this._receiverPaymentCodeInfo.set(paymentCode, []);
         }
         else {
-            if (this._senderPaymentCodeInfo.has(paymentCode)) {
-                return;
+            if (!this._senderPaymentCodeInfo.has(paymentCode)) {
+                this._senderPaymentCodeInfo.set(paymentCode, []);
             }
-            this._senderPaymentCodeInfo.set(paymentCode, []);
         }
+    }
+    /**
+     * Gets the address info for a given address.
+     *
+     * @param {string} address - The address.
+     * @returns {NeuteredAddressInfo | null} The address info or null if not found.
+     */
+    getChangeAddressInfo(address) {
+        const changeAddressInfo = this._changeAddresses.get(address);
+        if (!changeAddressInfo) {
+            return null;
+        }
+        return changeAddressInfo;
     }
 }
 
