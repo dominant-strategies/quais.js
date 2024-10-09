@@ -42,7 +42,7 @@ function addDefaults(tx: any): any {
     tx = Object.assign({}, tx);
     addDefault(tx, 'nonce', 0);
     addDefault(tx, 'gasLimit', BN_0);
-    addDefault(tx, 'gasLimit', BN_0);
+    addDefault(tx, 'gasPrice', BN_0);
     addDefault(tx, 'minerTip', BN_0);
     addDefault(tx, 'value', 0);
     addDefault(tx, 'data', '0x');
