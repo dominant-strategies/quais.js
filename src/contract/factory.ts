@@ -15,7 +15,6 @@ import { getContractAddress, isQiAddress } from '../address/index.js';
 import { getStatic } from '../utils/properties.js';
 import { QuaiTransactionRequest } from '../providers/provider.js';
 import { JsonRpcSigner } from '../providers/provider-jsonrpc.js';
-import { formatMixedCaseChecksumAddress } from '../address/index.js';
 
 // A = Arguments to the constructor
 // I = Interface of deployed contracts
@@ -140,10 +139,7 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         }
         const grindedTx = await this.grindContractAddress(tx);
 
-        grindedTx.accessList = (await this.runner.createAccessList?.(grindedTx))?.map((it) => {
-            it.address = formatMixedCaseChecksumAddress(it.address);
-            return it;
-        });
+        grindedTx.accessList = await this.runner.createAccessList?.(grindedTx);
 
         const sentTx = await this.runner.sendTransaction(grindedTx);
         const address = getStatic<(tx: ContractDeployTransaction) => string>(
