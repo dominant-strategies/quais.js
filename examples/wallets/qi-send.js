@@ -41,8 +41,8 @@ async function main() {
         Zone: addr.zone,
     }));
 
-    console.log('\nAlice Wallet Addresses (first 10):');
-    console.table(addressTable.slice(0, 10));
+    console.log('\nAlice Wallet Addresses:');
+    console.table(addressTable);
 
     const outpointsInfoTable = serializedWallet.outpoints.map((outpoint) => ({
         Address: outpoint.address,
@@ -53,19 +53,20 @@ async function main() {
         Account: outpoint.account,
     }));
 
-    console.log('\nAlice Outpoints Info (first 10):');
-    console.table(outpointsInfoTable.slice(0, 10));
+    console.log('\nAlice Outpoints Info:');
+    console.table(outpointsInfoTable);
 
     console.log(`Generating Bob's wallet and payment code...`);
     const bobMnemonic = quais.Mnemonic.fromPhrase(
         'innocent perfect bus miss prevent night oval position aspect nut angle usage expose grace juice',
     );
     const bobQiWallet = quais.QiHDWallet.fromMnemonic(bobMnemonic);
+    bobQiWallet.connect(provider);
     const bobPaymentCode = await bobQiWallet.getPaymentCode(0);
     console.log('Bob Payment code: ', bobPaymentCode);
 
     // Alice opens a channel to send Qi to Bob
-    aliceQiWallet.openChannel(bobPaymentCode, 'receiver');
+    aliceQiWallet.openChannel(bobPaymentCode, 'sender');
 
     // Alice sends 1000 Qi to Bob
     const tx = await aliceQiWallet.sendTransaction(bobPaymentCode, 750000, quais.Zone.Cyprus1, quais.Zone.Cyprus1);
@@ -85,8 +86,8 @@ async function main() {
         Zone: addr.zone,
     }));
 
-    console.log('\nAlice Wallet Addresses (first 10):');
-    console.table(addressTable2.slice(0, 10));
+    console.log('\nAlice Wallet Addresses:');
+    console.table(addressTable2);
 
     const outpointsInfoTable2 = aliceQiWallet.serialize().outpoints.map((outpoint) => ({
         Address: outpoint.address,
@@ -97,8 +98,38 @@ async function main() {
         Account: outpoint.account,
     }));
 
-    console.log('\nAlice Outpoints Info (first 10):');
-    console.table(outpointsInfoTable2.slice(0, 10));
+    console.log('\nAlice Outpoints Info:');
+    console.table(outpointsInfoTable2);
+
+    // wait 5 seconds
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+
+    console.log('Initializing Bob wallet...');
+    const alicePaymentCode = await aliceQiWallet.getPaymentCode(0);
+    console.log('Alice Payment code: ', alicePaymentCode);
+    bobQiWallet.openChannel(alicePaymentCode, 'receiver');
+    await bobQiWallet.sync(quais.Zone.Cyprus1);
+    console.log('Bob wallet scan complete');
+    const addressTableBob = bobQiWallet.serialize().addresses.map((addr) => ({
+        PubKey: addr.pubKey,
+        Address: addr.address,
+        Index: addr.index,
+        Change: addr.change ? 'Yes' : 'No',
+        Zone: addr.zone,
+    }));
+    console.log('\nBob Wallet Addresses:');
+    console.table(addressTableBob);
+
+    const outpointsInfoTableBob = bobQiWallet.serialize().outpoints.map((outpoint) => ({
+        Address: outpoint.address,
+        Denomination: outpoint.outpoint.denomination,
+        Index: outpoint.outpoint.index,
+        TxHash: outpoint.outpoint.txhash,
+        Zone: outpoint.zone,
+        Account: outpoint.account,
+    }));
+    console.log('\nBob Outpoints Info:');
+    console.table(outpointsInfoTableBob);
 }
 
 main()
