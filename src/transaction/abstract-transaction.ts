@@ -205,7 +205,11 @@ export interface ProtoAccessTuple {
     /**
      * The storage keys of the access tuple.
      */
-    storage_key: Array<Uint8Array>;
+    storage_key: Array<ProtoStorageKey>;
+}
+
+export interface ProtoStorageKey {
+    value: Uint8Array;
 }
 
 type allowedSignatureTypes = Signature | string;

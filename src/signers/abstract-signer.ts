@@ -2,7 +2,7 @@
  * Generally the [Wallet](../classes/Wallet) and [JsonRpcSigner](../classes/JsonRpcSigner) and their sub-classes are
  * sufficent for most developers, but this is provided to fascilitate more complex Signers.
  */
-import { AddressLike, resolveAddress, validateAddress } from '../address/index.js';
+import { AddressLike, formatMixedCaseChecksumAddress, resolveAddress, validateAddress } from '../address/index.js';
 import { defineProperties, getBigInt, resolveProperties, assert, assertArgument } from '../utils/index.js';
 import { addressFromTransactionRequest, copyRequest, QuaiTransactionRequest } from '../providers/provider.js';
 
@@ -146,6 +146,16 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             }
             if (pop.minerTip == null) {
                 pop.minerTip = feeData.minerTip || 10n;
+            }
+        }
+        if (pop.data) {
+            if (tx.accessList) {
+                pop.accessList = tx.accessList;
+            } else {
+                pop.accessList = (await this.createAccessList(tx))?.map((it) => {
+                    it.address = formatMixedCaseChecksumAddress(it.address);
+                    return it;
+                });
             }
         }
         //@TOOD: Don't await all over the place; save them up for

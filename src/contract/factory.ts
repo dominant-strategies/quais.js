@@ -4,7 +4,7 @@ import { concat, defineProperties, getBytes, hexlify, assert, assertArgument } f
 import { BaseContract, copyOverrides, resolveArgs } from './contract.js';
 
 import type { InterfaceAbi } from '../abi/index.js';
-import { validateAddress } from '../address/index.js';
+import { formatMixedCaseChecksumAddress, validateAddress } from '../address/index.js';
 import type { Addressable } from '../address/index.js';
 import type { BytesLike } from '../utils/index.js';
 import { getZoneForAddress } from '../utils/index.js';
@@ -139,7 +139,10 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         }
         const grindedTx = await this.grindContractAddress(tx);
 
-        grindedTx.accessList = await this.runner.createAccessList?.(grindedTx);
+        grindedTx.accessList = (await this.runner.createAccessList?.(grindedTx))?.map((it) => {
+            it.address = formatMixedCaseChecksumAddress(it.address);
+            return it;
+        });
 
         const sentTx = await this.runner.sendTransaction(grindedTx);
         const address = getStatic<(tx: ContractDeployTransaction) => string>(
