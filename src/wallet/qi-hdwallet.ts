@@ -477,8 +477,8 @@ export class QiHDWallet extends AbstractHDWallet {
         const totalFee =
             gasLimit * (feeData.gasPrice ?? 1n) + (feeData.maxFeePerGas ?? 0n) + (feeData.maxPriorityFeePerGas ?? 0n);
 
-        // Get new selection with increased fee
-        selection = fewestCoinSelector.increaseFee(totalFee);
+        // Get new selection with fee
+        selection = fewestCoinSelector.performSelection(spendTarget, totalFee);
 
         // 5.7 Determine if new addresses are needed for the change outputs
         const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
