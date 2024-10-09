@@ -1419,7 +1419,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                 gasPrice: (async () => {
                     try {
                         const value = await this.#perform({ method: 'getGasPrice', txType, zone: zone });
-                        return getBigInt(value, '%response');
+                        return getBigInt(value, '%response') * BigInt(Math.pow(10, 9));
                     } catch (error) {
                         console.log(error);
                     }
@@ -1428,7 +1428,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                 minerTip: (async () => {
                     try {
                         const value = txType ? await this.#perform({ method: 'getMinerTip', zone: zone }) : 0;
-                        return getBigInt(value, '%response');
+                        return getBigInt(value, '%response') * BigInt(Math.pow(10, 9));
                         // eslint-disable-next-line no-empty
                     } catch (error) {}
                     return null;
@@ -1457,13 +1457,15 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             tx = await tx;
         }
         const zone = await this.zoneFromAddress(addressFromTransactionRequest(tx));
-        return getBigInt(
-            await this.#perform({
-                method: 'estimateGas',
-                transaction: tx,
-                zone: zone,
-            }),
-            '%response',
+        return (
+            getBigInt(
+                await this.#perform({
+                    method: 'estimateGas',
+                    transaction: tx,
+                    zone: zone,
+                }),
+                '%response',
+            ) * BigInt(2)
         );
     }
 
@@ -1509,7 +1511,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             blockTag: this._getBlockTag(shard, _tx.blockTag),
         });
 
-        tx.accessList = await this.createAccessList(tx);
+        tx.accessList = (await this.createAccessList(tx)).map((it) => {
+            it.address = formatMixedCaseChecksumAddress(it.address);
+            return it;
+        });
 
         return await this.#checkNetwork(this.#call(tx, blockTag, -1, zone), shard);
     }
