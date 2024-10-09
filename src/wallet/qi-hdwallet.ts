@@ -64,6 +64,8 @@ export interface SerializedQiHDWallet extends SerializedHDWallet {
     changeAddresses: NeuteredAddressInfo[];
     gapAddresses: NeuteredAddressInfo[];
     gapChangeAddresses: NeuteredAddressInfo[];
+    usedGapAddresses: NeuteredAddressInfo[];
+    usedGapChangeAddresses: NeuteredAddressInfo[];
     receiverPaymentCodeInfo: { [key: string]: PaymentChannelAddressInfo[] };
     senderPaymentCodeInfo: { [key: string]: PaymentChannelAddressInfo[] };
 }
@@ -1071,6 +1073,8 @@ export class QiHDWallet extends AbstractHDWallet {
             changeAddresses: Array.from(this._changeAddresses.values()),
             gapAddresses: this._gapAddresses,
             gapChangeAddresses: this._gapChangeAddresses,
+            usedGapAddresses: this._usedGapAddresses,
+            usedGapChangeAddresses: this._usedGapChangeAddresses,
             receiverPaymentCodeInfo: Object.fromEntries(this._receiverPaymentCodeInfo),
             senderPaymentCodeInfo: Object.fromEntries(this._senderPaymentCodeInfo),
             ...hdwalletSerialized,
@@ -1113,6 +1117,22 @@ export class QiHDWallet extends AbstractHDWallet {
                 throw new Error(`Address ${gapChangeAddress} not found in wallet`);
             }
             wallet._gapChangeAddresses.push(gapChangeAddressInfo);
+        }
+
+        // validate the used gap addresses and import them
+        for (const usedGapAddressInfo of serialized.usedGapAddresses) {
+            if (!wallet._addresses.has(usedGapAddressInfo.address)) {
+                throw new Error(`Address ${usedGapAddressInfo.address} not found in wallet`);
+            }
+            wallet._usedGapAddresses.push(usedGapAddressInfo);
+        }
+
+        // validate the used gap change addresses and import them
+        for (const usedGapChangeAddressInfo of serialized.usedGapChangeAddresses) {
+            if (!wallet._changeAddresses.has(usedGapChangeAddressInfo.address)) {
+                throw new Error(`Address ${usedGapChangeAddressInfo.address} not found in wallet`);
+            }
+            wallet._usedGapChangeAddresses.push(usedGapChangeAddressInfo);
         }
 
         // validate the available outpoints and import them
@@ -1211,6 +1231,9 @@ export class QiHDWallet extends AbstractHDWallet {
         const addressInfo = this.locateAddressInfo(address);
         if (!addressInfo) {
             throw new Error(`Address ${address} not found in wallet`);
+        }
+        if (account && account !== addressInfo.account) {
+            throw new Error(`Address ${address} does not match account ${account}`);
         }
     }
 
