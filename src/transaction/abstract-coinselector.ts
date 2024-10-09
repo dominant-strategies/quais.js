@@ -68,7 +68,7 @@ export abstract class AbstractCoinSelector {
      * @param {SpendTarget} target - The target address and value to spend.
      * @returns {SelectedCoinsResult} The selected UTXOs and outputs.
      */
-    abstract performSelection(target: bigint): SelectedCoinsResult;
+    abstract performSelection(target: bigint, fee: bigint): SelectedCoinsResult;
 
     /**
      * Validates the provided UTXO instance. In order to be valid for coin selection, the UTXO must have a valid address

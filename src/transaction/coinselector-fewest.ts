@@ -1,4 +1,4 @@
-import { bigIntAbs } from '../utils/maths.js';
+// import { bigIntAbs } from '../utils/maths.js';
 import { AbstractCoinSelector, SelectedCoinsResult } from './abstract-coinselector.js';
 import { UTXO, denominate, denominations } from './utxo.js';
 
@@ -14,149 +14,208 @@ import { UTXO, denominate, denominations } from './utxo.js';
  */
 export class FewestCoinSelector extends AbstractCoinSelector {
     /**
-     * The coin selection algorithm considering transaction fees.
+     * Performs coin selection to meet the target amount plus fee, using the smallest possible denominations and
+     * minimizing the number of inputs and outputs.
      *
      * @param {bigint} target - The target amount to spend.
-     * @returns {SelectedCoinsResult} The selected UTXOs and change outputs.
+     * @param {bigint} fee - The fee amount to include in the selection.
+     * @returns {SelectedCoinsResult} The selected UTXOs and outputs.
      */
-    performSelection(target: bigint): SelectedCoinsResult {
+    performSelection(target: bigint, fee: bigint = BigInt(0)): SelectedCoinsResult {
         if (target <= BigInt(0)) {
             throw new Error('Target amount must be greater than 0');
         }
 
+        if (fee < BigInt(0)) {
+            throw new Error('Fee amount cannot be negative');
+        }
+
         this.validateUTXOs();
         this.target = target;
+        const totalRequired = BigInt(target) + BigInt(fee);
 
         // Initialize selection state
         this.selectedUTXOs = [];
         this.totalInputValue = BigInt(0);
 
-        const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUTXOs, 'desc');
+        // Sort available UTXOs by denomination in ascending order
+        const sortedUTXOs = this.sortUTXOsByDenomination(this.availableUTXOs, 'asc');
 
-        let totalValue = BigInt(0);
-        let selectedUTXOs: UTXO[] = [];
+        // Attempt to find a single UTXO that can cover the total required amount
+        const singleUTXO = sortedUTXOs.find((utxo) => BigInt(denominations[utxo.denomination!]) >= totalRequired);
 
-        // Get UTXOs that meets or exceeds the target value
-        const UTXOsEqualOrGreaterThanTarget = sortedUTXOs.filter(
-            (utxo) => utxo.denomination !== null && BigInt(denominations[utxo.denomination]) >= target,
-        );
-
-        if (UTXOsEqualOrGreaterThanTarget.length > 0) {
-            // Find the smallest UTXO that meets or exceeds the target value
-            const optimalUTXO = UTXOsEqualOrGreaterThanTarget.reduce((minDenominationUTXO, currentUTXO) => {
-                if (currentUTXO.denomination === null) return minDenominationUTXO;
-                return BigInt(denominations[currentUTXO.denomination]) <
-                    BigInt(denominations[minDenominationUTXO.denomination!])
-                    ? currentUTXO
-                    : minDenominationUTXO;
-            }, UTXOsEqualOrGreaterThanTarget[0]);
-
-            selectedUTXOs.push(optimalUTXO);
-            totalValue += BigInt(denominations[optimalUTXO.denomination!]);
+        if (singleUTXO) {
+            // Use the smallest UTXO that can cover the total required amount
+            this.selectedUTXOs.push(singleUTXO);
+            this.totalInputValue = BigInt(denominations[singleUTXO.denomination!]);
         } else {
-            // If no single UTXO meets or exceeds the target, aggregate smaller denominations
-            // until the target is met/exceeded or there are no more UTXOs to aggregate
-            while (sortedUTXOs.length > 0 && totalValue < target) {
-                const nextOptimalUTXO = sortedUTXOs.reduce<UTXO>((closest, utxo) => {
-                    if (utxo.denomination === null) return closest;
+            // If no single UTXO can cover the total required amount, find the minimal set
+            this.selectedUTXOs = this.findMinimalUTXOSet(sortedUTXOs, totalRequired);
 
-                    // Prioritize UTXOs that bring totalValue closer to target.value
-                    const absThisDiff = bigIntAbs(
-                        BigInt(target) - (BigInt(totalValue) + BigInt(denominations[utxo.denomination])),
-                    );
-                    const currentClosestDiff =
-                        closest && closest.denomination !== null
-                            ? bigIntAbs(
-                                  BigInt(target) - (BigInt(totalValue) + BigInt(denominations[closest.denomination])),
-                              )
-                            : BigInt(Number.MAX_SAFE_INTEGER);
-
-                    return absThisDiff < currentClosestDiff ? utxo : closest;
-                }, sortedUTXOs[0]);
-
-                // Add the selected UTXO to the selection and update totalValue
-                selectedUTXOs.push(nextOptimalUTXO);
-                totalValue += BigInt(denominations[nextOptimalUTXO.denomination!]);
-
-                // Remove the selected UTXO from the list of available UTXOs
-                const index = sortedUTXOs.findIndex(
-                    (utxo) =>
-                        utxo.denomination === nextOptimalUTXO.denomination && utxo.address === nextOptimalUTXO.address,
-                );
-                sortedUTXOs.splice(index, 1);
+            if (this.selectedUTXOs.length === 0) {
+                throw new Error('Insufficient funds');
             }
-        }
 
-        // Optimize the selection process
-        let optimalSelection = selectedUTXOs;
-        let minExcess = BigInt(totalValue) - BigInt(target);
-
-        for (let i = 0; i < selectedUTXOs.length; i++) {
-            const subsetUTXOs = selectedUTXOs.slice(0, i).concat(selectedUTXOs.slice(i + 1));
-            const subsetTotal = subsetUTXOs.reduce(
-                (sum, utxo) => BigInt(sum) + BigInt(denominations[utxo.denomination!]),
+            // Calculate total input value
+            this.totalInputValue = this.selectedUTXOs.reduce(
+                (sum, utxo) => sum + BigInt(denominations[utxo.denomination!]),
                 BigInt(0),
             );
-
-            if (subsetTotal >= target) {
-                const excess = BigInt(subsetTotal) - BigInt(target);
-                if (excess < minExcess) {
-                    optimalSelection = subsetUTXOs;
-                    minExcess = excess;
-                    totalValue = subsetTotal;
-                }
-            }
         }
 
-        selectedUTXOs = optimalSelection;
+        // Create outputs
+        const changeAmount = this.totalInputValue - BigInt(target) - BigInt(fee);
 
-        // Find the largest denomination used in the inputs
-
-        // Store the selected UTXOs and total input value
-        this.selectedUTXOs = selectedUTXOs;
-        this.totalInputValue = totalValue;
-
-        // Check if the selected UTXOs meet or exceed the target amount
-        if (totalValue < target) {
-            throw new Error('Insufficient funds');
-        }
-
-        // Store spendOutputs and changeOutputs
+        // Create spend outputs (to the recipient)
         this.spendOutputs = this.createSpendOutputs(target);
-        this.changeOutputs = this.createChangeOutputs(BigInt(totalValue) - BigInt(target));
+
+        // Create change outputs (to ourselves), if any
+        this.changeOutputs = this.createChangeOutputs(changeAmount);
+
+        // Verify that sum of outputs does not exceed sum of inputs
+        const totalOutputValue = this.calculateTotalOutputValue();
+        if (totalOutputValue > this.totalInputValue) {
+            throw new Error('Total output value exceeds total input value');
+        }
+
+        // Ensure largest output denomination ≤ largest input denomination
+        const maxInputDenomination = this.getMaxInputDenomination();
+        const maxOutputDenomination = this.getMaxOutputDenomination();
+
+        if (maxOutputDenomination > maxInputDenomination) {
+            throw new Error('Largest output denomination exceeds largest input denomination');
+        }
 
         return {
-            inputs: selectedUTXOs,
+            inputs: this.selectedUTXOs,
             spendOutputs: this.spendOutputs,
             changeOutputs: this.changeOutputs,
         };
     }
 
-    // Helper methods to create spend and change outputs
-    private createSpendOutputs(amount: bigint): UTXO[] {
-        const maxDenomination = this.getMaxInputDenomination();
+    /**
+     * Finds the minimal set of UTXOs that can cover the total required amount.
+     *
+     * @param {UTXO[]} sortedUTXOs - Available UTXOs sorted by denomination (ascending).
+     * @param {bigint} totalRequired - The total amount required (target + fee).
+     * @returns {UTXO[]} The minimal set of UTXOs.
+     */
+    private findMinimalUTXOSet(sortedUTXOs: UTXO[], totalRequired: bigint): UTXO[] {
+        // Use a greedy algorithm to select the fewest UTXOs
+        // Starting from the largest denominations to minimize the number of inputs
+        const utxos = [...sortedUTXOs].reverse(); // Largest to smallest
+        let totalValue = BigInt(0);
+        const selectedUTXOs: UTXO[] = [];
 
-        const spendDenominations = denominate(amount, maxDenomination);
-        return spendDenominations.map((denomination) => {
+        for (const utxo of utxos) {
+            if (totalValue >= totalRequired) {
+                break;
+            }
+            selectedUTXOs.push(utxo);
+            totalValue += BigInt(denominations[utxo.denomination!]);
+        }
+
+        if (totalValue >= totalRequired) {
+            return selectedUTXOs;
+        } else {
+            return []; // Insufficient funds
+        }
+    }
+
+    /**
+     * Creates spend outputs based on the target amount and input denominations.
+     *
+     * @param {bigint} amount - The target amount to spend.
+     * @param {UTXO[]} inputs - The selected inputs.
+     * @returns {UTXO[]} The spend outputs.
+     */
+    private createSpendOutputs(amount: bigint): UTXO[] {
+        const maxInputDenomination = this.getMaxInputDenomination();
+
+        // Denominate the amount using available denominations up to the max input denomination
+        const spendDenominations = denominate(amount, maxInputDenomination);
+
+        return spendDenominations.map((denominationValue) => {
             const utxo = new UTXO();
-            utxo.denomination = denominations.indexOf(denomination);
+            utxo.denomination = denominations.indexOf(denominationValue);
             return utxo;
         });
     }
 
+    /**
+     * Creates change outputs based on the change amount and input denominations.
+     *
+     * @param {bigint} change - The change amount to return.
+     * @param {UTXO[]} inputs - The selected inputs.
+     * @returns {UTXO[]} The change outputs.
+     */
     private createChangeOutputs(change: bigint): UTXO[] {
         if (change <= BigInt(0)) {
             return [];
         }
 
-        const maxDenomination = this.getMaxInputDenomination();
+        const maxInputDenomination = this.getMaxInputDenomination();
 
-        const changeDenominations = denominate(change, maxDenomination);
-        return changeDenominations.map((denomination) => {
+        // Denominate the change amount using available denominations up to the max input denomination
+        const changeDenominations = denominate(change, maxInputDenomination);
+
+        return changeDenominations.map((denominationValue) => {
             const utxo = new UTXO();
-            utxo.denomination = denominations.indexOf(denomination);
+            utxo.denomination = denominations.indexOf(denominationValue);
             return utxo;
         });
+    }
+
+    /**
+     * Calculates the total value of outputs (spend + change).
+     *
+     * @returns {bigint} The total output value.
+     */
+    private calculateTotalOutputValue(): bigint {
+        const spendValue = this.spendOutputs.reduce(
+            (sum, output) => sum + BigInt(denominations[output.denomination!]),
+            BigInt(0),
+        );
+
+        const changeValue = this.changeOutputs.reduce(
+            (sum, output) => sum + BigInt(denominations[output.denomination!]),
+            BigInt(0),
+        );
+
+        return spendValue + changeValue;
+    }
+
+    /**
+     * Gets the maximum denomination value from the selected UTXOs.
+     *
+     * @returns {bigint} The maximum input denomination value.
+     */
+    private getMaxInputDenomination(): bigint {
+        const inputs = [...this.selectedUTXOs];
+        return this.getMaxDenomination(inputs);
+    }
+
+    /**
+     * Gets the maximum denomination value from the spend and change outputs.
+     *
+     * @returns {bigint} The maximum output denomination value.
+     */
+    private getMaxOutputDenomination(): bigint {
+        const outputs = [...this.spendOutputs, ...this.changeOutputs];
+        return this.getMaxDenomination(outputs);
+    }
+
+    /**
+     * Gets the maximum denomination value from a list of UTXOs.
+     *
+     * @param {UTXO[]} utxos - The list of UTXOs.
+     * @returns {bigint} The maximum denomination value.
+     */
+    private getMaxDenomination(utxos: UTXO[]): bigint {
+        return utxos.reduce((max, utxo) => {
+            const denomValue = BigInt(denominations[utxo.denomination!]);
+            return denomValue > max ? denomValue : max;
+        }, BigInt(0));
     }
 
     /**
@@ -200,10 +259,7 @@ export class FewestCoinSelector extends AbstractCoinSelector {
             if (remainingFee <= BigInt(0)) {
                 // If we have excess, create a new change output
                 if (remainingFee < BigInt(0)) {
-                    const change =
-                        BigInt(this.totalInputValue) -
-                        BigInt(this.target!) -
-                        (BigInt(additionalFeeNeeded) - BigInt(remainingFee));
+                    const change = BigInt(this.totalInputValue) - BigInt(this.target!) - BigInt(additionalFeeNeeded);
                     this.adjustChangeOutputs(change);
                 }
             }
@@ -253,13 +309,6 @@ export class FewestCoinSelector extends AbstractCoinSelector {
             spendOutputs: this.spendOutputs,
             changeOutputs: this.changeOutputs,
         };
-    }
-
-    private getMaxInputDenomination(): bigint {
-        return this.selectedUTXOs.reduce((max, utxo) => {
-            const denomValue = BigInt(denominations[utxo.denomination!]);
-            return denomValue > max ? denomValue : max;
-        }, BigInt(0));
     }
 
     /**
