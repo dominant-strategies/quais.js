@@ -572,11 +572,9 @@ export class QiHDWallet extends AbstractHDWallet {
 
             if (isSpent) {
                 // Outpoint has been spent; remove it from pendingOutpoints
-                console.log('Outpoint has been spent; removing from pendingOutpoints');
                 this.removeOutpointFromPending(outpointInfo.outpoint);
             } else {
                 // Outpoint is still unspent; move it back to available outpoints
-                console.log('Outpoint is still unspent; moving back to available outpoints');
                 this.moveOutpointToAvailable(outpointInfo);
             }
         }
