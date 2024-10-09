@@ -389,7 +389,15 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             to: this.to != null ? getBytes(this.to as string) : null,
             value: formatNumber(this.value || 0, 'value'),
             data: getBytes(this.data || '0x'),
-            access_list: { access_tuples: [] },
+            access_list: {
+                access_tuples:
+                    this.accessList?.map((it) => {
+                        return {
+                            address: getBytes(it.address),
+                            storage_key: it.storageKeys.map((key) => getBytes(key)),
+                        };
+                    }) || [],
+            },
         };
 
         if (this.signature && includeSignature) {
