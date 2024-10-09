@@ -15,7 +15,13 @@ import {
     zeroPadValue,
 } from '../utils/index.js';
 import { decodeProtoTransaction, encodeProtoTransaction } from '../encoding/index.js';
-import { getAddress, recoverAddress, validateAddress, isQuaiAddress } from '../address/index.js';
+import {
+    formatMixedCaseChecksumAddress,
+    getAddress,
+    recoverAddress,
+    validateAddress,
+    isQuaiAddress,
+} from '../address/index.js';
 import { formatNumber, handleNumber } from '../providers/format.js';
 import { ProtoTransaction } from './abstract-transaction.js';
 import { Zone } from '../constants/index.js';
@@ -394,7 +400,9 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
                     this.accessList?.map((it) => {
                         return {
                             address: getBytes(it.address),
-                            storage_key: it.storageKeys.map((key) => getBytes(key)),
+                            storage_key: it.storageKeys.map((key) => {
+                                return { value: getBytes(key) };
+                            }),
                         };
                     }) || [],
             },
@@ -523,8 +531,8 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         tx.value = protoTx.value !== null ? toBigInt(protoTx.value!) : BigInt(0);
         tx.data = hexlify(protoTx.data!);
         tx.accessList = protoTx.access_list!.access_tuples.map((tuple) => ({
-            address: hexlify(tuple.address),
-            storageKeys: tuple.storage_key.map((key) => hexlify(key)),
+            address: formatMixedCaseChecksumAddress(hexlify(tuple.address)),
+            storageKeys: tuple.storage_key.map((key) => hexlify(key.value)),
         }));
         return tx;
     }

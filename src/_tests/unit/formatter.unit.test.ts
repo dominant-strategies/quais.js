@@ -67,7 +67,7 @@ describe('Transaction Receipt Formatter', () => {
         assert.equal(formattedReceipt.to, inZoneTxReceipt.to);
         assert.equal(formattedReceipt.blockHash, inZoneTxReceipt.blockHash);
         assert.equal(formattedReceipt.hash, inZoneTxReceipt.transactionHash);
-        assert.ok(formattedReceipt.outboundEtxs);
+        assert.strictEqual(formattedReceipt.outboundEtxs, null);
     });
 
     it('should correctly format a cross-zone transaction receipt', () => {
