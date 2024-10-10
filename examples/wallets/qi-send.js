@@ -26,6 +26,7 @@ async function main() {
 
     // Initialize Alice's wallet
     console.log('Initializing Alice wallet...');
+    console.log('Scanning Cyprus1 zone...', quais.Zone.Cyprus1);
     await aliceQiWallet.scan(quais.Zone.Cyprus1);
     console.log('Alice wallet scan complete');
 
