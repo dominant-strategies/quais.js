@@ -59,11 +59,15 @@ message ProtoTransaction {
   optional bytes r = 12;
   optional bytes s = 13;
   optional common.ProtoHash originating_tx_hash = 14;
-  optional ProtoTxIns tx_ins = 15;
-  optional ProtoTxOuts tx_outs = 16;
-  optional bytes signature = 17;
-  optional common.ProtoHash parent_hash = 18;
-  optional common.ProtoHash mix_hash = 19;
+  optional uint32 etx_index = 15;
+  optional ProtoTxIns tx_ins = 16;
+  optional ProtoTxOuts tx_outs = 17;
+  optional bytes signature = 18;
+  optional bytes etx_sender = 19;
+  optional common.ProtoHash parent_hash = 20;
+  optional common.ProtoHash mix_hash = 21;
+  optional uint64 work_nonce = 22;
+  optional uint64 etx_type = 23;
 }
 
 message ProtoTransactions { repeated ProtoTransaction transactions = 1; }

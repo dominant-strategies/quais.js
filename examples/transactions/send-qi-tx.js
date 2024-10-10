@@ -6,7 +6,9 @@ async function main() {
     const provider = new quais.JsonRpcProvider(process.env.RPC_URL);
 
     // Create wallet and connect to provider
+    console.log(process.env.RPC_URL)
     const mnemonic = quais.Mnemonic.fromPhrase(process.env.MNEMONIC);
+    console.log(mnemonic)
     const qiWallet = quais.QiHDWallet.fromMnemonic(mnemonic);
     qiWallet.connect(provider);
 
@@ -54,7 +56,9 @@ async function main() {
     txObj.txOutputs = txOutputs;
 
     // Sign and send the tx
+    console.log('\nSending Qi Tx...')
     const tx = await qiWallet.sendTransaction(txObj);
+    console.log('\nTx:', tx)
 
     // Wait for tx to be mined
     const txReceipt = await tx.wait();

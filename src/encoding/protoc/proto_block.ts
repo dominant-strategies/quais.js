@@ -1456,6 +1456,10 @@ export namespace block {
             [17],
             [18],
             [19],
+            [20],
+            [21],
+            [22],
+            [23],
         ];
         constructor(
             data?:
@@ -1504,6 +1508,9 @@ export namespace block {
                             originating_tx_hash?: dependency_1.common.ProtoHash;
                         }
                       | {
+                            etx_index?: number;
+                        }
+                      | {
                             tx_ins?: ProtoTxIns;
                         }
                       | {
@@ -1513,10 +1520,19 @@ export namespace block {
                             signature?: Uint8Array;
                         }
                       | {
+                            etx_sender?: Uint8Array;
+                        }
+                      | {
                             parent_hash?: dependency_1.common.ProtoHash;
                         }
                       | {
                             mix_hash?: dependency_1.common.ProtoHash;
+                        }
+                      | {
+                            work_nonce?: number;
+                        }
+                      | {
+                            etx_type?: number;
                         }
                   )),
         ) {
@@ -1565,6 +1581,9 @@ export namespace block {
                 if ('originating_tx_hash' in data && data.originating_tx_hash != undefined) {
                     this.originating_tx_hash = data.originating_tx_hash;
                 }
+                if ('etx_index' in data && data.etx_index != undefined) {
+                    this.etx_index = data.etx_index;
+                }
                 if ('tx_ins' in data && data.tx_ins != undefined) {
                     this.tx_ins = data.tx_ins;
                 }
@@ -1574,11 +1593,20 @@ export namespace block {
                 if ('signature' in data && data.signature != undefined) {
                     this.signature = data.signature;
                 }
+                if ('etx_sender' in data && data.etx_sender != undefined) {
+                    this.etx_sender = data.etx_sender;
+                }
                 if ('parent_hash' in data && data.parent_hash != undefined) {
                     this.parent_hash = data.parent_hash;
                 }
                 if ('mix_hash' in data && data.mix_hash != undefined) {
                     this.mix_hash = data.mix_hash;
+                }
+                if ('work_nonce' in data && data.work_nonce != undefined) {
+                    this.work_nonce = data.work_nonce;
+                }
+                if ('etx_type' in data && data.etx_type != undefined) {
+                    this.etx_type = data.etx_type;
                 }
             }
         }
@@ -1712,58 +1740,94 @@ export namespace block {
         get has_originating_tx_hash() {
             return pb_1.Message.getField(this, 14) != null;
         }
-        get tx_ins() {
-            return pb_1.Message.getWrapperField(this, ProtoTxIns, 15) as ProtoTxIns;
+        get etx_index() {
+            return pb_1.Message.getFieldWithDefault(this, 15, 0) as number;
         }
-        set tx_ins(value: ProtoTxIns) {
-            pb_1.Message.setOneofWrapperField(this, 15, this.#one_of_decls[14], value);
+        set etx_index(value: number) {
+            pb_1.Message.setOneofField(this, 15, this.#one_of_decls[14], value);
         }
-        get has_tx_ins() {
+        get has_etx_index() {
             return pb_1.Message.getField(this, 15) != null;
         }
-        get tx_outs() {
-            return pb_1.Message.getWrapperField(this, ProtoTxOuts, 16) as ProtoTxOuts;
+        get tx_ins() {
+            return pb_1.Message.getWrapperField(this, ProtoTxIns, 16) as ProtoTxIns;
         }
-        set tx_outs(value: ProtoTxOuts) {
+        set tx_ins(value: ProtoTxIns) {
             pb_1.Message.setOneofWrapperField(this, 16, this.#one_of_decls[15], value);
         }
-        get has_tx_outs() {
+        get has_tx_ins() {
             return pb_1.Message.getField(this, 16) != null;
         }
+        get tx_outs() {
+            return pb_1.Message.getWrapperField(this, ProtoTxOuts, 17) as ProtoTxOuts;
+        }
+        set tx_outs(value: ProtoTxOuts) {
+            pb_1.Message.setOneofWrapperField(this, 17, this.#one_of_decls[16], value);
+        }
+        get has_tx_outs() {
+            return pb_1.Message.getField(this, 17) != null;
+        }
         get signature() {
-            return pb_1.Message.getFieldWithDefault(this, 17, new Uint8Array(0)) as Uint8Array;
+            return pb_1.Message.getFieldWithDefault(this, 18, new Uint8Array(0)) as Uint8Array;
         }
         set signature(value: Uint8Array) {
-            pb_1.Message.setOneofField(this, 17, this.#one_of_decls[16], value);
+            pb_1.Message.setOneofField(this, 18, this.#one_of_decls[17], value);
         }
         get has_signature() {
-            return pb_1.Message.getField(this, 17) != null;
+            return pb_1.Message.getField(this, 18) != null;
+        }
+        get etx_sender() {
+            return pb_1.Message.getFieldWithDefault(this, 19, new Uint8Array(0)) as Uint8Array;
+        }
+        set etx_sender(value: Uint8Array) {
+            pb_1.Message.setOneofField(this, 19, this.#one_of_decls[18], value);
+        }
+        get has_etx_sender() {
+            return pb_1.Message.getField(this, 19) != null;
         }
         get parent_hash() {
             return pb_1.Message.getWrapperField(
                 this,
                 dependency_1.common.ProtoHash,
-                18,
+                20,
             ) as dependency_1.common.ProtoHash;
         }
         set parent_hash(value: dependency_1.common.ProtoHash) {
-            pb_1.Message.setOneofWrapperField(this, 18, this.#one_of_decls[17], value);
+            pb_1.Message.setOneofWrapperField(this, 20, this.#one_of_decls[19], value);
         }
         get has_parent_hash() {
-            return pb_1.Message.getField(this, 18) != null;
+            return pb_1.Message.getField(this, 20) != null;
         }
         get mix_hash() {
             return pb_1.Message.getWrapperField(
                 this,
                 dependency_1.common.ProtoHash,
-                19,
+                21,
             ) as dependency_1.common.ProtoHash;
         }
         set mix_hash(value: dependency_1.common.ProtoHash) {
-            pb_1.Message.setOneofWrapperField(this, 19, this.#one_of_decls[18], value);
+            pb_1.Message.setOneofWrapperField(this, 21, this.#one_of_decls[20], value);
         }
         get has_mix_hash() {
-            return pb_1.Message.getField(this, 19) != null;
+            return pb_1.Message.getField(this, 21) != null;
+        }
+        get work_nonce() {
+            return pb_1.Message.getFieldWithDefault(this, 22, 0) as number;
+        }
+        set work_nonce(value: number) {
+            pb_1.Message.setOneofField(this, 22, this.#one_of_decls[21], value);
+        }
+        get has_work_nonce() {
+            return pb_1.Message.getField(this, 22) != null;
+        }
+        get etx_type() {
+            return pb_1.Message.getFieldWithDefault(this, 23, 0) as number;
+        }
+        set etx_type(value: number) {
+            pb_1.Message.setOneofField(this, 23, this.#one_of_decls[22], value);
+        }
+        get has_etx_type() {
+            return pb_1.Message.getField(this, 23) != null;
         }
         get _type() {
             const cases: {
@@ -1891,50 +1955,86 @@ export namespace block {
             };
             return cases[pb_1.Message.computeOneofCase(this, [14])];
         }
+        get _etx_index() {
+            const cases: {
+                [index: number]: 'none' | 'etx_index';
+            } = {
+                0: 'none',
+                15: 'etx_index',
+            };
+            return cases[pb_1.Message.computeOneofCase(this, [15])];
+        }
         get _tx_ins() {
             const cases: {
                 [index: number]: 'none' | 'tx_ins';
             } = {
                 0: 'none',
-                15: 'tx_ins',
+                16: 'tx_ins',
             };
-            return cases[pb_1.Message.computeOneofCase(this, [15])];
+            return cases[pb_1.Message.computeOneofCase(this, [16])];
         }
         get _tx_outs() {
             const cases: {
                 [index: number]: 'none' | 'tx_outs';
             } = {
                 0: 'none',
-                16: 'tx_outs',
+                17: 'tx_outs',
             };
-            return cases[pb_1.Message.computeOneofCase(this, [16])];
+            return cases[pb_1.Message.computeOneofCase(this, [17])];
         }
         get _signature() {
             const cases: {
                 [index: number]: 'none' | 'signature';
             } = {
                 0: 'none',
-                17: 'signature',
+                18: 'signature',
             };
-            return cases[pb_1.Message.computeOneofCase(this, [17])];
+            return cases[pb_1.Message.computeOneofCase(this, [18])];
+        }
+        get _etx_sender() {
+            const cases: {
+                [index: number]: 'none' | 'etx_sender';
+            } = {
+                0: 'none',
+                19: 'etx_sender',
+            };
+            return cases[pb_1.Message.computeOneofCase(this, [19])];
         }
         get _parent_hash() {
             const cases: {
                 [index: number]: 'none' | 'parent_hash';
             } = {
                 0: 'none',
-                18: 'parent_hash',
+                20: 'parent_hash',
             };
-            return cases[pb_1.Message.computeOneofCase(this, [18])];
+            return cases[pb_1.Message.computeOneofCase(this, [20])];
         }
         get _mix_hash() {
             const cases: {
                 [index: number]: 'none' | 'mix_hash';
             } = {
                 0: 'none',
-                19: 'mix_hash',
+                21: 'mix_hash',
             };
-            return cases[pb_1.Message.computeOneofCase(this, [19])];
+            return cases[pb_1.Message.computeOneofCase(this, [21])];
+        }
+        get _work_nonce() {
+            const cases: {
+                [index: number]: 'none' | 'work_nonce';
+            } = {
+                0: 'none',
+                22: 'work_nonce',
+            };
+            return cases[pb_1.Message.computeOneofCase(this, [22])];
+        }
+        get _etx_type() {
+            const cases: {
+                [index: number]: 'none' | 'etx_type';
+            } = {
+                0: 'none',
+                23: 'etx_type',
+            };
+            return cases[pb_1.Message.computeOneofCase(this, [23])];
         }
         static fromObject(data: {
             type?: number;
@@ -1951,11 +2051,15 @@ export namespace block {
             r?: Uint8Array;
             s?: Uint8Array;
             originating_tx_hash?: ReturnType<typeof dependency_1.common.ProtoHash.prototype.toObject>;
+            etx_index?: number;
             tx_ins?: ReturnType<typeof ProtoTxIns.prototype.toObject>;
             tx_outs?: ReturnType<typeof ProtoTxOuts.prototype.toObject>;
             signature?: Uint8Array;
+            etx_sender?: Uint8Array;
             parent_hash?: ReturnType<typeof dependency_1.common.ProtoHash.prototype.toObject>;
             mix_hash?: ReturnType<typeof dependency_1.common.ProtoHash.prototype.toObject>;
+            work_nonce?: number;
+            etx_type?: number;
         }): ProtoTransaction {
             const message = new ProtoTransaction({});
             if (data.type != null) {
@@ -2000,6 +2104,9 @@ export namespace block {
             if (data.originating_tx_hash != null) {
                 message.originating_tx_hash = dependency_1.common.ProtoHash.fromObject(data.originating_tx_hash);
             }
+            if (data.etx_index != null) {
+                message.etx_index = data.etx_index;
+            }
             if (data.tx_ins != null) {
                 message.tx_ins = ProtoTxIns.fromObject(data.tx_ins);
             }
@@ -2009,11 +2116,20 @@ export namespace block {
             if (data.signature != null) {
                 message.signature = data.signature;
             }
+            if (data.etx_sender != null) {
+                message.etx_sender = data.etx_sender;
+            }
             if (data.parent_hash != null) {
                 message.parent_hash = dependency_1.common.ProtoHash.fromObject(data.parent_hash);
             }
             if (data.mix_hash != null) {
                 message.mix_hash = dependency_1.common.ProtoHash.fromObject(data.mix_hash);
+            }
+            if (data.work_nonce != null) {
+                message.work_nonce = data.work_nonce;
+            }
+            if (data.etx_type != null) {
+                message.etx_type = data.etx_type;
             }
             return message;
         }
@@ -2033,11 +2149,15 @@ export namespace block {
                 r?: Uint8Array;
                 s?: Uint8Array;
                 originating_tx_hash?: ReturnType<typeof dependency_1.common.ProtoHash.prototype.toObject>;
+                etx_index?: number;
                 tx_ins?: ReturnType<typeof ProtoTxIns.prototype.toObject>;
                 tx_outs?: ReturnType<typeof ProtoTxOuts.prototype.toObject>;
                 signature?: Uint8Array;
+                etx_sender?: Uint8Array;
                 parent_hash?: ReturnType<typeof dependency_1.common.ProtoHash.prototype.toObject>;
                 mix_hash?: ReturnType<typeof dependency_1.common.ProtoHash.prototype.toObject>;
+                work_nonce?: number;
+                etx_type?: number;
             } = {};
             if (this.type != null) {
                 data.type = this.type;
@@ -2081,6 +2201,9 @@ export namespace block {
             if (this.originating_tx_hash != null) {
                 data.originating_tx_hash = this.originating_tx_hash.toObject();
             }
+            if (this.etx_index != null) {
+                data.etx_index = this.etx_index;
+            }
             if (this.tx_ins != null) {
                 data.tx_ins = this.tx_ins.toObject();
             }
@@ -2090,11 +2213,20 @@ export namespace block {
             if (this.signature != null) {
                 data.signature = this.signature;
             }
+            if (this.etx_sender != null) {
+                data.etx_sender = this.etx_sender;
+            }
             if (this.parent_hash != null) {
                 data.parent_hash = this.parent_hash.toObject();
             }
             if (this.mix_hash != null) {
                 data.mix_hash = this.mix_hash.toObject();
+            }
+            if (this.work_nonce != null) {
+                data.work_nonce = this.work_nonce;
+            }
+            if (this.etx_type != null) {
+                data.etx_type = this.etx_type;
             }
             return data;
         }
@@ -2118,12 +2250,16 @@ export namespace block {
             if (this.has_s) writer.writeBytes(13, this.s);
             if (this.has_originating_tx_hash)
                 writer.writeMessage(14, this.originating_tx_hash, () => this.originating_tx_hash.serialize(writer));
-            if (this.has_tx_ins) writer.writeMessage(15, this.tx_ins, () => this.tx_ins.serialize(writer));
-            if (this.has_tx_outs) writer.writeMessage(16, this.tx_outs, () => this.tx_outs.serialize(writer));
-            if (this.has_signature) writer.writeBytes(17, this.signature);
+            if (this.has_etx_index) writer.writeUint32(15, this.etx_index);
+            if (this.has_tx_ins) writer.writeMessage(16, this.tx_ins, () => this.tx_ins.serialize(writer));
+            if (this.has_tx_outs) writer.writeMessage(17, this.tx_outs, () => this.tx_outs.serialize(writer));
+            if (this.has_signature) writer.writeBytes(18, this.signature);
+            if (this.has_etx_sender) writer.writeBytes(19, this.etx_sender);
             if (this.has_parent_hash)
-                writer.writeMessage(18, this.parent_hash, () => this.parent_hash.serialize(writer));
-            if (this.has_mix_hash) writer.writeMessage(19, this.mix_hash, () => this.mix_hash.serialize(writer));
+                writer.writeMessage(20, this.parent_hash, () => this.parent_hash.serialize(writer));
+            if (this.has_mix_hash) writer.writeMessage(21, this.mix_hash, () => this.mix_hash.serialize(writer));
+            if (this.has_work_nonce) writer.writeUint64(22, this.work_nonce);
+            if (this.has_etx_type) writer.writeUint64(23, this.etx_type);
             if (!w) return writer.getResultBuffer();
         }
         static deserialize(bytes: Uint8Array | pb_1.BinaryReader): ProtoTransaction {
@@ -2181,25 +2317,37 @@ export namespace block {
                         );
                         break;
                     case 15:
-                        reader.readMessage(message.tx_ins, () => (message.tx_ins = ProtoTxIns.deserialize(reader)));
+                        message.etx_index = reader.readUint32();
                         break;
                     case 16:
-                        reader.readMessage(message.tx_outs, () => (message.tx_outs = ProtoTxOuts.deserialize(reader)));
+                        reader.readMessage(message.tx_ins, () => (message.tx_ins = ProtoTxIns.deserialize(reader)));
                         break;
                     case 17:
-                        message.signature = reader.readBytes();
+                        reader.readMessage(message.tx_outs, () => (message.tx_outs = ProtoTxOuts.deserialize(reader)));
                         break;
                     case 18:
+                        message.signature = reader.readBytes();
+                        break;
+                    case 19:
+                        message.etx_sender = reader.readBytes();
+                        break;
+                    case 20:
                         reader.readMessage(
                             message.parent_hash,
                             () => (message.parent_hash = dependency_1.common.ProtoHash.deserialize(reader)),
                         );
                         break;
-                    case 19:
+                    case 21:
                         reader.readMessage(
                             message.mix_hash,
                             () => (message.mix_hash = dependency_1.common.ProtoHash.deserialize(reader)),
                         );
+                        break;
+                    case 22:
+                        message.work_nonce = reader.readUint64();
+                        break;
+                    case 23:
+                        message.etx_type = reader.readUint64();
                         break;
                     default:
                         reader.skipField();
