@@ -29240,9 +29240,42 @@ class AbstractProvider {
      * @returns {Promise<number>} A promise that resolves to the protocol expansion number.
      */
     async getProtocolExpansionNumber() {
-        return await this.#perform({
-            method: 'getProtocolExpansionNumber',
-        });
+        return getNumber(await this.#perform({ method: 'getProtocolExpansionNumber' }));
+    }
+    /**
+     * Get the active region shards based on the protocol expansion number.
+     *
+     * @returns {Promise<Shard[]>} A promise that resolves to the active shards.
+     */
+    async getActiveRegions() {
+        const protocolExpansionNumber = await this.getProtocolExpansionNumber();
+        const shards = [Shard.Cyprus];
+        if (protocolExpansionNumber >= 1) {
+            shards.push(Shard.Paxos);
+        }
+        if (protocolExpansionNumber >= 3) {
+            shards.push(Shard.Hydra);
+        }
+        return shards.sort((a, b) => a.localeCompare(b));
+    }
+    /**
+     * Get the active zones for a shard based on the protocol expansion number.
+     *
+     * @returns {Promise<Zone[]>} A promise that resolves to the active zones.
+     */
+    async getActiveZones() {
+        const protocolExpansionNumber = await this.getProtocolExpansionNumber();
+        const zones = [Zone.Cyprus1];
+        if (protocolExpansionNumber >= 1) {
+            zones.push(Zone.Cyprus2);
+        }
+        if (protocolExpansionNumber >= 2) {
+            zones.push(Zone.Paxos1, Zone.Paxos2);
+        }
+        if (protocolExpansionNumber >= 3) {
+            zones.push(Zone.Cyprus3, Zone.Paxos3, Zone.Hydra1, Zone.Hydra2, Zone.Hydra3);
+        }
+        return zones.sort((a, b) => a.localeCompare(b));
     }
     /**
      * Get the latest Qi rate for a zone.

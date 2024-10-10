@@ -29262,9 +29262,42 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {Promise<number>} A promise that resolves to the protocol expansion number.
          */
         async getProtocolExpansionNumber() {
-            return await this.#perform({
-                method: 'getProtocolExpansionNumber',
-            });
+            return getNumber(await this.#perform({ method: 'getProtocolExpansionNumber' }));
+        }
+        /**
+         * Get the active region shards based on the protocol expansion number.
+         *
+         * @returns {Promise<Shard[]>} A promise that resolves to the active shards.
+         */
+        async getActiveRegions() {
+            const protocolExpansionNumber = await this.getProtocolExpansionNumber();
+            const shards = [exports.Shard.Cyprus];
+            if (protocolExpansionNumber >= 1) {
+                shards.push(exports.Shard.Paxos);
+            }
+            if (protocolExpansionNumber >= 3) {
+                shards.push(exports.Shard.Hydra);
+            }
+            return shards.sort((a, b) => a.localeCompare(b));
+        }
+        /**
+         * Get the active zones for a shard based on the protocol expansion number.
+         *
+         * @returns {Promise<Zone[]>} A promise that resolves to the active zones.
+         */
+        async getActiveZones() {
+            const protocolExpansionNumber = await this.getProtocolExpansionNumber();
+            const zones = [exports.Zone.Cyprus1];
+            if (protocolExpansionNumber >= 1) {
+                zones.push(exports.Zone.Cyprus2);
+            }
+            if (protocolExpansionNumber >= 2) {
+                zones.push(exports.Zone.Paxos1, exports.Zone.Paxos2);
+            }
+            if (protocolExpansionNumber >= 3) {
+                zones.push(exports.Zone.Cyprus3, exports.Zone.Paxos3, exports.Zone.Hydra1, exports.Zone.Hydra2, exports.Zone.Hydra3);
+            }
+            return zones.sort((a, b) => a.localeCompare(b));
         }
         /**
          * Get the latest Qi rate for a zone.
