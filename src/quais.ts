@@ -176,6 +176,8 @@ export {
     // strings
     formatQuai,
     parseQuai,
+    formatQi,
+    parseQi,
     formatUnits,
     parseUnits,
     uuidV4,
