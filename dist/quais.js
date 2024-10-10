@@ -7164,6 +7164,16 @@ function formatQuai(wei) {
     return formatUnits(wei, 18);
 }
 /**
+ * Converts `value` into a decimal string using 3 decimal places.
+ *
+ * @category Utils
+ * @param {BigNumberish} value - The value to convert.
+ * @returns {string} The converted value.
+ */
+function formatQi(value) {
+    return formatUnits(value, 3);
+}
+/**
  * Converts the decimal string `quai` to a BigInt, using 18 decimal places.
  *
  * @category Utils
@@ -7172,6 +7182,16 @@ function formatQuai(wei) {
  */
 function parseQuai(ether) {
     return parseUnits(ether, 18);
+}
+/**
+ * Converts `value` into a decimal string using 3 decimal places.
+ *
+ * @category Utils
+ * @param {string} value - The value to convert.
+ * @returns {bigint} The converted value.
+ */
+function parseQi(value) {
+    return parseUnits(value, 3);
 }
 
 /**
@@ -33043,6 +33063,7 @@ var quais = /*#__PURE__*/Object.freeze({
     ethHashMessage: ethHashMessage,
     ethVerifyMessage: ethVerifyMessage,
     formatMixedCaseChecksumAddress: formatMixedCaseChecksumAddress,
+    formatQi: formatQi,
     formatQuai: formatQuai,
     formatUnits: formatUnits,
     fromTwos: fromTwos,
@@ -33074,6 +33095,7 @@ var quais = /*#__PURE__*/Object.freeze({
     makeError: makeError,
     mask: mask,
     musigCrypto: musigCrypto,
+    parseQi: parseQi,
     parseQuai: parseQuai,
     parseUnits: parseUnits,
     pbkdf2: pbkdf2,
@@ -33111,5 +33133,5 @@ var quais = /*#__PURE__*/Object.freeze({
     zeroPadValue: zeroPadValue
 });
 
-export { AbiCoder, AbstractProvider, AbstractSigner, BaseContract, Block, BrowserProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, ErrorDescription, ErrorFragment, EventFragment, EventLog, EventPayload, FallbackFragment, FeeData, FetchCancelSignal, FetchRequest, FetchResponse, FewestCoinSelector, FixedNumber, Fragment, FunctionFragment, Indexed, Interface, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, LangEs, Ledger, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, N$1 as N, NamedFragment, Network, ParamType, QiHDWallet, QiTransaction, QuaiHDWallet, QuaiTransaction, Result, Shard, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, TransactionDescription, TransactionReceipt, Typed, TypedDataEncoder, UTXO, UndecodedEventLog, UnmanagedSubscriber, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, Zone, accessListify, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32, decryptKeystoreJson, decryptKeystoreJsonSync, denominations, encodeBase58, encodeBase64, encodeBytes32, encryptKeystoreJson, encryptKeystoreJsonSync, ethHashMessage, ethVerifyMessage, formatMixedCaseChecksumAddress, formatQuai, formatUnits, fromTwos, getAddress, getAddressDetails, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getNumber, getTxType, getUint, getZoneForAddress, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isError, isHexString, isKeystoreJson, isQiAddress, isQuaiAddress, keccak256, lock, makeError, mask, musigCrypto, parseQuai, parseUnits, pbkdf2, quais, quaisymbol, randomBytes, recoverAddress, resolveAddress, ripemd160, scrypt, scryptSync, sha256, sha512, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toShard, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, toZone, uuidV4, validateAddress, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
+export { AbiCoder, AbstractProvider, AbstractSigner, BaseContract, Block, BrowserProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, ErrorDescription, ErrorFragment, EventFragment, EventLog, EventPayload, FallbackFragment, FeeData, FetchCancelSignal, FetchRequest, FetchResponse, FewestCoinSelector, FixedNumber, Fragment, FunctionFragment, Indexed, Interface, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, LangEs, Ledger, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, N$1 as N, NamedFragment, Network, ParamType, QiHDWallet, QiTransaction, QuaiHDWallet, QuaiTransaction, Result, Shard, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, TransactionDescription, TransactionReceipt, Typed, TypedDataEncoder, UTXO, UndecodedEventLog, UnmanagedSubscriber, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, Zone, accessListify, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32, decryptKeystoreJson, decryptKeystoreJsonSync, denominations, encodeBase58, encodeBase64, encodeBytes32, encryptKeystoreJson, encryptKeystoreJsonSync, ethHashMessage, ethVerifyMessage, formatMixedCaseChecksumAddress, formatQi, formatQuai, formatUnits, fromTwos, getAddress, getAddressDetails, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getNumber, getTxType, getUint, getZoneForAddress, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isError, isHexString, isKeystoreJson, isQiAddress, isQuaiAddress, keccak256, lock, makeError, mask, musigCrypto, parseQi, parseQuai, parseUnits, pbkdf2, quais, quaisymbol, randomBytes, recoverAddress, resolveAddress, ripemd160, scrypt, scryptSync, sha256, sha512, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toShard, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, toZone, uuidV4, validateAddress, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
 //# sourceMappingURL=quais.js.map

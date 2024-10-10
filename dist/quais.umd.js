@@ -7186,6 +7186,16 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         return formatUnits(wei, 18);
     }
     /**
+     * Converts `value` into a decimal string using 3 decimal places.
+     *
+     * @category Utils
+     * @param {BigNumberish} value - The value to convert.
+     * @returns {string} The converted value.
+     */
+    function formatQi(value) {
+        return formatUnits(value, 3);
+    }
+    /**
      * Converts the decimal string `quai` to a BigInt, using 18 decimal places.
      *
      * @category Utils
@@ -7194,6 +7204,16 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      */
     function parseQuai(ether) {
         return parseUnits(ether, 18);
+    }
+    /**
+     * Converts `value` into a decimal string using 3 decimal places.
+     *
+     * @category Utils
+     * @param {string} value - The value to convert.
+     * @returns {bigint} The converted value.
+     */
+    function parseQi(value) {
+        return parseUnits(value, 3);
     }
 
     /**
@@ -33065,6 +33085,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         ethHashMessage: ethHashMessage,
         ethVerifyMessage: ethVerifyMessage,
         formatMixedCaseChecksumAddress: formatMixedCaseChecksumAddress,
+        formatQi: formatQi,
         formatQuai: formatQuai,
         formatUnits: formatUnits,
         fromTwos: fromTwos,
@@ -33096,6 +33117,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         makeError: makeError,
         mask: mask,
         musigCrypto: musigCrypto,
+        parseQi: parseQi,
         parseQuai: parseQuai,
         parseUnits: parseUnits,
         pbkdf2: pbkdf2,
@@ -33229,6 +33251,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     exports.ethHashMessage = ethHashMessage;
     exports.ethVerifyMessage = ethVerifyMessage;
     exports.formatMixedCaseChecksumAddress = formatMixedCaseChecksumAddress;
+    exports.formatQi = formatQi;
     exports.formatQuai = formatQuai;
     exports.formatUnits = formatUnits;
     exports.fromTwos = fromTwos;
@@ -33260,6 +33283,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     exports.makeError = makeError;
     exports.mask = mask;
     exports.musigCrypto = musigCrypto;
+    exports.parseQi = parseQi;
     exports.parseQuai = parseQuai;
     exports.parseUnits = parseUnits;
     exports.pbkdf2 = pbkdf2;
