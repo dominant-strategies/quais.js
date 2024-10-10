@@ -474,8 +474,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const feeData = await this.provider.getFeeData(originZone, false);
 
         // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, maxFeePerGas and maxPriorityFeePerGas
-        const totalFee =
-            gasLimit * (feeData.gasPrice ?? 1n) + (feeData.maxFeePerGas ?? 0n) + (feeData.maxPriorityFeePerGas ?? 0n);
+        const totalFee = gasLimit * (feeData.gasPrice ?? 1n) + gasLimit * (feeData.minerTip ?? 0n);
 
         // Get new selection with fee
         selection = fewestCoinSelector.performSelection(spendTarget, totalFee);
