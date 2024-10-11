@@ -119,6 +119,10 @@ export interface ProtoTransaction {
      */
     etx_sender?: Uint8Array | null;
 
+    work_nonce?: number | null;
+
+    etx_type?: number | null;
+
     /**
      * The transaction inputs.
      */

@@ -494,6 +494,8 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         let address: string = '';
         delete protoTx.etx_sender;
         delete protoTx.etx_index;
+        delete protoTx.work_nonce;
+        delete protoTx.etx_type;
         const protoTxCopy = structuredClone(protoTx);
 
         if (protoTx.v && protoTx.r && protoTx.s) {
