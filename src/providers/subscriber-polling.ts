@@ -34,6 +34,11 @@ export function getPollingSubscriber(provider: AbstractProvider, event: Provider
         return new PollingTransactionSubscriber(provider, event, zone);
     }
 
+    if (event === 'qiTransaction') {
+        assert(hash != null, "hash is required for 'qiTransaction' event", 'MISSING_ARGUMENT');
+        return new QiPollingTransactionSubscriber(provider, hash, zone);
+    }
+
     assert(false, 'unsupported polling event', 'UNSUPPORTED_OPERATION', {
         operation: 'getPollingSubscriber',
         info: { event },
@@ -317,6 +322,24 @@ export class PollingTransactionSubscriber extends OnBlockSubscriber {
         const tx = await provider.getTransactionReceipt(this.#hash);
         if (tx) {
             provider.emit(this.#hash, toZone(this.#hash.slice(0, 4)), tx);
+        }
+    }
+}
+
+export class QiPollingTransactionSubscriber extends OnBlockSubscriber {
+    #hash: string;
+    #zone: Zone;
+
+    constructor(provider: AbstractProvider, hash: string, zone: Zone) {
+        super(provider, zone);
+        this.#hash = hash;
+        this.#zone = zone;
+    }
+
+    async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
+        const tx = await provider.getTransaction(this.#hash, this.#zone);
+        if (tx) {
+            provider.emit(this.#hash, this.#zone, tx);
         }
     }
 }

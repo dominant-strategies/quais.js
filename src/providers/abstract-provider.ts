@@ -77,6 +77,7 @@ import {
     PollingEventSubscriber,
     PollingOrphanSubscriber,
     PollingTransactionSubscriber,
+    QiPollingTransactionSubscriber,
 } from './subscriber-polling.js';
 import { getNodeLocationFromZone, getZoneFromNodeLocation } from '../utils/shards.js';
 import { fromShard } from '../constants/shards.js';
@@ -1055,7 +1056,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                 // For QiTransaction, use fromProto() directly
                 return new QiTransactionResponse(tx, this);
             } else {
-                throw new Error('Unknown transaction type');
+                throw new Error(`Unknown transaction type: ${tx.type}`);
             }
         } catch (error) {
             console.error('Error in _wrapTransactionResponse:', error);
@@ -1889,6 +1890,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                 return new PollingEventSubscriber(this as AbstractProvider, sub.filter);
             case 'transaction':
                 return new PollingTransactionSubscriber(this as AbstractProvider, sub.hash, sub.zone);
+            case 'qiTransaction':
+                return new QiPollingTransactionSubscriber(this as AbstractProvider, sub.hash, sub.zone);
             case 'orphan':
                 return new PollingOrphanSubscriber(this as AbstractProvider, sub.filter, sub.zone);
         }
