@@ -18984,10 +18984,10 @@ function accessListify(value) {
         return value.map((set, index) => {
             if (Array.isArray(set)) {
                 assertArgument(set.length === 2, 'invalid slot set', `value[${index}]`, set);
-                return accessSetify(set[0], set[1]);
+                return accessSetify(formatMixedCaseChecksumAddress(set[0]), set[1]);
             }
             assertArgument(set != null && typeof set === 'object', 'invalid address-slot set', 'value', value);
-            return accessSetify(set.address, set.storageKeys);
+            return accessSetify(formatMixedCaseChecksumAddress(set.address), set.storageKeys);
         });
     }
     assertArgument(value != null && typeof value === 'object', 'invalid access list', 'value', value);
@@ -24181,10 +24181,7 @@ class AbstractSigner {
                 pop.accessList = tx.accessList;
             }
             else {
-                pop.accessList = (await this.createAccessList(tx))?.map((it) => {
-                    it.address = formatMixedCaseChecksumAddress(it.address);
-                    return it;
-                });
+                pop.accessList = await this.createAccessList(tx);
             }
         }
         //@TOOD: Don't await all over the place; save them up for
@@ -30510,12 +30507,12 @@ class AbstractProvider {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _wrapTransactionResponse(tx, network) {
         try {
-            if (tx.type === 0 || tx.type === 1) {
+            if (tx.type === '0x0' || tx.type === '0x1' || tx.type === 0 || tx.type === 1) {
                 // For QuaiTransaction, format and wrap as before
                 const formattedTx = formatTransactionResponse(tx);
                 return new QuaiTransactionResponse(formattedTx, this);
             }
-            else if (tx.type === 2) {
+            else if (tx.type === '0x2' || tx.type === 2) {
                 // For QiTransaction, use fromProto() directly
                 return new QiTransactionResponse(tx, this);
             }
@@ -33071,10 +33068,7 @@ class ContractFactory {
             tx.from = this.runner.address;
         }
         const grindedTx = await this.grindContractAddress(tx);
-        grindedTx.accessList = (await this.runner.createAccessList?.(grindedTx))?.map((it) => {
-            it.address = formatMixedCaseChecksumAddress(it.address);
-            return it;
-        });
+        grindedTx.accessList = await this.runner.createAccessList?.(grindedTx);
         const sentTx = await this.runner.sendTransaction(grindedTx);
         const address = getStatic(this.constructor, 'getContractAddress')?.(tx);
         return new BaseContract(address, this.interface, this.runner, sentTx);

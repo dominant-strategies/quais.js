@@ -1,5 +1,5 @@
 import { validateAddress } from '../address/index.js';
-import { getAddress } from '../address/index.js';
+import { getAddress, formatMixedCaseChecksumAddress } from '../address/index.js';
 import { assertArgument, isHexString } from '../utils/index.js';
 
 import type { AccessList, AccessListish } from './index.js';
@@ -36,10 +36,10 @@ export function accessListify(value: AccessListish): AccessList {
             (set, index) => {
                 if (Array.isArray(set)) {
                     assertArgument(set.length === 2, 'invalid slot set', `value[${index}]`, set);
-                    return accessSetify(set[0], set[1]);
+                    return accessSetify(formatMixedCaseChecksumAddress(set[0]), set[1]);
                 }
                 assertArgument(set != null && typeof set === 'object', 'invalid address-slot set', 'value', value);
-                return accessSetify(set.address, set.storageKeys);
+                return accessSetify(formatMixedCaseChecksumAddress(set.address), set.storageKeys);
             },
         );
     }
