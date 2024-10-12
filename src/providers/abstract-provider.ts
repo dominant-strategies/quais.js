@@ -1051,11 +1051,11 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _wrapTransactionResponse(tx: any, network: Network): TransactionResponse {
         try {
-            if (tx.type === 0 || tx.type === 1) {
+            if (tx.type === '0x0' || tx.type === '0x1' || tx.type === 0 || tx.type === 1) {
                 // For QuaiTransaction, format and wrap as before
                 const formattedTx = formatTransactionResponse(tx) as QuaiTransactionResponseParams;
                 return new QuaiTransactionResponse(formattedTx, this);
-            } else if (tx.type === 2) {
+            } else if (tx.type === '0x2' || tx.type === 2) {
                 // For QiTransaction, use fromProto() directly
                 return new QiTransactionResponse(tx, this);
             } else {
