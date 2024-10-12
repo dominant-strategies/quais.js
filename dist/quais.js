@@ -8,7 +8,7 @@ import ecc from '@bitcoinerlab/secp256k1';
  *
  * @ignore
  */
-const version = '1.0.0-alpha.5';
+const version = '1.0.0-alpha.16';
 
 /**
  * Property helper functions.
