@@ -20933,7 +20933,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @category Providers
      */
     class BlockHeader {
-        gasPrice;
+        baseFeePerGas;
         efficiencyScore;
         etxEligibleSlices;
         etxSetRoot;
@@ -20967,7 +20967,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         qiToQuai;
         secondaryCoinbase;
         constructor(params) {
-            this.gasPrice = params.gasPrice;
+            this.baseFeePerGas = params.baseFeePerGas;
             this.efficiencyScore = params.efficiencyScore;
             this.etxEligibleSlices = params.etxEligibleSlices;
             this.etxSetRoot = params.etxSetRoot;
@@ -27501,12 +27501,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @returns {string} - The Base58 representation of PaymentCode.
          */
-        async toBase58() {
+        toBase58() {
             const version = new Uint8Array([PC_VERSION]);
             const buf = new Uint8Array(version.length + this.buf.length);
             buf.set(version);
             buf.set(this.buf, version.length);
-            // const { bs58check } = await import('@samouraiwallet/bip32/crypto');
             return bs58check.encode(buf);
         }
         /**
@@ -28562,7 +28561,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const feeData = await this.provider.getFeeData(originZone, false);
             // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, maxFeePerGas and maxPriorityFeePerGas
             const totalFee = gasLimit * (feeData.gasPrice ?? 1n) + gasLimit * (feeData.minerTip ?? 0n);
-            console.log('Total fee:', totalFee);
             // Get new selection with fee
             selection = fewestCoinSelector.performSelection(spendTarget, totalFee);
             // 5.7 Determine if new addresses are needed for the change outputs
@@ -29150,15 +29148,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 wallet._usedGapChangeAddresses.push(usedGapChangeAddressInfo);
             }
+            // validate and import the payment code info
+            wallet.validateAndImportPaymentCodeInfo(serialized.receiverPaymentCodeInfo, 'receiver');
+            wallet.validateAndImportPaymentCodeInfo(serialized.senderPaymentCodeInfo, 'sender');
             // validate the available outpoints and import them
             wallet.validateOutpointInfo(serialized.outpoints);
             wallet._availableOutpoints.push(...serialized.outpoints);
             // validate the pending outpoints and import them
             wallet.validateOutpointInfo(serialized.pendingOutpoints);
             wallet._pendingOutpoints.push(...serialized.pendingOutpoints);
-            // validate and import the payment code info
-            wallet.validateAndImportPaymentCodeInfo(serialized.receiverPaymentCodeInfo, 'receiver');
-            wallet.validateAndImportPaymentCodeInfo(serialized.senderPaymentCodeInfo, 'sender');
             return wallet;
         }
         /**
@@ -29245,8 +29243,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {number} account - The account index to derive the payment code from.
          * @returns {Promise<string>} A promise that resolves to the Base58-encoded BIP47 payment code.
          */
-        async getPaymentCode(account = 0) {
-            const privatePcode = await this._getPaymentCodePrivate(account);
+        getPaymentCode(account = 0) {
+            const privatePcode = this._getPaymentCodePrivate(account);
             return privatePcode.toBase58();
         }
         // helper method to get a bip32 API instance
@@ -30481,10 +30479,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         // @todo `network` is not used, remove or re-write
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         _wrapBlock(value, network) {
-            // Handle known node by -> remove null values from the number array
-            value.header.number = Array.isArray(value.header.number)
-                ? value.header.number.filter((n) => n != null)
-                : value.header.number;
             return new Block(formatBlock(value), this);
         }
         /**
