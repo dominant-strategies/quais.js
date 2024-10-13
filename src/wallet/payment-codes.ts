@@ -79,13 +79,12 @@ export class PaymentCodePublic {
      *
      * @returns {string} - The Base58 representation of PaymentCode.
      */
-    async toBase58(): Promise<string> {
+    toBase58(): string {
         const version = new Uint8Array([PC_VERSION]);
         const buf = new Uint8Array(version.length + this.buf.length);
 
         buf.set(version);
         buf.set(this.buf, version.length);
-        // const { bs58check } = await import('@samouraiwallet/bip32/crypto');
         return bs58check.encode(buf);
     }
 

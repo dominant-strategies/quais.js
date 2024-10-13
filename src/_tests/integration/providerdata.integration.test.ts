@@ -211,7 +211,7 @@ describe.skip('Test Provider Block operations', function () {
             outboundEtxs: rpcBlock.outboundEtxs,
             hash: rpcBlock.hash,
             header: {
-                gasPrice: BigInt(rpcBlock.header.gasPrice),
+                baseFeePerGas: BigInt(rpcBlock.header.baseFeePerGas),
                 efficiencyScore: BigInt(rpcBlock.header.efficiencyScore),
                 etxEligibleSlices: rpcBlock.header.etxEligibleSlices,
                 etxSetRoot: rpcBlock.header.etxSetRoot,

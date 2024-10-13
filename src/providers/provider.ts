@@ -460,7 +460,7 @@ export interface MinedBlock extends Block {}
  * @category Providers
  */
 export class BlockHeader implements BlockHeaderParams {
-    readonly gasPrice!: null | bigint;
+    readonly baseFeePerGas!: null | bigint;
     readonly efficiencyScore: bigint;
     readonly etxEligibleSlices: string;
     readonly etxSetRoot: string;
@@ -495,7 +495,7 @@ export class BlockHeader implements BlockHeaderParams {
     readonly secondaryCoinbase!: string;
 
     constructor(params: BlockHeaderParams) {
-        this.gasPrice = params.gasPrice;
+        this.baseFeePerGas = params.baseFeePerGas;
         this.efficiencyScore = params.efficiencyScore;
         this.etxEligibleSlices = params.etxEligibleSlices;
         this.etxSetRoot = params.etxSetRoot;

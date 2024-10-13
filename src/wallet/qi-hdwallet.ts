@@ -1163,6 +1163,10 @@ export class QiHDWallet extends AbstractHDWallet {
             wallet._usedGapChangeAddresses.push(usedGapChangeAddressInfo);
         }
 
+        // validate and import the payment code info
+        wallet.validateAndImportPaymentCodeInfo(serialized.receiverPaymentCodeInfo, 'receiver');
+        wallet.validateAndImportPaymentCodeInfo(serialized.senderPaymentCodeInfo, 'sender');
+
         // validate the available outpoints and import them
         wallet.validateOutpointInfo(serialized.outpoints);
         wallet._availableOutpoints.push(...serialized.outpoints);
@@ -1170,10 +1174,6 @@ export class QiHDWallet extends AbstractHDWallet {
         // validate the pending outpoints and import them
         wallet.validateOutpointInfo(serialized.pendingOutpoints);
         wallet._pendingOutpoints.push(...serialized.pendingOutpoints);
-
-        // validate and import the payment code info
-        wallet.validateAndImportPaymentCodeInfo(serialized.receiverPaymentCodeInfo, 'receiver');
-        wallet.validateAndImportPaymentCodeInfo(serialized.senderPaymentCodeInfo, 'sender');
 
         return wallet;
     }
@@ -1272,8 +1272,8 @@ export class QiHDWallet extends AbstractHDWallet {
      * @param {number} account - The account index to derive the payment code from.
      * @returns {Promise<string>} A promise that resolves to the Base58-encoded BIP47 payment code.
      */
-    public async getPaymentCode(account: number = 0): Promise<string> {
-        const privatePcode = await this._getPaymentCodePrivate(account);
+    public getPaymentCode(account: number = 0): string {
+        const privatePcode = this._getPaymentCodePrivate(account);
         return privatePcode.toBase58();
     }
 
