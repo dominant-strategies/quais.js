@@ -24,7 +24,7 @@ export interface BlockParams {
 }
 
 export interface BlockHeaderParams {
-    gasPrice: null | bigint;
+    baseFeePerGas: null | bigint;
     efficiencyScore: bigint;
     etxEligibleSlices: string;
     etxSetRoot: string;

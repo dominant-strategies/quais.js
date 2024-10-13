@@ -1000,10 +1000,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     // @todo `network` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _wrapBlock(value: BlockParams, network: Network): Block {
-        // Handle known node by -> remove null values from the number array
-        value.header.number = Array.isArray(value.header.number)
-            ? value.header.number.filter((n: any) => n != null)
-            : value.header.number;
         return new Block(formatBlock(value), this);
     }
 
