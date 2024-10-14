@@ -7,8 +7,8 @@ import {
 } from './hdwallet.js';
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
-import { computeAddress } from '../address/index.js';
-import { getBytes, hexlify } from '../utils/index.js';
+import { computeAddress, isQiAddress } from '../address/index.js';
+import { getBytes, getZoneForAddress, hexlify } from '../utils/index.js';
 import { TransactionLike, QiTransaction, TxInput, FewestCoinSelector } from '../transaction/index.js';
 import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
@@ -390,29 +390,13 @@ export class QiHDWallet extends AbstractHDWallet {
             });
     }
 
-    /**
-     * Sends a transaction using the traditional method (compatible with AbstractHDWallet).
-     *
-     * @param tx The transaction request.
-     */
-    public async sendTransaction(
-        recipientPaymentCode: string,
+    private async prepareAndSendTransaction(
         amount: bigint,
         originZone: Zone,
-        destinationZone: Zone,
+        getDestinationAddresses: (count: number) => Promise<string[]>,
     ): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
-        }
-        // This is the new method call (recipientPaymentCode, amount, originZone, destinationZone)
-        if (!validatePaymentCode(recipientPaymentCode)) {
-            throw new Error('Invalid payment code');
-        }
-        if (amount <= 0) {
-            throw new Error('Amount must be greater than 0');
-        }
-        if (!Object.values(Zone).includes(originZone) || !Object.values(Zone).includes(destinationZone)) {
-            throw new Error('Invalid zone');
         }
 
         // 1. Check the wallet has enough balance in the originating zone to send the transaction
@@ -429,33 +413,26 @@ export class QiHDWallet extends AbstractHDWallet {
         let selection = fewestCoinSelector.performSelection(spendTarget);
 
         // 3. Generate as many unused addresses as required to populate the spend outputs
-        const sendAddresses: string[] = [];
-        while (sendAddresses.length < selection.spendOutputs.length) {
-            const address = this.getNextSendAddress(recipientPaymentCode, destinationZone).address;
-            const { isUsed } = await this.checkAddressUse(address);
-            if (!isUsed) {
-                sendAddresses.push(address);
-            }
-        }
+        const sendAddresses = await getDestinationAddresses(selection.spendOutputs.length);
 
-        // 4. get known change addresses, then populate with new ones as needed
-        const changeAddresses: string[] = [];
-        for (let i = 0; i < selection.changeOutputs.length; i++) {
-            if (this._gapChangeAddresses.length > 0) {
-                // 1. get next change address from gap addresses array
-                // 2. remove it from the gap change addresses array
-                // 3. add it to the change addresses array
-                // 4. add it to the used gap change addresses array
-                const nextChangeAddressInfo = this._gapChangeAddresses.shift()!;
-                changeAddresses.push(nextChangeAddressInfo!.address);
-                this._usedGapChangeAddresses.push(nextChangeAddressInfo);
-            } else {
-                changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
+        const getChangeAddresses = async (count: number): Promise<string[]> => {
+            const addresses: string[] = [];
+            for (let i = 0; i < count; i++) {
+                if (this._gapChangeAddresses.length > 0) {
+                    const nextChangeAddressInfo = this._gapChangeAddresses.shift()!;
+                    addresses.push(nextChangeAddressInfo.address);
+                    this._usedGapChangeAddresses.push(nextChangeAddressInfo);
+                } else {
+                    addresses.push((await this.getNextChangeAddress(0, originZone)).address);
+                }
             }
-        }
+            return addresses;
+        };
+
+        // 4. Get change addresses
+        let changeAddresses = await getChangeAddresses(selection.changeOutputs.length);
+
         // 5. Create the transaction and sign it using the signTransaction method
-
-        // 5.1 Fetch the public keys for the input addresses
         let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
         if (inputPubKeys.some((pubkey) => !pubkey)) {
             throw new Error('Missing public key for input address');
@@ -473,25 +450,22 @@ export class QiHDWallet extends AbstractHDWallet {
         const gasLimit = await this.provider.estimateGas(tx);
         const feeData = await this.provider.getFeeData(originZone, false);
 
-        // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, maxFeePerGas and maxPriorityFeePerGas
+        // Calculate total fee for the transaction
         const totalFee = gasLimit * (feeData.gasPrice ?? 1n) + gasLimit * (feeData.minerTip ?? 0n);
 
         // Get new selection with fee
         selection = fewestCoinSelector.performSelection(spendTarget, totalFee);
 
-        // 5.7 Determine if new addresses are needed for the change outputs
+        // Determine if new addresses are needed for the change and spend outputs
         const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
         if (changeAddressesNeeded > 0) {
-            for (let i = 0; i < changeAddressesNeeded; i++) {
-                changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
-            }
+            changeAddresses = await getChangeAddresses(changeAddressesNeeded);
         }
 
         const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
         if (spendAddressesNeeded > 0) {
-            for (let i = 0; i < spendAddressesNeeded; i++) {
-                sendAddresses.push(this.getNextSendAddress(recipientPaymentCode, destinationZone).address);
-            }
+            const newSendAddresses = await getDestinationAddresses(spendAddressesNeeded);
+            sendAddresses.push(...newSendAddresses);
         }
 
         inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
@@ -507,11 +481,80 @@ export class QiHDWallet extends AbstractHDWallet {
         // Move used outpoints to pendingOutpoints
         this.moveOutpointsToPending(tx.txInputs);
 
-        // 5.6 Sign the transaction
+        // Sign the transaction
         const signedTx = await this.signTransaction(tx);
 
-        // 6. Broadcast the transaction to the network using the provider
+        // Broadcast the transaction to the network using the provider
         return this.provider.broadcastTransaction(originZone, signedTx);
+    }
+
+    /**
+     * Converts an amount of Qi to Quai and sends it to a specified Quai address.
+     *
+     * @param {string} destinationAddress - The Quai address to send the converted Quai to.
+     * @param {bigint} amount - The amount of Qi to convert to Quai.
+     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+     * @throws {Error} If the destination address is invalid, the amount is zero, or the conversion fails.
+     */
+    public async convertToQuai(destinationAddress: string, amount: bigint): Promise<TransactionResponse> {
+        const zone = getZoneForAddress(destinationAddress);
+        if (!zone) {
+            throw new Error(`Invalid zone for Quai address: ${destinationAddress}`);
+        }
+
+        if (isQiAddress(destinationAddress)) {
+            throw new Error(`Invalid Quai address: ${destinationAddress}`);
+        }
+
+        if (amount <= 0) {
+            throw new Error('Amount must be greater than 0');
+        }
+
+        const getDestinationAddresses = async (count: number): Promise<string[]> => {
+            return Array(count).fill(destinationAddress);
+        };
+
+        return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses);
+    }
+
+    /**
+     * Sends a transaction to a specified recipient payment code in a specified zone.
+     *
+     * @param {string} recipientPaymentCode - The payment code of the recipient.
+     * @param {bigint} amount - The amount of Qi to send.
+     * @param {Zone} originZone - The zone where the transaction originates.
+     * @param {Zone} destinationZone - The zone where the transaction is sent.
+     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+     * @throws {Error} If the payment code is invalid, the amount is zero, or the zones are invalid.
+     */
+    public async sendTransaction(
+        recipientPaymentCode: string,
+        amount: bigint,
+        originZone: Zone,
+        destinationZone: Zone,
+    ): Promise<TransactionResponse> {
+        if (!validatePaymentCode(recipientPaymentCode)) {
+            throw new Error('Invalid payment code');
+        }
+        if (amount <= 0) {
+            throw new Error('Amount must be greater than 0');
+        }
+        this.validateZone(originZone);
+        this.validateZone(destinationZone);
+
+        const getDestinationAddresses = async (count: number): Promise<string[]> => {
+            const addresses: string[] = [];
+            while (addresses.length < count) {
+                const address = this.getNextSendAddress(recipientPaymentCode, destinationZone).address;
+                const { isUsed } = await this.checkAddressUse(address);
+                if (!isUsed) {
+                    addresses.push(address);
+                }
+            }
+            return addresses;
+        };
+
+        return this.prepareAndSendTransaction(amount, originZone, getDestinationAddresses);
     }
 
     private async prepareTransaction(
