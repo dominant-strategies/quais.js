@@ -8,7 +8,7 @@ import type {
     TransactionResponse,
     TransactionRequest,
 } from '../providers/index.js';
-import { AccessList } from '../transaction';
+import { AccessList } from '../transaction/index.js';
 
 /**
  * The name for an event used for subscribing to Contract events.

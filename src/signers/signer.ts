@@ -4,7 +4,7 @@ import type { TransactionLike } from '../transaction/index.js';
 
 import type { ContractRunner } from '../contract/index.js';
 import type { BlockTag, Provider, TransactionRequest, TransactionResponse } from '../providers/provider.js';
-import { AccessList } from '../transaction';
+import { AccessList } from '../transaction/index.js';
 
 /**
  * A Signer represents an account on the Ethereum Blockchain, and is most often backed by a private key represented by a
@@ -72,8 +72,7 @@ export interface Signer extends Addressable, ContractRunner {
      * - Populates `nonce` via `signer.getNonce("pending")`
      * - Populates `gasLimit` via `signer.estimateGas(tx)`
      * - Populates `chainId` via `signer.provider.getNetwork()`
-     * - Populates `type` and relevant fee data for that type (`gasPrice` for legacy transactions, `maxFeePerGas` for
-     *   EIP-1559, etc)
+     * - Populates `type` and relevant fee data for that type (`gasPrice`, `minerTip`, etc)
      *
      * @param {TransactionRequest} tx - The transaction to prepare.
      * @returns {Promise<TransactionLike>} A promise resolving to the prepared transaction.
