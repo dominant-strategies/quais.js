@@ -197,14 +197,12 @@ export interface QuaiTransactionRequest {
     gasLimit?: null | BigNumberish;
 
     /**
-     * The gas price to use for legacy transactions or transactions on legacy networks.
-     *
-     * Most of the time the `max*FeePerGas` is preferred.
+     * The gas price to use for the transaction.
      */
     gasPrice?: null | BigNumberish;
 
     /**
-     * The [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) maximum priority fee to pay per gas.
+     * The tip to paid directly to the miner of the transaction.
      */
     minerTip?: null | BigNumberish;
 
@@ -310,14 +308,12 @@ export interface QuaiPreparedTransactionRequest {
     gasLimit?: bigint;
 
     /**
-     * The gas price to use for legacy transactions or transactions on legacy networks.
-     *
-     * Most of the time the `max*FeePerGas` is preferred.
+     * The gas price to use for the transaction.
      */
     gasPrice?: bigint;
 
     /**
-     * The [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) maximum priority fee to pay per gas.
+     * The fee paid directly to the miner of the transaction.
      */
     minerTip?: bigint;
 

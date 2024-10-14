@@ -1,4 +1,3 @@
-//import { TypedDataDomain, TypedDataField } from "@quaisproject/providerabstract-signer";
 import { getAddress } from '../address/index.js';
 import { keccak256 } from '../crypto/index.js';
 import { recoverAddress } from '../address/index.js';
