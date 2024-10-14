@@ -451,7 +451,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const gasLimit = await this.provider.estimateGas(tx);
         const feeData = await this.provider.getFeeData(originZone, false);
 
-        // Calculate total fee for the transaction
+        // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, and minerTip
         const totalFee = gasLimit * (feeData.gasPrice ?? 1n) + gasLimit * (feeData.minerTip ?? 0n);
 
         // Get new selection with fee
