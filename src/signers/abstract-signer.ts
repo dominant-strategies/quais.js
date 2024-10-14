@@ -14,7 +14,7 @@ import type { Signer } from './signer.js';
 import { getTxType } from '../utils/index.js';
 import { QuaiTransaction, QuaiTransactionLike } from '../transaction/index.js';
 import { toZone, Zone } from '../constants/index.js';
-import { AccessList } from '../transaction';
+import { AccessList } from '../transaction/index.js';
 
 function checkProvider(signer: AbstractSigner, operation: string): Provider {
     if (signer.provider) {
