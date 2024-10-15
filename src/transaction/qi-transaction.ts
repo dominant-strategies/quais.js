@@ -121,7 +121,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
 
         const prevTxHash = this.txInputs[0].txhash;
         const prevTxHashBytes = getBytes(prevTxHash);
-        const origin = prevTxHashBytes[1]; // Get the second byte (0-based index)
+        const origin = prevTxHashBytes[2]; // Get the third byte (0-based index)
         hashBuffer[0] = origin;
         hashBuffer[1] |= 0x80;
         hashBuffer[2] = origin;
