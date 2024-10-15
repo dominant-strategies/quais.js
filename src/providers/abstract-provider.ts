@@ -77,7 +77,7 @@ import {
     PollingEventSubscriber,
     PollingOrphanSubscriber,
     PollingTransactionSubscriber,
-    QiPollingTransactionSubscriber,
+    PollingQiTransactionSubscriber,
 } from './subscriber-polling.js';
 import { getNodeLocationFromZone, getZoneFromNodeLocation } from '../utils/shards.js';
 import { fromShard } from '../constants/shards.js';
@@ -156,6 +156,12 @@ export type Subscription =
       }
     | {
           type: 'transaction';
+          tag: string;
+          hash: string;
+          zone: Zone;
+      }
+    | {
+          type: 'qiTransaction';
           tag: string;
           hash: string;
           zone: Zone;
@@ -312,9 +318,16 @@ async function getSubscription(_event: ProviderEvent, zone?: Zone): Promise<Subs
     }
 
     if (isHexString(_event, 32)) {
+        const eventBytes = getBytes(_event);
+        const ninthBit = (eventBytes[1] & 0x01) === 0x01;
+
         const hash = _event.toLowerCase();
         zone = toZone(hash.slice(0, 4));
-        return { type: 'transaction', tag: getTag('tx', { hash }), hash, zone };
+        if (ninthBit) {
+            return { type: 'qiTransaction', tag: getTag('Tx', { hash }), hash, zone };
+        } else {
+            return { type: 'transaction', tag: getTag('tx', { hash }), hash, zone };
+        }
     }
 
     if ((<any>_event).orphan) {
@@ -1891,7 +1904,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             case 'transaction':
                 return new PollingTransactionSubscriber(this as AbstractProvider, sub.hash, sub.zone);
             case 'qiTransaction':
-                return new QiPollingTransactionSubscriber(this as AbstractProvider, sub.hash, sub.zone);
+                return new PollingQiTransactionSubscriber(this as AbstractProvider, sub.hash, sub.zone);
             case 'orphan':
                 return new PollingOrphanSubscriber(this as AbstractProvider, sub.filter, sub.zone);
         }

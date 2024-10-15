@@ -1,6 +1,6 @@
 import { toZone, Zone } from '../constants/index.js';
 import { toShard } from '../constants/shards.js';
-import { assert, isHexString } from '../utils/index.js';
+import { assert, getBytes, isHexString } from '../utils/index.js';
 import { getZoneFromNodeLocation } from '../utils/shards.js';
 import { getZoneFromEventFilter, type EventFilter, type OrphanFilter, type ProviderEvent } from './provider.js';
 
@@ -31,12 +31,14 @@ export function getPollingSubscriber(provider: AbstractProvider, event: Provider
     }
 
     if (isHexString(event, 32)) {
-        return new PollingTransactionSubscriber(provider, event, zone);
-    }
+        const eventBytes = getBytes(event);
+        const ninthBit = (eventBytes[1] & 0x01) === 0x01;
 
-    if (event === 'qiTransaction') {
-        assert(hash != null, "hash is required for 'qiTransaction' event", 'MISSING_ARGUMENT');
-        return new QiPollingTransactionSubscriber(provider, hash, zone);
+        if (ninthBit) {
+            return new PollingQiTransactionSubscriber(provider, event, zone);
+        } else {
+            return new PollingTransactionSubscriber(provider, event, zone);
+        }
     }
 
     assert(false, 'unsupported polling event', 'UNSUPPORTED_OPERATION', {
@@ -326,20 +328,18 @@ export class PollingTransactionSubscriber extends OnBlockSubscriber {
     }
 }
 
-export class QiPollingTransactionSubscriber extends OnBlockSubscriber {
+export class PollingQiTransactionSubscriber extends OnBlockSubscriber {
     #hash: string;
-    #zone: Zone;
 
     constructor(provider: AbstractProvider, hash: string, zone: Zone) {
         super(provider, zone);
         this.#hash = hash;
-        this.#zone = zone;
     }
 
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
-        const tx = await provider.getTransaction(this.#hash, this.#zone);
-        if (tx) {
-            provider.emit(this.#hash, this.#zone, tx);
+        const tx = await provider.getTransaction(this.#hash);
+        if (tx && tx.isMined()) {
+            provider.emit(this.#hash, toZone(this.#hash.slice(0, 4)), tx);
         }
     }
 }

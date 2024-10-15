@@ -2416,54 +2416,20 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
         const confirms = _confirms == null ? 1 : _confirms;
         const timeout = _timeout == null ? 0 : _timeout;
 
-        const startBlock = this.startBlock;
-        let stopScanning = startBlock === -1 ? true : false;
+        const tx = await this.provider.getTransaction(this.hash);
 
-        const zoneFromInput = async (txInputs: Array<TxInput> | undefined): Promise<Zone> => {
-            if (!txInputs || txInputs.length === 0) {
-                throw new Error('No transaction inputs provided');
-            }
-
-            const firstInput = txInputs[0];
-            if (!firstInput.pubkey) {
-                throw new Error('Public key not found in the first transaction input');
-            }
-            const address = computeAddress(firstInput.pubkey);
-            const zone = getZoneForAddress(address);
-            if (!zone) {
-                throw new Error(`Invalid zone for address: ${address}`);
-            }
-            return zone;
-        };
-
-        const zone = await zoneFromInput(this.txInputs);
-
-        const response = await this.provider.getTransaction(this.hash, zone);
-        if (response && response.isMined() && confirms === 0) {
-            return response as QiTransactionResponse;
-        }
-
-        if (response) {
-            if ((await response.confirmations()) >= confirms) {
-                return response as QiTransactionResponse;
-            }
-        } else {
-            // Allow null only when the confirms is 0
-            if (confirms === 0) {
-                return null;
-            }
+        if (confirms === 0 && tx) {
+            return tx as QiTransactionResponse;
         }
 
         const waiter = new Promise((resolve, reject) => {
+            // List of things to cancel when we have a result (one way or the other)
             const cancellers: Array<() => void> = [];
             const cancel = () => {
                 cancellers.forEach((c) => c());
             };
 
-            cancellers.push(() => {
-                stopScanning = true;
-            });
-
+            // Set up any timeout requested
             if (timeout > 0) {
                 const timer = setTimeout(() => {
                     cancel();
@@ -2474,38 +2440,21 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
                 });
             }
 
-            const txListener = async (response: QiTransactionResponse) => {
-                if ((await response.confirmations()) >= confirms) {
+            const txListener = async (tx: QiTransactionResponse) => {
+                // Done; return it!
+                if ((await tx.confirmations()) >= confirms) {
                     cancel();
-                    resolve(response);
+                    try {
+                        resolve(tx);
+                    } catch (error) {
+                        reject(error);
+                    }
                 }
             };
-
             cancellers.push(() => {
-                this.provider.off('qiTransaction', txListener, zone, this.hash);
+                this.provider.off(this.hash, txListener);
             });
-            this.provider.on('qiTransaction', txListener, zone, this.hash);
-
-            if (startBlock >= 0) {
-                const blockListener = async () => {
-                    const currentBlock = await this.provider.getBlockNumber(toShard(zone));
-                    if (currentBlock - startBlock >= confirms) {
-                        const response = await this.provider.getTransaction(this.hash, zone);
-                        if (response && response.isMined()) {
-                            cancel();
-                            resolve(response);
-                        }
-                    }
-
-                    if (!stopScanning) {
-                        this.provider.once('block', blockListener, zone);
-                    }
-                };
-                cancellers.push(() => {
-                    this.provider.off('block', blockListener, zone);
-                });
-                this.provider.once('block', blockListener, zone);
-            }
+            this.provider.on(this.hash, txListener);
         });
 
         return await (<Promise<QiTransactionResponse>>waiter);
