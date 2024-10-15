@@ -868,6 +868,10 @@ export class QiHDWallet extends AbstractHDWallet {
         // First, add all used gap addresses to the address map and import their outpoints
         for (const addressInfo of usedGapAddresses) {
             this._addAddress(addressMap, account, addressInfo.index, isChange);
+        }
+
+        // Scan outpoints for every address in the address map
+        for (const addressInfo of addressMap.values()) {
             const outpoints = await this.getOutpointsByAddress(addressInfo.address);
             if (outpoints.length > 0) {
                 this.importOutpoints(
