@@ -1432,7 +1432,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                 gasPrice: (async () => {
                     try {
                         const value = await this.#perform({ method: 'getGasPrice', txType, zone: zone });
-                        return getBigInt(value, '%response') * BigInt(Math.pow(10, txType ? 9 : 0));
+                        return getBigInt(value, '%response');
                     } catch (error) {
                         console.log(error);
                     }
@@ -1441,7 +1441,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                 minerTip: (async () => {
                     try {
                         const value = txType ? await this.#perform({ method: 'getMinerTip', zone: zone }) : 0;
-                        return getBigInt(value, '%response') * BigInt(Math.pow(10, txType ? 9 : 0));
+                        return getBigInt(value, '%response');
                         // eslint-disable-next-line no-empty
                     } catch (error) {}
                     return null;
