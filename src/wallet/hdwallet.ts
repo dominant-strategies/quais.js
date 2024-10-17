@@ -9,6 +9,8 @@ import { Zone } from '../constants/index.js';
 import { TransactionRequest, Provider } from '../providers/index.js';
 import { AllowedCoinType } from '../constants/index.js';
 
+export const HARDENED_OFFSET = 2 ** 31;
+
 /**
  * Interface representing information about a neutered address.
  */
@@ -123,7 +125,7 @@ export abstract class AbstractHDWallet {
         isChange: boolean = false,
     ): HDNodeWallet {
         const changeIndex = isChange ? 1 : 0;
-        const changeNode = this._root.deriveChild(account).deriveChild(changeIndex);
+        const changeNode = this._root.deriveChild(account + HARDENED_OFFSET).deriveChild(changeIndex);
 
         let addrIndex = startingIndex;
         let addressNode: HDNodeWallet;
@@ -177,7 +179,10 @@ export abstract class AbstractHDWallet {
 
         // derive the address node and validate the zone
         const changeIndex = isChange ? 1 : 0;
-        const addressNode = this._root.deriveChild(account).deriveChild(changeIndex).deriveChild(addressIndex);
+        const addressNode = this._root
+            .deriveChild(account + HARDENED_OFFSET)
+            .deriveChild(changeIndex)
+            .deriveChild(addressIndex);
         const zone = getZoneForAddress(addressNode.address);
         if (!zone) {
             throw new Error(`Failed to derive a valid address zone for the index ${addressIndex}`);
@@ -413,7 +418,10 @@ export abstract class AbstractHDWallet {
         }
 
         const changeIndex = addressInfo.change ? 1 : 0;
-        return this._root.deriveChild(addressInfo.account).deriveChild(changeIndex).deriveChild(addressInfo.index);
+        return this._root
+            .deriveChild(addressInfo.account + HARDENED_OFFSET)
+            .deriveChild(changeIndex)
+            .deriveChild(addressInfo.index);
     }
 
     /**
