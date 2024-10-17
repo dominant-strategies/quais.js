@@ -331,7 +331,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @param {string} address - The address to locate.
      * @returns {NeuteredAddressInfo | PaymentChannelAddressInfo | null} The address info or null if not found.
      */
-    private locateAddressInfo(address: string): NeuteredAddressInfo | PaymentChannelAddressExtendedInfo | null {
+    public locateAddressInfo(address: string): NeuteredAddressInfo | PaymentChannelAddressExtendedInfo | null {
         // First, try to get standard address info
         let addressInfo = this.getAddressInfo(address);
         if (addressInfo) {
