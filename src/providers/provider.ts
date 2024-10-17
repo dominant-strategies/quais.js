@@ -2981,4 +2981,36 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * @returns {Promise<txpoolInspectResponse>} A promise resolving to the transaction pool inspect.
      */
     txPoolInspect(zone: Zone): Promise<txpoolInspectResponse>;
+
+    /**
+     * Resolves to the current Quai rate for the given amount.
+     *
+     * @param {bigint} amt - The amount in quais to get the rate for.
+     * @returns {Promise<bigint>} A promise resolving to the latest Quai rate.
+     */
+    getQiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: bigint): Promise<bigint>;
+
+    /**
+     * Resolves to the current Quai rate for the given amount.
+     *
+     * @param {bigint} amt - The amount in quais to get the rate for.
+     * @returns {Promise<bigint>} A promise resolving to the latest Quai rate.
+     */
+    getLatestQiRate(zone: Zone, amt: bigint): Promise<bigint>;
+
+    /**
+     * Resolves to the current Quai rate for the given amount.
+     *
+     * @param {bigint} amt - The amount in quais to get the rate for.
+     * @returns {Promise<bigint>} A promise resolving to the latest Quai rate.
+     */
+    getQuaiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: bigint): Promise<bigint>;
+
+    /**
+     * Resolves to the current Quai rate for the given amount.
+     *
+     * @param {bigint} amt - The amount in quai to get the rate for.
+     * @returns {Promise<bigint>} A promise resolving to the latest Quai->Qi rate.
+     */
+    getLatestQuaiRate(zone: Zone, amt: bigint): Promise<bigint>;
 }
