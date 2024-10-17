@@ -4,6 +4,7 @@ import {
     SerializedHDWallet,
     _guard,
     MAX_ADDRESS_DERIVATION_ATTEMPTS,
+    HARDENED_OFFSET,
 } from './hdwallet.js';
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
@@ -705,7 +706,7 @@ export class QiHDWallet extends AbstractHDWallet {
             // NeuteredAddressInfo (BIP44 addresses)
             const changeIndex = addressInfo.change ? 1 : 0;
             const addressNode = this._root
-                .deriveChild(addressInfo.account)
+                .deriveChild(addressInfo.account + HARDENED_OFFSET)
                 .deriveChild(changeIndex)
                 .deriveChild(addressInfo.index);
             return addressNode.privateKey;
@@ -1297,7 +1298,7 @@ export class QiHDWallet extends AbstractHDWallet {
     private _getPaymentCodePrivate(account: number): PaymentCodePrivate {
         const bip32 = this._getBIP32API();
 
-        const accountNode = this._root.deriveChild(account);
+        const accountNode = this._root.deriveChild(account + HARDENED_OFFSET);
 
         // payment code array
         const pc = new Uint8Array(80);
