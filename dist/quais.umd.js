@@ -30,7 +30,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @ignore
      */
-    const version = '1.0.0-alpha.16';
+    const version = '1.0.0-alpha.18';
 
     /**
      * Property helper functions.
@@ -15850,7 +15850,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         return sha256(solidityPacked(types, values));
     }
 
-    //import { TypedDataDomain, TypedDataField } from "@quaisproject/providerabstract-signer";
     const padding = new Uint8Array(32);
     padding.fill(0);
     const BN__1 = BigInt(-1);
@@ -19222,13 +19221,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         BigInt(10),
         BigInt(50),
         BigInt(100),
-        BigInt(250),
         BigInt(500),
         BigInt(1000),
         BigInt(5000),
         BigInt(10000),
         BigInt(20000),
-        BigInt(50000),
         BigInt(100000),
         BigInt(1000000),
         BigInt(10000000),
@@ -20200,7 +20197,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const hashBuffer = Buffer.from(hashHex.substring(2), 'hex');
             const prevTxHash = this.txInputs[0].txhash;
             const prevTxHashBytes = getBytes(prevTxHash);
-            const origin = prevTxHashBytes[1]; // Get the second byte (0-based index)
+            const origin = prevTxHashBytes[2]; // Get the third byte (0-based index)
             hashBuffer[0] = origin;
             hashBuffer[1] |= 0x80;
             hashBuffer[2] = origin;
@@ -22565,6 +22562,48 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             const blockNumber = await this.provider.getBlockNumber(toShard(zone));
             return blockNumber - this.blockNumber + 1;
+        }
+        async wait(_confirms, _timeout) {
+            const confirms = _confirms == null ? 1 : _confirms;
+            const timeout = _timeout == null ? 0 : _timeout;
+            const tx = await this.provider.getTransaction(this.hash);
+            if (confirms === 0 && tx) {
+                return tx;
+            }
+            const waiter = new Promise((resolve, reject) => {
+                // List of things to cancel when we have a result (one way or the other)
+                const cancellers = [];
+                const cancel = () => {
+                    cancellers.forEach((c) => c());
+                };
+                // Set up any timeout requested
+                if (timeout > 0) {
+                    const timer = setTimeout(() => {
+                        cancel();
+                        reject(makeError('wait for transaction timeout', 'TIMEOUT'));
+                    }, timeout);
+                    cancellers.push(() => {
+                        clearTimeout(timer);
+                    });
+                }
+                const txListener = async (tx) => {
+                    // Done; return it!
+                    if ((await tx.confirmations()) >= confirms) {
+                        cancel();
+                        try {
+                            resolve(tx);
+                        }
+                        catch (error) {
+                            reject(error);
+                        }
+                    }
+                };
+                cancellers.push(() => {
+                    this.provider.off(this.hash, txListener);
+                });
+                this.provider.on(this.hash, txListener);
+            });
+            return await waiter;
         }
         /**
          * Returns `true` if this transaction has been included.
@@ -26172,6 +26211,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
     }
 
+    const HARDENED_OFFSET = 2 ** 31;
     /**
      * Constant to represent the maximum attempt to derive an address.
      */
@@ -26247,7 +26287,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         deriveNextAddressNode(account, startingIndex, zone, isChange = false) {
             const changeIndex = isChange ? 1 : 0;
-            const changeNode = this._root.deriveChild(account).deriveChild(changeIndex);
+            const changeNode = this._root.deriveChild(account + HARDENED_OFFSET).deriveChild(changeIndex);
             let addrIndex = startingIndex;
             let addressNode;
             for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
@@ -26288,7 +26328,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             });
             // derive the address node and validate the zone
             const changeIndex = isChange ? 1 : 0;
-            const addressNode = this._root.deriveChild(account).deriveChild(changeIndex).deriveChild(addressIndex);
+            const addressNode = this._root
+                .deriveChild(account + HARDENED_OFFSET)
+                .deriveChild(changeIndex)
+                .deriveChild(addressIndex);
             const zone = getZoneForAddress(addressNode.address);
             if (!zone) {
                 throw new Error(`Failed to derive a valid address zone for the index ${addressIndex}`);
@@ -26479,7 +26522,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 throw new Error(`Address ${addr} is not known to this wallet`);
             }
             const changeIndex = addressInfo.change ? 1 : 0;
-            return this._root.deriveChild(addressInfo.account).deriveChild(changeIndex).deriveChild(addressInfo.index);
+            return this._root
+                .deriveChild(addressInfo.account + HARDENED_OFFSET)
+                .deriveChild(changeIndex)
+                .deriveChild(addressInfo.index);
         }
         /**
          * Serializes the HD wallet state into a format suitable for storage or transmission.
@@ -28495,24 +28541,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 return utxo;
             });
         }
-        /**
-         * Sends a transaction using the traditional method (compatible with AbstractHDWallet).
-         *
-         * @param tx The transaction request.
-         */
-        async sendTransaction(recipientPaymentCode, amount, originZone, destinationZone) {
+        async prepareAndSendTransaction(amount, originZone, getDestinationAddresses) {
             if (!this.provider) {
                 throw new Error('Provider is not set');
-            }
-            // This is the new method call (recipientPaymentCode, amount, originZone, destinationZone)
-            if (!validatePaymentCode(recipientPaymentCode)) {
-                throw new Error('Invalid payment code');
-            }
-            if (amount <= 0) {
-                throw new Error('Amount must be greater than 0');
-            }
-            if (!Object.values(exports.Zone).includes(originZone) || !Object.values(exports.Zone).includes(destinationZone)) {
-                throw new Error('Invalid zone');
             }
             // 1. Check the wallet has enough balance in the originating zone to send the transaction
             const balance = this.getBalanceForZone(originZone);
@@ -28525,32 +28556,24 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const spendTarget = amount;
             let selection = fewestCoinSelector.performSelection(spendTarget);
             // 3. Generate as many unused addresses as required to populate the spend outputs
-            const sendAddresses = [];
-            while (sendAddresses.length < selection.spendOutputs.length) {
-                const address = this.getNextSendAddress(recipientPaymentCode, destinationZone).address;
-                const { isUsed } = await this.checkAddressUse(address);
-                if (!isUsed) {
-                    sendAddresses.push(address);
+            const sendAddresses = await getDestinationAddresses(selection.spendOutputs.length);
+            const getChangeAddresses = async (count) => {
+                const addresses = [];
+                for (let i = 0; i < count; i++) {
+                    if (this._gapChangeAddresses.length > 0) {
+                        const nextChangeAddressInfo = this._gapChangeAddresses.shift();
+                        addresses.push(nextChangeAddressInfo.address);
+                        this._usedGapChangeAddresses.push(nextChangeAddressInfo);
+                    }
+                    else {
+                        addresses.push((await this.getNextChangeAddress(0, originZone)).address);
+                    }
                 }
-            }
-            // 4. get known change addresses, then populate with new ones as needed
-            const changeAddresses = [];
-            for (let i = 0; i < selection.changeOutputs.length; i++) {
-                if (this._gapChangeAddresses.length > 0) {
-                    // 1. get next change address from gap addresses array
-                    // 2. remove it from the gap change addresses array
-                    // 3. add it to the change addresses array
-                    // 4. add it to the used gap change addresses array
-                    const nextChangeAddressInfo = this._gapChangeAddresses.shift();
-                    changeAddresses.push(nextChangeAddressInfo.address);
-                    this._usedGapChangeAddresses.push(nextChangeAddressInfo);
-                }
-                else {
-                    changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
-                }
-            }
+                return addresses;
+            };
+            // 4. Get change addresses
+            let changeAddresses = await getChangeAddresses(selection.changeOutputs.length);
             // 5. Create the transaction and sign it using the signTransaction method
-            // 5.1 Fetch the public keys for the input addresses
             let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
             if (inputPubKeys.some((pubkey) => !pubkey)) {
                 throw new Error('Missing public key for input address');
@@ -28558,32 +28581,88 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const chainId = (await this.provider.getNetwork()).chainId;
             let tx = await this.prepareTransaction(selection, inputPubKeys.map((pubkey) => pubkey), sendAddresses, changeAddresses, Number(chainId));
             const gasLimit = await this.provider.estimateGas(tx);
-            const feeData = await this.provider.getFeeData(originZone, false);
-            // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, maxFeePerGas and maxPriorityFeePerGas
-            const totalFee = gasLimit * (feeData.gasPrice ?? 1n) + gasLimit * (feeData.minerTip ?? 0n);
+            const gasPrice = denominations[1]; // 0.005 Qi
+            const minerTip = (gasLimit * gasPrice) / 100n; // 1% extra as tip
+            // const feeData = await this.provider.getFeeData(originZone, true);
+            // const conversionRate = await this.provider.getLatestQuaiRate(originZone, feeData.gasPrice);
+            // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, and minerTip
+            const totalFee = gasLimit * gasPrice + minerTip;
             // Get new selection with fee
             selection = fewestCoinSelector.performSelection(spendTarget, totalFee);
-            // 5.7 Determine if new addresses are needed for the change outputs
+            // Determine if new addresses are needed for the change and spend outputs
             const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
             if (changeAddressesNeeded > 0) {
-                for (let i = 0; i < changeAddressesNeeded; i++) {
-                    changeAddresses.push((await this.getNextChangeAddress(0, originZone)).address);
-                }
+                changeAddresses = await getChangeAddresses(changeAddressesNeeded);
             }
             const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
             if (spendAddressesNeeded > 0) {
-                for (let i = 0; i < spendAddressesNeeded; i++) {
-                    sendAddresses.push(this.getNextSendAddress(recipientPaymentCode, destinationZone).address);
-                }
+                const newSendAddresses = await getDestinationAddresses(spendAddressesNeeded);
+                sendAddresses.push(...newSendAddresses);
             }
             inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
             tx = await this.prepareTransaction(selection, inputPubKeys.map((pubkey) => pubkey), sendAddresses, changeAddresses, Number(chainId));
             // Move used outpoints to pendingOutpoints
             this.moveOutpointsToPending(tx.txInputs);
-            // 5.6 Sign the transaction
+            // Sign the transaction
             const signedTx = await this.signTransaction(tx);
-            // 6. Broadcast the transaction to the network using the provider
+            // Broadcast the transaction to the network using the provider
             return this.provider.broadcastTransaction(originZone, signedTx);
+        }
+        /**
+         * Converts an amount of Qi to Quai and sends it to a specified Quai address.
+         *
+         * @param {string} destinationAddress - The Quai address to send the converted Quai to.
+         * @param {bigint} amount - The amount of Qi to convert to Quai.
+         * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+         * @throws {Error} If the destination address is invalid, the amount is zero, or the conversion fails.
+         */
+        async convertToQuai(destinationAddress, amount) {
+            const zone = getZoneForAddress(destinationAddress);
+            if (!zone) {
+                throw new Error(`Invalid zone for Quai address: ${destinationAddress}`);
+            }
+            if (isQiAddress(destinationAddress)) {
+                throw new Error(`Invalid Quai address: ${destinationAddress}`);
+            }
+            if (amount <= 0) {
+                throw new Error('Amount must be greater than 0');
+            }
+            const getDestinationAddresses = async (count) => {
+                return Array(count).fill(destinationAddress);
+            };
+            return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses);
+        }
+        /**
+         * Sends a transaction to a specified recipient payment code in a specified zone.
+         *
+         * @param {string} recipientPaymentCode - The payment code of the recipient.
+         * @param {bigint} amount - The amount of Qi to send.
+         * @param {Zone} originZone - The zone where the transaction originates.
+         * @param {Zone} destinationZone - The zone where the transaction is sent.
+         * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+         * @throws {Error} If the payment code is invalid, the amount is zero, or the zones are invalid.
+         */
+        async sendTransaction(recipientPaymentCode, amount, originZone, destinationZone) {
+            if (!validatePaymentCode(recipientPaymentCode)) {
+                throw new Error('Invalid payment code');
+            }
+            if (amount <= 0) {
+                throw new Error('Amount must be greater than 0');
+            }
+            this.validateZone(originZone);
+            this.validateZone(destinationZone);
+            const getDestinationAddresses = async (count) => {
+                const addresses = [];
+                while (addresses.length < count) {
+                    const address = this.getNextSendAddress(recipientPaymentCode, destinationZone).address;
+                    const { isUsed } = await this.checkAddressUse(address);
+                    if (!isUsed) {
+                        addresses.push(address);
+                    }
+                }
+                return addresses;
+            };
+            return this.prepareAndSendTransaction(amount, originZone, getDestinationAddresses);
         }
         async prepareTransaction(selection, inputPubKeys, sendAddresses, changeAddresses, chainId) {
             const tx = new QiTransaction();
@@ -28737,7 +28816,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 // NeuteredAddressInfo (BIP44 addresses)
                 const changeIndex = addressInfo.change ? 1 : 0;
                 const addressNode = this._root
-                    .deriveChild(addressInfo.account)
+                    .deriveChild(addressInfo.account + HARDENED_OFFSET)
                     .deriveChild(changeIndex)
                     .deriveChild(addressInfo.index);
                 return addressNode.privateKey;
@@ -28842,6 +28921,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // First, add all used gap addresses to the address map and import their outpoints
             for (const addressInfo of usedGapAddresses) {
                 this._addAddress(addressMap, account, addressInfo.index, isChange);
+            }
+            // Scan outpoints for every address in the address map
+            for (const addressInfo of addressMap.values()) {
                 const outpoints = await this.getOutpointsByAddress(addressInfo.address);
                 if (outpoints.length > 0) {
                     this.importOutpoints(outpoints.map((outpoint) => ({
@@ -29265,7 +29347,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         _getPaymentCodePrivate(account) {
             const bip32 = this._getBIP32API();
-            const accountNode = this._root.deriveChild(account);
+            const accountNode = this._root.deriveChild(account + HARDENED_OFFSET);
             // payment code array
             const pc = new Uint8Array(80);
             // set version + options
@@ -29839,6 +29921,19 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
         }
     }
+    class PollingQiTransactionSubscriber extends OnBlockSubscriber {
+        #hash;
+        constructor(provider, hash, zone) {
+            super(provider, zone);
+            this.#hash = hash;
+        }
+        async _poll(blockNumber, provider) {
+            const tx = await provider.getTransaction(this.#hash);
+            if (tx && tx.isMined()) {
+                provider.emit(this.#hash, toZone(this.#hash.slice(0, 4)), tx);
+            }
+        }
+    }
     /**
      * A **PollingEventSubscriber** will poll for a given filter for its logs.
      *
@@ -30074,9 +30169,16 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
         }
         if (isHexString(_event, 32)) {
+            const eventBytes = getBytes(_event);
+            const ninthBit = (eventBytes[1] & 0x01) === 0x01;
             const hash = _event.toLowerCase();
             zone = toZone(hash.slice(0, 4));
-            return { type: 'transaction', tag: getTag('tx', { hash }), hash, zone };
+            if (ninthBit) {
+                return { type: 'qiTransaction', tag: getTag('Tx', { hash }), hash, zone };
+            }
+            else {
+                return { type: 'transaction', tag: getTag('tx', { hash }), hash, zone };
+            }
         }
         if (_event.orphan) {
             const event = _event;
@@ -30322,10 +30424,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Get the latest Quai rate for a zone.
          *
          * @param {Zone} zone - The zone to get the rate for.
-         * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
-         * @returns {Promise<bigint>} A promise that resolves to the latest Quai rate.
+         * @param {number} [amt=1] - The amount in quais to get the rate for. Default is `1`
+         * @returns {Promise<bigint>} A promise that resolves to the latest Quai -> Qi rate for the given amount.
          */
-        async getLatestQuaiRate(zone, amt = 1) {
+        async getLatestQuaiRate(zone, amt) {
             const blockNumber = await this.getBlockNumber(toShard(zone));
             return this.getQuaiRateAtBlock(zone, blockNumber, amt);
         }
@@ -30337,17 +30439,17 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
          * @returns {Promise<bigint>} A promise that resolves to the Quai rate at the specified block.
          */
-        async getQuaiRateAtBlock(zone, blockTag, amt = 1) {
+        async getQuaiRateAtBlock(zone, blockTag, amt) {
             let resolvedBlockTag = this._getBlockTag(toShard(zone), blockTag);
             if (typeof resolvedBlockTag !== 'string') {
                 resolvedBlockTag = await resolvedBlockTag;
             }
-            return await this.#perform({
+            return getBigInt(await this.#perform({
                 method: 'getQuaiRateAtBlock',
                 blockTag: resolvedBlockTag,
-                amt,
+                amt: Number(amt),
                 zone: zone,
-            });
+            }));
         }
         /**
          * Get the protocol expansion number.
@@ -30399,7 +30501,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
          * @returns {Promise<bigint>} A promise that resolves to the latest Qi rate.
          */
-        async getLatestQiRate(zone, amt = 1) {
+        async getLatestQiRate(zone, amt) {
             const blockNumber = await this.getBlockNumber(toShard(zone));
             return this.getQiRateAtBlock(zone, blockNumber, amt);
         }
@@ -30411,17 +30513,17 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
          * @returns {Promise<bigint>} A promise that resolves to the Qi rate at the specified block.
          */
-        async getQiRateAtBlock(zone, blockTag, amt = 1) {
+        async getQiRateAtBlock(zone, blockTag, amt) {
             let resolvedBlockTag = this._getBlockTag(toShard(zone), blockTag);
             if (typeof resolvedBlockTag !== 'string') {
                 resolvedBlockTag = await resolvedBlockTag;
             }
-            return await this.#perform({
+            return getBigInt(await this.#perform({
                 method: 'getQiRateAtBlock',
                 blockTag: resolvedBlockTag,
-                amt,
+                amt: Number(amt),
                 zone: zone,
-            });
+            }));
         }
         /**
          * Get the polling interval.
@@ -30533,7 +30635,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     return new QiTransactionResponse(tx, this);
                 }
                 else {
-                    throw new Error('Unknown transaction type');
+                    throw new Error(`Unknown transaction type: ${tx.type}`);
                 }
             }
             catch (error) {
@@ -30844,7 +30946,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     gasPrice: (async () => {
                         try {
                             const value = await this.#perform({ method: 'getGasPrice', txType, zone: zone });
-                            return getBigInt(value, '%response') * BigInt(Math.pow(10, txType ? 9 : 0));
+                            return getBigInt(value, '%response');
                         }
                         catch (error) {
                             console.log(error);
@@ -30854,7 +30956,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     minerTip: (async () => {
                         try {
                             const value = txType ? await this.#perform({ method: 'getMinerTip', zone: zone }) : 0;
-                            return getBigInt(value, '%response') * BigInt(Math.pow(10, txType ? 9 : 0));
+                            return getBigInt(value, '%response');
                             // eslint-disable-next-line no-empty
                         }
                         catch (error) { }
@@ -31239,6 +31341,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     return new PollingEventSubscriber(this, sub.filter);
                 case 'transaction':
                     return new PollingTransactionSubscriber(this, sub.hash, sub.zone);
+                case 'qiTransaction':
+                    return new PollingQiTransactionSubscriber(this, sub.hash, sub.zone);
                 case 'orphan':
                     return new PollingOrphanSubscriber(this, sub.filter, sub.zone);
             }
