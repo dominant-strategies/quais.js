@@ -30,7 +30,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @ignore
      */
-    const version = '1.0.0-alpha.18';
+    const version = '1.0.0-alpha.19';
 
     /**
      * Property helper functions.
@@ -20117,6 +20117,17 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         address: (addr) => hexlify(getAddress(addr)),
         denomination: getNumber,
     });
+    const _formatOutpoint = object({
+        denomination: (value) => getNumber(value),
+        index: (value) => getNumber(value),
+        lock: (value) => getNumber(value),
+        txhash: formatHash,
+    }, {
+        txhash: ['txHash'],
+    });
+    function formatOutpoints(outpoints) {
+        return outpoints.map(_formatOutpoint);
+    }
 
     /**
      * Class representing a QiTransaction.
@@ -28697,7 +28708,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // Create a copy to iterate over, as we'll be modifying the _pendingOutpoints array
             const pendingOutpoints = [...this._pendingOutpoints.filter((info) => info.zone === zone)];
             const uniqueAddresses = new Set(pendingOutpoints.map((info) => info.address));
-            const outpointsByAddress = await Promise.all(Array.from(uniqueAddresses).map((address) => this.getOutpointsByAddress(address)));
+            let outpointsByAddress = [];
+            try {
+                outpointsByAddress = (await Promise.all(Array.from(uniqueAddresses).map((address) => this.getOutpointsByAddress(address)))).flat();
+            }
+            catch (error) {
+                console.error('Error getting outpoints by address', error);
+            }
             const allOutpointsByAddress = outpointsByAddress.flat();
             for (const outpointInfo of pendingOutpoints) {
                 const isSpent = !allOutpointsByAddress.some((outpoint) => outpoint.txhash === outpointInfo.outpoint.txhash && outpoint.index === outpointInfo.outpoint.index);
@@ -31041,13 +31058,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return getBigInt(await this.#getAccountValue({ method: 'getBalance' }, address, blockTag), '%response');
         }
         async getOutpointsByAddress(address) {
-            const outpointsObj = await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest');
-            // Convert the object to an array of Outpoint objects
-            return Object.values(outpointsObj).map((outpoint) => ({
-                txhash: outpoint.TxHash,
-                index: outpoint.Index,
-                denomination: outpoint.Denomination,
-            }));
+            return formatOutpoints(await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest'));
         }
         async getTransactionCount(address, blockTag) {
             return getNumber(await this.#getAccountValue({ method: 'getTransactionCount' }, address, blockTag), '%response');
