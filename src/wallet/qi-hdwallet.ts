@@ -604,9 +604,14 @@ export class QiHDWallet extends AbstractHDWallet {
         const pendingOutpoints = [...this._pendingOutpoints.filter((info) => info.zone === zone)];
 
         const uniqueAddresses = new Set<string>(pendingOutpoints.map((info) => info.address));
-        const outpointsByAddress = await Promise.all(
-            Array.from(uniqueAddresses).map((address) => this.getOutpointsByAddress(address)),
-        );
+        let outpointsByAddress: Outpoint[] = [];
+        try {
+            outpointsByAddress = (
+                await Promise.all(Array.from(uniqueAddresses).map((address) => this.getOutpointsByAddress(address)))
+            ).flat();
+        } catch (error) {
+            console.error('Error getting outpoints by address', error);
+        }
 
         const allOutpointsByAddress = outpointsByAddress.flat();
 

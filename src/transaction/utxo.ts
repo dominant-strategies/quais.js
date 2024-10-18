@@ -10,6 +10,7 @@ export type Outpoint = {
     txhash: string;
     index: number;
     denomination: number;
+    lock?: number;
 };
 
 /**

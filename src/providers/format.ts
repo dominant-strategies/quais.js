@@ -4,6 +4,7 @@
 import { getAddress } from '../address/index.js';
 import { Signature } from '../crypto/index.js';
 import { accessListify } from '../transaction/index.js';
+import { Outpoint } from '../transaction/utxo.js';
 import { hexlify } from '../utils/data.js';
 import {
     getBigInt,
@@ -25,6 +26,7 @@ import type {
     QiTransactionResponseParams,
     QuaiTransactionResponseParams,
     ExternalTransactionResponseParams,
+    OutpointResponseParams,
 } from './formatting.js';
 
 const BN_0 = BigInt(0);
@@ -495,3 +497,19 @@ const _formatTxOutput = object({
     address: (addr: string) => hexlify(getAddress(addr)),
     denomination: getNumber,
 });
+
+const _formatOutpoint = object(
+    {
+        denomination: (value: string) => getNumber(value),
+        index: (value: string) => getNumber(value),
+        lock: (value: string) => getNumber(value),
+        txhash: formatHash,
+    },
+    {
+        txhash: ['txHash'],
+    },
+);
+
+export function formatOutpoints(outpoints: OutpointResponseParams[]): Outpoint[] {
+    return outpoints.map(_formatOutpoint);
+}
