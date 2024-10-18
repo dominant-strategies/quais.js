@@ -33,7 +33,13 @@ import {
 import { decodeProtoTransaction } from '../encoding/index.js';
 import type { txpoolContentResponse, txpoolInspectResponse } from './txpool.js';
 
-import { formatBlock, formatLog, formatTransactionReceipt, formatTransactionResponse } from './format.js';
+import {
+    formatBlock,
+    formatLog,
+    formatOutpoints,
+    formatTransactionReceipt,
+    formatTransactionResponse,
+} from './format.js';
 import { Network } from './network.js';
 import {
     copyRequest,
@@ -55,7 +61,7 @@ import type { BigNumberish } from '../utils/index.js';
 import type { Listener } from '../utils/index.js';
 
 import type { Networkish } from './network.js';
-import type { BlockParams, LogParams, OutpointResponseParams, TransactionReceiptParams } from './formatting.js';
+import type { BlockParams, LogParams, TransactionReceiptParams } from './formatting.js';
 
 import type {
     BlockTag,
@@ -1555,18 +1561,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     async getOutpointsByAddress(address: AddressLike): Promise<Outpoint[]> {
-        const outpointsObj: Record<string, OutpointResponseParams> = await this.#getAccountValue(
-            { method: 'getOutpointsByAddress' },
-            address,
-            'latest',
-        );
-
-        // Convert the object to an array of Outpoint objects
-        return Object.values(outpointsObj).map((outpoint: OutpointResponseParams) => ({
-            txhash: outpoint.TxHash,
-            index: outpoint.Index,
-            denomination: outpoint.Denomination,
-        }));
+        return formatOutpoints(await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest'));
     }
 
     async getTransactionCount(address: AddressLike, blockTag?: BlockTag): Promise<number> {
