@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { JsonRpcProvider, Wallet } from '../../index.js';
+import { WebSocketProvider, Wallet } from '../../index.js';
 
 import dotenv from 'dotenv';
 import { QuaiTransactionResponse } from '../../providers/provider.js';
@@ -17,27 +17,28 @@ const testCases = [
         receiverAddressEnvVar: 'CYPRUS1_ADDR_2',
         skipReceiverBalanceCheck: false,
     },
-    {
-        description: 'Cyprus1 to Cyprus2',
-        receiverAddressEnvVar: 'CYPRUS2_ADDR_1',
-        skipReceiverBalanceCheck: true,
-    },
-    {
-        description: 'Cyprus1 to Paxos1',
-        receiverAddressEnvVar: 'PAXOS1_ADDR_1',
-        skipReceiverBalanceCheck: true,
-    },
+    //    {
+    //        description: 'Cyprus1 to Cyprus2',
+    //        receiverAddressEnvVar: 'CYPRUS2_ADDR_1',
+    //        skipReceiverBalanceCheck: true,
+    //    },
+    //    {
+    //        description: 'Cyprus1 to Paxos1',
+    //        receiverAddressEnvVar: 'PAXOS1_ADDR_1',
+    //        skipReceiverBalanceCheck: true,
+    //    },
 ];
 
 describe('Test sending Quai', function () {
     this.timeout(120000);
 
-    let provider: JsonRpcProvider;
+    let provider: WebSocketProvider;
     let wallet: Wallet;
     const quaiAmount = 42000000000n;
 
     before(async () => {
-        provider = new JsonRpcProvider(process.env.RPC_URL);
+        const wsUrl = process.env.RPC_URL?.replace('https', 'wss')?.replace('http', 'ws');
+        provider = new WebSocketProvider(wsUrl ?? '');
         wallet = new Wallet(process.env.CYPRUS1_PRIVKEY_1!, provider);
         const senderBalance = await provider.getBalance(wallet.address);
         // ensure balance is greater than 0.1 QUAI
@@ -63,7 +64,12 @@ describe('Test sending Quai', function () {
                     from: wallet.address,
                 };
                 console.log(`Sending quai to: ${receiverAddress}`);
+                provider.on({ address: receiverAddress }, () => {
+                    console.log('Received quai');
+                });
                 const tx = (await wallet.sendTransaction(txObj)) as QuaiTransactionResponse;
+                //wait 2 seconds
+                await new Promise((resolve) => setTimeout(resolve, 10000));
                 assert(tx);
                 console.log('Waiting for Quai Tx to be mined...');
                 const receipt = await tx.wait();

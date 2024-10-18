@@ -3,7 +3,7 @@ import { assert, assertArgument, makeError } from '../utils/index.js';
 import { JsonRpcApiProvider } from './provider-jsonrpc.js';
 
 import type { Subscriber, Subscription } from './abstract-provider.js';
-import type { EventFilter } from './provider.js';
+import type { AccessesFilter, EventFilter } from './provider.js';
 import type { JsonRpcApiProviderOptions, JsonRpcError, JsonRpcPayload, JsonRpcResult } from './provider-jsonrpc.js';
 import type { Networkish } from './network.js';
 import type { WebSocketLike } from './provider-websocket.js';
@@ -183,6 +183,37 @@ export class SocketBlockSubscriber extends SocketSubscriber {
 }
 
 /**
+ * A **SocketAccessesSubscriber** listens for `acceses` events and emits `accesses` events.
+ *
+ * @category Providers
+ */
+export class SocketAccessesSubscriber extends SocketSubscriber {
+    /**
+     * Creates a new **SocketBlockSubscriber**.
+     *
+     * @ignore
+     * @param {SocketProvider} provider - The socket provider.
+     * @param filter
+     * @param zone
+     */
+    constructor(provider: SocketProvider, filter: AccessesFilter, zone: Zone) {
+        super(provider, ['accesses', filter.address], zone);
+    }
+
+    /**
+     * Emit the block event.
+     *
+     * @ignore
+     * @param {SocketProvider} provider - The socket provider.
+     * @param {any} message - The message to emit.
+     * @returns {Promise<void>}
+     */
+    async _emit(provider: SocketProvider, message: any): Promise<void> {
+        provider.emit('accesses', this.zone, message);
+    }
+}
+
+/**
  * A **SocketPendingSubscriber** listens for pending transactions and emits `"pending"` events.
  *
  * @category Providers
@@ -318,6 +349,8 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
                 return new UnmanagedSubscriber('close');
             case 'block':
                 return new SocketBlockSubscriber(this, sub.zone);
+            case 'accesses':
+                return new SocketAccessesSubscriber(this, sub.filter, sub.zone);
             case 'pending':
                 return new SocketPendingSubscriber(this, sub.zone);
             case 'event':
