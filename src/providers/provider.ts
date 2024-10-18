@@ -2628,6 +2628,15 @@ export interface EventFilter {
 }
 
 /**
+ * An **AccessesFilter** allows efficiently filtering accesses (state uses) using address.
+ *
+ * @category Providers
+ */
+export interface AccessesFilter {
+    address: AddressLike;
+}
+
+/**
  * A **Filter** allows searching a specific range of blocks for mathcing logs.
  *
  * @category Providers
@@ -2702,7 +2711,7 @@ export function getZoneFromEventFilter(filter: EventFilter): Zone | null {
  *
  * @category Providers
  */
-export type ProviderEvent = string | Array<string | Array<string>> | EventFilter | OrphanFilter;
+export type ProviderEvent = string | Array<string | Array<string>> | EventFilter | OrphanFilter | AccessesFilter;
 
 //////////////////////
 // Provider

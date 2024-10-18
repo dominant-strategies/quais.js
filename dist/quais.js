@@ -30191,7 +30191,7 @@ async function getSubscription(_event, zone) {
         // @todo Should lowercase and whatnot things here instead of copy...
         return { type: 'orphan', tag: getTag('orphan', event), filter: copy$1(event), zone };
     }
-    if (_event.address || _event.topics) {
+    if (_event.topics || Array.isArray(_event.address)) {
         const event = _event;
         const filter = {
             topics: (event.topics || []).map((t) => {
@@ -30243,6 +30243,16 @@ async function getSubscription(_event, zone) {
             }
         }
         return { filter, tag: getTag('event', filter), type: 'event', zone };
+    }
+    else if (_event.address) {
+        const address = formatMixedCaseChecksumAddress(isHexString(_event.address) ? _event.address : await resolveAddress(_event.address));
+        const filter = {
+            address: address
+        };
+        if (!zone) {
+            zone = toZone(address.slice(0, 4));
+        }
+        return { filter, tag: getTag('accesses', filter), type: 'accesses', zone };
     }
     assertArgument(false, 'unknown ProviderEvent', 'event', _event);
 }
@@ -33522,6 +33532,35 @@ class SocketBlockSubscriber extends SocketSubscriber {
     }
 }
 /**
+ * A **SocketAccessesSubscriber** listens for `acceses` events and emits `accesses` events.
+ *
+ * @category Providers
+ */
+class SocketAccessesSubscriber extends SocketSubscriber {
+    /**
+     * Creates a new **SocketBlockSubscriber**.
+     *
+     * @ignore
+     * @param {SocketProvider} provider - The socket provider.
+     * @param filter
+     * @param zone
+     */
+    constructor(provider, filter, zone) {
+        super(provider, ['accesses', filter.address], zone);
+    }
+    /**
+     * Emit the block event.
+     *
+     * @ignore
+     * @param {SocketProvider} provider - The socket provider.
+     * @param {any} message - The message to emit.
+     * @returns {Promise<void>}
+     */
+    async _emit(provider, message) {
+        provider.emit('accesses', this.zone, message);
+    }
+}
+/**
  * A **SocketPendingSubscriber** listens for pending transactions and emits `"pending"` events.
  *
  * @category Providers
@@ -33639,6 +33678,8 @@ class SocketProvider extends JsonRpcApiProvider {
                 return new UnmanagedSubscriber('close');
             case 'block':
                 return new SocketBlockSubscriber(this, sub.zone);
+            case 'accesses':
+                return new SocketAccessesSubscriber(this, sub.filter, sub.zone);
             case 'pending':
                 return new SocketPendingSubscriber(this, sub.zone);
             case 'event':
