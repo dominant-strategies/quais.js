@@ -79,21 +79,21 @@ interface PaymentChannelAddressInfo {
 /**
  * @extends SerializedHDWallet
  * @property {OutpointInfo[]} outpoints - Array of outpoint information.
- * @property {NeuteredAddressInfo[]} changeAddresses - Array of change addresses.
- * @property {NeuteredAddressInfo[]} gapAddresses - Array of gap addresses.
- * @property {NeuteredAddressInfo[]} gapChangeAddresses - Array of gap change addresses.
+ * @property {QiAddressInfo[]} changeAddresses - Array of change addresses.
+ * @property {QiAddressInfo[]} gapAddresses - Array of gap addresses.
+ * @property {QiAddressInfo[]} gapChangeAddresses - Array of gap change addresses.
  * @interface SerializedQiHDWallet
  */
 export interface SerializedQiHDWallet extends SerializedHDWallet {
     outpoints: OutpointInfo[];
     pendingOutpoints: OutpointInfo[];
-    changeAddresses: NeuteredAddressInfo[];
-    gapAddresses: NeuteredAddressInfo[];
-    gapChangeAddresses: NeuteredAddressInfo[];
-    usedGapAddresses: NeuteredAddressInfo[];
-    usedGapChangeAddresses: NeuteredAddressInfo[];
-    receiverPaymentCodeInfo: { [key: string]: PaymentChannelAddressInfo[] };
-    senderPaymentCodeInfo: { [key: string]: PaymentChannelAddressInfo[] };
+    changeAddresses: QiAddressInfo[];
+    gapAddresses: QiAddressInfo[];
+    gapChangeAddresses: QiAddressInfo[];
+    // usedGapAddresses: NeuteredAddressInfo[]; //! Do we need this?
+    // usedGapChangeAddresses: NeuteredAddressInfo[]; //! Do we need this?
+    receiverPaymentCodeInfo: { [key: string]: QiAddressInfo[] };
+    senderPaymentCodeInfo: { [key: string]: QiAddressInfo[] };
 }
 
 type AddressUsageCallback = (address: string) => Promise<boolean>;
@@ -1098,17 +1098,38 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     public serialize(): SerializedQiHDWallet {
         const hdwalletSerialized = super.serialize();
+
+        const getGapAddresses = (addresses: QiAddressInfo[]): QiAddressInfo[] => {
+            const reversedAddresses = [...addresses].reverse();
+            const gapAddresses: QiAddressInfo[] = [];
+            for (const address of reversedAddresses) {
+                if (address.status === AddressStatus.UNUSED) {
+                    gapAddresses.push(address);
+                } else {
+                    break;
+                }
+            }
+            return gapAddresses.reverse();
+        };
+
         return {
+            ...hdwalletSerialized,
             outpoints: this._availableOutpoints,
             pendingOutpoints: this._pendingOutpoints,
-            changeAddresses: Array.from(this._changeAddresses.values()),
-            gapAddresses: this._gapAddresses,
-            gapChangeAddresses: this._gapChangeAddresses,
-            usedGapAddresses: this._usedGapAddresses,
-            usedGapChangeAddresses: this._usedGapChangeAddresses,
-            receiverPaymentCodeInfo: Object.fromEntries(this._receiverPaymentCodeInfo),
-            senderPaymentCodeInfo: Object.fromEntries(this._senderPaymentCodeInfo),
-            ...hdwalletSerialized,
+            addresses: Array.from(this._addressesMap.get('BIP44:external') || []),
+            changeAddresses: Array.from(this._addressesMap.get('BIP44:change') || []),
+            gapAddresses: getGapAddresses(this._addressesMap.get('BIP44:external') || []),
+            gapChangeAddresses: getGapAddresses(this._addressesMap.get('BIP44:change') || []),
+            // usedGapAddresses: this._usedGapAddresses, //! Do we need this?
+            // usedGapChangeAddresses: this._usedGapChangeAddresses, //! Do we need this?
+            receiverPaymentCodeInfo: Object.fromEntries(
+                Array.from(this._addressesMap.entries())
+                    .filter(([key]) => key !== 'BIP44:external' && key !== 'BIP44:change')
+                    .map(([key, value]) => [key, Array.from(value)]),
+            ),
+            senderPaymentCodeInfo: Object.fromEntries(
+                Array.from(this._paymentCodeSendAddressMap.entries()).map(([key, value]) => [key, Array.from(value)]),
+            ),
         };
     }
 
@@ -1120,7 +1141,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @throws {Error} If the serialized data is invalid or if any addresses in the gap addresses or gap change
      *   addresses do not exist in the wallet.
      */
-    public static async deserialize(serialized: SerializedQiHDWallet): Promise<QiHDWallet> {
+    public static async deserialize(serialized: SerializedQiHDWallet): Promise<QiHDWalletV3> {
         super.validateSerializedWallet(serialized);
         // create the wallet instance
         const mnemonic = Mnemonic.fromPhrase(serialized.phrase);
@@ -1128,47 +1149,11 @@ export class QiHDWallet extends AbstractHDWallet {
         const root = HDNodeWallet.fromMnemonic(mnemonic, path);
         const wallet = new this(_guard, root);
 
-        // import the addresses
-        wallet.importSerializedAddresses(wallet._addresses, serialized.addresses);
-        // import the change addresses
-        wallet.importSerializedAddresses(wallet._changeAddresses, serialized.changeAddresses);
-
-        // import the gap addresses, verifying they already exist in the wallet
-        for (const gapAddressInfo of serialized.gapAddresses) {
-            const gapAddress = gapAddressInfo.address;
-            if (!wallet._addresses.has(gapAddress)) {
-                throw new Error(`Address ${gapAddress} not found in wallet`);
-            }
-            wallet._gapAddresses.push(gapAddressInfo);
-        }
-        // import the gap change addresses, verifying they already exist in the wallet
-        for (const gapChangeAddressInfo of serialized.gapChangeAddresses) {
-            const gapChangeAddress = gapChangeAddressInfo.address;
-            if (!wallet._changeAddresses.has(gapChangeAddress)) {
-                throw new Error(`Address ${gapChangeAddress} not found in wallet`);
-            }
-            wallet._gapChangeAddresses.push(gapChangeAddressInfo);
-        }
-
-        // validate the used gap addresses and import them
-        for (const usedGapAddressInfo of serialized.usedGapAddresses) {
-            if (!wallet._addresses.has(usedGapAddressInfo.address)) {
-                throw new Error(`Address ${usedGapAddressInfo.address} not found in wallet`);
-            }
-            wallet._usedGapAddresses.push(usedGapAddressInfo);
-        }
-
-        // validate the used gap change addresses and import them
-        for (const usedGapChangeAddressInfo of serialized.usedGapChangeAddresses) {
-            if (!wallet._changeAddresses.has(usedGapChangeAddressInfo.address)) {
-                throw new Error(`Address ${usedGapChangeAddressInfo.address} not found in wallet`);
-            }
-            wallet._usedGapChangeAddresses.push(usedGapChangeAddressInfo);
-        }
+        wallet.validateAndImportAddresses(serialized.addresses as QiAddressInfo[], 'BIP44:external'); //!Fix: cast to QiAddressInfo[]
+        wallet.validateAndImportAddresses(serialized.changeAddresses, 'BIP44:change');
 
         // validate and import the payment code info
-        wallet.validateAndImportPaymentCodeInfo(serialized.receiverPaymentCodeInfo, 'receiver');
-        wallet.validateAndImportPaymentCodeInfo(serialized.senderPaymentCodeInfo, 'sender');
+        wallet.validateAndImportCounterPartyPaymentCode(serialized.receiverPaymentCodeInfo);
 
         // validate the available outpoints and import them
         wallet.validateOutpointInfo(serialized.outpoints);
@@ -1181,52 +1166,48 @@ export class QiHDWallet extends AbstractHDWallet {
         return wallet;
     }
 
+    private validateAndImportAddresses = (addresses: QiAddressInfo[], path: DerivationPath) => {
+        for (const addressInfo of addresses) {
+            this.validateQiAddressInfo(addressInfo);
+        }
+        this._addressesMap.set(path, addresses);
+    };
+
     /**
      * Validates and imports a map of payment code info.
      *
-     * @param {Map<string, PaymentChannelAddressInfo[]>} paymentCodeInfoMap - The map of payment code info to validate
-     *   and import.
-     * @param {'receiver' | 'sender'} target - The target map to update ('receiver' or 'sender').
+     * @param {Object<string, QiAddressInfo[]>} paymentCodeInfoMap - The map of payment code info to validate and
+     *   import.
      * @throws {Error} If any of the payment code info is invalid.
      */
-    private validateAndImportPaymentCodeInfo(
-        paymentCodeInfoMap: { [key: string]: PaymentChannelAddressInfo[] },
-        target: 'receiver' | 'sender',
-    ): void {
-        const targetMap = target === 'receiver' ? this._receiverPaymentCodeInfo : this._senderPaymentCodeInfo;
+    private validateAndImportCounterPartyPaymentCode(paymentCodeInfoMap: { [key: string]: QiAddressInfo[] }): void {
+        const targetMap = this._paymentCodeSendAddressMap;
 
         for (const [paymentCode, paymentCodeInfoArray] of Object.entries(paymentCodeInfoMap)) {
             if (!validatePaymentCode(paymentCode)) {
                 throw new Error(`Invalid payment code: ${paymentCode}`);
             }
             for (const pcInfo of paymentCodeInfoArray) {
-                this.validatePaymentCodeInfo(pcInfo);
+                this.validateQiAddressInfo(pcInfo);
             }
             targetMap.set(paymentCode, paymentCodeInfoArray);
         }
     }
 
-    /**
-     * Validates a payment code info object.
-     *
-     * @param {PaymentChannelAddressInfo} pcInfo - The payment code info to validate.
-     * @throws {Error} If the payment code info is invalid.
-     */
-    private validatePaymentCodeInfo(pcInfo: PaymentChannelAddressInfo): void {
-        if (!/^(0x)?[0-9a-fA-F]{40}$/.test(pcInfo.address)) {
-            throw new Error('Invalid payment code info: address must be a 40-character hexadecimal string');
+    private validateQiAddressInfo(addressInfo: QiAddressInfo): void {
+        this.validateNeuteredAddressInfo(addressInfo);
+
+        if (!Object.values(AddressStatus).includes(addressInfo.status)) {
+            throw new Error(`Invalid QiAddressInfo: status '${addressInfo.status}' is not a valid AddressStatus`);
         }
-        if (!Number.isInteger(pcInfo.index) || pcInfo.index < 0) {
-            throw new Error('Invalid payment code info: index must be a non-negative integer');
-        }
-        if (typeof pcInfo.isUsed !== 'boolean') {
-            throw new Error('Invalid payment code info: isUsed must be a boolean');
-        }
-        if (!Object.values(Zone).includes(pcInfo.zone)) {
-            throw new Error(`Invalid payment code info: zone '${pcInfo.zone}' is not a valid Zone`);
-        }
-        if (!Number.isInteger(pcInfo.account) || pcInfo.account < 0) {
-            throw new Error('Invalid payment code info: account must be a non-negative integer');
+
+        if (
+            addressInfo.counterpartyPaymentCode !== undefined &&
+            !validatePaymentCode(addressInfo.counterpartyPaymentCode)
+        ) {
+            throw new Error(
+                `Invalid QiAddressInfo: counterpartyPaymentCode '${addressInfo.counterpartyPaymentCode}' is not a valid payment code`,
+            );
         }
     }
 
