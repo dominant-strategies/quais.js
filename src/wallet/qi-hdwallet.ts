@@ -1215,16 +1215,6 @@ export class QiHDWallet extends AbstractHDWallet {
         return privatePcode.toBase58();
     }
 
-    // helper method to get a bip32 API instance
-    private _getBIP32API(): BIP32API {
-        return BIP32Factory(ecc) as BIP32API;
-    }
-
-    // helper method to decode a base58 string into a Uint8Array
-    private _decodeBase58(base58: string): Uint8Array {
-        return bs58check.decode(base58);
-    }
-
     /**
      * Generates a BIP47 private payment code for the specified account. The payment code is created by combining the
      * account's public key and chain code.
@@ -1234,7 +1224,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<PaymentCodePrivate>} A promise that resolves to the PaymentCodePrivate instance.
      */
     private _getPaymentCodePrivate(account: number): PaymentCodePrivate {
-        const bip32 = this._getBIP32API();
+        const bip32 = BIP32Factory(ecc) as BIP32API;
 
         const accountNode = this._root.deriveChild(account + HARDENED_OFFSET);
 
@@ -1266,8 +1256,8 @@ export class QiHDWallet extends AbstractHDWallet {
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
     public getNextSendAddress(receiverPaymentCode: string, zone: Zone, account: number = 0): QiAddressInfo {
-        const bip32 = this._getBIP32API();
-        const buf = this._decodeBase58(receiverPaymentCode);
+        const bip32 = BIP32Factory(ecc) as BIP32API;
+        const buf = bs58check.decode(receiverPaymentCode);
         const version = buf[0];
         if (version !== PC_VERSION) throw new Error('Invalid payment code version');
 
@@ -1314,8 +1304,8 @@ export class QiHDWallet extends AbstractHDWallet {
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
     public getNextReceiveAddress(senderPaymentCode: string, zone: Zone, account: number = 0): QiAddressInfo {
-        const bip32 = this._getBIP32API();
-        const buf = this._decodeBase58(senderPaymentCode);
+        const bip32 = BIP32Factory(ecc) as BIP32API;
+        const buf = bs58check.decode(senderPaymentCode);
         const version = buf[0];
         if (version !== PC_VERSION) throw new Error('Invalid payment code version');
 
