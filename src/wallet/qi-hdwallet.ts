@@ -76,10 +76,6 @@ interface PaymentChannelAddressInfo {
     account: number;
 }
 
-interface PaymentChannelAddressExtendedInfo extends PaymentChannelAddressInfo {
-    counterpartyPaymentCode: string;
-}
-
 /**
  * @extends SerializedHDWallet
  * @property {OutpointInfo[]} outpoints - Array of outpoint information.
@@ -352,48 +348,20 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     /**
-     * Gets the payment channel address info for a given address.
-     *
-     * @param {string} address - The address to look up.
-     * @returns {PaymentChannelAddressInfo | null} The address info or null if not found.
-     */
-    public getPaymentChannelAddressInfo(address: string): PaymentChannelAddressExtendedInfo | null {
-        for (const [paymentCode, pcInfoArray] of this._receiverPaymentCodeInfo.entries()) {
-            const pcInfo = pcInfoArray.find((info) => info.address === address);
-            if (pcInfo) {
-                return { ...pcInfo, counterpartyPaymentCode: paymentCode };
-            }
-        }
-        return null;
-    }
-
-    /**
      * Locates the address information for the given address, searching through standard addresses, change addresses,
      * and payment channel addresses.
      *
      * @param {string} address - The address to locate.
-     * @returns {NeuteredAddressInfo | PaymentChannelAddressInfo | null} The address info or null if not found.
+     * @returns {QiAddressInfo | null} The address info or null if not found.
      */
-    public locateAddressInfo(address: string): NeuteredAddressInfo | PaymentChannelAddressExtendedInfo | null {
-        // First, try to get standard address info
-        let addressInfo = this.getAddressInfo(address);
-        if (addressInfo) {
-            return addressInfo;
+    public locateAddressInfo(address: string): QiAddressInfo | null {
+        for (const [, addressInfos] of this._addressesMap.entries()) {
+            const addressInfo = addressInfos.find((info) => info.address === address);
+            if (addressInfo) {
+                return addressInfo;
+            }
         }
 
-        // Next, try to get change address info
-        addressInfo = this.getChangeAddressInfo(address);
-        if (addressInfo) {
-            return addressInfo;
-        }
-
-        // Finally, try to get payment channel address info
-        const pcAddressInfo = this.getPaymentChannelAddressInfo(address);
-        if (pcAddressInfo) {
-            return pcAddressInfo;
-        }
-
-        // Address not found
         return null;
     }
 
@@ -507,19 +475,45 @@ export class QiHDWallet extends AbstractHDWallet {
         const sendAddresses = await getDestinationAddresses(selection.spendOutputs.length);
 
         const getChangeAddresses = async (count: number): Promise<string[]> => {
+            const changeAddresses = this._addressesMap.get('BIP44:change') || [];
+            const gapLimit = QiHDWallet._GAP_LIMIT;
             const addresses: string[] = [];
-            for (let i = 0; i < count; i++) {
-                if (this._gapChangeAddresses.length > 0) {
-                    const nextChangeAddressInfo = this._gapChangeAddresses.shift()!;
-                    addresses.push(nextChangeAddressInfo.address);
-                    this._usedGapChangeAddresses.push(nextChangeAddressInfo);
-                } else {
-                    addresses.push((await this.getNextChangeAddress(0, originZone)).address);
+            let lastUsedIndex = -1;
+            let consecutiveUnusedCount = 0;
+
+            // Find the last used index and count consecutive unused addresses
+            for (let i = changeAddresses.length - 1; i >= 0; i--) {
+                // ! we are assuming that the addresses are always in order according to their derivation index
+                if (changeAddresses[i].status !== AddressStatus.UNUSED) {
+                    lastUsedIndex = changeAddresses[i].index;
+                    break;
                 }
+                consecutiveUnusedCount++;
             }
+
+            // Generate new addresses until we have GAP_LIMIT consecutive unused addresses
+            while (consecutiveUnusedCount < gapLimit) {
+                const newChangeAddress = await this.getNextChangeAddress(0, originZone);
+                const newChangeAddressInfo: QiAddressInfo = {
+                    ...newChangeAddress,
+                    status: AddressStatus.UNUSED,
+                };
+                changeAddresses.push(newChangeAddressInfo);
+                consecutiveUnusedCount++;
+            }
+
+            // Select the first 'count' addresses within the GAP_LIMIT
+            for (let i = lastUsedIndex + 1; i < changeAddresses.length && addresses.length < count; i++) {
+                const addressInfo = changeAddresses[i];
+                addresses.push(addressInfo.address);
+                addressInfo.status = AddressStatus.ATTEMPTED_USE;
+            }
+
+            // Update the _addressesMap with the modified change addresses
+            this._addressesMap.set('BIP44:change', changeAddresses);
+
             return addresses;
         };
-
         // 4. Get change addresses
         const changeAddresses = await getChangeAddresses(selection.changeOutputs.length);
 
@@ -839,8 +833,8 @@ export class QiHDWallet extends AbstractHDWallet {
             throw new Error(`Address not found: ${address}`);
         }
 
-        if ('change' in addressInfo) {
-            // NeuteredAddressInfo (BIP44 addresses)
+        if (!('counterpartyPaymentCode' in addressInfo)) {
+            // (BIP44 addresses)
             const changeIndex = addressInfo.change ? 1 : 0;
             const addressNode = this._root
                 .deriveChild(addressInfo.account + HARDENED_OFFSET)
@@ -848,8 +842,8 @@ export class QiHDWallet extends AbstractHDWallet {
                 .deriveChild(addressInfo.index);
             return addressNode.privateKey;
         } else {
-            // PaymentChannelAddressInfo (BIP47 addresses)
-            const pcAddressInfo = addressInfo as PaymentChannelAddressExtendedInfo;
+            // (BIP47 addresses)
+            const pcAddressInfo = addressInfo;
             const account = pcAddressInfo.account;
             const index = pcAddressInfo.index - 1;
 
