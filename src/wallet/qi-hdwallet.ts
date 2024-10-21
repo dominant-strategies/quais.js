@@ -1029,39 +1029,49 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     /**
+     * Gets the addresses for the specified zone.
+     *
+     * @param {Zone} zone - The zone.
+     * @returns {QiAddressInfo[]} The addresses for the zone.
+     */
+    public getAddressForZone(zone: Zone): QiAddressInfo[] {
+        this.validateZone(zone);
+        return this._addressesMap.get('BIP44:external')?.filter((addressInfo) => addressInfo.zone === zone) || [];
+    }
+
+    /**
      * Gets the change addresses for the specified zone.
      *
      * @param {Zone} zone - The zone.
-     * @returns {NeuteredAddressInfo[]} The change addresses for the zone.
+     * @returns {QiAddressInfo[]} The change addresses for the zone.
      */
-    public getChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+    public getChangeAddressesForZone(zone: Zone): QiAddressInfo[] {
         this.validateZone(zone);
-        const changeAddresses = this._changeAddresses.values();
-        return Array.from(changeAddresses).filter((addressInfo) => addressInfo.zone === zone);
+        return this._addressesMap.get('BIP44:change')?.filter((addressInfo) => addressInfo.zone === zone) || [];
     }
 
     /**
      * Gets the gap addresses for the specified zone.
      *
      * @param {Zone} zone - The zone.
-     * @returns {NeuteredAddressInfo[]} The gap addresses for the zone.
+     * @returns {QiAddressInfo[]} The gap addresses for the zone.
      */
-    public getGapAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+    public getGapAddressesForZone(zone: Zone): QiAddressInfo[] {
         this.validateZone(zone);
-        const gapAddresses = this._gapAddresses.filter((addressInfo) => addressInfo.zone === zone);
-        return gapAddresses;
+        const gapAddresses = this._addressesMap.get('BIP44:external') || [];
+        return gapAddresses.filter((addressInfo) => addressInfo.zone === zone);
     }
 
     /**
      * Gets the gap change addresses for the specified zone.
      *
      * @param {Zone} zone - The zone.
-     * @returns {NeuteredAddressInfo[]} The gap change addresses for the zone.
+     * @returns {QiAddressInfo[]} The gap change addresses for the zone.
      */
-    public getGapChangeAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+    public getGapChangeAddressesForZone(zone: Zone): QiAddressInfo[] {
         this.validateZone(zone);
-        const gapChangeAddresses = this._gapChangeAddresses.filter((addressInfo) => addressInfo.zone === zone);
-        return gapChangeAddresses;
+        const gapChangeAddresses = this._addressesMap.get('BIP44:change') || [];
+        return gapChangeAddresses.filter((addressInfo) => addressInfo.zone === zone);
     }
 
     /**
