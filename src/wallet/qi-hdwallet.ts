@@ -839,22 +839,15 @@ export class QiHDWallet extends AbstractHDWallet {
     public async scan(zone: Zone, account: number = 0): Promise<void> {
         this.validateZone(zone);
         // flush the existing addresses and outpoints
-        this._addresses = new Map();
-        this._changeAddresses = new Map();
-        this._gapAddresses = [];
-        this._gapChangeAddresses = [];
+        this._addressesMap = new Map();
         this._availableOutpoints = [];
 
         // Reset each map so that all keys have empty array values but keys are preserved
         const resetSenderPaymentCodeInfo = new Map(
-            Array.from(this._senderPaymentCodeInfo.keys()).map((key) => [key, []]),
-        );
-        const resetReceiverPaymentCodeInfo = new Map(
-            Array.from(this._receiverPaymentCodeInfo.keys()).map((key) => [key, []]),
+            Array.from(this._paymentCodeSendAddressMap.keys()).map((key) => [key, []]),
         );
 
-        this._senderPaymentCodeInfo = resetSenderPaymentCodeInfo;
-        this._receiverPaymentCodeInfo = resetReceiverPaymentCodeInfo;
+        this._paymentCodeSendAddressMap = resetSenderPaymentCodeInfo;
 
         await this._scan(zone, account);
     }
@@ -887,19 +880,13 @@ export class QiHDWallet extends AbstractHDWallet {
     private async _scan(zone: Zone, account: number = 0): Promise<void> {
         if (!this.provider) throw new Error('Provider not set');
 
-        // Start scanning processes for each derivation tree
-        const scans = [
-            this.scanBIP44Addresses(zone, account, false), // External addresses
-            this.scanBIP44Addresses(zone, account, true), // Change addresses
+        const derivationPaths: DerivationPath[] = [
+            'BIP44:external',
+            'BIP44:change',
+            ...Array.from(this._addressesMap.keys()).filter((path) => !path.startsWith('BIP44:')),
         ];
 
-        // Add scanning processes for each payment channel
-        for (const paymentCode of this._receiverPaymentCodeInfo.keys()) {
-            scans.push(this.scanPaymentChannel(zone, account, paymentCode));
-        }
-
-        // Run all scans in parallel
-        await Promise.all(scans);
+        await Promise.all(derivationPaths.map((path) => this._scanDerivationPath(path, zone, account)));
     }
 
     /**
@@ -912,192 +899,45 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If an error occurs during the address scanning or outpoints retrieval process.
      */
-    private async scanBIP44Addresses(zone: Zone, account: number, isChange: boolean): Promise<void> {
-        const addressMap = isChange ? this._changeAddresses : this._addresses;
-        const gapAddresses = isChange ? this._gapChangeAddresses : this._gapAddresses;
-        const usedGapAddresses = isChange ? this._usedGapChangeAddresses : this._usedGapAddresses;
+    private async _scanDerivationPath(path: DerivationPath, zone: Zone, account: number): Promise<void> {
+        const addresses = this._addressesMap.get(path) || [];
+        let consecutiveUnusedCount = 0;
 
-        // First, add all used gap addresses to the address map and import their outpoints
-        for (const addressInfo of usedGapAddresses) {
-            this._addAddress(addressMap, account, addressInfo.index, isChange);
-        }
-
-        // Scan outpoints for every address in the address map
-        for (const addressInfo of addressMap.values()) {
-            const outpoints = await this.getOutpointsByAddress(addressInfo.address);
-            if (outpoints.length > 0) {
-                this.importOutpoints(
-                    outpoints.map((outpoint) => ({
-                        outpoint,
-                        address: addressInfo.address,
-                        zone,
-                        account,
-                    })),
-                );
+        // Check existing addresses
+        for (let i = 0; i < addresses.length; i++) {
+            const addr = addresses[i];
+            if (addr.status === AddressStatus.UNKNOWN || addr.status === AddressStatus.ATTEMPTED_USE) {
+                const isUsed = await this.checkAddressUse(addr.address);
+                addr.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
             }
-        }
 
-        let gapCount = 0;
-        // Second, re-examine existing gap addresses
-        const newlyUsedAddresses: NeuteredAddressInfo[] = [];
-        for (let i: number = 0; i < gapAddresses.length; ) {
-            const addressInfo = gapAddresses[i];
-            const { isUsed, outpoints } = await this.checkAddressUse(addressInfo.address);
-            if (isUsed) {
-                // Address has been used since last scan
-                this._addAddress(addressMap, account, addressInfo.index, isChange);
-                if (outpoints.length > 0) {
-                    this.importOutpoints(
-                        outpoints.map((outpoint) => ({
-                            outpoint,
-                            address: addressInfo.address,
-                            zone,
-                            account,
-                        })),
-                    );
-                }
-                // Remove from gap addresses
-                newlyUsedAddresses.push(addressInfo);
-                gapCount = 0;
+            if (addr.status === AddressStatus.USED) {
+                consecutiveUnusedCount = 0;
             } else {
-                gapCount++;
-                i++;
+                consecutiveUnusedCount++;
+            }
+
+            if (consecutiveUnusedCount >= QiHDWallet._GAP_LIMIT && i >= QiHDWallet._GAP_LIMIT) {
+                break;
             }
         }
 
-        // remove addresses that have been used from the gap addresses
-        const updatedGapAddresses = gapAddresses.filter(
-            (addressInfo) => !newlyUsedAddresses.some((usedAddress) => usedAddress.address === addressInfo.address),
-        );
+        // Generate new addresses if needed
+        while (consecutiveUnusedCount < QiHDWallet._GAP_LIMIT) {
+            const isChange = path.endsWith(':change');
+            const newAddrInfo = this._getNextQiAddress(account, zone, isChange);
+            const isUsed = await this.checkAddressUse(newAddrInfo.address);
+            newAddrInfo.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
+            addresses.push(newAddrInfo);
 
-        // Scan for new gap addresses
-        const newGapAddresses: NeuteredAddressInfo[] = [];
-        while (gapCount < QiHDWallet._GAP_LIMIT) {
-            const addressInfo = this._getNextAddress(account, zone, isChange, addressMap);
-            const { isUsed, outpoints } = await this.checkAddressUse(addressInfo.address);
-            if (isUsed) {
-                if (outpoints.length > 0) {
-                    this.importOutpoints(
-                        outpoints.map((outpoint) => ({
-                            outpoint,
-                            address: addressInfo.address,
-                            zone,
-                            account,
-                        })),
-                    );
-                }
-                gapCount = 0;
+            if (newAddrInfo.status === AddressStatus.USED) {
+                consecutiveUnusedCount = 0;
             } else {
-                gapCount++;
-                // check if the address is already in the updated gap addresses array
-                if (!updatedGapAddresses.some((usedAddress) => usedAddress.address === addressInfo.address)) {
-                    newGapAddresses.push(addressInfo);
-                }
+                consecutiveUnusedCount++;
             }
         }
 
-        // update the gap addresses
-        if (isChange) {
-            this._gapChangeAddresses = [...updatedGapAddresses, ...newGapAddresses];
-        } else {
-            this._gapAddresses = [...updatedGapAddresses, ...newGapAddresses];
-        }
-    }
-
-    /**
-     * Scans the specified payment channel for addresses with unspent outputs. Starting at the last address index, it
-     * will generate new addresses until the gap limit is reached.
-     *
-     * @param {Zone} zone - The zone in which to scan for addresses.
-     * @param {number} account - The index of the account to scan.
-     * @param {string} paymentCode - The payment code to scan.
-     * @returns {Promise<void>} A promise that resolves when the scan is complete.
-     * @throws {Error} If the zone is invalid.
-     */
-    private async scanPaymentChannel(zone: Zone, account: number, paymentCode: string): Promise<void> {
-        let gapCount = 0;
-
-        const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(paymentCode);
-        if (!paymentCodeInfoArray) {
-            throw new Error(`Payment code ${paymentCode} not found`);
-        }
-        // first, re-examine existing unused addresses
-        const newlyUsedAddresses: PaymentChannelAddressInfo[] = [];
-        const unusedAddresses = paymentCodeInfoArray.filter((info) => !info.isUsed);
-        for (let i: number = 0; i < unusedAddresses.length; ) {
-            const addressInfo = unusedAddresses[i];
-            const { isUsed, outpoints } = await this.checkAddressUse(addressInfo.address);
-            if (outpoints.length > 0 || isUsed) {
-                // Address has been used since last scan
-                addressInfo.isUsed = true;
-                const pcAddressInfoIndex = paymentCodeInfoArray.findIndex((info) => info.index === addressInfo.index);
-                paymentCodeInfoArray[pcAddressInfoIndex] = addressInfo;
-                this.importOutpoints(
-                    outpoints.map((outpoint) => ({
-                        outpoint,
-                        address: addressInfo.address,
-                        zone,
-                        account,
-                    })),
-                );
-                // Remove from gap addresses
-                newlyUsedAddresses.push(addressInfo);
-                gapCount = 0;
-            } else {
-                // Address is still unused
-                gapCount++;
-                i++;
-            }
-        }
-        // remove the addresses that have been used from the payment code info array
-        const updatedPaymentCodeInfoArray = paymentCodeInfoArray.filter(
-            (addressInfo: PaymentChannelAddressInfo) =>
-                !newlyUsedAddresses.some((usedAddress) => usedAddress.index === addressInfo.index),
-        );
-        // Then, scan for new gap addresses
-        while (gapCount < QiHDWallet._GAP_LIMIT) {
-            const pcAddressInfo = this.getNextReceiveAddress(paymentCode, zone, account);
-            const outpoints = await this.getOutpointsByAddress(pcAddressInfo.address);
-
-            let isUsed = false;
-            if (outpoints.length > 0) {
-                isUsed = true;
-                this.importOutpoints(
-                    outpoints.map((outpoint) => ({
-                        outpoint,
-                        address: pcAddressInfo.address,
-                        zone,
-                        account,
-                    })),
-                );
-                gapCount = 0;
-            } else if (
-                this._addressUseChecker !== undefined &&
-                (await this._addressUseChecker(pcAddressInfo.address))
-            ) {
-                // address checker returned true, so the address is used
-                isUsed = true;
-                gapCount = 0;
-            } else {
-                gapCount++;
-            }
-
-            if (isUsed) {
-                // update the payment code info array if the address has been used
-                pcAddressInfo.isUsed = isUsed;
-                const pcAddressInfoIndex = updatedPaymentCodeInfoArray.findIndex(
-                    (info) => info.index === pcAddressInfo.index,
-                );
-                if (pcAddressInfoIndex !== -1) {
-                    updatedPaymentCodeInfoArray[pcAddressInfoIndex] = pcAddressInfo;
-                } else {
-                    updatedPaymentCodeInfoArray.push(pcAddressInfo);
-                }
-            }
-        }
-
-        // update the payment code info map
-        this._receiverPaymentCodeInfo.set(paymentCode, updatedPaymentCodeInfoArray);
+        this._addressesMap.set(path, addresses);
     }
 
     /**
@@ -1116,6 +956,15 @@ export class QiHDWallet extends AbstractHDWallet {
         }
     }
 
+    /**
+     * Checks if the specified address is used by querying the network node for the outpoints of the address. If the
+     * address is used, the outpoints are imported into the wallet.
+     *
+     * @param {string} address - The address to check.
+     * @returns {Promise<{ isUsed: boolean; outpoints: Outpoint[] }>} A promise that resolves to an object containing a
+     *   boolean indicating whether the address is used and an array of outpoints.
+     * @throws {Error} If the query fails.
+     */
     private async checkAddressUse(address: string): Promise<{ isUsed: boolean; outpoints: Outpoint[] }> {
         let isUsed = false;
         let outpoints: Outpoint[] = [];
@@ -1123,8 +972,17 @@ export class QiHDWallet extends AbstractHDWallet {
             outpoints = await this.getOutpointsByAddress(address);
             if (outpoints.length > 0) {
                 isUsed = true;
+                this.importOutpoints(
+                    outpoints.map((outpoint) => ({
+                        outpoint,
+                        address,
+                        zone: getZoneForAddress(address)!,
+                        account: 0,
+                    })),
+                );
             } else if (this._addressUseChecker !== undefined && (await this._addressUseChecker(address))) {
                 // address checker returned true, so the address is used
+                //! How do we get the outpoints for the address?
                 isUsed = true;
             }
         } catch (error) {
