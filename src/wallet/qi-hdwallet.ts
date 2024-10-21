@@ -227,6 +227,64 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     /**
+     * Finds the last used index in an array of QiAddressInfo objects.
+     *
+     * @param {QiAddressInfo[]} addresses - The array of QiAddressInfo objects.
+     * @returns {number} The last used index.
+     */
+    private _findLastUsedIndex(addresses: QiAddressInfo[] | undefined): number {
+        return addresses?.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1) || 0;
+    }
+
+    /**
+     * Derives the next Qi BIP 44 address for the specified account and zone.
+     *
+     * @param {number} account - The account number.
+     * @param {Zone} zone - The zone.
+     * @param {boolean} isChange - Whether to derive a change address.
+     * @returns {QiAddressInfo} The next Qi address information.
+     */
+    private _getNextQiAddress(account: number, zone: Zone, isChange: boolean): QiAddressInfo {
+        const addresses = this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external') || [];
+        const lastIndex = this._findLastUsedIndex(addresses);
+        const addressNode = this.deriveNextAddressNode(account, lastIndex + 1, zone, isChange);
+        const newAddrInfo = {
+            pubKey: addressNode.publicKey,
+            address: addressNode.address,
+            account,
+            index: addressNode.index,
+            change: isChange,
+            zone,
+            status: AddressStatus.UNUSED,
+        };
+        addresses.push(newAddrInfo);
+        this._addressesMap.set(isChange ? 'BIP44:change' : 'BIP44:external', addresses);
+        return newAddrInfo;
+    }
+
+    /**
+     * Promise that resolves to the next address for the specified account and zone.
+     *
+     * @param {number} account - The account number.
+     * @param {Zone} zone - The zone.
+     * @returns {Promise<QiAddressInfo>} The next Qi address information.
+     */
+    public async getNextAddress(account: number, zone: Zone): Promise<QiAddressInfo> {
+        return this._getNextQiAddress(account, zone, false);
+    }
+
+    /**
+     * Synchronously retrieves the next address for the specified account and zone.
+     *
+     * @param {number} account - The account number.
+     * @param {Zone} zone - The zone.
+     * @returns {QiAddressInfo} The next Qi address information.
+     */
+    public getNextAddressSync(account: number, zone: Zone): QiAddressInfo {
+        return this._getNextQiAddress(account, zone, false);
+    }
+
+    /**
      * Promise that resolves to the next change address for the specified account and zone.
      *
      * @param {number} account - The index of the account for which to retrieve the next change address.
@@ -234,7 +292,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<NeuteredAddressInfo>} The next change neutered address information.
      */
     public async getNextChangeAddress(account: number, zone: Zone): Promise<NeuteredAddressInfo> {
-        return Promise.resolve(this._getNextAddress(account, zone, true, this._changeAddresses));
+        return Promise.resolve(this._getNextQiAddress(account, zone, true));
     }
 
     /**
@@ -245,7 +303,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {NeuteredAddressInfo} The next change neutered address information.
      */
     public getNextChangeAddressSync(account: number, zone: Zone): NeuteredAddressInfo {
-        return this._getNextAddress(account, zone, true, this._changeAddresses);
+        return this._getNextQiAddress(account, zone, true);
     }
 
     /**
