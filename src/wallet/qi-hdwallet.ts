@@ -1318,9 +1318,10 @@ export class QiHDWallet extends AbstractHDWallet {
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             const address = receiverPCodePublic.getPaymentAddress(walletPCodePrivate, addrIndex++);
             if (this.isValidAddressForZone(address, zone)) {
+                const pubkey = receiverPCodePublic.derivePaymentPublicKey(walletPCodePrivate, addrIndex - 1);
                 const pcInfo: QiAddressInfo = {
                     address,
-                    pubKey: hexlify(receiverPCodePublic.pubKey),
+                    pubKey: hexlify(pubkey),
                     index: addrIndex,
                     account,
                     zone,
@@ -1365,9 +1366,10 @@ export class QiHDWallet extends AbstractHDWallet {
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             const address = walletPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex++);
             if (this.isValidAddressForZone(address, zone)) {
+                const pubkey = walletPCodePrivate.derivePaymentPublicKey(senderPCodePublic, addrIndex - 1);
                 const pcInfo: QiAddressInfo = {
                     address,
-                    pubKey: hexlify(walletPCodePrivate.pubKey),
+                    pubKey: hexlify(pubkey),
                     index: addrIndex,
                     account,
                     zone,
