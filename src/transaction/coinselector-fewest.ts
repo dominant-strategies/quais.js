@@ -101,8 +101,13 @@ export class FewestCoinSelector extends AbstractCoinSelector {
      * @returns {UTXO[]} The minimal set of UTXOs.
      */
     private findMinimalUTXOSet(sortedUTXOs: UTXO[], totalRequired: bigint): UTXO[] {
-        // Use a greedy algorithm to select the fewest UTXOs
-        // Starting from the largest denominations to minimize the number of inputs
+        // First, try to find the smallest single UTXO that covers the total required amount
+        const singleUTXO = sortedUTXOs.find((utxo) => BigInt(denominations[utxo.denomination!]) >= totalRequired);
+        if (singleUTXO) {
+            return [singleUTXO];
+        }
+
+        // If no single UTXO is sufficient, use a greedy algorithm starting from the largest denominations
         const utxos = [...sortedUTXOs].reverse(); // Largest to smallest
         let totalValue = BigInt(0);
         const selectedUTXOs: UTXO[] = [];
