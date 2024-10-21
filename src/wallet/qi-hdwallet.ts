@@ -38,11 +38,36 @@ export interface OutpointInfo {
     account?: number;
 }
 
-// enum AddressUseStatus {
-//     USED, // Address has been used in a transaction and is not available for reuse
-//     UNUSED, // Address has not been used in any transaction and is available for reuse
-//     ATTEMPTED, // Address was attempted to be used in a transaction but tx status is unknown
-// }
+/**
+ * Enum representing the status of an address in the wallet.
+ *
+ * @enum {string}
+ */
+enum AddressStatus {
+    USED = 'USED',
+    UNUSED = 'UNUSED',
+    ATTEMPTED_USE = 'ATTEMPTED_USE',
+    UNKNOWN = 'UNKNOWN',
+}
+
+/**
+ * Type representing the derivation path of an address in the wallet.
+ *
+ * @type {string}
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type DerivationPath = 'BIP44:external' | 'BIP44:change' | string; // string for payment codes
+
+/**
+ * Interface representing an address in the Qi HD wallet.
+ *
+ * @extends NeuteredAddressInfo
+ */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface QiAddressInfo extends NeuteredAddressInfo {
+    status: AddressStatus;
+    counterpartyPaymentCode?: string;
+}
 
 interface PaymentChannelAddressInfo {
     address: string;
