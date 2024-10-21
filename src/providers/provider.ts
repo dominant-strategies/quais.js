@@ -2627,12 +2627,15 @@ export interface EventFilter {
     nodeLocation?: NodeLocation;
 }
 
+export type AccessesType = 'block' | 'balance';
+
 /**
  * An **AccessesFilter** allows efficiently filtering accesses (state uses) using address.
  *
  * @category Providers
  */
 export interface AccessesFilter {
+    type: AccessesType;
     address: AddressLike;
 }
 

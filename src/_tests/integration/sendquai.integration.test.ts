@@ -64,8 +64,8 @@ describe('Test sending Quai', function () {
                     from: wallet.address,
                 };
                 console.log(`Sending quai to: ${receiverAddress}`);
-                provider.on({ address: receiverAddress }, () => {
-                    console.log('Received quai');
+                provider.on({ type: 'balance', address: receiverAddress }, (balance) => {
+                    console.log(`Received quai on address ${receiverAddress}. New Balance is ${balance}`);
                 });
                 const tx = (await wallet.sendTransaction(txObj)) as QuaiTransactionResponse;
                 //wait 2 seconds
