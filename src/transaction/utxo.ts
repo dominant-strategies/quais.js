@@ -148,6 +148,7 @@ export class UTXO implements UTXOLike {
     #index: null | number;
     #address: null | string;
     #denomination: null | number;
+    #lock: null | number;
 
     /**
      * Gets the transaction hash.
@@ -233,6 +234,14 @@ export class UTXO implements UTXOLike {
         this.#denomination = value;
     }
 
+    get lock(): null | number {
+        return this.#lock;
+    }
+
+    set lock(value: null | number) {
+        this.#lock = value;
+    }
+
     /**
      * Constructs a new UTXO instance with null properties.
      */
@@ -241,6 +250,7 @@ export class UTXO implements UTXOLike {
         this.#index = null;
         this.#address = null;
         this.#denomination = null;
+        this.#lock = null;
     }
 
     /**

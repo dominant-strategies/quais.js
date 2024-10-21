@@ -15,7 +15,7 @@ import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
 import { keccak256, musigCrypto } from '../crypto/index.js';
 import { Outpoint, UTXO, denominations } from '../transaction/utxo.js';
-import { AllowedCoinType, Zone } from '../constants/index.js';
+import { AllowedCoinType, Shard, toShard, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
 import { PaymentCodePrivate, PaymentCodePublic, PC_VERSION, validatePaymentCode } from './payment-codes.js';
 import { BIP32Factory } from './bip32/bip32.js';
@@ -292,14 +292,8 @@ export class QiHDWallet extends AbstractHDWallet {
 
         const hash = getBytes(keccak256(txobj.unsignedSerialized));
 
-        const shouldUseSchnorrSignature = (inputs: TxInput[]): boolean => {
-            if (inputs.length === 1) return true;
-            const firstPubKey = inputs[0].pubkey;
-            return inputs.every((input) => input.pubkey === firstPubKey);
-        };
-
         let signature: string;
-        if (shouldUseSchnorrSignature(txobj.txInputs)) {
+        if (txobj.txInputs.length === 1) {
             signature = this.createSchnorrSignature(txobj.txInputs[0], hash);
         } else {
             signature = this.createMuSigSignature(txobj, hash);
@@ -355,7 +349,7 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     /**
-     * Gets the balance for the specified zone.
+     * Gets the **total** balance for the specified zone, including locked UTXOs.
      *
      * @param {Zone} zone - The zone to get the balance for.
      * @returns {bigint} The total balance for the zone.
@@ -367,6 +361,50 @@ export class QiHDWallet extends AbstractHDWallet {
             .filter((outpoint) => outpoint.zone === zone)
             .reduce((total, outpoint) => {
                 const denominationValue = denominations[outpoint.outpoint.denomination];
+                return total + denominationValue;
+            }, BigInt(0));
+    }
+
+    /**
+     * Gets the locked balance for the specified zone.
+     *
+     * @param {Zone} zone - The zone to get the locked balance for.
+     * @returns {bigint} The locked balance for the zone.
+     */
+    public async getSpendableBalanceForZone(zone: Zone, blockNumber?: number): Promise<bigint> {
+        this.validateZone(zone);
+        if (!this.provider) {
+            throw new Error('Provider is not set');
+        }
+        if (!blockNumber) {
+            blockNumber = await this.provider.getBlockNumber(toShard(zone));
+        }
+        return this._availableOutpoints
+            .filter((utxo) => utxo.outpoint.lock === 0 || utxo.outpoint.lock! < blockNumber!)
+            .reduce((total, utxo) => {
+                const denominationValue = denominations[utxo.outpoint.denomination];
+                return total + denominationValue;
+            }, BigInt(0));
+    }
+
+    /**
+     * Gets the locked balance for the specified zone.
+     *
+     * @param {Zone} zone - The zone to get the locked balance for.
+     * @returns {bigint} The locked balance for the zone.
+     */
+    public async getLockedBalanceForZone(zone: Zone, blockNumber?: number): Promise<bigint> {
+        this.validateZone(zone);
+        if (!this.provider) {
+            throw new Error('Provider is not set');
+        }
+        if (!blockNumber) {
+            blockNumber = await this.provider.getBlockNumber(toShard(zone));
+        }
+        return this._availableOutpoints
+            .filter((utxo) => utxo.outpoint.lock !== 0 && blockNumber! < utxo.outpoint.lock!)
+            .reduce((total, utxo) => {
+                const denominationValue = denominations[utxo.outpoint.denomination];
                 return total + denominationValue;
             }, BigInt(0));
     }
@@ -387,6 +425,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 utxo.index = outpointInfo.outpoint.index;
                 utxo.address = outpointInfo.address;
                 utxo.denomination = outpointInfo.outpoint.denomination;
+                utxo.lock = outpointInfo.outpoint.lock ?? null;
                 return utxo;
             });
     }
@@ -401,14 +440,16 @@ export class QiHDWallet extends AbstractHDWallet {
         }
 
         // 1. Check the wallet has enough balance in the originating zone to send the transaction
-        const balance = this.getBalanceForZone(originZone);
+        const currentBlock = await this.provider.getBlockNumber(originZone as unknown as Shard);
+        const balance = await this.getSpendableBalanceForZone(originZone, currentBlock);
         if (balance < amount) {
             throw new Error(`Insufficient balance in the originating zone: want ${amount} Qi got ${balance} Qi`);
         }
 
         // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
         const zoneUTXOs = this.outpointsToUTXOs(originZone);
-        const fewestCoinSelector = new FewestCoinSelector(zoneUTXOs);
+        const unlockedUTXOs = zoneUTXOs.filter((utxo) => utxo.lock === 0 || utxo.lock! < currentBlock);
+        const fewestCoinSelector = new FewestCoinSelector(unlockedUTXOs);
 
         const spendTarget: bigint = amount;
         let selection = fewestCoinSelector.performSelection(spendTarget);
@@ -431,7 +472,7 @@ export class QiHDWallet extends AbstractHDWallet {
         };
 
         // 4. Get change addresses
-        let changeAddresses = await getChangeAddresses(selection.changeOutputs.length);
+        const changeAddresses = await getChangeAddresses(selection.changeOutputs.length);
 
         // 5. Create the transaction and sign it using the signTransaction method
         let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
@@ -452,7 +493,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const gasPrice = denominations[1]; // 0.005 Qi
         const minerTip = (gasLimit * gasPrice) / 100n; // 1% extra as tip
         // const feeData = await this.provider.getFeeData(originZone, true);
-        // const conversionRate = await this.provider.getLatestQuaiRate(originZone, feeData.gasPrice);
+        // const conversionRate = await this.provider.getLatestQuaiRate(originZone, feeData.gasPrice!);
 
         // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, and minerTip
         const totalFee = gasLimit * gasPrice + minerTip;
@@ -463,7 +504,8 @@ export class QiHDWallet extends AbstractHDWallet {
         // Determine if new addresses are needed for the change and spend outputs
         const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
         if (changeAddressesNeeded > 0) {
-            changeAddresses = await getChangeAddresses(changeAddressesNeeded);
+            const newChangeAddresses = await getChangeAddresses(changeAddressesNeeded);
+            changeAddresses.push(...newChangeAddresses);
         }
 
         const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
@@ -696,12 +738,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const musig = MuSigFactory(musigCrypto);
 
         // Collect private keys corresponding to the pubkeys found on the inputs
-        const privKeysSet = new Set<string>();
-        tx.txInputs!.forEach((input) => {
-            const privKey = this.getPrivateKeyForTxInput(input);
-            privKeysSet.add(privKey);
-        });
-        const privKeys = Array.from(privKeysSet);
+        const privKeys = tx.txInputs.map((input) => this.getPrivateKeyForTxInput(input));
 
         // Create an array of public keys corresponding to the private keys for musig aggregation
         const pubKeys: Uint8Array[] = privKeys
