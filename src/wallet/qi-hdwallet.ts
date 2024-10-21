@@ -55,7 +55,6 @@ enum AddressStatus {
  *
  * @type {string}
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type DerivationPath = 'BIP44:external' | 'BIP44:change' | string; // string for payment codes
 
 /**
@@ -63,7 +62,6 @@ type DerivationPath = 'BIP44:external' | 'BIP44:change' | string; // string for 
  *
  * @extends NeuteredAddressInfo
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface QiAddressInfo extends NeuteredAddressInfo {
     status: AddressStatus;
     counterpartyPaymentCode?: string;
@@ -161,46 +159,18 @@ export class QiHDWallet extends AbstractHDWallet {
     protected static _coinType: AllowedCoinType = 969;
 
     /**
-     * Map of change addresses to address info.
+     * A map containing address information for all addresses known to the wallet. This includes:
      *
-     * @ignore
-     * @type {Map<string, NeuteredAddressInfo>}
-     */
-    protected _changeAddresses: Map<string, NeuteredAddressInfo> = new Map();
-
-    /**
-     * Array of gap addresses.
+     * - BIP44 derived addresses (external)
+     * - BIP44 derived change addresses
+     * - BIP47 payment code derived addresses for receiving funds
      *
-     * @ignore
-     * @type {NeuteredAddressInfo[]}
-     */
-    protected _gapChangeAddresses: NeuteredAddressInfo[] = [];
-
-    /**
-     * Array of gap change addresses.
+     * The key is the derivation path or payment code, and the value is an array of QiAddressInfo objects.
      *
-     * @ignore
-     * @type {NeuteredAddressInfo[]}
+     * @private
+     * @type {Map<DerivationPath, QiAddressInfo[]>}
      */
-    protected _gapAddresses: NeuteredAddressInfo[] = [];
-
-    /**
-     * This array is used to keep track of gap addresses that have been included in a transaction, but whose outpoints
-     * have not been imported into the wallet.
-     *
-     * @ignore
-     * @type {NeuteredAddressInfo[]}
-     */
-    protected _usedGapAddresses: NeuteredAddressInfo[] = [];
-
-    /**
-     * This array is used to keep track of gap change addresses that have been included in a transaction, but whose
-     * outpoints have not been imported into the wallet.
-     *
-     * @ignore
-     * @type {NeuteredAddressInfo[]}
-     */
-    protected _usedGapChangeAddresses: NeuteredAddressInfo[] = [];
+    private _addressesMap: Map<DerivationPath, QiAddressInfo[]> = new Map();
 
     /**
      * Array of outpoint information.
@@ -222,14 +192,17 @@ export class QiHDWallet extends AbstractHDWallet {
     protected _addressUseChecker: AddressUsageCallback | undefined;
 
     /**
-     * Map of paymentcodes to PaymentChannelAddressInfo for the receiver
+     * A map containing address information for sending funds to counterparties using BIP47 payment codes.
+     *
+     * @remarks
+     * The key is the receiver's payment code, and the value is an array of QiAddressInfo objects. These addresses are
+     * derived from the receiver's payment code and are used only for sending funds. They are not part of the set of
+     * addresses that this wallet can control or spend from. This map is used to keep track of addresses generated for
+     * each payment channel to ensure proper address rotation and avoid address reuse when sending funds.
+     * @private
+     * @type {Map<string, QiAddressInfo[]>}
      */
-    private _receiverPaymentCodeInfo: Map<string, PaymentChannelAddressInfo[]> = new Map();
-
-    /**
-     * Map of paymentcodes to PaymentChannelAddressInfo for the sender
-     */
-    private _senderPaymentCodeInfo: Map<string, PaymentChannelAddressInfo[]> = new Map();
+    private _paymentCodeSendAddressMap: Map<string, QiAddressInfo[]> = new Map();
 
     /**
      * @ignore
@@ -238,6 +211,8 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     constructor(guard: any, root: HDNodeWallet, provider?: Provider) {
         super(guard, root, provider);
+        this._addressesMap.set('BIP44:external', []);
+        this._addressesMap.set('BIP44:change', []);
     }
 
     /**
@@ -249,15 +224,6 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     public setAddressUseChecker(checker: AddressUsageCallback): void {
         this._addressUseChecker = checker;
-    }
-
-    // getters for the payment code info maps
-    public get receiverPaymentCodeInfo(): { [key: string]: PaymentChannelAddressInfo[] } {
-        return Object.fromEntries(this._receiverPaymentCodeInfo);
-    }
-
-    public get senderPaymentCodeInfo(): { [key: string]: PaymentChannelAddressInfo[] } {
-        return Object.fromEntries(this._senderPaymentCodeInfo);
     }
 
     /**
