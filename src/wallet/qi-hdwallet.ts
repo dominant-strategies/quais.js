@@ -67,15 +67,6 @@ interface QiAddressInfo extends NeuteredAddressInfo {
     counterpartyPaymentCode?: string;
 }
 
-interface PaymentChannelAddressInfo {
-    address: string;
-    pubKey: string;
-    index: number;
-    isUsed: boolean;
-    zone: Zone;
-    account: number;
-}
-
 /**
  * @extends SerializedHDWallet
  * @property {OutpointInfo[]} outpoints - Array of outpoint information.
@@ -1141,7 +1132,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @throws {Error} If the serialized data is invalid or if any addresses in the gap addresses or gap change
      *   addresses do not exist in the wallet.
      */
-    public static async deserialize(serialized: SerializedQiHDWallet): Promise<QiHDWalletV3> {
+    public static async deserialize(serialized: SerializedQiHDWallet): Promise<QiHDWallet> {
         super.validateSerializedWallet(serialized);
         // create the wallet instance
         const mnemonic = Mnemonic.fromPhrase(serialized.phrase);
@@ -1311,37 +1302,35 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<string>} A promise that resolves to the payment address for sending funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    public getNextSendAddress(receiverPaymentCode: string, zone: Zone, account: number = 0): PaymentChannelAddressInfo {
+    public getNextSendAddress(receiverPaymentCode: string, zone: Zone, account: number = 0): QiAddressInfo {
         const bip32 = this._getBIP32API();
         const buf = this._decodeBase58(receiverPaymentCode);
         const version = buf[0];
         if (version !== PC_VERSION) throw new Error('Invalid payment code version');
 
-        const receiverPCodePrivate = this._getPaymentCodePrivate(account);
-        const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
+        const walletPCodePrivate = this._getPaymentCodePrivate(account);
+        const receiverPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
 
-        const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(receiverPaymentCode);
-        const lastIndex =
-            paymentCodeInfoArray && paymentCodeInfoArray.length > 0
-                ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
-                : 0;
+        const paymentCodeInfoArray = this._paymentCodeSendAddressMap.get(receiverPaymentCode);
+        const lastIndex = this._findLastUsedIndex(paymentCodeInfoArray);
 
         let addrIndex = lastIndex;
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
-            const address = senderPCodePublic.getPaymentAddress(receiverPCodePrivate, addrIndex++);
+            const address = receiverPCodePublic.getPaymentAddress(walletPCodePrivate, addrIndex++);
             if (this.isValidAddressForZone(address, zone)) {
-                const pcInfo: PaymentChannelAddressInfo = {
+                const pcInfo: QiAddressInfo = {
                     address,
-                    pubKey: hexlify(senderPCodePublic.pubKey),
+                    pubKey: hexlify(receiverPCodePublic.pubKey),
                     index: addrIndex,
                     account,
                     zone,
-                    isUsed: false,
+                    change: false,
+                    status: AddressStatus.UNUSED,
                 };
                 if (paymentCodeInfoArray) {
                     paymentCodeInfoArray.push(pcInfo);
                 } else {
-                    this._senderPaymentCodeInfo.set(receiverPaymentCode, [pcInfo]);
+                    this._paymentCodeSendAddressMap.set(receiverPaymentCode, [pcInfo]);
                 }
                 return pcInfo;
             }
@@ -1360,41 +1349,36 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<string>} A promise that resolves to the payment address for receiving funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    public getNextReceiveAddress(
-        senderPaymentCode: string,
-        zone: Zone,
-        account: number = 0,
-    ): PaymentChannelAddressInfo {
+    public getNextReceiveAddress(senderPaymentCode: string, zone: Zone, account: number = 0): QiAddressInfo {
         const bip32 = this._getBIP32API();
         const buf = this._decodeBase58(senderPaymentCode);
         const version = buf[0];
         if (version !== PC_VERSION) throw new Error('Invalid payment code version');
 
         const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
-        const receiverPCodePrivate = this._getPaymentCodePrivate(account);
+        const walletPCodePrivate = this._getPaymentCodePrivate(account);
 
-        const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(senderPaymentCode);
-        const lastIndex =
-            paymentCodeInfoArray && paymentCodeInfoArray.length > 0
-                ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
-                : 0;
+        const paymentCodeInfoArray = this._addressesMap.get(senderPaymentCode);
+        const lastIndex = this._findLastUsedIndex(paymentCodeInfoArray);
 
         let addrIndex = lastIndex;
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
-            const address = receiverPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex++);
+            const address = walletPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex++);
             if (this.isValidAddressForZone(address, zone)) {
-                const pcInfo: PaymentChannelAddressInfo = {
+                const pcInfo: QiAddressInfo = {
                     address,
-                    pubKey: hexlify(receiverPCodePrivate.pubKey),
+                    pubKey: hexlify(walletPCodePrivate.pubKey),
                     index: addrIndex,
                     account,
                     zone,
-                    isUsed: false,
+                    change: false,
+                    status: AddressStatus.UNUSED,
+                    counterpartyPaymentCode: senderPaymentCode,
                 };
                 if (paymentCodeInfoArray) {
                     paymentCodeInfoArray.push(pcInfo);
                 } else {
-                    this._receiverPaymentCodeInfo.set(senderPaymentCode, [pcInfo]);
+                    this._addressesMap.set(senderPaymentCode, [pcInfo]);
                 }
                 return pcInfo;
             }
@@ -1410,20 +1394,17 @@ export class QiHDWallet extends AbstractHDWallet {
      * it will be ignored.
      *
      * @param {string} paymentCode - The payment code to store.
-     * @param {'receiver' | 'sender'} type - The type of payment code ('receiver' or 'sender').
      */
-    public openChannel(paymentCode: string, type: 'receiver' | 'sender'): void {
+    public openChannel(paymentCode: string): void {
         if (!validatePaymentCode(paymentCode)) {
             throw new Error(`Invalid payment code: ${paymentCode}`);
         }
-        if (type === 'receiver') {
-            if (!this._receiverPaymentCodeInfo.has(paymentCode)) {
-                this._receiverPaymentCodeInfo.set(paymentCode, []);
-            }
-        } else {
-            if (!this._senderPaymentCodeInfo.has(paymentCode)) {
-                this._senderPaymentCodeInfo.set(paymentCode, []);
-            }
+        if (!this._addressesMap.has(paymentCode)) {
+            this._addressesMap.set(paymentCode, []);
+        }
+
+        if (!this._paymentCodeSendAddressMap.has(paymentCode)) {
+            this._paymentCodeSendAddressMap.set(paymentCode, []);
         }
     }
 
@@ -1431,10 +1412,10 @@ export class QiHDWallet extends AbstractHDWallet {
      * Gets the address info for a given address.
      *
      * @param {string} address - The address.
-     * @returns {NeuteredAddressInfo | null} The address info or null if not found.
+     * @returns {QiAddressInfo | null} The address info or null if not found.
      */
-    public getChangeAddressInfo(address: string): NeuteredAddressInfo | null {
-        const changeAddressInfo = this._changeAddresses.get(address);
+    public getChangeAddressInfo(address: string): QiAddressInfo | null {
+        const changeAddressInfo = this._addressesMap.get('BIP44:change')?.find((addr) => addr.address === address);
         if (!changeAddressInfo) {
             return null;
         }
