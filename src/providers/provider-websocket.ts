@@ -16,6 +16,7 @@ export interface WebSocketLike {
     onopen: null | ((...args: Array<any>) => any);
     onmessage: null | ((...args: Array<any>) => any);
     onerror: null | ((...args: Array<any>) => any);
+    onclose: null | ((...args: Array<any>) => any);
 
     readyState: number;
 
@@ -116,6 +117,20 @@ export class WebSocketProvider extends SocketProvider {
                 // @TODO: now what? Attempt reconnect?
             }
         };
+
+        // @TODO: implement onclose
+        //        websocket.onclose = () => {
+        //            console.log('WebSocket closed. Attempting to reconnect...');
+        //            setTimeout(() => {
+        //                const baseUrl = websocket.url.split(':').slice(0, 2).join(':');
+        //                const shardSuffix = this._getOption('usePathing') ? `/${fromShard(shard, 'nickname')}` : `:${port}`;
+        //                const newWebSocket = this.createWebSocket(baseUrl, shardSuffix);
+        //                this.initWebSocket(newWebSocket, shard, port);
+        //                this.#websockets.push(newWebSocket);
+        //                this._urlMap.set(shard, newWebSocket);
+        //            }, 500); // Reconnect after 5 seconds
+        //        };
+
         websocket.onmessage = (message: { data: string }) => {
             this._processMessage(message.data);
         };
@@ -139,6 +154,12 @@ export class WebSocketProvider extends SocketProvider {
         }
     }
 
+    createWebSocket = (baseUrl: string, suffix: string): WebSocketLike => {
+        const tempWs = new _WebSocket(`${baseUrl}${suffix}`);
+        return tempWs as WebSocketLike;
+        // wait 2 minutes
+    };
+
     /**
      * Initialize the URL map with WebSocket connections.
      *
@@ -152,11 +173,6 @@ export class WebSocketProvider extends SocketProvider {
         this._urlMap.clear();
         try {
             const primeSuffix = this._getOption('usePathing') ? `/${fromShard(Shard.Prime, 'nickname')}` : ':8001';
-            const createWebSocket = (baseUrl: string, suffix: string): WebSocketLike => {
-                const tempWs = new _WebSocket(`${baseUrl}${suffix}`);
-                return tempWs as WebSocketLike;
-                // wait 2 minutes
-            };
 
             const initShardWebSockets = async (baseUrl: string) => {
                 const shards = await this._getRunningLocations(Shard.Prime, true);
@@ -168,7 +184,7 @@ export class WebSocketProvider extends SocketProvider {
                             ? `/${fromShard(shardEnum, 'nickname')}`
                             : `:${port}`;
                         const shardUrl = baseUrl.split(':').slice(0, 2).join(':');
-                        const websocket = createWebSocket(shardUrl, shardSuffix);
+                        const websocket = this.createWebSocket(shardUrl, shardSuffix);
                         this.initWebSocket(websocket, shardEnum);
                         this.#websockets.push(websocket);
                         this._urlMap.set(shardEnum, websocket);
@@ -185,7 +201,7 @@ export class WebSocketProvider extends SocketProvider {
             if (Array.isArray(urls)) {
                 for (const url of urls) {
                     const baseUrl = `${url.split(':')[0]}:${url.split(':')[1]}`;
-                    const primeWebsocket = createWebSocket(baseUrl, primeSuffix);
+                    const primeWebsocket = this.createWebSocket(baseUrl, primeSuffix);
                     this.initWebSocket(primeWebsocket, Shard.Prime);
                     this.#websockets.push(primeWebsocket);
                     this._urlMap.set(Shard.Prime, primeWebsocket);

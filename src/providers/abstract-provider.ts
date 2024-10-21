@@ -362,7 +362,19 @@ async function getSubscription(_event: ProviderEvent, zone?: Zone): Promise<Subs
         return { type: 'orphan', tag: getTag('orphan', event), filter: copy(event), zone };
     }
 
-    if ((<any>_event).topics || Array.isArray((<any>_event).address)) {
+    if ((<any>_event).type && (<any>_event).address) {
+        const address = formatMixedCaseChecksumAddress(
+            isHexString((<any>_event).address) ? (<any>_event).address : await resolveAddress((<any>_event).address),
+        );
+        const filter = <AccessesFilter>{
+            type: (<any>_event).type,
+            address: address,
+        };
+        if (!zone) {
+            zone = toZone(address.slice(0, 4));
+        }
+        return { filter, tag: getTag('accesses', filter), type: 'accesses', zone };
+    } else if ((<any>_event).topics || (<any>_event).address) {
         const event = <EventFilter>_event;
 
         const filter: EventFilter = {
@@ -418,17 +430,6 @@ async function getSubscription(_event: ProviderEvent, zone?: Zone): Promise<Subs
         }
 
         return { filter, tag: getTag('event', filter), type: 'event', zone };
-    } else if ((<any>_event).address) {
-        const address = formatMixedCaseChecksumAddress(
-            isHexString((<any>_event).address) ? (<any>_event).address : await resolveAddress((<any>_event).address),
-        );
-        const filter = <AccessesFilter>{
-            address: address,
-        };
-        if (!zone) {
-            zone = toZone(address.slice(0, 4));
-        }
-        return { filter, tag: getTag('accesses', filter), type: 'accesses', zone };
     }
 
     assertArgument(false, 'unknown ProviderEvent', 'event', _event);

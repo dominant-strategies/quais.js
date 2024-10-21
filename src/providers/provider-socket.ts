@@ -188,10 +188,10 @@ export class SocketBlockSubscriber extends SocketSubscriber {
  * @category Providers
  */
 export class SocketAccessesSubscriber extends SocketSubscriber {
-    #logFilter: string;
+    #accessesFilter: string;
 
-    get logFilter(): EventFilter {
-        return JSON.parse(this.#logFilter);
+    get accessesFilter(): AccessesFilter {
+        return JSON.parse(this.#accessesFilter);
     }
     /**
      * Creates a new **SocketBlockSubscriber**.
@@ -203,7 +203,7 @@ export class SocketAccessesSubscriber extends SocketSubscriber {
      */
     constructor(provider: SocketProvider, filter: AccessesFilter, zone: Zone) {
         super(provider, ['accesses', filter.address], zone);
-        this.#logFilter = JSON.stringify(filter);
+        this.#accessesFilter = JSON.stringify(filter);
     }
 
     /**
@@ -215,7 +215,10 @@ export class SocketAccessesSubscriber extends SocketSubscriber {
      * @returns {Promise<void>}
      */
     async _emit(provider: SocketProvider, message: any): Promise<void> {
-        provider.emit(this.logFilter, this.zone, message);
+        if (this.accessesFilter.type === 'balance') {
+            message = await provider.getBalance(this.accessesFilter.address);
+        }
+        provider.emit(this.accessesFilter, this.zone, message);
     }
 }
 
