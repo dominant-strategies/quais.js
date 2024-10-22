@@ -1429,18 +1429,25 @@ export class QiHDWalletLegacy extends AbstractHDWallet {
         const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
 
         const paymentCodeInfoArray = this._senderPaymentCodeInfo.get(receiverPaymentCode);
+        const filteredPaymentCodeInfoArray = paymentCodeInfoArray?.filter(
+            (addressInfo) => addressInfo.account === account && addressInfo.zone === zone,
+        );
         const lastIndex =
-            paymentCodeInfoArray && paymentCodeInfoArray.length > 0
-                ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
+            filteredPaymentCodeInfoArray && filteredPaymentCodeInfoArray.length > 0
+                ? filteredPaymentCodeInfoArray.reduce(
+                      (maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index),
+                      -1,
+                  )
                 : 0;
 
         let addrIndex = lastIndex;
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             const address = senderPCodePublic.getPaymentAddress(receiverPCodePrivate, addrIndex++);
             if (this.isValidAddressForZone(address, zone)) {
+                const pubkey = senderPCodePublic.derivePaymentPublicKey(receiverPCodePrivate, addrIndex - 1);
                 const pcInfo: PaymentChannelAddressInfo = {
                     address,
-                    pubKey: hexlify(senderPCodePublic.pubKey),
+                    pubKey: hexlify(pubkey),
                     index: addrIndex,
                     account,
                     zone,
@@ -1482,18 +1489,25 @@ export class QiHDWalletLegacy extends AbstractHDWallet {
         const receiverPCodePrivate = this._getPaymentCodePrivate(account);
 
         const paymentCodeInfoArray = this._receiverPaymentCodeInfo.get(senderPaymentCode);
+        const filteredPaymentCodeInfoArray = paymentCodeInfoArray?.filter(
+            (addressInfo) => addressInfo.account === account && addressInfo.zone === zone,
+        );
         const lastIndex =
-            paymentCodeInfoArray && paymentCodeInfoArray.length > 0
-                ? paymentCodeInfoArray[paymentCodeInfoArray.length - 1].index
+            filteredPaymentCodeInfoArray && filteredPaymentCodeInfoArray.length > 0
+                ? filteredPaymentCodeInfoArray.reduce(
+                      (maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index),
+                      -1,
+                  )
                 : 0;
 
         let addrIndex = lastIndex;
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             const address = receiverPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex++);
             if (this.isValidAddressForZone(address, zone)) {
+                const pubkey = receiverPCodePrivate.derivePaymentPublicKey(senderPCodePublic, addrIndex - 1);
                 const pcInfo: PaymentChannelAddressInfo = {
                     address,
-                    pubKey: hexlify(receiverPCodePrivate.pubKey),
+                    pubKey: hexlify(pubkey),
                     index: addrIndex,
                     account,
                     zone,
