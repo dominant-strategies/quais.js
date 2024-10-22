@@ -1,4 +1,4 @@
-import { AbstractHDWallet, _guard } from './hdwallet.js';
+import { AbstractHDWallet, NeuteredAddressInfo, _guard } from './hdwallet.js';
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QuaiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { resolveAddress } from '../address/index.js';
@@ -6,6 +6,10 @@ import { AllowedCoinType } from '../constants/index.js';
 import { SerializedHDWallet } from './hdwallet.js';
 import { Mnemonic } from './mnemonic.js';
 import { TypedDataDomain, TypedDataField } from '../hash/index.js';
+
+export interface SerializedQuaiHDWallet extends SerializedHDWallet {
+    addresses: Array<NeuteredAddressInfo>;
+}
 
 /**
  * The Quai HD wallet is a BIP44-compliant hierarchical deterministic wallet used for managing a set of addresses in the
@@ -106,6 +110,27 @@ export class QuaiHDWallet extends AbstractHDWallet {
     }
 
     /**
+     * Serializes the QuaiHDWallet state into a format suitable for storage or transmission.
+     *
+     * This method extends the serialization from the parent class (AbstractHDWallet) and includes additional
+     * QuaiHDWallet-specific data, such as the addresses.
+     *
+     * @example const wallet = new QuaiHDWallet(); const serializedData = wallet.serialize(); // serializedData can now
+     * be stored or transmitted
+     *
+     * @returns {SerializedQuaiHDWallet} An object representing the serialized state of the QuaiHDWallet, including
+     *   addresses and other inherited properties from the parent wallet.
+     */
+    public serialize(): SerializedQuaiHDWallet {
+        const hdwalletSerialized = super.serialize();
+
+        return {
+            ...hdwalletSerialized,
+            addresses: Array.from(this._addresses.values()),
+        };
+    }
+
+    /**
      * Deserializes the given serialized HD wallet data into an instance of QuaiHDWallet.
      *
      * @async
@@ -115,7 +140,7 @@ export class QuaiHDWallet extends AbstractHDWallet {
      * @public
      * @static
      */
-    public static async deserialize(serialized: SerializedHDWallet): Promise<QuaiHDWallet> {
+    public static async deserialize(serialized: SerializedQuaiHDWallet): Promise<QuaiHDWallet> {
         super.validateSerializedWallet(serialized);
         // create the wallet instance
         const mnemonic = Mnemonic.fromPhrase(serialized.phrase);

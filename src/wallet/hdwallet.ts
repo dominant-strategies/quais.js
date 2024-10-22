@@ -30,7 +30,6 @@ export interface SerializedHDWallet {
     version: number;
     phrase: string;
     coinType: AllowedCoinType;
-    addresses: Array<NeuteredAddressInfo>;
 }
 
 /**
@@ -441,12 +440,10 @@ export abstract class AbstractHDWallet {
      *   mnemonic phrase, coin type, and addresses.
      */
     public serialize(): SerializedHDWallet {
-        const addresses = Array.from(this._addresses.values());
         return {
             version: (this.constructor as any)._version,
             phrase: this._root.mnemonic!.phrase,
             coinType: this.coinType(),
-            addresses: addresses,
         };
     }
 
