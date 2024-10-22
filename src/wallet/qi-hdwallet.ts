@@ -436,27 +436,37 @@ export class QiHDWallet extends AbstractHDWallet {
      * Converts outpoints for a specific zone to UTXO format.
      *
      * @param {Zone} zone - The zone to filter outpoints for.
+     * @param {number} [minDenominationToUse] - The minimum denomination to allow for the UTXOs.
      * @returns {UTXO[]} An array of UTXO objects.
      */
-    private outpointsToUTXOs(zone: Zone): UTXO[] {
+    private outpointsToUTXOs(zone: Zone, minDenominationToUse?: number): UTXO[] {
         this.validateZone(zone);
-        return this._availableOutpoints
-            .filter((outpointInfo) => outpointInfo.zone === zone)
-            .map((outpointInfo) => {
-                const utxo = new UTXO();
-                utxo.txhash = outpointInfo.outpoint.txhash;
-                utxo.index = outpointInfo.outpoint.index;
-                utxo.address = outpointInfo.address;
-                utxo.denomination = outpointInfo.outpoint.denomination;
-                utxo.lock = outpointInfo.outpoint.lock ?? null;
-                return utxo;
-            });
+        let zoneOutpoints = this._availableOutpoints.filter((outpointInfo) => outpointInfo.zone === zone);
+
+        // Filter outpoints by minimum denomination if specified
+        // This will likely only be used for converting to Quai
+        // as the min denomination for converting is 10 (100 Qi)
+        if (minDenominationToUse) {
+            zoneOutpoints = zoneOutpoints.filter(
+                (outpointInfo) => outpointInfo.outpoint.denomination >= minDenominationToUse,
+            );
+        }
+        return zoneOutpoints.map((outpointInfo) => {
+            const utxo = new UTXO();
+            utxo.txhash = outpointInfo.outpoint.txhash;
+            utxo.index = outpointInfo.outpoint.index;
+            utxo.address = outpointInfo.address;
+            utxo.denomination = outpointInfo.outpoint.denomination;
+            utxo.lock = outpointInfo.outpoint.lock ?? null;
+            return utxo;
+        });
     }
 
     private async prepareAndSendTransaction(
         amount: bigint,
         originZone: Zone,
         getDestinationAddresses: (count: number) => Promise<string[]>,
+        minDenominationToUse?: number,
     ): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
@@ -472,8 +482,20 @@ export class QiHDWallet extends AbstractHDWallet {
         }
 
         // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
-        const zoneUTXOs = this.outpointsToUTXOs(originZone);
+        const zoneUTXOs = this.outpointsToUTXOs(originZone, minDenominationToUse);
+        if (zoneUTXOs.length === 0) {
+            if (minDenominationToUse === 10) {
+                throw new Error('Qi denominations too small to convert.');
+            } else {
+                throw new Error('No Qi available in zone.');
+            }
+        }
+
         const unlockedUTXOs = zoneUTXOs.filter((utxo) => utxo.lock === 0 || utxo.lock! < currentBlock);
+        if (unlockedUTXOs.length === 0) {
+            throw new Error('Insufficient spendable balance in zone.');
+        }
+
         const fewestCoinSelector = new FewestCoinSelector(unlockedUTXOs);
 
         const spendTarget: bigint = amount;
@@ -608,7 +630,7 @@ export class QiHDWallet extends AbstractHDWallet {
             return Array(count).fill(destinationAddress);
         };
 
-        return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses);
+        return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses, 10);
     }
 
     /**
