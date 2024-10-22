@@ -8,7 +8,7 @@ import ecc from '@bitcoinerlab/secp256k1';
  *
  * @ignore
  */
-const version = '1.0.0-alpha.19';
+const version = '1.0.0-alpha.20';
 
 /**
  * Property helper functions.
@@ -19271,6 +19271,7 @@ class UTXO {
     #index;
     #address;
     #denomination;
+    #lock;
     /**
      * Gets the transaction hash.
      *
@@ -19345,6 +19346,12 @@ class UTXO {
         }
         this.#denomination = value;
     }
+    get lock() {
+        return this.#lock;
+    }
+    set lock(value) {
+        this.#lock = value;
+    }
     /**
      * Constructs a new UTXO instance with null properties.
      */
@@ -19353,6 +19360,7 @@ class UTXO {
         this.#index = null;
         this.#address = null;
         this.#denomination = null;
+        this.#lock = null;
     }
     /**
      * Converts the UTXO instance to a JSON object.
@@ -19476,8 +19484,12 @@ class FewestCoinSelector extends AbstractCoinSelector {
      * @returns {UTXO[]} The minimal set of UTXOs.
      */
     findMinimalUTXOSet(sortedUTXOs, totalRequired) {
-        // Use a greedy algorithm to select the fewest UTXOs
-        // Starting from the largest denominations to minimize the number of inputs
+        // First, try to find the smallest single UTXO that covers the total required amount
+        const singleUTXO = sortedUTXOs.find((utxo) => BigInt(denominations[utxo.denomination]) >= totalRequired);
+        if (singleUTXO) {
+            return [singleUTXO];
+        }
+        // If no single UTXO is sufficient, use a greedy algorithm starting from the largest denominations
         const utxos = [...sortedUTXOs].reverse(); // Largest to smallest
         let totalValue = BigInt(0);
         const selectedUTXOs = [];
@@ -28439,14 +28451,8 @@ class QiHDWallet extends AbstractHDWallet {
         if (!txobj.txInputs || txobj.txInputs.length == 0 || !txobj.txOutputs)
             throw new Error('Invalid UTXO transaction, missing inputs or outputs');
         const hash = getBytes(keccak256(txobj.unsignedSerialized));
-        const shouldUseSchnorrSignature = (inputs) => {
-            if (inputs.length === 1)
-                return true;
-            const firstPubKey = inputs[0].pubkey;
-            return inputs.every((input) => input.pubkey === firstPubKey);
-        };
         let signature;
-        if (shouldUseSchnorrSignature(txobj.txInputs)) {
+        if (txobj.txInputs.length === 1) {
             signature = this.createSchnorrSignature(txobj.txInputs[0], hash);
         }
         else {
@@ -28497,7 +28503,7 @@ class QiHDWallet extends AbstractHDWallet {
         return null;
     }
     /**
-     * Gets the balance for the specified zone.
+     * Gets the **total** balance for the specified zone, including locked UTXOs.
      *
      * @param {Zone} zone - The zone to get the balance for.
      * @returns {bigint} The total balance for the zone.
@@ -28508,6 +28514,48 @@ class QiHDWallet extends AbstractHDWallet {
             .filter((outpoint) => outpoint.zone === zone)
             .reduce((total, outpoint) => {
             const denominationValue = denominations[outpoint.outpoint.denomination];
+            return total + denominationValue;
+        }, BigInt(0));
+    }
+    /**
+     * Gets the locked balance for the specified zone.
+     *
+     * @param {Zone} zone - The zone to get the locked balance for.
+     * @returns {bigint} The locked balance for the zone.
+     */
+    async getSpendableBalanceForZone(zone, blockNumber) {
+        this.validateZone(zone);
+        if (!this.provider) {
+            throw new Error('Provider is not set');
+        }
+        if (!blockNumber) {
+            blockNumber = await this.provider.getBlockNumber(toShard(zone));
+        }
+        return this._availableOutpoints
+            .filter((utxo) => utxo.outpoint.lock === 0 || utxo.outpoint.lock < blockNumber)
+            .reduce((total, utxo) => {
+            const denominationValue = denominations[utxo.outpoint.denomination];
+            return total + denominationValue;
+        }, BigInt(0));
+    }
+    /**
+     * Gets the locked balance for the specified zone.
+     *
+     * @param {Zone} zone - The zone to get the locked balance for.
+     * @returns {bigint} The locked balance for the zone.
+     */
+    async getLockedBalanceForZone(zone, blockNumber) {
+        this.validateZone(zone);
+        if (!this.provider) {
+            throw new Error('Provider is not set');
+        }
+        if (!blockNumber) {
+            blockNumber = await this.provider.getBlockNumber(toShard(zone));
+        }
+        return this._availableOutpoints
+            .filter((utxo) => utxo.outpoint.lock !== 0 && blockNumber < utxo.outpoint.lock)
+            .reduce((total, utxo) => {
+            const denominationValue = denominations[utxo.outpoint.denomination];
             return total + denominationValue;
         }, BigInt(0));
     }
@@ -28527,6 +28575,7 @@ class QiHDWallet extends AbstractHDWallet {
             utxo.index = outpointInfo.outpoint.index;
             utxo.address = outpointInfo.address;
             utxo.denomination = outpointInfo.outpoint.denomination;
+            utxo.lock = outpointInfo.outpoint.lock ?? null;
             return utxo;
         });
     }
@@ -28535,13 +28584,15 @@ class QiHDWallet extends AbstractHDWallet {
             throw new Error('Provider is not set');
         }
         // 1. Check the wallet has enough balance in the originating zone to send the transaction
-        const balance = this.getBalanceForZone(originZone);
+        const currentBlock = await this.provider.getBlockNumber(originZone);
+        const balance = await this.getSpendableBalanceForZone(originZone, currentBlock);
         if (balance < amount) {
             throw new Error(`Insufficient balance in the originating zone: want ${amount} Qi got ${balance} Qi`);
         }
         // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
         const zoneUTXOs = this.outpointsToUTXOs(originZone);
-        const fewestCoinSelector = new FewestCoinSelector(zoneUTXOs);
+        const unlockedUTXOs = zoneUTXOs.filter((utxo) => utxo.lock === 0 || utxo.lock < currentBlock);
+        const fewestCoinSelector = new FewestCoinSelector(unlockedUTXOs);
         const spendTarget = amount;
         let selection = fewestCoinSelector.performSelection(spendTarget);
         // 3. Generate as many unused addresses as required to populate the spend outputs
@@ -28561,7 +28612,7 @@ class QiHDWallet extends AbstractHDWallet {
             return addresses;
         };
         // 4. Get change addresses
-        let changeAddresses = await getChangeAddresses(selection.changeOutputs.length);
+        const changeAddresses = await getChangeAddresses(selection.changeOutputs.length);
         // 5. Create the transaction and sign it using the signTransaction method
         let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
         if (inputPubKeys.some((pubkey) => !pubkey)) {
@@ -28573,7 +28624,7 @@ class QiHDWallet extends AbstractHDWallet {
         const gasPrice = denominations[1]; // 0.005 Qi
         const minerTip = (gasLimit * gasPrice) / 100n; // 1% extra as tip
         // const feeData = await this.provider.getFeeData(originZone, true);
-        // const conversionRate = await this.provider.getLatestQuaiRate(originZone, feeData.gasPrice);
+        // const conversionRate = await this.provider.getLatestQuaiRate(originZone, feeData.gasPrice!);
         // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, and minerTip
         const totalFee = gasLimit * gasPrice + minerTip;
         // Get new selection with fee
@@ -28581,7 +28632,8 @@ class QiHDWallet extends AbstractHDWallet {
         // Determine if new addresses are needed for the change and spend outputs
         const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
         if (changeAddressesNeeded > 0) {
-            changeAddresses = await getChangeAddresses(changeAddressesNeeded);
+            const newChangeAddresses = await getChangeAddresses(changeAddressesNeeded);
+            changeAddresses.push(...newChangeAddresses);
         }
         const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
         if (spendAddressesNeeded > 0) {
@@ -28761,12 +28813,7 @@ class QiHDWallet extends AbstractHDWallet {
     createMuSigSignature(tx, hash) {
         const musig = MuSigFactory(musigCrypto);
         // Collect private keys corresponding to the pubkeys found on the inputs
-        const privKeysSet = new Set();
-        tx.txInputs.forEach((input) => {
-            const privKey = this.getPrivateKeyForTxInput(input);
-            privKeysSet.add(privKey);
-        });
-        const privKeys = Array.from(privKeysSet);
+        const privKeys = tx.txInputs.map((input) => this.getPrivateKeyForTxInput(input));
         // Create an array of public keys corresponding to the private keys for musig aggregation
         const pubKeys = privKeys
             .map((privKey) => musigCrypto.getPublicKey(getBytes(privKey), true))
@@ -30191,7 +30238,18 @@ async function getSubscription(_event, zone) {
         // @todo Should lowercase and whatnot things here instead of copy...
         return { type: 'orphan', tag: getTag('orphan', event), filter: copy$1(event), zone };
     }
-    if (_event.topics || Array.isArray(_event.address)) {
+    if (_event.type && _event.address) {
+        const address = formatMixedCaseChecksumAddress(isHexString(_event.address) ? _event.address : await resolveAddress(_event.address));
+        const filter = {
+            type: _event.type,
+            address: address,
+        };
+        if (!zone) {
+            zone = toZone(address.slice(0, 4));
+        }
+        return { filter, tag: getTag('accesses', filter), type: 'accesses', zone };
+    }
+    else if (_event.topics || _event.address) {
         const event = _event;
         const filter = {
             topics: (event.topics || []).map((t) => {
@@ -30243,16 +30301,6 @@ async function getSubscription(_event, zone) {
             }
         }
         return { filter, tag: getTag('event', filter), type: 'event', zone };
-    }
-    else if (_event.address) {
-        const address = formatMixedCaseChecksumAddress(isHexString(_event.address) ? _event.address : await resolveAddress(_event.address));
-        const filter = {
-            address: address
-        };
-        if (!zone) {
-            zone = toZone(address.slice(0, 4));
-        }
-        return { filter, tag: getTag('accesses', filter), type: 'accesses', zone };
     }
     assertArgument(false, 'unknown ProviderEvent', 'event', _event);
 }
@@ -33537,6 +33585,10 @@ class SocketBlockSubscriber extends SocketSubscriber {
  * @category Providers
  */
 class SocketAccessesSubscriber extends SocketSubscriber {
+    #accessesFilter;
+    get accessesFilter() {
+        return JSON.parse(this.#accessesFilter);
+    }
     /**
      * Creates a new **SocketBlockSubscriber**.
      *
@@ -33547,6 +33599,7 @@ class SocketAccessesSubscriber extends SocketSubscriber {
      */
     constructor(provider, filter, zone) {
         super(provider, ['accesses', filter.address], zone);
+        this.#accessesFilter = JSON.stringify(filter);
     }
     /**
      * Emit the block event.
@@ -33557,7 +33610,10 @@ class SocketAccessesSubscriber extends SocketSubscriber {
      * @returns {Promise<void>}
      */
     async _emit(provider, message) {
-        provider.emit('accesses', this.zone, message);
+        if (this.accessesFilter.type === 'balance') {
+            message = await provider.getBalance(this.accessesFilter.address);
+        }
+        provider.emit(this.accessesFilter, this.zone, message);
     }
 }
 /**
@@ -33929,6 +33985,18 @@ class WebSocketProvider extends SocketProvider {
                 // @TODO: now what? Attempt reconnect?
             }
         };
+        // @TODO: implement onclose
+        //        websocket.onclose = () => {
+        //            console.log('WebSocket closed. Attempting to reconnect...');
+        //            setTimeout(() => {
+        //                const baseUrl = websocket.url.split(':').slice(0, 2).join(':');
+        //                const shardSuffix = this._getOption('usePathing') ? `/${fromShard(shard, 'nickname')}` : `:${port}`;
+        //                const newWebSocket = this.createWebSocket(baseUrl, shardSuffix);
+        //                this.initWebSocket(newWebSocket, shard, port);
+        //                this.#websockets.push(newWebSocket);
+        //                this._urlMap.set(shard, newWebSocket);
+        //            }, 500); // Reconnect after 5 seconds
+        //        };
         websocket.onmessage = (message) => {
             this._processMessage(message.data);
         };
@@ -33950,6 +34018,11 @@ class WebSocketProvider extends SocketProvider {
             count++;
         }
     }
+    createWebSocket = (baseUrl, suffix) => {
+        const tempWs = new _WebSocket(`${baseUrl}${suffix}`);
+        return tempWs;
+        // wait 2 minutes
+    };
     /**
      * Initialize the URL map with WebSocket connections.
      *
@@ -33963,11 +34036,6 @@ class WebSocketProvider extends SocketProvider {
         this._urlMap.clear();
         try {
             const primeSuffix = this._getOption('usePathing') ? `/${fromShard(Shard.Prime, 'nickname')}` : ':8001';
-            const createWebSocket = (baseUrl, suffix) => {
-                const tempWs = new _WebSocket(`${baseUrl}${suffix}`);
-                return tempWs;
-                // wait 2 minutes
-            };
             const initShardWebSockets = async (baseUrl) => {
                 const shards = await this._getRunningLocations(Shard.Prime, true);
                 await Promise.all(shards.map(async (shard) => {
@@ -33977,7 +34045,7 @@ class WebSocketProvider extends SocketProvider {
                         ? `/${fromShard(shardEnum, 'nickname')}`
                         : `:${port}`;
                     const shardUrl = baseUrl.split(':').slice(0, 2).join(':');
-                    const websocket = createWebSocket(shardUrl, shardSuffix);
+                    const websocket = this.createWebSocket(shardUrl, shardSuffix);
                     this.initWebSocket(websocket, shardEnum);
                     this.#websockets.push(websocket);
                     this._urlMap.set(shardEnum, websocket);
@@ -33993,7 +34061,7 @@ class WebSocketProvider extends SocketProvider {
             if (Array.isArray(urls)) {
                 for (const url of urls) {
                     const baseUrl = `${url.split(':')[0]}:${url.split(':')[1]}`;
-                    const primeWebsocket = createWebSocket(baseUrl, primeSuffix);
+                    const primeWebsocket = this.createWebSocket(baseUrl, primeSuffix);
                     this.initWebSocket(primeWebsocket, Shard.Prime);
                     this.#websockets.push(primeWebsocket);
                     this._urlMap.set(Shard.Prime, primeWebsocket);
