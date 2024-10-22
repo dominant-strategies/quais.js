@@ -64,7 +64,7 @@ type DerivationPath = 'BIP44:external' | 'BIP44:change' | string; // string for 
  */
 interface QiAddressInfo extends NeuteredAddressInfo {
     status: AddressStatus;
-    counterpartyPaymentCode?: string;
+    derivationPath: DerivationPath;
 }
 
 /**
@@ -250,6 +250,7 @@ export class QiHDWallet extends AbstractHDWallet {
             change: isChange,
             zone,
             status: AddressStatus.UNUSED,
+            derivationPath: isChange ? 'BIP44:change' : 'BIP44:external',
         };
         this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external')?.push(newAddrInfo);
         return newAddrInfo;
@@ -841,7 +842,7 @@ export class QiHDWallet extends AbstractHDWallet {
             throw new Error(`Address not found: ${address}`);
         }
 
-        if (!('counterpartyPaymentCode' in addressInfo)) {
+        if (addressInfo.derivationPath === 'BIP44:external' || addressInfo.derivationPath === 'BIP44:change') {
             // (BIP44 addresses)
             const changeIndex = addressInfo.change ? 1 : 0;
             const addressNode = this._root
@@ -855,7 +856,7 @@ export class QiHDWallet extends AbstractHDWallet {
             const account = pcAddressInfo.account;
             const index = pcAddressInfo.index - 1;
 
-            const counterpartyPaymentCode = pcAddressInfo.counterpartyPaymentCode;
+            const counterpartyPaymentCode = pcAddressInfo.derivationPath;
             if (!counterpartyPaymentCode) {
                 throw new Error('Counterparty payment code not found for payment channel address');
             }
@@ -1183,29 +1184,43 @@ export class QiHDWallet extends AbstractHDWallet {
         const root = HDNodeWallet.fromMnemonic(mnemonic, path);
         const wallet = new this(_guard, root);
 
-        // validate and import the addresses
-        const validateAndImportAddresses = (addresses: QiAddressInfo[], path: DerivationPath) => {
-            for (const addressInfo of addresses) {
-                wallet.validateQiAddressInfo(addressInfo);
+        const validateQiAddressInfo = (addressInfo: QiAddressInfo): void => {
+            wallet.validateNeuteredAddressInfo(addressInfo);
+
+            if (!Object.values(AddressStatus).includes(addressInfo.status)) {
+                throw new Error(`Invalid QiAddressInfo: status '${addressInfo.status}' is not a valid AddressStatus`);
             }
-            wallet._addressesMap.set(path, addresses);
+
+            if (
+                addressInfo.derivationPath !== 'BIP44:external' &&
+                addressInfo.derivationPath !== 'BIP44:change' &&
+                !validatePaymentCode(addressInfo.derivationPath)
+            ) {
+                throw new Error(
+                    `Invalid QiAddressInfo: derivationPath '${addressInfo.derivationPath}' is not valid. It should be 'BIP44:external', 'BIP44:change', or a valid BIP47 payment code`,
+                );
+            }
         };
-        validateAndImportAddresses(serialized.addresses, 'BIP44:external');
+        // validate and import all the wallet addresses
+        for (const addressInfo of serialized.addresses) {
+            validateQiAddressInfo(addressInfo);
+            const key = addressInfo.derivationPath;
+            if (!wallet._addressesMap.has(key)) {
+                wallet._addressesMap.set(key, []);
+            }
+            wallet._addressesMap.get(key)!.push(addressInfo);
+        }
 
         // validate and import the counter party payment code info
-        const validateAndImportCounterPartyPaymentCode = (paymentCodeInfoMap: { [key: string]: QiAddressInfo[] }) => {
-            for (const [paymentCode, paymentCodeInfoArray] of Object.entries(paymentCodeInfoMap)) {
-                if (!validatePaymentCode(paymentCode)) {
-                    throw new Error(`Invalid payment code: ${paymentCode}`);
-                }
-                for (const pcInfo of paymentCodeInfoArray) {
-                    wallet.validateQiAddressInfo(pcInfo);
-                }
-                wallet._paymentCodeSendAddressMap.set(paymentCode, paymentCodeInfoArray);
+        for (const [paymentCode, paymentCodeInfoArray] of Object.entries(serialized.senderPaymentCodeInfo)) {
+            if (!validatePaymentCode(paymentCode)) {
+                throw new Error(`Invalid payment code: ${paymentCode}`);
             }
-        };
-
-        validateAndImportCounterPartyPaymentCode(serialized.senderPaymentCodeInfo);
+            for (const pcInfo of paymentCodeInfoArray) {
+                validateQiAddressInfo(pcInfo);
+            }
+            wallet._paymentCodeSendAddressMap.set(paymentCode, paymentCodeInfoArray);
+        }
 
         // validate the available outpoints and import them
         wallet.validateOutpointInfo(serialized.outpoints);
@@ -1216,23 +1231,6 @@ export class QiHDWallet extends AbstractHDWallet {
         wallet._pendingOutpoints.push(...serialized.pendingOutpoints);
 
         return wallet;
-    }
-
-    private validateQiAddressInfo(addressInfo: QiAddressInfo): void {
-        this.validateNeuteredAddressInfo(addressInfo);
-
-        if (!Object.values(AddressStatus).includes(addressInfo.status)) {
-            throw new Error(`Invalid QiAddressInfo: status '${addressInfo.status}' is not a valid AddressStatus`);
-        }
-
-        if (
-            addressInfo.counterpartyPaymentCode !== undefined &&
-            !validatePaymentCode(addressInfo.counterpartyPaymentCode)
-        ) {
-            throw new Error(
-                `Invalid QiAddressInfo: counterpartyPaymentCode '${addressInfo.counterpartyPaymentCode}' is not a valid payment code`,
-            );
-        }
     }
 
     /**
@@ -1350,6 +1348,7 @@ export class QiHDWallet extends AbstractHDWallet {
                     zone,
                     change: false,
                     status: AddressStatus.UNUSED,
+                    derivationPath: receiverPaymentCode,
                 };
                 if (paymentCodeInfoArray) {
                     paymentCodeInfoArray.push(pcInfo);
@@ -1398,7 +1397,7 @@ export class QiHDWallet extends AbstractHDWallet {
                     zone,
                     change: false,
                     status: AddressStatus.UNUSED,
-                    counterpartyPaymentCode: senderPaymentCode,
+                    derivationPath: senderPaymentCode,
                 };
                 if (paymentCodeInfoArray) {
                     paymentCodeInfoArray.push(pcInfo);
