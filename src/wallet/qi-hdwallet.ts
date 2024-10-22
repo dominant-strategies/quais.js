@@ -228,8 +228,11 @@ export class QiHDWallet extends AbstractHDWallet {
      * @param {QiAddressInfo[]} addresses - The array of QiAddressInfo objects.
      * @returns {number} The last used index.
      */
-    private _findLastUsedIndex(addresses: QiAddressInfo[] | undefined): number {
-        return addresses?.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1) || 0;
+    private _findLastUsedIndex(addresses: QiAddressInfo[] | undefined, account: number, zone: Zone): number {
+        const filteredAddresses = addresses?.filter(
+            (addressInfo) => addressInfo.account === account && addressInfo.zone === zone,
+        );
+        return filteredAddresses?.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1) || 0;
     }
 
     /**
@@ -242,7 +245,7 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     private _getNextQiAddress(account: number, zone: Zone, isChange: boolean): QiAddressInfo {
         const addresses = this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external') || [];
-        const lastIndex = this._findLastUsedIndex(addresses);
+        const lastIndex = this._findLastUsedIndex(addresses, account, zone);
         const addressNode = this.deriveNextAddressNode(account, lastIndex + 1, zone, isChange);
         const newAddrInfo = {
             pubKey: addressNode.publicKey,
@@ -253,6 +256,7 @@ export class QiHDWallet extends AbstractHDWallet {
             zone,
             status: AddressStatus.UNUSED,
         };
+        this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external')?.push(newAddrInfo);
         return newAddrInfo;
     }
 
@@ -1369,7 +1373,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const receiverPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
 
         const paymentCodeInfoArray = this._paymentCodeSendAddressMap.get(receiverPaymentCode);
-        const lastIndex = this._findLastUsedIndex(paymentCodeInfoArray);
+        const lastIndex = this._findLastUsedIndex(paymentCodeInfoArray, account, zone);
 
         let addrIndex = lastIndex;
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
@@ -1417,7 +1421,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const walletPCodePrivate = this._getPaymentCodePrivate(account);
 
         const paymentCodeInfoArray = this._addressesMap.get(senderPaymentCode);
-        const lastIndex = this._findLastUsedIndex(paymentCodeInfoArray);
+        const lastIndex = this._findLastUsedIndex(paymentCodeInfoArray, account, zone);
 
         let addrIndex = lastIndex;
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
