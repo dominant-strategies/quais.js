@@ -275,9 +275,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {QiAddressInfo} The next Qi address information.
      */
     public getNextAddressSync(account: number, zone: Zone): QiAddressInfo {
-        const addrInfo = this._getNextQiAddress(account, zone, false);
-        this._addressesMap.get('BIP44:external')?.push(addrInfo);
-        return addrInfo;
+        return this._getNextQiAddress(account, zone, false);
     }
 
     /**
@@ -299,9 +297,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {NeuteredAddressInfo} The next change neutered address information.
      */
     public getNextChangeAddressSync(account: number, zone: Zone): QiAddressInfo {
-        const addrInfo = this._getNextQiAddress(account, zone, true);
-        this._addressesMap.get('BIP44:change')?.push(addrInfo);
-        return addrInfo;
+        return this._getNextQiAddress(account, zone, true);
     }
 
     /**
@@ -951,7 +947,6 @@ export class QiHDWallet extends AbstractHDWallet {
     private async _scanDerivationPath(path: DerivationPath, zone: Zone, account: number): Promise<void> {
         const addresses = this._addressesMap.get(path) || [];
         let consecutiveUnusedCount = 0;
-
         const checkStatuses = [AddressStatus.UNKNOWN, AddressStatus.ATTEMPTED_USE, AddressStatus.UNUSED];
 
         // Check existing addresses
@@ -994,7 +989,6 @@ export class QiHDWallet extends AbstractHDWallet {
 
             const { isUsed, outpoints } = await this.checkAddressUse(newAddrInfo.address);
             newAddrInfo.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
-            addresses.push(newAddrInfo);
 
             // import outpoints if any are found
             if (outpoints.length > 0) {
