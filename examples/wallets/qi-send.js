@@ -11,6 +11,9 @@ async function main() {
     const aliceQiWallet = quais.QiHDWallet.fromMnemonic(mnemonic);
     aliceQiWallet.connect(provider);
 
+    const aliceLegacyWallet = quais.QiHDWalletLegacy.fromMnemonic(mnemonic);
+    aliceLegacyWallet.connect(provider);
+
     console.log(`Generating Bob's wallet and payment code...`);
     const bobMnemonic = quais.Mnemonic.fromPhrase(
         'innocent perfect bus miss prevent night oval position aspect nut angle usage expose grace juice',
@@ -19,23 +22,27 @@ async function main() {
     // Create Bob's wallet and connect to provider
     const bobQiWallet = quais.QiHDWallet.fromMnemonic(bobMnemonic);
     bobQiWallet.connect(provider);
-    const bobPaymentCode = await bobQiWallet.getPaymentCode(0);
+    const bobPaymentCode = bobQiWallet.getPaymentCode(0);
 
     // Alice opens a channel to send Qi to Bob
-    aliceQiWallet.openChannel(bobPaymentCode, 'sender');
+    aliceQiWallet.openChannel(bobPaymentCode);
 
     // Initialize Alice's wallet
     console.log('Initializing Alice wallet...');
     console.log('Scanning Cyprus1 zone...', quais.Zone.Cyprus1);
     await aliceQiWallet.scan(quais.Zone.Cyprus1);
+    // await aliceLegacyWallet.scan(quais.Zone.Cyprus1);
     console.log('Alice wallet scan complete');
 
     console.log('Alice Wallet Summary:');
     printWalletInfo(aliceQiWallet);
 
+    // console.log('Alice Legacy Wallet Summary:');
+    // printWalletInfo(aliceLegacyWallet);
+
     // Bob open channel with Alice
-    const alicePaymentCode = await aliceQiWallet.getPaymentCode(0);
-    bobQiWallet.openChannel(alicePaymentCode, 'receiver');
+    const alicePaymentCode = aliceQiWallet.getPaymentCode(0);
+    bobQiWallet.openChannel(alicePaymentCode);
 
     // Bob initializes his wallet
     console.log('Initializing Bob wallet...');
@@ -51,15 +58,12 @@ async function main() {
     const tx = await aliceQiWallet.sendTransaction(bobPaymentCode, 1000, quais.Zone.Cyprus1, quais.Zone.Cyprus1);
     console.log(`Tx contains ${tx.txInputs?.length} inputs`);
     console.log(`Tx contains ${tx.txOutputs?.length} outputs`);
-    console.log('Tx: ', tx);
-    // wait for the transaction to be confirmed
+    // console.log('Tx: ', tx);
     console.log('Waiting for transaction to be confirmed...');
-    // const receipt = await tx.wait(); //! throws 'wait() is not a function'
-    // console.log('Transaction confirmed: ', receipt);
-    // sleep for 5 seconds
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    // const receipt = await provider.getTransactionReceipt(tx.hash); //! throws 'invalid shard'
-    // console.log('Transaction confirmed: ', receipt);
+    // await tx.wait();
+
+    // sleep for 10 seconds to allow the transaction to be confirmed
+    await new Promise((resolve) => setTimeout(resolve, 15000));
 
     // Bob syncs his wallet
     console.log('Syncing Bob wallet...');
@@ -92,10 +96,8 @@ function printWalletInfo(wallet) {
         'Change Addresses': serializedWallet.changeAddresses.length,
         'Gap Addresses': serializedWallet.gapAddresses.length,
         'Gap Change Addresses': serializedWallet.gapChangeAddresses.length,
-        'Used Gap Addresses': serializedWallet.usedGapAddresses.length,
-        'Used Gap Change Addresses': serializedWallet.usedGapChangeAddresses.length,
-        'Receiver PaymentCode addresses': Object.keys(wallet.receiverPaymentCodeInfo).length,
-        'Sender PaymentCode addresses': Object.keys(wallet.senderPaymentCodeInfo).length,
+        // 'Payment Channel Addresses': wallet.getPaymentChannelAddressesForZone(quais.Zone.Cyprus1).length,
+        // 'Sender PaymentCode addresses': Object.keys(wallet.senderPaymentCodeInfo).length,
         'Available Outpoints': serializedWallet.outpoints.length,
         'Pending Outpoints': serializedWallet.pendingOutpoints.length,
         'Coin Type': serializedWallet.coinType,
@@ -141,24 +143,6 @@ function printWalletInfo(wallet) {
     }));
     console.table(gapChangeAddressesTable);
 
-    console.log('\nWallet Used Gap Addresses:');
-    const usedGapAddressesTable = serializedWallet.usedGapAddresses.map((addr) => ({
-        PubKey: addr.pubKey,
-        Address: addr.address,
-        Index: addr.index,
-        Zone: addr.zone,
-    }));
-    console.table(usedGapAddressesTable);
-
-    console.log('\nWallet Used Gap Change Addresses:');
-    const usedGapChangeAddressesTable = serializedWallet.usedGapChangeAddresses.map((addr) => ({
-        PubKey: addr.pubKey,
-        Address: addr.address,
-        Index: addr.index,
-        Zone: addr.zone,
-    }));
-    console.table(usedGapChangeAddressesTable);
-
     console.log('\nWallet Outpoints:');
     const outpointsInfoTable = serializedWallet.outpoints.map((outpoint) => ({
         Address: outpoint.address,
@@ -182,30 +166,30 @@ function printWalletInfo(wallet) {
     console.table(pendingOutpointsInfoTable);
 
     // Print receiver payment code info
-    console.log('\nWallet Receiver Payment Code Info:');
-    const receiverPaymentCodeInfo = wallet.receiverPaymentCodeInfo;
-    for (const [paymentCode, addressInfoArray] of Object.entries(receiverPaymentCodeInfo)) {
-        console.log(`Payment Code: ${paymentCode}`);
-        const receiverTable = addressInfoArray.map((info) => ({
-            Address: info.address,
-            PubKey: info.pubKey,
-            Index: info.index,
-            Zone: info.zone,
-        }));
-        console.table(receiverTable);
-    }
+    // console.log('\nWallet Receiver Payment Code Info:');
+    // const openChannels = wallet.openChannels;
+    // for (const paymentCode of openChannels) {
+    //     console.log(`Payment Code: ${paymentCode}`);
+    //     const receiverTable = wallet.getPaymentChannelAddressesForZone(paymentCode, quais.Zone.Cyprus1).map((info) => ({
+    //         Address: info.address,
+    //         PubKey: info.pubKey,
+    //         Index: info.index,
+    //         Zone: info.zone,
+    //     }));
+    //     console.table(receiverTable);
+    // }
 
     // Print sender payment code info
-    console.log('\nWallet Sender Payment Code Info:');
-    const senderPaymentCodeInfo = wallet.senderPaymentCodeInfo;
-    for (const [paymentCode, addressInfoArray] of Object.entries(senderPaymentCodeInfo)) {
-        console.log(`Payment Code: ${paymentCode}`);
-        const senderTable = addressInfoArray.map((info) => ({
-            Address: info.address,
-            PubKey: info.pubKey,
-            Index: info.index,
-            Zone: info.zone,
-        }));
-        console.table(senderTable);
-    }
+    // console.log('\nWallet Sender Payment Code Info:');
+    // const senderPaymentCodeInfo = wallet.senderPaymentCodeInfo;
+    // for (const [paymentCode, addressInfoArray] of Object.entries(senderPaymentCodeInfo)) {
+    //     console.log(`Payment Code: ${paymentCode}`);
+    //     const senderTable = addressInfoArray.map((info) => ({
+    //         Address: info.address,
+    //         PubKey: info.pubKey,
+    //         Index: info.index,
+    //         Zone: info.zone,
+    //     }));
+    //     console.table(senderTable);
+    // }
 }
