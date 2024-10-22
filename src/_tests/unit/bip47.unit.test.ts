@@ -44,19 +44,19 @@ describe('Test opening channels', function () {
     it('opens a channel correctly', async function () {
         const paymentCode =
             'PM8TJTzqM3pqdQxBA52AX9M5JBCdkyJYWpNfJZpNX9H7FY2XitYFd99LSfCCQamCN5LubK1YNQMoz33g1WgVNX2keWoDtfDG9H1AfGcupRzHsPn6Rc2z';
-        bobQiWallet.openChannel(paymentCode, 'receiver');
-        assert.deepEqual(bobQiWallet.receiverPaymentCodeInfo[paymentCode], []);
+        bobQiWallet.openChannel(paymentCode);
+        assert.equal(bobQiWallet.channelIsOpen(paymentCode), true);
     });
 
     it('does nothing if the channel is already open', async function () {
         const paymentCode =
             'PM8TJTzqM3pqdQxBA52AX9M5JBCdkyJYWpNfJZpNX9H7FY2XitYFd99LSfCCQamCN5LubK1YNQMoz33g1WgVNX2keWoDtfDG9H1AfGcupRzHsPn6Rc2z';
-        bobQiWallet.openChannel(paymentCode, 'receiver');
-        assert.deepEqual(bobQiWallet.receiverPaymentCodeInfo[paymentCode], []);
+        bobQiWallet.openChannel(paymentCode);
+        assert.equal(bobQiWallet.channelIsOpen(paymentCode), true);
     });
 
     it('returns an error if the payment code is not valid', async function () {
         const invalidPaymentCode = 'InvalidPaymentCode';
-        assert.throws(() => bobQiWallet.openChannel(invalidPaymentCode, 'receiver'), /Invalid payment code/);
+        assert.throws(() => bobQiWallet.openChannel(invalidPaymentCode), /Invalid payment code/);
     });
 });

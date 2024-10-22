@@ -203,6 +203,15 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     /**
+     * Gets the payment codes for all open channels.
+     *
+     * @returns {string[]} The payment codes for all open channels.
+     */
+    get openChannels(): string[] {
+        return Array.from(this._addressesMap.keys()).filter((key) => !key.startsWith('BIP44:'));
+    }
+
+    /**
      * Sets the address use checker. The provided callback function should accept an address as input and return a
      * boolean indicating whether the address is in use. If the callback returns true, the address is considered used
      * and if it returns false, the address is considered unused.
@@ -244,8 +253,6 @@ export class QiHDWallet extends AbstractHDWallet {
             zone,
             status: AddressStatus.UNUSED,
         };
-        addresses.push(newAddrInfo);
-        this._addressesMap.set(isChange ? 'BIP44:change' : 'BIP44:external', addresses);
         return newAddrInfo;
     }
 
@@ -257,7 +264,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<QiAddressInfo>} The next Qi address information.
      */
     public async getNextAddress(account: number, zone: Zone): Promise<QiAddressInfo> {
-        return this._getNextQiAddress(account, zone, false);
+        return Promise.resolve(this.getNextAddressSync(account, zone));
     }
 
     /**
@@ -268,7 +275,9 @@ export class QiHDWallet extends AbstractHDWallet {
      * @returns {QiAddressInfo} The next Qi address information.
      */
     public getNextAddressSync(account: number, zone: Zone): QiAddressInfo {
-        return this._getNextQiAddress(account, zone, false);
+        const addrInfo = this._getNextQiAddress(account, zone, false);
+        this._addressesMap.get('BIP44:external')?.push(addrInfo);
+        return addrInfo;
     }
 
     /**
@@ -278,8 +287,8 @@ export class QiHDWallet extends AbstractHDWallet {
      * @param {Zone} zone - The zone in which to retrieve the next change address.
      * @returns {Promise<NeuteredAddressInfo>} The next change neutered address information.
      */
-    public async getNextChangeAddress(account: number, zone: Zone): Promise<NeuteredAddressInfo> {
-        return Promise.resolve(this._getNextQiAddress(account, zone, true));
+    public async getNextChangeAddress(account: number, zone: Zone): Promise<QiAddressInfo> {
+        return Promise.resolve(this.getNextChangeAddressSync(account, zone));
     }
 
     /**
@@ -289,8 +298,10 @@ export class QiHDWallet extends AbstractHDWallet {
      * @param {Zone} zone - The zone in which to retrieve the next change address.
      * @returns {NeuteredAddressInfo} The next change neutered address information.
      */
-    public getNextChangeAddressSync(account: number, zone: Zone): NeuteredAddressInfo {
-        return this._getNextQiAddress(account, zone, true);
+    public getNextChangeAddressSync(account: number, zone: Zone): QiAddressInfo {
+        const addrInfo = this._getNextQiAddress(account, zone, true);
+        this._addressesMap.get('BIP44:change')?.push(addrInfo);
+        return addrInfo;
     }
 
     /**
@@ -300,7 +311,16 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     public importOutpoints(outpoints: OutpointInfo[]): void {
         this.validateOutpointInfo(outpoints);
-        this._availableOutpoints.push(...outpoints);
+
+        // check if any of the outpoints are already in the availableOutpoints
+        const newOutpoints = outpoints.filter(
+            (outpoint) =>
+                !this._availableOutpoints.some(
+                    (o) =>
+                        o.outpoint.txhash === outpoint.outpoint.txhash && o.outpoint.index === outpoint.outpoint.index,
+                ),
+        );
+        this._availableOutpoints.push(...newOutpoints);
     }
 
     /**
@@ -352,7 +372,6 @@ export class QiHDWallet extends AbstractHDWallet {
                 return addressInfo;
             }
         }
-
         return null;
     }
 
@@ -451,7 +470,9 @@ export class QiHDWallet extends AbstractHDWallet {
         const currentBlock = await this.provider.getBlockNumber(originZone as unknown as Shard);
         const balance = await this.getSpendableBalanceForZone(originZone, currentBlock);
         if (balance < amount) {
-            throw new Error(`Insufficient balance in the originating zone: want ${amount} Qi got ${balance} Qi`);
+            throw new Error(
+                `Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qi`,
+            );
         }
 
         // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
@@ -467,44 +488,41 @@ export class QiHDWallet extends AbstractHDWallet {
 
         const getChangeAddresses = async (count: number): Promise<string[]> => {
             const changeAddresses = this._addressesMap.get('BIP44:change') || [];
-            const gapLimit = QiHDWallet._GAP_LIMIT;
-            const addresses: string[] = [];
-            let lastUsedIndex = -1;
-            let consecutiveUnusedCount = 0;
+            const addresses: QiAddressInfo[] = [];
 
-            // Find the last used index and count consecutive unused addresses
-            for (let i = changeAddresses.length - 1; i >= 0; i--) {
-                // ! we are assuming that the addresses are always in order according to their derivation index
-                if (changeAddresses[i].status !== AddressStatus.UNUSED) {
-                    lastUsedIndex = changeAddresses[i].index;
-                    break;
+            for (let i = 0; i < changeAddresses.length; i++) {
+                if (changeAddresses[i].status === AddressStatus.UNUSED) {
+                    addresses.push(changeAddresses[i]);
                 }
-                consecutiveUnusedCount++;
+
+                if (addresses.length === count) break;
             }
 
-            // Generate new addresses until we have GAP_LIMIT consecutive unused addresses
-            while (consecutiveUnusedCount < gapLimit) {
-                const newChangeAddress = await this.getNextChangeAddress(0, originZone);
-                const newChangeAddressInfo: QiAddressInfo = {
-                    ...newChangeAddress,
-                    status: AddressStatus.UNUSED,
-                };
-                changeAddresses.push(newChangeAddressInfo);
-                consecutiveUnusedCount++;
+            // Generate the remaining number of change addresses if needed
+            const remainingAddressesNeeded = count - addresses.length;
+            if (remainingAddressesNeeded > 0) {
+                addresses.push(
+                    ...Array(remainingAddressesNeeded)
+                        .fill(0)
+                        .map(() => this.getNextChangeAddressSync(0, originZone)),
+                );
             }
 
-            // Select the first 'count' addresses within the GAP_LIMIT
-            for (let i = lastUsedIndex + 1; i < changeAddresses.length && addresses.length < count; i++) {
-                const addressInfo = changeAddresses[i];
-                addresses.push(addressInfo.address);
-                addressInfo.status = AddressStatus.ATTEMPTED_USE;
-            }
+            // Combine the existing change addresses with the newly generated addresses and ensure they are unique and sorted by index
+            const mergedChangeAddresses = [
+                ...changeAddresses,
+                ...addresses.map((address) => ({ ...address, status: AddressStatus.ATTEMPTED_USE })),
+            ];
+            const sortedAndFilteredChangeAddresses = mergedChangeAddresses
+                .filter((address, index, self) => self.findIndex((t) => t.address === address.address) === index)
+                .sort((a, b) => a.index - b.index);
 
-            // Update the _addressesMap with the modified change addresses
-            this._addressesMap.set('BIP44:change', changeAddresses);
+            // Update the _addressesMap with the modified change addresses and statuses
+            this._addressesMap.set('BIP44:change', sortedAndFilteredChangeAddresses);
 
-            return addresses;
+            return addresses.map((address) => address.address);
         };
+
         // 4. Get change addresses
         const changeAddresses = await getChangeAddresses(selection.changeOutputs.length);
 
@@ -866,16 +884,23 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     public async scan(zone: Zone, account: number = 0): Promise<void> {
         this.validateZone(zone);
-        // flush the existing addresses and outpoints
-        this._addressesMap = new Map();
-        this._availableOutpoints = [];
 
-        // Reset each map so that all keys have empty array values but keys are preserved
-        const resetSenderPaymentCodeInfo = new Map(
-            Array.from(this._paymentCodeSendAddressMap.keys()).map((key) => [key, []]),
+        // set status of all addresses to unknown
+        this._addressesMap = new Map(
+            Array.from(this._addressesMap.entries()).map(([key, addresses]) => [
+                key,
+                addresses.map((addr) => ({ ...addr, status: AddressStatus.UNKNOWN })),
+            ]),
         );
 
-        this._paymentCodeSendAddressMap = resetSenderPaymentCodeInfo;
+        // flush available and pending outpoints
+        this._availableOutpoints = [];
+        this._pendingOutpoints = [];
+
+        // Reset each map so that all keys have empty array values but keys are preserved
+        this._paymentCodeSendAddressMap = new Map(
+            Array.from(this._paymentCodeSendAddressMap.keys()).map((key) => [key, []]),
+        );
 
         await this._scan(zone, account);
     }
@@ -908,11 +933,7 @@ export class QiHDWallet extends AbstractHDWallet {
     private async _scan(zone: Zone, account: number = 0): Promise<void> {
         if (!this.provider) throw new Error('Provider not set');
 
-        const derivationPaths: DerivationPath[] = [
-            'BIP44:external',
-            'BIP44:change',
-            ...Array.from(this._addressesMap.keys()).filter((path) => !path.startsWith('BIP44:')),
-        ];
+        const derivationPaths: DerivationPath[] = ['BIP44:external', 'BIP44:change', ...this.openChannels];
 
         await Promise.all(derivationPaths.map((path) => this._scanDerivationPath(path, zone, account)));
     }
@@ -931,12 +952,26 @@ export class QiHDWallet extends AbstractHDWallet {
         const addresses = this._addressesMap.get(path) || [];
         let consecutiveUnusedCount = 0;
 
+        const checkStatuses = [AddressStatus.UNKNOWN, AddressStatus.ATTEMPTED_USE, AddressStatus.UNUSED];
+
         // Check existing addresses
         for (let i = 0; i < addresses.length; i++) {
             const addr = addresses[i];
-            if (addr.status === AddressStatus.UNKNOWN || addr.status === AddressStatus.ATTEMPTED_USE) {
-                const isUsed = await this.checkAddressUse(addr.address);
-                addr.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
+            if (checkStatuses.includes(addr.status)) {
+                const { isUsed, outpoints } = await this.checkAddressUse(addr.address);
+                addresses[i].status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
+
+                // import outpoints if any are found
+                if (outpoints.length > 0) {
+                    this.importOutpoints(
+                        outpoints.map((outpoint) => ({
+                            outpoint,
+                            address: addr.address,
+                            zone: addr.zone,
+                            account: addr.account,
+                        })),
+                    );
+                }
             }
 
             if (addr.status === AddressStatus.USED) {
@@ -945,18 +980,33 @@ export class QiHDWallet extends AbstractHDWallet {
                 consecutiveUnusedCount++;
             }
 
-            if (consecutiveUnusedCount >= QiHDWallet._GAP_LIMIT && i >= QiHDWallet._GAP_LIMIT) {
-                break;
-            }
+            // If the consecutive unused count has reached the gap limit, break
+            if (consecutiveUnusedCount >= QiHDWallet._GAP_LIMIT) break;
         }
 
         // Generate new addresses if needed
         while (consecutiveUnusedCount < QiHDWallet._GAP_LIMIT) {
             const isChange = path.endsWith(':change');
-            const newAddrInfo = this._getNextQiAddress(account, zone, isChange);
-            const isUsed = await this.checkAddressUse(newAddrInfo.address);
+
+            const newAddrInfo = path.includes('BIP44')
+                ? this._getNextQiAddress(account, zone, isChange)
+                : this.getNextReceiveAddress(path, zone, account);
+
+            const { isUsed, outpoints } = await this.checkAddressUse(newAddrInfo.address);
             newAddrInfo.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
             addresses.push(newAddrInfo);
+
+            // import outpoints if any are found
+            if (outpoints.length > 0) {
+                this.importOutpoints(
+                    outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: newAddrInfo.address,
+                        zone: newAddrInfo.zone,
+                        account: newAddrInfo.account,
+                    })),
+                );
+            }
 
             if (newAddrInfo.status === AddressStatus.USED) {
                 consecutiveUnusedCount = 0;
@@ -964,8 +1014,6 @@ export class QiHDWallet extends AbstractHDWallet {
                 consecutiveUnusedCount++;
             }
         }
-
-        this._addressesMap.set(path, addresses);
     }
 
     /**
@@ -1000,17 +1048,8 @@ export class QiHDWallet extends AbstractHDWallet {
             outpoints = await this.getOutpointsByAddress(address);
             if (outpoints.length > 0) {
                 isUsed = true;
-                this.importOutpoints(
-                    outpoints.map((outpoint) => ({
-                        outpoint,
-                        address,
-                        zone: getZoneForAddress(address)!,
-                        account: 0,
-                    })),
-                );
             } else if (this._addressUseChecker !== undefined && (await this._addressUseChecker(address))) {
                 // address checker returned true, so the address is used
-                //! How do we get the outpoints for the address?
                 isUsed = true;
             }
         } catch (error) {
@@ -1050,7 +1089,9 @@ export class QiHDWallet extends AbstractHDWallet {
     public getGapAddressesForZone(zone: Zone): QiAddressInfo[] {
         this.validateZone(zone);
         const gapAddresses = this._addressesMap.get('BIP44:external') || [];
-        return gapAddresses.filter((addressInfo) => addressInfo.zone === zone);
+        return gapAddresses.filter(
+            (addressInfo) => addressInfo.zone === zone && addressInfo.status === AddressStatus.UNUSED,
+        );
     }
 
     /**
@@ -1062,7 +1103,33 @@ export class QiHDWallet extends AbstractHDWallet {
     public getGapChangeAddressesForZone(zone: Zone): QiAddressInfo[] {
         this.validateZone(zone);
         const gapChangeAddresses = this._addressesMap.get('BIP44:change') || [];
-        return gapChangeAddresses.filter((addressInfo) => addressInfo.zone === zone);
+        return gapChangeAddresses.filter(
+            (addressInfo) => addressInfo.zone === zone && addressInfo.status === AddressStatus.UNUSED,
+        );
+    }
+
+    /**
+     * Gets the payment channel addresses for the specified zone.
+     *
+     * @param {string} paymentCode - The payment code.
+     * @param {Zone} zone - The zone.
+     * @returns {QiAddressInfo[]} The payment channel addresses for the zone.
+     */
+    public getPaymentChannelAddressesForZone(paymentCode: string, zone: Zone): QiAddressInfo[] {
+        return this._addressesMap.get(paymentCode)?.filter((addressInfo) => addressInfo.zone === zone) || [];
+    }
+
+    /**
+     * Gets the gap payment channel addresses for the specified payment code.
+     *
+     * @param {string} paymentCode - The payment code.
+     * @returns {QiAddressInfo[]} The gap payment channel addresses for the payment code.
+     */
+    public getGapPaymentChannelAddresses(paymentCode: string): QiAddressInfo[] {
+        return (
+            this._addressesMap.get(paymentCode)?.filter((addressInfo) => addressInfo.status === AddressStatus.UNUSED) ||
+            []
+        );
     }
 
     /**
@@ -1398,6 +1465,10 @@ export class QiHDWallet extends AbstractHDWallet {
         if (!this._paymentCodeSendAddressMap.has(paymentCode)) {
             this._paymentCodeSendAddressMap.set(paymentCode, []);
         }
+    }
+
+    public channelIsOpen(paymentCode: string): boolean {
+        return this._addressesMap.has(paymentCode) && this._paymentCodeSendAddressMap.has(paymentCode);
     }
 
     /**
