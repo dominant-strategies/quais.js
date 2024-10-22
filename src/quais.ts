@@ -210,6 +210,7 @@ export {
     Mnemonic,
     QuaiHDWallet,
     QiHDWallet,
+    QiHDWalletLegacy,
     Wallet,
     isKeystoreJson,
     decryptKeystoreJsonSync,
