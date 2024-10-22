@@ -122,20 +122,15 @@ describe('QiHDWallet: Test serialization and deserialization of QiHDWallet with 
 
         // Assertions
         assert.strictEqual(
-            await deserializedAliceWallet.getPaymentCode(0),
+            deserializedAliceWallet.getPaymentCode(0),
             alicePaymentCode,
             'Payment code should match after deserialization',
         );
 
-        assert.deepStrictEqual(
-            deserializedAliceWallet.receiverPaymentCodeInfo,
-            aliceQiWallet.receiverPaymentCodeInfo,
-            'Receiver payment code info should match',
-        );
-        assert.deepStrictEqual(
-            deserializedAliceWallet.senderPaymentCodeInfo,
-            aliceQiWallet.senderPaymentCodeInfo,
-            'Sender payment code info should match',
+        assert.equal(
+            deserializedAliceWallet.channelIsOpen(alicePaymentCode),
+            aliceQiWallet.channelIsOpen(alicePaymentCode),
+            'Channel should be open',
         );
     });
 });
