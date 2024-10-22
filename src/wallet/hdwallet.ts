@@ -464,6 +464,41 @@ export abstract class AbstractHDWallet {
     }
 
     /**
+     * Validates the NeuteredAddressInfo object.
+     *
+     * @param {NeuteredAddressInfo} info - The NeuteredAddressInfo object to be validated.
+     * @throws {Error} If the NeuteredAddressInfo object is invalid.
+     * @protected
+     */
+    protected validateNeuteredAddressInfo(info: NeuteredAddressInfo): void {
+        if (!/^(0x)?[0-9a-fA-F]{40}$/.test(info.address)) {
+            throw new Error('Invalid NeuteredAddressInfo: address must be a 40-character hexadecimal string');
+        }
+
+        if (!/^0x[0-9a-fA-F]{64}$/.test(info.pubKey)) {
+            throw new Error(
+                'Invalid NeuteredAddressInfo: pubKey must be a 64-character hexadecimal string with 0x prefix',
+            );
+        }
+
+        if (!Number.isInteger(info.account) || info.account < 0) {
+            throw new Error('Invalid NeuteredAddressInfo: account must be a non-negative integer');
+        }
+
+        if (!Number.isInteger(info.index) || info.index < 0) {
+            throw new Error('Invalid NeuteredAddressInfo: index must be a non-negative integer');
+        }
+
+        if (typeof info.change !== 'boolean') {
+            throw new Error('Invalid NeuteredAddressInfo: change must be a boolean');
+        }
+
+        if (!Object.values(Zone).includes(info.zone)) {
+            throw new Error(`Invalid NeuteredAddressInfo: zone '${info.zone}' is not a valid Zone`);
+        }
+    }
+
+    /**
      * Validates the version and coinType of the serialized wallet.
      *
      * @param {SerializedHDWallet} serialized - The serialized wallet data to be validated.
