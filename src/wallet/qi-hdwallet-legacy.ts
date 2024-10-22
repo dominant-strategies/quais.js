@@ -68,6 +68,7 @@ interface PaymentChannelAddressExtendedInfo extends PaymentChannelAddressInfo {
 export interface SerializedQiHDWallet extends SerializedHDWallet {
     outpoints: OutpointInfo[];
     pendingOutpoints: OutpointInfo[];
+    addresses: NeuteredAddressInfo[];
     changeAddresses: NeuteredAddressInfo[];
     gapAddresses: NeuteredAddressInfo[];
     gapChangeAddresses: NeuteredAddressInfo[];
@@ -1190,6 +1191,7 @@ export class QiHDWalletLegacy extends AbstractHDWallet {
         return {
             outpoints: this._availableOutpoints,
             pendingOutpoints: this._pendingOutpoints,
+            addresses: Array.from(this._addresses.values()),
             changeAddresses: Array.from(this._changeAddresses.values()),
             gapAddresses: this._gapAddresses,
             gapChangeAddresses: this._gapChangeAddresses,
