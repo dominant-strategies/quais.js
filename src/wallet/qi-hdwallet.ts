@@ -1058,7 +1058,7 @@ export class QiHDWallet extends AbstractHDWallet {
      * @param {Zone} zone - The zone.
      * @returns {QiAddressInfo[]} The addresses for the zone.
      */
-    public getAddressForZone(zone: Zone): QiAddressInfo[] {
+    public getAddressesForZone(zone: Zone): QiAddressInfo[] {
         this.validateZone(zone);
         return this._addressesMap.get('BIP44:external')?.filter((addressInfo) => addressInfo.zone === zone) || [];
     }
