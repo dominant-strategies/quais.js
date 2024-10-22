@@ -469,25 +469,27 @@ export abstract class AbstractHDWallet {
      */
     protected validateNeuteredAddressInfo(info: NeuteredAddressInfo): void {
         if (!/^(0x)?[0-9a-fA-F]{40}$/.test(info.address)) {
-            throw new Error('Invalid NeuteredAddressInfo: address must be a 40-character hexadecimal string');
+            throw new Error(
+                `Invalid NeuteredAddressInfo: address must be a 40-character hexadecimal string: ${info.address}`,
+            );
         }
 
-        if (!/^0x[0-9a-fA-F]{64}$/.test(info.pubKey)) {
+        if (!/^0x[0-9a-fA-F]{66}$/.test(info.pubKey)) {
             throw new Error(
-                'Invalid NeuteredAddressInfo: pubKey must be a 64-character hexadecimal string with 0x prefix',
+                `Invalid NeuteredAddressInfo: pubKey must be a 32-character hexadecimal string with 0x prefix: ${info.pubKey}`,
             );
         }
 
         if (!Number.isInteger(info.account) || info.account < 0) {
-            throw new Error('Invalid NeuteredAddressInfo: account must be a non-negative integer');
+            throw new Error(`Invalid NeuteredAddressInfo: account must be a non-negative integer: ${info.account}`);
         }
 
         if (!Number.isInteger(info.index) || info.index < 0) {
-            throw new Error('Invalid NeuteredAddressInfo: index must be a non-negative integer');
+            throw new Error(`Invalid NeuteredAddressInfo: index must be a non-negative integer: ${info.index}`);
         }
 
         if (typeof info.change !== 'boolean') {
-            throw new Error('Invalid NeuteredAddressInfo: change must be a boolean');
+            throw new Error(`Invalid NeuteredAddressInfo: change must be a boolean: ${info.change}`);
         }
 
         if (!Object.values(Zone).includes(info.zone)) {
