@@ -11,9 +11,6 @@ async function main() {
     const aliceQiWallet = quais.QiHDWallet.fromMnemonic(mnemonic);
     aliceQiWallet.connect(provider);
 
-    const aliceLegacyWallet = quais.QiHDWalletLegacy.fromMnemonic(mnemonic);
-    aliceLegacyWallet.connect(provider);
-
     console.log(`Generating Bob's wallet and payment code...`);
     const bobMnemonic = quais.Mnemonic.fromPhrase(
         'innocent perfect bus miss prevent night oval position aspect nut angle usage expose grace juice',
@@ -31,14 +28,10 @@ async function main() {
     console.log('Initializing Alice wallet...');
     console.log('Scanning Cyprus1 zone...', quais.Zone.Cyprus1);
     await aliceQiWallet.scan(quais.Zone.Cyprus1);
-    // await aliceLegacyWallet.scan(quais.Zone.Cyprus1);
     console.log('Alice wallet scan complete');
 
     console.log('Alice Wallet Summary:');
     printWalletInfo(aliceQiWallet);
-
-    // console.log('Alice Legacy Wallet Summary:');
-    // printWalletInfo(aliceLegacyWallet);
 
     // Bob open channel with Alice
     const alicePaymentCode = aliceQiWallet.getPaymentCode(0);
