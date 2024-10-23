@@ -32,7 +32,7 @@ export function getPollingSubscriber(provider: AbstractProvider, event: Provider
 
     if (isHexString(event, 32)) {
         const eventBytes = getBytes(event);
-        const ninthBit = (eventBytes[1] & 0x01) === 0x01;
+        const ninthBit = (eventBytes[1] & 0x80) === 0x80;
 
         if (ninthBit) {
             return new PollingQiTransactionSubscriber(provider, event, zone);

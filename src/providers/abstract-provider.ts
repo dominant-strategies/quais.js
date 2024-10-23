@@ -332,7 +332,7 @@ async function getSubscription(_event: ProviderEvent, zone?: Zone): Promise<Subs
 
     if (isHexString(_event, 32)) {
         const eventBytes = getBytes(_event);
-        const ninthBit = (eventBytes[1] & 0x01) === 0x01;
+        const ninthBit = (eventBytes[1] & 0x80) === 0x80;
 
         const hash = _event.toLowerCase();
         zone = toZone(hash.slice(0, 4));
