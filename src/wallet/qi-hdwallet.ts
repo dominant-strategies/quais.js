@@ -446,7 +446,7 @@ export class QiHDWallet extends AbstractHDWallet {
         // Filter outpoints by minimum denomination if specified
         // This will likely only be used for converting to Quai
         // as the min denomination for converting is 10 (100 Qi)
-        if (minDenominationToUse) {
+        if (minDenominationToUse !== undefined) {
             zoneOutpoints = zoneOutpoints.filter(
                 (outpointInfo) => outpointInfo.outpoint.denomination >= minDenominationToUse,
             );
@@ -1177,7 +1177,9 @@ export class QiHDWallet extends AbstractHDWallet {
             ...hdwalletSerialized,
             outpoints: this._availableOutpoints,
             pendingOutpoints: this._pendingOutpoints,
-            addresses: Array.from(this._addressesMap.get('BIP44:external') || []),
+            addresses: Array.from(this._addressesMap.entries()).flatMap(([key, addresses]) =>
+                addresses.map((address) => ({ ...address, derivationPath: key })),
+            ),
             senderPaymentCodeInfo: Object.fromEntries(
                 Array.from(this._paymentCodeSendAddressMap.entries()).map(([key, value]) => [key, Array.from(value)]),
             ),
