@@ -528,8 +528,8 @@ export class QiHDWallet extends AbstractHDWallet {
 
             // Combine the existing change addresses with the newly generated addresses and ensure they are unique and sorted by index
             const mergedChangeAddresses = [
-                ...changeAddresses,
                 ...addresses.map((address) => ({ ...address, status: AddressStatus.ATTEMPTED_USE })),
+                ...changeAddresses,
             ];
             const sortedAndFilteredChangeAddresses = mergedChangeAddresses
                 .filter((address, index, self) => self.findIndex((t) => t.address === address.address) === index)
