@@ -1353,11 +1353,11 @@ export class QiHDWallet extends AbstractHDWallet {
         const paymentCodeInfoArray = this._paymentCodeSendAddressMap.get(receiverPaymentCode);
         const lastIndex = this._findLastUsedIndex(paymentCodeInfoArray, account, zone);
 
-        let addrIndex = lastIndex;
+        let addrIndex = lastIndex + 1;
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
-            const address = receiverPCodePublic.getPaymentAddress(walletPCodePrivate, addrIndex++);
+            const address = receiverPCodePublic.getPaymentAddress(walletPCodePrivate, addrIndex);
             if (this.isValidAddressForZone(address, zone)) {
-                const pubkey = receiverPCodePublic.derivePaymentPublicKey(walletPCodePrivate, addrIndex - 1);
+                const pubkey = receiverPCodePublic.derivePaymentPublicKey(walletPCodePrivate, addrIndex);
                 const pcInfo: QiAddressInfo = {
                     address,
                     pubKey: hexlify(pubkey),
@@ -1375,6 +1375,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 }
                 return pcInfo;
             }
+            addrIndex++;
         }
 
         throw new Error(
@@ -1402,11 +1403,11 @@ export class QiHDWallet extends AbstractHDWallet {
         const paymentCodeInfoArray = this._addressesMap.get(senderPaymentCode);
         const lastIndex = this._findLastUsedIndex(paymentCodeInfoArray, account, zone);
 
-        let addrIndex = lastIndex;
+        let addrIndex = lastIndex + 1;
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
-            const address = walletPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex++);
+            const address = walletPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex);
             if (this.isValidAddressForZone(address, zone)) {
-                const pubkey = walletPCodePrivate.derivePaymentPublicKey(senderPCodePublic, addrIndex - 1);
+                const pubkey = walletPCodePrivate.derivePaymentPublicKey(senderPCodePublic, addrIndex);
                 const pcInfo: QiAddressInfo = {
                     address,
                     pubKey: hexlify(pubkey),
@@ -1424,6 +1425,7 @@ export class QiHDWallet extends AbstractHDWallet {
                 }
                 return pcInfo;
             }
+            addrIndex++;
         }
 
         throw new Error(
