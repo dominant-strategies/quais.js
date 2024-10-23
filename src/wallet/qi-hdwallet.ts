@@ -504,22 +504,22 @@ export class QiHDWallet extends AbstractHDWallet {
         // 3. Generate as many unused addresses as required to populate the spend outputs
         const sendAddresses = await getDestinationAddresses(selection.spendOutputs.length);
 
-        const getChangeAddresses = async (count: number): Promise<string[]> => {
-            const changeAddresses = this._addressesMap.get('BIP44:change') || [];
-            const addresses: QiAddressInfo[] = [];
+        const getChangeAddressesForOutputs = async (count: number): Promise<string[]> => {
+            const currentChangeAddresses = this._addressesMap.get('BIP44:change') || [];
+            const outpusChangeAddresses: QiAddressInfo[] = [];
 
-            for (let i = 0; i < changeAddresses.length; i++) {
-                if (changeAddresses[i].status === AddressStatus.UNUSED) {
-                    addresses.push(changeAddresses[i]);
+            for (let i = 0; i < currentChangeAddresses.length; i++) {
+                if (currentChangeAddresses[i].status === AddressStatus.UNUSED) {
+                    outpusChangeAddresses.push(currentChangeAddresses[i]);
                 }
 
-                if (addresses.length === count) break;
+                if (outpusChangeAddresses.length === count) break;
             }
 
             // Generate the remaining number of change addresses if needed
-            const remainingAddressesNeeded = count - addresses.length;
+            const remainingAddressesNeeded = count - outpusChangeAddresses.length;
             if (remainingAddressesNeeded > 0) {
-                addresses.push(
+                outpusChangeAddresses.push(
                     ...Array(remainingAddressesNeeded)
                         .fill(0)
                         .map(() => this.getNextChangeAddressSync(0, originZone)),
@@ -528,8 +528,8 @@ export class QiHDWallet extends AbstractHDWallet {
 
             // Combine the existing change addresses with the newly generated addresses and ensure they are unique and sorted by index
             const mergedChangeAddresses = [
-                ...addresses.map((address) => ({ ...address, status: AddressStatus.ATTEMPTED_USE })),
-                ...changeAddresses,
+                ...outpusChangeAddresses.map((address) => ({ ...address, status: AddressStatus.ATTEMPTED_USE })),
+                ...currentChangeAddresses,
             ];
             const sortedAndFilteredChangeAddresses = mergedChangeAddresses
                 .filter((address, index, self) => self.findIndex((t) => t.address === address.address) === index)
@@ -538,11 +538,11 @@ export class QiHDWallet extends AbstractHDWallet {
             // Update the _addressesMap with the modified change addresses and statuses
             this._addressesMap.set('BIP44:change', sortedAndFilteredChangeAddresses);
 
-            return addresses.map((address) => address.address);
+            return outpusChangeAddresses.map((address) => address.address);
         };
 
         // 4. Get change addresses
-        const changeAddresses = await getChangeAddresses(selection.changeOutputs.length);
+        const changeAddresses = await getChangeAddressesForOutputs(selection.changeOutputs.length);
 
         // 5. Create the transaction and sign it using the signTransaction method
         let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
@@ -574,8 +574,8 @@ export class QiHDWallet extends AbstractHDWallet {
         // Determine if new addresses are needed for the change and spend outputs
         const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
         if (changeAddressesNeeded > 0) {
-            const newChangeAddresses = await getChangeAddresses(changeAddressesNeeded);
-            changeAddresses.push(...newChangeAddresses);
+            const outpusChangeAddresses = await getChangeAddressesForOutputs(changeAddressesNeeded);
+            changeAddresses.push(...outpusChangeAddresses);
         }
 
         const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
