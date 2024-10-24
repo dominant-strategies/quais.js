@@ -1,8 +1,7 @@
 import { BIP32API, BIP32Interface, HDNodeBIP32Adapter } from './bip32/types.js';
 import { sha256 } from '@noble/hashes/sha256';
-import { keccak256 } from '../crypto/index.js';
 import { getBytes, hexlify } from '../utils/data.js';
-import { getAddress } from '../address/address.js';
+import { computeAddress } from '../address/address.js';
 import { bs58check } from './bip32/crypto.js';
 import type { TinySecp256k1Interface } from './bip32/types.js';
 import { secp256k1 } from '@noble/curves/secp256k1';
@@ -159,7 +158,7 @@ export class PaymentCodePublic {
      * @protected
      */
     protected getAddressFromPubkey(pubKey: Uint8Array): string {
-        return getAddress(keccak256('0x' + hexlify(pubKey).substring(4)).substring(26));
+        return computeAddress(hexlify(pubKey));
     }
 
     /**
@@ -171,9 +170,8 @@ export class PaymentCodePublic {
      * @throws {Error} - If unable to derive public key or if an unknown address type is specified.
      */
     getPaymentAddress(paymentCode: PaymentCodePrivate, idx: number): string {
-        const pubkey = hexlify(this.derivePaymentPublicKey(paymentCode, idx));
-
-        return getAddress(keccak256('0x' + pubkey.substring(4)).substring(26));
+        const pubkey = this.derivePaymentPublicKey(paymentCode, idx);
+        return this.getAddressFromPubkey(pubkey);
     }
 }
 
