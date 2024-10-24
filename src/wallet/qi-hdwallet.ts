@@ -218,7 +218,7 @@ export class QiHDWallet extends AbstractHDWallet {
     }
 
     /**
-     * Finds the last used index in an array of QiAddressInfo objects.
+     * Finds the last used index in an array of QiAddressInfo objects. If no index is found, returns -1.
      *
      * @param {QiAddressInfo[]} addresses - The array of QiAddressInfo objects.
      * @returns {number} The last used index.
@@ -227,7 +227,7 @@ export class QiHDWallet extends AbstractHDWallet {
         const filteredAddresses = addresses?.filter(
             (addressInfo) => addressInfo.account === account && addressInfo.zone === zone,
         );
-        return filteredAddresses?.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1) || 0;
+        return filteredAddresses?.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1) || -1;
     }
 
     /**
