@@ -60,7 +60,6 @@ async function main() {
 	const bobAmount = 5000n;
 	console.log(`\nBob sends back ${quais.formatQi(bobAmount)} Qi to Alice`);
 	const tx2 = await bobQiWallet.sendTransaction(alicePaymentCode, bobAmount, quais.Zone.Cyprus1, quais.Zone.Cyprus1);
-  
 	console.log(`Transaction hash: ${tx2.hash}`);
 	console.log(`Tx contains ${tx2.txInputs?.length} inputs`);
 	console.log(`Tx inputs: ${JSON.stringify(tx2.txInputs)}`);
