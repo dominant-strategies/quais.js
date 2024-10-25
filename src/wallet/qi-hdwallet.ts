@@ -872,7 +872,7 @@ export class QiHDWallet extends AbstractHDWallet {
             // (BIP47 addresses)
             const pcAddressInfo = addressInfo;
             const account = pcAddressInfo.account;
-            const index = pcAddressInfo.index - 1;
+            const index = pcAddressInfo.index;
 
             const counterpartyPaymentCode = pcAddressInfo.derivationPath;
             if (!counterpartyPaymentCode) {
