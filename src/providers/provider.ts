@@ -1234,11 +1234,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
      * @ignore
      */
     constructor(tx: TransactionReceiptParams, provider: Provider) {
-        this.#logs = Object.freeze(
-            tx.logs.map((log) => {
-                return new Log(log, provider);
-            }),
-        );
+        this.#logs = Object.freeze(Array.isArray(tx.logs) ? tx.logs.map((log) => new Log(log, provider)) : []);
 
         let gasPrice = BN_0;
         if (tx.effectiveGasPrice != null) {
