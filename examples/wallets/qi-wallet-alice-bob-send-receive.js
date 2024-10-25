@@ -32,9 +32,10 @@ async function main() {
 	console.log('Bob Qi wallet scan complete');
 	printWalletInfo('Bob', bobQiWallet);
 
-	// Alice sends 50 Qi to Bob
-	console.log('\nAlice sends 50 Qi to Bob');
-	const tx = await aliceQiWallet.sendTransaction(bobPaymentCode, 50000n, quais.Zone.Cyprus1, quais.Zone.Cyprus1);
+	const aliceAmount = 5000000n;
+	// Alice sends 5000 Qi to Bob
+	console.log(`\nAlice sends ${quais.formatQi(aliceAmount)} Qi to Bob`);
+	const tx = await aliceQiWallet.sendTransaction(bobPaymentCode, aliceAmount, quais.Zone.Cyprus1, quais.Zone.Cyprus1);
 	//     console.log('Transaction sent: ', tx);
 	console.log(`Transaction hash: ${tx.hash}`);
 	console.log(`Tx contains ${tx.txInputs?.length} inputs`);
@@ -56,8 +57,9 @@ async function main() {
 	console.log('Bob Qi wallet sync complete');
 	printWalletInfo('Bob', bobQiWallet);
 
-	console.log('\nBob sends back 25 Qi to Alice');
-	const tx2 = await bobQiWallet.sendTransaction(alicePaymentCode, 25000n, quais.Zone.Cyprus1, quais.Zone.Cyprus1);
+	const bobAmount = 5000n;
+	console.log(`\nBob sends back ${quais.formatQi(bobAmount)} Qi to Alice`);
+	const tx2 = await bobQiWallet.sendTransaction(alicePaymentCode, bobAmount, quais.Zone.Cyprus1, quais.Zone.Cyprus1);
 	console.log(`Transaction hash: ${tx2.hash}`);
 	console.log(`Tx contains ${tx2.txInputs?.length} inputs`);
 	console.log(`Tx inputs: ${JSON.stringify(tx2.txInputs)}`);
