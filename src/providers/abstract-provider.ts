@@ -1986,6 +1986,16 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return sub;
     }
 
+    async startZoneSubscriptions(zone: Zone): Promise<void> {
+        for (const sub of Array.from(this.#subs.values())) {
+            if (sub.zone === zone) {
+                if (sub.started) {
+                    await sub.subscriber.start();
+                }
+            }
+        }
+    }
+
     async on(event: ProviderEvent, listener: Listener, zone?: Zone): Promise<this> {
         const sub = await this.#getSub(event, zone);
         sub.listeners.push({ listener, once: false });

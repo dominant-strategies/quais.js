@@ -4,7 +4,7 @@ import { SocketProvider } from './provider-socket.js';
 
 import type { JsonRpcApiProviderOptions } from './provider-jsonrpc.js';
 import type { Networkish } from './network.js';
-import { Shard, toShard } from '../constants/index.js';
+import { Shard, toShard, toZone } from '../constants/index.js';
 import { fromShard } from '../constants/shards.js';
 
 /**
@@ -111,6 +111,12 @@ export class WebSocketProvider extends SocketProvider {
                 await this._start();
                 this.resume();
                 this.readyMap.set(shard, true);
+                try {
+                    const zone = toZone(shard);
+                    this.provider.startZoneSubscriptions(zone);
+                } catch (error) {
+                    // Intentionally left empty. Will catch if shard is prime or region, which isn't a zone
+                }
             } catch (error) {
                 console.log('failed to start WebsocketProvider', error);
                 this.readyMap.set(shard, false);
@@ -119,7 +125,6 @@ export class WebSocketProvider extends SocketProvider {
         };
 
         websocket.onclose = () => {
-            console.log('WebSocket closed. Attempting to reconnect...');
             setTimeout(() => {
                 const baseUrl = websocket.url.split(':').slice(0, 2).join(':').split('/').slice(0, 3).join('/');
                 const shardSuffix = this._getOption('usePathing') ? `/${fromShard(shard, 'nickname')}` : `:${port}`;
