@@ -62,7 +62,7 @@ type DerivationPath = 'BIP44:external' | 'BIP44:change' | string; // string for 
  *
  * @extends NeuteredAddressInfo
  */
-interface QiAddressInfo extends NeuteredAddressInfo {
+export interface QiAddressInfo extends NeuteredAddressInfo {
     status: AddressStatus;
     derivationPath: DerivationPath;
 }

@@ -218,6 +218,8 @@ export {
     encryptKeystoreJsonSync,
     SerializedHDWallet,
     SerializedQiHDWallet,
+    QiAddressInfo,
+    NeuteredAddressInfo,
 } from './wallet/index.js';
 
 // WORDLIST
