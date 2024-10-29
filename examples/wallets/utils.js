@@ -129,4 +129,7 @@ function printPaymentCodeInfo(paymentCodeInfo) {
 
 module.exports = {
 	printWalletInfo,
+	printAddressTable,
+	printOutpointTable,
+	printPaymentCodeInfo
 };
