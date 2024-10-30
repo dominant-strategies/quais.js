@@ -220,6 +220,7 @@ export {
     SerializedQiHDWallet,
     QiAddressInfo,
     NeuteredAddressInfo,
+    OutpointInfo,
 } from './wallet/index.js';
 
 // WORDLIST
@@ -298,6 +299,8 @@ export type {
     TransactionReceiptParams,
     TransactionRequest,
     TransactionResponse,
+    QiTransactionResponse,
+    QuaiTransactionResponse,
     TransactionResponseParams,
     WebSocketCreator,
     WebSocketLike,
