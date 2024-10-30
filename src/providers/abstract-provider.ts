@@ -1549,11 +1549,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             blockTag: this._getBlockTag(shard, _tx.blockTag),
         });
 
-        tx.accessList = (await this.createAccessList(tx)).map((it) => {
-            it.address = formatMixedCaseChecksumAddress(it.address);
-            return it;
-        });
-
         return await this.#checkNetwork(this.#call(tx, blockTag, -1, zone), shard);
     }
 
