@@ -791,7 +791,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                 urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + primeSuffix;
                 this._urlMap.set(Shard.Prime, urls as C);
                 this.#connect.push(urls);
-                const shards = await this.getRunningLocations();
+                const shards = await this._getRunningLocations(Shard.Prime, true);
                 shards.forEach((shard) => {
                     const port = 9200 + 20 * shard[0] + shard[1];
                     const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
@@ -809,7 +809,8 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                     const primeConnect = new FetchRequest(primeUrl);
                     this._urlMap.set(Shard.Prime, primeConnect as C);
                     this.#connect.push(primeConnect);
-                    const shards = await this.getRunningLocations();
+                    console.log('fetching running locations');
+                    const shards = await this._getRunningLocations(Shard.Prime, true);
                     shards.forEach((shard) => {
                         const port = 9200 + 20 * shard[0] + shard[1];
                         const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);

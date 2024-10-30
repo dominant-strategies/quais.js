@@ -1006,7 +1006,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                         break;
                     }
                     console.log(
-                        'JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)',
+                        'JsonRpcProvider failed to detect network and cannot start up; retrying(perhaps the URL is wrong or the node is not started)',
                     );
                     this.emit(
                         'error',
@@ -1016,12 +1016,16 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                             info: { error },
                         }),
                     );
-                    await stall(1000);
+                    await stall(1000 * Math.pow(2, retries));
                     retries++;
                 }
             }
             if (retries >= maxRetries) {
-                throw new Error('Failed to detect network after maximum retries');
+                console.log('JsonRpcProvider failed to detect network and cannot start up; retry limit reached');
+                makeError('failed to bootstrap network detection', 'NETWORK_ERROR', {
+                    event: 'initial-network-discovery',
+                    info: { retries },
+                });
             }
 
             // Start dispatching requests
@@ -1038,6 +1042,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      */
     async _waitUntilReady(): Promise<void> {
         if (this._initFailed) {
+            console.log('init failed');
             throw new Error('Provider failed to initialize on creation. Run initialize or create a new provider.');
         }
         await this.initPromise;
@@ -1602,28 +1607,90 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
     }
 
     async send(method: string, params: Array<any> | Record<string, any>, shard?: Shard, now?: boolean): Promise<any> {
+        console.log('send', method, params, shard, now);
+        try {
+            await this._start();
+
+            console.log('started');
+
+            return await super.send(method, params, shard, now);
+        } catch (error) {
+            console.log('hiiiiiiii');
+            console.log('caught error', error);
+            return Promise.reject(
+                makeError('failed to bootstrap network detection', 'NETWORK_ERROR', {
+                    event: 'initial-network-discovery',
+                    info: { error },
+                }),
+            );
+        }
         // All requests are over HTTP, so we can just start handling requests
         // We do this here rather than the constructor so that we don't send any
         // requests to the network (i.e. quai_chainId) until we absolutely have to.
-        await this._start();
-
-        return await super.send(method, params, shard, now);
     }
 
-    async _send(payload: JsonRpcPayload | Array<JsonRpcPayload>, shard?: Shard): Promise<Array<JsonRpcResult>> {
-        // Configure a POST connection for the requested method
-        const request = this._getConnection(shard);
-        request.body = JSON.stringify(payload);
-        request.setHeader('content-type', 'application/json');
-        const response = await request.send();
-        response.assertOk();
-
-        let resp = response.bodyJson;
-        if (!Array.isArray(resp)) {
-            resp = [resp];
+    async _send(
+        payload: JsonRpcPayload | Array<JsonRpcPayload>,
+        shard?: Shard,
+        now?: boolean,
+    ): Promise<Array<JsonRpcResult | JsonRpcError>> {
+        if (this._initFailed) {
+            console.log('Provider failed to initialize on creation. Run initialize or create a new provider.');
+            return [
+                {
+                    id: Array.isArray(payload) ? payload[0].id : payload.id,
+                    error: {
+                        code: -32000,
+                        message: 'Provider failed to initialize on creation. Run initialize or create a new provider.',
+                    },
+                },
+            ];
         }
 
-        return resp;
+        try {
+            if (!now) {
+                console.log('not now');
+                await this._waitUntilReady();
+            }
+        } catch (error) {
+            console.log('caught error waiting in _send');
+            return [
+                {
+                    id: Array.isArray(payload) ? payload[0].id : payload.id,
+                    error: {
+                        code: -32000,
+                        message: 'Provider failed to initialize on creation. Run initialize or create a new provider.',
+                    },
+                },
+            ];
+        }
+        // Configure a POST connection for the requested method
+        try {
+            console.log('trying to send');
+            const request = this._getConnection(shard);
+            request.body = JSON.stringify(payload);
+            request.setHeader('content-type', 'application/json');
+            const response = await request.send();
+            response.assertOk();
+
+            let resp = response.bodyJson;
+            if (!Array.isArray(resp)) {
+                resp = [resp];
+            }
+
+            return resp;
+        } catch (error) {
+            console.log('caught error');
+            return [
+                {
+                    id: Array.isArray(payload) ? payload[0].id : payload.id,
+                    error: {
+                        code: -32000,
+                        message: 'Provider failed to initialize on creation. Run initialize or create a new provider.',
+                    },
+                },
+            ];
+        }
     }
 }
 
