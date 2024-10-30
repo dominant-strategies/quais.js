@@ -57,6 +57,22 @@ export type TxOutput = {
     lock?: string;
 };
 
+type PreviousOutpointJson = {
+    txHash: string;
+    index: string;
+};
+
+export type TxInputJson = {
+    previousOutpoint: PreviousOutpointJson;
+    pubkey: string;
+};
+
+export type TxOutputJson = {
+    address: string;
+    denomination: string;
+    lock?: string;
+};
+
 /**
  * List of supported Qi denominations.
  *

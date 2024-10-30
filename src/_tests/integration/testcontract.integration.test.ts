@@ -491,7 +491,7 @@ describe('Test Contract Fallback', function () {
             const { name, address, abi } = test;
             const send = test[group];
 
-            const contract = new Contract(address, abi, provider);
+            const contract = new Contract(address, abi, provider as ContractRunner);
             it(`test contract fallback checks: ${group} - ${name}`, async function () {
                 const func = async function () {
                     if (abi.length === 0) {

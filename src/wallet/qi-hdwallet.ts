@@ -9,7 +9,7 @@ import {
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress, isQiAddress } from '../address/index.js';
-import { getBytes, getZoneForAddress, hexlify } from '../utils/index.js';
+import { getBytes, getZoneForAddress, hexlify, toQuantity } from '../utils/index.js';
 import { TransactionLike, QiTransaction, TxInput, FewestCoinSelector } from '../transaction/index.js';
 import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
@@ -23,6 +23,7 @@ import { bs58check } from './bip32/crypto.js';
 import { type BIP32API, HDNodeBIP32Adapter } from './bip32/types.js';
 import ecc from '@bitcoinerlab/secp256k1';
 import { SelectedCoinsResult } from '../transaction/abstract-coinselector.js';
+import { QiPerformActionTransaction } from '../providers/abstract-provider.js';
 
 /**
  * @property {Outpoint} outpoint - The outpoint object.
@@ -550,43 +551,71 @@ export class QiHDWallet extends AbstractHDWallet {
             throw new Error('Missing public key for input address');
         }
 
+        let attempts = 0;
+        let finalFee = 0n;
+        let satisfiedFeeEstimation = false;
+        const MAX_FEE_ESTIMATION_ATTEMPTS = 5;
+
+        while (attempts < MAX_FEE_ESTIMATION_ATTEMPTS) {
+            const feeEstimationTx = this.prepareFeeEstimationTransaction(
+                selection,
+                inputPubKeys.map((pubkey) => pubkey!),
+                sendAddresses,
+                changeAddresses,
+            );
+
+            finalFee = await this.provider.estimateFeeForQi(feeEstimationTx);
+
+            // Get new selection with updated fee
+            selection = fewestCoinSelector.performSelection(spendTarget, finalFee);
+
+            // Determine if new addresses are needed for the change outputs
+            const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
+            if (changeAddressesNeeded > 0) {
+                // Need more change addresses
+                const newChangeAddresses = await getChangeAddressesForOutputs(changeAddressesNeeded);
+                changeAddresses.push(...newChangeAddresses);
+            } else if (changeAddressesNeeded < 0) {
+                // Have extra change addresses, remove the addresses starting from the end
+                // TODO: Set the status of the addresses to UNUSED in _addressesMap. This fine for now as it will be fixed during next sync
+                changeAddresses.splice(changeAddressesNeeded);
+            }
+
+            // Determine if new addresses are needed for the spend outputs
+            const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
+            if (spendAddressesNeeded > 0) {
+                // Need more send addresses
+                const newSendAddresses = await getDestinationAddresses(spendAddressesNeeded);
+                sendAddresses.push(...newSendAddresses);
+            } else if (spendAddressesNeeded < 0) {
+                // Have extra send addresses, remove the excess
+                // TODO: Set the status of the addresses to UNUSED in _addressesMap. This fine for now as it will be fixed during next sync
+                sendAddresses.splice(spendAddressesNeeded);
+            }
+
+            inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
+
+            // Calculate total new outputs needed (absolute value)
+            const totalNewOutputsNeeded = Math.abs(changeAddressesNeeded) + Math.abs(spendAddressesNeeded);
+
+            // If we need 5 or fewer new outputs, we can break the loop
+            if ((changeAddressesNeeded <= 0 && spendAddressesNeeded <= 0) || totalNewOutputsNeeded <= 5) {
+                finalFee *= 3n; // Increase the fee 3x to ensure it's accepted
+                satisfiedFeeEstimation = true;
+                break;
+            }
+
+            attempts++;
+        }
+
+        // If we didn't satisfy the fee estimation, increase the fee 10x to ensure it's accepted
+        if (!satisfiedFeeEstimation) {
+            finalFee *= 10n;
+        }
+
+        // Proceed with creating and signing the transaction
         const chainId = (await this.provider.getNetwork()).chainId;
-        let tx = await this.prepareTransaction(
-            selection,
-            inputPubKeys.map((pubkey) => pubkey!),
-            sendAddresses,
-            changeAddresses,
-            Number(chainId),
-        );
-
-        const gasLimit = await this.provider.estimateGas(tx);
-        const gasPrice = denominations[1]; // 0.005 Qi
-        const minerTip = (gasLimit * gasPrice) / 100n; // 1% extra as tip
-        // const feeData = await this.provider.getFeeData(originZone, true);
-        // const conversionRate = await this.provider.getLatestQuaiRate(originZone, feeData.gasPrice!);
-
-        // 5.6 Calculate total fee for the transaction using the gasLimit, gasPrice, and minerTip
-        const totalFee = gasLimit * gasPrice + minerTip;
-
-        // Get new selection with fee
-        selection = fewestCoinSelector.performSelection(spendTarget, totalFee);
-
-        // Determine if new addresses are needed for the change and spend outputs
-        const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
-        if (changeAddressesNeeded > 0) {
-            const outpusChangeAddresses = await getChangeAddressesForOutputs(changeAddressesNeeded);
-            changeAddresses.push(...outpusChangeAddresses);
-        }
-
-        const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
-        if (spendAddressesNeeded > 0) {
-            const newSendAddresses = await getDestinationAddresses(spendAddressesNeeded);
-            sendAddresses.push(...newSendAddresses);
-        }
-
-        inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
-
-        tx = await this.prepareTransaction(
+        const tx = await this.prepareTransaction(
             selection,
             inputPubKeys.map((pubkey) => pubkey!),
             sendAddresses,
@@ -704,6 +733,41 @@ export class QiHDWallet extends AbstractHDWallet {
         }));
         tx.chainId = chainId;
         return tx;
+    }
+
+    private prepareFeeEstimationTransaction(
+        selection: SelectedCoinsResult,
+        inputPubKeys: string[],
+        sendAddresses: string[],
+        changeAddresses: string[],
+    ): QiPerformActionTransaction {
+        const txIn = selection.inputs.map((input, index) => ({
+            previousOutpoint: { txHash: input.txhash!, index: toQuantity(input.index!) },
+            pubkey: inputPubKeys[index],
+        }));
+
+        // 5.3 Create the "sender" outputs
+        const senderOutputs = selection.spendOutputs.map((output, index) => ({
+            address: sendAddresses[index],
+            denomination: output.denomination,
+        }));
+
+        // 5.4 Create the "change" outputs
+        const changeOutputs = selection.changeOutputs.map((output, index) => ({
+            address: changeAddresses[index],
+            denomination: output.denomination,
+        }));
+
+        const txOut = [...senderOutputs, ...changeOutputs].map((output) => ({
+            address: output.address,
+            denomination: toQuantity(output.denomination!),
+        }));
+
+        return {
+            txType: 2,
+            txIn,
+            txOut,
+        };
     }
 
     /**

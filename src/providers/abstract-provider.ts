@@ -14,7 +14,7 @@
 import { computeAddress, resolveAddress, formatMixedCaseChecksumAddress } from '../address/index.js';
 import { Shard, toShard, toZone, Zone } from '../constants/index.js';
 import { TxInput, TxOutput } from '../transaction/index.js';
-import { Outpoint } from '../transaction/utxo.js';
+import { Outpoint, TxInputJson, TxOutputJson } from '../transaction/utxo.js';
 import {
     hexlify,
     isHexString,
@@ -495,14 +495,19 @@ export interface QuaiPerformActionTransaction extends QuaiPreparedTransactionReq
 // todo: write docs for this
 export interface QiPerformActionTransaction extends QiPreparedTransactionRequest {
     /**
+     * The transaction type. Always 2 for UTXO transactions.
+     */
+    txType: number;
+
+    /**
      * The `inputs` of the UTXO transaction.
      */
-    inputs?: Array<TxInput>;
+    txIn: Array<TxInputJson>;
 
     /**
      * The `outputs` of the UTXO transaction.
      */
-    outputs?: Array<TxOutput>;
+    txOut: Array<TxOutputJson>;
 
     [key: string]: any;
 }
@@ -532,6 +537,11 @@ export type PerformActionRequest =
     | {
           method: 'estimateGas';
           transaction: PerformActionTransaction;
+          zone?: Zone;
+      }
+    | {
+          method: 'estimateFeeForQi';
+          transaction: QiPerformActionTransaction;
           zone?: Zone;
       }
     | {
@@ -1504,6 +1514,18 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                 }),
                 '%response',
             ) * BigInt(2)
+        );
+    }
+
+    async estimateFeeForQi(_tx: QiPerformActionTransaction): Promise<bigint> {
+        const zone = await this.zoneFromAddress(addressFromTransactionRequest(_tx));
+        return getBigInt(
+            await this.#perform({
+                method: 'estimateFeeForQi',
+                transaction: _tx,
+                zone: zone,
+            }),
+            '%response',
         );
     }
 
