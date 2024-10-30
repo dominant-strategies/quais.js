@@ -1238,6 +1238,13 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                 };
             }
 
+            case 'estimateFeeForQi': {
+                return {
+                    method: 'quai_estimateFeeForQi',
+                    args: [req.transaction],
+                };
+            }
+
             case 'createAccessList': {
                 return {
                     method: 'quai_createAccessList',

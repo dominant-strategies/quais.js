@@ -19,7 +19,7 @@ import type { AccessList, AccessListish } from '../transaction/index.js';
 
 import type { ContractRunner } from '../contract/index.js';
 import type { Network } from './network.js';
-import type { Outpoint } from '../transaction/utxo.js';
+import type { Outpoint, TxInputJson } from '../transaction/utxo.js';
 import type { TxInput, TxOutput } from '../transaction/utxo.js';
 import type { Zone, Shard } from '../constants/index.js';
 import type { txpoolContentResponse, txpoolInspectResponse } from './txpool.js';
@@ -56,6 +56,7 @@ import { QiTransactionLike } from '../transaction/qi-transaction.js';
 import { QuaiTransactionLike } from '../transaction/quai-transaction.js';
 import { toShard, toZone } from '../constants/index.js';
 import { getZoneFromNodeLocation, getZoneForAddress } from '../utils/shards.js';
+import { QiPerformActionTransaction } from './abstract-provider.js';
 
 /**
  * Get the value if it is not null or undefined.
@@ -146,7 +147,12 @@ export function addressFromTransactionRequest(tx: TransactionRequest): AddressLi
         return tx.from;
     }
     if ('txInputs' in tx && !!tx.txInputs) {
-        return computeAddress(tx.txInputs[0].pubkey);
+        const inputs = tx.txInputs as TxInput[];
+        return computeAddress(inputs[0].pubkey);
+    }
+    if ('txIn' in tx && !!tx.txIn) {
+        const inputs = tx.txIn as TxInputJson[];
+        return computeAddress(inputs[0].pubkey);
     }
     if ('to' in tx && !!tx.to) {
         return tx.to as AddressLike;
@@ -2856,6 +2862,14 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * @throws {Error} If the transaction execution reverts.
      */
     estimateGas(tx: TransactionRequest): Promise<bigint>;
+
+    /**
+     * Estimate the fee for a Qi transaction.
+     *
+     * @param {QiPerformActionTransaction} tx - The transaction to estimate the fee for.
+     * @returns {Promise<bigint>} A promise resolving to the estimated fee.
+     */
+    estimateFeeForQi(tx: QiPerformActionTransaction): Promise<bigint>;
 
     /**
      * Required for populating access lists for state mutating calls
