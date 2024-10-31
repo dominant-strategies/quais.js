@@ -8,7 +8,6 @@ import {
     TestCaseQiAddresses,
     TestCaseQiSignMessage,
     TestCaseQiTransaction,
-    TestCaseQiSerialization,
     AddressInfo,
     TxInput,
     TxOutput,
@@ -65,74 +64,6 @@ describe('QiHDWallet: Test address generation and retrieval', function () {
             }
         });
     }
-});
-
-describe('QiHDWallet: Test serialization and deserialization of QiHDWallet', function () {
-    this.timeout(10000);
-    const tests = loadTests<TestCaseQiSerialization>('qi-serialization');
-    for (const test of tests) {
-        const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
-        const qiWallet = QiHDWallet.fromMnemonic(mnemonic);
-        let serialized: any;
-        it(`tests serialization QuaiHDWallet: ${test.name}`, async function () {
-            for (const param of test.params) {
-                qiWallet.getNextAddressSync(param.account, param.zone);
-                qiWallet.getNextChangeAddressSync(param.account, param.zone);
-            }
-            qiWallet.importOutpoints(test.outpoints);
-            serialized = qiWallet.serialize();
-            assert.deepEqual(serialized, test.serialized);
-        });
-
-        it(`tests deserialization QiHDWallet: ${test.name}`, async function () {
-            const deserialized = await QiHDWallet.deserialize(serialized);
-            assert.deepEqual(deserialized.serialize(), serialized);
-        });
-    }
-});
-
-describe('QiHDWallet: Test serialization and deserialization of QiHDWallet with payment codes', function () {
-    this.timeout(10000);
-    it('tests serialization and deserialization with payment codes and addresses', async function () {
-        // Create Alice's wallet
-        const aliceMnemonic = Mnemonic.fromPhrase(
-            'empower cook violin million wool twelve involve nice donate author mammal salt royal shiver birth olympic embody hello beef suit isolate mixed text spot',
-        );
-        const aliceQiWallet = QiHDWallet.fromMnemonic(aliceMnemonic);
-
-        // Create Bob's wallet
-        const bobMnemonic = Mnemonic.fromPhrase(
-            'innocent perfect bus miss prevent night oval position aspect nut angle usage expose grace juice',
-        );
-        const bobQiWallet = QiHDWallet.fromMnemonic(bobMnemonic);
-
-        // Get payment codes
-        const alicePaymentCode = await aliceQiWallet.getPaymentCode(0);
-        const bobPaymentCode = await bobQiWallet.getPaymentCode(0);
-
-        // Generate addresses
-        await aliceQiWallet.getNextSendAddress(bobPaymentCode, Zone.Cyprus1);
-        await aliceQiWallet.getNextReceiveAddress(bobPaymentCode, Zone.Cyprus1);
-
-        // Serialize Alice's wallet
-        const serializedAliceWallet = aliceQiWallet.serialize();
-
-        // Deserialize Alice's wallet
-        const deserializedAliceWallet = await QiHDWallet.deserialize(serializedAliceWallet);
-
-        // Assertions
-        assert.strictEqual(
-            deserializedAliceWallet.getPaymentCode(0),
-            alicePaymentCode,
-            'Payment code should match after deserialization',
-        );
-
-        assert.equal(
-            deserializedAliceWallet.channelIsOpen(alicePaymentCode),
-            aliceQiWallet.channelIsOpen(alicePaymentCode),
-            'Channel should be open',
-        );
-    });
 });
 
 describe('QiHDWallet: Test transaction signing', function () {

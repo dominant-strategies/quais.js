@@ -376,23 +376,6 @@ export interface TestCaseQiTransaction {
     signed: string;
 }
 
-export interface TestCaseQiSerialization {
-    name: string;
-    mnemonic: string;
-    params: Array<AddrParams>;
-    outpoints: Array<outpointInfo>;
-    serialized: {
-        version: number;
-        phrase: string;
-        coinType: number;
-        addresses: Array<AddressInfo>;
-        changeAddresses: Array<AddressInfo>;
-        gapAddresses: Array<AddressInfo>;
-        changeGapAddresses: Array<AddressInfo>;
-        outpoints: Array<outpointInfo>;
-    };
-}
-
 export interface TestCaseQiSignMessage {
     name: string;
     mnemonic: string;
