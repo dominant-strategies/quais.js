@@ -31,6 +31,6 @@ export { Wallet } from './wallet.js';
 
 export type { KeystoreAccount, EncryptOptions } from './json-keystore.js';
 
-export { QiHDWallet, SerializedQiHDWallet, QiAddressInfo, OutpointInfo } from './qi-hdwallet.js';
+export { QiHDWallet, SerializedQiHDWallet, QiAddressInfo, OutpointInfo, AddressStatus } from './qi-hdwallet.js';
 
 export { HDNodeVoidWallet, HDNodeWallet } from './hdnodewallet.js';
