@@ -221,6 +221,7 @@ export {
     QiAddressInfo,
     NeuteredAddressInfo,
     OutpointInfo,
+    AddressStatus,
 } from './wallet/index.js';
 
 // WORDLIST

@@ -44,7 +44,7 @@ export interface OutpointInfo {
  *
  * @enum {string}
  */
-enum AddressStatus {
+export enum AddressStatus {
     USED = 'USED',
     UNUSED = 'UNUSED',
     ATTEMPTED_USE = 'ATTEMPTED_USE',
