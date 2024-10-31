@@ -998,7 +998,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
         (async () => {
             let retries = 0;
-            const maxRetries = 2;
+            const maxRetries = 5;
             while (this.#network == null && !this.destroyed && retries < maxRetries) {
                 try {
                     this.#network = await this._detectNetwork();
@@ -1622,16 +1622,11 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
     }
 
     async send(method: string, params: Array<any> | Record<string, any>, shard?: Shard, now?: boolean): Promise<any> {
-        console.log('send', method, params, shard, now);
         try {
             this._start();
 
-            console.log('started');
-
             return await super.send(method, params, shard, now);
         } catch (error) {
-            console.log('hiiiiiiii');
-            console.log('caught error', error);
             return Promise.reject(error);
         }
         // All requests are over HTTP, so we can just start handling requests
@@ -1686,7 +1681,6 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
 
             return resp;
         } catch (error) {
-            console.log('caught error');
             return [
                 {
                     id: Array.isArray(payload) ? payload[0].id : payload.id,
