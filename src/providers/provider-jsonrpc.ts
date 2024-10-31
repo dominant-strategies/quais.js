@@ -987,7 +987,8 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
      *
      * @ignore
      */
-    _start(): void {
+    _start() {
+        this.attemptConnect = true;
         if (this.#notReady == null || this.#notReady.resolve == null) {
             return;
         }
@@ -997,7 +998,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
         (async () => {
             let retries = 0;
-            const maxRetries = 5;
+            const maxRetries = 2;
             while (this.#network == null && !this.destroyed && retries < maxRetries) {
                 try {
                     this.#network = await this._detectNetwork();
@@ -1045,7 +1046,28 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             console.log('init failed');
             throw new Error('Provider failed to initialize on creation. Run initialize or create a new provider.');
         }
-        await this.initPromise;
+
+        // Flag to control the loop in setAttemptConnect
+        let keepAttempting = true;
+
+        // Function to set attemptConnect every 2 seconds
+        const setAttemptConnect = async () => {
+            while (keepAttempting) {
+                this.attemptConnect = true;
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+            }
+        };
+
+        // Start setting attemptConnect in the background
+        setAttemptConnect();
+
+        try {
+            // Wait until initPromise resolves
+            await this.initPromise;
+        } finally {
+            // Stop setting attemptConnect once initPromise resolves
+            keepAttempting = false;
+        }
     }
 
     /**
@@ -1609,7 +1631,7 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
     async send(method: string, params: Array<any> | Record<string, any>, shard?: Shard, now?: boolean): Promise<any> {
         console.log('send', method, params, shard, now);
         try {
-            await this._start();
+            this._start();
 
             console.log('started');
 
@@ -1617,12 +1639,7 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         } catch (error) {
             console.log('hiiiiiiii');
             console.log('caught error', error);
-            return Promise.reject(
-                makeError('failed to bootstrap network detection', 'NETWORK_ERROR', {
-                    event: 'initial-network-discovery',
-                    info: { error },
-                }),
-            );
+            return Promise.reject(error);
         }
         // All requests are over HTTP, so we can just start handling requests
         // We do this here rather than the constructor so that we don't send any
@@ -1635,7 +1652,6 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         now?: boolean,
     ): Promise<Array<JsonRpcResult | JsonRpcError>> {
         if (this._initFailed) {
-            console.log('Provider failed to initialize on creation. Run initialize or create a new provider.');
             return [
                 {
                     id: Array.isArray(payload) ? payload[0].id : payload.id,
@@ -1649,11 +1665,9 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
 
         try {
             if (!now) {
-                console.log('not now');
                 await this._waitUntilReady();
             }
         } catch (error) {
-            console.log('caught error waiting in _send');
             return [
                 {
                     id: Array.isArray(payload) ? payload[0].id : payload.id,
@@ -1666,7 +1680,6 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
         }
         // Configure a POST connection for the requested method
         try {
-            console.log('trying to send');
             const request = this._getConnection(shard);
             request.body = JSON.stringify(payload);
             request.setHeader('content-type', 'application/json');
@@ -1686,7 +1699,7 @@ export class JsonRpcProvider extends JsonRpcApiProvider {
                     id: Array.isArray(payload) ? payload[0].id : payload.id,
                     error: {
                         code: -32000,
-                        message: 'Provider failed to initialize on creation. Run initialize or create a new provider.',
+                        message: error instanceof Error ? error.message : String(error),
                     },
                 },
             ];

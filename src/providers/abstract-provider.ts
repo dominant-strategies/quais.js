@@ -703,6 +703,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @ignore
      */
     _urlMap: Map<Shard, C>;
+
     #connect: FetchRequest[];
     #subs: Map<string, Sub>;
 
@@ -729,6 +730,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     initResolvePromise: null | ((value: void) => void);
     initRejectPromise: null | ((reason?: any) => void);
     initPromise: Promise<void>;
+    attemptConnect: boolean;
 
     /**
      * Create a new **AbstractProvider** connected to `network`, or use the various network detection capabilities to
@@ -739,6 +741,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      */
     constructor(_network?: 'any' | Networkish, options?: AbstractProviderOptions) {
         this._initFailed = false;
+        this.attemptConnect = true;
         this.#options = Object.assign({}, defaultOptions, options || {});
 
         if (_network === 'any') {
@@ -785,13 +788,17 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @returns {Promise<void>} A promise that resolves when the map is initialized.
      */
     async initialize<U = string[] | FetchRequest>(urls: U): Promise<void> {
+        this.initPromise = new Promise((resolve, reject) => {
+            this.initResolvePromise = resolve;
+            this.initRejectPromise = reject;
+        });
         try {
             const primeSuffix = this.#options.usePathing ? `/${fromShard(Shard.Prime, 'nickname')}` : ':9001';
             if (urls instanceof FetchRequest) {
                 urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + primeSuffix;
                 this._urlMap.set(Shard.Prime, urls as C);
                 this.#connect.push(urls);
-                const shards = await this._getRunningLocations(Shard.Prime, true);
+                const shards = await this._waitGetRunningLocations(Shard.Prime, true);
                 shards.forEach((shard) => {
                     const port = 9200 + 20 * shard[0] + shard[1];
                     const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
@@ -810,7 +817,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                     this._urlMap.set(Shard.Prime, primeConnect as C);
                     this.#connect.push(primeConnect);
                     console.log('fetching running locations');
-                    const shards = await this._getRunningLocations(Shard.Prime, true);
+                    const shards = await this._waitGetRunningLocations(Shard.Prime, true);
                     shards.forEach((shard) => {
                         const port = 9200 + 20 * shard[0] + shard[1];
                         const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
@@ -1016,6 +1023,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @returns {Promise<T>} A promise that resolves to the result of the operation.
      */
     async #perform<T = any>(req: PerformActionRequest): Promise<T> {
+        this.attemptConnect = true;
         const timeout = this.#options.cacheTimeout;
         // Caching disabled
         if (timeout < 0) {
@@ -1443,6 +1451,35 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         }
 
         return expected.clone();
+    }
+
+    protected async _waitGetRunningLocations(shard: Shard, now: boolean): Promise<number[][]> {
+        let retries = 0;
+        let locations: number[][] = [];
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            try {
+                if (this.attemptConnect) {
+                    if (retries > 5) {
+                        retries = 0;
+                    }
+                    locations = await this._getRunningLocations(shard, now);
+                    break;
+                } else {
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
+            } catch (error) {
+                retries++;
+                if (retries > 5) {
+                    this.attemptConnect = false;
+                }
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+        }
+        if (locations.length === 0) {
+            throw new Error('could not get running locations');
+        }
+        return locations;
     }
 
     protected async _getRunningLocations(shard?: Shard, now?: boolean): Promise<number[][]> {
