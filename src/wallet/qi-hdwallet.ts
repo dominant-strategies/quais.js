@@ -916,8 +916,18 @@ export class QiHDWallet extends AbstractHDWallet {
      */
     private getPrivateKeyForTxInput(input: TxInput): string {
         if (!input.pubkey) throw new Error('Missing public key for input');
-
         const address = computeAddress(input.pubkey);
+        return this.getPrivateKey(address);
+    }
+
+    /**
+     * Returns the private key for a given address. This method should be used with caution as it exposes the private
+     * key to the user.
+     *
+     * @param {string} address - The address associated with the desired private key.
+     * @returns {string} The private key.
+     */
+    public getPrivateKey(address: string): string {
         const addressInfo = this.locateAddressInfo(address);
 
         if (!addressInfo) {
