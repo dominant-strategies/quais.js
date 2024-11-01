@@ -30,7 +30,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @ignore
      */
-    const version = '1.0.0-alpha.20';
+    const version = '1.0.0-alpha.23';
 
     /**
      * Property helper functions.
@@ -28336,13 +28336,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @enum {string}
      */
-    var AddressStatus;
+    exports.AddressStatus = void 0;
     (function (AddressStatus) {
         AddressStatus["USED"] = "USED";
         AddressStatus["UNUSED"] = "UNUSED";
         AddressStatus["ATTEMPTED_USE"] = "ATTEMPTED_USE";
         AddressStatus["UNKNOWN"] = "UNKNOWN";
-    })(AddressStatus || (AddressStatus = {}));
+    })(exports.AddressStatus || (exports.AddressStatus = {}));
     /**
      * Current known issues:
      *
@@ -28493,7 +28493,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 index: addressNode.index,
                 change: isChange,
                 zone,
-                status: AddressStatus.UNUSED,
+                status: exports.AddressStatus.UNUSED,
                 derivationPath: isChange ? 'BIP44:change' : 'BIP44:external',
             };
             this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external')?.push(newAddrInfo);
@@ -28714,7 +28714,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 const currentChangeAddresses = this._addressesMap.get('BIP44:change') || [];
                 const outpusChangeAddresses = [];
                 for (let i = 0; i < currentChangeAddresses.length; i++) {
-                    if (currentChangeAddresses[i].status === AddressStatus.UNUSED) {
+                    if (currentChangeAddresses[i].status === exports.AddressStatus.UNUSED) {
                         outpusChangeAddresses.push(currentChangeAddresses[i]);
                     }
                     if (outpusChangeAddresses.length === count)
@@ -28729,7 +28729,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 // Combine the existing change addresses with the newly generated addresses and ensure they are unique and sorted by index
                 const mergedChangeAddresses = [
-                    ...outpusChangeAddresses.map((address) => ({ ...address, status: AddressStatus.ATTEMPTED_USE })),
+                    ...outpusChangeAddresses.map((address) => ({ ...address, status: exports.AddressStatus.ATTEMPTED_USE })),
                     ...currentChangeAddresses,
                 ];
                 const sortedAndFilteredChangeAddresses = mergedChangeAddresses
@@ -29030,6 +29030,16 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (!input.pubkey)
                 throw new Error('Missing public key for input');
             const address = computeAddress(input.pubkey);
+            return this.getPrivateKey(address);
+        }
+        /**
+         * Returns the private key for a given address. This method should be used with caution as it exposes the private
+         * key to the user.
+         *
+         * @param {string} address - The address associated with the desired private key.
+         * @returns {string} The private key.
+         */
+        getPrivateKey(address) {
             const addressInfo = this.locateAddressInfo(address);
             if (!addressInfo) {
                 throw new Error(`Address not found: ${address}`);
@@ -29077,7 +29087,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // set status of all addresses to unknown
             this._addressesMap = new Map(Array.from(this._addressesMap.entries()).map(([key, addresses]) => [
                 key,
-                addresses.map((addr) => ({ ...addr, status: AddressStatus.UNKNOWN })),
+                addresses.map((addr) => ({ ...addr, status: exports.AddressStatus.UNKNOWN })),
             ]));
             // flush available and pending outpoints
             this._availableOutpoints = [];
@@ -29129,13 +29139,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         async _scanDerivationPath(path, zone, account) {
             const addresses = this._addressesMap.get(path) || [];
             let consecutiveUnusedCount = 0;
-            const checkStatuses = [AddressStatus.UNKNOWN, AddressStatus.ATTEMPTED_USE, AddressStatus.UNUSED];
+            const checkStatuses = [exports.AddressStatus.UNKNOWN, exports.AddressStatus.ATTEMPTED_USE, exports.AddressStatus.UNUSED];
             // Check existing addresses
             for (let i = 0; i < addresses.length; i++) {
                 const addr = addresses[i];
                 if (checkStatuses.includes(addr.status)) {
                     const { isUsed, outpoints } = await this.checkAddressUse(addr.address);
-                    addresses[i].status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
+                    addresses[i].status = isUsed ? exports.AddressStatus.USED : exports.AddressStatus.UNUSED;
                     // import outpoints if any are found
                     if (outpoints.length > 0) {
                         this.importOutpoints(outpoints.map((outpoint) => ({
@@ -29146,7 +29156,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         })));
                     }
                 }
-                if (addr.status === AddressStatus.USED) {
+                if (addr.status === exports.AddressStatus.USED) {
                     consecutiveUnusedCount = 0;
                 }
                 else {
@@ -29163,7 +29173,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     ? this._getNextQiAddress(account, zone, isChange)
                     : this.getNextReceiveAddress(path, zone, account);
                 const { isUsed, outpoints } = await this.checkAddressUse(newAddrInfo.address);
-                newAddrInfo.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
+                newAddrInfo.status = isUsed ? exports.AddressStatus.USED : exports.AddressStatus.UNUSED;
                 // import outpoints if any are found
                 if (outpoints.length > 0) {
                     this.importOutpoints(outpoints.map((outpoint) => ({
@@ -29173,7 +29183,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         account: newAddrInfo.account,
                     })));
                 }
-                if (newAddrInfo.status === AddressStatus.USED) {
+                if (newAddrInfo.status === exports.AddressStatus.USED) {
                     consecutiveUnusedCount = 0;
                 }
                 else {
@@ -29253,7 +29263,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         getGapAddressesForZone(zone) {
             this.validateZone(zone);
             const gapAddresses = this._addressesMap.get('BIP44:external') || [];
-            return gapAddresses.filter((addressInfo) => addressInfo.zone === zone && addressInfo.status === AddressStatus.UNUSED);
+            return gapAddresses.filter((addressInfo) => addressInfo.zone === zone && addressInfo.status === exports.AddressStatus.UNUSED);
         }
         /**
          * Gets the gap change addresses for the specified zone.
@@ -29264,7 +29274,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         getGapChangeAddressesForZone(zone) {
             this.validateZone(zone);
             const gapChangeAddresses = this._addressesMap.get('BIP44:change') || [];
-            return gapChangeAddresses.filter((addressInfo) => addressInfo.zone === zone && addressInfo.status === AddressStatus.UNUSED);
+            return gapChangeAddresses.filter((addressInfo) => addressInfo.zone === zone && addressInfo.status === exports.AddressStatus.UNUSED);
         }
         /**
          * Gets the payment channel addresses for the specified zone.
@@ -29283,7 +29293,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {QiAddressInfo[]} The gap payment channel addresses for the payment code.
          */
         getGapPaymentChannelAddresses(paymentCode) {
-            return (this._addressesMap.get(paymentCode)?.filter((addressInfo) => addressInfo.status === AddressStatus.UNUSED) ||
+            return (this._addressesMap.get(paymentCode)?.filter((addressInfo) => addressInfo.status === exports.AddressStatus.UNUSED) ||
                 []);
         }
         /**
@@ -29334,7 +29344,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const wallet = new this(_guard, root);
             const validateQiAddressInfo = (addressInfo) => {
                 wallet.validateNeuteredAddressInfo(addressInfo);
-                if (!Object.values(AddressStatus).includes(addressInfo.status)) {
+                if (!Object.values(exports.AddressStatus).includes(addressInfo.status)) {
                     throw new Error(`Invalid QiAddressInfo: status '${addressInfo.status}' is not a valid AddressStatus`);
                 }
                 if (addressInfo.derivationPath !== 'BIP44:external' &&
@@ -29469,7 +29479,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         account,
                         zone,
                         change: false,
-                        status: AddressStatus.UNUSED,
+                        status: exports.AddressStatus.UNUSED,
                         derivationPath: receiverPaymentCode,
                     };
                     if (paymentCodeInfoArray) {
@@ -29514,7 +29524,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         account,
                         zone,
                         change: false,
-                        status: AddressStatus.UNUSED,
+                        status: exports.AddressStatus.UNUSED,
                         derivationPath: senderPaymentCode,
                     };
                     if (paymentCodeInfoArray) {
@@ -30384,6 +30394,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         initResolvePromise;
         initRejectPromise;
         initPromise;
+        attemptConnect;
         /**
          * Create a new **AbstractProvider** connected to `network`, or use the various network detection capabilities to
          * discover the {@link Network | **Network**} if necessary.
@@ -30393,6 +30404,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         constructor(_network, options) {
             this._initFailed = false;
+            this.attemptConnect = true;
             this.#options = Object.assign({}, defaultOptions$1, options || {});
             if (_network === 'any') {
                 this.#anyNetwork = true;
@@ -30433,13 +30445,17 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {Promise<void>} A promise that resolves when the map is initialized.
          */
         async initialize(urls) {
+            this.initPromise = new Promise((resolve, reject) => {
+                this.initResolvePromise = resolve;
+                this.initRejectPromise = reject;
+            });
             try {
                 const primeSuffix = this.#options.usePathing ? `/${fromShard(exports.Shard.Prime, 'nickname')}` : ':9001';
                 if (urls instanceof FetchRequest) {
                     urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + primeSuffix;
                     this._urlMap.set(exports.Shard.Prime, urls);
                     this.#connect.push(urls);
-                    const shards = await this.getRunningLocations();
+                    const shards = await this._waitGetRunningLocations(exports.Shard.Prime, true);
                     shards.forEach((shard) => {
                         const port = 9200 + 20 * shard[0] + shard[1];
                         const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
@@ -30454,7 +30470,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         const primeConnect = new FetchRequest(primeUrl);
                         this._urlMap.set(exports.Shard.Prime, primeConnect);
                         this.#connect.push(primeConnect);
-                        const shards = await this.getRunningLocations();
+                        const shards = await this._waitGetRunningLocations(exports.Shard.Prime, true);
                         shards.forEach((shard) => {
                             const port = 9200 + 20 * shard[0] + shard[1];
                             const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
@@ -30538,7 +30554,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return getBigInt(await this.#perform({
                 method: 'getQuaiRateAtBlock',
                 blockTag: resolvedBlockTag,
-                amt: Number(amt),
+                amt: toQuantity(String(amt)),
                 zone: zone,
             }));
         }
@@ -30612,7 +30628,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return getBigInt(await this.#perform({
                 method: 'getQiRateAtBlock',
                 blockTag: resolvedBlockTag,
-                amt: Number(amt),
+                amt: toQuantity(String(amt)),
                 zone: zone,
             }));
         }
@@ -30641,6 +30657,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {Promise<T>} A promise that resolves to the result of the operation.
          */
         async #perform(req) {
+            this.attemptConnect = true;
             const timeout = this.#options.cacheTimeout;
             // Caching disabled
             if (timeout < 0) {
@@ -31018,6 +31035,36 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
             }
             return expected.clone();
+        }
+        async _waitGetRunningLocations(shard, now) {
+            let retries = 0;
+            let locations = [];
+            // eslint-disable-next-line no-constant-condition
+            while (true) {
+                try {
+                    if (this.attemptConnect) {
+                        if (retries > 5) {
+                            retries = 0;
+                        }
+                        locations = await this._getRunningLocations(shard, now);
+                        break;
+                    }
+                    else {
+                        await new Promise((resolve) => setTimeout(resolve, 1000));
+                    }
+                }
+                catch (error) {
+                    retries++;
+                    if (retries > 5) {
+                        this.attemptConnect = false;
+                    }
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
+            }
+            if (locations.length === 0) {
+                throw new Error('could not get running locations');
+            }
+            return locations;
         }
         async _getRunningLocations(shard, now) {
             now = now ? now : false;
@@ -32600,6 +32647,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @ignore
          */
         _start() {
+            this.attemptConnect = true;
             if (this.#notReady == null || this.#notReady.resolve == null) {
                 return;
             }
@@ -32616,17 +32664,21 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         if (this.destroyed) {
                             break;
                         }
-                        console.log('JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)');
+                        console.log('JsonRpcProvider failed to detect network and cannot start up; retrying (perhaps the URL is wrong or the node is not started)');
                         this.emit('error', undefined, makeError('failed to bootstrap network detection', 'NETWORK_ERROR', {
                             event: 'initial-network-discovery',
                             info: { error },
                         }));
-                        await stall(1000);
+                        await stall(1000 * Math.pow(2, retries));
                         retries++;
                     }
                 }
                 if (retries >= maxRetries) {
-                    throw new Error('Failed to detect network after maximum retries');
+                    console.log('JsonRpcProvider failed to detect network and cannot start up; retry limit reached');
+                    makeError('failed to bootstrap network detection', 'NETWORK_ERROR', {
+                        event: 'initial-network-discovery',
+                        info: { retries },
+                    });
                 }
                 // Start dispatching requests
                 this.#scheduleDrain();
@@ -32641,9 +32693,28 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         async _waitUntilReady() {
             if (this._initFailed) {
+                console.log('init failed');
                 throw new Error('Provider failed to initialize on creation. Run initialize or create a new provider.');
             }
-            await this.initPromise;
+            // Flag to control the loop in setAttemptConnect
+            let keepAttempting = true;
+            // Function to set attemptConnect every 2 seconds
+            const setAttemptConnect = async () => {
+                while (keepAttempting) {
+                    this.attemptConnect = true;
+                    await new Promise((resolve) => setTimeout(resolve, 2000));
+                }
+            };
+            // Start setting attemptConnect in the background
+            setAttemptConnect();
+            try {
+                // Wait until initPromise resolves
+                await this.initPromise;
+            }
+            finally {
+                // Stop setting attemptConnect once initPromise resolves
+                keepAttempting = false;
+            }
         }
         /**
          * Return a Subscriber that will manage the `sub`.
@@ -33120,24 +33191,69 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return new FetchRequest(connection.url);
         }
         async send(method, params, shard, now) {
+            try {
+                this._start();
+                return await super.send(method, params, shard, now);
+            }
+            catch (error) {
+                return Promise.reject(error);
+            }
             // All requests are over HTTP, so we can just start handling requests
             // We do this here rather than the constructor so that we don't send any
             // requests to the network (i.e. quai_chainId) until we absolutely have to.
-            await this._start();
-            return await super.send(method, params, shard, now);
         }
-        async _send(payload, shard) {
-            // Configure a POST connection for the requested method
-            const request = this._getConnection(shard);
-            request.body = JSON.stringify(payload);
-            request.setHeader('content-type', 'application/json');
-            const response = await request.send();
-            response.assertOk();
-            let resp = response.bodyJson;
-            if (!Array.isArray(resp)) {
-                resp = [resp];
+        async _send(payload, shard, now) {
+            if (this._initFailed) {
+                return [
+                    {
+                        id: Array.isArray(payload) ? payload[0].id : payload.id,
+                        error: {
+                            code: -32000,
+                            message: 'Provider failed to initialize on creation. Run initialize or create a new provider.',
+                        },
+                    },
+                ];
             }
-            return resp;
+            try {
+                if (!now) {
+                    await this._waitUntilReady();
+                }
+            }
+            catch (error) {
+                return [
+                    {
+                        id: Array.isArray(payload) ? payload[0].id : payload.id,
+                        error: {
+                            code: -32000,
+                            message: 'Provider failed to initialize on creation. Run initialize or create a new provider.',
+                        },
+                    },
+                ];
+            }
+            // Configure a POST connection for the requested method
+            try {
+                const request = this._getConnection(shard);
+                request.body = JSON.stringify(payload);
+                request.setHeader('content-type', 'application/json');
+                const response = await request.send();
+                response.assertOk();
+                let resp = response.bodyJson;
+                if (!Array.isArray(resp)) {
+                    resp = [resp];
+                }
+                return resp;
+            }
+            catch (error) {
+                return [
+                    {
+                        id: Array.isArray(payload) ? payload[0].id : payload.id,
+                        error: {
+                            code: -32000,
+                            message: error instanceof Error ? error.message : String(error),
+                        },
+                    },
+                ];
+            }
         }
     }
     function spelunkData(value) {
@@ -34338,6 +34454,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         AbiCoder: AbiCoder,
         AbstractProvider: AbstractProvider,
         AbstractSigner: AbstractSigner,
+        get AddressStatus () { return exports.AddressStatus; },
         BaseContract: BaseContract,
         Block: Block,
         BrowserProvider: BrowserProvider,

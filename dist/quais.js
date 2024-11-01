@@ -8,7 +8,7 @@ import ecc from '@bitcoinerlab/secp256k1';
  *
  * @ignore
  */
-const version = '1.0.0-alpha.20';
+const version = '1.0.0-alpha.23';
 
 /**
  * Property helper functions.
@@ -29008,6 +29008,16 @@ class QiHDWallet extends AbstractHDWallet {
         if (!input.pubkey)
             throw new Error('Missing public key for input');
         const address = computeAddress(input.pubkey);
+        return this.getPrivateKey(address);
+    }
+    /**
+     * Returns the private key for a given address. This method should be used with caution as it exposes the private
+     * key to the user.
+     *
+     * @param {string} address - The address associated with the desired private key.
+     * @returns {string} The private key.
+     */
+    getPrivateKey(address) {
         const addressInfo = this.locateAddressInfo(address);
         if (!addressInfo) {
             throw new Error(`Address not found: ${address}`);
@@ -30362,6 +30372,7 @@ class AbstractProvider {
     initResolvePromise;
     initRejectPromise;
     initPromise;
+    attemptConnect;
     /**
      * Create a new **AbstractProvider** connected to `network`, or use the various network detection capabilities to
      * discover the {@link Network | **Network**} if necessary.
@@ -30371,6 +30382,7 @@ class AbstractProvider {
      */
     constructor(_network, options) {
         this._initFailed = false;
+        this.attemptConnect = true;
         this.#options = Object.assign({}, defaultOptions$1, options || {});
         if (_network === 'any') {
             this.#anyNetwork = true;
@@ -30411,13 +30423,17 @@ class AbstractProvider {
      * @returns {Promise<void>} A promise that resolves when the map is initialized.
      */
     async initialize(urls) {
+        this.initPromise = new Promise((resolve, reject) => {
+            this.initResolvePromise = resolve;
+            this.initRejectPromise = reject;
+        });
         try {
             const primeSuffix = this.#options.usePathing ? `/${fromShard(Shard.Prime, 'nickname')}` : ':9001';
             if (urls instanceof FetchRequest) {
                 urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + primeSuffix;
                 this._urlMap.set(Shard.Prime, urls);
                 this.#connect.push(urls);
-                const shards = await this.getRunningLocations();
+                const shards = await this._waitGetRunningLocations(Shard.Prime, true);
                 shards.forEach((shard) => {
                     const port = 9200 + 20 * shard[0] + shard[1];
                     const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
@@ -30432,7 +30448,7 @@ class AbstractProvider {
                     const primeConnect = new FetchRequest(primeUrl);
                     this._urlMap.set(Shard.Prime, primeConnect);
                     this.#connect.push(primeConnect);
-                    const shards = await this.getRunningLocations();
+                    const shards = await this._waitGetRunningLocations(Shard.Prime, true);
                     shards.forEach((shard) => {
                         const port = 9200 + 20 * shard[0] + shard[1];
                         const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
@@ -30516,7 +30532,7 @@ class AbstractProvider {
         return getBigInt(await this.#perform({
             method: 'getQuaiRateAtBlock',
             blockTag: resolvedBlockTag,
-            amt: Number(amt),
+            amt: toQuantity(String(amt)),
             zone: zone,
         }));
     }
@@ -30590,7 +30606,7 @@ class AbstractProvider {
         return getBigInt(await this.#perform({
             method: 'getQiRateAtBlock',
             blockTag: resolvedBlockTag,
-            amt: Number(amt),
+            amt: toQuantity(String(amt)),
             zone: zone,
         }));
     }
@@ -30619,6 +30635,7 @@ class AbstractProvider {
      * @returns {Promise<T>} A promise that resolves to the result of the operation.
      */
     async #perform(req) {
+        this.attemptConnect = true;
         const timeout = this.#options.cacheTimeout;
         // Caching disabled
         if (timeout < 0) {
@@ -30996,6 +31013,36 @@ class AbstractProvider {
             }
         }
         return expected.clone();
+    }
+    async _waitGetRunningLocations(shard, now) {
+        let retries = 0;
+        let locations = [];
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+            try {
+                if (this.attemptConnect) {
+                    if (retries > 5) {
+                        retries = 0;
+                    }
+                    locations = await this._getRunningLocations(shard, now);
+                    break;
+                }
+                else {
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                }
+            }
+            catch (error) {
+                retries++;
+                if (retries > 5) {
+                    this.attemptConnect = false;
+                }
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+        }
+        if (locations.length === 0) {
+            throw new Error('could not get running locations');
+        }
+        return locations;
     }
     async _getRunningLocations(shard, now) {
         now = now ? now : false;
@@ -32578,6 +32625,7 @@ class JsonRpcApiProvider extends AbstractProvider {
      * @ignore
      */
     _start() {
+        this.attemptConnect = true;
         if (this.#notReady == null || this.#notReady.resolve == null) {
             return;
         }
@@ -32594,17 +32642,21 @@ class JsonRpcApiProvider extends AbstractProvider {
                     if (this.destroyed) {
                         break;
                     }
-                    console.log('JsonRpcProvider failed to detect network and cannot start up; retry in 1s (perhaps the URL is wrong or the node is not started)');
+                    console.log('JsonRpcProvider failed to detect network and cannot start up; retrying (perhaps the URL is wrong or the node is not started)');
                     this.emit('error', undefined, makeError('failed to bootstrap network detection', 'NETWORK_ERROR', {
                         event: 'initial-network-discovery',
                         info: { error },
                     }));
-                    await stall(1000);
+                    await stall(1000 * Math.pow(2, retries));
                     retries++;
                 }
             }
             if (retries >= maxRetries) {
-                throw new Error('Failed to detect network after maximum retries');
+                console.log('JsonRpcProvider failed to detect network and cannot start up; retry limit reached');
+                makeError('failed to bootstrap network detection', 'NETWORK_ERROR', {
+                    event: 'initial-network-discovery',
+                    info: { retries },
+                });
             }
             // Start dispatching requests
             this.#scheduleDrain();
@@ -32619,9 +32671,28 @@ class JsonRpcApiProvider extends AbstractProvider {
      */
     async _waitUntilReady() {
         if (this._initFailed) {
+            console.log('init failed');
             throw new Error('Provider failed to initialize on creation. Run initialize or create a new provider.');
         }
-        await this.initPromise;
+        // Flag to control the loop in setAttemptConnect
+        let keepAttempting = true;
+        // Function to set attemptConnect every 2 seconds
+        const setAttemptConnect = async () => {
+            while (keepAttempting) {
+                this.attemptConnect = true;
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+            }
+        };
+        // Start setting attemptConnect in the background
+        setAttemptConnect();
+        try {
+            // Wait until initPromise resolves
+            await this.initPromise;
+        }
+        finally {
+            // Stop setting attemptConnect once initPromise resolves
+            keepAttempting = false;
+        }
     }
     /**
      * Return a Subscriber that will manage the `sub`.
@@ -33098,24 +33169,69 @@ class JsonRpcProvider extends JsonRpcApiProvider {
         return new FetchRequest(connection.url);
     }
     async send(method, params, shard, now) {
+        try {
+            this._start();
+            return await super.send(method, params, shard, now);
+        }
+        catch (error) {
+            return Promise.reject(error);
+        }
         // All requests are over HTTP, so we can just start handling requests
         // We do this here rather than the constructor so that we don't send any
         // requests to the network (i.e. quai_chainId) until we absolutely have to.
-        await this._start();
-        return await super.send(method, params, shard, now);
     }
-    async _send(payload, shard) {
-        // Configure a POST connection for the requested method
-        const request = this._getConnection(shard);
-        request.body = JSON.stringify(payload);
-        request.setHeader('content-type', 'application/json');
-        const response = await request.send();
-        response.assertOk();
-        let resp = response.bodyJson;
-        if (!Array.isArray(resp)) {
-            resp = [resp];
+    async _send(payload, shard, now) {
+        if (this._initFailed) {
+            return [
+                {
+                    id: Array.isArray(payload) ? payload[0].id : payload.id,
+                    error: {
+                        code: -32000,
+                        message: 'Provider failed to initialize on creation. Run initialize or create a new provider.',
+                    },
+                },
+            ];
         }
-        return resp;
+        try {
+            if (!now) {
+                await this._waitUntilReady();
+            }
+        }
+        catch (error) {
+            return [
+                {
+                    id: Array.isArray(payload) ? payload[0].id : payload.id,
+                    error: {
+                        code: -32000,
+                        message: 'Provider failed to initialize on creation. Run initialize or create a new provider.',
+                    },
+                },
+            ];
+        }
+        // Configure a POST connection for the requested method
+        try {
+            const request = this._getConnection(shard);
+            request.body = JSON.stringify(payload);
+            request.setHeader('content-type', 'application/json');
+            const response = await request.send();
+            response.assertOk();
+            let resp = response.bodyJson;
+            if (!Array.isArray(resp)) {
+                resp = [resp];
+            }
+            return resp;
+        }
+        catch (error) {
+            return [
+                {
+                    id: Array.isArray(payload) ? payload[0].id : payload.id,
+                    error: {
+                        code: -32000,
+                        message: error instanceof Error ? error.message : String(error),
+                    },
+                },
+            ];
+        }
     }
 }
 function spelunkData(value) {
@@ -34316,6 +34432,7 @@ var quais = /*#__PURE__*/Object.freeze({
     AbiCoder: AbiCoder,
     AbstractProvider: AbstractProvider,
     AbstractSigner: AbstractSigner,
+    get AddressStatus () { return AddressStatus; },
     BaseContract: BaseContract,
     Block: Block,
     BrowserProvider: BrowserProvider,
@@ -34482,5 +34599,5 @@ var quais = /*#__PURE__*/Object.freeze({
     zeroPadValue: zeroPadValue
 });
 
-export { AbiCoder, AbstractProvider, AbstractSigner, BaseContract, Block, BrowserProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, ErrorDescription, ErrorFragment, EventFragment, EventLog, EventPayload, FallbackFragment, FeeData, FetchCancelSignal, FetchRequest, FetchResponse, FewestCoinSelector, FixedNumber, Fragment, FunctionFragment, Indexed, Interface, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, LangEs, Ledger, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, N$1 as N, NamedFragment, Network, ParamType, QiHDWallet, QiTransaction, QuaiHDWallet, QuaiTransaction, Result, Shard, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, TransactionDescription, TransactionReceipt, Typed, TypedDataEncoder, UTXO, UndecodedEventLog, UnmanagedSubscriber, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, Zone, accessListify, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32, decryptKeystoreJson, decryptKeystoreJsonSync, denominations, encodeBase58, encodeBase64, encodeBytes32, encryptKeystoreJson, encryptKeystoreJsonSync, ethHashMessage, ethVerifyMessage, formatMixedCaseChecksumAddress, formatQi, formatQuai, formatUnits, fromTwos, getAddress, getAddressDetails, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getNumber, getTxType, getUint, getZoneForAddress, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isError, isHexString, isKeystoreJson, isQiAddress, isQuaiAddress, keccak256, lock, makeError, mask, musigCrypto, parseQi, parseQuai, parseUnits, pbkdf2, quais, quaisymbol, randomBytes, recoverAddress, resolveAddress, ripemd160, scrypt, scryptSync, sha256, sha512, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toShard, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, toZone, uuidV4, validateAddress, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
+export { AbiCoder, AbstractProvider, AbstractSigner, AddressStatus, BaseContract, Block, BrowserProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, ErrorDescription, ErrorFragment, EventFragment, EventLog, EventPayload, FallbackFragment, FeeData, FetchCancelSignal, FetchRequest, FetchResponse, FewestCoinSelector, FixedNumber, Fragment, FunctionFragment, Indexed, Interface, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, LangEs, Ledger, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, N$1 as N, NamedFragment, Network, ParamType, QiHDWallet, QiTransaction, QuaiHDWallet, QuaiTransaction, Result, Shard, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, TransactionDescription, TransactionReceipt, Typed, TypedDataEncoder, UTXO, UndecodedEventLog, UnmanagedSubscriber, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, Zone, accessListify, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32, decryptKeystoreJson, decryptKeystoreJsonSync, denominations, encodeBase58, encodeBase64, encodeBytes32, encryptKeystoreJson, encryptKeystoreJsonSync, ethHashMessage, ethVerifyMessage, formatMixedCaseChecksumAddress, formatQi, formatQuai, formatUnits, fromTwos, getAddress, getAddressDetails, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getNumber, getTxType, getUint, getZoneForAddress, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isError, isHexString, isKeystoreJson, isQiAddress, isQuaiAddress, keccak256, lock, makeError, mask, musigCrypto, parseQi, parseQuai, parseUnits, pbkdf2, quais, quaisymbol, randomBytes, recoverAddress, resolveAddress, ripemd160, scrypt, scryptSync, sha256, sha512, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toShard, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, toZone, uuidV4, validateAddress, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
 //# sourceMappingURL=quais.js.map
