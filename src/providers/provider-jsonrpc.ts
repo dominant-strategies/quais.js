@@ -1007,7 +1007,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                         break;
                     }
                     console.log(
-                        'JsonRpcProvider failed to detect network and cannot start up; retrying(perhaps the URL is wrong or the node is not started)',
+                        'JsonRpcProvider failed to detect network and cannot start up; retrying (perhaps the URL is wrong or the node is not started)',
                     );
                     this.emit(
                         'error',

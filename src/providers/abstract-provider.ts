@@ -806,7 +806,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                     const primeConnect = new FetchRequest(primeUrl);
                     this._urlMap.set(Shard.Prime, primeConnect as C);
                     this.#connect.push(primeConnect);
-                    console.log('fetching running locations');
                     const shards = await this._waitGetRunningLocations(Shard.Prime, true);
                     shards.forEach((shard) => {
                         const port = 9200 + 20 * shard[0] + shard[1];
