@@ -636,13 +636,13 @@ export type PerformActionRequest =
     | {
           method: 'getQiRateAtBlock';
           blockTag: BlockTag;
-          amt: number;
+          amt: string;
           zone: Zone;
       }
     | {
           method: 'getQuaiRateAtBlock';
           blockTag: BlockTag;
-          amt: number;
+          amt: string;
           zone: Zone;
       }
     | {
@@ -900,7 +900,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             await this.#perform({
                 method: 'getQuaiRateAtBlock',
                 blockTag: resolvedBlockTag,
-                amt: Number(amt),
+                amt: toQuantity(String(amt)),
                 zone: zone,
             }),
         );
@@ -982,7 +982,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             await this.#perform({
                 method: 'getQiRateAtBlock',
                 blockTag: resolvedBlockTag,
-                amt: Number(amt),
+                amt: toQuantity(String(amt)),
                 zone: zone,
             }),
         );
