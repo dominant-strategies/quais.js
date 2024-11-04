@@ -9,11 +9,11 @@ import {
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress, isQiAddress } from '../address/index.js';
-import { getBytes, getZoneForAddress, hexlify, toQuantity } from '../utils/index.js';
+import { getBytes, getZoneForAddress, hexlify, isHexString, toQuantity } from '../utils/index.js';
 import { TransactionLike, QiTransaction, TxInput, FewestCoinSelector } from '../transaction/index.js';
 import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
-import { keccak256, musigCrypto } from '../crypto/index.js';
+import { keccak256, musigCrypto, SigningKey } from '../crypto/index.js';
 import { Outpoint, UTXO, denominations } from '../transaction/utxo.js';
 import { AllowedCoinType, Shard, toShard, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
@@ -142,6 +142,12 @@ export class QiHDWallet extends AbstractHDWallet {
     protected static _coinType: AllowedCoinType = 969;
 
     /**
+     * @ignore
+     * @type {string}
+     */
+    private static readonly PRIVATE_KEYS_PATH: string = 'privateKeys' as const;
+
+    /**
      * A map containing address information for all addresses known to the wallet. This includes:
      *
      * - BIP44 derived addresses (external)
@@ -196,6 +202,7 @@ export class QiHDWallet extends AbstractHDWallet {
         super(guard, root, provider);
         this._addressesMap.set('BIP44:external', []);
         this._addressesMap.set('BIP44:change', []);
+        this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, []);
     }
 
     /**
@@ -1544,5 +1551,68 @@ export class QiHDWallet extends AbstractHDWallet {
             return null;
         }
         return changeAddressInfo;
+    }
+
+    /**
+     * Imports a private key and adds it to the wallet.
+     *
+     * @param {string} privateKey - The private key to import (hex string)
+     * @returns {Promise<QiAddressInfo>} The address information for the imported key
+     * @throws {Error} If the private key is invalid or the address is already in use
+     */
+    public async importPrivateKey(privateKey: string): Promise<QiAddressInfo> {
+        if (!isHexString(privateKey, 32)) {
+            throw new Error(`Invalid private key format: must be 32-byte hex string (got ${privateKey})`);
+        }
+
+        const pubKey = SigningKey.computePublicKey(privateKey, true);
+        const address = computeAddress(pubKey);
+
+        // Validate address is for correct zone and ledger
+        const addressZone = getZoneForAddress(address);
+        if (!addressZone) {
+            throw new Error(`Private key does not correspond to a valid address for any zone (got ${address})`);
+        }
+        if (!isQiAddress(address)) {
+            throw new Error(`Private key does not correspond to a valid Qi address (got ${address})`);
+        }
+
+        for (const [path, addresses] of this._addressesMap.entries()) {
+            if (addresses.some((info) => info.address === address)) {
+                throw new Error(`Address ${address} already exists in wallet under path ${path}`);
+            }
+        }
+
+        const addressInfo: QiAddressInfo = {
+            pubKey,
+            address,
+            account: 0,
+            index: -1,
+            change: false,
+            zone: addressZone,
+            status: AddressStatus.UNUSED,
+            derivationPath: privateKey, // Store private key in derivationPath
+        };
+
+        this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH)!.push(addressInfo);
+
+        return addressInfo;
+    }
+
+    /**
+     * Gets all addresses that were imported via private keys.
+     *
+     * @param {Zone} [zone] - Optional zone to filter addresses by
+     * @returns {QiAddressInfo[]} Array of address info objects for imported addresses
+     */
+    public getImportedAddresses(zone?: Zone): QiAddressInfo[] {
+        const importedAddresses = this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH) || [];
+
+        if (zone !== undefined) {
+            this.validateZone(zone);
+            return importedAddresses.filter((info) => info.zone === zone);
+        }
+
+        return [...importedAddresses];
     }
 }
