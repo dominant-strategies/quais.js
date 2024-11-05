@@ -250,6 +250,14 @@ export class QiHDWallet extends AbstractHDWallet {
         const addresses = this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external') || [];
         const lastIndex = this._findLastUsedIndex(addresses, account, zone);
         const addressNode = this.deriveNextAddressNode(account, lastIndex + 1, zone, isChange);
+
+        const privateKeysArray = this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH) || [];
+        const existingPrivateKeyIndex = privateKeysArray.findIndex((info) => info.address === addressNode.address);
+        if (existingPrivateKeyIndex !== -1) {
+            privateKeysArray.splice(existingPrivateKeyIndex, 1);
+            this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, privateKeysArray);
+        }
+
         const newAddrInfo = {
             pubKey: addressNode.publicKey,
             address: addressNode.address,
@@ -941,6 +949,11 @@ export class QiHDWallet extends AbstractHDWallet {
             throw new Error(`Address not found: ${address}`);
         }
 
+        // Handle imported private keys
+        if (isHexString(addressInfo.derivationPath, 32)) {
+            return addressInfo.derivationPath;
+        }
+
         if (addressInfo.derivationPath === 'BIP44:external' || addressInfo.derivationPath === 'BIP44:change') {
             // (BIP44 addresses)
             const changeIndex = addressInfo.change ? 1 : 0;
@@ -1258,9 +1271,8 @@ export class QiHDWallet extends AbstractHDWallet {
             ...hdwalletSerialized,
             outpoints: this._availableOutpoints,
             pendingOutpoints: this._pendingOutpoints,
-            addresses: Array.from(this._addressesMap.entries()).flatMap(([key, addresses]) =>
-                addresses.map((address) => ({ ...address, derivationPath: key })),
-            ),
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            addresses: Array.from(this._addressesMap.entries()).flatMap(([_, addresses]) => addresses),
             senderPaymentCodeInfo: Object.fromEntries(
                 Array.from(this._paymentCodeSendAddressMap.entries()).map(([key, value]) => [key, Array.from(value)]),
             ),
@@ -1303,8 +1315,10 @@ export class QiHDWallet extends AbstractHDWallet {
         // validate and import all the wallet addresses
         for (const addressInfo of serialized.addresses) {
             validateQiAddressInfo(addressInfo);
-            const key = addressInfo.derivationPath;
-            if (!wallet._addressesMap.has(key)) {
+            let key = addressInfo.derivationPath;
+            if (isHexString(key, 32)) {
+                key = QiHDWallet.PRIVATE_KEYS_PATH;
+            } else if (!key.startsWith('BIP44:')) {
                 wallet._addressesMap.set(key, []);
             }
             wallet._addressesMap.get(key)!.push(addressInfo);
