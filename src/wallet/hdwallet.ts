@@ -141,48 +141,8 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
     }
 
     abstract addAddress(account: number, addressIndex: number): T | null;
-
-    /**
-     * Promise that resolves to the next address for the specified account and zone.
-     *
-     * @param {number} account - The index of the account for which to retrieve the next address.
-     * @param {Zone} zone - The zone in which to retrieve the next address.
-     * @returns {Promise<T>} The next neutered address information.
-     */
-    public async getNextAddress(account: number, zone: Zone): Promise<T> {
-        return Promise.resolve(this._getNextAddress(account, zone, this._addresses) as T);
-    }
-
-    /**
-     * Synchronously retrieves the next address for the specified account and zone.
-     *
-     * @param {number} account - The index of the account for which to retrieve the next address.
-     * @param {Zone} zone - The zone in which to retrieve the next address.
-     * @returns {T} The next neutered address information.
-     */
-    public getNextAddressSync(account: number, zone: Zone): T {
-        return this._getNextAddress(account, zone, this._addresses) as T;
-    }
-
-    /**
-     * Derives and returns the next address information for the specified account and zone.
-     *
-     * @param {number} accountIndex - The index of the account for which the address is being generated.
-     * @param {Zone} zone - The zone in which the address is to be used.
-     * @param {Map<string, NeuteredAddressInfo>} addressMap - A map storing the neutered address information.
-     * @returns {T} The derived neutered address information.
-     * @throws {Error} If the zone is invalid.
-     */
-    protected _getNextAddress(
-        accountIndex: number,
-        zone: Zone,
-        addressMap: Map<string, NeuteredAddressInfo>,
-    ): NeuteredAddressInfo {
-        this.validateZone(zone);
-        const lastIndex = this.getLastAddressIndex(addressMap, zone, accountIndex);
-        const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
-        return this.createAndStoreAddressInfo(addressNode, accountIndex, zone, addressMap);
-    }
+    abstract getNextAddress(account: number, zone: Zone): Promise<T>;
+    abstract getNextAddressSync(account: number, zone: Zone): T;
 
     /**
      * Gets the address info for a given address.
@@ -478,38 +438,5 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
             (addressInfo) => addressInfo.account === account && addressInfo.zone === zone,
         );
         return addresses.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1);
-    }
-
-    /**
-     * Creates and stores address information in the address map for a specified account, zone, and change type.
-     *
-     * This method constructs a NeuteredAddressInfo object using the provided HDNodeWallet and other parameters, then
-     * stores this information in the provided address map.
-     *
-     * @param {HDNodeWallet} addressNode - The HDNodeWallet object containing the address and public key information.
-     * @param {number} account - The account number to associate with the address.
-     * @param {Zone} zone - The specific zone to associate with the address.
-     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map to store the created NeuteredAddressInfo, with the
-     *   address as the key.
-     * @returns {NeuteredAddressInfo} - The created NeuteredAddressInfo object.
-     * @protected
-     */
-    protected createAndStoreAddressInfo(
-        addressNode: HDNodeWallet,
-        account: number,
-        zone: Zone,
-        addressMap: Map<string, NeuteredAddressInfo>,
-    ): NeuteredAddressInfo {
-        const neuteredAddressInfo: NeuteredAddressInfo = {
-            pubKey: addressNode.publicKey,
-            address: addressNode.address,
-            account,
-            index: addressNode.index,
-            zone,
-        };
-
-        addressMap.set(neuteredAddressInfo.address, neuteredAddressInfo);
-
-        return neuteredAddressInfo;
     }
 }

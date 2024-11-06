@@ -2,7 +2,7 @@ import { AbstractHDWallet, NeuteredAddressInfo, _guard } from './hdwallet.js';
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QuaiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { isQuaiAddress, resolveAddress } from '../address/index.js';
-import { AllowedCoinType } from '../constants/index.js';
+import { AllowedCoinType, Zone } from '../constants/index.js';
 import { SerializedHDWallet, HARDENED_OFFSET } from './hdwallet.js';
 import { Mnemonic } from './mnemonic.js';
 import { TypedDataDomain, TypedDataField } from '../hash/index.js';
@@ -219,7 +219,7 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
             throw new Error(`Address ${addressNode.address} is not a valid Quai address`);
         }
 
-        return this.createAndStoreAddressInfo(addressNode, account, zone, this._addresses);
+        return this.createAndStoreAddressInfo(addressNode, account, zone);
     }
 
     /**
@@ -246,5 +246,71 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
                 throw new Error(`Zone mismatch: ${addressInfo.zone} != ${newAddressInfo.zone}`);
             }
         }
+    }
+
+    /**
+     * Promise that resolves to the next address for the specified account and zone.
+     *
+     * @param {number} account - The index of the account for which to retrieve the next address.
+     * @param {Zone} zone - The zone in which to retrieve the next address.
+     * @returns {Promise<T>} The next neutered address information.
+     */
+    public async getNextAddress(account: number, zone: Zone): Promise<NeuteredAddressInfo> {
+        return Promise.resolve(this._getNextAddress(account, zone));
+    }
+
+    /**
+     * Synchronously retrieves the next address for the specified account and zone.
+     *
+     * @param {number} account - The index of the account for which to retrieve the next address.
+     * @param {Zone} zone - The zone in which to retrieve the next address.
+     * @returns {T} The next neutered address information.
+     */
+    public getNextAddressSync(account: number, zone: Zone): NeuteredAddressInfo {
+        return this._getNextAddress(account, zone);
+    }
+
+    /**
+     * Derives and returns the next address information for the specified account and zone.
+     *
+     * @param {number} accountIndex - The index of the account for which the address is being generated.
+     * @param {Zone} zone - The zone in which the address is to be used.
+     * @param {Map<string, NeuteredAddressInfo>} addressMap - A map storing the neutered address information.
+     * @returns {T} The derived neutered address information.
+     * @throws {Error} If the zone is invalid.
+     */
+    protected _getNextAddress(accountIndex: number, zone: Zone): NeuteredAddressInfo {
+        this.validateZone(zone);
+        const lastIndex = this.getLastAddressIndex(this._addresses, zone, accountIndex);
+        const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
+        return this.createAndStoreAddressInfo(addressNode, accountIndex, zone);
+    }
+
+    /**
+     * Creates and stores address information in the address map for a specified account, zone, and change type.
+     *
+     * This method constructs a NeuteredAddressInfo object using the provided HDNodeWallet and other parameters, then
+     * stores this information in the provided address map.
+     *
+     * @param {HDNodeWallet} addressNode - The HDNodeWallet object containing the address and public key information.
+     * @param {number} account - The account number to associate with the address.
+     * @param {Zone} zone - The specific zone to associate with the address.
+     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map to store the created NeuteredAddressInfo, with the
+     *   address as the key.
+     * @returns {NeuteredAddressInfo} - The created NeuteredAddressInfo object.
+     * @protected
+     */
+    protected createAndStoreAddressInfo(addressNode: HDNodeWallet, account: number, zone: Zone): NeuteredAddressInfo {
+        const neuteredAddressInfo: NeuteredAddressInfo = {
+            pubKey: addressNode.publicKey,
+            address: addressNode.address,
+            account,
+            index: addressNode.index,
+            zone,
+        };
+
+        this._addresses.set(neuteredAddressInfo.address, neuteredAddressInfo);
+
+        return neuteredAddressInfo;
     }
 }
