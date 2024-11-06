@@ -313,4 +313,18 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
 
         return neuteredAddressInfo;
     }
+
+    /**
+     * Gets the address info for a given address.
+     *
+     * @param {string} address - The address.
+     * @returns {T | null} The address info or null if not found.
+     */
+    public getAddressInfo(address: string): NeuteredAddressInfo | null {
+        const addressInfo = this._addresses.get(address);
+        if (!addressInfo) {
+            return null;
+        }
+        return addressInfo;
+    }
 }
