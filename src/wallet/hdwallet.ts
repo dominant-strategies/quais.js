@@ -145,6 +145,7 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
     abstract getNextAddressSync(account: number, zone: Zone): T;
     abstract getAddressInfo(address: string): T | null;
     abstract getPrivateKey(address: string): string;
+    abstract getAddressesForZone(zone: Zone): T[];
 
     /**
      * Gets the addresses for a given account.
@@ -155,18 +156,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
     public getAddressesForAccount(account: number): T[] {
         const addresses = this._addresses.values();
         return Array.from(addresses).filter((addressInfo) => addressInfo.account === account) as T[];
-    }
-
-    /**
-     * Gets the addresses for a given zone.
-     *
-     * @param {Zone} zone - The zone.
-     * @returns {T[]} The addresses for the zone.
-     */
-    public getAddressesForZone(zone: Zone): T[] {
-        this.validateZone(zone);
-        const addresses = this._addresses.values();
-        return Array.from(addresses).filter((addressInfo) => addressInfo.zone === zone) as T[];
     }
 
     /**

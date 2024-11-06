@@ -364,4 +364,16 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
             .deriveChild(changeIndex)
             .deriveChild(addressInfo.index);
     }
+
+    /**
+     * Gets the addresses for a given zone.
+     *
+     * @param {Zone} zone - The zone.
+     * @returns {T[]} The addresses for the zone.
+     */
+    public getAddressesForZone(zone: Zone): NeuteredAddressInfo[] {
+        this.validateZone(zone);
+        const addresses = this._addresses.values();
+        return Array.from(addresses).filter((addressInfo) => addressInfo.zone === zone);
+    }
 }
