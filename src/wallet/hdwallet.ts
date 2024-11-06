@@ -19,7 +19,6 @@ export interface NeuteredAddressInfo {
     address: string;
     account: number;
     index: number;
-    change: boolean;
     zone: Zone;
 }
 
@@ -146,11 +145,10 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
      *
      * @param {number} account - The account number.
      * @param {number} addressIndex - The address index.
-     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false`
-     * @returns {NeuteredAddressInfo} The added address info.
+     * @returns {T} The added address info.
      */
-    public addAddress(account: number, addressIndex: number, isChange: boolean = false): NeuteredAddressInfo {
-        return this._addAddress(this._addresses, account, addressIndex, isChange);
+    public addAddress(account: number, addressIndex: number): T {
+        return this._addAddress(this._addresses, account, addressIndex) as T;
     }
 
     /**
@@ -159,7 +157,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
      * @param {Map<string, NeuteredAddressInfo>} addressMap - The address map.
      * @param {number} account - The account number.
      * @param {number} addressIndex - The address index.
-     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false`
      * @returns {NeuteredAddressInfo} The added address info.
      * @throws {Error} If the address for the index already exists.
      */
@@ -167,7 +164,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
         addressMap: Map<string, NeuteredAddressInfo>,
         account: number,
         addressIndex: number,
-        isChange: boolean = false,
     ): NeuteredAddressInfo {
         // check if address already exists for the index
         this._addresses.forEach((addressInfo) => {
@@ -177,7 +173,7 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
         });
 
         // derive the address node and validate the zone
-        const changeIndex = isChange ? 1 : 0;
+        const changeIndex = 0;
         const addressNode = this._root
             .deriveChild(account + HARDENED_OFFSET)
             .deriveChild(changeIndex)
@@ -187,7 +183,7 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
             throw new Error(`Failed to derive a valid address zone for the index ${addressIndex}`);
         }
 
-        return this.createAndStoreAddressInfo(addressNode, account, zone, isChange, addressMap);
+        return this.createAndStoreAddressInfo(addressNode, account, zone, addressMap);
     }
 
     /**
@@ -198,7 +194,7 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
      * @returns {Promise<T>} The next neutered address information.
      */
     public async getNextAddress(account: number, zone: Zone): Promise<T> {
-        return Promise.resolve(this._getNextAddress(account, zone, false, this._addresses) as T);
+        return Promise.resolve(this._getNextAddress(account, zone, this._addresses) as T);
     }
 
     /**
@@ -209,7 +205,7 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
      * @returns {T} The next neutered address information.
      */
     public getNextAddressSync(account: number, zone: Zone): T {
-        return this._getNextAddress(account, zone, false, this._addresses) as T;
+        return this._getNextAddress(account, zone, this._addresses) as T;
     }
 
     /**
@@ -217,7 +213,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
      *
      * @param {number} accountIndex - The index of the account for which the address is being generated.
      * @param {Zone} zone - The zone in which the address is to be used.
-     * @param {boolean} isChange - A flag indicating whether the address is a change address.
      * @param {Map<string, NeuteredAddressInfo>} addressMap - A map storing the neutered address information.
      * @returns {T} The derived neutered address information.
      * @throws {Error} If the zone is invalid.
@@ -225,13 +220,12 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
     protected _getNextAddress(
         accountIndex: number,
         zone: Zone,
-        isChange: boolean,
         addressMap: Map<string, NeuteredAddressInfo>,
     ): NeuteredAddressInfo {
         this.validateZone(zone);
-        const lastIndex = this.getLastAddressIndex(addressMap, zone, accountIndex, isChange);
-        const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, isChange);
-        return this.createAndStoreAddressInfo(addressNode, accountIndex, zone, isChange, addressMap);
+        const lastIndex = this.getLastAddressIndex(addressMap, zone, accountIndex);
+        const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
+        return this.createAndStoreAddressInfo(addressNode, accountIndex, zone, addressMap);
     }
 
     /**
@@ -416,7 +410,7 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
             throw new Error(`Address ${addr} is not known to this wallet`);
         }
 
-        const changeIndex = addressInfo.change ? 1 : 0;
+        const changeIndex = 0;
         return this._root
             .deriveChild(addressInfo.account + HARDENED_OFFSET)
             .deriveChild(changeIndex)
@@ -488,10 +482,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
             throw new Error(`Invalid NeuteredAddressInfo: index must be a non-negative integer: ${info.index}`);
         }
 
-        if (typeof info.change !== 'boolean') {
-            throw new Error(`Invalid NeuteredAddressInfo: change must be a boolean: ${info.change}`);
-        }
-
         if (!Object.values(Zone).includes(info.zone)) {
             throw new Error(`Invalid NeuteredAddressInfo: zone '${info.zone}' is not a valid Zone`);
         }
@@ -526,12 +516,7 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
      */
     protected importSerializedAddresses(addressMap: Map<string, T>, addresses: NeuteredAddressInfo[]): void {
         for (const addressInfo of addresses) {
-            const newAddressInfo = this._addAddress(
-                addressMap,
-                addressInfo.account,
-                addressInfo.index,
-                addressInfo.change,
-            );
+            const newAddressInfo = this._addAddress(addressMap, addressInfo.account, addressInfo.index);
             // validate the address info
             if (addressInfo.address !== newAddressInfo.address) {
                 throw new Error(`Address mismatch: ${addressInfo.address} != ${newAddressInfo.address}`);
@@ -555,20 +540,12 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
      *   an address string and the value is a NeuteredAddressInfo object.
      * @param {Zone} zone - The specific zone to filter the addresses by.
      * @param {number} account - The account number to filter the addresses by.
-     * @param {boolean} isChange - A boolean indicating whether to filter for change addresses (true) or receiving
-     *   addresses (false).
      * @returns {number} - The highest address index for the specified criteria, or -1 if no addresses match.
      * @protected
      */
-    protected getLastAddressIndex(
-        addressMap: Map<string, NeuteredAddressInfo>,
-        zone: Zone,
-        account: number,
-        isChange: boolean,
-    ): number {
+    protected getLastAddressIndex(addressMap: Map<string, NeuteredAddressInfo>, zone: Zone, account: number): number {
         const addresses = Array.from(addressMap.values()).filter(
-            (addressInfo) =>
-                addressInfo.account === account && addressInfo.zone === zone && addressInfo.change === isChange,
+            (addressInfo) => addressInfo.account === account && addressInfo.zone === zone,
         );
         return addresses.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1);
     }
@@ -582,8 +559,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
      * @param {HDNodeWallet} addressNode - The HDNodeWallet object containing the address and public key information.
      * @param {number} account - The account number to associate with the address.
      * @param {Zone} zone - The specific zone to associate with the address.
-     * @param {boolean} isChange - A boolean indicating whether the address is a change address (true) or a receiving
-     *   address (false).
      * @param {Map<string, NeuteredAddressInfo>} addressMap - The map to store the created NeuteredAddressInfo, with the
      *   address as the key.
      * @returns {NeuteredAddressInfo} - The created NeuteredAddressInfo object.
@@ -593,7 +568,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
         addressNode: HDNodeWallet,
         account: number,
         zone: Zone,
-        isChange: boolean,
         addressMap: Map<string, NeuteredAddressInfo>,
     ): NeuteredAddressInfo {
         const neuteredAddressInfo: NeuteredAddressInfo = {
@@ -601,7 +575,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
             address: addressNode.address,
             account,
             index: addressNode.index,
-            change: isChange,
             zone,
         };
 
