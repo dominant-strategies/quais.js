@@ -287,7 +287,6 @@ export interface AddressInfo {
     address: string;
     account: number;
     index: number;
-    change: boolean;
     zone: Zone;
 }
 
