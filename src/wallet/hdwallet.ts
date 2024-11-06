@@ -140,14 +140,93 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
         );
     }
 
+    /**
+     * Adds an address to the wallet for a given account and address index.
+     *
+     * @param {number} account - The account number to add the address to
+     * @param {number} addressIndex - The index of the address to add
+     * @returns {T | null} The address info object if successful, null otherwise
+     */
     abstract addAddress(account: number, addressIndex: number): T | null;
+
+    /**
+     * Gets the next available address for a given account and zone.
+     *
+     * @param {number} account - The account number to get the next address for
+     * @param {Zone} zone - The zone to get the next address in
+     * @returns {Promise<T>} Promise that resolves to the next address info
+     */
     abstract getNextAddress(account: number, zone: Zone): Promise<T>;
+
+    /**
+     * Synchronously gets the next available address for a given account and zone.
+     *
+     * @param {number} account - The account number to get the next address for
+     * @param {Zone} zone - The zone to get the next address in
+     * @returns {T} The next address info
+     */
     abstract getNextAddressSync(account: number, zone: Zone): T;
+
+    /**
+     * Gets the address info for a given address string.
+     *
+     * @param {string} address - The address to get info for
+     * @returns {T | null} The address info if found, null otherwise
+     */
     abstract getAddressInfo(address: string): T | null;
+
+    /**
+     * Gets the private key for a given address.
+     *
+     * @param {string} address - The address to get the private key for
+     * @returns {string} The private key as a hex string
+     */
     abstract getPrivateKey(address: string): string;
+
+    /**
+     * Gets all addresses belonging to a specific zone.
+     *
+     * @param {Zone} zone - The zone to get addresses for
+     * @returns {T[]} Array of address info objects in the zone
+     */
     abstract getAddressesForZone(zone: Zone): T[];
+
+    /**
+     * Gets all addresses belonging to a specific account.
+     *
+     * @param {number} account - The account number to get addresses for
+     * @returns {T[]} Array of address info objects in the account
+     */
     abstract getAddressesForAccount(account: number): T[];
+
+    /**
+     * Finds the highest used index for a given account and zone.
+     *
+     * @param {T[] | undefined} addresses - Array of address info objects to search
+     * @param {number} account - The account number to find the last index for
+     * @param {Zone} zone - The zone to find the last index in
+     * @returns {number} The highest used index, or -1 if none found
+     * @protected
+     */
     protected abstract _findLastUsedIndex(addresses: T[] | undefined, account: number, zone: Zone): number;
+
+    /**
+     * Abstract method to sign a message using the private key associated with the given address.
+     *
+     * @param {string} address - The address for which the message is to be signed.
+     * @param {string | Uint8Array} message - The message to be signed, either as a string or Uint8Array.
+     * @returns {Promise<string>} A promise that resolves to the signature of the message in hexadecimal string format.
+     * @throws {Error} If the method is not implemented in the subclass.
+     */
+    abstract signMessage(address: string, message: string | Uint8Array): Promise<string>;
+
+    /**
+     * Abstract method to sign a transaction.
+     *
+     * @param {TransactionRequest} tx - The transaction request.
+     * @returns {Promise<string>} A promise that resolves to the signed transaction.
+     */
+    abstract signTransaction(tx: TransactionRequest): Promise<string>;
 
     /**
      * Creates an instance of the HD wallet.
@@ -228,14 +307,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
     }
 
     /**
-     * Abstract method to sign a transaction.
-     *
-     * @param {TransactionRequest} tx - The transaction request.
-     * @returns {Promise<string>} A promise that resolves to the signed transaction.
-     */
-    abstract signTransaction(tx: TransactionRequest): Promise<string>;
-
-    /**
      * Connects the wallet to a provider.
      *
      * @param {Provider} provider - The provider.
@@ -255,16 +326,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
             throw new Error(`Invalid zone: ${zone}`);
         }
     }
-
-    /**
-     * Abstract method to sign a message using the private key associated with the given address.
-     *
-     * @param {string} address - The address for which the message is to be signed.
-     * @param {string | Uint8Array} message - The message to be signed, either as a string or Uint8Array.
-     * @returns {Promise<string>} A promise that resolves to the signature of the message in hexadecimal string format.
-     * @throws {Error} If the method is not implemented in the subclass.
-     */
-    abstract signMessage(address: string, message: string | Uint8Array): Promise<string>;
 
     /**
      * Serializes the HD wallet state into a format suitable for storage or transmission.
