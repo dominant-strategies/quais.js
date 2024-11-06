@@ -146,17 +146,7 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
     abstract getAddressInfo(address: string): T | null;
     abstract getPrivateKey(address: string): string;
     abstract getAddressesForZone(zone: Zone): T[];
-
-    /**
-     * Gets the addresses for a given account.
-     *
-     * @param {number} account - The account number.
-     * @returns {T[]} The addresses for the account.
-     */
-    public getAddressesForAccount(account: number): T[] {
-        const addresses = this._addresses.values();
-        return Array.from(addresses).filter((addressInfo) => addressInfo.account === account) as T[];
-    }
+    abstract getAddressesForAccount(account: number): T[];
 
     /**
      * Creates an instance of the HD wallet.

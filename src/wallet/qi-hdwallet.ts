@@ -1707,4 +1707,17 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         return addressInfo;
     }
+
+    /**
+     * Gets the addresses for a given account.
+     *
+     * @param {number} account - The account number.
+     * @returns {QiAddressInfo[]} The addresses for the account.
+     */
+    public getAddressesForAccount(account: number): QiAddressInfo[] {
+        const addresses = this._addressesMap.values();
+        return Array.from(addresses)
+            .flat()
+            .filter((info) => info.account === account);
+    }
 }
