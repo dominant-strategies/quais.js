@@ -140,51 +140,7 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
         );
     }
 
-    /**
-     * Adds an address to the wallet.
-     *
-     * @param {number} account - The account number.
-     * @param {number} addressIndex - The address index.
-     * @returns {T} The added address info.
-     */
-    public addAddress(account: number, addressIndex: number): T {
-        return this._addAddress(this._addresses, account, addressIndex) as T;
-    }
-
-    /**
-     * Helper method to add an address to the wallet address map.
-     *
-     * @param {Map<string, NeuteredAddressInfo>} addressMap - The address map.
-     * @param {number} account - The account number.
-     * @param {number} addressIndex - The address index.
-     * @returns {NeuteredAddressInfo} The added address info.
-     * @throws {Error} If the address for the index already exists.
-     */
-    protected _addAddress(
-        addressMap: Map<string, NeuteredAddressInfo>,
-        account: number,
-        addressIndex: number,
-    ): NeuteredAddressInfo {
-        // check if address already exists for the index
-        this._addresses.forEach((addressInfo) => {
-            if (addressInfo.index === addressIndex) {
-                throw new Error(`Address for index ${addressIndex} already exists`);
-            }
-        });
-
-        // derive the address node and validate the zone
-        const changeIndex = 0;
-        const addressNode = this._root
-            .deriveChild(account + HARDENED_OFFSET)
-            .deriveChild(changeIndex)
-            .deriveChild(addressIndex);
-        const zone = getZoneForAddress(addressNode.address);
-        if (!zone) {
-            throw new Error(`Failed to derive a valid address zone for the index ${addressIndex}`);
-        }
-
-        return this.createAndStoreAddressInfo(addressNode, account, zone, addressMap);
-    }
+    abstract addAddress(account: number, addressIndex: number): T | null;
 
     /**
      * Promise that resolves to the next address for the specified account and zone.
@@ -501,32 +457,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
         }
         if (serialized.coinType !== (this as any)._coinType) {
             throw new Error(`Invalid coinType ${serialized.coinType} for wallet (expected ${(this as any)._coinType})`);
-        }
-    }
-
-    /**
-     * Imports addresses from a serialized wallet into the addresses map. Before adding the addresses, a validation is
-     * performed to ensure the address, public key, and zone match the expected values.
-     *
-     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map where the addresses will be imported.
-     * @param {NeuteredAddressInfo[]} addresses - The array of addresses to be imported, each containing account, index,
-     *   change, address, pubKey, and zone information.
-     * @throws {Error} If there is a mismatch between the expected and actual address, public key, or zone.
-     * @protected
-     */
-    protected importSerializedAddresses(addressMap: Map<string, T>, addresses: NeuteredAddressInfo[]): void {
-        for (const addressInfo of addresses) {
-            const newAddressInfo = this._addAddress(addressMap, addressInfo.account, addressInfo.index);
-            // validate the address info
-            if (addressInfo.address !== newAddressInfo.address) {
-                throw new Error(`Address mismatch: ${addressInfo.address} != ${newAddressInfo.address}`);
-            }
-            if (addressInfo.pubKey !== newAddressInfo.pubKey) {
-                throw new Error(`Public key mismatch: ${addressInfo.pubKey} != ${newAddressInfo.pubKey}`);
-            }
-            if (addressInfo.zone !== newAddressInfo.zone) {
-                throw new Error(`Zone mismatch: ${addressInfo.zone} != ${newAddressInfo.zone}`);
-            }
         }
     }
 
