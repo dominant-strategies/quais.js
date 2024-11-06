@@ -1254,8 +1254,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @throws {Error} If the address does not correspond to a valid HD node or if signing fails.
      */
     public async signMessage(address: string, message: string | Uint8Array): Promise<string> {
-        const addrNode = this._getHDNodeForAddress(address);
-        const privKey = addrNode.privateKey;
+        const privKey = this.getPrivateKey(address);
         const digest = keccak256(message);
         const signature = schnorr.sign(digest, getBytes(privKey));
         return hexlify(signature);
