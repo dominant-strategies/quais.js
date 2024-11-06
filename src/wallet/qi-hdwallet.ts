@@ -1628,4 +1628,68 @@ export class QiHDWallet extends AbstractHDWallet {
 
         return [...importedAddresses];
     }
+
+    /**
+     * Adds a new address to the wallet.
+     *
+     * @param {number} account - The account number.
+     * @param {number} addressIndex - The address index.
+     * @returns {QiAddressInfo} The address info for the new address.
+     */
+    public addAddress(account: number, addressIndex: number): QiAddressInfo {
+        return this._addAddress(account, addressIndex, false);
+    }
+
+    /**
+     * Adds a new change address to the wallet.
+     *
+     * @param {number} account - The account number.
+     * @param {number} addressIndex - The address index.
+     * @returns {QiAddressInfo} The address info for the new address.
+     */
+    public addChangeAddress(account: number, addressIndex: number): QiAddressInfo {
+        return this._addAddress(account, addressIndex, true);
+    }
+
+    private _addAddress(account: number, addressIndex: number, isChange: boolean): QiAddressInfo {
+        const derivationPath = isChange ? 'BIP44:change' : 'BIP44:external';
+
+        const existingAddresses = this._addressesMap.get(derivationPath) || [];
+        if (existingAddresses.some((info) => info.index === addressIndex)) {
+            throw new Error(`Address index ${addressIndex} already exists in wallet under path ${derivationPath}`);
+        }
+
+        const addressNode = this._root
+            .deriveChild(account + HARDENED_OFFSET)
+            .deriveChild(isChange ? 1 : 0)
+            .deriveChild(addressIndex);
+        const zone = getZoneForAddress(addressNode.address);
+        if (!zone) {
+            throw new Error(`Failed to derive a Qi valid address zone for the index ${addressIndex}`);
+        }
+
+        if (!isQiAddress(addressNode.address)) {
+            throw new Error(`Address ${addressNode.address} is not a valid Qi address`);
+        }
+
+        const addressInfo: QiAddressInfo = {
+            pubKey: addressNode.publicKey,
+            address: addressNode.address,
+            account,
+            index: addressIndex,
+            change: isChange,
+            zone,
+            status: AddressStatus.UNUSED,
+            derivationPath,
+        };
+
+        const addresses = this._addressesMap.get(derivationPath);
+        if (!addresses) {
+            this._addressesMap.set(derivationPath, [addressInfo]);
+        } else {
+            addresses.push(addressInfo);
+        }
+
+        return addressInfo;
+    }
 }
