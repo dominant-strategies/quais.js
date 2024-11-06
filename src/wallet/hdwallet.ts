@@ -143,20 +143,7 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
     abstract addAddress(account: number, addressIndex: number): T | null;
     abstract getNextAddress(account: number, zone: Zone): Promise<T>;
     abstract getNextAddressSync(account: number, zone: Zone): T;
-
-    /**
-     * Gets the address info for a given address.
-     *
-     * @param {string} address - The address.
-     * @returns {T | null} The address info or null if not found.
-     */
-    public getAddressInfo(address: string): T | null {
-        const addressInfo = this._addresses.get(address);
-        if (!addressInfo) {
-            return null;
-        }
-        return addressInfo as T;
-    }
+    abstract getAddressInfo(address: string): T | null;
 
     /**
      * Returns the private key for a given address. This method should be used with caution as it exposes the private

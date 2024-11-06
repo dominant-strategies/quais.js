@@ -123,7 +123,7 @@ type AddressUsageCallback = (address: string) => Promise<boolean>;
  * const deserializedWallet = QiHDWallet.deserialize(serializedWallet); // create a new wallet instance from the serialized data
  * ```
  */
-export class QiHDWallet extends AbstractHDWallet {
+export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     /**
      * @ignore
      * @type {number}
@@ -1552,6 +1552,20 @@ export class QiHDWallet extends AbstractHDWallet {
 
     public channelIsOpen(paymentCode: string): boolean {
         return this._addressesMap.has(paymentCode) && this._paymentCodeSendAddressMap.has(paymentCode);
+    }
+
+    /**
+     * Gets the address info for a given address.
+     *
+     * @param {string} address - The address.
+     * @returns {QiAddressInfo | null} The address info or null if not found.
+     */
+    public getAddressInfo(address: string): QiAddressInfo | null {
+        const externalAddressInfo = this._addressesMap.get('BIP44:external')?.find((addr) => addr.address === address);
+        if (!externalAddressInfo) {
+            return null;
+        }
+        return externalAddressInfo;
     }
 
     /**
