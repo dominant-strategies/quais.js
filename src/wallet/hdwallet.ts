@@ -147,6 +147,7 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
     abstract getPrivateKey(address: string): string;
     abstract getAddressesForZone(zone: Zone): T[];
     abstract getAddressesForAccount(account: number): T[];
+    protected abstract _findLastUsedIndex(addresses: T[] | undefined, account: number, zone: Zone): number;
 
     /**
      * Creates an instance of the HD wallet.
@@ -233,14 +234,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
      * @returns {Promise<string>} A promise that resolves to the signed transaction.
      */
     abstract signTransaction(tx: TransactionRequest): Promise<string>;
-
-    // /**
-    //  * Abstract method to send a transaction.
-    //  *
-    //  * @param {TransactionRequest} tx - The transaction request.
-    //  * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
-    //  */
-    // abstract sendTransaction(tx: TransactionRequest): Promise<TransactionResponse>;
 
     /**
      * Connects the wallet to a provider.
@@ -348,25 +341,5 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
         if (serialized.coinType !== (this as any)._coinType) {
             throw new Error(`Invalid coinType ${serialized.coinType} for wallet (expected ${(this as any)._coinType})`);
         }
-    }
-
-    /**
-     * Retrieves the highest address index from the given address map for a specified zone, account, and change type.
-     *
-     * This method filters the address map based on the provided zone, account, and change type, then determines the
-     * maximum address index from the filtered addresses.
-     *
-     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map containing address information, where the key is
-     *   an address string and the value is a NeuteredAddressInfo object.
-     * @param {Zone} zone - The specific zone to filter the addresses by.
-     * @param {number} account - The account number to filter the addresses by.
-     * @returns {number} - The highest address index for the specified criteria, or -1 if no addresses match.
-     * @protected
-     */
-    protected getLastAddressIndex(addressMap: Map<string, NeuteredAddressInfo>, zone: Zone, account: number): number {
-        const addresses = Array.from(addressMap.values()).filter(
-            (addressInfo) => addressInfo.account === account && addressInfo.zone === zone,
-        );
-        return addresses.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1);
     }
 }

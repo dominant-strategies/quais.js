@@ -232,7 +232,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @param {QiAddressInfo[]} addresses - The array of QiAddressInfo objects.
      * @returns {number} The last used index.
      */
-    private _findLastUsedIndex(addresses: QiAddressInfo[] | undefined, account: number, zone: Zone): number {
+    protected _findLastUsedIndex(addresses: QiAddressInfo[] | undefined, account: number, zone: Zone): number {
         const filteredAddresses = addresses?.filter(
             (addressInfo) => addressInfo.account === account && addressInfo.zone === zone,
         );

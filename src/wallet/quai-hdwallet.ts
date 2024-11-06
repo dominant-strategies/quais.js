@@ -281,7 +281,7 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
      */
     protected _getNextAddress(accountIndex: number, zone: Zone): NeuteredAddressInfo {
         this.validateZone(zone);
-        const lastIndex = this.getLastAddressIndex(this._addresses, zone, accountIndex);
+        const lastIndex = this._findLastUsedIndex(Array.from(this._addresses.values()), accountIndex, zone);
         const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
         return this.createAndStoreAddressInfo(addressNode, accountIndex, zone);
     }
@@ -386,5 +386,12 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
     public getAddressesForAccount(account: number): NeuteredAddressInfo[] {
         const addresses = this._addresses.values();
         return Array.from(addresses).filter((addressInfo) => addressInfo.account === account);
+    }
+
+    protected _findLastUsedIndex(addresses: NeuteredAddressInfo[] | undefined, account: number, zone: Zone): number {
+        const filteredAddresses = addresses?.filter(
+            (addressInfo) => addressInfo.account === account && addressInfo.zone === zone,
+        );
+        return filteredAddresses?.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1) || -1;
     }
 }
