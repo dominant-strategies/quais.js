@@ -111,7 +111,10 @@ describe('QiHDWallet Serialization/Deserialization', function () {
                 );
 
                 // Verify gap payment channel addresses
-                const gapPaymentChannelAddresses = deserializedWallet.getGapPaymentChannelAddresses(paymentCode);
+                const gapPaymentChannelAddresses = deserializedWallet.getGapPaymentChannelAddressesForZone(
+                    paymentCode,
+                    zone,
+                );
                 assert.strictEqual(
                     gapPaymentChannelAddresses.length,
                     test.addresses.filter(
@@ -149,7 +152,7 @@ describe('QiHDWallet Serialization/Deserialization', function () {
             const paymentCodes = Object.keys(test.senderPaymentCodeInfo);
             for (const paymentCode of paymentCodes) {
                 // Test gap payment channel addresses
-                const gapPaymentAddresses = deserializedWallet.getGapPaymentChannelAddresses(paymentCode);
+                const gapPaymentAddresses = deserializedWallet.getGapPaymentChannelAddressesForZone(paymentCode, zone);
                 for (const addr of gapPaymentAddresses) {
                     assert.strictEqual(addr.status, AddressStatus.UNUSED, 'Gap payment address should be unused');
                     assert.strictEqual(
