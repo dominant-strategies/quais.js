@@ -30,7 +30,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @ignore
      */
-    const version = '1.0.0-alpha.23';
+    const version = '1.0.0-alpha.24';
 
     /**
      * Property helper functions.
@@ -29292,8 +29292,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {string} paymentCode - The payment code.
          * @returns {QiAddressInfo[]} The gap payment channel addresses for the payment code.
          */
-        getGapPaymentChannelAddresses(paymentCode) {
-            return (this._addressesMap.get(paymentCode)?.filter((addressInfo) => addressInfo.status === exports.AddressStatus.UNUSED) ||
+        getGapPaymentChannelAddressesForZone(paymentCode, zone) {
+            return (this._addressesMap
+                .get(paymentCode)
+                ?.filter((addressInfo) => addressInfo.status === exports.AddressStatus.UNUSED && addressInfo.zone === zone) ||
                 []);
         }
         /**
@@ -30363,7 +30365,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     const defaultOptions$1 = {
         cacheTimeout: 250,
         pollingInterval: 4000,
-        usePathing: false,
+        usePathing: true,
     };
     /**
      * An **AbstractProvider** provides a base class for other sub-classes to implement the {@link Provider | **Provider**}
@@ -32086,7 +32088,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         batchMaxSize: 1 << 20,
         batchMaxCount: 100,
         cacheTimeout: 250,
-        usePathing: false,
+        usePathing: true,
     };
     // @TODO: Unchecked Signers
     /**

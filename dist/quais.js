@@ -8,7 +8,7 @@ import ecc from '@bitcoinerlab/secp256k1';
  *
  * @ignore
  */
-const version = '1.0.0-alpha.23';
+const version = '1.0.0-alpha.24';
 
 /**
  * Property helper functions.
@@ -29270,8 +29270,10 @@ class QiHDWallet extends AbstractHDWallet {
      * @param {string} paymentCode - The payment code.
      * @returns {QiAddressInfo[]} The gap payment channel addresses for the payment code.
      */
-    getGapPaymentChannelAddresses(paymentCode) {
-        return (this._addressesMap.get(paymentCode)?.filter((addressInfo) => addressInfo.status === AddressStatus.UNUSED) ||
+    getGapPaymentChannelAddressesForZone(paymentCode, zone) {
+        return (this._addressesMap
+            .get(paymentCode)
+            ?.filter((addressInfo) => addressInfo.status === AddressStatus.UNUSED && addressInfo.zone === zone) ||
             []);
     }
     /**
@@ -30341,7 +30343,7 @@ function getTime() {
 const defaultOptions$1 = {
     cacheTimeout: 250,
     pollingInterval: 4000,
-    usePathing: false,
+    usePathing: true,
 };
 /**
  * An **AbstractProvider** provides a base class for other sub-classes to implement the {@link Provider | **Provider**}
@@ -32064,7 +32066,7 @@ const defaultOptions = {
     batchMaxSize: 1 << 20,
     batchMaxCount: 100,
     cacheTimeout: 250,
-    usePathing: false,
+    usePathing: true,
 };
 // @TODO: Unchecked Signers
 /**
