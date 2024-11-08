@@ -72,9 +72,9 @@ export interface QiAddressInfo extends NeuteredAddressInfo {
 /**
  * @extends SerializedHDWallet
  * @property {OutpointInfo[]} outpoints - Array of outpoint information.
- * @property {QiAddressInfo[]} changeAddresses - Array of change addresses.
- * @property {QiAddressInfo[]} gapAddresses - Array of gap addresses.
- * @property {QiAddressInfo[]} gapChangeAddresses - Array of gap change addresses.
+ * @property {QiAddressInfo[]} addresses - Array of Qi address information.
+ * @property {Record<string, QiAddressInfo[]>} senderPaymentCodeInfo - Map of payment code to array ofQi address
+ *   information.
  * @interface SerializedQiHDWallet
  */
 export interface SerializedQiHDWallet extends SerializedHDWallet {
@@ -261,9 +261,18 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, privateKeysArray);
         }
 
-        const newAddrInfo = {
-            pubKey: addressNode.publicKey,
+        return this._createAndStoreQiAddressInfo(addressNode, account, zone, isChange);
+    }
+
+    private _createAndStoreQiAddressInfo(
+        addressNode: HDNodeWallet,
+        account: number,
+        zone: Zone,
+        isChange: boolean,
+    ): QiAddressInfo {
+        const qiAddressInfo: QiAddressInfo = {
             address: addressNode.address,
+            pubKey: addressNode.publicKey,
             account,
             index: addressNode.index,
             change: isChange,
@@ -271,8 +280,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             status: AddressStatus.UNUSED,
             derivationPath: isChange ? 'BIP44:change' : 'BIP44:external',
         };
-        this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external')?.push(newAddrInfo);
-        return newAddrInfo;
+
+        this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external')!.push(qiAddressInfo); // _addressesMap is initialized within the constructor
+        return qiAddressInfo;
     }
 
     /**
@@ -951,11 +961,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         if (addressInfo.derivationPath === 'BIP44:external' || addressInfo.derivationPath === 'BIP44:change') {
             // (BIP44 addresses)
-            const changeIndex = addressInfo.change ? 1 : 0;
-            const addressNode = this._root
-                .deriveChild(addressInfo.account + HARDENED_OFFSET)
-                .deriveChild(changeIndex)
-                .deriveChild(addressInfo.index);
+            const addressNode = this._getAddressNode(addressInfo.account, addressInfo.change, addressInfo.index);
             return addressNode.privateKey;
         } else {
             // (BIP47 addresses)
@@ -1290,42 +1296,18 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const root = HDNodeWallet.fromMnemonic(mnemonic, path);
         const wallet = new this(_guard, root);
 
-        const validateQiAddressInfo = (addressInfo: QiAddressInfo): void => {
-            wallet.validateNeuteredAddressInfo(addressInfo);
-
-            if (!Object.values(AddressStatus).includes(addressInfo.status)) {
-                throw new Error(`Invalid QiAddressInfo: status '${addressInfo.status}' is not a valid AddressStatus`);
-            }
-
-            if (
-                addressInfo.derivationPath !== 'BIP44:external' &&
-                addressInfo.derivationPath !== 'BIP44:change' &&
-                !validatePaymentCode(addressInfo.derivationPath)
-            ) {
-                throw new Error(
-                    `Invalid QiAddressInfo: derivationPath '${addressInfo.derivationPath}' is not valid. It should be 'BIP44:external', 'BIP44:change', or a valid BIP47 payment code`,
-                );
-            }
-        };
-
-        // First, group addresses by derivation path
-        const addressesByPath = new Map<string, QiAddressInfo[]>();
+        // validate and import all the wallet addresses
         for (const addressInfo of serialized.addresses) {
-            validateQiAddressInfo(addressInfo);
+            wallet.validateAddressInfo(addressInfo);
             let key = addressInfo.derivationPath;
             if (isHexString(key, 32)) {
                 key = QiHDWallet.PRIVATE_KEYS_PATH;
             }
-
-            if (!addressesByPath.has(key)) {
-                addressesByPath.set(key, []);
+            const existingAddresses = wallet._addressesMap.get(key);
+            if (existingAddresses && existingAddresses.some((addr) => addr.address === addressInfo.address)) {
+                throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
             }
-            addressesByPath.get(key)!.push(addressInfo);
-        }
-
-        // Then, set all paths in the wallet's address map
-        for (const [key, addresses] of addressesByPath) {
-            wallet._addressesMap.set(key, addresses);
+            wallet._addressesMap.get(key)!.push(addressInfo);
         }
 
         // validate and import the counter party payment code info
@@ -1334,7 +1316,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 throw new Error(`Invalid payment code: ${paymentCode}`);
             }
             for (const pcInfo of paymentCodeInfoArray) {
-                validateQiAddressInfo(pcInfo);
+                wallet.validateAddressInfo(pcInfo);
             }
             wallet._paymentCodeSendAddressMap.set(paymentCode, paymentCodeInfoArray);
         }
@@ -1348,6 +1330,90 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         wallet._pendingOutpoints.push(...serialized.pendingOutpoints);
 
         return wallet;
+    }
+
+    protected validateAddressDerivation(info: QiAddressInfo): void {
+        const addressNode = this._getAddressNode(info.account, info.change, info.index);
+
+        // Validate derived address matches
+        if (addressNode.address !== info.address) {
+            throw new Error(`Address mismatch: derived ${addressNode.address} but got ${info.address}`);
+        }
+
+        // Validate derived public key matches
+        if (addressNode.publicKey !== info.pubKey) {
+            throw new Error(`Public key mismatch: derived ${addressNode.publicKey} but got ${info.pubKey}`);
+        }
+
+        // Validate zone
+        const zone = getZoneForAddress(addressNode.address);
+        if (!zone || zone !== info.zone) {
+            throw new Error(`Zone mismatch: derived ${zone} but got ${info.zone}`);
+        }
+
+        // Validate it's a valid Qi address
+        if (!isQiAddress(addressNode.address)) {
+            throw new Error(`Address ${addressNode.address} is not a valid Qi address`);
+        }
+    }
+
+    protected validateExtendedProperties(info: QiAddressInfo): void {
+        // Validate status
+        if (!Object.values(AddressStatus).includes(info.status)) {
+            throw new Error(`Invalid status: ${info.status}`);
+        }
+
+        // Validate derivation path
+        if (typeof info.derivationPath !== 'string' || !info.derivationPath) {
+            throw new Error(`Invalid derivation path: ${info.derivationPath}`);
+        }
+
+        // Validate derivation path format
+        this.validateDerivationPath(info.derivationPath, info.change);
+    }
+
+    /**
+     * Validates that the derivation path is either a BIP44 path or a valid payment code.
+     *
+     * @private
+     * @param {string} path - The derivation path to validate
+     * @param {boolean} isChange - Whether this is a change address
+     * @throws {Error} If the path is invalid
+     */
+    private validateDerivationPath(path: string, isChange: boolean): void {
+        // Check if it's a BIP44 path
+        if (path === 'BIP44:external' || path === 'BIP44:change') {
+            // Validate that the path matches the change flag
+            const expectedPath = isChange ? 'BIP44:change' : 'BIP44:external';
+            if (path !== expectedPath) {
+                throw new Error(
+                    `BIP44 path mismatch: address marked as ${isChange ? 'change' : 'external'} ` +
+                        `but has path ${path}`,
+                );
+            }
+            return;
+        }
+
+        // Check if it's a private key path
+        if (path === QiHDWallet.PRIVATE_KEYS_PATH) {
+            if (isChange) {
+                throw new Error('Imported private key addresses cannot be change addresses');
+            }
+            return;
+        }
+
+        // If not a BIP44 path or private key, must be a valid payment code
+        if (!validatePaymentCode(path)) {
+            throw new Error(
+                `Invalid derivation path: must be 'BIP44:external', 'BIP44:change', ` +
+                    `'${QiHDWallet.PRIVATE_KEYS_PATH}', or a valid payment code. Got: ${path}`,
+            );
+        }
+
+        // Payment code addresses cannot be change addresses
+        if (isChange) {
+            throw new Error('Payment code addresses cannot be change addresses');
+        }
     }
 
     /**
@@ -1654,6 +1720,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {QiAddressInfo} The address info for the new address.
      */
     public addAddress(account: number, addressIndex: number): QiAddressInfo {
+        if (account < 0 || addressIndex < 0) {
+            throw new Error('Account and address index must be non-negative integers');
+        }
         return this._addAddress(account, addressIndex, false);
     }
 
@@ -1665,6 +1734,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {QiAddressInfo} The address info for the new address.
      */
     public addChangeAddress(account: number, addressIndex: number): QiAddressInfo {
+        if (account < 0 || addressIndex < 0) {
+            throw new Error('Account and address index must be non-negative integers');
+        }
         return this._addAddress(account, addressIndex, true);
     }
 
@@ -1675,11 +1747,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         if (existingAddresses.some((info) => info.index === addressIndex)) {
             throw new Error(`Address index ${addressIndex} already exists in wallet under path ${derivationPath}`);
         }
-
-        const addressNode = this._root
-            .deriveChild(account + HARDENED_OFFSET)
-            .deriveChild(isChange ? 1 : 0)
-            .deriveChild(addressIndex);
+        const addressNode = this._getAddressNode(account, isChange, addressIndex);
         const zone = getZoneForAddress(addressNode.address);
         if (!zone) {
             throw new Error(`Failed to derive a Qi valid address zone for the index ${addressIndex}`);
@@ -1689,25 +1757,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             throw new Error(`Address ${addressNode.address} is not a valid Qi address`);
         }
 
-        const addressInfo: QiAddressInfo = {
-            pubKey: addressNode.publicKey,
-            address: addressNode.address,
-            account,
-            index: addressIndex,
-            change: isChange,
-            zone,
-            status: AddressStatus.UNUSED,
-            derivationPath,
-        };
-
-        const addresses = this._addressesMap.get(derivationPath);
-        if (!addresses) {
-            this._addressesMap.set(derivationPath, [addressInfo]);
-        } else {
-            addresses.push(addressInfo);
-        }
-
-        return addressInfo;
+        return this._createAndStoreQiAddressInfo(addressNode, account, zone, isChange);
     }
 
     /**

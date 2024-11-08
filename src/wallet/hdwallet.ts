@@ -106,6 +106,30 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
     }
 
     /**
+     * Gets the BIP44 change node for a given account and change flag.
+     *
+     * @param {number} account - The account number.
+     * @param {boolean} change - Whether to get the change node.
+     * @returns {HDNodeWallet} The change node.
+     */
+    protected _getChangeNode(account: number, change: boolean): HDNodeWallet {
+        const changeIndex = change ? 1 : 0;
+        return this._root.deriveChild(account + HARDENED_OFFSET).deriveChild(changeIndex);
+    }
+
+    /**
+     * Gets the BIP44 address node for a given account, change flag, and address index.
+     *
+     * @param {number} account - The account number.
+     * @param {boolean} change - Whether to get the change node.
+     * @param {number} addressIndex - The address index.
+     * @returns {HDNodeWallet} The address node.
+     */
+    protected _getAddressNode(account: number, change: boolean, addressIndex: number): HDNodeWallet {
+        return this._getChangeNode(account, change).deriveChild(addressIndex);
+    }
+
+    /**
      * Derives the next valid address node for a specified account, starting index, and zone. The method ensures the
      * derived address belongs to the correct shard and ledger, as defined by the Quai blockchain specifications.
      *
@@ -122,9 +146,7 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
         zone: Zone,
         isChange: boolean = false,
     ): HDNodeWallet {
-        const changeIndex = isChange ? 1 : 0;
-        const changeNode = this._root.deriveChild(account + HARDENED_OFFSET).deriveChild(changeIndex);
-
+        const changeNode = this._getChangeNode(account, isChange);
         let addrIndex = startingIndex;
         let addressNode: HDNodeWallet;
 
@@ -355,22 +377,40 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
     }
 
     /**
+     * Validates an address info object, including basic properties and address derivation.
+     *
+     * @param {T} info - The address info to validate
+     * @throws {Error} If validation fails
+     * @protected
+     */
+    protected validateAddressInfo(info: T): void {
+        // Basic property validation
+        this.validateBaseAddressInfo(info);
+
+        // Validate address derivation
+        this.validateAddressDerivation(info);
+
+        // Allow subclasses to add their own validation
+        this.validateExtendedProperties(info);
+    }
+
+    /**
      * Validates the NeuteredAddressInfo object.
      *
      * @param {NeuteredAddressInfo} info - The NeuteredAddressInfo object to be validated.
      * @throws {Error} If the NeuteredAddressInfo object is invalid.
      * @protected
      */
-    protected validateNeuteredAddressInfo(info: NeuteredAddressInfo): void {
+    protected validateBaseAddressInfo(info: NeuteredAddressInfo): void {
         if (!/^(0x)?[0-9a-fA-F]{40}$/.test(info.address)) {
             throw new Error(
-                `Invalid NeuteredAddressInfo: address must be a 40-character hexadecimal string: ${info.address}`,
+                `Invalid NeuteredAddressInfo: address must be a 40-character hexadecimal string prefixed with 0x: ${info.address}`,
             );
         }
 
         if (!/^0x[0-9a-fA-F]{66}$/.test(info.pubKey)) {
             throw new Error(
-                `Invalid NeuteredAddressInfo: pubKey must be a 32-character hexadecimal string with 0x prefix: ${info.pubKey}`,
+                `Invalid NeuteredAddressInfo: pubKey must be a 66-character hexadecimal string prefixed with 0x: ${info.pubKey}`,
             );
         }
 
@@ -385,6 +425,26 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
         if (!Object.values(Zone).includes(info.zone)) {
             throw new Error(`Invalid NeuteredAddressInfo: zone '${info.zone}' is not a valid Zone`);
         }
+    }
+
+    /**
+     * Validates that the address, pubKey and zone match what would be derived from the other properties.
+     *
+     * @param {T} info - The address info to validate
+     * @throws {Error} If validation fails
+     * @protected
+     */
+    protected abstract validateAddressDerivation(info: T): void;
+
+    /**
+     * Hook for subclasses to add their own validation logic. Base implementation does nothing.
+     *
+     * @param {T} _info - The address info to validate
+     * @protected
+     */
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    protected validateExtendedProperties(_info: T): void {
+        // Base implementation does nothing
     }
 
     /**

@@ -3,7 +3,7 @@ import { HDNodeWallet } from './hdnodewallet.js';
 import { QuaiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { isQuaiAddress, resolveAddress } from '../address/index.js';
 import { AllowedCoinType, Zone } from '../constants/index.js';
-import { SerializedHDWallet, HARDENED_OFFSET } from './hdwallet.js';
+import { SerializedHDWallet } from './hdwallet.js';
 import { Mnemonic } from './mnemonic.js';
 import { TypedDataDomain, TypedDataField } from '../hash/index.js';
 import { getZoneForAddress } from '../utils/index.js';
@@ -131,6 +131,31 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
         };
     }
 
+    protected validateAddressDerivation(info: NeuteredAddressInfo): void {
+        const addressNode = this._getAddressNode(info.account, false, info.index);
+
+        // Validate derived address matches
+        if (addressNode.address !== info.address) {
+            throw new Error(`Address mismatch: derived ${addressNode.address} but got ${info.address}`);
+        }
+
+        // Validate derived public key matches
+        if (addressNode.publicKey !== info.pubKey) {
+            throw new Error(`Public key mismatch: derived ${addressNode.publicKey} but got ${info.pubKey}`);
+        }
+
+        // Validate zone
+        const zone = getZoneForAddress(addressNode.address);
+        if (!zone || zone !== info.zone) {
+            throw new Error(`Zone mismatch: derived ${zone} but got ${info.zone}`);
+        }
+
+        // Validate it's a valid Quai address
+        if (!isQuaiAddress(addressNode.address)) {
+            throw new Error(`Address ${addressNode.address} is not a valid Quai address`);
+        }
+    }
+
     /**
      * Deserializes the given serialized HD wallet data into an instance of QuaiHDWallet.
      *
@@ -150,7 +175,13 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
         const wallet = new this(_guard, root);
 
         // import the addresses
-        wallet.importSerializedAddresses(serialized.addresses);
+        for (const addressInfo of serialized.addresses) {
+            wallet.validateAddressInfo(addressInfo);
+            if (wallet._addresses.has(addressInfo.address)) {
+                throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
+            }
+            wallet._addresses.set(addressInfo.address, addressInfo);
+        }
 
         return wallet;
     }
@@ -184,6 +215,9 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
      * @returns {NeuteredAddressInfo} The added address info.
      */
     public addAddress(account: number, addressIndex: number): NeuteredAddressInfo {
+        if (account < 0 || addressIndex < 0) {
+            throw new Error('Account and address index must be non-negative integers');
+        }
         return this._addAddress(account, addressIndex) as NeuteredAddressInfo;
     }
 
@@ -205,11 +239,7 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
         });
 
         // derive the address node and validate the zone
-        const changeIndex = 0;
-        const addressNode = this._root
-            .deriveChild(account + HARDENED_OFFSET)
-            .deriveChild(changeIndex)
-            .deriveChild(addressIndex);
+        const addressNode = this._getAddressNode(account, false, addressIndex);
         const zone = getZoneForAddress(addressNode.address);
         if (!zone) {
             throw new Error(`Failed to derive a valid address zone for the index ${addressIndex}`);
@@ -219,33 +249,7 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
             throw new Error(`Address ${addressNode.address} is not a valid Quai address`);
         }
 
-        return this.createAndStoreAddressInfo(addressNode, account, zone);
-    }
-
-    /**
-     * Imports addresses from a serialized wallet into the addresses map. Before adding the addresses, a validation is
-     * performed to ensure the address, public key, and zone match the expected values.
-     *
-     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map where the addresses will be imported.
-     * @param {NeuteredAddressInfo[]} addresses - The array of addresses to be imported, each containing account, index,
-     *   address, pubKey, and zone information.
-     * @throws {Error} If there is a mismatch between the expected and actual address, public key, or zone.
-     * @protected
-     */
-    protected importSerializedAddresses(addresses: NeuteredAddressInfo[]): void {
-        for (const addressInfo of addresses) {
-            const newAddressInfo = this._addAddress(addressInfo.account, addressInfo.index);
-            // validate the address info
-            if (addressInfo.address !== newAddressInfo.address) {
-                throw new Error(`Address mismatch: ${addressInfo.address} != ${newAddressInfo.address}`);
-            }
-            if (addressInfo.pubKey !== newAddressInfo.pubKey) {
-                throw new Error(`Public key mismatch: ${addressInfo.pubKey} != ${newAddressInfo.pubKey}`);
-            }
-            if (addressInfo.zone !== newAddressInfo.zone) {
-                throw new Error(`Zone mismatch: ${addressInfo.zone} != ${newAddressInfo.zone}`);
-            }
-        }
+        return this._createAndStoreNeuteredAddressInfo(addressNode, account, zone);
     }
 
     /**
@@ -283,7 +287,7 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
         this.validateZone(zone);
         const lastIndex = this._findLastUsedIndex(Array.from(this._addresses.values()), accountIndex, zone);
         const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
-        return this.createAndStoreAddressInfo(addressNode, accountIndex, zone);
+        return this._createAndStoreNeuteredAddressInfo(addressNode, accountIndex, zone);
     }
 
     /**
@@ -300,7 +304,11 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
      * @returns {NeuteredAddressInfo} - The created NeuteredAddressInfo object.
      * @protected
      */
-    protected createAndStoreAddressInfo(addressNode: HDNodeWallet, account: number, zone: Zone): NeuteredAddressInfo {
+    private _createAndStoreNeuteredAddressInfo(
+        addressNode: HDNodeWallet,
+        account: number,
+        zone: Zone,
+    ): NeuteredAddressInfo {
         const neuteredAddressInfo: NeuteredAddressInfo = {
             pubKey: addressNode.publicKey,
             address: addressNode.address,
@@ -358,11 +366,7 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
             throw new Error(`Address ${addr} is not known to this wallet`);
         }
 
-        const changeIndex = 0;
-        return this._root
-            .deriveChild(addressInfo.account + HARDENED_OFFSET)
-            .deriveChild(changeIndex)
-            .deriveChild(addressInfo.index);
+        return this._getAddressNode(addressInfo.account, false, addressInfo.index);
     }
 
     /**
