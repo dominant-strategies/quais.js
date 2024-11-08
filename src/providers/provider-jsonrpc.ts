@@ -225,7 +225,7 @@ const defaultOptions = {
     batchMaxCount: 100, // 100 requests
 
     cacheTimeout: 250,
-    usePathing: false,
+    usePathing: true,
 };
 
 export interface AbstractJsonRpcTransactionRequest {

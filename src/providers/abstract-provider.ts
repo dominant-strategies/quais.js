@@ -688,7 +688,7 @@ export type AbstractProviderOptions = {
 const defaultOptions = {
     cacheTimeout: 250,
     pollingInterval: 4000,
-    usePathing: false,
+    usePathing: true,
 };
 
 /**
