@@ -1215,9 +1215,11 @@ export class QiHDWallet extends AbstractHDWallet {
      * @param {string} paymentCode - The payment code.
      * @returns {QiAddressInfo[]} The gap payment channel addresses for the payment code.
      */
-    public getGapPaymentChannelAddresses(paymentCode: string): QiAddressInfo[] {
+    public getGapPaymentChannelAddressesForZone(paymentCode: string, zone: Zone): QiAddressInfo[] {
         return (
-            this._addressesMap.get(paymentCode)?.filter((addressInfo) => addressInfo.status === AddressStatus.UNUSED) ||
+            this._addressesMap
+                .get(paymentCode)
+                ?.filter((addressInfo) => addressInfo.status === AddressStatus.UNUSED && addressInfo.zone === zone) ||
             []
         );
     }
