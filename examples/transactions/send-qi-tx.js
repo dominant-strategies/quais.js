@@ -3,7 +3,7 @@ require('dotenv').config();
 
 async function main() {
     // Create provider
-    const provider = new quais.JsonRpcProvider(process.env.RPC_URL);
+    const provider = new quais.JsonRpcProvider(process.env.RPC_URL, undefined, { usePathing: true });
 
     // Create wallet and connect to provider
     console.log(process.env.RPC_URL)

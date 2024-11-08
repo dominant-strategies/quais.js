@@ -4,8 +4,7 @@ require('dotenv').config();
 
 async function main() {
     // Create provider
-    console.log('RPC URL: ', process.env.RPC_URL);
-    const provider = new quais.JsonRpcProvider(process.env.RPC_URL);
+    const provider = new quais.JsonRpcProvider(process.env.RPC_URL, undefined, { usePathing: true });
 
     // Create Alice's Qi wallet and connect to provider
     const mnemonic = quais.Mnemonic.fromPhrase(process.env.MNEMONIC);

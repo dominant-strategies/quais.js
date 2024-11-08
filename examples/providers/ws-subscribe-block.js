@@ -2,7 +2,7 @@ const quais = require('../../lib/commonjs/quais');
 require('dotenv').config();
 
 async function main() {
-	const provider = new quais.WebSocketProvider(process.env.WS_RPC_URL);
+	const provider = new quais.WebSocketProvider(process.env.WS_RPC_URL, undefined, { usePathing: true });
 
 	let blockNumber = null;
 	provider.on(

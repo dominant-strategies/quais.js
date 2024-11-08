@@ -3,7 +3,7 @@ require('dotenv').config();
 
 async function main() {
     // Create provider
-    const provider = new quais.JsonRpcProvider(process.env.RPC_URL);
+    const provider = new quais.JsonRpcProvider(process.env.RPC_URL, undefined, { usePathing: true });
 
     // Get block (with includeTransactions set to false)
     const block = await provider.getBlock(quais.Shard.Cyprus1, 'latest', false);

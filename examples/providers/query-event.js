@@ -3,7 +3,7 @@ require('dotenv').config();
 
 async function main() {
     // Create provider
-    const provider = new quais.JsonRpcProvider(process.env.RPC_URL);
+    const provider = new quais.JsonRpcProvider(process.env.RPC_URL, undefined, { usePathing: true });
 
     // Define simplified abi
     const abi = ['event Transfer(address indexed from, address indexed to, uint amount)'];

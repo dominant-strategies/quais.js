@@ -3,7 +3,7 @@ require('dotenv').config();
 
 async function main() {
     // Create provider
-    const provider = new quais.JsonRpcProvider(process.env.RPC_URL);
+    const provider = new quais.JsonRpcProvider(process.env.RPC_URL, undefined, { usePathing: true });
 
     // Define filter for any Transfer events in the last 10 blocks in Cyprus1 ([0, 0])
     const filter = {

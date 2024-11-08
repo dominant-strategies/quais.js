@@ -3,7 +3,7 @@ require('dotenv').config();
 
 async function main() {
     // Create provider
-    const provider = new quais.JsonRpcProvider(process.env.RPC_URL);
+    const provider = new quais.JsonRpcProvider(process.env.RPC_URL, undefined, { usePathing: true });
 
     // Get balance of a Quai or Qi address
     const balance = await provider.getBalance('0x002F4783248e2D6FF1aa6482A8C0D7a76de3C329', 'latest');
