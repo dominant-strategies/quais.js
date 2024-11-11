@@ -244,6 +244,9 @@ export type {
 // ADDRESS
 export type { Addressable, AddressLike } from './address/index.js';
 
+// CONSTANTS
+export type { AllowedCoinType } from './constants/index.js';
+
 // CONTRACT
 export type {
     ConstantContractMethod,
