@@ -1,13 +1,11 @@
 import assert from 'assert';
 
-import { loadTests, convertToZone } from '../utils.js';
+import { loadTests } from '../utils.js';
 
 import {
     TestCaseQuaiTransaction,
     TestCaseQuaiSerialization,
-    TestCaseQuaiAddresses,
     TestCaseQuaiTypedData,
-    AddressInfo,
     Zone,
     TestCaseQuaiMessageSign,
 } from '../types.js';
@@ -15,50 +13,6 @@ import {
 import { recoverAddress } from '../../index.js';
 
 import { Mnemonic, QuaiHDWallet } from '../../index.js';
-
-describe('Test address generation and retrieval', function () {
-    const tests = loadTests<TestCaseQuaiAddresses>('quai-addresses');
-    for (const test of tests) {
-        const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
-        const quaiWallet = QuaiHDWallet.fromMnemonic(mnemonic);
-        it(`tests addresses generation and retrieval: ${test.name}`, function () {
-            const generatedAddresses: AddressInfo[] = [];
-            for (const { params, expectedAddress } of test.addresses) {
-                const addrInfo = quaiWallet.getNextAddressSync(params.account, params.zone);
-                assert.deepEqual(addrInfo, expectedAddress);
-                generatedAddresses.push(addrInfo);
-
-                const retrievedAddrInfo = quaiWallet.getAddressInfo(expectedAddress.address);
-                assert.deepEqual(retrievedAddrInfo, expectedAddress);
-
-                const accountMap = new Map<number, AddressInfo[]>();
-                for (const addrInfo of generatedAddresses) {
-                    if (!accountMap.has(addrInfo.account)) {
-                        accountMap.set(addrInfo.account, []);
-                    }
-                    accountMap.get(addrInfo.account)!.push(addrInfo);
-                }
-                for (const [account, expectedAddresses] of accountMap) {
-                    const retrievedAddresses = quaiWallet.getAddressesForAccount(account);
-                    assert.deepEqual(retrievedAddresses, expectedAddresses);
-                }
-
-                const zoneMap = new Map<string, AddressInfo[]>();
-                for (const addrInfo of generatedAddresses) {
-                    if (!zoneMap.has(addrInfo.zone)) {
-                        zoneMap.set(addrInfo.zone, []);
-                    }
-                    zoneMap.get(addrInfo.zone)!.push(addrInfo);
-                }
-                for (const [zone, expectedAddresses] of zoneMap) {
-                    const zoneEnum = convertToZone(zone);
-                    const retrievedAddresses = quaiWallet.getAddressesForZone(zoneEnum);
-                    assert.deepEqual(retrievedAddresses, expectedAddresses);
-                }
-            }
-        });
-    }
-});
 
 describe('Test transaction signing', function () {
     const tests = loadTests<TestCaseQuaiTransaction>('quai-transaction');

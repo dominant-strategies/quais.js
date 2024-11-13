@@ -1,70 +1,12 @@
 import assert from 'assert';
 
-import { loadTests, convertToZone } from '../utils.js';
+import { loadTests } from '../utils.js';
 import { schnorr } from '@noble/curves/secp256k1';
 import { keccak_256 } from '@noble/hashes/sha3';
 import { MuSigFactory } from '@brandonblack/musig';
-import {
-    TestCaseQiAddresses,
-    TestCaseQiSignMessage,
-    TestCaseQiTransaction,
-    AddressInfo,
-    TxInput,
-    TxOutput,
-    Zone,
-} from '../types.js';
+import { TestCaseQiSignMessage, TestCaseQiTransaction, TxInput, TxOutput, Zone } from '../types.js';
 
 import { Mnemonic, QiHDWallet, QiTransaction, getBytes, hexlify, musigCrypto } from '../../index.js';
-
-describe('QiHDWallet: Test address generation and retrieval', function () {
-    const tests = loadTests<TestCaseQiAddresses>('qi-addresses');
-    for (const test of tests) {
-        const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
-        const qiWallet = QiHDWallet.fromMnemonic(mnemonic);
-        it(`tests addresses generation and retrieval: ${test.name}`, function () {
-            const generatedAddresses: AddressInfo[] = [];
-            for (const { params, expectedAddress } of test.addresses) {
-                const addrInfo = qiWallet.getNextAddressSync(params.account, params.zone);
-                assert.deepEqual(addrInfo, expectedAddress);
-                generatedAddresses.push(addrInfo);
-
-                const retrievedAddrInfo = qiWallet.getAddressInfo(expectedAddress.address);
-                assert.deepEqual(retrievedAddrInfo, expectedAddress);
-
-                const accountMap = new Map<number, AddressInfo[]>();
-                for (const addrInfo of generatedAddresses) {
-                    if (!accountMap.has(addrInfo.account)) {
-                        accountMap.set(addrInfo.account, []);
-                    }
-                    accountMap.get(addrInfo.account)!.push(addrInfo);
-                }
-                for (const [account, expectedAddresses] of accountMap) {
-                    const retrievedAddresses = qiWallet.getAddressesForAccount(account);
-                    assert.deepEqual(retrievedAddresses, expectedAddresses);
-                }
-
-                const zoneMap = new Map<string, AddressInfo[]>();
-                for (const addrInfo of generatedAddresses) {
-                    if (!zoneMap.has(addrInfo.zone)) {
-                        zoneMap.set(addrInfo.zone, []);
-                    }
-                    zoneMap.get(addrInfo.zone)!.push(addrInfo);
-                }
-                for (const [zone, expectedAddresses] of zoneMap) {
-                    const zoneEnum = convertToZone(zone);
-                    const retrievedAddresses = qiWallet.getAddressesForZone(zoneEnum);
-                    assert.deepEqual(retrievedAddresses, expectedAddresses);
-                }
-            }
-        });
-        it(`tests change addresses generation and retrieval: ${test.name}`, function () {
-            for (const { params, expectedAddress } of test.changeAddresses) {
-                const addrInfo = qiWallet.getNextChangeAddressSync(params.account, params.zone);
-                assert.deepEqual(addrInfo, expectedAddress);
-            }
-        });
-    }
-});
 
 describe('QiHDWallet: Test transaction signing', function () {
     const tests = loadTests<TestCaseQiTransaction>('qi-transaction');

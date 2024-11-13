@@ -277,11 +277,6 @@ export interface AddrParams {
     account: number;
     zone: Zone;
 }
-export type TestAddresses = Array<{
-    params: AddrParams;
-    expectedAddress: AddressInfo;
-}>;
-
 export interface AddressInfo {
     pubKey: string;
     address: string;
@@ -311,12 +306,6 @@ export interface TestCaseQuaiTransaction {
     signed: string;
 }
 
-export interface TestCaseQuaiAddresses {
-    name: string;
-    mnemonic: string;
-    addresses: TestAddresses;
-}
-
 export interface TestCaseQuaiTypedData {
     name: string;
     mnemonic: string;
@@ -333,13 +322,6 @@ export interface TestCaseQuaiMessageSign {
     message: string;
     digest: string;
     signature: string;
-}
-
-export interface TestCaseQiAddresses {
-    name: string;
-    mnemonic: string;
-    addresses: TestAddresses;
-    changeAddresses: TestAddresses;
 }
 
 export interface TxInput {
