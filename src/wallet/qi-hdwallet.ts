@@ -491,168 +491,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         });
     }
 
-    private async prepareAndSendTransaction(
-        amount: bigint,
-        originZone: Zone,
-        getDestinationAddresses: (count: number) => Promise<string[]>,
-        minDenominationToUse?: number,
-    ): Promise<TransactionResponse> {
-        if (!this.provider) {
-            throw new Error('Provider is not set');
-        }
-
-        // 1. Check the wallet has enough balance in the originating zone to send the transaction
-        const currentBlock = await this.provider.getBlockNumber(originZone as unknown as Shard);
-        const balance = await this.getSpendableBalanceForZone(originZone, currentBlock);
-        if (balance < amount) {
-            throw new Error(
-                `Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qi`,
-            );
-        }
-
-        // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
-        const zoneUTXOs = this.outpointsToUTXOs(originZone, minDenominationToUse);
-        if (zoneUTXOs.length === 0) {
-            if (minDenominationToUse === 10) {
-                throw new Error('Qi denominations too small to convert.');
-            } else {
-                throw new Error('No Qi available in zone.');
-            }
-        }
-
-        const unlockedUTXOs = zoneUTXOs.filter((utxo) => utxo.lock === 0 || utxo.lock! < currentBlock);
-        if (unlockedUTXOs.length === 0) {
-            throw new Error('Insufficient spendable balance in zone.');
-        }
-
-        const fewestCoinSelector = new FewestCoinSelector(unlockedUTXOs);
-
-        const spendTarget: bigint = amount;
-        let selection = fewestCoinSelector.performSelection(spendTarget);
-
-        // 3. Generate as many unused addresses as required to populate the spend outputs
-        const sendAddresses = await getDestinationAddresses(selection.spendOutputs.length);
-
-        const getChangeAddressesForOutputs = async (count: number): Promise<string[]> => {
-            const currentChangeAddresses = this._addressesMap.get('BIP44:change') || [];
-            const outpusChangeAddresses: QiAddressInfo[] = [];
-
-            for (let i = 0; i < currentChangeAddresses.length; i++) {
-                if (currentChangeAddresses[i].status === AddressStatus.UNUSED) {
-                    outpusChangeAddresses.push(currentChangeAddresses[i]);
-                }
-
-                if (outpusChangeAddresses.length === count) break;
-            }
-
-            // Generate the remaining number of change addresses if needed
-            const remainingAddressesNeeded = count - outpusChangeAddresses.length;
-            if (remainingAddressesNeeded > 0) {
-                outpusChangeAddresses.push(
-                    ...Array(remainingAddressesNeeded)
-                        .fill(0)
-                        .map(() => this.getNextChangeAddressSync(0, originZone)),
-                );
-            }
-
-            // Combine the existing change addresses with the newly generated addresses and ensure they are unique and sorted by index
-            const mergedChangeAddresses = [
-                ...outpusChangeAddresses.map((address) => ({ ...address, status: AddressStatus.ATTEMPTED_USE })),
-                ...currentChangeAddresses,
-            ];
-            const sortedAndFilteredChangeAddresses = mergedChangeAddresses
-                .filter((address, index, self) => self.findIndex((t) => t.address === address.address) === index)
-                .sort((a, b) => a.index - b.index);
-
-            // Update the _addressesMap with the modified change addresses and statuses
-            this._addressesMap.set('BIP44:change', sortedAndFilteredChangeAddresses);
-
-            return outpusChangeAddresses.map((address) => address.address);
-        };
-
-        // 4. Get change addresses
-        const changeAddresses = await getChangeAddressesForOutputs(selection.changeOutputs.length);
-
-        // 5. Create the transaction and sign it using the signTransaction method
-        let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
-        if (inputPubKeys.some((pubkey) => !pubkey)) {
-            throw new Error('Missing public key for input address');
-        }
-
-        let attempts = 0;
-        let finalFee = 0n;
-        const MAX_FEE_ESTIMATION_ATTEMPTS = 5;
-
-        while (attempts < MAX_FEE_ESTIMATION_ATTEMPTS) {
-            const feeEstimationTx = this.prepareFeeEstimationTransaction(
-                selection,
-                inputPubKeys.map((pubkey) => pubkey!),
-                sendAddresses,
-                changeAddresses,
-            );
-
-            finalFee = await this.provider.estimateFeeForQi(feeEstimationTx);
-
-            // Get new selection with updated fee 2x
-            selection = fewestCoinSelector.performSelection(spendTarget, finalFee * 2n);
-
-            // Determine if new addresses are needed for the change outputs
-            const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
-            if (changeAddressesNeeded > 0) {
-                // Need more change addresses
-                const newChangeAddresses = await getChangeAddressesForOutputs(changeAddressesNeeded);
-                changeAddresses.push(...newChangeAddresses);
-            } else if (changeAddressesNeeded < 0) {
-                // Have extra change addresses, remove the addresses starting from the end
-                // TODO: Set the status of the addresses to UNUSED in _addressesMap. This fine for now as it will be fixed during next sync
-                changeAddresses.splice(changeAddressesNeeded);
-            }
-
-            // Determine if new addresses are needed for the spend outputs
-            const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
-            if (spendAddressesNeeded > 0) {
-                // Need more send addresses
-                const newSendAddresses = await getDestinationAddresses(spendAddressesNeeded);
-                sendAddresses.push(...newSendAddresses);
-            } else if (spendAddressesNeeded < 0) {
-                // Have extra send addresses, remove the excess
-                // TODO: Set the status of the addresses to UNUSED in _addressesMap. This fine for now as it will be fixed during next sync
-                sendAddresses.splice(spendAddressesNeeded);
-            }
-
-            inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
-
-            // Calculate total new outputs needed (absolute value)
-            const totalNewOutputsNeeded = Math.abs(changeAddressesNeeded) + Math.abs(spendAddressesNeeded);
-
-            // If we need 5 or fewer new outputs, we can break the loop
-            if ((changeAddressesNeeded <= 0 && spendAddressesNeeded <= 0) || totalNewOutputsNeeded <= 5) {
-                break;
-            }
-
-            attempts++;
-        }
-
-        // Proceed with creating and signing the transaction
-        const chainId = (await this.provider.getNetwork()).chainId;
-        const tx = await this.prepareTransaction(
-            selection,
-            inputPubKeys.map((pubkey) => pubkey!),
-            sendAddresses,
-            changeAddresses,
-            Number(chainId),
-        );
-
-        // Move used outpoints to pendingOutpoints
-        this.moveOutpointsToPending(tx.txInputs);
-
-        // Sign the transaction
-        const signedTx = await this.signTransaction(tx);
-
-        // Broadcast the transaction to the network using the provider
-        return this.provider.broadcastTransaction(originZone, signedTx);
-    }
-
     /**
      * Converts an amount of Qi to Quai and sends it to a specified Quai address.
      *
@@ -722,6 +560,197 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         return this.prepareAndSendTransaction(amount, originZone, getDestinationAddresses);
     }
 
+    /**
+     * Prepares and sends a transaction with the specified parameters.
+     *
+     * @private
+     * @param {bigint} amount - The amount of Qi to send.
+     * @param {Zone} originZone - The zone where the transaction originates.
+     * @param {Function} getDestinationAddresses - A function that returns a promise resolving to an array of
+     *   destination addresses.
+     * @param {number} [minDenominationToUse] - Optional minimum denomination of Qi to use for the transaction.
+     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+     * @throws {Error} If provider is not set, insufficient balance, no available UTXOs, or insufficient spendable
+     *   balance.
+     */
+    private async prepareAndSendTransaction(
+        amount: bigint,
+        originZone: Zone,
+        getDestinationAddresses: (count: number) => Promise<string[]>,
+        minDenominationToUse?: number,
+    ): Promise<TransactionResponse> {
+        if (!this.provider) {
+            throw new Error('Provider is not set');
+        }
+
+        // 1. Check the wallet has enough balance in the originating zone to send the transaction
+        const currentBlock = await this.provider.getBlockNumber(originZone as unknown as Shard);
+        const balance = await this.getSpendableBalanceForZone(originZone, currentBlock);
+        if (balance < amount) {
+            throw new Error(
+                `Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qi`,
+            );
+        }
+
+        // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
+        const zoneUTXOs = this.outpointsToUTXOs(originZone, minDenominationToUse);
+        if (zoneUTXOs.length === 0) {
+            if (minDenominationToUse === 10) {
+                throw new Error('Qi denominations too small to convert.');
+            } else {
+                throw new Error('No Qi available in zone.');
+            }
+        }
+
+        const unlockedUTXOs = zoneUTXOs.filter((utxo) => utxo.lock === 0 || utxo.lock! < currentBlock);
+        if (unlockedUTXOs.length === 0) {
+            throw new Error('Insufficient spendable balance in zone.');
+        }
+
+        const fewestCoinSelector = new FewestCoinSelector(unlockedUTXOs);
+
+        const spendTarget: bigint = amount;
+        let selection = fewestCoinSelector.performSelection({ target: spendTarget, fee: BigInt(0) });
+
+        // 3. Generate as many unused addresses as required to populate the spend outputs
+        const sendAddresses = await getDestinationAddresses(selection.spendOutputs.length);
+
+        const getChangeAddressesForOutputs = async (count: number): Promise<string[]> => {
+            const currentChangeAddresses = this._addressesMap.get('BIP44:change') || [];
+            const outpusChangeAddresses: QiAddressInfo[] = [];
+
+            for (let i = 0; i < currentChangeAddresses.length; i++) {
+                if (currentChangeAddresses[i].status === AddressStatus.UNUSED) {
+                    outpusChangeAddresses.push(currentChangeAddresses[i]);
+                }
+
+                if (outpusChangeAddresses.length === count) break;
+            }
+
+            // Generate the remaining number of change addresses if needed
+            const remainingAddressesNeeded = count - outpusChangeAddresses.length;
+            if (remainingAddressesNeeded > 0) {
+                outpusChangeAddresses.push(
+                    ...Array(remainingAddressesNeeded)
+                        .fill(0)
+                        .map(() => this.getNextChangeAddressSync(0, originZone)),
+                );
+            }
+
+            // Combine the existing change addresses with the newly generated addresses and ensure they are unique and sorted by index
+            const mergedChangeAddresses = [
+                ...outpusChangeAddresses.map((address) => ({ ...address, status: AddressStatus.ATTEMPTED_USE })),
+                ...currentChangeAddresses,
+            ];
+            const sortedAndFilteredChangeAddresses = mergedChangeAddresses
+                .filter((address, index, self) => self.findIndex((t) => t.address === address.address) === index)
+                .sort((a, b) => a.index - b.index);
+
+            // Update the _addressesMap with the modified change addresses and statuses
+            this._addressesMap.set('BIP44:change', sortedAndFilteredChangeAddresses);
+
+            return outpusChangeAddresses.map((address) => address.address);
+        };
+
+        // 4. Get change addresses
+        const changeAddresses = await getChangeAddressesForOutputs(selection.changeOutputs.length);
+
+        // 5. Create the transaction and sign it using the signTransaction method
+        let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
+        if (inputPubKeys.some((pubkey) => !pubkey)) {
+            throw new Error('Missing public key for input address');
+        }
+
+        let attempts = 0;
+        let finalFee = 0n;
+        const MAX_FEE_ESTIMATION_ATTEMPTS = 5;
+
+        while (attempts < MAX_FEE_ESTIMATION_ATTEMPTS) {
+            const feeEstimationTx = this.prepareFeeEstimationTransaction(
+                selection,
+                inputPubKeys.map((pubkey) => pubkey!),
+                sendAddresses,
+                changeAddresses,
+            );
+
+            finalFee = await this.provider.estimateFeeForQi(feeEstimationTx);
+
+<<<<<<< HEAD
+            // Get new selection with updated fee 2x
+            selection = fewestCoinSelector.performSelection(spendTarget, finalFee * 2n);
+=======
+            // Get new selection with updated fee
+            selection = fewestCoinSelector.performSelection({ target: spendTarget, fee: finalFee });
+>>>>>>> 70bc7b4e (move validateUTXO() to parent class)
+
+            // Determine if new addresses are needed for the change outputs
+            const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
+            if (changeAddressesNeeded > 0) {
+                // Need more change addresses
+                const newChangeAddresses = await getChangeAddressesForOutputs(changeAddressesNeeded);
+                changeAddresses.push(...newChangeAddresses);
+            } else if (changeAddressesNeeded < 0) {
+                // Have extra change addresses, remove the addresses starting from the end
+                // TODO: Set the status of the addresses to UNUSED in _addressesMap. This fine for now as it will be fixed during next sync
+                changeAddresses.splice(changeAddressesNeeded);
+            }
+
+            // Determine if new addresses are needed for the spend outputs
+            const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
+            if (spendAddressesNeeded > 0) {
+                // Need more send addresses
+                const newSendAddresses = await getDestinationAddresses(spendAddressesNeeded);
+                sendAddresses.push(...newSendAddresses);
+            } else if (spendAddressesNeeded < 0) {
+                // Have extra send addresses, remove the excess
+                // TODO: Set the status of the addresses to UNUSED in _addressesMap. This fine for now as it will be fixed during next sync
+                sendAddresses.splice(spendAddressesNeeded);
+            }
+
+            inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
+
+            // Calculate total new outputs needed (absolute value)
+            const totalNewOutputsNeeded = Math.abs(changeAddressesNeeded) + Math.abs(spendAddressesNeeded);
+
+            // If we need 5 or fewer new outputs, we can break the loop
+            if ((changeAddressesNeeded <= 0 && spendAddressesNeeded <= 0) || totalNewOutputsNeeded <= 5) {
+                break;
+            }
+
+            attempts++;
+        }
+
+        // Proceed with creating and signing the transaction
+        const chainId = (await this.provider.getNetwork()).chainId;
+        const tx = await this.prepareTransaction(
+            selection,
+            inputPubKeys.map((pubkey) => pubkey!),
+            sendAddresses,
+            changeAddresses,
+            Number(chainId),
+        );
+
+        // Move used outpoints to pendingOutpoints
+        this.moveOutpointsToPending(tx.txInputs);
+
+        // Sign the transaction
+        const signedTx = await this.signTransaction(tx);
+
+        // Broadcast the transaction to the network using the provider
+        return this.provider.broadcastTransaction(originZone, signedTx);
+    }
+
+    /**
+     * Prepares a transaction with the specified parameters.
+     *
+     * @private
+     * @param {SelectedCoinsResult} selection - The selected coins result.
+     * @param {string[]} inputPubKeys - The public keys of the inputs.
+     * @param {string[]} sendAddresses - The addresses to send to.
+     * @param {string[]} changeAddresses - The addresses to change to.
+     * @param {number} chainId - The chain ID.
+     * @returns {Promise<QiTransaction>} A promise that resolves to the prepared transaction.
+     */
     private async prepareTransaction(
         selection: SelectedCoinsResult,
         inputPubKeys: string[],
@@ -755,6 +784,16 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         return tx;
     }
 
+    /**
+     * Prepares a fee estimation transaction with the specified parameters.
+     *
+     * @private
+     * @param {SelectedCoinsResult} selection - The selected coins result.
+     * @param {string[]} inputPubKeys - The public keys of the inputs.
+     * @param {string[]} sendAddresses - The addresses to send to.
+     * @param {string[]} changeAddresses - The addresses to change to.
+     * @returns {QiPerformActionTransaction} The prepared transaction.
+     */
     private prepareFeeEstimationTransaction(
         selection: SelectedCoinsResult,
         inputPubKeys: string[],
