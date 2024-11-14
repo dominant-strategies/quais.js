@@ -675,13 +675,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
             finalFee = await this.provider.estimateFeeForQi(feeEstimationTx);
 
-<<<<<<< HEAD
-            // Get new selection with updated fee 2x
-            selection = fewestCoinSelector.performSelection(spendTarget, finalFee * 2n);
-=======
             // Get new selection with updated fee
             selection = fewestCoinSelector.performSelection({ target: spendTarget, fee: finalFee });
->>>>>>> 70bc7b4e (move validateUTXO() to parent class)
 
             // Determine if new addresses are needed for the change outputs
             const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
@@ -1341,10 +1336,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             let key = addressInfo.derivationPath;
             if (isHexString(key, 32)) {
                 key = QiHDWallet.PRIVATE_KEYS_PATH;
-            }
-            const existingAddresses = wallet._addressesMap.get(key);
-            if (existingAddresses && existingAddresses.some((addr) => addr.address === addressInfo.address)) {
-                throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
             }
             const existingAddresses = wallet._addressesMap.get(key);
             if (existingAddresses && existingAddresses.some((addr) => addr.address === addressInfo.address)) {

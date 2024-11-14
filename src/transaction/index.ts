@@ -29,6 +29,7 @@ export { accessListify } from './accesslist.js';
 export { AbstractTransaction } from './abstract-transaction.js';
 
 export { FewestCoinSelector } from './coinselector-fewest.js';
+export { AggregateCoinSelector } from './coinselector-aggregate.js';
 export type { SpendTarget } from './abstract-coinselector.js';
 
 export type { TransactionLike } from './abstract-transaction.js';

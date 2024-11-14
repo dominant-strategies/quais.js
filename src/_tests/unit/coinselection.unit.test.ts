@@ -22,7 +22,7 @@ describe('FewestCoinSelector', function () {
             const availableUTXOs = createUTXOs([1, 2, 3]); // .065 Qi
             const targetSpend = denominations[3]; // .05 Qi
             const selector = new FewestCoinSelector(availableUTXOs);
-            const result = selector.performSelection(targetSpend);
+            const result = selector.performSelection({ target: targetSpend });
 
             // A single 0.05 Qi UTXO should have been selected
             assert.strictEqual(result.inputs.length, 1);
@@ -40,7 +40,7 @@ describe('FewestCoinSelector', function () {
             const availableUTXOs = createUTXOs([1, 2, 2, 3]); // .075 Qi
             const targetSpend = denominations[2] + denominations[3]; // .06 Qi
             const selector = new FewestCoinSelector(availableUTXOs);
-            const result = selector.performSelection(targetSpend);
+            const result = selector.performSelection({ target: targetSpend });
 
             // 2 UTXOs should have been selected for a total of .06 Qi
             assert.strictEqual(result.inputs.length, 2);
@@ -63,7 +63,7 @@ describe('FewestCoinSelector', function () {
             const availableUTXOs = createUTXOs([2, 4]); // .11 Qi
             const targetSpend = denominations[3]; // .05 Qi
             const selector = new FewestCoinSelector(availableUTXOs);
-            const result = selector.performSelection(targetSpend);
+            const result = selector.performSelection({ target: targetSpend });
 
             // A single 0.1 Qi UTXO should have been selected
             assert.strictEqual(result.inputs.length, 1);
@@ -82,7 +82,7 @@ describe('FewestCoinSelector', function () {
             const availableUTXOs = createUTXOs([2, 4, 4, 4, 5]); // .56 Qi
             const targetSpend = denominations[6]; // .5 Qi
             const selector = new FewestCoinSelector(availableUTXOs);
-            const result = selector.performSelection(targetSpend);
+            const result = selector.performSelection({ target: targetSpend });
 
             // 4 UTXOs should have been selected for a total of .55 Qi
             assert.strictEqual(result.inputs.length, 4);
@@ -107,17 +107,20 @@ describe('FewestCoinSelector', function () {
     describe('Error cases', function () {
         it('throws an error when there are insufficient funds', function () {
             const selector = new FewestCoinSelector(createUTXOs([0, 0]));
-            assert.throws(() => selector.performSelection(denominations[3]), /Insufficient funds/);
+            assert.throws(() => selector.performSelection({ target: denominations[3] }), /Insufficient funds/);
         });
 
         it('throws an error when no UTXOs are available', function () {
             const selector = new FewestCoinSelector([]);
-            assert.throws(() => selector.performSelection(denominations[2]), /No UTXOs available/);
+            assert.throws(() => selector.performSelection({ target: denominations[2] }), /No UTXOs available/);
         });
 
         it('throws an error when the target amount is negative', function () {
             const selector = new FewestCoinSelector(createUTXOs([2, 2]));
-            assert.throws(() => selector.performSelection(-denominations[1]), /Target amount must be greater than 0/);
+            assert.throws(
+                () => selector.performSelection({ target: -denominations[1] }),
+                /Target amount must be greater than 0/,
+            );
         });
     });
 
@@ -127,7 +130,7 @@ describe('FewestCoinSelector', function () {
             const availableUTXOs = createUTXOs([3]); // Denomination index 3 (50 units)
             const targetSpend = denominations[2]; // 10 units
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection(targetSpend);
+            selector.performSelection({ target: targetSpend });
 
             // Calculate expected initial change amount
             const initialChangeAmount = denominations[3] - denominations[2]; // 50 - 10 = 40 units
@@ -178,7 +181,7 @@ describe('FewestCoinSelector', function () {
             const availableUTXOs = createUTXOs([2, 2, 2]); // Denomination index 2 (10 units each)
             const targetSpend = denominations[2] * BigInt(2); // 20 units
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection(targetSpend);
+            selector.performSelection({ target: targetSpend });
 
             // Initially, no change outputs (total input = 20 units)
             assert.strictEqual(selector.changeOutputs.length, 0);
@@ -206,7 +209,7 @@ describe('FewestCoinSelector', function () {
             const availableUTXOs = createUTXOs([2, 2]); // Two .01 Qi UTXOs
             const targetSpend = denominations[2] * BigInt(2); // .02 Qi
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection(targetSpend);
+            selector.performSelection({ target: targetSpend });
 
             // No change outputs expected
             assert.strictEqual(selector.changeOutputs.length, 0);
@@ -227,7 +230,7 @@ describe('FewestCoinSelector', function () {
             const availableUTXOs = createUTXOs([3, 2]); // .05 Qi and .01 Qi
             const targetSpend = denominations[3]; // .05 Qi
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection(targetSpend);
+            selector.performSelection({ target: targetSpend });
 
             // No change outputs expected
             assert.strictEqual(selector.changeOutputs.length, 0);
@@ -248,7 +251,7 @@ describe('FewestCoinSelector', function () {
             const availableUTXOs = createUTXOs([3, 2]); // Denomination indices 3 (50 units) and 2 (10 units)
             const targetSpend = denominations[1]; // 20 units
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection(targetSpend);
+            selector.performSelection({ target: targetSpend });
 
             // Initially, selects the 50-unit UTXO for the target spend
             assert.strictEqual(selector.selectedUTXOs.length, 1);
@@ -285,7 +288,7 @@ describe('FewestCoinSelector', function () {
             const availableUTXOs = createUTXOs([3]); // .05 Qi
             const targetSpend = denominations[3]; // .05 Qi
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection(targetSpend);
+            selector.performSelection({ target: targetSpend });
 
             // No change outputs expected
             assert.strictEqual(selector.changeOutputs.length, 0);
@@ -308,7 +311,7 @@ describe('FewestCoinSelector', function () {
             const availableUTXOs = createUTXOs([2, 2]); // Denomination indices 2 (10 units each)
             const targetSpend = denominations[2]; // 10 units
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection(targetSpend);
+            selector.performSelection({ target: targetSpend });
 
             // Initially, selects one UTXO, change expected
             assert.strictEqual(selector.selectedUTXOs.length, 1);
