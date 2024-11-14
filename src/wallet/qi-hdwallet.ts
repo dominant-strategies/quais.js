@@ -571,7 +571,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         let attempts = 0;
         let finalFee = 0n;
-        let satisfiedFeeEstimation = false;
         const MAX_FEE_ESTIMATION_ATTEMPTS = 5;
 
         while (attempts < MAX_FEE_ESTIMATION_ATTEMPTS) {
@@ -584,8 +583,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
             finalFee = await this.provider.estimateFeeForQi(feeEstimationTx);
 
-            // Get new selection with updated fee
-            selection = fewestCoinSelector.performSelection(spendTarget, finalFee);
+            // Get new selection with updated fee 2x
+            selection = fewestCoinSelector.performSelection(spendTarget, finalFee * 2n);
 
             // Determine if new addresses are needed for the change outputs
             const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
@@ -618,17 +617,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
             // If we need 5 or fewer new outputs, we can break the loop
             if ((changeAddressesNeeded <= 0 && spendAddressesNeeded <= 0) || totalNewOutputsNeeded <= 5) {
-                finalFee *= 3n; // Increase the fee 3x to ensure it's accepted
-                satisfiedFeeEstimation = true;
                 break;
             }
 
             attempts++;
-        }
-
-        // If we didn't satisfy the fee estimation, increase the fee 10x to ensure it's accepted
-        if (!satisfiedFeeEstimation) {
-            finalFee *= 10n;
         }
 
         // Proceed with creating and signing the transaction
