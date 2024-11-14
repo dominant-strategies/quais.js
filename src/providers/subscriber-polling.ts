@@ -2,7 +2,13 @@ import { toZone, Zone } from '../constants/index.js';
 import { toShard } from '../constants/shards.js';
 import { assert, getBytes, isHexString } from '../utils/index.js';
 import { getZoneFromNodeLocation } from '../utils/shards.js';
-import { getZoneFromEventFilter, type EventFilter, type OrphanFilter, type ProviderEvent } from './provider.js';
+import {
+    getZoneFromEventFilter,
+    TransactionResponse,
+    type EventFilter,
+    type OrphanFilter,
+    type ProviderEvent,
+} from './provider.js';
 
 import type { AbstractProvider, Subscriber } from './abstract-provider.js';
 
@@ -337,7 +343,7 @@ export class PollingQiTransactionSubscriber extends OnBlockSubscriber {
     }
 
     async _poll(blockNumber: number, provider: AbstractProvider): Promise<void> {
-        const tx = await provider.getTransaction(this.#hash);
+        const tx = (await provider.getTransaction(this.#hash)) as TransactionResponse;
         if (tx && tx.isMined()) {
             provider.emit(this.#hash, toZone(this.#hash.slice(0, 4)), tx);
         }
