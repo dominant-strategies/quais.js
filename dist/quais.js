@@ -8,7 +8,7 @@ import ecc from '@bitcoinerlab/secp256k1';
  *
  * @ignore
  */
-const version = '1.0.0-alpha.24';
+const version = '1.0.0-alpha.25';
 
 /**
  * Property helper functions.
@@ -19956,6 +19956,20 @@ function formatTransactionReceipt(value) {
     const result = _formatTransactionReceipt(value);
     return result;
 }
+function formatTransactionResponse(value) {
+    // Determine if it is a Quai or Qi transaction based on the type
+    const transactionType = parseInt(value.type, 16);
+    switch (transactionType) {
+        case 0x0:
+            return formatQuaiTransactionResponse(value);
+        case 0x1:
+            return formatExternalTransactionResponse(value);
+        case 0x2:
+            return formatQiTransactionResponse(value);
+        default:
+            throw new Error('Unknown transaction type');
+    }
+}
 function formatExternalTransactionResponse(value) {
     const result = object({
         hash: formatHash,
@@ -19993,120 +20007,98 @@ function formatExternalTransactionResponse(value) {
     }
     return result;
 }
-function formatTransactionResponse(value) {
-    // Determine if it is a Quai or Qi transaction based on the type
-    const transactionType = parseInt(value.type, 16);
-    let result;
-    if (transactionType === 0x0 || transactionType === 0x1) {
-        // QuaiTransactionResponseParams
-        result = object({
-            hash: formatHash,
-            type: (value) => {
-                if (value === '0x' || value == null) {
-                    return 0;
-                }
-                return parseInt(value, 16);
-            },
-            accessList: allowNull(accessListify, null),
-            blockHash: allowNull(formatHash, null),
-            blockNumber: allowNull((value) => (value ? parseInt(value, 16) : null), null),
-            index: allowNull((value) => (value ? BigInt(value) : null), null),
-            from: allowNull(getAddress, null),
-            minerTip: allowNull((value) => (value ? BigInt(value) : null)),
-            gasPrice: allowNull((value) => (value ? BigInt(value) : null)),
-            gasLimit: allowNull((value) => (value ? BigInt(value) : null), null),
-            to: allowNull(getAddress, null),
-            value: allowNull((value) => (value ? BigInt(value) : null), null),
-            nonce: allowNull((value) => (value ? parseInt(value, 10) : null), null),
-            creates: allowNull(getAddress, null),
-            chainId: allowNull((value) => (value ? BigInt(value) : null), null),
-            etxType: allowNull((value) => value, null),
-            data: (value) => value,
-        }, {
-            data: ['input'],
-            gasLimit: ['gas'],
-            index: ['transactionIndex'],
-        })(value);
-        // Add an access list to supported transaction types
-        if ((value.type === 0 || value.type === 2) && value.accessList == null) {
-            result.accessList = [];
-        }
-        // Compute the signature
-        if (value.signature) {
-            result.signature = Signature.from(value.signature);
-            // Some backends omit ChainId on legacy transactions, but we can compute it
-            if (result.chainId == null) {
-                const chainId = result.signature.legacyChainId;
-                if (chainId != null) {
-                    result.chainId = chainId;
-                }
+function formatQuaiTransactionResponse(value) {
+    const result = object({
+        hash: formatHash,
+        type: (value) => {
+            if (value === '0x' || value == null) {
+                return 0;
+            }
+            return parseInt(value, 16);
+        },
+        accessList: allowNull(accessListify, null),
+        blockHash: allowNull(formatHash, null),
+        blockNumber: allowNull((value) => (value ? parseInt(value, 16) : null), null),
+        index: allowNull((value) => (value ? BigInt(value) : null), null),
+        from: allowNull(getAddress, null),
+        minerTip: allowNull((value) => (value ? BigInt(value) : null)),
+        gasPrice: allowNull((value) => (value ? BigInt(value) : null)),
+        gasLimit: allowNull((value) => (value ? BigInt(value) : null), null),
+        to: allowNull(getAddress, null),
+        value: allowNull((value) => (value ? BigInt(value) : null), null),
+        nonce: allowNull((value) => (value ? parseInt(value, 10) : null), null),
+        creates: allowNull(getAddress, null),
+        chainId: allowNull((value) => (value ? BigInt(value) : null), null),
+        etxType: allowNull((value) => parseInt(value, 16), null),
+        data: (value) => value,
+    }, {
+        data: ['input'],
+        gasLimit: ['gas'],
+        index: ['transactionIndex'],
+    })(value);
+    // Add an access list if missing
+    if (value.accessList == null) {
+        result.accessList = [];
+    }
+    // Compute the signature
+    if (value.signature) {
+        result.signature = Signature.from(value.signature);
+        // Some backends omit ChainId on legacy transactions, but we can compute it
+        if (result.chainId == null) {
+            const chainId = result.signature.legacyChainId;
+            if (chainId != null) {
+                result.chainId = chainId;
             }
         }
-        // 0x0000... should actually be null
-        if (result.blockHash && getBigInt(result.blockHash) === BN_0$2) {
-            result.blockHash = null;
-        }
     }
-    else if (transactionType === 0x2) {
-        // QiTransactionResponseParams
-        result = object({
-            hash: formatHash,
-            type: (value) => {
-                if (value === '0x' || value == null) {
-                    return 0;
-                }
-                return parseInt(value, 16);
-            },
-            blockHash: allowNull(formatHash, null),
-            blockNumber: allowNull((value) => (value ? parseInt(value, 16) : null), null),
-            index: allowNull((value) => (value ? BigInt(value) : null), null),
-            chainId: allowNull((value) => (value ? BigInt(value) : null), null),
-            signature: (value) => value,
-            txInputs: allowNull((value) => value.map(_formatTxInput), null),
-            txOutputs: allowNull((value) => value.map(_formatTxOutput), null),
-        }, {
-            index: ['transactionIndex'],
-            signature: ['utxoSignature'],
-            txInputs: ['inputs'],
-            txOutputs: ['outputs'],
-        })(value);
-    }
-    else {
-        throw new Error('Unknown transaction type');
+    // 0x0000... should actually be null
+    if (result.blockHash && getBigInt(result.blockHash) === BN_0$2) {
+        result.blockHash = null;
     }
     return result;
 }
-const _formatTxInput = object({
-    txhash: formatTxHash,
-    index: formatIndex,
-    pubkey: hexlify,
-}, {
-    txhash: ['PreviousOutPoint', 'TxHash'],
-    index: ['PreviousOutPoint', 'Index'],
-    pubkey: ['PubKey'],
-});
-function extractTxHash(value) {
-    if (value && value.TxHash) {
-        return value.TxHash;
-    }
-    throw new Error('Invalid PreviousOutPoint');
+function formatQiTransactionResponse(value) {
+    return object({
+        hash: formatHash,
+        type: (value) => {
+            if (value === '0x' || value == null) {
+                return 0;
+            }
+            return parseInt(value, 16);
+        },
+        blockHash: allowNull(formatHash, null),
+        blockNumber: allowNull((value) => (value ? parseInt(value, 16) : null), null),
+        chainId: allowNull((value) => (value ? BigInt(value) : null), null),
+        signature: (value) => value,
+        txInputs: allowNull(formatTxInputs, []),
+        txOutputs: allowNull(formatTxOutputs, []),
+    }, {
+        index: ['transactionIndex'],
+        signature: ['utxoSignature'],
+        txInputs: ['inputs'],
+        txOutputs: ['outputs'],
+    })(value);
 }
-function formatTxHash(value) {
-    return formatHash(extractTxHash(value));
-}
-function extractIndex(value) {
-    if (value && value.Index !== undefined) {
-        return value.Index;
-    }
-    throw new Error('Invalid PreviousOutPoint');
-}
-function formatIndex(value) {
-    return getNumber(extractIndex(value));
-}
-const _formatTxOutput = object({
-    address: (addr) => hexlify(getAddress(addr)),
-    denomination: getNumber,
-});
+const formatTxInputs = (value) => {
+    return value?.map(_formatTxInput);
+};
+const _formatTxInput = (value) => {
+    return {
+        txhash: formatHash(value.previousOutPoint.txHash),
+        index: getNumber(value.previousOutPoint.index),
+        pubkey: hexlify(value.pubKey),
+    };
+};
+const formatTxOutputs = (value) => {
+    return value?.map(_formatTxOutput);
+};
+const _formatTxOutput = (value) => {
+    return {
+        denomination: getNumber(value.denomination),
+        lock: getNumber(value.lock),
+        address: getAddress(value.address),
+    };
+};
 const _formatOutpoint = object({
     denomination: (value) => getNumber(value),
     index: (value) => getNumber(value),
@@ -22559,7 +22551,7 @@ class QiTransactionResponse {
                 blockNumber: this.provider.getBlockNumber(toShard(zone)),
             });
             // Not mined yet...
-            if (tx == null || tx.blockNumber == null) {
+            if (tx == null || tx.blockNumber == null || tx.blockHash == null) {
                 return 0;
             }
             return blockNumber - tx.blockNumber + 1;
@@ -22571,7 +22563,7 @@ class QiTransactionResponse {
         const confirms = _confirms == null ? 1 : _confirms;
         const timeout = _timeout == null ? 0 : _timeout;
         const tx = await this.provider.getTransaction(this.hash);
-        if (confirms === 0 && tx) {
+        if (confirms === 0 && tx?.blockHash != null) {
             return tx;
         }
         const waiter = new Promise((resolve, reject) => {
@@ -26303,127 +26295,6 @@ class AbstractHDWallet {
         throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
     }
     /**
-     * Adds an address to the wallet.
-     *
-     * @param {number} account - The account number.
-     * @param {number} addressIndex - The address index.
-     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false`
-     * @returns {NeuteredAddressInfo} The added address info.
-     */
-    addAddress(account, addressIndex, isChange = false) {
-        return this._addAddress(this._addresses, account, addressIndex, isChange);
-    }
-    /**
-     * Helper method to add an address to the wallet address map.
-     *
-     * @param {Map<string, NeuteredAddressInfo>} addressMap - The address map.
-     * @param {number} account - The account number.
-     * @param {number} addressIndex - The address index.
-     * @param {boolean} [isChange=false] - Whether the address is a change address. Default is `false`
-     * @returns {NeuteredAddressInfo} The added address info.
-     * @throws {Error} If the address for the index already exists.
-     */
-    _addAddress(addressMap, account, addressIndex, isChange = false) {
-        // check if address already exists for the index
-        this._addresses.forEach((addressInfo) => {
-            if (addressInfo.index === addressIndex) {
-                throw new Error(`Address for index ${addressIndex} already exists`);
-            }
-        });
-        // derive the address node and validate the zone
-        const changeIndex = isChange ? 1 : 0;
-        const addressNode = this._root
-            .deriveChild(account + HARDENED_OFFSET)
-            .deriveChild(changeIndex)
-            .deriveChild(addressIndex);
-        const zone = getZoneForAddress(addressNode.address);
-        if (!zone) {
-            throw new Error(`Failed to derive a valid address zone for the index ${addressIndex}`);
-        }
-        return this.createAndStoreAddressInfo(addressNode, account, zone, isChange, addressMap);
-    }
-    /**
-     * Promise that resolves to the next address for the specified account and zone.
-     *
-     * @param {number} account - The index of the account for which to retrieve the next address.
-     * @param {Zone} zone - The zone in which to retrieve the next address.
-     * @returns {Promise<NeuteredAddressInfo>} The next neutered address information.
-     */
-    async getNextAddress(account, zone) {
-        return Promise.resolve(this._getNextAddress(account, zone, false, this._addresses));
-    }
-    /**
-     * Synchronously retrieves the next address for the specified account and zone.
-     *
-     * @param {number} account - The index of the account for which to retrieve the next address.
-     * @param {Zone} zone - The zone in which to retrieve the next address.
-     * @returns {NeuteredAddressInfo} The next neutered address information.
-     */
-    getNextAddressSync(account, zone) {
-        return this._getNextAddress(account, zone, false, this._addresses);
-    }
-    /**
-     * Derives and returns the next address information for the specified account and zone.
-     *
-     * @param {number} accountIndex - The index of the account for which the address is being generated.
-     * @param {Zone} zone - The zone in which the address is to be used.
-     * @param {boolean} isChange - A flag indicating whether the address is a change address.
-     * @param {Map<string, NeuteredAddressInfo>} addressMap - A map storing the neutered address information.
-     * @returns {NeuteredAddressInfo} The derived neutered address information.
-     * @throws {Error} If the zone is invalid.
-     */
-    _getNextAddress(accountIndex, zone, isChange, addressMap) {
-        this.validateZone(zone);
-        const lastIndex = this.getLastAddressIndex(addressMap, zone, accountIndex, isChange);
-        const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, isChange);
-        return this.createAndStoreAddressInfo(addressNode, accountIndex, zone, isChange, addressMap);
-    }
-    /**
-     * Gets the address info for a given address.
-     *
-     * @param {string} address - The address.
-     * @returns {NeuteredAddressInfo | null} The address info or null if not found.
-     */
-    getAddressInfo(address) {
-        const addressInfo = this._addresses.get(address);
-        if (!addressInfo) {
-            return null;
-        }
-        return addressInfo;
-    }
-    /**
-     * Returns the private key for a given address. This method should be used with caution as it exposes the private
-     * key to the user.
-     *
-     * @param {string} address - The address associated with the desired private key.
-     * @returns {string} The private key.
-     */
-    getPrivateKey(address) {
-        const hdNode = this._getHDNodeForAddress(address);
-        return hdNode.privateKey;
-    }
-    /**
-     * Gets the addresses for a given account.
-     *
-     * @param {number} account - The account number.
-     * @returns {NeuteredAddressInfo[]} The addresses for the account.
-     */
-    getAddressesForAccount(account) {
-        const addresses = this._addresses.values();
-        return Array.from(addresses).filter((addressInfo) => addressInfo.account === account);
-    }
-    /**
-     * Gets the addresses for a given zone.
-     *
-     * @param {Zone} zone - The zone.
-     * @returns {NeuteredAddressInfo[]} The addresses for the zone.
-     */
-    getAddressesForZone(zone) {
-        this.validateZone(zone);
-        const addresses = this._addresses.values();
-        return Array.from(addresses).filter((addressInfo) => addressInfo.zone === zone);
-    }
-    /**
      * Creates an instance of the HD wallet.
      *
      * @param {new (root: HDNodeWallet) => T} this - The constructor of the HD wallet.
@@ -26482,13 +26353,6 @@ class AbstractHDWallet {
         const mnemonic = Mnemonic.fromPhrase(phrase, password, wordlist);
         return this.createInstance(mnemonic);
     }
-    // /**
-    //  * Abstract method to send a transaction.
-    //  *
-    //  * @param {TransactionRequest} tx - The transaction request.
-    //  * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
-    //  */
-    // abstract sendTransaction(tx: TransactionRequest): Promise<TransactionResponse>;
     /**
      * Connects the wallet to a provider.
      *
@@ -26507,29 +26371,6 @@ class AbstractHDWallet {
         if (!Object.values(Zone).includes(zone)) {
             throw new Error(`Invalid zone: ${zone}`);
         }
-    }
-    /**
-     * Derives and returns the Hierarchical Deterministic (HD) node wallet associated with a given address.
-     *
-     * This method fetches the account and address information from the wallet's internal storage, derives the
-     * appropriate change node based on whether the address is a change address, and further derives the final HD node
-     * using the address index.
-     *
-     * @param {string} addr - The address for which to derive the HD node.
-     * @returns {HDNodeWallet} The derived HD node wallet corresponding to the given address.
-     * @throws {Error} If the given address is not known to the wallet.
-     * @throws {Error} If the account associated with the address is not found.
-     */
-    _getHDNodeForAddress(addr) {
-        const addressInfo = this._addresses.get(addr);
-        if (!addressInfo) {
-            throw new Error(`Address ${addr} is not known to this wallet`);
-        }
-        const changeIndex = addressInfo.change ? 1 : 0;
-        return this._root
-            .deriveChild(addressInfo.account + HARDENED_OFFSET)
-            .deriveChild(changeIndex)
-            .deriveChild(addressInfo.index);
     }
     /**
      * Serializes the HD wallet state into a format suitable for storage or transmission.
@@ -26576,9 +26417,6 @@ class AbstractHDWallet {
         if (!Number.isInteger(info.index) || info.index < 0) {
             throw new Error(`Invalid NeuteredAddressInfo: index must be a non-negative integer: ${info.index}`);
         }
-        if (typeof info.change !== 'boolean') {
-            throw new Error(`Invalid NeuteredAddressInfo: change must be a boolean: ${info.change}`);
-        }
         if (!Object.values(Zone).includes(info.zone)) {
             throw new Error(`Invalid NeuteredAddressInfo: zone '${info.zone}' is not a valid Zone`);
         }
@@ -26598,78 +26436,6 @@ class AbstractHDWallet {
         if (serialized.coinType !== this._coinType) {
             throw new Error(`Invalid coinType ${serialized.coinType} for wallet (expected ${this._coinType})`);
         }
-    }
-    /**
-     * Imports addresses from a serialized wallet into the addresses map. Before adding the addresses, a validation is
-     * performed to ensure the address, public key, and zone match the expected values.
-     *
-     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map where the addresses will be imported.
-     * @param {NeuteredAddressInfo[]} addresses - The array of addresses to be imported, each containing account, index,
-     *   change, address, pubKey, and zone information.
-     * @throws {Error} If there is a mismatch between the expected and actual address, public key, or zone.
-     * @protected
-     */
-    importSerializedAddresses(addressMap, addresses) {
-        for (const addressInfo of addresses) {
-            const newAddressInfo = this._addAddress(addressMap, addressInfo.account, addressInfo.index, addressInfo.change);
-            // validate the address info
-            if (addressInfo.address !== newAddressInfo.address) {
-                throw new Error(`Address mismatch: ${addressInfo.address} != ${newAddressInfo.address}`);
-            }
-            if (addressInfo.pubKey !== newAddressInfo.pubKey) {
-                throw new Error(`Public key mismatch: ${addressInfo.pubKey} != ${newAddressInfo.pubKey}`);
-            }
-            if (addressInfo.zone !== newAddressInfo.zone) {
-                throw new Error(`Zone mismatch: ${addressInfo.zone} != ${newAddressInfo.zone}`);
-            }
-        }
-    }
-    /**
-     * Retrieves the highest address index from the given address map for a specified zone, account, and change type.
-     *
-     * This method filters the address map based on the provided zone, account, and change type, then determines the
-     * maximum address index from the filtered addresses.
-     *
-     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map containing address information, where the key is
-     *   an address string and the value is a NeuteredAddressInfo object.
-     * @param {Zone} zone - The specific zone to filter the addresses by.
-     * @param {number} account - The account number to filter the addresses by.
-     * @param {boolean} isChange - A boolean indicating whether to filter for change addresses (true) or receiving
-     *   addresses (false).
-     * @returns {number} - The highest address index for the specified criteria, or -1 if no addresses match.
-     * @protected
-     */
-    getLastAddressIndex(addressMap, zone, account, isChange) {
-        const addresses = Array.from(addressMap.values()).filter((addressInfo) => addressInfo.account === account && addressInfo.zone === zone && addressInfo.change === isChange);
-        return addresses.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1);
-    }
-    /**
-     * Creates and stores address information in the address map for a specified account, zone, and change type.
-     *
-     * This method constructs a NeuteredAddressInfo object using the provided HDNodeWallet and other parameters, then
-     * stores this information in the provided address map.
-     *
-     * @param {HDNodeWallet} addressNode - The HDNodeWallet object containing the address and public key information.
-     * @param {number} account - The account number to associate with the address.
-     * @param {Zone} zone - The specific zone to associate with the address.
-     * @param {boolean} isChange - A boolean indicating whether the address is a change address (true) or a receiving
-     *   address (false).
-     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map to store the created NeuteredAddressInfo, with the
-     *   address as the key.
-     * @returns {NeuteredAddressInfo} - The created NeuteredAddressInfo object.
-     * @protected
-     */
-    createAndStoreAddressInfo(addressNode, account, zone, isChange, addressMap) {
-        const neuteredAddressInfo = {
-            pubKey: addressNode.publicKey,
-            address: addressNode.address,
-            account,
-            index: addressNode.index,
-            change: isChange,
-            zone,
-        };
-        addressMap.set(neuteredAddressInfo.address, neuteredAddressInfo);
-        return neuteredAddressInfo;
     }
 }
 
@@ -26771,7 +26537,7 @@ class QuaiHDWallet extends AbstractHDWallet {
      * This method extends the serialization from the parent class (AbstractHDWallet) and includes additional
      * QuaiHDWallet-specific data, such as the addresses.
      *
-     * @example const wallet = new QuaiHDWallet(); const serializedData = wallet.serialize(); // serializedData can now
+     * @example Const wallet = new QuaiHDWallet(); const serializedData = wallet.serialize(); // serializedData can now
      * be stored or transmitted
      *
      * @returns {SerializedQuaiHDWallet} An object representing the serialized state of the QuaiHDWallet, including
@@ -26802,7 +26568,7 @@ class QuaiHDWallet extends AbstractHDWallet {
         const root = HDNodeWallet.fromMnemonic(mnemonic, path);
         const wallet = new this(_guard, root);
         // import the addresses
-        wallet.importSerializedAddresses(wallet._addresses, serialized.addresses);
+        wallet.importSerializedAddresses(serialized.addresses);
         return wallet;
     }
     /**
@@ -26819,6 +26585,204 @@ class QuaiHDWallet extends AbstractHDWallet {
     async signTypedData(address, domain, types, value) {
         const addrNode = this._getHDNodeForAddress(address);
         return addrNode.signTypedData(domain, types, value);
+    }
+    /**
+     * Adds an address to the wallet.
+     *
+     * @param {number} account - The account number.
+     * @param {number} addressIndex - The address index.
+     * @returns {NeuteredAddressInfo} The added address info.
+     */
+    addAddress(account, addressIndex) {
+        return this._addAddress(account, addressIndex);
+    }
+    /**
+     * Helper method to add an address to the wallet address map.
+     *
+     * @param {Map<string, NeuteredAddressInfo>} addressMap - The address map.
+     * @param {number} account - The account number.
+     * @param {number} addressIndex - The address index.
+     * @returns {NeuteredAddressInfo} The added address info.
+     * @throws {Error} If the address for the index already exists.
+     */
+    _addAddress(account, addressIndex) {
+        // check if address already exists for the index
+        this._addresses.forEach((addressInfo) => {
+            if (addressInfo.index === addressIndex) {
+                throw new Error(`Address for index ${addressIndex} already exists`);
+            }
+        });
+        // derive the address node and validate the zone
+        const changeIndex = 0;
+        const addressNode = this._root
+            .deriveChild(account + HARDENED_OFFSET)
+            .deriveChild(changeIndex)
+            .deriveChild(addressIndex);
+        const zone = getZoneForAddress(addressNode.address);
+        if (!zone) {
+            throw new Error(`Failed to derive a valid address zone for the index ${addressIndex}`);
+        }
+        if (!isQuaiAddress(addressNode.address)) {
+            throw new Error(`Address ${addressNode.address} is not a valid Quai address`);
+        }
+        return this.createAndStoreAddressInfo(addressNode, account, zone);
+    }
+    /**
+     * Imports addresses from a serialized wallet into the addresses map. Before adding the addresses, a validation is
+     * performed to ensure the address, public key, and zone match the expected values.
+     *
+     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map where the addresses will be imported.
+     * @param {NeuteredAddressInfo[]} addresses - The array of addresses to be imported, each containing account, index,
+     *   address, pubKey, and zone information.
+     * @throws {Error} If there is a mismatch between the expected and actual address, public key, or zone.
+     * @protected
+     */
+    importSerializedAddresses(addresses) {
+        for (const addressInfo of addresses) {
+            const newAddressInfo = this._addAddress(addressInfo.account, addressInfo.index);
+            // validate the address info
+            if (addressInfo.address !== newAddressInfo.address) {
+                throw new Error(`Address mismatch: ${addressInfo.address} != ${newAddressInfo.address}`);
+            }
+            if (addressInfo.pubKey !== newAddressInfo.pubKey) {
+                throw new Error(`Public key mismatch: ${addressInfo.pubKey} != ${newAddressInfo.pubKey}`);
+            }
+            if (addressInfo.zone !== newAddressInfo.zone) {
+                throw new Error(`Zone mismatch: ${addressInfo.zone} != ${newAddressInfo.zone}`);
+            }
+        }
+    }
+    /**
+     * Promise that resolves to the next address for the specified account and zone.
+     *
+     * @param {number} account - The index of the account for which to retrieve the next address.
+     * @param {Zone} zone - The zone in which to retrieve the next address.
+     * @returns {Promise<T>} The next neutered address information.
+     */
+    async getNextAddress(account, zone) {
+        return Promise.resolve(this._getNextAddress(account, zone));
+    }
+    /**
+     * Synchronously retrieves the next address for the specified account and zone.
+     *
+     * @param {number} account - The index of the account for which to retrieve the next address.
+     * @param {Zone} zone - The zone in which to retrieve the next address.
+     * @returns {T} The next neutered address information.
+     */
+    getNextAddressSync(account, zone) {
+        return this._getNextAddress(account, zone);
+    }
+    /**
+     * Derives and returns the next address information for the specified account and zone.
+     *
+     * @param {number} accountIndex - The index of the account for which the address is being generated.
+     * @param {Zone} zone - The zone in which the address is to be used.
+     * @param {Map<string, NeuteredAddressInfo>} addressMap - A map storing the neutered address information.
+     * @returns {T} The derived neutered address information.
+     * @throws {Error} If the zone is invalid.
+     */
+    _getNextAddress(accountIndex, zone) {
+        this.validateZone(zone);
+        const lastIndex = this._findLastUsedIndex(Array.from(this._addresses.values()), accountIndex, zone);
+        const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
+        return this.createAndStoreAddressInfo(addressNode, accountIndex, zone);
+    }
+    /**
+     * Creates and stores address information in the address map for a specified account, zone, and change type.
+     *
+     * This method constructs a NeuteredAddressInfo object using the provided HDNodeWallet and other parameters, then
+     * stores this information in the provided address map.
+     *
+     * @param {HDNodeWallet} addressNode - The HDNodeWallet object containing the address and public key information.
+     * @param {number} account - The account number to associate with the address.
+     * @param {Zone} zone - The specific zone to associate with the address.
+     * @param {Map<string, NeuteredAddressInfo>} addressMap - The map to store the created NeuteredAddressInfo, with the
+     *   address as the key.
+     * @returns {NeuteredAddressInfo} - The created NeuteredAddressInfo object.
+     * @protected
+     */
+    createAndStoreAddressInfo(addressNode, account, zone) {
+        const neuteredAddressInfo = {
+            pubKey: addressNode.publicKey,
+            address: addressNode.address,
+            account,
+            index: addressNode.index,
+            zone,
+        };
+        this._addresses.set(neuteredAddressInfo.address, neuteredAddressInfo);
+        return neuteredAddressInfo;
+    }
+    /**
+     * Gets the address info for a given address.
+     *
+     * @param {string} address - The address.
+     * @returns {T | null} The address info or null if not found.
+     */
+    getAddressInfo(address) {
+        const addressInfo = this._addresses.get(address);
+        if (!addressInfo) {
+            return null;
+        }
+        return addressInfo;
+    }
+    /**
+     * Returns the private key for a given address. This method should be used with caution as it exposes the private
+     * key to the user.
+     *
+     * @param {string} address - The address associated with the desired private key.
+     * @returns {string} The private key.
+     */
+    getPrivateKey(address) {
+        const hdNode = this._getHDNodeForAddress(address);
+        return hdNode.privateKey;
+    }
+    /**
+     * Derives and returns the Hierarchical Deterministic (HD) node wallet associated with a given address.
+     *
+     * This method fetches the account and address information from the wallet's internal storage, derives the
+     * appropriate change node based on whether the address is a change address, and further derives the final HD node
+     * using the address index.
+     *
+     * @param {string} addr - The address for which to derive the HD node.
+     * @returns {HDNodeWallet} The derived HD node wallet corresponding to the given address.
+     * @throws {Error} If the given address is not known to the wallet.
+     * @throws {Error} If the account associated with the address is not found.
+     */
+    _getHDNodeForAddress(addr) {
+        const addressInfo = this._addresses.get(addr);
+        if (!addressInfo) {
+            throw new Error(`Address ${addr} is not known to this wallet`);
+        }
+        const changeIndex = 0;
+        return this._root
+            .deriveChild(addressInfo.account + HARDENED_OFFSET)
+            .deriveChild(changeIndex)
+            .deriveChild(addressInfo.index);
+    }
+    /**
+     * Gets the addresses for a given zone.
+     *
+     * @param {Zone} zone - The zone.
+     * @returns {NeuteredAddressInfo[]} The addresses for the zone.
+     */
+    getAddressesForZone(zone) {
+        this.validateZone(zone);
+        const addresses = this._addresses.values();
+        return Array.from(addresses).filter((addressInfo) => addressInfo.zone === zone);
+    }
+    /**
+     * Gets the addresses for a given account.
+     *
+     * @param {number} account - The account number.
+     * @returns {NeuteredAddressInfo[]} The addresses for the account.
+     */
+    getAddressesForAccount(account) {
+        const addresses = this._addresses.values();
+        return Array.from(addresses).filter((addressInfo) => addressInfo.account === account);
+    }
+    _findLastUsedIndex(addresses, account, zone) {
+        const filteredAddresses = addresses?.filter((addressInfo) => addressInfo.account === account && addressInfo.zone === zone);
+        return filteredAddresses?.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1) || -1;
     }
 }
 
@@ -28374,6 +28338,11 @@ class QiHDWallet extends AbstractHDWallet {
      */
     static _coinType = 969;
     /**
+     * @ignore
+     * @type {string}
+     */
+    static PRIVATE_KEYS_PATH = 'privateKeys';
+    /**
      * A map containing address information for all addresses known to the wallet. This includes:
      *
      * - BIP44 derived addresses (external)
@@ -28423,6 +28392,7 @@ class QiHDWallet extends AbstractHDWallet {
         super(guard, root, provider);
         this._addressesMap.set('BIP44:external', []);
         this._addressesMap.set('BIP44:change', []);
+        this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, []);
     }
     /**
      * Gets the payment codes for all open channels.
@@ -28430,7 +28400,7 @@ class QiHDWallet extends AbstractHDWallet {
      * @returns {string[]} The payment codes for all open channels.
      */
     get openChannels() {
-        return Array.from(this._addressesMap.keys()).filter((key) => !key.startsWith('BIP44:'));
+        return Array.from(this._addressesMap.keys()).filter((key) => !key.startsWith('BIP44:') && key !== QiHDWallet.PRIVATE_KEYS_PATH);
     }
     /**
      * Sets the address use checker. The provided callback function should accept an address as input and return a
@@ -28464,6 +28434,12 @@ class QiHDWallet extends AbstractHDWallet {
         const addresses = this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external') || [];
         const lastIndex = this._findLastUsedIndex(addresses, account, zone);
         const addressNode = this.deriveNextAddressNode(account, lastIndex + 1, zone, isChange);
+        const privateKeysArray = this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH) || [];
+        const existingPrivateKeyIndex = privateKeysArray.findIndex((info) => info.address === addressNode.address);
+        if (existingPrivateKeyIndex !== -1) {
+            privateKeysArray.splice(existingPrivateKeyIndex, 1);
+            this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, privateKeysArray);
+        }
         const newAddrInfo = {
             pubKey: addressNode.publicKey,
             address: addressNode.address,
@@ -28726,13 +28702,12 @@ class QiHDWallet extends AbstractHDWallet {
         }
         let attempts = 0;
         let finalFee = 0n;
-        let satisfiedFeeEstimation = false;
         const MAX_FEE_ESTIMATION_ATTEMPTS = 5;
         while (attempts < MAX_FEE_ESTIMATION_ATTEMPTS) {
             const feeEstimationTx = this.prepareFeeEstimationTransaction(selection, inputPubKeys.map((pubkey) => pubkey), sendAddresses, changeAddresses);
             finalFee = await this.provider.estimateFeeForQi(feeEstimationTx);
-            // Get new selection with updated fee
-            selection = fewestCoinSelector.performSelection(spendTarget, finalFee);
+            // Get new selection with updated fee 2x
+            selection = fewestCoinSelector.performSelection(spendTarget, finalFee * 2n);
             // Determine if new addresses are needed for the change outputs
             const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
             if (changeAddressesNeeded > 0) {
@@ -28762,15 +28737,9 @@ class QiHDWallet extends AbstractHDWallet {
             const totalNewOutputsNeeded = Math.abs(changeAddressesNeeded) + Math.abs(spendAddressesNeeded);
             // If we need 5 or fewer new outputs, we can break the loop
             if ((changeAddressesNeeded <= 0 && spendAddressesNeeded <= 0) || totalNewOutputsNeeded <= 5) {
-                finalFee *= 3n; // Increase the fee 3x to ensure it's accepted
-                satisfiedFeeEstimation = true;
                 break;
             }
             attempts++;
-        }
-        // If we didn't satisfy the fee estimation, increase the fee 10x to ensure it's accepted
-        if (!satisfiedFeeEstimation) {
-            finalFee *= 10n;
         }
         // Proceed with creating and signing the transaction
         const chainId = (await this.provider.getNetwork()).chainId;
@@ -29021,6 +28990,10 @@ class QiHDWallet extends AbstractHDWallet {
         const addressInfo = this.locateAddressInfo(address);
         if (!addressInfo) {
             throw new Error(`Address not found: ${address}`);
+        }
+        // Handle imported private keys
+        if (isHexString(addressInfo.derivationPath, 32)) {
+            return addressInfo.derivationPath;
         }
         if (addressInfo.derivationPath === 'BIP44:external' || addressInfo.derivationPath === 'BIP44:change') {
             // (BIP44 addresses)
@@ -29285,8 +29258,7 @@ class QiHDWallet extends AbstractHDWallet {
      * @throws {Error} If the address does not correspond to a valid HD node or if signing fails.
      */
     async signMessage(address, message) {
-        const addrNode = this._getHDNodeForAddress(address);
-        const privKey = addrNode.privateKey;
+        const privKey = this.getPrivateKey(address);
         const digest = keccak256(message);
         const signature = schnorr.sign(digest, getBytes(privKey));
         return hexlify(signature);
@@ -29303,7 +29275,8 @@ class QiHDWallet extends AbstractHDWallet {
             ...hdwalletSerialized,
             outpoints: this._availableOutpoints,
             pendingOutpoints: this._pendingOutpoints,
-            addresses: Array.from(this._addressesMap.entries()).flatMap(([key, addresses]) => addresses.map((address) => ({ ...address, derivationPath: key }))),
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            addresses: Array.from(this._addressesMap.entries()).flatMap(([_, addresses]) => addresses),
             senderPaymentCodeInfo: Object.fromEntries(Array.from(this._paymentCodeSendAddressMap.entries()).map(([key, value]) => [key, Array.from(value)])),
         };
     }
@@ -29333,14 +29306,22 @@ class QiHDWallet extends AbstractHDWallet {
                 throw new Error(`Invalid QiAddressInfo: derivationPath '${addressInfo.derivationPath}' is not valid. It should be 'BIP44:external', 'BIP44:change', or a valid BIP47 payment code`);
             }
         };
-        // validate and import all the wallet addresses
+        // First, group addresses by derivation path
+        const addressesByPath = new Map();
         for (const addressInfo of serialized.addresses) {
             validateQiAddressInfo(addressInfo);
-            const key = addressInfo.derivationPath;
-            if (!wallet._addressesMap.has(key)) {
-                wallet._addressesMap.set(key, []);
+            let key = addressInfo.derivationPath;
+            if (isHexString(key, 32)) {
+                key = QiHDWallet.PRIVATE_KEYS_PATH;
             }
-            wallet._addressesMap.get(key).push(addressInfo);
+            if (!addressesByPath.has(key)) {
+                addressesByPath.set(key, []);
+            }
+            addressesByPath.get(key).push(addressInfo);
+        }
+        // Then, set all paths in the wallet's address map
+        for (const [key, addresses] of addressesByPath) {
+            wallet._addressesMap.set(key, addresses);
         }
         // validate and import the counter party payment code info
         for (const [paymentCode, paymentCodeInfoArray] of Object.entries(serialized.senderPaymentCodeInfo)) {
@@ -29545,12 +29526,146 @@ class QiHDWallet extends AbstractHDWallet {
      * @param {string} address - The address.
      * @returns {QiAddressInfo | null} The address info or null if not found.
      */
+    getAddressInfo(address) {
+        const externalAddressInfo = this._addressesMap.get('BIP44:external')?.find((addr) => addr.address === address);
+        if (!externalAddressInfo) {
+            return null;
+        }
+        return externalAddressInfo;
+    }
+    /**
+     * Gets the address info for a given address.
+     *
+     * @param {string} address - The address.
+     * @returns {QiAddressInfo | null} The address info or null if not found.
+     */
     getChangeAddressInfo(address) {
         const changeAddressInfo = this._addressesMap.get('BIP44:change')?.find((addr) => addr.address === address);
         if (!changeAddressInfo) {
             return null;
         }
         return changeAddressInfo;
+    }
+    /**
+     * Imports a private key and adds it to the wallet.
+     *
+     * @param {string} privateKey - The private key to import (hex string)
+     * @returns {Promise<QiAddressInfo>} The address information for the imported key
+     * @throws {Error} If the private key is invalid or the address is already in use
+     */
+    async importPrivateKey(privateKey) {
+        if (!isHexString(privateKey, 32)) {
+            throw new Error(`Invalid private key format: must be 32-byte hex string (got ${privateKey})`);
+        }
+        const pubKey = SigningKey.computePublicKey(privateKey, true);
+        const address = computeAddress(pubKey);
+        // Validate address is for correct zone and ledger
+        const addressZone = getZoneForAddress(address);
+        if (!addressZone) {
+            throw new Error(`Private key does not correspond to a valid address for any zone (got ${address})`);
+        }
+        if (!isQiAddress(address)) {
+            throw new Error(`Private key does not correspond to a valid Qi address (got ${address})`);
+        }
+        for (const [path, addresses] of this._addressesMap.entries()) {
+            if (addresses.some((info) => info.address === address)) {
+                throw new Error(`Address ${address} already exists in wallet under path ${path}`);
+            }
+        }
+        const addressInfo = {
+            pubKey,
+            address,
+            account: 0,
+            index: -1,
+            change: false,
+            zone: addressZone,
+            status: AddressStatus.UNUSED,
+            derivationPath: privateKey, // Store private key in derivationPath
+        };
+        this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH).push(addressInfo);
+        return addressInfo;
+    }
+    /**
+     * Gets all addresses that were imported via private keys.
+     *
+     * @param {Zone} [zone] - Optional zone to filter addresses by
+     * @returns {QiAddressInfo[]} Array of address info objects for imported addresses
+     */
+    getImportedAddresses(zone) {
+        const importedAddresses = this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH) || [];
+        if (zone !== undefined) {
+            this.validateZone(zone);
+            return importedAddresses.filter((info) => info.zone === zone);
+        }
+        return [...importedAddresses];
+    }
+    /**
+     * Adds a new address to the wallet.
+     *
+     * @param {number} account - The account number.
+     * @param {number} addressIndex - The address index.
+     * @returns {QiAddressInfo} The address info for the new address.
+     */
+    addAddress(account, addressIndex) {
+        return this._addAddress(account, addressIndex, false);
+    }
+    /**
+     * Adds a new change address to the wallet.
+     *
+     * @param {number} account - The account number.
+     * @param {number} addressIndex - The address index.
+     * @returns {QiAddressInfo} The address info for the new address.
+     */
+    addChangeAddress(account, addressIndex) {
+        return this._addAddress(account, addressIndex, true);
+    }
+    _addAddress(account, addressIndex, isChange) {
+        const derivationPath = isChange ? 'BIP44:change' : 'BIP44:external';
+        const existingAddresses = this._addressesMap.get(derivationPath) || [];
+        if (existingAddresses.some((info) => info.index === addressIndex)) {
+            throw new Error(`Address index ${addressIndex} already exists in wallet under path ${derivationPath}`);
+        }
+        const addressNode = this._root
+            .deriveChild(account + HARDENED_OFFSET)
+            .deriveChild(isChange ? 1 : 0)
+            .deriveChild(addressIndex);
+        const zone = getZoneForAddress(addressNode.address);
+        if (!zone) {
+            throw new Error(`Failed to derive a Qi valid address zone for the index ${addressIndex}`);
+        }
+        if (!isQiAddress(addressNode.address)) {
+            throw new Error(`Address ${addressNode.address} is not a valid Qi address`);
+        }
+        const addressInfo = {
+            pubKey: addressNode.publicKey,
+            address: addressNode.address,
+            account,
+            index: addressIndex,
+            change: isChange,
+            zone,
+            status: AddressStatus.UNUSED,
+            derivationPath,
+        };
+        const addresses = this._addressesMap.get(derivationPath);
+        if (!addresses) {
+            this._addressesMap.set(derivationPath, [addressInfo]);
+        }
+        else {
+            addresses.push(addressInfo);
+        }
+        return addressInfo;
+    }
+    /**
+     * Gets the addresses for a given account.
+     *
+     * @param {number} account - The account number.
+     * @returns {QiAddressInfo[]} The addresses for the account.
+     */
+    getAddressesForAccount(account) {
+        const addresses = this._addressesMap.values();
+        return Array.from(addresses)
+            .flat()
+            .filter((info) => info.account === account);
     }
 }
 
@@ -29998,7 +30113,7 @@ class PollingQiTransactionSubscriber extends OnBlockSubscriber {
         this.#hash = hash;
     }
     async _poll(blockNumber, provider) {
-        const tx = await provider.getTransaction(this.#hash);
+        const tx = (await provider.getTransaction(this.#hash));
         if (tx && tx.isMined()) {
             provider.emit(this.#hash, toZone(this.#hash.slice(0, 4)), tx);
         }
@@ -30713,14 +30828,15 @@ class AbstractProvider {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _wrapTransactionResponse(tx, network) {
         try {
-            if (tx.type === '0x0' || tx.type === '0x1' || tx.type === 0 || tx.type === 1) {
-                // For QuaiTransaction, format and wrap as before
-                const formattedTx = formatTransactionResponse(tx);
+            const formattedTx = formatTransactionResponse(tx);
+            if (tx.type === '0x0' || tx.type === 0) {
                 return new QuaiTransactionResponse(formattedTx, this);
             }
+            else if (tx.type === '0x1' || tx.type === 1) {
+                return new ExternalTransactionResponse(formattedTx, this);
+            }
             else if (tx.type === '0x2' || tx.type === 2) {
-                // For QiTransaction, use fromProto() directly
-                return new QiTransactionResponse(tx, this);
+                return new QiTransactionResponse(formattedTx, this);
             }
             else {
                 throw new Error(`Unknown transaction type: ${tx.type}`);
@@ -31200,6 +31316,9 @@ class AbstractProvider {
             const tx = type == 2 ? QiTransaction.from(signedTx) : QuaiTransaction.from(signedTx);
             const txObj = tx.toJSON();
             this.#validateTransactionHash(tx.hash || '', hash);
+            if (type == 2) {
+                return new QiTransactionResponse(txObj, this);
+            }
             const wrappedTx = this._wrapTransactionResponse(txObj, network);
             return wrappedTx.replaceableTransaction(blockNumber);
         }
