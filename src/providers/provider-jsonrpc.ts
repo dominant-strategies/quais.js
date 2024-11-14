@@ -449,7 +449,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
                     const tx = await this.provider.getTransaction(hash);
 
                     if (tx != null) {
-                        resolve(tx.replaceableTransaction(blockNumber));
+                        resolve(tx.replaceableTransaction(blockNumber) as TransactionResponse);
                         return;
                     }
                 } catch (error) {

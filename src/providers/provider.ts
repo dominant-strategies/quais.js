@@ -1101,7 +1101,7 @@ export class Log implements LogParams {
     async getTransaction(): Promise<TransactionResponse> {
         const tx = await this.provider.getTransaction(this.transactionHash);
         assert(!!tx, 'failed to find transaction', 'UNKNOWN_ERROR', {});
-        return tx;
+        return tx as TransactionResponse;
     }
 
     /**
@@ -1399,7 +1399,7 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
      * @returns {Promise<TransactionResponse>} A promise resolving to the transaction.
      * @throws {Error} If the transaction is not found.
      */
-    async getTransaction(): Promise<TransactionResponse> {
+    async getTransaction(): Promise<TransactionResponse | ExternalTransactionResponse> {
         const tx = await this.provider.getTransaction(this.hash);
         if (tx == null) {
             throw new Error('TODO');
@@ -2399,7 +2399,7 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
             });
 
             // Not mined yet...
-            if (tx == null || tx.blockNumber == null) {
+            if (tx == null || tx.blockNumber == null || tx.blockHash == null) {
                 return 0;
             }
 
@@ -2416,7 +2416,7 @@ export class QiTransactionResponse implements QiTransactionLike, QiTransactionRe
 
         const tx = await this.provider.getTransaction(this.hash);
 
-        if (confirms === 0 && tx) {
+        if (confirms === 0 && tx?.blockHash != null) {
             return tx as QiTransactionResponse;
         }
 
@@ -2926,7 +2926,7 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * @param {string} hash - The transaction hash to fetch.
      * @returns {Promise<null | TransactionResponse>} A promise resolving to the transaction or null if not found.
      */
-    getTransaction(hash: string): Promise<null | TransactionResponse>;
+    getTransaction(hash: string): Promise<null | TransactionResponse | ExternalTransactionResponse>;
 
     /**
      * Resolves to the transaction receipt for `hash`, if mined.

@@ -321,6 +321,22 @@ export function formatTransactionReceipt(value: any): TransactionReceiptParams {
     return result;
 }
 
+export function formatTransactionResponse(value: any): TransactionResponseParams | ExternalTransactionResponseParams {
+    // Determine if it is a Quai or Qi transaction based on the type
+    const transactionType = parseInt(value.type, 16);
+
+    switch (transactionType) {
+        case 0x0:
+            return formatQuaiTransactionResponse(value);
+        case 0x1:
+            return formatExternalTransactionResponse(value);
+        case 0x2:
+            return formatQiTransactionResponse(value);
+        default:
+            throw new Error('Unknown transaction type');
+    }
+}
+
 export function formatExternalTransactionResponse(value: any): ExternalTransactionResponseParams {
     const result = object(
         {
@@ -364,139 +380,113 @@ export function formatExternalTransactionResponse(value: any): ExternalTransacti
     return result;
 }
 
-export function formatTransactionResponse(value: any): TransactionResponseParams {
-    // Determine if it is a Quai or Qi transaction based on the type
-    const transactionType = parseInt(value.type, 16);
-
-    let result: TransactionResponseParams;
-
-    if (transactionType === 0x0 || transactionType === 0x1) {
-        // QuaiTransactionResponseParams
-        result = object(
-            {
-                hash: formatHash,
-                type: (value: any) => {
-                    if (value === '0x' || value == null) {
-                        return 0;
-                    }
-                    return parseInt(value, 16);
-                },
-                accessList: allowNull(accessListify, null),
-                blockHash: allowNull(formatHash, null),
-                blockNumber: allowNull((value: any) => (value ? parseInt(value, 16) : null), null),
-                index: allowNull((value: any) => (value ? BigInt(value) : null), null),
-                from: allowNull(getAddress, null),
-                minerTip: allowNull((value: any) => (value ? BigInt(value) : null)),
-                gasPrice: allowNull((value: any) => (value ? BigInt(value) : null)),
-                gasLimit: allowNull((value: any) => (value ? BigInt(value) : null), null),
-                to: allowNull(getAddress, null),
-                value: allowNull((value: any) => (value ? BigInt(value) : null), null),
-                nonce: allowNull((value: any) => (value ? parseInt(value, 10) : null), null),
-                creates: allowNull(getAddress, null),
-                chainId: allowNull((value: any) => (value ? BigInt(value) : null), null),
-                etxType: allowNull((value: any) => value, null),
-                data: (value: any) => value,
-            },
-            {
-                data: ['input'],
-                gasLimit: ['gas'],
-                index: ['transactionIndex'],
-            },
-        )(value) as QuaiTransactionResponseParams;
-
-        // Add an access list to supported transaction types
-        if ((value.type === 0 || value.type === 2) && value.accessList == null) {
-            result.accessList = [];
-        }
-
-        // Compute the signature
-        if (value.signature) {
-            result.signature = Signature.from(value.signature);
-            // Some backends omit ChainId on legacy transactions, but we can compute it
-            if (result.chainId == null) {
-                const chainId = result.signature.legacyChainId;
-                if (chainId != null) {
-                    result.chainId = chainId;
+function formatQuaiTransactionResponse(value: any): QuaiTransactionResponseParams {
+    const result = object(
+        {
+            hash: formatHash,
+            type: (value: any) => {
+                if (value === '0x' || value == null) {
+                    return 0;
                 }
+                return parseInt(value, 16);
+            },
+            accessList: allowNull(accessListify, null),
+            blockHash: allowNull(formatHash, null),
+            blockNumber: allowNull((value: any) => (value ? parseInt(value, 16) : null), null),
+            index: allowNull((value: any) => (value ? BigInt(value) : null), null),
+            from: allowNull(getAddress, null),
+            minerTip: allowNull((value: any) => (value ? BigInt(value) : null)),
+            gasPrice: allowNull((value: any) => (value ? BigInt(value) : null)),
+            gasLimit: allowNull((value: any) => (value ? BigInt(value) : null), null),
+            to: allowNull(getAddress, null),
+            value: allowNull((value: any) => (value ? BigInt(value) : null), null),
+            nonce: allowNull((value: any) => (value ? parseInt(value, 10) : null), null),
+            creates: allowNull(getAddress, null),
+            chainId: allowNull((value: any) => (value ? BigInt(value) : null), null),
+            etxType: allowNull((value: any) => parseInt(value, 16), null),
+            data: (value: any) => value,
+        },
+        {
+            data: ['input'],
+            gasLimit: ['gas'],
+            index: ['transactionIndex'],
+        },
+    )(value) as QuaiTransactionResponseParams;
+
+    // Add an access list if missing
+    if (value.accessList == null) {
+        result.accessList = [];
+    }
+
+    // Compute the signature
+    if (value.signature) {
+        result.signature = Signature.from(value.signature);
+        // Some backends omit ChainId on legacy transactions, but we can compute it
+        if (result.chainId == null) {
+            const chainId = result.signature.legacyChainId;
+            if (chainId != null) {
+                result.chainId = chainId;
             }
         }
+    }
 
-        // 0x0000... should actually be null
-        if (result.blockHash && getBigInt(result.blockHash) === BN_0) {
-            result.blockHash = null;
-        }
-    } else if (transactionType === 0x2) {
-        // QiTransactionResponseParams
-        result = object(
-            {
-                hash: formatHash,
-                type: (value: any) => {
-                    if (value === '0x' || value == null) {
-                        return 0;
-                    }
-                    return parseInt(value, 16);
-                },
-                blockHash: allowNull(formatHash, null),
-                blockNumber: allowNull((value: any) => (value ? parseInt(value, 16) : null), null),
-                index: allowNull((value: any) => (value ? BigInt(value) : null), null),
-                chainId: allowNull((value: any) => (value ? BigInt(value) : null), null),
-                signature: (value: any) => value,
-                txInputs: allowNull((value: any) => value.map(_formatTxInput), null),
-                txOutputs: allowNull((value: any) => value.map(_formatTxOutput), null),
-            },
-            {
-                index: ['transactionIndex'],
-                signature: ['utxoSignature'],
-                txInputs: ['inputs'],
-                txOutputs: ['outputs'],
-            },
-        )(value) as QiTransactionResponseParams;
-    } else {
-        throw new Error('Unknown transaction type');
+    // 0x0000... should actually be null
+    if (result.blockHash && getBigInt(result.blockHash) === BN_0) {
+        result.blockHash = null;
     }
 
     return result;
 }
 
-const _formatTxInput = object(
-    {
-        txhash: formatTxHash,
-        index: formatIndex,
-        pubkey: hexlify,
-    },
-    {
-        txhash: ['PreviousOutPoint', 'TxHash'],
-        index: ['PreviousOutPoint', 'Index'],
-        pubkey: ['PubKey'],
-    },
-);
-
-function extractTxHash(value: any): string {
-    if (value && value.TxHash) {
-        return value.TxHash;
-    }
-    throw new Error('Invalid PreviousOutPoint');
+function formatQiTransactionResponse(value: any): QiTransactionResponseParams {
+    return object(
+        {
+            hash: formatHash,
+            type: (value: any) => {
+                if (value === '0x' || value == null) {
+                    return 0;
+                }
+                return parseInt(value, 16);
+            },
+            blockHash: allowNull(formatHash, null),
+            blockNumber: allowNull((value: any) => (value ? parseInt(value, 16) : null), null),
+            chainId: allowNull((value: any) => (value ? BigInt(value) : null), null),
+            signature: (value: any) => value,
+            txInputs: allowNull(formatTxInputs, []),
+            txOutputs: allowNull(formatTxOutputs, []),
+        },
+        {
+            index: ['transactionIndex'],
+            signature: ['utxoSignature'],
+            txInputs: ['inputs'],
+            txOutputs: ['outputs'],
+        },
+    )(value) as QiTransactionResponseParams;
 }
 
-function formatTxHash(value: any): string {
-    return formatHash(extractTxHash(value));
-}
+const formatTxInputs = (value: any) => {
+    return value?.map(_formatTxInput);
+};
 
-function extractIndex(value: any): number {
-    if (value && value.Index !== undefined) {
-        return value.Index;
-    }
-    throw new Error('Invalid PreviousOutPoint');
-}
+const _formatTxInput = (value: any) => {
+    return {
+        txhash: formatHash(value.previousOutPoint.txHash),
+        index: getNumber(value.previousOutPoint.index),
+        pubkey: hexlify(value.pubKey),
+    };
+};
 
-function formatIndex(value: any): number {
-    return getNumber(extractIndex(value));
-}
+const formatTxOutputs = (value: any) => {
+    return value?.map(_formatTxOutput);
+};
 
-const _formatTxOutput = object({
-    address: (addr: string) => hexlify(getAddress(addr)),
-    denomination: getNumber,
-});
+const _formatTxOutput = (value: any) => {
+    return {
+        denomination: getNumber(value.denomination),
+        lock: getNumber(value.lock),
+        address: getAddress(value.address),
+    };
+};
 
 const _formatOutpoint = object(
     {

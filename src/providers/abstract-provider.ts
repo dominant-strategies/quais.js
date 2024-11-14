@@ -55,6 +55,7 @@ import {
     QiTransactionResponse,
     QuaiTransactionRequest,
     AccessesFilter,
+    ExternalTransactionResponse,
 } from './provider.js';
 
 import type { Addressable, AddressLike } from '../address/index.js';
@@ -62,7 +63,13 @@ import type { BigNumberish } from '../utils/index.js';
 import type { Listener } from '../utils/index.js';
 
 import type { Networkish } from './network.js';
-import type { BlockParams, LogParams, TransactionReceiptParams } from './formatting.js';
+import type {
+    BlockParams,
+    ExternalTransactionResponseParams,
+    LogParams,
+    QiTransactionResponseParams,
+    TransactionReceiptParams,
+} from './formatting.js';
 
 import type {
     BlockTag,
@@ -1105,15 +1112,15 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      */
     // TODO: `newtork` is not used, remove or re-write
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _wrapTransactionResponse(tx: any, network: Network): TransactionResponse {
+    _wrapTransactionResponse(tx: any, network: Network): TransactionResponse | ExternalTransactionResponse {
         try {
-            if (tx.type === '0x0' || tx.type === '0x1' || tx.type === 0 || tx.type === 1) {
-                // For QuaiTransaction, format and wrap as before
-                const formattedTx = formatTransactionResponse(tx) as QuaiTransactionResponseParams;
-                return new QuaiTransactionResponse(formattedTx, this);
+            const formattedTx = formatTransactionResponse(tx);
+            if (tx.type === '0x0' || tx.type === 0) {
+                return new QuaiTransactionResponse(formattedTx as QuaiTransactionResponseParams, this);
+            } else if (tx.type === '0x1' || tx.type === 1) {
+                return new ExternalTransactionResponse(formattedTx as ExternalTransactionResponseParams, this);
             } else if (tx.type === '0x2' || tx.type === 2) {
-                // For QiTransaction, use fromProto() directly
-                return new QiTransactionResponse(tx, this);
+                return new QiTransactionResponse(formattedTx as QiTransactionResponseParams, this);
             } else {
                 throw new Error(`Unknown transaction type: ${tx.type}`);
             }
@@ -1684,8 +1691,12 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
             this.#validateTransactionHash(tx.hash || '', hash);
 
+            if (type == 2) {
+                return new QiTransactionResponse(txObj as QiTransactionResponseParams, this);
+            }
+
             const wrappedTx = this._wrapTransactionResponse(<any>txObj, network);
-            return wrappedTx.replaceableTransaction(blockNumber);
+            return wrappedTx.replaceableTransaction(blockNumber) as TransactionResponse;
         } catch (error) {
             console.error('Error in broadcastTransaction:', error);
             throw error;
@@ -1755,7 +1766,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return this._wrapBlock(params, network);
     }
 
-    async getTransaction(hash: string): Promise<null | TransactionResponse> {
+    async getTransaction(hash: string): Promise<null | TransactionResponse | ExternalTransactionResponse> {
         const zone = toZone(this.shardFromHash(hash));
         const { network, params } = await resolveProperties({
             network: this.getNetwork(),
