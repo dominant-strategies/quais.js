@@ -1,5 +1,5 @@
 // import { bigIntAbs } from '../utils/maths.js';
-import { AbstractCoinSelector, SelectedCoinsResult } from './abstract-coinselector.js';
+import { AbstractCoinSelector, CoinSelectionConfig, SelectedCoinsResult } from './abstract-coinselector.js';
 import { UTXO, denominate, denominations } from './utxo.js';
 
 /**
@@ -21,7 +21,9 @@ export class FewestCoinSelector extends AbstractCoinSelector {
      * @param {bigint} fee - The fee amount to include in the selection.
      * @returns {SelectedCoinsResult} The selected UTXOs and outputs.
      */
-    performSelection(target: bigint, fee: bigint = BigInt(0)): SelectedCoinsResult {
+    performSelection(config: CoinSelectionConfig): SelectedCoinsResult {
+        const { target = BigInt(0), fee = BigInt(0) } = config;
+
         if (target <= BigInt(0)) {
             throw new Error('Target amount must be greater than 0');
         }
@@ -352,16 +354,5 @@ export class FewestCoinSelector extends AbstractCoinSelector {
                 BigInt(a.denomination !== null ? denominations[a.denomination] : 0);
             return diff > BigInt(0) ? 1 : diff < BigInt(0) ? -1 : 0;
         });
-    }
-
-    /**
-     * Validates the available UTXOs.
-     *
-     * @throws Will throw an error if there are no available UTXOs.
-     */
-    private validateUTXOs() {
-        if (this.availableUTXOs.length === 0) {
-            throw new Error('No UTXOs available');
-        }
     }
 }
