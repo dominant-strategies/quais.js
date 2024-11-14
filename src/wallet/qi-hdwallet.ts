@@ -631,7 +631,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const fewestCoinSelector = new FewestCoinSelector(unlockedUTXOs);
 
         const spendTarget: bigint = amount;
-        let selection = fewestCoinSelector.performSelection(spendTarget);
+        let selection = fewestCoinSelector.performSelection({ target: spendTarget });
 
         // 3. Generate as many unused addresses as required to populate the spend outputs
         const sendAddresses = await getDestinationAddresses(selection.spendOutputs.length);
@@ -702,7 +702,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             finalFee = await this.provider.estimateFeeForQi(feeEstimationTx);
 
             // Get new selection with updated fee 2x
-            selection = fewestCoinSelector.performSelection(spendTarget, finalFee * 3n);
+            selection = fewestCoinSelector.performSelection({ target: spendTarget, fee: finalFee * 3n });
 
             // Determine if new addresses are needed for the change outputs
             const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
@@ -862,6 +862,17 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         return this.prepareAndSendTransaction(amount, originZone, getDestinationAddresses);
     }
 
+    /**
+     * Prepares a transaction with the specified parameters.
+     *
+     * @private
+     * @param {SelectedCoinsResult} selection - The selected coins result.
+     * @param {string[]} inputPubKeys - The public keys of the inputs.
+     * @param {string[]} sendAddresses - The addresses to send to.
+     * @param {string[]} changeAddresses - The addresses to change to.
+     * @param {number} chainId - The chain ID.
+     * @returns {Promise<QiTransaction>} A promise that resolves to the prepared transaction.
+     */
     private async prepareTransaction(
         selection: SelectedCoinsResult,
         inputPubKeys: string[],
@@ -895,6 +906,16 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         return tx;
     }
 
+    /**
+     * Prepares a fee estimation transaction with the specified parameters.
+     *
+     * @private
+     * @param {SelectedCoinsResult} selection - The selected coins result.
+     * @param {string[]} inputPubKeys - The public keys of the inputs.
+     * @param {string[]} sendAddresses - The addresses to send to.
+     * @param {string[]} changeAddresses - The addresses to change to.
+     * @returns {QiPerformActionTransaction} The prepared transaction.
+     */
     private prepareFeeEstimationTransaction(
         selection: SelectedCoinsResult,
         inputPubKeys: string[],

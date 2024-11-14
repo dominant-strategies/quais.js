@@ -37,6 +37,13 @@ export type SelectedCoinsResult = {
  * @category Transaction
  * @abstract
  */
+export interface CoinSelectionConfig {
+    target?: bigint;
+    fee?: bigint;
+    includeLocked?: boolean;
+    // Any future parameters can be added here
+}
+
 export abstract class AbstractCoinSelector {
     public availableUTXOs: UTXO[];
     public totalInputValue: bigint = BigInt(0);
@@ -65,10 +72,10 @@ export abstract class AbstractCoinSelector {
      * and change outputs.
      *
      * @abstract
-     * @param {SpendTarget} target - The target address and value to spend.
+     * @param {CoinSelectionConfig} config - The configuration for coin selection.
      * @returns {SelectedCoinsResult} The selected UTXOs and outputs.
      */
-    abstract performSelection(target: bigint, fee: bigint): SelectedCoinsResult;
+    abstract performSelection(config: CoinSelectionConfig): SelectedCoinsResult;
 
     /**
      * Validates the provided UTXO instance. In order to be valid for coin selection, the UTXO must have a valid address
@@ -93,6 +100,17 @@ export abstract class AbstractCoinSelector {
 
         if (utxo.index == null) {
             throw new Error('UTXO index is required');
+        }
+    }
+
+    /**
+     * Validates the available UTXOs.
+     *
+     * @throws Will throw an error if there are no available UTXOs.
+     */
+    protected validateUTXOs() {
+        if (this.availableUTXOs.length === 0) {
+            throw new Error('No UTXOs available');
         }
     }
 }
