@@ -212,7 +212,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {string[]} The payment codes for all open channels.
      */
     get openChannels(): string[] {
-        return Array.from(this._addressesMap.keys()).filter((key) => !key.startsWith('BIP44:'));
+        return Array.from(this._addressesMap.keys()).filter(
+            (key) => !key.startsWith('BIP44:') && key !== QiHDWallet.PRIVATE_KEYS_PATH,
+        );
     }
 
     /**
@@ -1268,7 +1270,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     public serialize(): SerializedQiHDWallet {
         const hdwalletSerialized = super.serialize();
-
         return {
             ...hdwalletSerialized,
             outpoints: this._availableOutpoints,
@@ -1314,16 +1315,25 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 );
             }
         };
-        // validate and import all the wallet addresses
+
+        // First, group addresses by derivation path
+        const addressesByPath = new Map<string, QiAddressInfo[]>();
         for (const addressInfo of serialized.addresses) {
             validateQiAddressInfo(addressInfo);
             let key = addressInfo.derivationPath;
             if (isHexString(key, 32)) {
                 key = QiHDWallet.PRIVATE_KEYS_PATH;
-            } else if (!key.startsWith('BIP44:')) {
-                wallet._addressesMap.set(key, []);
             }
-            wallet._addressesMap.get(key)!.push(addressInfo);
+
+            if (!addressesByPath.has(key)) {
+                addressesByPath.set(key, []);
+            }
+            addressesByPath.get(key)!.push(addressInfo);
+        }
+
+        // Then, set all paths in the wallet's address map
+        for (const [key, addresses] of addressesByPath) {
+            wallet._addressesMap.set(key, addresses);
         }
 
         // validate and import the counter party payment code info
