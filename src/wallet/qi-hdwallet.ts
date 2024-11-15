@@ -1307,10 +1307,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             if (existingAddresses && existingAddresses.some((addr) => addr.address === addressInfo.address)) {
                 throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
             }
-            const existingAddresses = wallet._addressesMap.get(key);
-            if (existingAddresses && existingAddresses.some((addr) => addr.address === addressInfo.address)) {
-                throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
-            }
             wallet._addressesMap.get(key)!.push(addressInfo);
         }
 
