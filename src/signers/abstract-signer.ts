@@ -128,7 +128,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         // Populate the chain ID
         const network = await (<Provider>this.provider).getNetwork();
 
-        if (pop.chainId != null) {
+        if (pop.chainId != null && pop.chainId !== 0n) {
             const chainId = getBigInt(pop.chainId);
             assertArgument(chainId === network.chainId, 'transaction chainId mismatch', 'tx.chainId', zone);
         } else {
