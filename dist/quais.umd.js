@@ -29127,7 +29127,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (!this.provider)
                 throw new Error('Provider not set');
             const derivationPaths = ['BIP44:external', 'BIP44:change', ...this.openChannels];
-            await Promise.all(derivationPaths.map((path) => this._scanDerivationPath(path, zone, account)));
+            await Promise.all([
+                ...derivationPaths.map((path) => this._scanDerivationPath(path, zone, account)),
+                this._scanDerivationPath(QiHDWallet.PRIVATE_KEYS_PATH, zone, account, true),
+            ]);
         }
         /**
          * Scans for the next address in the specified zone and account, checking for associated outpoints, and updates the
@@ -29139,7 +29142,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {Promise<void>} A promise that resolves when the scan is complete.
          * @throws {Error} If an error occurs during the address scanning or outpoints retrieval process.
          */
-        async _scanDerivationPath(path, zone, account) {
+        async _scanDerivationPath(path, zone, account, skipGap = false) {
             const addresses = this._addressesMap.get(path) || [];
             let consecutiveUnusedCount = 0;
             const checkStatuses = [exports.AddressStatus.UNKNOWN, exports.AddressStatus.ATTEMPTED_USE, exports.AddressStatus.UNUSED];
@@ -29169,6 +29172,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 if (consecutiveUnusedCount >= QiHDWallet._GAP_LIMIT)
                     break;
             }
+            // skip gap if requested
+            if (skipGap)
+                return;
             // Generate new addresses if needed
             while (consecutiveUnusedCount < QiHDWallet._GAP_LIMIT) {
                 const isChange = path.endsWith(':change');
@@ -29349,16 +29355,26 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const wallet = new this(_guard, root);
             // validate and import all the wallet addresses
             for (const addressInfo of serialized.addresses) {
-                wallet.validateAddressInfo(addressInfo);
                 let key = addressInfo.derivationPath;
                 if (isHexString(key, 32)) {
                     key = QiHDWallet.PRIVATE_KEYS_PATH;
+                }
+                else if (key.includes('BIP44')) {
+                    // only validate if it's not a private key or a BIP44 path
+                    wallet.validateAddressInfo(addressInfo);
+                }
+                else {
+                    // payment code addresses require different derivation validation
+                    wallet.validateBaseAddressInfo(addressInfo);
+                    wallet.validateExtendedProperties(addressInfo);
                 }
                 const existingAddresses = wallet._addressesMap.get(key);
                 if (existingAddresses && existingAddresses.some((addr) => addr.address === addressInfo.address)) {
                     throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
                 }
-                wallet._addressesMap.get(key).push(addressInfo);
+                const walletAddresses = wallet._addressesMap.get(key) || [];
+                walletAddresses.push(addressInfo);
+                wallet._addressesMap.set(key, walletAddresses);
             }
             // validate and import the counter party payment code info
             for (const [paymentCode, paymentCodeInfoArray] of Object.entries(serialized.senderPaymentCodeInfo)) {
@@ -29366,7 +29382,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     throw new Error(`Invalid payment code: ${paymentCode}`);
                 }
                 for (const pcInfo of paymentCodeInfoArray) {
-                    wallet.validateAddressInfo(pcInfo);
+                    // Basic property validation
+                    wallet.validateBaseAddressInfo(pcInfo);
+                    wallet.validateExtendedProperties(pcInfo);
                 }
                 wallet._paymentCodeSendAddressMap.set(paymentCode, paymentCodeInfoArray);
             }
