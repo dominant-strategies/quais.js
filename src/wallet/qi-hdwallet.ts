@@ -1031,10 +1031,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     private async _scan(zone: Zone, account: number = 0): Promise<void> {
         if (!this.provider) throw new Error('Provider not set');
-
         const derivationPaths: DerivationPath[] = ['BIP44:external', 'BIP44:change', ...this.openChannels];
 
-        await Promise.all(derivationPaths.map((path) => this._scanDerivationPath(path, zone, account)));
+        await Promise.all([
+            ...derivationPaths.map((path) => this._scanDerivationPath(path, zone, account)),
+            this._scanDerivationPath(QiHDWallet.PRIVATE_KEYS_PATH, zone, account, true),
+        ]);
     }
 
     /**
@@ -1047,7 +1049,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If an error occurs during the address scanning or outpoints retrieval process.
      */
-    private async _scanDerivationPath(path: DerivationPath, zone: Zone, account: number): Promise<void> {
+    private async _scanDerivationPath(
+        path: DerivationPath,
+        zone: Zone,
+        account: number,
+        skipGap: boolean = false,
+    ): Promise<void> {
         const addresses = this._addressesMap.get(path) || [];
         let consecutiveUnusedCount = 0;
         const checkStatuses = [AddressStatus.UNKNOWN, AddressStatus.ATTEMPTED_USE, AddressStatus.UNUSED];
@@ -1081,6 +1088,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             // If the consecutive unused count has reached the gap limit, break
             if (consecutiveUnusedCount >= QiHDWallet._GAP_LIMIT) break;
         }
+        // skip gap if requested
+        if (skipGap) return;
 
         // Generate new addresses if needed
         while (consecutiveUnusedCount < QiHDWallet._GAP_LIMIT) {
@@ -1284,16 +1293,24 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // validate and import all the wallet addresses
         for (const addressInfo of serialized.addresses) {
-            wallet.validateAddressInfo(addressInfo);
             let key = addressInfo.derivationPath;
             if (isHexString(key, 32)) {
                 key = QiHDWallet.PRIVATE_KEYS_PATH;
+            } else if (key.includes('BIP44')) {
+                // only validate if it's not a private key or a BIP44 path
+                wallet.validateAddressInfo(addressInfo);
+            } else {
+                // payment code addresses require different derivation validation
+                wallet.validateBaseAddressInfo(addressInfo);
+                wallet.validateExtendedProperties(addressInfo);
             }
             const existingAddresses = wallet._addressesMap.get(key);
             if (existingAddresses && existingAddresses.some((addr) => addr.address === addressInfo.address)) {
                 throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
             }
-            wallet._addressesMap.get(key)!.push(addressInfo);
+            const walletAddresses = wallet._addressesMap.get(key) || [];
+            walletAddresses.push(addressInfo);
+            wallet._addressesMap.set(key, walletAddresses);
         }
 
         // validate and import the counter party payment code info
@@ -1302,7 +1319,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 throw new Error(`Invalid payment code: ${paymentCode}`);
             }
             for (const pcInfo of paymentCodeInfoArray) {
-                wallet.validateAddressInfo(pcInfo);
+                // Basic property validation
+                wallet.validateBaseAddressInfo(pcInfo);
+                wallet.validateExtendedProperties(pcInfo);
             }
             wallet._paymentCodeSendAddressMap.set(paymentCode, paymentCodeInfoArray);
         }
