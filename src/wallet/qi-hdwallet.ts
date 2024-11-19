@@ -465,37 +465,27 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * Converts outpoints for a specific zone to UTXO format.
      *
      * @param {Zone} zone - The zone to filter outpoints for.
-     * @param {number} [minDenominationToUse] - The minimum denomination to allow for the UTXOs.
      * @returns {UTXO[]} An array of UTXO objects.
      */
-    private outpointsToUTXOs(zone: Zone, minDenominationToUse?: number): UTXO[] {
+    private outpointsToUTXOs(zone: Zone): UTXO[] {
         this.validateZone(zone);
-        let zoneOutpoints = this._availableOutpoints.filter((outpointInfo) => outpointInfo.zone === zone);
-
-        // Filter outpoints by minimum denomination if specified
-        // This will likely only be used for converting to Quai
-        // as the min denomination for converting is 10 (100 Qi)
-        if (minDenominationToUse !== undefined) {
-            zoneOutpoints = zoneOutpoints.filter(
-                (outpointInfo) => outpointInfo.outpoint.denomination >= minDenominationToUse,
-            );
-        }
-        return zoneOutpoints.map((outpointInfo) => {
-            const utxo = new UTXO();
-            utxo.txhash = outpointInfo.outpoint.txhash;
-            utxo.index = outpointInfo.outpoint.index;
-            utxo.address = outpointInfo.address;
-            utxo.denomination = outpointInfo.outpoint.denomination;
-            utxo.lock = outpointInfo.outpoint.lock ?? null;
-            return utxo;
-        });
+        return this._availableOutpoints
+            .filter((outpointInfo) => outpointInfo.zone === zone)
+            .map((outpointInfo) => {
+                const utxo = new UTXO();
+                utxo.txhash = outpointInfo.outpoint.txhash;
+                utxo.index = outpointInfo.outpoint.index;
+                utxo.address = outpointInfo.address;
+                utxo.denomination = outpointInfo.outpoint.denomination;
+                utxo.lock = outpointInfo.outpoint.lock ?? null;
+                return utxo;
+            });
     }
 
     private async prepareAndSendTransaction(
         amount: bigint,
         originZone: Zone,
         getDestinationAddresses: (count: number) => Promise<string[]>,
-        minDenominationToUse?: number,
     ): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
@@ -511,13 +501,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         }
 
         // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
-        const zoneUTXOs = this.outpointsToUTXOs(originZone, minDenominationToUse);
+        const zoneUTXOs = this.outpointsToUTXOs(originZone);
         if (zoneUTXOs.length === 0) {
-            if (minDenominationToUse === 10) {
-                throw new Error('Qi denominations too small to convert.');
-            } else {
-                throw new Error('No Qi available in zone.');
-            }
+            throw new Error('No Qi available in zone.');
         }
 
         const unlockedUTXOs = zoneUTXOs.filter((utxo) => utxo.lock === 0 || utxo.lock! < currentBlock);
@@ -657,7 +643,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * Converts an amount of Qi to Quai and sends it to a specified Quai address.
      *
      * @param {string} destinationAddress - The Quai address to send the converted Quai to.
-     * @param {bigint} amount - The amount of Qi to convert to Quai.
+     * @param {bigint} amount - The amount of Qi (in qits) to convert to Quai.
      * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
      * @throws {Error} If the destination address is invalid, the amount is zero, or the conversion fails.
      */
@@ -671,22 +657,22 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             throw new Error(`Invalid Quai address: ${destinationAddress}`);
         }
 
-        if (amount <= 0) {
-            throw new Error('Amount must be greater than 0');
+        if (amount < 100000) {
+            throw new Error('Amount must be greater than 100 Qi (100,000 qits)');
         }
 
         const getDestinationAddresses = async (count: number): Promise<string[]> => {
             return Array(count).fill(destinationAddress);
         };
 
-        return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses, 10);
+        return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses);
     }
 
     /**
      * Sends a transaction to a specified recipient payment code in a specified zone.
      *
      * @param {string} recipientPaymentCode - The payment code of the recipient.
-     * @param {bigint} amount - The amount of Qi to send.
+     * @param {bigint} amount - The amount of Qi (in qits) to send.
      * @param {Zone} originZone - The zone where the transaction originates.
      * @param {Zone} destinationZone - The zone where the transaction is sent.
      * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
