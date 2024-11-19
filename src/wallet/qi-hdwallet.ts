@@ -11,7 +11,13 @@ import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress, isQiAddress } from '../address/index.js';
 import { getBytes, getZoneForAddress, hexlify, isHexString, toQuantity } from '../utils/index.js';
-import { TransactionLike, QiTransaction, TxInput, FewestCoinSelector } from '../transaction/index.js';
+import {
+    TransactionLike,
+    QiTransaction,
+    TxInput,
+    FewestCoinSelector,
+    AggregateCoinSelector,
+} from '../transaction/index.js';
 import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
 import { keccak256, musigCrypto, SigningKey } from '../crypto/index.js';
@@ -212,9 +218,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {string[]} The payment codes for all open channels.
      */
     get openChannels(): string[] {
-        return Array.from(this._addressesMap.keys()).filter(
-            (key) => !key.startsWith('BIP44:') && key !== QiHDWallet.PRIVATE_KEYS_PATH,
-        );
+        return Array.from(this._addressesMap.keys()).filter((key) => !key.startsWith('BIP44:'));
     }
 
     /**
@@ -288,6 +292,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         zone: Zone,
         isChange: boolean,
     ): QiAddressInfo {
+        // scan the wallet outpoints for the new address. If the address is found, set the status to USED
+        const outpointInfo = this._availableOutpoints.find((outpoint) => outpoint.address === addressNode.address);
+        const status = outpointInfo ? AddressStatus.USED : AddressStatus.UNUSED;
+
         const qiAddressInfo: QiAddressInfo = {
             address: addressNode.address,
             pubKey: addressNode.publicKey,
@@ -295,7 +303,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             index: addressNode.index,
             change: isChange,
             zone,
-            status: AddressStatus.UNKNOWN,
+            status,
             derivationPath: isChange ? 'BIP44:change' : 'BIP44:external',
             lastSyncedBlock: null,
         };
@@ -364,6 +372,15 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                         o.outpoint.txhash === outpoint.outpoint.txhash && o.outpoint.index === outpoint.outpoint.index,
                 ),
         );
+
+        // For every outpoint, scan the wallet for the address and set the status
+        for (const outpoint of newOutpoints) {
+            const addressInfo = this.locateAddressInfo(outpoint.address);
+            if (addressInfo) {
+                addressInfo.status = AddressStatus.USED;
+            }
+        }
+
         this._availableOutpoints.push(...newOutpoints);
     }
 
@@ -580,27 +597,170 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * Converts outpoints for a specific zone to UTXO format.
      *
      * @param {Zone} zone - The zone to filter outpoints for.
+     * @param {number} [minDenominationToUse] - The minimum denomination to allow for the UTXOs.
      * @returns {UTXO[]} An array of UTXO objects.
      */
-    private outpointsToUTXOs(zone: Zone): UTXO[] {
+    private outpointsToUTXOs(zone: Zone, minDenominationToUse?: number): UTXO[] {
         this.validateZone(zone);
-        return this._availableOutpoints
-            .filter((outpointInfo) => outpointInfo.zone === zone)
-            .map((outpointInfo) => {
-                const utxo = new UTXO();
-                utxo.txhash = outpointInfo.outpoint.txhash;
-                utxo.index = outpointInfo.outpoint.index;
-                utxo.address = outpointInfo.address;
-                utxo.denomination = outpointInfo.outpoint.denomination;
-                utxo.lock = outpointInfo.outpoint.lock ?? null;
-                return utxo;
-            });
+        let zoneOutpoints = this._availableOutpoints.filter((outpointInfo) => outpointInfo.zone === zone);
+
+        // Filter outpoints by minimum denomination if specified
+        // This will likely only be used for converting to Quai
+        // as the min denomination for converting is 10 (100 Qi)
+        if (minDenominationToUse !== undefined) {
+            zoneOutpoints = zoneOutpoints.filter(
+                (outpointInfo) => outpointInfo.outpoint.denomination >= minDenominationToUse,
+            );
+        }
+        return zoneOutpoints.map((outpointInfo) => {
+            const utxo = new UTXO();
+            utxo.txhash = outpointInfo.outpoint.txhash;
+            utxo.index = outpointInfo.outpoint.index;
+            utxo.address = outpointInfo.address;
+            utxo.denomination = outpointInfo.outpoint.denomination;
+            utxo.lock = outpointInfo.outpoint.lock ?? null;
+            return utxo;
+        });
     }
 
+    /**
+     * Converts an amount of Qi to Quai and sends it to a specified Quai address.
+     *
+     * @param {string} destinationAddress - The Quai address to send the converted Quai to.
+     * @param {bigint} amount - The amount of Qi to convert to Quai.
+     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+     * @throws {Error} If the destination address is invalid, the amount is zero, or the conversion fails.
+     */
+    public async convertToQuai(destinationAddress: string, amount: bigint): Promise<TransactionResponse> {
+        const zone = getZoneForAddress(destinationAddress);
+        if (!zone) {
+            throw new Error(`Invalid zone for Quai address: ${destinationAddress}`);
+        }
+
+        if (isQiAddress(destinationAddress)) {
+            throw new Error(`Invalid Quai address: ${destinationAddress}`);
+        }
+
+        if (amount <= 0) {
+            throw new Error('Amount must be greater than 0');
+        }
+
+        const getDestinationAddresses = async (count: number): Promise<string[]> => {
+            return Array(count).fill(destinationAddress);
+        };
+
+        return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses, 10);
+    }
+
+    /**
+     * Sends a transaction to a specified recipient payment code in a specified zone.
+     *
+     * @param {string} recipientPaymentCode - The payment code of the recipient.
+     * @param {bigint} amount - The amount of Qi to send.
+     * @param {Zone} originZone - The zone where the transaction originates.
+     * @param {Zone} destinationZone - The zone where the transaction is sent.
+     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+     * @throws {Error} If the payment code is invalid, the amount is zero, or the zones are invalid.
+     */
+    public async sendTransaction(
+        recipientPaymentCode: string,
+        amount: bigint,
+        originZone: Zone,
+        destinationZone: Zone,
+    ): Promise<TransactionResponse> {
+        if (!validatePaymentCode(recipientPaymentCode)) {
+            throw new Error('Invalid payment code');
+        }
+        if (amount <= 0) {
+            throw new Error('Amount must be greater than 0');
+        }
+        this.validateZone(originZone);
+        this.validateZone(destinationZone);
+
+        const getDestinationAddresses = async (count: number): Promise<string[]> => {
+            const addresses: string[] = [];
+            while (addresses.length < count) {
+                const address = this.getNextSendAddress(recipientPaymentCode, destinationZone).address;
+                const { isUsed } = await this.checkAddressUse(address);
+                if (!isUsed) {
+                    addresses.push(address);
+                }
+            }
+            return addresses;
+        };
+
+        return this.prepareAndSendTransaction(amount, originZone, getDestinationAddresses);
+    }
+
+    /**
+     * Aggregates all the available UTXOs for the specified zone and account. This method creates a new transaction with
+     * all the available UTXOs as inputs and as fewest outputs as possible.
+     *
+     * @param {Zone} zone - The zone to aggregate the balance for.
+     * @returns {Promise<TransactionResponse>} The transaction response.
+     */
+    public async aggregate(zone: Zone): Promise<TransactionResponse> {
+        this.validateZone(zone);
+        if (!this.provider) {
+            throw new Error('Provider is not set');
+        }
+
+        const zoneUTXOs = this.outpointsToUTXOs(zone);
+        if (zoneUTXOs.length === 0) {
+            throw new Error('No UTXOs available in zone.');
+        }
+
+        const aggregateCoinSelector = new AggregateCoinSelector(zoneUTXOs);
+        // TODO: Calculate mempool max fee
+        const fee = BigInt(1000); // temporary hardcode fee to 1 Qi
+        const selection = aggregateCoinSelector.performSelection({ fee, maxDenomination: 6, includeLocked: false });
+
+        const sendAddressesInfo = this._getUnusedBIP44Addresses(1, 0, 'BIP44:external', zone);
+        const sendAddresses = sendAddressesInfo.map((addressInfo) => addressInfo.address);
+        const changeAddresses: string[] = [];
+        const inputPubKeys = selection.inputs.map((input) => {
+            const addressInfo = this.locateAddressInfo(input.address);
+            if (!addressInfo) {
+                throw new Error(`Could not locate address info for address: ${input.address}`);
+            }
+            return addressInfo.pubKey;
+        });
+
+        // Proceed with creating and signing the transaction
+        const chainId = (await this.provider.getNetwork()).chainId;
+        const tx = await this.prepareTransaction(
+            selection,
+            inputPubKeys,
+            sendAddresses,
+            changeAddresses,
+            Number(chainId),
+        );
+
+        // Sign the transaction
+        const signedTx = await this.signTransaction(tx);
+
+        // Broadcast the transaction to the network using the provider
+        return this.provider.broadcastTransaction(zone, signedTx);
+    }
+
+    /**
+     * Prepares and sends a transaction with the specified parameters.
+     *
+     * @private
+     * @param {bigint} amount - The amount of Qi to send.
+     * @param {Zone} originZone - The zone where the transaction originates.
+     * @param {Function} getDestinationAddresses - A function that returns a promise resolving to an array of
+     *   destination addresses.
+     * @param {number} [minDenominationToUse] - Optional minimum denomination of Qi to use for the transaction.
+     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+     * @throws {Error} If provider is not set, insufficient balance, no available UTXOs, or insufficient spendable
+     *   balance.
+     */
     private async prepareAndSendTransaction(
         amount: bigint,
         originZone: Zone,
         getDestinationAddresses: (count: number) => Promise<string[]>,
+        minDenominationToUse?: number,
     ): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
@@ -616,9 +776,13 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         }
 
         // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
-        const zoneUTXOs = this.outpointsToUTXOs(originZone);
+        const zoneUTXOs = this.outpointsToUTXOs(originZone, minDenominationToUse);
         if (zoneUTXOs.length === 0) {
-            throw new Error('No Qi available in zone.');
+            if (minDenominationToUse === 10) {
+                throw new Error('Qi denominations too small to convert.');
+            } else {
+                throw new Error('No Qi available in zone.');
+            }
         }
 
         const unlockedUTXOs = zoneUTXOs.filter(
@@ -689,6 +853,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         let attempts = 0;
         let finalFee = 0n;
+        let satisfiedFeeEstimation = false;
         const MAX_FEE_ESTIMATION_ATTEMPTS = 5;
 
         while (attempts < MAX_FEE_ESTIMATION_ATTEMPTS) {
@@ -744,10 +909,17 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
             // If we need 5 or fewer new outputs, we can break the loop
             if ((changeAddressesNeeded <= 0 && spendAddressesNeeded <= 0) || totalNewOutputsNeeded <= 5) {
+                finalFee *= 3n; // Increase the fee 3x to ensure it's accepted
+                satisfiedFeeEstimation = true;
                 break;
             }
 
             attempts++;
+        }
+
+        // If we didn't satisfy the fee estimation, increase the fee 10x to ensure it's accepted
+        if (!satisfiedFeeEstimation) {
+            finalFee *= 10n;
         }
 
         // Proceed with creating and signing the transaction
@@ -765,101 +937,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // Broadcast the transaction to the network using the provider
         return this.provider.broadcastTransaction(originZone, signedTx);
-    }
-
-    /**
-     * Converts an amount of Qi to Quai and sends it to a specified Quai address.
-     *
-     * @param {string} destinationAddress - The Quai address to send the converted Quai to.
-     * @param {bigint} amount - The amount of Qi (in qits) to convert to Quai.
-     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
-     * @throws {Error} If the destination address is invalid, the amount is zero, or the conversion fails.
-     */
-    public async convertToQuai(destinationAddress: string, amount: bigint): Promise<TransactionResponse> {
-        const zone = getZoneForAddress(destinationAddress);
-        if (!zone) {
-            throw new Error(`Invalid zone for Quai address: ${destinationAddress}`);
-        }
-
-        if (isQiAddress(destinationAddress)) {
-            throw new Error(`Invalid Quai address: ${destinationAddress}`);
-        }
-
-        if (amount < 100000) {
-            throw new Error('Amount must be greater than 100 Qi (100,000 qits)');
-        }
-
-        const getDestinationAddresses = async (count: number): Promise<string[]> => {
-            return Array(count).fill(destinationAddress);
-        };
-
-        return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses);
-    }
-
-    /**
-     * Sends a transaction to a specified recipient payment code in a specified zone.
-     *
-     * @param {string} recipientPaymentCode - The payment code of the recipient.
-     * @param {bigint} amount - The amount of Qi (in qits) to send.
-     * @param {Zone} originZone - The zone where the transaction originates.
-     * @param {Zone} destinationZone - The zone where the transaction is sent.
-     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
-     * @throws {Error} If the payment code is invalid, the amount is zero, or the zones are invalid.
-     */
-    public async sendTransaction(
-        recipientPaymentCode: string,
-        amount: bigint,
-        originZone: Zone,
-        destinationZone: Zone,
-    ): Promise<TransactionResponse> {
-        if (!validatePaymentCode(recipientPaymentCode)) {
-            throw new Error('Invalid payment code');
-        }
-        if (amount <= 0) {
-            throw new Error('Amount must be greater than 0');
-        }
-        if (!this.provider) {
-            throw new Error('Provider is not set');
-        }
-        this.validateZone(originZone);
-        this.validateZone(destinationZone);
-        const currentBlock = await this.provider.getBlock(toShard(originZone), 'latest')!;
-
-        const getDestinationAddresses = async (count: number): Promise<string[]> => {
-            const addresses: string[] = [];
-            const updatedAddresses: QiAddressInfo[] = [];
-            while (addresses.length < count) {
-                const addressInfo = this.getNextSendAddress(recipientPaymentCode, destinationZone);
-                const { isUsed } = await this.checkAddressUse(addressInfo.address);
-
-                if (!isUsed) {
-                    addressInfo.status = AddressStatus.ATTEMPTED_USE;
-                    addresses.push(addressInfo.address);
-                } else {
-                    addressInfo.status = AddressStatus.USED;
-                }
-
-                updatedAddresses.push({
-                    ...addressInfo,
-                    lastSyncedBlock: { hash: currentBlock?.hash!, number: currentBlock?.woHeader.number! },
-                });
-            }
-
-            // Update the status for the addresses being used for the payment code
-            const paymentCodeInfoArray = this._paymentCodeSendAddressMap.get(recipientPaymentCode) || [];
-            const updatedPaymentCodeInfoArray = paymentCodeInfoArray.map((info) => {
-                const updateAddrInfo = updatedAddresses.find((addr) => addr.address === info.address);
-                if (updateAddrInfo) {
-                    return updateAddrInfo;
-                }
-                return info;
-            });
-            this._paymentCodeSendAddressMap.set(recipientPaymentCode, updatedPaymentCodeInfoArray);
-
-            return addresses;
-        };
-
-        return this.prepareAndSendTransaction(amount, originZone, getDestinationAddresses);
     }
 
     /**
@@ -949,6 +1026,39 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             txIn,
             txOut,
         };
+    }
+
+    /**
+     * Gets a set of unused BIP44 addresses from the specified derivation path. It first checks if there are any unused
+     * addresses available in the _addressesMap and uses those if possible. If there are not enough unused addresses, it
+     * will generate new ones.
+     *
+     * @param amount - The number of addresses to get.
+     * @param path - The derivation path to get addresses from.
+     * @param zone - The zone to get addresses from.
+     * @returns An array of addresses.
+     */
+    private _getUnusedBIP44Addresses(
+        amount: number,
+        account: number,
+        path: DerivationPath,
+        zone: Zone,
+    ): QiAddressInfo[] {
+        const addresses = this._addressesMap.get(path) || [];
+        const unusedAddresses = addresses.filter(
+            (address) =>
+                address.status === AddressStatus.UNUSED && address.account === account && address.zone === zone,
+        );
+        if (unusedAddresses.length >= amount) {
+            return unusedAddresses.slice(0, amount);
+        }
+
+        const remainingAddressesNeeded = amount - unusedAddresses.length;
+        const isChange = path === 'BIP44:change';
+        const newAddresses = Array.from({ length: remainingAddressesNeeded }, () =>
+            this._getNextQiAddress(account, zone, isChange),
+        );
+        return [...unusedAddresses, ...newAddresses];
     }
 
     /**
@@ -1140,6 +1250,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         onOutpointsDeleted?: OutpointsCallback,
     ): Promise<void> {
         if (!this.provider) throw new Error('Provider not set');
+
         const derivationPaths: DerivationPath[] = ['BIP44:external', 'BIP44:change', ...this.openChannels];
 
         await Promise.all([
@@ -1486,11 +1597,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @param {string} paymentCode - The payment code.
      * @returns {QiAddressInfo[]} The gap payment channel addresses for the payment code.
      */
-    public getGapPaymentChannelAddressesForZone(paymentCode: string, zone: Zone): QiAddressInfo[] {
+    public getGapPaymentChannelAddresses(paymentCode: string): QiAddressInfo[] {
         return (
-            this._addressesMap
-                .get(paymentCode)
-                ?.filter((addressInfo) => addressInfo.status === AddressStatus.UNUSED && addressInfo.zone === zone) ||
+            this._addressesMap.get(paymentCode)?.filter((addressInfo) => addressInfo.status === AddressStatus.UNUSED) ||
             []
         );
     }
@@ -1518,6 +1627,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     public serialize(): SerializedQiHDWallet {
         const hdwalletSerialized = super.serialize();
+
         return {
             ...hdwalletSerialized,
             addresses: Array.from(this._addressesMap.values()).flatMap((addresses) => addresses),
@@ -1545,24 +1655,18 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // validate and import all the wallet addresses
         for (const addressInfo of serialized.addresses) {
+            wallet.validateAddressInfo(addressInfo);
             let key = addressInfo.derivationPath;
             if (isHexString(key, 32)) {
                 key = QiHDWallet.PRIVATE_KEYS_PATH;
-            } else if (key.includes('BIP44')) {
-                // only validate if it's not a private key or a BIP44 path
-                wallet.validateAddressInfo(addressInfo);
-            } else {
-                // payment code addresses require different derivation validation
-                wallet.validateBaseAddressInfo(addressInfo);
-                wallet.validateExtendedProperties(addressInfo);
+            } else if (!key.startsWith('BIP44:')) {
+                wallet._addressesMap.set(key, []);
             }
             const existingAddresses = wallet._addressesMap.get(key);
             if (existingAddresses && existingAddresses.some((addr) => addr.address === addressInfo.address)) {
                 throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
             }
-            const walletAddresses = wallet._addressesMap.get(key) || [];
-            walletAddresses.push(addressInfo);
-            wallet._addressesMap.set(key, walletAddresses);
+            wallet._addressesMap.get(key)!.push(addressInfo);
         }
 
         // validate and import the counter party payment code info
@@ -1571,9 +1675,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 throw new Error(`Invalid payment code: ${paymentCode}`);
             }
             for (const pcInfo of paymentCodeInfoArray) {
-                // Basic property validation
-                wallet.validateBaseAddressInfo(pcInfo);
-                wallet.validateExtendedProperties(pcInfo);
+                wallet.validateAddressInfo(pcInfo);
             }
             wallet._paymentCodeSendAddressMap.set(paymentCode, paymentCodeInfoArray);
         }
