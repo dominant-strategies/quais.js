@@ -30,7 +30,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @ignore
      */
-    const version = '1.0.0-alpha.25';
+    const version = '1.0.0-alpha.26';
 
     /**
      * Property helper functions.
@@ -24221,12 +24221,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const zone = await this.zoneFromAddress(tx.from);
             const pop = (await populate(this, tx));
             if (pop.type == null) {
-                pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
+                pop.type = getTxType(pop.from ?? null, pop.to ?? null);
             }
-            if (pop.nonce == null) {
+            if (pop.nonce == null || pop.nonce === 0) {
                 pop.nonce = await this.getNonce('pending');
             }
-            if (pop.gasLimit == null) {
+            if (pop.gasLimit == null || pop.gasLimit === 0n) {
                 if (pop.type == 0)
                     pop.gasLimit = await this.estimateGas(pop);
                 else {
@@ -24239,7 +24239,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             // Populate the chain ID
             const network = await this.provider.getNetwork();
-            if (pop.chainId != null) {
+            if (pop.chainId != null && pop.chainId !== 0n) {
                 const chainId = getBigInt(pop.chainId);
                 assertArgument(chainId === network.chainId, 'transaction chainId mismatch', 'tx.chainId', zone);
             }
@@ -24260,7 +24260,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     pop.accessList = tx.accessList;
                 }
                 else {
-                    pop.accessList = await this.createAccessList(tx);
+                    pop.accessList = await this.createAccessList(pop);
                 }
             }
             //@TOOD: Don't await all over the place; save them up for
@@ -26293,6 +26293,28 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return isCorrectShard && isCorrectLedger;
         }
         /**
+         * Gets the BIP44 change node for a given account and change flag.
+         *
+         * @param {number} account - The account number.
+         * @param {boolean} change - Whether to get the change node.
+         * @returns {HDNodeWallet} The change node.
+         */
+        _getChangeNode(account, change) {
+            const changeIndex = change ? 1 : 0;
+            return this._root.deriveChild(account + HARDENED_OFFSET).deriveChild(changeIndex);
+        }
+        /**
+         * Gets the BIP44 address node for a given account, change flag, and address index.
+         *
+         * @param {number} account - The account number.
+         * @param {boolean} change - Whether to get the change node.
+         * @param {number} addressIndex - The address index.
+         * @returns {HDNodeWallet} The address node.
+         */
+        _getAddressNode(account, change, addressIndex) {
+            return this._getChangeNode(account, change).deriveChild(addressIndex);
+        }
+        /**
          * Derives the next valid address node for a specified account, starting index, and zone. The method ensures the
          * derived address belongs to the correct shard and ledger, as defined by the Quai blockchain specifications.
          *
@@ -26304,8 +26326,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @throws {Error} If a valid address for the specified zone cannot be derived within the allowed attempts.
          */
         deriveNextAddressNode(account, startingIndex, zone, isChange = false) {
-            const changeIndex = isChange ? 1 : 0;
-            const changeNode = this._root.deriveChild(account + HARDENED_OFFSET).deriveChild(changeIndex);
+            const changeNode = this._getChangeNode(account, isChange);
             let addrIndex = startingIndex;
             let addressNode;
             for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
@@ -26420,18 +26441,33 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             throw new Error('deserialize method must be implemented in the subclass');
         }
         /**
+         * Validates an address info object, including basic properties and address derivation.
+         *
+         * @param {T} info - The address info to validate
+         * @throws {Error} If validation fails
+         * @protected
+         */
+        validateAddressInfo(info) {
+            // Basic property validation
+            this.validateBaseAddressInfo(info);
+            // Validate address derivation
+            this.validateAddressDerivation(info);
+            // Allow subclasses to add their own validation
+            this.validateExtendedProperties(info);
+        }
+        /**
          * Validates the NeuteredAddressInfo object.
          *
          * @param {NeuteredAddressInfo} info - The NeuteredAddressInfo object to be validated.
          * @throws {Error} If the NeuteredAddressInfo object is invalid.
          * @protected
          */
-        validateNeuteredAddressInfo(info) {
+        validateBaseAddressInfo(info) {
             if (!/^(0x)?[0-9a-fA-F]{40}$/.test(info.address)) {
-                throw new Error(`Invalid NeuteredAddressInfo: address must be a 40-character hexadecimal string: ${info.address}`);
+                throw new Error(`Invalid NeuteredAddressInfo: address must be a 40-character hexadecimal string prefixed with 0x: ${info.address}`);
             }
             if (!/^0x[0-9a-fA-F]{66}$/.test(info.pubKey)) {
-                throw new Error(`Invalid NeuteredAddressInfo: pubKey must be a 32-character hexadecimal string with 0x prefix: ${info.pubKey}`);
+                throw new Error(`Invalid NeuteredAddressInfo: pubKey must be a 66-character hexadecimal string prefixed with 0x: ${info.pubKey}`);
             }
             if (!Number.isInteger(info.account) || info.account < 0) {
                 throw new Error(`Invalid NeuteredAddressInfo: account must be a non-negative integer: ${info.account}`);
@@ -26442,6 +26478,16 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (!Object.values(exports.Zone).includes(info.zone)) {
                 throw new Error(`Invalid NeuteredAddressInfo: zone '${info.zone}' is not a valid Zone`);
             }
+        }
+        /**
+         * Hook for subclasses to add their own validation logic. Base implementation does nothing.
+         *
+         * @param {T} _info - The address info to validate
+         * @protected
+         */
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        validateExtendedProperties(_info) {
+            // Base implementation does nothing
         }
         /**
          * Validates the version and coinType of the serialized wallet.
@@ -26572,6 +26618,26 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 addresses: Array.from(this._addresses.values()),
             };
         }
+        validateAddressDerivation(info) {
+            const addressNode = this._getAddressNode(info.account, false, info.index);
+            // Validate derived address matches
+            if (addressNode.address !== info.address) {
+                throw new Error(`Address mismatch: derived ${addressNode.address} but got ${info.address}`);
+            }
+            // Validate derived public key matches
+            if (addressNode.publicKey !== info.pubKey) {
+                throw new Error(`Public key mismatch: derived ${addressNode.publicKey} but got ${info.pubKey}`);
+            }
+            // Validate zone
+            const zone = getZoneForAddress(addressNode.address);
+            if (!zone || zone !== info.zone) {
+                throw new Error(`Zone mismatch: derived ${zone} but got ${info.zone}`);
+            }
+            // Validate it's a valid Quai address
+            if (!isQuaiAddress(addressNode.address)) {
+                throw new Error(`Address ${addressNode.address} is not a valid Quai address`);
+            }
+        }
         /**
          * Deserializes the given serialized HD wallet data into an instance of QuaiHDWallet.
          *
@@ -26590,7 +26656,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const root = HDNodeWallet.fromMnemonic(mnemonic, path);
             const wallet = new this(_guard, root);
             // import the addresses
-            wallet.importSerializedAddresses(serialized.addresses);
+            for (const addressInfo of serialized.addresses) {
+                wallet.validateAddressInfo(addressInfo);
+                if (wallet._addresses.has(addressInfo.address)) {
+                    throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
+                }
+                wallet._addresses.set(addressInfo.address, addressInfo);
+            }
             return wallet;
         }
         /**
@@ -26616,6 +26688,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {NeuteredAddressInfo} The added address info.
          */
         addAddress(account, addressIndex) {
+            if (account < 0 || addressIndex < 0) {
+                throw new Error('Account and address index must be non-negative integers');
+            }
             return this._addAddress(account, addressIndex);
         }
         /**
@@ -26635,11 +26710,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
             });
             // derive the address node and validate the zone
-            const changeIndex = 0;
-            const addressNode = this._root
-                .deriveChild(account + HARDENED_OFFSET)
-                .deriveChild(changeIndex)
-                .deriveChild(addressIndex);
+            const addressNode = this._getAddressNode(account, false, addressIndex);
             const zone = getZoneForAddress(addressNode.address);
             if (!zone) {
                 throw new Error(`Failed to derive a valid address zone for the index ${addressIndex}`);
@@ -26647,32 +26718,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (!isQuaiAddress(addressNode.address)) {
                 throw new Error(`Address ${addressNode.address} is not a valid Quai address`);
             }
-            return this.createAndStoreAddressInfo(addressNode, account, zone);
-        }
-        /**
-         * Imports addresses from a serialized wallet into the addresses map. Before adding the addresses, a validation is
-         * performed to ensure the address, public key, and zone match the expected values.
-         *
-         * @param {Map<string, NeuteredAddressInfo>} addressMap - The map where the addresses will be imported.
-         * @param {NeuteredAddressInfo[]} addresses - The array of addresses to be imported, each containing account, index,
-         *   address, pubKey, and zone information.
-         * @throws {Error} If there is a mismatch between the expected and actual address, public key, or zone.
-         * @protected
-         */
-        importSerializedAddresses(addresses) {
-            for (const addressInfo of addresses) {
-                const newAddressInfo = this._addAddress(addressInfo.account, addressInfo.index);
-                // validate the address info
-                if (addressInfo.address !== newAddressInfo.address) {
-                    throw new Error(`Address mismatch: ${addressInfo.address} != ${newAddressInfo.address}`);
-                }
-                if (addressInfo.pubKey !== newAddressInfo.pubKey) {
-                    throw new Error(`Public key mismatch: ${addressInfo.pubKey} != ${newAddressInfo.pubKey}`);
-                }
-                if (addressInfo.zone !== newAddressInfo.zone) {
-                    throw new Error(`Zone mismatch: ${addressInfo.zone} != ${newAddressInfo.zone}`);
-                }
-            }
+            return this._createAndStoreNeuteredAddressInfo(addressNode, account, zone);
         }
         /**
          * Promise that resolves to the next address for the specified account and zone.
@@ -26707,7 +26753,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.validateZone(zone);
             const lastIndex = this._findLastUsedIndex(Array.from(this._addresses.values()), accountIndex, zone);
             const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
-            return this.createAndStoreAddressInfo(addressNode, accountIndex, zone);
+            return this._createAndStoreNeuteredAddressInfo(addressNode, accountIndex, zone);
         }
         /**
          * Creates and stores address information in the address map for a specified account, zone, and change type.
@@ -26723,7 +26769,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {NeuteredAddressInfo} - The created NeuteredAddressInfo object.
          * @protected
          */
-        createAndStoreAddressInfo(addressNode, account, zone) {
+        _createAndStoreNeuteredAddressInfo(addressNode, account, zone) {
             const neuteredAddressInfo = {
                 pubKey: addressNode.publicKey,
                 address: addressNode.address,
@@ -26775,11 +26821,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (!addressInfo) {
                 throw new Error(`Address ${addr} is not known to this wallet`);
             }
-            const changeIndex = 0;
-            return this._root
-                .deriveChild(addressInfo.account + HARDENED_OFFSET)
-                .deriveChild(changeIndex)
-                .deriveChild(addressInfo.index);
+            return this._getAddressNode(addressInfo.account, false, addressInfo.index);
         }
         /**
          * Gets the addresses for a given zone.
@@ -28462,9 +28504,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 privateKeysArray.splice(existingPrivateKeyIndex, 1);
                 this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, privateKeysArray);
             }
-            const newAddrInfo = {
-                pubKey: addressNode.publicKey,
+            return this._createAndStoreQiAddressInfo(addressNode, account, zone, isChange);
+        }
+        _createAndStoreQiAddressInfo(addressNode, account, zone, isChange) {
+            const qiAddressInfo = {
                 address: addressNode.address,
+                pubKey: addressNode.publicKey,
                 account,
                 index: addressNode.index,
                 change: isChange,
@@ -28472,8 +28517,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 status: exports.AddressStatus.UNUSED,
                 derivationPath: isChange ? 'BIP44:change' : 'BIP44:external',
             };
-            this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external')?.push(newAddrInfo);
-            return newAddrInfo;
+            this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external').push(qiAddressInfo); // _addressesMap is initialized within the constructor
+            return qiAddressInfo;
         }
         /**
          * Promise that resolves to the next address for the specified account and zone.
@@ -28635,19 +28680,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Converts outpoints for a specific zone to UTXO format.
          *
          * @param {Zone} zone - The zone to filter outpoints for.
-         * @param {number} [minDenominationToUse] - The minimum denomination to allow for the UTXOs.
          * @returns {UTXO[]} An array of UTXO objects.
          */
-        outpointsToUTXOs(zone, minDenominationToUse) {
+        outpointsToUTXOs(zone) {
             this.validateZone(zone);
-            let zoneOutpoints = this._availableOutpoints.filter((outpointInfo) => outpointInfo.zone === zone);
-            // Filter outpoints by minimum denomination if specified
-            // This will likely only be used for converting to Quai
-            // as the min denomination for converting is 10 (100 Qi)
-            if (minDenominationToUse !== undefined) {
-                zoneOutpoints = zoneOutpoints.filter((outpointInfo) => outpointInfo.outpoint.denomination >= minDenominationToUse);
-            }
-            return zoneOutpoints.map((outpointInfo) => {
+            return this._availableOutpoints
+                .filter((outpointInfo) => outpointInfo.zone === zone)
+                .map((outpointInfo) => {
                 const utxo = new UTXO();
                 utxo.txhash = outpointInfo.outpoint.txhash;
                 utxo.index = outpointInfo.outpoint.index;
@@ -28657,7 +28696,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 return utxo;
             });
         }
-        async prepareAndSendTransaction(amount, originZone, getDestinationAddresses, minDenominationToUse) {
+        async prepareAndSendTransaction(amount, originZone, getDestinationAddresses) {
             if (!this.provider) {
                 throw new Error('Provider is not set');
             }
@@ -28668,14 +28707,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 throw new Error(`Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qi`);
             }
             // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
-            const zoneUTXOs = this.outpointsToUTXOs(originZone, minDenominationToUse);
+            const zoneUTXOs = this.outpointsToUTXOs(originZone);
             if (zoneUTXOs.length === 0) {
-                if (minDenominationToUse === 10) {
-                    throw new Error('Qi denominations too small to convert.');
-                }
-                else {
-                    throw new Error('No Qi available in zone.');
-                }
+                throw new Error('No Qi available in zone.');
             }
             const unlockedUTXOs = zoneUTXOs.filter((utxo) => utxo.lock === 0 || utxo.lock < currentBlock);
             if (unlockedUTXOs.length === 0) {
@@ -28777,7 +28811,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * Converts an amount of Qi to Quai and sends it to a specified Quai address.
          *
          * @param {string} destinationAddress - The Quai address to send the converted Quai to.
-         * @param {bigint} amount - The amount of Qi to convert to Quai.
+         * @param {bigint} amount - The amount of Qi (in qits) to convert to Quai.
          * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
          * @throws {Error} If the destination address is invalid, the amount is zero, or the conversion fails.
          */
@@ -28789,19 +28823,19 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (isQiAddress(destinationAddress)) {
                 throw new Error(`Invalid Quai address: ${destinationAddress}`);
             }
-            if (amount <= 0) {
-                throw new Error('Amount must be greater than 0');
+            if (amount < 100000) {
+                throw new Error('Amount must be greater than 100 Qi (100,000 qits)');
             }
             const getDestinationAddresses = async (count) => {
                 return Array(count).fill(destinationAddress);
             };
-            return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses, 10);
+            return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses);
         }
         /**
          * Sends a transaction to a specified recipient payment code in a specified zone.
          *
          * @param {string} recipientPaymentCode - The payment code of the recipient.
-         * @param {bigint} amount - The amount of Qi to send.
+         * @param {bigint} amount - The amount of Qi (in qits) to send.
          * @param {Zone} originZone - The zone where the transaction originates.
          * @param {Zone} destinationZone - The zone where the transaction is sent.
          * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
@@ -29019,11 +29053,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             if (addressInfo.derivationPath === 'BIP44:external' || addressInfo.derivationPath === 'BIP44:change') {
                 // (BIP44 addresses)
-                const changeIndex = addressInfo.change ? 1 : 0;
-                const addressNode = this._root
-                    .deriveChild(addressInfo.account + HARDENED_OFFSET)
-                    .deriveChild(changeIndex)
-                    .deriveChild(addressInfo.index);
+                const addressNode = this._getAddressNode(addressInfo.account, addressInfo.change, addressInfo.index);
                 return addressNode.privateKey;
             }
             else {
@@ -29317,33 +29347,18 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const path = this.parentPath(serialized.coinType);
             const root = HDNodeWallet.fromMnemonic(mnemonic, path);
             const wallet = new this(_guard, root);
-            const validateQiAddressInfo = (addressInfo) => {
-                wallet.validateNeuteredAddressInfo(addressInfo);
-                if (!Object.values(exports.AddressStatus).includes(addressInfo.status)) {
-                    throw new Error(`Invalid QiAddressInfo: status '${addressInfo.status}' is not a valid AddressStatus`);
-                }
-                if (addressInfo.derivationPath !== 'BIP44:external' &&
-                    addressInfo.derivationPath !== 'BIP44:change' &&
-                    !validatePaymentCode(addressInfo.derivationPath)) {
-                    throw new Error(`Invalid QiAddressInfo: derivationPath '${addressInfo.derivationPath}' is not valid. It should be 'BIP44:external', 'BIP44:change', or a valid BIP47 payment code`);
-                }
-            };
-            // First, group addresses by derivation path
-            const addressesByPath = new Map();
+            // validate and import all the wallet addresses
             for (const addressInfo of serialized.addresses) {
-                validateQiAddressInfo(addressInfo);
+                wallet.validateAddressInfo(addressInfo);
                 let key = addressInfo.derivationPath;
                 if (isHexString(key, 32)) {
                     key = QiHDWallet.PRIVATE_KEYS_PATH;
                 }
-                if (!addressesByPath.has(key)) {
-                    addressesByPath.set(key, []);
+                const existingAddresses = wallet._addressesMap.get(key);
+                if (existingAddresses && existingAddresses.some((addr) => addr.address === addressInfo.address)) {
+                    throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
                 }
-                addressesByPath.get(key).push(addressInfo);
-            }
-            // Then, set all paths in the wallet's address map
-            for (const [key, addresses] of addressesByPath) {
-                wallet._addressesMap.set(key, addresses);
+                wallet._addressesMap.get(key).push(addressInfo);
             }
             // validate and import the counter party payment code info
             for (const [paymentCode, paymentCodeInfoArray] of Object.entries(serialized.senderPaymentCodeInfo)) {
@@ -29351,7 +29366,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     throw new Error(`Invalid payment code: ${paymentCode}`);
                 }
                 for (const pcInfo of paymentCodeInfoArray) {
-                    validateQiAddressInfo(pcInfo);
+                    wallet.validateAddressInfo(pcInfo);
                 }
                 wallet._paymentCodeSendAddressMap.set(paymentCode, paymentCodeInfoArray);
             }
@@ -29362,6 +29377,74 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             wallet.validateOutpointInfo(serialized.pendingOutpoints);
             wallet._pendingOutpoints.push(...serialized.pendingOutpoints);
             return wallet;
+        }
+        validateAddressDerivation(info) {
+            const addressNode = this._getAddressNode(info.account, info.change, info.index);
+            // Validate derived address matches
+            if (addressNode.address !== info.address) {
+                throw new Error(`Address mismatch: derived ${addressNode.address} but got ${info.address}`);
+            }
+            // Validate derived public key matches
+            if (addressNode.publicKey !== info.pubKey) {
+                throw new Error(`Public key mismatch: derived ${addressNode.publicKey} but got ${info.pubKey}`);
+            }
+            // Validate zone
+            const zone = getZoneForAddress(addressNode.address);
+            if (!zone || zone !== info.zone) {
+                throw new Error(`Zone mismatch: derived ${zone} but got ${info.zone}`);
+            }
+            // Validate it's a valid Qi address
+            if (!isQiAddress(addressNode.address)) {
+                throw new Error(`Address ${addressNode.address} is not a valid Qi address`);
+            }
+        }
+        validateExtendedProperties(info) {
+            // Validate status
+            if (!Object.values(exports.AddressStatus).includes(info.status)) {
+                throw new Error(`Invalid status: ${info.status}`);
+            }
+            // Validate derivation path
+            if (typeof info.derivationPath !== 'string' || !info.derivationPath) {
+                throw new Error(`Invalid derivation path: ${info.derivationPath}`);
+            }
+            // Validate derivation path format
+            this.validateDerivationPath(info.derivationPath, info.change);
+        }
+        /**
+         * Validates that the derivation path is either a BIP44 path or a valid payment code.
+         *
+         * @private
+         * @param {string} path - The derivation path to validate
+         * @param {boolean} isChange - Whether this is a change address
+         * @throws {Error} If the path is invalid
+         */
+        validateDerivationPath(path, isChange) {
+            // Check if it's a BIP44 path
+            if (path === 'BIP44:external' || path === 'BIP44:change') {
+                // Validate that the path matches the change flag
+                const expectedPath = isChange ? 'BIP44:change' : 'BIP44:external';
+                if (path !== expectedPath) {
+                    throw new Error(`BIP44 path mismatch: address marked as ${isChange ? 'change' : 'external'} ` +
+                        `but has path ${path}`);
+                }
+                return;
+            }
+            // Check if it's a private key path
+            if (path === QiHDWallet.PRIVATE_KEYS_PATH) {
+                if (isChange) {
+                    throw new Error('Imported private key addresses cannot be change addresses');
+                }
+                return;
+            }
+            // If not a BIP44 path or private key, must be a valid payment code
+            if (!validatePaymentCode(path)) {
+                throw new Error(`Invalid derivation path: must be 'BIP44:external', 'BIP44:change', ` +
+                    `'${QiHDWallet.PRIVATE_KEYS_PATH}', or a valid payment code. Got: ${path}`);
+            }
+            // Payment code addresses cannot be change addresses
+            if (isChange) {
+                throw new Error('Payment code addresses cannot be change addresses');
+            }
         }
         /**
          * Validates an array of OutpointInfo objects. This method checks the validity of each OutpointInfo object by
@@ -29629,6 +29712,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {QiAddressInfo} The address info for the new address.
          */
         addAddress(account, addressIndex) {
+            if (account < 0 || addressIndex < 0) {
+                throw new Error('Account and address index must be non-negative integers');
+            }
             return this._addAddress(account, addressIndex, false);
         }
         /**
@@ -29639,6 +29725,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {QiAddressInfo} The address info for the new address.
          */
         addChangeAddress(account, addressIndex) {
+            if (account < 0 || addressIndex < 0) {
+                throw new Error('Account and address index must be non-negative integers');
+            }
             return this._addAddress(account, addressIndex, true);
         }
         _addAddress(account, addressIndex, isChange) {
@@ -29647,10 +29736,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (existingAddresses.some((info) => info.index === addressIndex)) {
                 throw new Error(`Address index ${addressIndex} already exists in wallet under path ${derivationPath}`);
             }
-            const addressNode = this._root
-                .deriveChild(account + HARDENED_OFFSET)
-                .deriveChild(isChange ? 1 : 0)
-                .deriveChild(addressIndex);
+            const addressNode = this._getAddressNode(account, isChange, addressIndex);
             const zone = getZoneForAddress(addressNode.address);
             if (!zone) {
                 throw new Error(`Failed to derive a Qi valid address zone for the index ${addressIndex}`);
@@ -29658,24 +29744,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (!isQiAddress(addressNode.address)) {
                 throw new Error(`Address ${addressNode.address} is not a valid Qi address`);
             }
-            const addressInfo = {
-                pubKey: addressNode.publicKey,
-                address: addressNode.address,
-                account,
-                index: addressIndex,
-                change: isChange,
-                zone,
-                status: exports.AddressStatus.UNUSED,
-                derivationPath,
-            };
-            const addresses = this._addressesMap.get(derivationPath);
-            if (!addresses) {
-                this._addressesMap.set(derivationPath, [addressInfo]);
-            }
-            else {
-                addresses.push(addressInfo);
-            }
-            return addressInfo;
+            return this._createAndStoreQiAddressInfo(addressNode, account, zone, isChange);
         }
         /**
          * Gets the addresses for a given account.
