@@ -107,14 +107,14 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         const pop = (await populate(this, tx)) as QuaiTransactionLike;
 
         if (pop.type == null) {
-            pop.type = await getTxType(pop.from ?? null, pop.to ?? null);
+            pop.type = getTxType(pop.from ?? null, pop.to ?? null);
         }
 
-        if (pop.nonce == null) {
+        if (pop.nonce == null || pop.nonce === 0) {
             pop.nonce = await this.getNonce('pending');
         }
 
-        if (pop.gasLimit == null) {
+        if (pop.gasLimit == null || pop.gasLimit === 0n) {
             if (pop.type == 0) pop.gasLimit = await this.estimateGas(pop);
             else {
                 //Special cases for type 2 tx to bypass address out of scope in the node
@@ -148,7 +148,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             if (tx.accessList) {
                 pop.accessList = tx.accessList;
             } else {
-                pop.accessList = await this.createAccessList(tx);
+                pop.accessList = await this.createAccessList(pop as QuaiTransactionRequest);
             }
         }
         //@TOOD: Don't await all over the place; save them up for
