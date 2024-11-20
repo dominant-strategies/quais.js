@@ -73,6 +73,13 @@ export type TxOutputJson = {
     lock?: string;
 };
 
+export interface OutpointDeltas {
+    [address: string]: {
+        created: Outpoint[];
+        deleted: Outpoint[];
+    };
+}
+
 /**
  * List of supported Qi denominations.
  *

@@ -19,7 +19,7 @@ import type { AccessList, AccessListish } from '../transaction/index.js';
 
 import type { ContractRunner } from '../contract/index.js';
 import type { Network } from './network.js';
-import type { Outpoint, TxInputJson } from '../transaction/utxo.js';
+import type { Outpoint, OutpointDeltas, TxInputJson } from '../transaction/utxo.js';
 import type { TxInput, TxOutput } from '../transaction/utxo.js';
 import type { Zone, Shard } from '../constants/index.js';
 import type { txpoolContentResponse, txpoolInspectResponse } from './txpool.js';
@@ -3035,4 +3035,6 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      * @returns {Promise<bigint>} A promise resolving to the latest Quai->Qi rate.
      */
     getLatestQuaiRate(zone: Zone, amt: bigint): Promise<bigint>;
+
+    getOutpointDeltas(addresses: string[], startHash: string, endHash: string): Promise<OutpointDeltas>;
 }

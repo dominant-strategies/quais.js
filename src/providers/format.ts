@@ -4,7 +4,7 @@
 import { getAddress } from '../address/index.js';
 import { Signature } from '../crypto/index.js';
 import { accessListify } from '../transaction/index.js';
-import { Outpoint } from '../transaction/utxo.js';
+import { Outpoint, OutpointDeltas } from '../transaction/utxo.js';
 import { hexlify } from '../utils/data.js';
 import {
     getBigInt,
@@ -27,6 +27,7 @@ import type {
     QuaiTransactionResponseParams,
     ExternalTransactionResponseParams,
     OutpointResponseParams,
+    OutpointDeltaResponseParams,
 } from './formatting.js';
 
 const BN_0 = BigInt(0);
@@ -502,4 +503,44 @@ const _formatOutpoint = object(
 
 export function formatOutpoints(outpoints: OutpointResponseParams[]): Outpoint[] {
     return outpoints.map(_formatOutpoint);
+}
+
+export function formatOutpointDeltas(deltas: OutpointDeltaResponseParams): OutpointDeltas {
+    const result: OutpointDeltas = {};
+
+    for (const [address, delta] of Object.entries(deltas)) {
+        const created: OutpointResponseParams[] = [];
+        const deleted: OutpointResponseParams[] = [];
+
+        // Process created outpoints
+        for (const [txHash, outputs] of Object.entries(delta.created)) {
+            outputs.forEach((output) => {
+                created.push({
+                    txHash,
+                    index: output.index,
+                    denomination: output.denomination,
+                    lock: output.lock,
+                });
+            });
+        }
+
+        // Process deleted outpoints
+        for (const [txHash, outputs] of Object.entries(delta.deleted)) {
+            outputs.forEach((output) => {
+                deleted.push({
+                    txHash,
+                    index: output.index,
+                    denomination: output.denomination,
+                    lock: output.lock,
+                });
+            });
+        }
+
+        result[address] = {
+            created: formatOutpoints(created),
+            deleted: formatOutpoints(deleted),
+        };
+    }
+
+    return result;
 }
