@@ -394,37 +394,138 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     /**
-     * Gets the **total** balance for the specified zone, including locked UTXOs.
+     * Gets the total balance for the specified zone, including locked UTXOs.
      *
      * @param {Zone} zone - The zone to get the balance for.
-     * @returns {bigint} The total balance for the zone.
+     * @param {number} [blockNumber] - The block number to use for the lock check.
+     * @param {boolean} useAvailableOutpoints - Whether to use available outpoints to calculate the balance.
+     * @returns {Promise<bigint>} The total balance for the zone.
      */
-    public getBalanceForZone(zone: Zone): bigint {
+    public async getBalanceForZone(
+        zone: Zone,
+        blockNumber?: number,
+        useAvailableOutpoints: boolean = false,
+    ): Promise<bigint> {
+        if (!this.provider) throw new Error('Provider is not set');
         this.validateZone(zone);
+        if (!blockNumber && useAvailableOutpoints) {
+            blockNumber = await this.provider.getBlockNumber(toShard(zone));
+        }
 
-        return this._availableOutpoints
-            .filter((outpoint) => outpoint.zone === zone)
-            .reduce((total, outpoint) => {
-                const denominationValue = denominations[outpoint.outpoint.denomination];
-                return total + denominationValue;
-            }, BigInt(0));
+        return (
+            (await this.getSpendableBalanceForZone(zone, blockNumber, useAvailableOutpoints)) +
+            (await this.getLockedBalanceForZone(zone, blockNumber, useAvailableOutpoints))
+        );
     }
 
     /**
-     * Gets the locked balance for the specified zone.
+     * Gets the **spendable** balance for the specified zone by calling {@link getBalance} for all known addresses in the
+     * zone.
+     *
+     * @param {Zone} zone - The zone to get the balance for.
+     * @param {boolean} useAvailableOutpoints - Whether to use available outpoints to calculate the balance.
+     * @returns {bigint} The spendable balance for the zone.
+     */
+    public async getSpendableBalanceForZone(
+        zone: Zone,
+        blockNumber?: number,
+        useAvailableOutpoints: boolean = false,
+    ): Promise<bigint> {
+        if (!this.provider) throw new Error('Provider is not set');
+        this.validateZone(zone);
+
+        if (useAvailableOutpoints) {
+            if (!blockNumber) {
+                blockNumber = await this.provider.getBlockNumber(toShard(zone));
+            }
+            return this._calculateAvailableOutpointSpendableBalanceForZone(zone, blockNumber);
+        }
+        return this._fetchSpendableBalanceForZone(zone);
+    }
+
+    /**
+     * Gets the **locked** balance for the specified zone by calling {@link getLockedBalance} for all known addresses in
+     * the zone.
+     *
+     * @param {Zone} zone - The zone to get the balance for.
+     * @param {boolean} useAvailableOutpoints - Whether to use available outpoints to calculate the balance.
+     * @returns {bigint} The locked balance for the zone.
+     */
+    public async getLockedBalanceForZone(
+        zone: Zone,
+        blockNumber?: number,
+        useAvailableOutpoints: boolean = false,
+    ): Promise<bigint> {
+        if (!this.provider) throw new Error('Provider is not set');
+        this.validateZone(zone);
+
+        if (useAvailableOutpoints) {
+            if (!blockNumber) {
+                blockNumber = await this.provider.getBlockNumber(toShard(zone));
+            }
+            return this._calculateAvailableOutpointLockedBalanceForZone(zone, blockNumber);
+        }
+        return this._fetchLockedBalanceForZone(zone);
+    }
+
+    /**
+     * Gets the spendable balance for the specified zone by calling {@link getBalance} for all known addresses in the
+     * zone.
+     *
+     * @param {Zone} zone - The zone to get the spendable balance for.
+     * @returns {bigint} The spendable balance for the zone.
+     */
+    private async _fetchSpendableBalanceForZone(zone: Zone): Promise<bigint> {
+        const balanceMethod = async (address: string) => this.provider?.getBalance(address, 'latest') || BigInt(0);
+        return this._fetchBalanceForZone(zone, balanceMethod);
+    }
+
+    /**
+     * Gets the locked balance for the specified zone by calling {@link getLockedBalance} for all known addresses in the
+     * zone.
      *
      * @param {Zone} zone - The zone to get the locked balance for.
      * @returns {bigint} The locked balance for the zone.
      */
-    public async getSpendableBalanceForZone(zone: Zone, blockNumber?: number): Promise<bigint> {
-        this.validateZone(zone);
-        if (!this.provider) {
-            throw new Error('Provider is not set');
-        }
-        if (!blockNumber) {
-            blockNumber = await this.provider.getBlockNumber(toShard(zone));
-        }
+    private async _fetchLockedBalanceForZone(zone: Zone): Promise<bigint> {
+        const balanceMethod = async (address: string) => this.provider?.getLockedBalance(address) || BigInt(0);
+        return this._fetchBalanceForZone(zone, balanceMethod);
+    }
+
+    /**
+     * Fetches the balance for the specified zone by calling the provided balance method for all known addresses in the
+     * zone.
+     *
+     * @param {Zone} zone - The zone to get the balance for.
+     * @param {Function} balanceMethod - The method to call to get the balance for each address.
+     * @returns {Promise<bigint>} The balance for the zone.
+     */
+    private async _fetchBalanceForZone(
+        zone: Zone,
+        balanceMethod: (address: string) => Promise<bigint>,
+    ): Promise<bigint> {
+        const allAddresses = Array.from(this._addressesMap.values())
+            .flat()
+            .filter((address) => address.zone === zone);
+        const allBalances = await Promise.all(
+            allAddresses.map((address) => balanceMethod(address.address) ?? BigInt(0)),
+        );
+        return allBalances.reduce((total, balance) => BigInt(total) + BigInt(balance), BigInt(0));
+    }
+
+    /**
+     * Gets the spendable balance for the specified zone using the available outpoints.
+     *
+     * @param {Zone} zone - The zone to get the spendable balance for.
+     * @param {number} [blockNumber] - The block number to use for the lock check.
+     * @returns {bigint} The spendable balance for the zone.
+     */
+    private async _calculateAvailableOutpointSpendableBalanceForZone(
+        zone: Zone,
+        blockNumber?: number,
+    ): Promise<bigint> {
         return this._availableOutpoints
+            .filter((utxo) => utxo.zone === zone)
             .filter((utxo) => utxo.outpoint.lock === 0 || utxo.outpoint.lock! < blockNumber!)
             .reduce((total, utxo) => {
                 const denominationValue = denominations[utxo.outpoint.denomination];
@@ -433,20 +534,15 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     /**
-     * Gets the locked balance for the specified zone.
+     * Gets the locked balance for the specified zone using the available outpoints.
      *
      * @param {Zone} zone - The zone to get the locked balance for.
+     * @param {number} [blockNumber] - The block number to use for the lock check.
      * @returns {bigint} The locked balance for the zone.
      */
-    public async getLockedBalanceForZone(zone: Zone, blockNumber?: number): Promise<bigint> {
-        this.validateZone(zone);
-        if (!this.provider) {
-            throw new Error('Provider is not set');
-        }
-        if (!blockNumber) {
-            blockNumber = await this.provider.getBlockNumber(toShard(zone));
-        }
+    private async _calculateAvailableOutpointLockedBalanceForZone(zone: Zone, blockNumber?: number): Promise<bigint> {
         return this._availableOutpoints
+            .filter((utxo) => utxo.zone === zone)
             .filter((utxo) => utxo.outpoint.lock !== 0 && blockNumber! < utxo.outpoint.lock!)
             .reduce((total, utxo) => {
                 const denominationValue = denominations[utxo.outpoint.denomination];
