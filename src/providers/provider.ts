@@ -2806,6 +2806,14 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
     getBalance(address: AddressLike, blockTag?: BlockTag): Promise<bigint>;
 
     /**
+     * Get the locked balance for `address`.
+     *
+     * @param {AddressLike} address - The address to fetch the locked balance for.
+     * @returns {Promise<bigint>} A promise resolving to the locked balance.
+     */
+    getLockedBalance(address: AddressLike): Promise<bigint>;
+
+    /**
      * Get the UTXO entries for `address`.
      *
      * @param {AddressLike} address - The address to fetch the UTXO entries for.

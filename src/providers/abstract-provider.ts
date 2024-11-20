@@ -565,6 +565,11 @@ export type PerformActionRequest =
           zone: Zone;
       }
     | {
+          method: 'getLockedBalance';
+          address: string;
+          zone: Zone;
+      }
+    | {
           method: 'getOutpointsByAddress';
           address: string;
           zone: Zone;
@@ -678,7 +683,7 @@ export type PerformActionRequest =
 
 type _PerformAccountRequest =
     | {
-          method: 'getBalance' | 'getTransactionCount' | 'getCode' | 'getOutpointsByAddress';
+          method: 'getBalance' | 'getLockedBalance' | 'getTransactionCount' | 'getCode' | 'getOutpointsByAddress';
       }
     | {
           method: 'getStorage';
@@ -1647,6 +1652,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     async getBalance(address: AddressLike, blockTag?: BlockTag): Promise<bigint> {
         return getBigInt(await this.#getAccountValue({ method: 'getBalance' }, address, blockTag), '%response');
+    }
+
+    async getLockedBalance(address: AddressLike): Promise<bigint> {
+        return getBigInt(await this.#getAccountValue({ method: 'getLockedBalance' }, address), '%response');
     }
 
     async getOutpointsByAddress(address: AddressLike): Promise<Outpoint[]> {
