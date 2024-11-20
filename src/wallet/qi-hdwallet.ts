@@ -78,8 +78,6 @@ export interface QiAddressInfo extends NeuteredAddressInfo {
  * @interface SerializedQiHDWallet
  */
 export interface SerializedQiHDWallet extends SerializedHDWallet {
-    outpoints: OutpointInfo[];
-    pendingOutpoints: OutpointInfo[];
     addresses: Array<QiAddressInfo>;
     senderPaymentCodeInfo: { [key: string]: QiAddressInfo[] };
 }
@@ -169,11 +167,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @type {OutpointInfo[]}
      */
     protected _availableOutpoints: OutpointInfo[] = [];
-
-    /**
-     * Map of outpoints that are pending confirmation of being spent.
-     */
-    protected _pendingOutpoints: OutpointInfo[] = [];
 
     /**
      * @ignore
@@ -629,9 +622,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             Number(chainId),
         );
 
-        // Move used outpoints to pendingOutpoints
-        this.moveOutpointsToPending(tx.txInputs);
-
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
 
@@ -777,82 +767,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     /**
-     * Checks the status of pending outpoints and updates the wallet's UTXO set accordingly.
-     *
-     * @param zone The zone in which to check the pending outpoints.
-     */
-    private async checkPendingOutpoints(zone: Zone): Promise<void> {
-        // Create a copy to iterate over, as we'll be modifying the _pendingOutpoints array
-        const pendingOutpoints = [...this._pendingOutpoints.filter((info) => info.zone === zone)];
-
-        const uniqueAddresses = new Set<string>(pendingOutpoints.map((info) => info.address));
-        let outpointsByAddress: Outpoint[] = [];
-        try {
-            outpointsByAddress = (
-                await Promise.all(Array.from(uniqueAddresses).map((address) => this.getOutpointsByAddress(address)))
-            ).flat();
-        } catch (error) {
-            console.error('Error getting outpoints by address', error);
-        }
-
-        const allOutpointsByAddress = outpointsByAddress.flat();
-
-        for (const outpointInfo of pendingOutpoints) {
-            const isSpent = !allOutpointsByAddress.some(
-                (outpoint) =>
-                    outpoint.txhash === outpointInfo.outpoint.txhash && outpoint.index === outpointInfo.outpoint.index,
-            );
-
-            if (isSpent) {
-                // Outpoint has been spent; remove it from pendingOutpoints
-                this.removeOutpointFromPending(outpointInfo.outpoint);
-            } else {
-                // Outpoint is still unspent; move it back to available outpoints
-                this.moveOutpointToAvailable(outpointInfo);
-            }
-        }
-    }
-
-    /**
-     * Moves specified inputs to pending outpoints.
-     *
-     * @param inputs List of inputs used in the transaction.
-     */
-    private moveOutpointsToPending(inputs: TxInput[]): void {
-        inputs.forEach((input) => {
-            const index = this._availableOutpoints.findIndex(
-                (outpointInfo) =>
-                    outpointInfo.outpoint.txhash === input.txhash && outpointInfo.outpoint.index === input.index,
-            );
-            if (index !== -1) {
-                const [outpointInfo] = this._availableOutpoints.splice(index, 1);
-                this._pendingOutpoints.push(outpointInfo);
-            }
-        });
-    }
-
-    /**
-     * Removes an outpoint from the pending outpoints.
-     *
-     * @param outpoint The outpoint to remove.
-     */
-    private removeOutpointFromPending(outpoint: Outpoint): void {
-        this._pendingOutpoints = this._pendingOutpoints.filter(
-            (info) => !(info.outpoint.txhash === outpoint.txhash && info.outpoint.index === outpoint.index),
-        );
-    }
-
-    /**
-     * Moves an outpoint from pending back to available outpoints.
-     *
-     * @param outpointInfo The outpoint info to move.
-     */
-    private moveOutpointToAvailable(outpointInfo: OutpointInfo): void {
-        this.removeOutpointFromPending(outpointInfo.outpoint);
-        this._availableOutpoints.push(outpointInfo);
-    }
-
-    /**
      * Returns a schnorr signature for the given message and private key.
      *
      * @ignore
@@ -994,7 +908,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // flush available and pending outpoints
         this._availableOutpoints = [];
-        this._pendingOutpoints = [];
 
         // Reset each map so that all keys have empty array values but keys are preserved
         this._paymentCodeSendAddressMap = new Map(
@@ -1017,7 +930,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     public async sync(zone: Zone, account: number = 0): Promise<void> {
         this.validateZone(zone);
         await this._scan(zone, account);
-        await this.checkPendingOutpoints(zone);
     }
 
     /**
@@ -1265,10 +1177,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const hdwalletSerialized = super.serialize();
         return {
             ...hdwalletSerialized,
-            outpoints: this._availableOutpoints,
-            pendingOutpoints: this._pendingOutpoints,
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            addresses: Array.from(this._addressesMap.entries()).flatMap(([_, addresses]) => addresses),
+            addresses: Array.from(this._addressesMap.values()).flatMap((addresses) => addresses),
             senderPaymentCodeInfo: Object.fromEntries(
                 Array.from(this._paymentCodeSendAddressMap.entries()).map(([key, value]) => [key, Array.from(value)]),
             ),
@@ -1325,15 +1234,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             }
             wallet._paymentCodeSendAddressMap.set(paymentCode, paymentCodeInfoArray);
         }
-
-        // validate the available outpoints and import them
-        wallet.validateOutpointInfo(serialized.outpoints);
-        wallet._availableOutpoints.push(...serialized.outpoints);
-
-        // validate the pending outpoints and import them
-        wallet.validateOutpointInfo(serialized.pendingOutpoints);
-        wallet._pendingOutpoints.push(...serialized.pendingOutpoints);
-
         return wallet;
     }
 
