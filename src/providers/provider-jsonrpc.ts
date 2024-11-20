@@ -1322,6 +1322,12 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
             case 'txPoolInspect':
                 return { method: 'txpool_inspect', args: [] };
+
+            case 'getOutpointDeltasForAddressesInRange':
+                return {
+                    method: 'quai_getOutpointDeltasForAddressesInRange',
+                    args: [req.addresses, req.startHash, req.endHash],
+                };
         }
 
         return null;

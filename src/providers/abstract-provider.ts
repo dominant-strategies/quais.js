@@ -11,10 +11,10 @@
  * to listenerCount.
  */
 
-import { computeAddress, resolveAddress, formatMixedCaseChecksumAddress } from '../address/index.js';
+import { computeAddress, resolveAddress, formatMixedCaseChecksumAddress, isQiAddress } from '../address/index.js';
 import { Shard, toShard, toZone, Zone } from '../constants/index.js';
 import { TxInput, TxOutput } from '../transaction/index.js';
-import { Outpoint, TxInputJson, TxOutputJson } from '../transaction/utxo.js';
+import { Outpoint, OutpointDeltas, TxInputJson, TxOutputJson } from '../transaction/utxo.js';
 import {
     hexlify,
     isHexString,
@@ -36,6 +36,7 @@ import type { txpoolContentResponse, txpoolInspectResponse } from './txpool.js';
 import {
     formatBlock,
     formatLog,
+    formatOutpointDeltas,
     formatOutpoints,
     formatTransactionReceipt,
     formatTransactionResponse,
@@ -67,6 +68,7 @@ import type {
     BlockParams,
     ExternalTransactionResponseParams,
     LogParams,
+    OutpointDeltaResponseParams,
     QiTransactionResponseParams,
     TransactionReceiptParams,
 } from './formatting.js';
@@ -664,6 +666,13 @@ export type PerformActionRequest =
       }
     | {
           method: 'txPoolInspect';
+          zone: Zone;
+      }
+    | {
+          method: 'getOutpointDeltasForAddressesInRange';
+          addresses: string[];
+          startHash: string;
+          endHash: string;
           zone: Zone;
       };
 
@@ -1811,6 +1820,112 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             return null;
         }
         return hexlify(result);
+    }
+
+    async getOutpointDeltas(addresses: string[], startHash: string, endHash: string): Promise<OutpointDeltas> {
+        // Validate addresses are Qi addresses
+        for (const addr of addresses) {
+            assertArgument(isQiAddress(addr), `Invalid Qi address: ${addr}`, 'addresses', addresses);
+        }
+
+        // Validate block hashes
+        assertArgument(isHexString(startHash, 32), 'invalid startHash', 'startHash', startHash);
+        assertArgument(isHexString(endHash, 32), 'invalid endHash', 'endHash', endHash);
+
+        // Get the zone from the first address
+        const zone = await this.zoneFromAddress(addresses[0]);
+        const shard = toShard(zone);
+
+        // Fetch the block numbers for startHash and endHash in parallel
+        const [startBlock, endBlock] = await Promise.all([
+            this.getBlock(shard, startHash),
+            this.getBlock(shard, endHash),
+        ]);
+
+        if (startBlock == null) {
+            throw new Error('Could not find start block');
+        }
+
+        if (endBlock == null) {
+            throw new Error('Could not find end block');
+        }
+
+        const startBlockNumber = getNumber(startBlock.woHeader.number, 'startBlockNumber');
+        const endBlockNumber = getNumber(endBlock.woHeader.number, 'endBlockNumber');
+
+        assertArgument(
+            startBlockNumber <= endBlockNumber,
+            'startBlockNumber must be less than or equal to endBlockNumber',
+            'startBlockNumber',
+            startBlockNumber,
+        );
+
+        // Precompute the ranges and collect end block numbers
+        const ranges: Array<{ startHash: string; endHash: string }> = [];
+        const endBlockNumbers: number[] = [];
+
+        let currentStartBlockNumber = startBlockNumber;
+        let currentStartHash: string = startHash;
+
+        while (currentStartBlockNumber <= endBlockNumber) {
+            // Calculate end of this segment
+            const currentEndBlockNumber = Math.min(currentStartBlockNumber + 999, endBlockNumber);
+            endBlockNumbers.push(currentEndBlockNumber);
+
+            // Update for next segment
+            currentStartBlockNumber = currentEndBlockNumber + 1;
+        }
+
+        // Fetch all the end block hashes in parallel
+        const endBlocksPromises = endBlockNumbers.map((blockNumber) => this.getBlock(shard, blockNumber));
+        const endBlocks = await Promise.all(endBlocksPromises);
+
+        // Build the ranges using the fetched block hashes
+        currentStartBlockNumber = startBlockNumber;
+        currentStartHash = startHash;
+
+        for (let i = 0; i < endBlocks.length; i++) {
+            const currentEndBlock = endBlocks[i];
+            if (!currentEndBlock) {
+                throw new Error(`Could not find block for block number ${endBlockNumbers[i]}`);
+            }
+            const currentEndHash = currentEndBlock.hash;
+
+            ranges.push({ startHash: currentStartHash, endHash: currentEndHash });
+
+            // Update for next segment
+            currentStartBlockNumber = endBlockNumbers[i] + 1;
+            currentStartHash = currentEndHash;
+        }
+
+        // Issue all RPC calls in parallel
+        const promises = ranges.map((range) => {
+            return this.#perform<OutpointDeltaResponseParams>({
+                method: 'getOutpointDeltasForAddressesInRange',
+                addresses: addresses,
+                startHash: range.startHash,
+                endHash: range.endHash,
+                zone: zone,
+            }).then(formatOutpointDeltas);
+        });
+
+        // Wait for all promises to resolve
+        const deltasArray = await Promise.all(promises);
+
+        // Merge all the results
+        const deltas: OutpointDeltas = {};
+
+        for (const delta of deltasArray) {
+            for (const [address, data] of Object.entries(delta)) {
+                if (!deltas[address]) {
+                    deltas[address] = { created: [], deleted: [] };
+                }
+                deltas[address].created.push(...data.created);
+                deltas[address].deleted.push(...data.deleted);
+            }
+        }
+
+        return deltas;
     }
 
     // Bloom-filter Queries

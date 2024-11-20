@@ -540,3 +540,23 @@ export interface OutpointResponseParams {
     denomination: string;
     lock: string;
 }
+
+// Add this interface near the other response type definitions
+export interface OutpointDeltaResponseParams {
+    [address: string]: {
+        created: {
+            [txHash: string]: Array<{
+                denomination: string;
+                index: string;
+                lock: string;
+            }>;
+        };
+        deleted: {
+            [txHash: string]: Array<{
+                denomination: string;
+                index: string;
+                lock: string;
+            }>;
+        };
+    };
+}
