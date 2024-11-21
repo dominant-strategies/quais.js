@@ -1831,7 +1831,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return hexlify(result);
     }
 
-    async getOutpointDeltas(addresses: string[], startHash: string, endHash: string): Promise<OutpointDeltas> {
+    async getOutpointDeltas(addresses: string[], startHash: string, endHash?: string): Promise<OutpointDeltas> {
         // Validate addresses are Qi addresses
         for (const addr of addresses) {
             assertArgument(isQiAddress(addr), `Invalid Qi address: ${addr}`, 'addresses', addresses);
@@ -1839,7 +1839,11 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
         // Validate block hashes
         assertArgument(isHexString(startHash, 32), 'invalid startHash', 'startHash', startHash);
-        assertArgument(isHexString(endHash, 32), 'invalid endHash', 'endHash', endHash);
+        if (endHash) {
+            assertArgument(isHexString(endHash, 32), 'invalid endHash', 'endHash', endHash);
+        } else {
+            endHash = 'latest';
+        }
 
         // Get the zone from the first address
         const zone = await this.zoneFromAddress(addresses[0]);

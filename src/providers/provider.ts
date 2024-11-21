@@ -3044,5 +3044,5 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      */
     getLatestQuaiRate(zone: Zone, amt: bigint): Promise<bigint>;
 
-    getOutpointDeltas(addresses: string[], startHash: string, endHash: string): Promise<OutpointDeltas>;
+    getOutpointDeltas(addresses: string[], startHash: string, endHash?: string): Promise<OutpointDeltas>;
 }
