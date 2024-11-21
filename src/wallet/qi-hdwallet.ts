@@ -78,11 +78,13 @@ export interface QiAddressInfo extends NeuteredAddressInfo {
  * @interface SerializedQiHDWallet
  */
 export interface SerializedQiHDWallet extends SerializedHDWallet {
+    lastSyncedBlock: { hash: string; number: number };
     addresses: Array<QiAddressInfo>;
     senderPaymentCodeInfo: { [key: string]: QiAddressInfo[] };
 }
 
 type AddressUsageCallback = (address: string) => Promise<boolean>;
+type OutpointsCallback = (outpoints: { [address: string]: Outpoint[] }) => Promise<void>;
 
 /**
  * Current known issues:
@@ -188,6 +190,13 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     private _paymentCodeSendAddressMap: Map<string, QiAddressInfo[]> = new Map();
 
     /**
+     * The last synced block hash and number.
+     *
+     * @type {{ hash: string; number: number }}
+     */
+    private _lastSyncedBlock: { hash: string; number: number } = { hash: '', number: 0 };
+
+    /**
      * @ignore
      * @param {HDNodeWallet} root - The root HDNodeWallet.
      * @param {Provider} [provider] - The provider (optional).
@@ -208,6 +217,18 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         return Array.from(this._addressesMap.keys()).filter(
             (key) => !key.startsWith('BIP44:') && key !== QiHDWallet.PRIVATE_KEYS_PATH,
         );
+    }
+
+    get lastSyncedBlock(): { hash: string; number: number } {
+        return this._lastSyncedBlock;
+    }
+
+    set lastSyncedBlock(block: { hash: string; number: number }) {
+        if (block.number || block.hash) {
+            this._lastSyncedBlock = block;
+        } else {
+            throw new Error('Invalid block object for lastSyncedBlock');
+        }
     }
 
     /**
@@ -669,7 +690,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             finalFee = await this.provider.estimateFeeForQi(feeEstimationTx);
 
             // Get new selection with updated fee 2x
-            selection = fewestCoinSelector.performSelection(spendTarget, finalFee * 2n);
+            selection = fewestCoinSelector.performSelection(spendTarget, finalFee * 3n);
 
             // Determine if new addresses are needed for the change outputs
             const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
@@ -1023,9 +1044,15 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {Promise<void>} A promise that resolves when the sync is complete.
      * @throws {Error} If the zone is invalid.
      */
-    public async sync(zone: Zone, account: number = 0): Promise<void> {
+    public async sync(
+        zone: Zone,
+        account: number = 0,
+        onOutpointsCreated?: OutpointsCallback,
+        onOutpointsDeleted?: OutpointsCallback,
+        fromBlockHash?: string,
+    ): Promise<void> {
         this.validateZone(zone);
-        await this._scan(zone, account);
+        await this._scan(zone, account, onOutpointsCreated, onOutpointsDeleted, fromBlockHash);
     }
 
     /**
@@ -1034,16 +1061,50 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      *
      * @param {Zone} zone - The zone in which to scan for addresses.
      * @param {number} [account=0] - The index of the account to scan. Default is `0`
+     * @param {Function} [onCreate] - A callback function that is called when a new address is created.
+     * @param {Function} [onDelete] - A callback function that is called when an address is deleted.
+     * @param {string} [fromBlockHash] - The block hash to start scanning from.
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the provider is not set.
      */
-    private async _scan(zone: Zone, account: number = 0): Promise<void> {
+    private async _scan(
+        zone: Zone,
+        account: number = 0,
+        onOutpointsCreated?: OutpointsCallback,
+        onOutpointsDeleted?: OutpointsCallback,
+        fromBlockHash?: string, // this should default to the last synced block hash
+    ): Promise<void> {
         if (!this.provider) throw new Error('Provider not set');
         const derivationPaths: DerivationPath[] = ['BIP44:external', 'BIP44:change', ...this.openChannels];
 
         await Promise.all([
-            ...derivationPaths.map((path) => this._scanDerivationPath(path, zone, account)),
-            this._scanDerivationPath(QiHDWallet.PRIVATE_KEYS_PATH, zone, account, true),
+            ...derivationPaths.map((path) =>
+                this._scanDerivationPath(
+                    path,
+                    zone,
+                    account,
+                    false,
+                    onOutpointsCreated,
+                    onOutpointsDeleted,
+                    fromBlockHash,
+                ),
+            ),
+            this._scanDerivationPath(
+                QiHDWallet.PRIVATE_KEYS_PATH,
+                zone,
+                account,
+                true,
+                onOutpointsCreated,
+                onOutpointsDeleted,
+                fromBlockHash,
+            ),
+            new Promise<void>(async (resolve) => {
+                const latestBlock = await this.provider!.getBlock(zone as unknown as Shard, 'latest');
+                if (latestBlock) {
+                    this._lastSyncedBlock = { hash: latestBlock.hash, number: Number(latestBlock.woHeader.number) };
+                }
+                resolve();
+            }),
         ]);
     }
 
@@ -1062,29 +1123,87 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         zone: Zone,
         account: number,
         skipGap: boolean = false,
+        onOutpointsCreated?: OutpointsCallback,
+        onOutpointsDeleted?: OutpointsCallback,
+        fromBlockHash?: string,
     ): Promise<void> {
         const addresses = this._addressesMap.get(path) || [];
-        let consecutiveUnusedCount = 0;
-        const checkStatuses = [AddressStatus.UNKNOWN, AddressStatus.ATTEMPTED_USE, AddressStatus.UNUSED];
+        const createdOutpoints: { [address: string]: Outpoint[] } = {};
+        const deletedOutpoints: { [address: string]: Outpoint[] } = {};
 
-        // Check existing addresses
-        for (let i = 0; i < addresses.length; i++) {
-            const addr = addresses[i];
-            if (checkStatuses.includes(addr.status)) {
-                const { isUsed, outpoints } = await this.checkAddressUse(addr.address);
-                addresses[i].status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
-
-                // import outpoints if any are found
-                if (outpoints.length > 0) {
-                    this.importOutpoints(
-                        outpoints.map((outpoint) => ({
-                            outpoint,
-                            address: addr.address,
-                            zone: addr.zone,
-                            account: addr.account,
-                        })),
+        // For addresses with status USED, use getOutpointDeltas to update outpoints
+        const usedAddresses = addresses.filter((addr) => addr.status === AddressStatus.USED);
+        if (usedAddresses.length > 0) {
+            if (!fromBlockHash) {
+                if (this._lastSyncedBlock) {
+                    fromBlockHash = this._lastSyncedBlock.hash;
+                } else {
+                    throw new Error(
+                        'No last synced block hash found. Please provide a fromBlockHash or if this is the first sync, please use the scan method.',
                     );
                 }
+            }
+
+            const addressStrings = usedAddresses.map((addr) => addr.address);
+
+            // Get outpoint deltas
+            const deltas = await this.provider!.getOutpointDeltas(addressStrings, fromBlockHash);
+
+            // Process deltas
+            for (const [address, delta] of Object.entries(deltas)) {
+                // Handle created outpoints
+                if (delta.created && delta.created.length > 0) {
+                    this.importOutpoints(
+                        delta.created.map((outpoint) => ({
+                            outpoint,
+                            address,
+                            zone,
+                            account,
+                        })),
+                    );
+                    createdOutpoints[address] = delta.created;
+                }
+
+                // Handle deleted outpoints
+                if (delta.deleted && delta.deleted.length > 0) {
+                    // Remove corresponding outpoints from availableOutpoints
+                    this._availableOutpoints = this._availableOutpoints.filter(
+                        (outpointInfo) =>
+                            !(
+                                outpointInfo.address === address &&
+                                delta.deleted.some(
+                                    (deletedOutpoint) =>
+                                        deletedOutpoint.txhash === outpointInfo.outpoint.txhash &&
+                                        deletedOutpoint.index === outpointInfo.outpoint.index,
+                                )
+                            ),
+                    );
+                    deletedOutpoints[address] = delta.deleted;
+                }
+            }
+        }
+
+        let consecutiveUnusedCount = 0;
+        const checkStatuses = [AddressStatus.UNKNOWN, AddressStatus.ATTEMPTED_USE, AddressStatus.UNUSED];
+        const unusedAddresses = addresses.filter((addr) => checkStatuses.includes(addr.status));
+
+        // Check existing addresses
+        for (let i = 0; i < unusedAddresses.length; i++) {
+            const addr = unusedAddresses[i];
+            const { isUsed, outpoints } = await this.checkAddressUse(addr.address);
+            unusedAddresses[i].status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
+
+            // import outpoints if any are found
+            if (outpoints.length > 0) {
+                this.importOutpoints(
+                    outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: addr.address,
+                        zone: addr.zone,
+                        account: addr.account,
+                    })),
+                );
+                createdOutpoints[addr.address] = outpoints;
             }
 
             if (addr.status === AddressStatus.USED) {
@@ -1096,40 +1215,64 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             // If the consecutive unused count has reached the gap limit, break
             if (consecutiveUnusedCount >= QiHDWallet._GAP_LIMIT) break;
         }
-        // skip gap if requested
-        if (skipGap) return;
 
-        // Generate new addresses if needed
-        while (consecutiveUnusedCount < QiHDWallet._GAP_LIMIT) {
-            const isChange = path.endsWith(':change');
+        if (!skipGap) {
+            // Generate new addresses if needed until the gap limit is reached
+            while (consecutiveUnusedCount < QiHDWallet._GAP_LIMIT) {
+                const isChange = path.endsWith(':change');
 
-            const newAddrInfo = path.includes('BIP44')
-                ? this._getNextQiAddress(account, zone, isChange)
-                : this.getNextReceiveAddress(path, zone, account);
+                const newAddrInfo = path.includes('BIP44')
+                    ? this._getNextQiAddress(account, zone, isChange)
+                    : this.getNextReceiveAddress(path, zone, account);
 
-            const { isUsed, outpoints } = await this.checkAddressUse(newAddrInfo.address);
-            newAddrInfo.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
+                const { isUsed, outpoints } = await this.checkAddressUse(newAddrInfo.address);
+                newAddrInfo.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
 
-            // import outpoints if any are found
-            if (outpoints.length > 0) {
-                this.importOutpoints(
-                    outpoints.map((outpoint) => ({
-                        outpoint,
-                        address: newAddrInfo.address,
-                        zone: newAddrInfo.zone,
-                        account: newAddrInfo.account,
-                    })),
-                );
-            }
+                // import outpoints if any are found
+                if (outpoints.length > 0) {
+                    this.importOutpoints(
+                        outpoints.map((outpoint) => ({
+                            outpoint,
+                            address: newAddrInfo.address,
+                            zone: newAddrInfo.zone,
+                            account: newAddrInfo.account,
+                        })),
+                    );
+                    createdOutpoints[newAddrInfo.address] = outpoints;
+                }
 
-            if (newAddrInfo.status === AddressStatus.USED) {
-                consecutiveUnusedCount = 0;
-            } else {
-                consecutiveUnusedCount++;
+                if (newAddrInfo.status === AddressStatus.USED) {
+                    consecutiveUnusedCount = 0;
+                } else {
+                    consecutiveUnusedCount++;
+                }
             }
         }
-    }
 
+        // execute callbacks
+        await Promise.all([
+            new Promise<void>(async (resolve) => {
+                if (onOutpointsCreated && Object.keys(createdOutpoints).length > 0) {
+                    try {
+                        await onOutpointsCreated(createdOutpoints);
+                    } catch (error: any) {
+                        console.error(`Error in onOutpointsCreated callback: ${error.message}`);
+                    }
+                }
+                resolve();
+            }),
+            new Promise<void>(async (resolve) => {
+                if (onOutpointsDeleted && Object.keys(deletedOutpoints).length > 0) {
+                    try {
+                        await onOutpointsDeleted(deletedOutpoints);
+                    } catch (error: any) {
+                        console.error(`Error in onOutpointsDeleted callback: ${error.message}`);
+                    }
+                }
+                resolve();
+            }),
+        ]);
+    }
     /**
      * Queries the network node for the outpoints of the specified address.
      *
@@ -1273,6 +1416,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const hdwalletSerialized = super.serialize();
         return {
             ...hdwalletSerialized,
+            lastSyncedBlock: this._lastSyncedBlock,
             addresses: Array.from(this._addressesMap.values()).flatMap((addresses) => addresses),
             senderPaymentCodeInfo: Object.fromEntries(
                 Array.from(this._paymentCodeSendAddressMap.entries()).map(([key, value]) => [key, Array.from(value)]),
@@ -1295,6 +1439,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const path = (this as any).parentPath(serialized.coinType);
         const root = HDNodeWallet.fromMnemonic(mnemonic, path);
         const wallet = new this(_guard, root);
+
+        wallet._lastSyncedBlock = serialized.lastSyncedBlock;
 
         // validate and import all the wallet addresses
         for (const addressInfo of serialized.addresses) {
