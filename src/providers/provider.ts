@@ -551,7 +551,7 @@ export class Uncle implements UncleParams {
     readonly location!: string;
     readonly mixHash!: string;
     readonly nonce!: string;
-    readonly number!: string;
+    readonly number!: number;
     readonly parentHash!: string;
     readonly timestamp!: string;
     readonly txHash!: string;
@@ -960,7 +960,7 @@ export class Block implements BlockParams, Iterable<string> {
         }
         return createOrphanedBlockFilter({
             hash: this.hash!,
-            number: parseInt(this.woHeader.number!, 16),
+            number: this.woHeader.number!,
         });
     }
 }
@@ -2806,6 +2806,14 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
     getBalance(address: AddressLike, blockTag?: BlockTag): Promise<bigint>;
 
     /**
+     * Get the locked balance for `address`.
+     *
+     * @param {AddressLike} address - The address to fetch the locked balance for.
+     * @returns {Promise<bigint>} A promise resolving to the locked balance.
+     */
+    getLockedBalance(address: AddressLike): Promise<bigint>;
+
+    /**
      * Get the UTXO entries for `address`.
      *
      * @param {AddressLike} address - The address to fetch the UTXO entries for.
@@ -3036,5 +3044,5 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
      */
     getLatestQuaiRate(zone: Zone, amt: bigint): Promise<bigint>;
 
-    getOutpointDeltas(addresses: string[], startHash: string, endHash: string): Promise<OutpointDeltas>;
+    getOutpointDeltas(addresses: string[], startHash: string, endHash?: string): Promise<OutpointDeltas>;
 }

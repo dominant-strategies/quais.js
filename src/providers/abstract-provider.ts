@@ -565,6 +565,11 @@ export type PerformActionRequest =
           zone: Zone;
       }
     | {
+          method: 'getLockedBalance';
+          address: string;
+          zone: Zone;
+      }
+    | {
           method: 'getOutpointsByAddress';
           address: string;
           zone: Zone;
@@ -678,7 +683,7 @@ export type PerformActionRequest =
 
 type _PerformAccountRequest =
     | {
-          method: 'getBalance' | 'getTransactionCount' | 'getCode' | 'getOutpointsByAddress';
+          method: 'getBalance' | 'getLockedBalance' | 'getTransactionCount' | 'getCode' | 'getOutpointsByAddress';
       }
     | {
           method: 'getStorage';
@@ -1649,6 +1654,10 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return getBigInt(await this.#getAccountValue({ method: 'getBalance' }, address, blockTag), '%response');
     }
 
+    async getLockedBalance(address: AddressLike): Promise<bigint> {
+        return getBigInt(await this.#getAccountValue({ method: 'getLockedBalance' }, address), '%response');
+    }
+
     async getOutpointsByAddress(address: AddressLike): Promise<Outpoint[]> {
         return formatOutpoints(await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest'));
     }
@@ -1822,7 +1831,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         return hexlify(result);
     }
 
-    async getOutpointDeltas(addresses: string[], startHash: string, endHash: string): Promise<OutpointDeltas> {
+    async getOutpointDeltas(addresses: string[], startHash: string, endHash?: string): Promise<OutpointDeltas> {
         // Validate addresses are Qi addresses
         for (const addr of addresses) {
             assertArgument(isQiAddress(addr), `Invalid Qi address: ${addr}`, 'addresses', addresses);
@@ -1830,7 +1839,11 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
         // Validate block hashes
         assertArgument(isHexString(startHash, 32), 'invalid startHash', 'startHash', startHash);
-        assertArgument(isHexString(endHash, 32), 'invalid endHash', 'endHash', endHash);
+        if (endHash) {
+            assertArgument(isHexString(endHash, 32), 'invalid endHash', 'endHash', endHash);
+        } else {
+            endHash = 'latest';
+        }
 
         // Get the zone from the first address
         const zone = await this.zoneFromAddress(addresses[0]);

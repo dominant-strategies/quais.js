@@ -1197,6 +1197,12 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                     args: [req.address, req.blockTag],
                 };
 
+            case 'getLockedBalance':
+                return {
+                    method: 'quai_getLockedBalance',
+                    args: [req.address],
+                };
+
             case 'getOutpointsByAddress':
                 return {
                     method: 'quai_getOutpointsByAddress',
