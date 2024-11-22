@@ -129,7 +129,7 @@ describe('QiHDWallet Roundtrip Transaction', function () {
             );
 
             // Alice's balance should be lower than the initial balance minus the amount sent (because of the tx fee)
-            const aliceBalance = aliceWallet.getBalanceForZone(Zone.Cyprus1);
+            const aliceBalance = await aliceWallet.getBalanceForZone(Zone.Cyprus1);
             const aliceBalanceWithoutFee = BigInt(test.alice.initialState.balance) - BigInt(test.alice.sendAmount);
             aliceFee = BigInt(aliceBalanceWithoutFee) - BigInt(aliceBalance);
             assert.ok(
@@ -156,8 +156,8 @@ describe('QiHDWallet Roundtrip Transaction', function () {
             await aliceWallet.sync(Zone.Cyprus1);
             await bobWallet.sync(Zone.Cyprus1);
 
-            const aliceBalance = aliceWallet.getBalanceForZone(Zone.Cyprus1);
-            const bobBalance = bobWallet.getBalanceForZone(Zone.Cyprus1);
+            const aliceBalance = await aliceWallet.getBalanceForZone(Zone.Cyprus1);
+            const bobBalance = await bobWallet.getBalanceForZone(Zone.Cyprus1);
 
             const bobBalanceWithoutFee =
                 BigInt(test.bob.initialState.balance) + BigInt(test.alice.sendAmount) - BigInt(test.bob.sendAmount);

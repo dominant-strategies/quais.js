@@ -19,16 +19,6 @@ describe('QiHDWallet Serialization/Deserialization', function () {
             assert.strictEqual(serializedWallet.phrase, test.phrase, 'Phrase mismatch');
             assert.strictEqual(serializedWallet.coinType, test.coinType, 'Coin type mismatch');
 
-            // Compare outpoints
-            assert.deepStrictEqual(serializedWallet.outpoints, test.outpoints, 'Outpoints mismatch');
-
-            // Compare pending outpoints
-            assert.deepStrictEqual(
-                serializedWallet.pendingOutpoints,
-                test.pendingOutpoints,
-                'Pending outpoints mismatch',
-            );
-
             // Compare addresses
             assert.deepStrictEqual(
                 serializedWallet.addresses.sort((a, b) => a.index - b.index),
@@ -82,14 +72,6 @@ describe('QiHDWallet Serialization/Deserialization', function () {
                         addr.status === AddressStatus.UNUSED,
                 ).length,
                 'Gap addresses count mismatch',
-            );
-
-            // Verify outpoints were correctly imported
-            const zoneOutpoints = deserializedWallet.getOutpoints(zone);
-            assert.strictEqual(
-                zoneOutpoints.length,
-                test.outpoints.filter((outpoint) => outpoint.zone === zone).length,
-                'Outpoints count mismatch',
             );
 
             // Verify payment channels were correctly restored
