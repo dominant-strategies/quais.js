@@ -194,13 +194,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     private _paymentCodeSendAddressMap: Map<string, QiAddressInfo[]> = new Map();
 
     /**
-     * The last synced block hash and number.
-     *
-     * @type {{ hash: string; number: number }}
-     */
-    private _lastSyncedBlock: { hash: string; number: number } = { hash: '', number: 0 };
-
-    /**
      * @ignore
      * @param {HDNodeWallet} root - The root HDNodeWallet.
      * @param {Provider} [provider] - The provider (optional).
@@ -1102,10 +1095,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         account: number = 0,
         onOutpointsCreated?: OutpointsCallback,
         onOutpointsDeleted?: OutpointsCallback,
-        fromBlockHash?: string,
     ): Promise<void> {
         this.validateZone(zone);
-        await this._scan(zone, account, onOutpointsCreated, onOutpointsDeleted, fromBlockHash);
+        await this._scan(zone, account, onOutpointsCreated, onOutpointsDeleted);
     }
 
     /**
@@ -1116,7 +1108,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @param {number} [account=0] - The index of the account to scan. Default is `0`
      * @param {Function} [onCreate] - A callback function that is called when a new address is created.
      * @param {Function} [onDelete] - A callback function that is called when an address is deleted.
-     * @param {string} [fromBlockHash] - The block hash to start scanning from.
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the provider is not set.
      */
@@ -1125,22 +1116,13 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         account: number = 0,
         onOutpointsCreated?: OutpointsCallback,
         onOutpointsDeleted?: OutpointsCallback,
-        fromBlockHash?: string, // this should default to the last synced block hash
     ): Promise<void> {
         if (!this.provider) throw new Error('Provider not set');
         const derivationPaths: DerivationPath[] = ['BIP44:external', 'BIP44:change', ...this.openChannels];
 
         await Promise.all([
             ...derivationPaths.map((path) =>
-                this._scanDerivationPath(
-                    path,
-                    zone,
-                    account,
-                    false,
-                    onOutpointsCreated,
-                    onOutpointsDeleted,
-                    fromBlockHash,
-                ),
+                this._scanDerivationPath(path, zone, account, false, onOutpointsCreated, onOutpointsDeleted),
             ),
             this._scanDerivationPath(
                 QiHDWallet.PRIVATE_KEYS_PATH,
@@ -1149,7 +1131,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 true,
                 onOutpointsCreated,
                 onOutpointsDeleted,
-                fromBlockHash,
             ),
         ]);
     }
@@ -1171,7 +1152,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         skipGap: boolean = false,
         onOutpointsCreated?: OutpointsCallback,
         onOutpointsDeleted?: OutpointsCallback,
-        fromBlockHash?: string,
     ): Promise<void> {
         const addresses = this._addressesMap.get(path) || [];
         const updatedAddresses: QiAddressInfo[] = [];
@@ -1185,16 +1165,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const unsyncedAddresses = addresses.filter((addr) => addr.lastSyncedBlock === null);
 
         if (previouslySyncedAddresses.length > 0) {
-            if (!fromBlockHash) {
-                if (this._lastSyncedBlock) {
-                    fromBlockHash = this._lastSyncedBlock.hash;
-                } else {
-                    throw new Error(
-                        'No last synced block hash found. Please provide a fromBlockHash or if this is the first sync, please use the scan method.',
-                    );
-                }
-            }
-
             // get all unique txhashes from used addresses last synced block to current block
             const addressesByLastSyncedTxHash: { [txHash: string]: string[] } = {};
             for (const addr of previouslySyncedAddresses) {
