@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 import {
     AbstractHDWallet,
     NeuteredAddressInfo,
@@ -1332,29 +1333,28 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         });
         this._addressesMap.set(path, updatedAddressesForMap);
 
+        const executeCreatedOutpointsCallback = async () => {
+            if (onOutpointsCreated && Object.keys(createdOutpoints).length > 0) {
+                try {
+                    await onOutpointsCreated(createdOutpoints);
+                } catch (error: any) {
+                    console.error(`Error in onOutpointsCreated callback: ${error.message}`);
+                }
+            }
+        };
+
+        const executeDeletedOutpointsCallback = async () => {
+            if (onOutpointsDeleted && Object.keys(deletedOutpoints).length > 0) {
+                try {
+                    await onOutpointsDeleted(deletedOutpoints);
+                } catch (error: any) {
+                    console.error(`Error in onOutpointsDeleted callback: ${error.message}`);
+                }
+            }
+        };
+
         // execute callbacks
-        await Promise.all([
-            new Promise<void>(async (resolve) => {
-                if (onOutpointsCreated && Object.keys(createdOutpoints).length > 0) {
-                    try {
-                        await onOutpointsCreated(createdOutpoints);
-                    } catch (error: any) {
-                        console.error(`Error in onOutpointsCreated callback: ${error.message}`);
-                    }
-                }
-                resolve();
-            }),
-            new Promise<void>(async (resolve) => {
-                if (onOutpointsDeleted && Object.keys(deletedOutpoints).length > 0) {
-                    try {
-                        await onOutpointsDeleted(deletedOutpoints);
-                    } catch (error: any) {
-                        console.error(`Error in onOutpointsDeleted callback: ${error.message}`);
-                    }
-                }
-                resolve();
-            }),
-        ]);
+        await Promise.all([executeCreatedOutpointsCallback(), executeDeletedOutpointsCallback()]);
     }
     /**
      * Queries the network node for the outpoints of the specified address.
