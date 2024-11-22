@@ -20132,6 +20132,40 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     function formatOutpoints(outpoints) {
         return outpoints.map(_formatOutpoint);
     }
+    function formatOutpointDeltas(deltas) {
+        const result = {};
+        for (const [address, delta] of Object.entries(deltas)) {
+            const created = [];
+            const deleted = [];
+            // Process created outpoints
+            for (const [txHash, outputs] of Object.entries(delta.created)) {
+                outputs.forEach((output) => {
+                    created.push({
+                        txHash,
+                        index: output.index,
+                        denomination: output.denomination,
+                        lock: output.lock,
+                    });
+                });
+            }
+            // Process deleted outpoints
+            for (const [txHash, outputs] of Object.entries(delta.deleted)) {
+                outputs.forEach((output) => {
+                    deleted.push({
+                        txHash,
+                        index: output.index,
+                        denomination: output.denomination,
+                        lock: output.lock,
+                    });
+                });
+            }
+            result[address] = {
+                created: formatOutpoints(created),
+                deleted: formatOutpoints(deleted),
+            };
+        }
+        return result;
+    }
 
     /**
      * Class representing a QiTransaction.
@@ -21408,7 +21442,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             return createOrphanedBlockFilter({
                 hash: this.hash,
-                number: parseInt(this.woHeader.number, 16),
+                number: this.woHeader.number,
             });
         }
     }
@@ -28337,6 +28371,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
     }
 
+    /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
     /**
      * Enum representing the status of an address in the wallet.
      *
@@ -28374,6 +28409,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * ```ts
      * import { QiHDWallet, Zone } from 'quais';
+     * import { Outpoint } from '../../lib/commonjs/transaction/utxo';
      *
      * const wallet = new QiHDWallet();
      * const cyrpus1Address = await wallet.getNextAddress(0, Zone.Cyrpus1); // get the first address in the Cyrpus1 zone
@@ -28426,10 +28462,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @type {OutpointInfo[]}
          */
         _availableOutpoints = [];
-        /**
-         * Map of outpoints that are pending confirmation of being spent.
-         */
-        _pendingOutpoints = [];
         /**
          * @ignore
          * @type {AddressUsageCallback}
@@ -28495,16 +28527,33 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {QiAddressInfo} The next Qi address information.
          */
         _getNextQiAddress(account, zone, isChange) {
-            const addresses = this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external') || [];
+            const derivationPath = isChange ? 'BIP44:change' : 'BIP44:external';
+            const addresses = this._addressesMap.get(derivationPath) || [];
             const lastIndex = this._findLastUsedIndex(addresses, account, zone);
             const addressNode = this.deriveNextAddressNode(account, lastIndex + 1, zone, isChange);
+            const newAddressInfo = this._createAndStoreQiAddressInfo(addressNode, account, zone, isChange);
             const privateKeysArray = this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH) || [];
             const existingPrivateKeyIndex = privateKeysArray.findIndex((info) => info.address === addressNode.address);
             if (existingPrivateKeyIndex !== -1) {
+                // Update the status and last synced block for the address being moved from private keys to bip44
+                const pkAddressToRemove = privateKeysArray[existingPrivateKeyIndex];
+                const updatedAddresses = addresses.map((addressInfo) => {
+                    if (addressInfo.address === pkAddressToRemove.address) {
+                        return {
+                            ...addressInfo,
+                            status: pkAddressToRemove.status,
+                            lastSyncedBlock: pkAddressToRemove.lastSyncedBlock,
+                        };
+                    }
+                    return addressInfo;
+                });
+                // update the private keys array
                 privateKeysArray.splice(existingPrivateKeyIndex, 1);
                 this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, privateKeysArray);
+                // update the addresses array
+                this._addressesMap.set(derivationPath, updatedAddresses);
             }
-            return this._createAndStoreQiAddressInfo(addressNode, account, zone, isChange);
+            return newAddressInfo;
         }
         _createAndStoreQiAddressInfo(addressNode, account, zone, isChange) {
             const qiAddressInfo = {
@@ -28514,8 +28563,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 index: addressNode.index,
                 change: isChange,
                 zone,
-                status: exports.AddressStatus.UNUSED,
+                status: exports.AddressStatus.UNKNOWN,
                 derivationPath: isChange ? 'BIP44:change' : 'BIP44:external',
+                lastSyncedBlock: null,
             };
             this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external').push(qiAddressInfo); // _addressesMap is initialized within the constructor
             return qiAddressInfo;
@@ -28620,35 +28670,110 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             return null;
         }
         /**
-         * Gets the **total** balance for the specified zone, including locked UTXOs.
+         * Gets the total balance for the specified zone, including locked UTXOs.
          *
          * @param {Zone} zone - The zone to get the balance for.
-         * @returns {bigint} The total balance for the zone.
+         * @param {number} [blockNumber] - The block number to use for the lock check.
+         * @param {boolean} useAvailableOutpoints - Whether to use available outpoints to calculate the balance.
+         * @returns {Promise<bigint>} The total balance for the zone.
          */
-        getBalanceForZone(zone) {
+        async getBalanceForZone(zone, blockNumber, useAvailableOutpoints = false) {
+            if (!this.provider)
+                throw new Error('Provider is not set');
             this.validateZone(zone);
-            return this._availableOutpoints
-                .filter((outpoint) => outpoint.zone === zone)
-                .reduce((total, outpoint) => {
-                const denominationValue = denominations[outpoint.outpoint.denomination];
-                return total + denominationValue;
-            }, BigInt(0));
+            if (!blockNumber && useAvailableOutpoints) {
+                blockNumber = await this.provider.getBlockNumber(toShard(zone));
+            }
+            return ((await this.getSpendableBalanceForZone(zone, blockNumber, useAvailableOutpoints)) +
+                (await this.getLockedBalanceForZone(zone, blockNumber, useAvailableOutpoints)));
         }
         /**
-         * Gets the locked balance for the specified zone.
+         * Gets the **spendable** balance for the specified zone by calling {@link getBalance} for all known addresses in the
+         * zone.
+         *
+         * @param {Zone} zone - The zone to get the balance for.
+         * @param {boolean} useAvailableOutpoints - Whether to use available outpoints to calculate the balance.
+         * @returns {bigint} The spendable balance for the zone.
+         */
+        async getSpendableBalanceForZone(zone, blockNumber, useAvailableOutpoints = false) {
+            if (!this.provider)
+                throw new Error('Provider is not set');
+            this.validateZone(zone);
+            if (useAvailableOutpoints) {
+                if (!blockNumber) {
+                    blockNumber = await this.provider.getBlockNumber(toShard(zone));
+                }
+                return this._calculateAvailableOutpointSpendableBalanceForZone(zone, blockNumber);
+            }
+            return this._fetchSpendableBalanceForZone(zone);
+        }
+        /**
+         * Gets the **locked** balance for the specified zone by calling {@link getLockedBalance} for all known addresses in
+         * the zone.
+         *
+         * @param {Zone} zone - The zone to get the balance for.
+         * @param {boolean} useAvailableOutpoints - Whether to use available outpoints to calculate the balance.
+         * @returns {bigint} The locked balance for the zone.
+         */
+        async getLockedBalanceForZone(zone, blockNumber, useAvailableOutpoints = false) {
+            if (!this.provider)
+                throw new Error('Provider is not set');
+            this.validateZone(zone);
+            if (useAvailableOutpoints) {
+                if (!blockNumber) {
+                    blockNumber = await this.provider.getBlockNumber(toShard(zone));
+                }
+                return this._calculateAvailableOutpointLockedBalanceForZone(zone, blockNumber);
+            }
+            return this._fetchLockedBalanceForZone(zone);
+        }
+        /**
+         * Gets the spendable balance for the specified zone by calling {@link getBalance} for all known addresses in the
+         * zone.
+         *
+         * @param {Zone} zone - The zone to get the spendable balance for.
+         * @returns {bigint} The spendable balance for the zone.
+         */
+        async _fetchSpendableBalanceForZone(zone) {
+            const balanceMethod = async (address) => this.provider?.getBalance(address, 'latest') || BigInt(0);
+            return this._fetchBalanceForZone(zone, balanceMethod);
+        }
+        /**
+         * Gets the locked balance for the specified zone by calling {@link getLockedBalance} for all known addresses in the
+         * zone.
          *
          * @param {Zone} zone - The zone to get the locked balance for.
          * @returns {bigint} The locked balance for the zone.
          */
-        async getSpendableBalanceForZone(zone, blockNumber) {
-            this.validateZone(zone);
-            if (!this.provider) {
-                throw new Error('Provider is not set');
-            }
-            if (!blockNumber) {
-                blockNumber = await this.provider.getBlockNumber(toShard(zone));
-            }
+        async _fetchLockedBalanceForZone(zone) {
+            const balanceMethod = async (address) => this.provider?.getLockedBalance(address) || BigInt(0);
+            return this._fetchBalanceForZone(zone, balanceMethod);
+        }
+        /**
+         * Fetches the balance for the specified zone by calling the provided balance method for all known addresses in the
+         * zone.
+         *
+         * @param {Zone} zone - The zone to get the balance for.
+         * @param {Function} balanceMethod - The method to call to get the balance for each address.
+         * @returns {Promise<bigint>} The balance for the zone.
+         */
+        async _fetchBalanceForZone(zone, balanceMethod) {
+            const allAddresses = Array.from(this._addressesMap.values())
+                .flat()
+                .filter((address) => address.zone === zone);
+            const allBalances = await Promise.all(allAddresses.map((address) => balanceMethod(address.address) ?? BigInt(0)));
+            return allBalances.reduce((total, balance) => BigInt(total) + BigInt(balance), BigInt(0));
+        }
+        /**
+         * Gets the spendable balance for the specified zone using the available outpoints.
+         *
+         * @param {Zone} zone - The zone to get the spendable balance for.
+         * @param {number} [blockNumber] - The block number to use for the lock check.
+         * @returns {bigint} The spendable balance for the zone.
+         */
+        async _calculateAvailableOutpointSpendableBalanceForZone(zone, blockNumber) {
             return this._availableOutpoints
+                .filter((utxo) => utxo.zone === zone)
                 .filter((utxo) => utxo.outpoint.lock === 0 || utxo.outpoint.lock < blockNumber)
                 .reduce((total, utxo) => {
                 const denominationValue = denominations[utxo.outpoint.denomination];
@@ -28656,20 +28781,15 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }, BigInt(0));
         }
         /**
-         * Gets the locked balance for the specified zone.
+         * Gets the locked balance for the specified zone using the available outpoints.
          *
          * @param {Zone} zone - The zone to get the locked balance for.
+         * @param {number} [blockNumber] - The block number to use for the lock check.
          * @returns {bigint} The locked balance for the zone.
          */
-        async getLockedBalanceForZone(zone, blockNumber) {
-            this.validateZone(zone);
-            if (!this.provider) {
-                throw new Error('Provider is not set');
-            }
-            if (!blockNumber) {
-                blockNumber = await this.provider.getBlockNumber(toShard(zone));
-            }
+        async _calculateAvailableOutpointLockedBalanceForZone(zone, blockNumber) {
             return this._availableOutpoints
+                .filter((utxo) => utxo.zone === zone)
                 .filter((utxo) => utxo.outpoint.lock !== 0 && blockNumber < utxo.outpoint.lock)
                 .reduce((total, utxo) => {
                 const denominationValue = denominations[utxo.outpoint.denomination];
@@ -28701,8 +28821,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 throw new Error('Provider is not set');
             }
             // 1. Check the wallet has enough balance in the originating zone to send the transaction
-            const currentBlock = await this.provider.getBlockNumber(originZone);
-            const balance = await this.getSpendableBalanceForZone(originZone, currentBlock);
+            const currentBlock = await this.provider.getBlock(toShard(originZone), 'latest');
+            const balance = await this.getSpendableBalanceForZone(originZone, currentBlock?.woHeader.number, true);
             if (balance < amount) {
                 throw new Error(`Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qi`);
             }
@@ -28711,7 +28831,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (zoneUTXOs.length === 0) {
                 throw new Error('No Qi available in zone.');
             }
-            const unlockedUTXOs = zoneUTXOs.filter((utxo) => utxo.lock === 0 || utxo.lock < currentBlock);
+            const unlockedUTXOs = zoneUTXOs.filter((utxo) => utxo.lock === 0 || utxo.lock < currentBlock?.woHeader.number);
             if (unlockedUTXOs.length === 0) {
                 throw new Error('Insufficient spendable balance in zone.');
             }
@@ -28739,7 +28859,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 // Combine the existing change addresses with the newly generated addresses and ensure they are unique and sorted by index
                 const mergedChangeAddresses = [
-                    ...outpusChangeAddresses.map((address) => ({ ...address, status: exports.AddressStatus.ATTEMPTED_USE })),
+                    // Not updated last synced block because we are not certain of the success of the transaction
+                    // so we will want to get deltas from last **checked** block
+                    ...outpusChangeAddresses.map((address) => ({
+                        ...address,
+                        status: exports.AddressStatus.ATTEMPTED_USE,
+                    })),
                     ...currentChangeAddresses,
                 ];
                 const sortedAndFilteredChangeAddresses = mergedChangeAddresses
@@ -28763,7 +28888,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 const feeEstimationTx = this.prepareFeeEstimationTransaction(selection, inputPubKeys.map((pubkey) => pubkey), sendAddresses, changeAddresses);
                 finalFee = await this.provider.estimateFeeForQi(feeEstimationTx);
                 // Get new selection with updated fee 2x
-                selection = fewestCoinSelector.performSelection(spendTarget, finalFee * 2n);
+                selection = fewestCoinSelector.performSelection(spendTarget, finalFee * 3n);
                 // Determine if new addresses are needed for the change outputs
                 const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
                 if (changeAddressesNeeded > 0) {
@@ -28772,9 +28897,17 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     changeAddresses.push(...newChangeAddresses);
                 }
                 else if (changeAddressesNeeded < 0) {
-                    // Have extra change addresses, remove the addresses starting from the end
-                    // TODO: Set the status of the addresses to UNUSED in _addressesMap. This fine for now as it will be fixed during next sync
-                    changeAddresses.splice(changeAddressesNeeded);
+                    // Have extra change addresses, remove the excess
+                    const addressesToSetToUnused = changeAddresses.slice(changeAddressesNeeded);
+                    // Set the status of the addresses back to UNUSED in _addressesMap for removed addresses
+                    const changeAddressesMap = this._addressesMap.get('BIP44:change');
+                    const updatedChangeAddressesMap = changeAddressesMap.map((a) => {
+                        if (addressesToSetToUnused.includes(a.address)) {
+                            return { ...a, status: exports.AddressStatus.UNUSED };
+                        }
+                        return a;
+                    });
+                    this._addressesMap.set('BIP44:change', updatedChangeAddressesMap);
                 }
                 // Determine if new addresses are needed for the spend outputs
                 const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
@@ -28784,9 +28917,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     sendAddresses.push(...newSendAddresses);
                 }
                 else if (spendAddressesNeeded < 0) {
-                    // Have extra send addresses, remove the excess
-                    // TODO: Set the status of the addresses to UNUSED in _addressesMap. This fine for now as it will be fixed during next sync
-                    sendAddresses.splice(spendAddressesNeeded);
+                    // It would be great to reset the status of the addresses to UNUSED in _addressesMap but we do not
+                    // know exactly how these addresses are derived, so we just remove them from the array
+                    sendAddresses.slice(spendAddressesNeeded);
                 }
                 inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
                 // Calculate total new outputs needed (absolute value)
@@ -28800,8 +28933,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // Proceed with creating and signing the transaction
             const chainId = (await this.provider.getNetwork()).chainId;
             const tx = await this.prepareTransaction(selection, inputPubKeys.map((pubkey) => pubkey), sendAddresses, changeAddresses, Number(chainId));
-            // Move used outpoints to pendingOutpoints
-            this.moveOutpointsToPending(tx.txInputs);
             // Sign the transaction
             const signedTx = await this.signTransaction(tx);
             // Broadcast the transaction to the network using the provider
@@ -28848,17 +28979,40 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (amount <= 0) {
                 throw new Error('Amount must be greater than 0');
             }
+            if (!this.provider) {
+                throw new Error('Provider is not set');
+            }
             this.validateZone(originZone);
             this.validateZone(destinationZone);
+            const currentBlock = await this.provider.getBlock(toShard(originZone), 'latest');
             const getDestinationAddresses = async (count) => {
                 const addresses = [];
+                const updatedAddresses = [];
                 while (addresses.length < count) {
-                    const address = this.getNextSendAddress(recipientPaymentCode, destinationZone).address;
-                    const { isUsed } = await this.checkAddressUse(address);
+                    const addressInfo = this.getNextSendAddress(recipientPaymentCode, destinationZone);
+                    const { isUsed } = await this.checkAddressUse(addressInfo.address);
                     if (!isUsed) {
-                        addresses.push(address);
+                        addressInfo.status = exports.AddressStatus.ATTEMPTED_USE;
+                        addresses.push(addressInfo.address);
                     }
+                    else {
+                        addressInfo.status = exports.AddressStatus.USED;
+                    }
+                    updatedAddresses.push({
+                        ...addressInfo,
+                        lastSyncedBlock: { hash: currentBlock?.hash, number: currentBlock?.woHeader.number },
+                    });
                 }
+                // Update the status for the addresses being used for the payment code
+                const paymentCodeInfoArray = this._paymentCodeSendAddressMap.get(recipientPaymentCode) || [];
+                const updatedPaymentCodeInfoArray = paymentCodeInfoArray.map((info) => {
+                    const updateAddrInfo = updatedAddresses.find((addr) => addr.address === info.address);
+                    if (updateAddrInfo) {
+                        return updateAddrInfo;
+                    }
+                    return info;
+                });
+                this._paymentCodeSendAddressMap.set(recipientPaymentCode, updatedPaymentCodeInfoArray);
                 return addresses;
             };
             return this.prepareAndSendTransaction(amount, originZone, getDestinationAddresses);
@@ -28911,66 +29065,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 txIn,
                 txOut,
             };
-        }
-        /**
-         * Checks the status of pending outpoints and updates the wallet's UTXO set accordingly.
-         *
-         * @param zone The zone in which to check the pending outpoints.
-         */
-        async checkPendingOutpoints(zone) {
-            // Create a copy to iterate over, as we'll be modifying the _pendingOutpoints array
-            const pendingOutpoints = [...this._pendingOutpoints.filter((info) => info.zone === zone)];
-            const uniqueAddresses = new Set(pendingOutpoints.map((info) => info.address));
-            let outpointsByAddress = [];
-            try {
-                outpointsByAddress = (await Promise.all(Array.from(uniqueAddresses).map((address) => this.getOutpointsByAddress(address)))).flat();
-            }
-            catch (error) {
-                console.error('Error getting outpoints by address', error);
-            }
-            const allOutpointsByAddress = outpointsByAddress.flat();
-            for (const outpointInfo of pendingOutpoints) {
-                const isSpent = !allOutpointsByAddress.some((outpoint) => outpoint.txhash === outpointInfo.outpoint.txhash && outpoint.index === outpointInfo.outpoint.index);
-                if (isSpent) {
-                    // Outpoint has been spent; remove it from pendingOutpoints
-                    this.removeOutpointFromPending(outpointInfo.outpoint);
-                }
-                else {
-                    // Outpoint is still unspent; move it back to available outpoints
-                    this.moveOutpointToAvailable(outpointInfo);
-                }
-            }
-        }
-        /**
-         * Moves specified inputs to pending outpoints.
-         *
-         * @param inputs List of inputs used in the transaction.
-         */
-        moveOutpointsToPending(inputs) {
-            inputs.forEach((input) => {
-                const index = this._availableOutpoints.findIndex((outpointInfo) => outpointInfo.outpoint.txhash === input.txhash && outpointInfo.outpoint.index === input.index);
-                if (index !== -1) {
-                    const [outpointInfo] = this._availableOutpoints.splice(index, 1);
-                    this._pendingOutpoints.push(outpointInfo);
-                }
-            });
-        }
-        /**
-         * Removes an outpoint from the pending outpoints.
-         *
-         * @param outpoint The outpoint to remove.
-         */
-        removeOutpointFromPending(outpoint) {
-            this._pendingOutpoints = this._pendingOutpoints.filter((info) => !(info.outpoint.txhash === outpoint.txhash && info.outpoint.index === outpoint.index));
-        }
-        /**
-         * Moves an outpoint from pending back to available outpoints.
-         *
-         * @param outpointInfo The outpoint info to move.
-         */
-        moveOutpointToAvailable(outpointInfo) {
-            this.removeOutpointFromPending(outpointInfo.outpoint);
-            this._availableOutpoints.push(outpointInfo);
         }
         /**
          * Returns a schnorr signature for the given message and private key.
@@ -29090,11 +29184,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // set status of all addresses to unknown
             this._addressesMap = new Map(Array.from(this._addressesMap.entries()).map(([key, addresses]) => [
                 key,
-                addresses.map((addr) => ({ ...addr, status: exports.AddressStatus.UNKNOWN })),
+                addresses.map((addr) => ({ ...addr, status: exports.AddressStatus.UNKNOWN, lastSyncedBlock: null })),
             ]));
-            // flush available and pending outpoints
+            // flush available
             this._availableOutpoints = [];
-            this._pendingOutpoints = [];
             // Reset each map so that all keys have empty array values but keys are preserved
             this._paymentCodeSendAddressMap = new Map(Array.from(this._paymentCodeSendAddressMap.keys()).map((key) => [key, []]));
             await this._scan(zone, account);
@@ -29109,10 +29202,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {Promise<void>} A promise that resolves when the sync is complete.
          * @throws {Error} If the zone is invalid.
          */
-        async sync(zone, account = 0) {
+        async sync(zone, account = 0, onOutpointsCreated, onOutpointsDeleted) {
             this.validateZone(zone);
-            await this._scan(zone, account);
-            await this.checkPendingOutpoints(zone);
+            await this._scan(zone, account, onOutpointsCreated, onOutpointsDeleted);
         }
         /**
          * Internal method to scan the specified zone for addresses with unspent outputs. This method handles the actual
@@ -29120,16 +29212,18 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @param {Zone} zone - The zone in which to scan for addresses.
          * @param {number} [account=0] - The index of the account to scan. Default is `0`
+         * @param {Function} [onCreate] - A callback function that is called when a new address is created.
+         * @param {Function} [onDelete] - A callback function that is called when an address is deleted.
          * @returns {Promise<void>} A promise that resolves when the scan is complete.
          * @throws {Error} If the provider is not set.
          */
-        async _scan(zone, account = 0) {
+        async _scan(zone, account = 0, onOutpointsCreated, onOutpointsDeleted) {
             if (!this.provider)
                 throw new Error('Provider not set');
             const derivationPaths = ['BIP44:external', 'BIP44:change', ...this.openChannels];
             await Promise.all([
-                ...derivationPaths.map((path) => this._scanDerivationPath(path, zone, account)),
-                this._scanDerivationPath(QiHDWallet.PRIVATE_KEYS_PATH, zone, account, true),
+                ...derivationPaths.map((path) => this._scanDerivationPath(path, zone, account, false, onOutpointsCreated, onOutpointsDeleted)),
+                this._scanDerivationPath(QiHDWallet.PRIVATE_KEYS_PATH, zone, account, true, onOutpointsCreated, onOutpointsDeleted),
             ]);
         }
         /**
@@ -29142,25 +29236,95 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {Promise<void>} A promise that resolves when the scan is complete.
          * @throws {Error} If an error occurs during the address scanning or outpoints retrieval process.
          */
-        async _scanDerivationPath(path, zone, account, skipGap = false) {
+        async _scanDerivationPath(path, zone, account, skipGap = false, onOutpointsCreated, onOutpointsDeleted) {
             const addresses = this._addressesMap.get(path) || [];
-            let consecutiveUnusedCount = 0;
-            const checkStatuses = [exports.AddressStatus.UNKNOWN, exports.AddressStatus.ATTEMPTED_USE, exports.AddressStatus.UNUSED];
-            // Check existing addresses
-            for (let i = 0; i < addresses.length; i++) {
-                const addr = addresses[i];
-                if (checkStatuses.includes(addr.status)) {
-                    const { isUsed, outpoints } = await this.checkAddressUse(addr.address);
-                    addresses[i].status = isUsed ? exports.AddressStatus.USED : exports.AddressStatus.UNUSED;
-                    // import outpoints if any are found
-                    if (outpoints.length > 0) {
-                        this.importOutpoints(outpoints.map((outpoint) => ({
-                            outpoint,
-                            address: addr.address,
-                            zone: addr.zone,
-                            account: addr.account,
-                        })));
+            const updatedAddresses = [];
+            const createdOutpoints = {};
+            const deletedOutpoints = {};
+            const currentBlock = await this.provider.getBlock(toShard(zone), 'latest');
+            // Addresses with a last synced block are checked for outpoint deltas
+            const previouslySyncedAddresses = addresses.filter((addr) => addr.lastSyncedBlock !== null);
+            const unsyncedAddresses = addresses.filter((addr) => addr.lastSyncedBlock === null);
+            if (previouslySyncedAddresses.length > 0) {
+                // get all unique txhashes from used addresses last synced block to current block
+                const addressesByLastSyncedTxHash = {};
+                for (const addr of previouslySyncedAddresses) {
+                    if (addr.lastSyncedBlock?.hash) {
+                        if (!addressesByLastSyncedTxHash[addr.lastSyncedBlock.hash]) {
+                            addressesByLastSyncedTxHash[addr.lastSyncedBlock.hash] = [addr.address];
+                        }
+                        else {
+                            addressesByLastSyncedTxHash[addr.lastSyncedBlock.hash].push(addr.address);
+                        }
                     }
+                }
+                // Get outpoint deltas for each unique txhash
+                const deltasBatches = await Promise.all(Object.entries(addressesByLastSyncedTxHash).map(([txHash, addresses]) => this.provider.getOutpointDeltas(addresses, txHash)));
+                // combine deltas into single object
+                const deltas = {};
+                for (const deltaBatch of deltasBatches) {
+                    for (const [address, delta] of Object.entries(deltaBatch)) {
+                        if (!deltas[address]) {
+                            deltas[address] = { created: delta.created, deleted: delta.deleted };
+                        }
+                        else {
+                            deltas[address].created.push(...delta.created);
+                            deltas[address].deleted.push(...delta.deleted);
+                        }
+                    }
+                }
+                // Process deltas
+                for (const [address, delta] of Object.entries(deltas)) {
+                    const addressInfo = addresses.find((a) => a.address === address);
+                    const updatedAddressInfo = {
+                        ...addressInfo,
+                        lastSyncedBlock: {
+                            hash: currentBlock?.hash,
+                            number: currentBlock?.woHeader.number,
+                        },
+                    };
+                    // Handle created outpoints
+                    if (delta.created && delta.created.length > 0) {
+                        this.importOutpoints(delta.created.map((outpoint) => ({
+                            outpoint,
+                            address,
+                            zone,
+                            account,
+                        })));
+                        createdOutpoints[address] = delta.created;
+                        // set address status to used even if it may have already has this status
+                        updatedAddressInfo.status = exports.AddressStatus.USED;
+                    }
+                    // Handle deleted outpoints
+                    if (delta.deleted && delta.deleted.length > 0) {
+                        // Remove corresponding outpoints from availableOutpoints
+                        this._availableOutpoints = this._availableOutpoints.filter((outpointInfo) => !(outpointInfo.address === address &&
+                            delta.deleted.some((deletedOutpoint) => deletedOutpoint.txhash === outpointInfo.outpoint.txhash &&
+                                deletedOutpoint.index === outpointInfo.outpoint.index)));
+                        deletedOutpoints[address] = delta.deleted;
+                    }
+                    updatedAddresses.push(updatedAddressInfo);
+                }
+            }
+            let consecutiveUnusedCount = 0;
+            // Check unsynced addresses for outpoints
+            for (let i = 0; i < unsyncedAddresses.length; i++) {
+                const addr = unsyncedAddresses[i];
+                const { isUsed, outpoints } = await this.checkAddressUse(addr.address);
+                unsyncedAddresses[i].status = isUsed ? exports.AddressStatus.USED : exports.AddressStatus.UNUSED;
+                unsyncedAddresses[i].lastSyncedBlock = {
+                    hash: currentBlock?.hash,
+                    number: currentBlock?.woHeader.number,
+                };
+                // import outpoints if any are found
+                if (outpoints.length > 0) {
+                    this.importOutpoints(outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: addr.address,
+                        zone: addr.zone,
+                        account: addr.account,
+                    })));
+                    createdOutpoints[addr.address] = outpoints;
                 }
                 if (addr.status === exports.AddressStatus.USED) {
                     consecutiveUnusedCount = 0;
@@ -29168,37 +29332,74 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 else {
                     consecutiveUnusedCount++;
                 }
+                updatedAddresses.push(unsyncedAddresses[i]);
                 // If the consecutive unused count has reached the gap limit, break
                 if (consecutiveUnusedCount >= QiHDWallet._GAP_LIMIT)
                     break;
             }
-            // skip gap if requested
-            if (skipGap)
-                return;
-            // Generate new addresses if needed
-            while (consecutiveUnusedCount < QiHDWallet._GAP_LIMIT) {
-                const isChange = path.endsWith(':change');
-                const newAddrInfo = path.includes('BIP44')
-                    ? this._getNextQiAddress(account, zone, isChange)
-                    : this.getNextReceiveAddress(path, zone, account);
-                const { isUsed, outpoints } = await this.checkAddressUse(newAddrInfo.address);
-                newAddrInfo.status = isUsed ? exports.AddressStatus.USED : exports.AddressStatus.UNUSED;
-                // import outpoints if any are found
-                if (outpoints.length > 0) {
-                    this.importOutpoints(outpoints.map((outpoint) => ({
-                        outpoint,
-                        address: newAddrInfo.address,
-                        zone: newAddrInfo.zone,
-                        account: newAddrInfo.account,
-                    })));
-                }
-                if (newAddrInfo.status === exports.AddressStatus.USED) {
-                    consecutiveUnusedCount = 0;
-                }
-                else {
-                    consecutiveUnusedCount++;
+            if (!skipGap) {
+                // Generate new addresses if needed until the gap limit is reached
+                while (consecutiveUnusedCount < QiHDWallet._GAP_LIMIT) {
+                    const isChange = path.endsWith(':change');
+                    const newAddrInfo = path.includes('BIP44')
+                        ? this._getNextQiAddress(account, zone, isChange)
+                        : this.getNextReceiveAddress(path, zone, account);
+                    const { isUsed, outpoints } = await this.checkAddressUse(newAddrInfo.address);
+                    newAddrInfo.status = isUsed ? exports.AddressStatus.USED : exports.AddressStatus.UNUSED;
+                    newAddrInfo.lastSyncedBlock = {
+                        hash: currentBlock?.hash,
+                        number: currentBlock?.woHeader.number,
+                    };
+                    // import outpoints if any are found
+                    if (outpoints.length > 0) {
+                        this.importOutpoints(outpoints.map((outpoint) => ({
+                            outpoint,
+                            address: newAddrInfo.address,
+                            zone: newAddrInfo.zone,
+                            account: newAddrInfo.account,
+                        })));
+                        createdOutpoints[newAddrInfo.address] = outpoints;
+                    }
+                    if (newAddrInfo.status === exports.AddressStatus.USED) {
+                        consecutiveUnusedCount = 0;
+                    }
+                    else {
+                        consecutiveUnusedCount++;
+                    }
+                    updatedAddresses.push(newAddrInfo);
                 }
             }
+            // update addresses map
+            const updatedAddressesForMap = addresses.map((addr) => {
+                const updatedAddr = updatedAddresses.find((a) => a.address === addr.address);
+                if (updatedAddr) {
+                    return updatedAddr;
+                }
+                return addr;
+            });
+            this._addressesMap.set(path, updatedAddressesForMap);
+            const executeCreatedOutpointsCallback = async () => {
+                if (onOutpointsCreated && Object.keys(createdOutpoints).length > 0) {
+                    try {
+                        await onOutpointsCreated(createdOutpoints);
+                    }
+                    catch (error) {
+                        console.error(`Error in onOutpointsCreated callback: ${error.message}`);
+                    }
+                }
+            };
+            const executeDeletedOutpointsCallback = async () => {
+                if (onOutpointsDeleted && Object.keys(deletedOutpoints).length > 0) {
+                    try {
+                        await onOutpointsDeleted(deletedOutpoints);
+                    }
+                    catch (error) {
+                        console.error(`Error in onOutpointsDeleted callback: ${error.message}`);
+                    }
+                }
+            };
+            // execute callbacks
+            await Promise.all([executeCreatedOutpointsCallback(), executeDeletedOutpointsCallback()]);
         }
         /**
          * Queries the network node for the outpoints of the specified address.
@@ -29331,10 +29532,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const hdwalletSerialized = super.serialize();
             return {
                 ...hdwalletSerialized,
-                outpoints: this._availableOutpoints,
-                pendingOutpoints: this._pendingOutpoints,
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                addresses: Array.from(this._addressesMap.entries()).flatMap(([_, addresses]) => addresses),
+                addresses: Array.from(this._addressesMap.values()).flatMap((addresses) => addresses),
                 senderPaymentCodeInfo: Object.fromEntries(Array.from(this._paymentCodeSendAddressMap.entries()).map(([key, value]) => [key, Array.from(value)])),
             };
         }
@@ -29388,12 +29586,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
                 wallet._paymentCodeSendAddressMap.set(paymentCode, paymentCodeInfoArray);
             }
-            // validate the available outpoints and import them
-            wallet.validateOutpointInfo(serialized.outpoints);
-            wallet._availableOutpoints.push(...serialized.outpoints);
-            // validate the pending outpoints and import them
-            wallet.validateOutpointInfo(serialized.pendingOutpoints);
-            wallet._pendingOutpoints.push(...serialized.pendingOutpoints);
             return wallet;
         }
         validateAddressDerivation(info) {
@@ -29563,8 +29755,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         account,
                         zone,
                         change: false,
-                        status: exports.AddressStatus.UNUSED,
+                        status: exports.AddressStatus.UNKNOWN,
                         derivationPath: receiverPaymentCode,
+                        lastSyncedBlock: null,
                     };
                     if (paymentCodeInfoArray) {
                         paymentCodeInfoArray.push(pcInfo);
@@ -29608,8 +29801,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         account,
                         zone,
                         change: false,
-                        status: exports.AddressStatus.UNUSED,
+                        status: exports.AddressStatus.UNKNOWN,
                         derivationPath: senderPaymentCode,
+                        lastSyncedBlock: null,
                     };
                     if (paymentCodeInfoArray) {
                         paymentCodeInfoArray.push(pcInfo);
@@ -29703,7 +29897,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 change: false,
                 zone: addressZone,
                 status: exports.AddressStatus.UNUSED,
-                derivationPath: privateKey, // Store private key in derivationPath
+                derivationPath: privateKey,
+                lastSyncedBlock: null,
             };
             this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH).push(addressInfo);
             return addressInfo;
@@ -31387,6 +31582,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         async getBalance(address, blockTag) {
             return getBigInt(await this.#getAccountValue({ method: 'getBalance' }, address, blockTag), '%response');
         }
+        async getLockedBalance(address) {
+            return getBigInt(await this.#getAccountValue({ method: 'getLockedBalance' }, address), '%response');
+        }
         async getOutpointsByAddress(address) {
             return formatOutpoints(await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest'));
         }
@@ -31529,6 +31727,90 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 return null;
             }
             return hexlify(result);
+        }
+        async getOutpointDeltas(addresses, startHash, endHash) {
+            // Validate addresses are Qi addresses
+            for (const addr of addresses) {
+                assertArgument(isQiAddress(addr), `Invalid Qi address: ${addr}`, 'addresses', addresses);
+            }
+            // Validate block hashes
+            assertArgument(isHexString(startHash, 32), 'invalid startHash', 'startHash', startHash);
+            if (endHash) {
+                assertArgument(isHexString(endHash, 32), 'invalid endHash', 'endHash', endHash);
+            }
+            else {
+                endHash = 'latest';
+            }
+            // Get the zone from the first address
+            const zone = await this.zoneFromAddress(addresses[0]);
+            const shard = toShard(zone);
+            // Fetch the block numbers for startHash and endHash in parallel
+            const [startBlock, endBlock] = await Promise.all([
+                this.getBlock(shard, startHash),
+                this.getBlock(shard, endHash),
+            ]);
+            if (startBlock == null) {
+                throw new Error('Could not find start block');
+            }
+            if (endBlock == null) {
+                throw new Error('Could not find end block');
+            }
+            const startBlockNumber = getNumber(startBlock.woHeader.number, 'startBlockNumber');
+            const endBlockNumber = getNumber(endBlock.woHeader.number, 'endBlockNumber');
+            assertArgument(startBlockNumber <= endBlockNumber, 'startBlockNumber must be less than or equal to endBlockNumber', 'startBlockNumber', startBlockNumber);
+            // Precompute the ranges and collect end block numbers
+            const ranges = [];
+            const endBlockNumbers = [];
+            let currentStartBlockNumber = startBlockNumber;
+            let currentStartHash = startHash;
+            while (currentStartBlockNumber <= endBlockNumber) {
+                // Calculate end of this segment
+                const currentEndBlockNumber = Math.min(currentStartBlockNumber + 999, endBlockNumber);
+                endBlockNumbers.push(currentEndBlockNumber);
+                // Update for next segment
+                currentStartBlockNumber = currentEndBlockNumber + 1;
+            }
+            // Fetch all the end block hashes in parallel
+            const endBlocksPromises = endBlockNumbers.map((blockNumber) => this.getBlock(shard, blockNumber));
+            const endBlocks = await Promise.all(endBlocksPromises);
+            // Build the ranges using the fetched block hashes
+            currentStartBlockNumber = startBlockNumber;
+            currentStartHash = startHash;
+            for (let i = 0; i < endBlocks.length; i++) {
+                const currentEndBlock = endBlocks[i];
+                if (!currentEndBlock) {
+                    throw new Error(`Could not find block for block number ${endBlockNumbers[i]}`);
+                }
+                const currentEndHash = currentEndBlock.hash;
+                ranges.push({ startHash: currentStartHash, endHash: currentEndHash });
+                // Update for next segment
+                currentStartBlockNumber = endBlockNumbers[i] + 1;
+                currentStartHash = currentEndHash;
+            }
+            // Issue all RPC calls in parallel
+            const promises = ranges.map((range) => {
+                return this.#perform({
+                    method: 'getOutpointDeltasForAddressesInRange',
+                    addresses: addresses,
+                    startHash: range.startHash,
+                    endHash: range.endHash,
+                    zone: zone,
+                }).then(formatOutpointDeltas);
+            });
+            // Wait for all promises to resolve
+            const deltasArray = await Promise.all(promises);
+            // Merge all the results
+            const deltas = {};
+            for (const delta of deltasArray) {
+                for (const [address, data] of Object.entries(delta)) {
+                    if (!deltas[address]) {
+                        deltas[address] = { created: [], deleted: [] };
+                    }
+                    deltas[address].created.push(...data.created);
+                    deltas[address].deleted.push(...data.deleted);
+                }
+            }
+            return deltas;
         }
         // Bloom-filter Queries
         async getLogs(_filter) {
@@ -33035,6 +33317,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         method: 'quai_getBalance',
                         args: [req.address, req.blockTag],
                     };
+                case 'getLockedBalance':
+                    return {
+                        method: 'quai_getLockedBalance',
+                        args: [req.address],
+                    };
                 case 'getOutpointsByAddress':
                     return {
                         method: 'quai_getOutpointsByAddress',
@@ -33143,6 +33430,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     return { method: 'txpool_content', args: [] };
                 case 'txPoolInspect':
                     return { method: 'txpool_inspect', args: [] };
+                case 'getOutpointDeltasForAddressesInRange':
+                    return {
+                        method: 'quai_getOutpointDeltasForAddressesInRange',
+                        args: [req.addresses, req.startHash, req.endHash],
+                    };
             }
             return null;
         }
