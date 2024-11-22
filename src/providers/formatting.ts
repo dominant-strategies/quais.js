@@ -67,7 +67,7 @@ export interface UncleParams {
     location: string;
     mixHash: string;
     nonce: string;
-    number: string;
+    number: number;
     parentHash: string;
     timestamp: string;
     txHash: string;

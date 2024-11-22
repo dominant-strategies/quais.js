@@ -551,7 +551,7 @@ export class Uncle implements UncleParams {
     readonly location!: string;
     readonly mixHash!: string;
     readonly nonce!: string;
-    readonly number!: string;
+    readonly number!: number;
     readonly parentHash!: string;
     readonly timestamp!: string;
     readonly txHash!: string;
@@ -960,7 +960,7 @@ export class Block implements BlockParams, Iterable<string> {
         }
         return createOrphanedBlockFilter({
             hash: this.hash!,
-            number: parseInt(this.woHeader.number!, 16),
+            number: this.woHeader.number!,
         });
     }
 }
