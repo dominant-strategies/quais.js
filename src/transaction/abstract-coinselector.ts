@@ -41,6 +41,7 @@ export interface CoinSelectionConfig {
     target?: bigint;
     fee?: bigint;
     includeLocked?: boolean;
+    maxDenomination?: number;
     // Any future parameters can be added here
 }
 
@@ -112,5 +113,29 @@ export abstract class AbstractCoinSelector {
         if (this.availableUTXOs.length === 0) {
             throw new Error('No UTXOs available');
         }
+    }
+
+    /**
+     * Sorts UTXOs by their denomination.
+     *
+     * @param {UTXO[]} utxos - The UTXOs to sort.
+     * @param {'asc' | 'desc'} direction - The direction to sort ('asc' for ascending, 'desc' for descending).
+     * @returns {UTXO[]} The sorted UTXOs.
+     */
+    protected sortUTXOsByDenomination(utxos: UTXO[], direction: 'asc' | 'desc'): UTXO[] {
+        if (direction === 'asc') {
+            return [...utxos].sort((a, b) => {
+                const diff =
+                    BigInt(a.denomination !== null ? denominations[a.denomination] : 0) -
+                    BigInt(b.denomination !== null ? denominations[b.denomination] : 0);
+                return diff > BigInt(0) ? 1 : diff < BigInt(0) ? -1 : 0;
+            });
+        }
+        return [...utxos].sort((a, b) => {
+            const diff =
+                BigInt(b.denomination !== null ? denominations[b.denomination] : 0) -
+                BigInt(a.denomination !== null ? denominations[a.denomination] : 0);
+            return diff > BigInt(0) ? 1 : diff < BigInt(0) ? -1 : 0;
+        });
     }
 }
