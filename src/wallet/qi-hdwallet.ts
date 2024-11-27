@@ -259,47 +259,24 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const derivationPath = isChange ? 'BIP44:change' : 'BIP44:external';
         const addresses = this._addressesMap.get(derivationPath) || [];
 
-        // if (derivationPath === 'BIP44:external' && addresses.length === 0) {
-        //     return {
-        //         address: '0x00928694B9ecd4192C2BEc60f286e3AfaCCcf6A2',
-        //         pubKey: '0x0300928694B9ecd4192C2BEc60f286e3AfaCCcf6A2',
-        //         account,
-        //         index: 0,
-        //         change: isChange,
-        //         zone,
-        //         status: AddressStatus.UNKNOWN,
-        //         derivationPath: 'BIP44:external',
-        //         lastSyncedBlock: null,
-        //     };
-        // }
-
         const lastIndex = this._findLastUsedIndex(addresses, account, zone);
         const addressNode = this.deriveNextAddressNode(account, lastIndex + 1, zone, isChange);
         const newAddressInfo = this._createAndStoreQiAddressInfo(addressNode, account, zone, isChange);
 
         const privateKeysArray = this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH) || [];
-        const existingPrivateKeyIndex = privateKeysArray.findIndex((info) => info.address === addressNode.address);
-        if (existingPrivateKeyIndex !== -1) {
-            // Update the status and last synced block for the address being moved from private keys to bip44
-            const pkAddressToRemove = privateKeysArray[existingPrivateKeyIndex];
-            const updatedAddresses = addresses.map((addressInfo) => {
-                if (addressInfo.address === pkAddressToRemove.address) {
-                    return {
-                        ...addressInfo,
-                        status: pkAddressToRemove.status,
-                        lastSyncedBlock: pkAddressToRemove.lastSyncedBlock,
-                    };
-                }
-                return addressInfo;
-            });
+        const existingPrivateKeyIndex = privateKeysArray.findIndex((info) => info.address === newAddressInfo.address);
 
-            // update the private keys array
+        if (existingPrivateKeyIndex !== -1) {
+            // Update the newAddressInfo directly with the status and last synced block from the private key address
+            const pkAddressInfo = privateKeysArray[existingPrivateKeyIndex];
+            newAddressInfo.status = pkAddressInfo.status;
+            newAddressInfo.lastSyncedBlock = pkAddressInfo.lastSyncedBlock;
+
+            // Remove the address from the privateKeysArray
             privateKeysArray.splice(existingPrivateKeyIndex, 1);
             this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, privateKeysArray);
-
-            // update the addresses array
-            this._addressesMap.set(derivationPath, updatedAddresses);
         }
+
         return newAddressInfo;
     }
 
@@ -806,20 +783,20 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         const getChangeAddressesForOutputs = async (count: number): Promise<string[]> => {
             const currentChangeAddresses = this._addressesMap.get('BIP44:change') || [];
-            const outpusChangeAddresses: QiAddressInfo[] = [];
+            const outputChangeAddresses: QiAddressInfo[] = [];
 
             for (let i = 0; i < currentChangeAddresses.length; i++) {
                 if (currentChangeAddresses[i].status === AddressStatus.UNUSED) {
-                    outpusChangeAddresses.push(currentChangeAddresses[i]);
+                    outputChangeAddresses.push(currentChangeAddresses[i]);
                 }
 
-                if (outpusChangeAddresses.length === count) break;
+                if (outputChangeAddresses.length === count) break;
             }
 
             // Generate the remaining number of change addresses if needed
-            const remainingAddressesNeeded = count - outpusChangeAddresses.length;
+            const remainingAddressesNeeded = count - outputChangeAddresses.length;
             if (remainingAddressesNeeded > 0) {
-                outpusChangeAddresses.push(
+                outputChangeAddresses.push(
                     ...Array(remainingAddressesNeeded)
                         .fill(0)
                         .map(() => this.getNextChangeAddressSync(0, originZone)),
@@ -830,7 +807,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             const mergedChangeAddresses = [
                 // Not updated last synced block because we are not certain of the success of the transaction
                 // so we will want to get deltas from last **checked** block
-                ...outpusChangeAddresses.map((address) => ({
+                ...outputChangeAddresses.map((address) => ({
                     ...address,
                     status: AddressStatus.ATTEMPTED_USE,
                 })),
@@ -843,7 +820,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             // Update the _addressesMap with the modified change addresses and statuses
             this._addressesMap.set('BIP44:change', sortedAndFilteredChangeAddresses);
 
-            return outpusChangeAddresses.map((address) => address.address);
+            return outputChangeAddresses.map((address) => address.address);
         };
 
         // 4. Get change addresses
