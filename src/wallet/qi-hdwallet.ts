@@ -145,7 +145,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @ignore
      * @type {number}
      */
-    protected static _GAP_LIMIT: number = 2;
+    protected static _GAP_LIMIT: number = 5;
 
     /**
      * @ignore
@@ -218,7 +218,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {string[]} The payment codes for all open channels.
      */
     get openChannels(): string[] {
-        return Array.from(this._addressesMap.keys()).filter((key) => !key.startsWith('BIP44:'));
+        return Array.from(this._addressesMap.keys()).filter(
+            (key) => !key.startsWith('BIP44:') && key !== QiHDWallet.PRIVATE_KEYS_PATH,
+        );
     }
 
     /**
@@ -286,23 +288,20 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         zone: Zone,
         isChange: boolean,
     ): QiAddressInfo {
-        // scan the wallet outpoints for the new address. If the address is found, set the status to USED
-        const outpointInfo = this._availableOutpoints.find((outpoint) => outpoint.address === addressNode.address);
-        const status = outpointInfo ? AddressStatus.USED : AddressStatus.UNUSED;
-
+        const derivationPath = isChange ? 'BIP44:change' : 'BIP44:external';
         const qiAddressInfo: QiAddressInfo = {
+            zone,
+            account,
+            derivationPath,
             address: addressNode.address,
             pubKey: addressNode.publicKey,
-            account,
             index: addressNode.index,
             change: isChange,
-            zone,
-            status,
-            derivationPath: isChange ? 'BIP44:change' : 'BIP44:external',
+            status: AddressStatus.UNKNOWN,
             lastSyncedBlock: null,
         };
 
-        this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external')!.push(qiAddressInfo); // _addressesMap is initialized within the constructor
+        this._addressesMap.get(derivationPath)!.push(qiAddressInfo); // _addressesMap is initialized within the constructor
         return qiAddressInfo;
     }
 
@@ -550,7 +549,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         blockNumber?: number,
     ): Promise<bigint> {
         return this.getOutpoints(zone)
-            .filter((utxo) => utxo.zone === zone)
             .filter((utxo) => utxo.outpoint.lock === 0 || utxo.outpoint.lock! < blockNumber!)
             .reduce((total, utxo) => {
                 const denominationValue = denominations[utxo.outpoint.denomination];
@@ -833,8 +831,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         }
 
         let attempts = 0;
-        let finalFee = 0n;
-        let satisfiedFeeEstimation = false;
         const MAX_FEE_ESTIMATION_ATTEMPTS = 5;
 
         while (attempts < MAX_FEE_ESTIMATION_ATTEMPTS) {
@@ -845,10 +841,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 changeAddresses,
             );
 
-            finalFee = await this.provider.estimateFeeForQi(feeEstimationTx);
+            const estimatedFee = await this.provider.estimateFeeForQi(feeEstimationTx);
 
             // Get new selection with updated fee 2x
-            selection = fewestCoinSelector.performSelection({ target: spendTarget, fee: finalFee * 3n });
+            selection = fewestCoinSelector.performSelection({ target: spendTarget, fee: estimatedFee * 3n });
 
             // Determine if new addresses are needed for the change outputs
             const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
@@ -890,17 +886,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
             // If we need 5 or fewer new outputs, we can break the loop
             if ((changeAddressesNeeded <= 0 && spendAddressesNeeded <= 0) || totalNewOutputsNeeded <= 5) {
-                finalFee *= 3n; // Increase the fee 3x to ensure it's accepted
-                satisfiedFeeEstimation = true;
                 break;
             }
 
             attempts++;
-        }
-
-        // If we didn't satisfy the fee estimation, increase the fee 10x to ensure it's accepted
-        if (!satisfiedFeeEstimation) {
-            finalFee *= 10n;
         }
 
         // Proceed with creating and signing the transaction
