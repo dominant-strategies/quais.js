@@ -3,21 +3,9 @@ import { loadTests } from '../utils.js';
 import { QiHDWallet } from '../../wallet/qi-hdwallet.js';
 import { Mnemonic } from '../../wallet/mnemonic.js';
 import { Zone } from '../../constants/zones.js';
-import { UTXO } from '../../quais.js';
-
-// Custom error class for controlled exit
-class TestCompletionError extends Error {
-    constructor(public readonly capturedArgs: any[]) {
-        super('Test completed successfully');
-        this.name = 'TestCompletionError';
-    }
-}
-
-function sortByDenomination(inputs: UTXO[], order: 'asc' | 'desc' = 'asc') {
-    return inputs.sort((a, b) =>
-        order === 'asc' ? (a.denomination || 0) - (b.denomination || 0) : (b.denomination || 0) - (a.denomination || 0),
-    );
-}
+import { QiTransactionResponse } from '../../quais.js';
+import { MockProvider } from './mockProvider.js';
+import { TxInput, TxOutput } from '../../transaction/utxo.js';
 
 interface AggregateTestCase {
     mnemonic: string;
@@ -39,39 +27,37 @@ interface AggregateTestCase {
     }>;
     fee: number;
     expected: {
-        selection: {
-            inputs: Array<{
-                txhash: string;
-                index: number;
-                address: string;
-                denomination: number;
-            }>;
-            spendOutputs: Array<{
-                denomination: number;
-            }>;
-            changeOutputs: Array<{
-                denomination: number;
-            }>;
-        };
-        inputPubKeys: string[];
-        sendAddresses: string[];
-        changeAddresses: string[];
+        txInputs: Array<TxInput>;
+        txOutputs: Array<TxOutput>;
     };
 }
+
+// helper method to sort txInputs by txhash
+const sortTxInputs = (txInputs: Array<TxInput> | undefined) => {
+    return (txInputs || []).sort((a, b) => a.txhash.localeCompare(b.txhash));
+};
+
+// helper method to sort txOutputs by address and filtering out 'lock'
+const sortTxOutputs = (txOutputs: Array<TxOutput> | undefined) => {
+    return (txOutputs || [])
+        .map((txOutput) => ({
+            address: txOutput.address.toLowerCase(),
+            denomination: txOutput.denomination,
+        }))
+        .sort((a, b) => a.address.localeCompare(b.address));
+};
 
 describe('QiHDWallet.aggregate', () => {
     const testCases = loadTests<AggregateTestCase>('qi-wallet-aggregate');
 
     testCases.forEach((testCase) => {
-        it(`should correctly aggregate UTXOs for wallet with mnemonic`, async () => {
-            // Create wallet from mnemonic
+        it(`should correctly aggregate UTXOs for QiHDWallet`, async () => {
             const mnemonic = Mnemonic.fromPhrase(testCase.mnemonic);
             const wallet = QiHDWallet.fromMnemonic(mnemonic);
 
-            // Mock provider with minimal implementation
-            wallet.connect({
-                getNetwork: async () => ({ chainId: BigInt(1) }),
-            } as any);
+            const mockProvider = new MockProvider({ network: BigInt(1) });
+
+            wallet.connect(mockProvider);
 
             // Add addresses to wallet before importing outpoints
             for (const addressToAdd of testCase.addressesToAdd) {
@@ -81,72 +67,24 @@ describe('QiHDWallet.aggregate', () => {
             // Import test outpoints
             wallet.importOutpoints(testCase.outpointInfos);
 
-            // Spy on prepareTransaction and throw custom error to exit early
-            wallet['prepareTransaction'] = async (...args) => {
-                throw new TestCompletionError(args);
-            };
+            const txResponse = (await wallet.aggregate(testCase.zone)) as QiTransactionResponse;
 
-            try {
-                await wallet.aggregate(testCase.zone as any);
-                assert.fail('Expected TestCompletionError to be thrown');
-            } catch (error) {
-                if (error instanceof TestCompletionError) {
-                    const [selection, inputPubKeys, sendAddresses, changeAddresses] = error.capturedArgs;
+            // assert txResponse is not null or undefined
+            assert(txResponse !== null && txResponse !== undefined, 'txResponse is null or undefined');
 
-                    const sortedInputs = sortByDenomination(selection.inputs, 'desc');
-                    const sortedExpectedInputs = sortByDenomination(
-                        testCase.expected.selection.inputs as UTXO[],
-                        'desc',
-                    );
+            // assert expected txInputs are equal to captured txInputs
+            assert.deepStrictEqual(
+                sortTxInputs(txResponse.txInputs),
+                sortTxInputs(testCase.expected.txInputs),
+                `txInputs: expected: ${JSON.stringify(testCase.expected.txInputs, null, 2)}, \nactual: ${JSON.stringify(txResponse.txInputs, null, 2)}`,
+            );
 
-                    // Verify selection with complete input properties
-                    assert.deepStrictEqual(
-                        sortedInputs.map((input: UTXO) => ({
-                            txhash: input.txhash,
-                            index: input.index,
-                            address: input.address,
-                            denomination: input.denomination,
-                        })),
-                        sortedExpectedInputs,
-                        `inputs: expected: ${JSON.stringify(sortedExpectedInputs, null, 2)}, \nactual: ${JSON.stringify(sortedInputs, null, 2)}`,
-                    );
-
-                    // Verify spendOutputs
-                    assert.deepStrictEqual(
-                        selection.spendOutputs.map((output: UTXO) => ({ denomination: output.denomination })),
-                        testCase.expected.selection.spendOutputs,
-                        `spendOutputs: expected: ${JSON.stringify(testCase.expected.selection.spendOutputs, null, 2)}, \nactual: ${JSON.stringify(selection.spendOutputs, null, 2)}`,
-                    );
-
-                    // Verify changeOutputs
-                    assert.deepStrictEqual(
-                        selection.changeOutputs.map((output: UTXO) => ({ denomination: output.denomination })),
-                        testCase.expected.selection.changeOutputs,
-                        `changeOutputs: expected: ${JSON.stringify(testCase.expected.selection.changeOutputs, null, 2)}, \nactual: ${JSON.stringify(selection.changeOutputs, null, 2)}`,
-                    );
-
-                    // Verify input public keys
-                    assert.deepStrictEqual(
-                        inputPubKeys,
-                        testCase.expected.inputPubKeys,
-                        `inputPubKeys: expected: ${JSON.stringify(testCase.expected.inputPubKeys, null, 2)}, \nactual: ${JSON.stringify(inputPubKeys, null, 2)}`,
-                    );
-
-                    // Verify addresses
-                    assert.deepStrictEqual(
-                        sendAddresses,
-                        testCase.expected.sendAddresses,
-                        `sendAddresses: expected: ${JSON.stringify(testCase.expected.sendAddresses, null, 2)}, \nactual: ${JSON.stringify(sendAddresses, null, 2)}`,
-                    );
-                    assert.deepStrictEqual(
-                        changeAddresses,
-                        testCase.expected.changeAddresses,
-                        `changeAddresses: expected: ${JSON.stringify(testCase.expected.changeAddresses, null, 2)}, \nactual: ${JSON.stringify(changeAddresses, null, 2)}`,
-                    );
-                } else {
-                    throw error;
-                }
-            }
+            // assert expected txOutputs are equal to captured txOutputs
+            assert.deepStrictEqual(
+                sortTxOutputs(txResponse.txOutputs),
+                sortTxOutputs(testCase.expected.txOutputs),
+                `txOutputs: expected: ${JSON.stringify(testCase.expected.txOutputs, null, 2)}, \nactual: ${JSON.stringify(txResponse.txOutputs, null, 2)}`,
+            );
         });
     });
 });
