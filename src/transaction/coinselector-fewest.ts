@@ -102,7 +102,7 @@ export class FewestCoinSelector extends AbstractCoinSelector {
      * @param {bigint} totalRequired - The total amount required (target + fee).
      * @returns {UTXO[]} The minimal set of UTXOs.
      */
-    private findMinimalUTXOSet(sortedUTXOs: UTXO[], totalRequired: bigint): UTXO[] {
+    protected findMinimalUTXOSet(sortedUTXOs: UTXO[], totalRequired: bigint): UTXO[] {
         // First, try to find the smallest single UTXO that covers the total required amount
         const singleUTXO = sortedUTXOs.find((utxo) => BigInt(denominations[utxo.denomination!]) >= totalRequired);
         if (singleUTXO) {
@@ -136,7 +136,7 @@ export class FewestCoinSelector extends AbstractCoinSelector {
      * @param {UTXO[]} inputs - The selected inputs.
      * @returns {UTXO[]} The spend outputs.
      */
-    private createSpendOutputs(amount: bigint): UTXO[] {
+    protected createSpendOutputs(amount: bigint): UTXO[] {
         const maxInputDenomination = this.getMaxInputDenomination();
 
         // Denominate the amount using available denominations up to the max input denomination
@@ -156,7 +156,7 @@ export class FewestCoinSelector extends AbstractCoinSelector {
      * @param {UTXO[]} inputs - The selected inputs.
      * @returns {UTXO[]} The change outputs.
      */
-    private createChangeOutputs(change: bigint): UTXO[] {
+    protected createChangeOutputs(change: bigint): UTXO[] {
         if (change <= BigInt(0)) {
             return [];
         }
@@ -178,7 +178,7 @@ export class FewestCoinSelector extends AbstractCoinSelector {
      *
      * @returns {bigint} The total output value.
      */
-    private calculateTotalOutputValue(): bigint {
+    protected calculateTotalOutputValue(): bigint {
         const spendValue = this.spendOutputs.reduce(
             (sum, output) => sum + BigInt(denominations[output.denomination!]),
             BigInt(0),
@@ -197,7 +197,7 @@ export class FewestCoinSelector extends AbstractCoinSelector {
      *
      * @returns {bigint} The maximum input denomination value.
      */
-    private getMaxInputDenomination(): bigint {
+    protected getMaxInputDenomination(): bigint {
         const inputs = [...this.selectedUTXOs];
         return this.getMaxDenomination(inputs);
     }
@@ -207,7 +207,7 @@ export class FewestCoinSelector extends AbstractCoinSelector {
      *
      * @returns {bigint} The maximum output denomination value.
      */
-    private getMaxOutputDenomination(): bigint {
+    protected getMaxOutputDenomination(): bigint {
         const outputs = [...this.spendOutputs, ...this.changeOutputs];
         return this.getMaxDenomination(outputs);
     }
@@ -218,7 +218,7 @@ export class FewestCoinSelector extends AbstractCoinSelector {
      * @param {UTXO[]} utxos - The list of UTXOs.
      * @returns {bigint} The maximum denomination value.
      */
-    private getMaxDenomination(utxos: UTXO[]): bigint {
+    protected getMaxDenomination(utxos: UTXO[]): bigint {
         return utxos.reduce((max, utxo) => {
             const denomValue = BigInt(denominations[utxo.denomination!]);
             return denomValue > max ? denomValue : max;
@@ -323,7 +323,7 @@ export class FewestCoinSelector extends AbstractCoinSelector {
      *
      * @param {bigint} changeAmount - The amount to adjust change outputs by.
      */
-    private adjustChangeOutputs(changeAmount: bigint): void {
+    protected adjustChangeOutputs(changeAmount: bigint): void {
         if (changeAmount <= BigInt(0)) {
             this.changeOutputs = [];
             return;
