@@ -1655,6 +1655,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     public static async deserialize(serialized: SerializedQiHDWallet): Promise<QiHDWallet> {
         super.validateSerializedWallet(serialized);
+
         // create the wallet instance
         const mnemonic = Mnemonic.fromPhrase(serialized.phrase);
         const path = (this as any).parentPath(serialized.coinType);
@@ -1663,18 +1664,23 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // validate and import all the wallet addresses
         for (const addressInfo of serialized.addresses) {
-            wallet.validateAddressInfo(addressInfo);
             let key = addressInfo.derivationPath;
             if (isHexString(key, 32)) {
                 key = QiHDWallet.PRIVATE_KEYS_PATH;
-            } else if (!key.startsWith('BIP44:')) {
-                wallet._addressesMap.set(key, []);
+            } else if (key.includes('BIP44')) {
+                // only validate if it's not a private key or a BIP44 path
+                wallet.validateAddressInfo(addressInfo);
+            } else {
+                // payment code addresses require different derivation validation
+                wallet.validateBaseAddressInfo(addressInfo);
+                wallet.validateExtendedProperties(addressInfo);
             }
             const existingAddresses = wallet._addressesMap.get(key);
-            if (existingAddresses && existingAddresses.some((addr) => addr.address === addressInfo.address)) {
-                throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
+            if (!existingAddresses) {
+                wallet._addressesMap.set(key, [addressInfo]);
+            } else if (!existingAddresses.some((addr) => addr.address === addressInfo.address)) {
+                existingAddresses!.push(addressInfo);
             }
-            wallet._addressesMap.get(key)!.push(addressInfo);
         }
 
         // validate and import the counter party payment code info
@@ -1683,10 +1689,13 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 throw new Error(`Invalid payment code: ${paymentCode}`);
             }
             for (const pcInfo of paymentCodeInfoArray) {
-                wallet.validateAddressInfo(pcInfo);
+                // Basic property validation
+                wallet.validateBaseAddressInfo(pcInfo);
+                wallet.validateExtendedProperties(pcInfo);
             }
             wallet._paymentCodeSendAddressMap.set(paymentCode, paymentCodeInfoArray);
         }
+
         return wallet;
     }
 
