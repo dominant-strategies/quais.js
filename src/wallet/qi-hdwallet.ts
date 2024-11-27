@@ -31,6 +31,7 @@ import { type BIP32API, HDNodeBIP32Adapter } from './bip32/types.js';
 import ecc from '@bitcoinerlab/secp256k1';
 import { SelectedCoinsResult } from '../transaction/abstract-coinselector.js';
 import { QiPerformActionTransaction } from '../providers/abstract-provider.js';
+import { ConversionCoinSelector } from '../transaction/coinselector-conversion.js';
 
 /**
  * @property {Outpoint} outpoint - The outpoint object.
@@ -576,22 +577,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * Converts outpoints for a specific zone to UTXO format.
      *
      * @param {Zone} zone - The zone to filter outpoints for.
-     * @param {number} [minDenominationToUse] - The minimum denomination to allow for the UTXOs.
      * @returns {UTXO[]} An array of UTXO objects.
      */
-    private outpointsToUTXOs(zone: Zone, minDenominationToUse?: number): UTXO[] {
-        this.validateZone(zone);
-        let zoneOutpoints = this.getOutpoints(zone);
-
-        // Filter outpoints by minimum denomination if specified
-        // This will likely only be used for converting to Quai
-        // as the min denomination for converting is 10 (100 Qi)
-        if (minDenominationToUse !== undefined) {
-            zoneOutpoints = zoneOutpoints.filter(
-                (outpointInfo) => outpointInfo.outpoint.denomination >= minDenominationToUse,
-            );
-        }
-        return zoneOutpoints.map((outpointInfo) => {
+    private outpointsToUTXOs(zone: Zone): UTXO[] {
+        return this.getOutpoints(zone).map((outpointInfo) => {
             const utxo = new UTXO();
             utxo.txhash = outpointInfo.outpoint.txhash;
             utxo.index = outpointInfo.outpoint.index;
@@ -628,7 +617,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             return Array(count).fill(destinationAddress);
         };
 
-        return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses, 10);
+        return this.prepareAndSendTransaction(
+            amount,
+            zone,
+            getDestinationAddresses,
+            (utxos) => new ConversionCoinSelector(utxos),
+        );
     }
 
     /**
@@ -668,7 +662,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             return addresses;
         };
 
-        return this.prepareAndSendTransaction(amount, originZone, getDestinationAddresses);
+        return this.prepareAndSendTransaction(
+            amount,
+            originZone,
+            getDestinationAddresses,
+            (utxos) => new FewestCoinSelector(utxos),
+        );
     }
 
     /**
@@ -730,7 +729,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @param {Zone} originZone - The zone where the transaction originates.
      * @param {Function} getDestinationAddresses - A function that returns a promise resolving to an array of
      *   destination addresses.
-     * @param {number} [minDenominationToUse] - Optional minimum denomination of Qi to use for the transaction.
      * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
      * @throws {Error} If provider is not set, insufficient balance, no available UTXOs, or insufficient spendable
      *   balance.
@@ -739,7 +737,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         amount: bigint,
         originZone: Zone,
         getDestinationAddresses: (count: number) => Promise<string[]>,
-        minDenominationToUse?: number,
+        coinSelectorCreator: (utxos: UTXO[]) => FewestCoinSelector | ConversionCoinSelector,
     ): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
@@ -755,15 +753,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         }
 
         // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
-        const zoneUTXOs = this.outpointsToUTXOs(originZone, minDenominationToUse);
+        const zoneUTXOs = this.outpointsToUTXOs(originZone);
         if (zoneUTXOs.length === 0) {
-            if (minDenominationToUse === 10) {
-                throw new Error('Qi denominations too small to convert.');
-            } else {
-                throw new Error('No Qi available in zone.');
-            }
+            throw new Error('No Qi available in zone.');
         }
-
         const unlockedUTXOs = zoneUTXOs.filter(
             (utxo) => utxo.lock === 0 || utxo.lock! < currentBlock?.woHeader.number!,
         );
@@ -771,10 +764,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             throw new Error('Insufficient spendable balance in zone.');
         }
 
-        const fewestCoinSelector = new FewestCoinSelector(unlockedUTXOs);
+        const coinSelector = coinSelectorCreator(unlockedUTXOs);
 
         const spendTarget: bigint = amount;
-        let selection = fewestCoinSelector.performSelection({ target: spendTarget });
+        let selection = coinSelector.performSelection({ target: spendTarget });
 
         // 3. Generate as many unused addresses as required to populate the spend outputs
         const sendAddresses = await getDestinationAddresses(selection.spendOutputs.length);
@@ -844,8 +837,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             const estimatedFee = await this.provider.estimateFeeForQi(feeEstimationTx);
 
             // Get new selection with updated fee 2x
-            selection = fewestCoinSelector.performSelection({ target: spendTarget, fee: estimatedFee * 3n });
-
+            selection = coinSelector.performSelection({ target: spendTarget, fee: estimatedFee * 3n });
             // Determine if new addresses are needed for the change outputs
             const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
             if (changeAddressesNeeded > 0) {
@@ -904,7 +896,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
-
         // Broadcast the transaction to the network using the provider
         return this.provider.broadcastTransaction(originZone, signedTx);
     }
@@ -1223,29 +1214,30 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         const derivationPaths: DerivationPath[] = ['BIP44:external', 'BIP44:change', ...this.openChannels];
         const currentBlock = (await this.provider!.getBlock(toShard(zone), 'latest')) as Block;
-
-        await Promise.all([
-            ...derivationPaths.map((path) =>
-                this._scanDerivationPath(
-                    path,
-                    zone,
-                    account,
-                    currentBlock,
-                    false,
-                    onOutpointsCreated,
-                    onOutpointsDeleted,
-                ),
-            ),
-            this._scanDerivationPath(
-                QiHDWallet.PRIVATE_KEYS_PATH,
+        for (const path of derivationPaths) {
+            await this._scanDerivationPath(
+                path,
                 zone,
                 account,
                 currentBlock,
-                true,
+                false,
                 onOutpointsCreated,
                 onOutpointsDeleted,
-            ),
-        ]);
+            );
+
+            // Yield control back to the event loop
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+
+        await this._scanDerivationPath(
+            QiHDWallet.PRIVATE_KEYS_PATH,
+            zone,
+            account,
+            currentBlock,
+            true,
+            onOutpointsCreated,
+            onOutpointsDeleted,
+        );
     }
 
     /**
@@ -1459,6 +1451,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                         break;
                     }
                 }
+
+                // Yield control back to the event loop after each iteration
+                await new Promise((resolve) => setTimeout(resolve, 0));
             }
         }
 
