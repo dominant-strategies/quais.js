@@ -114,17 +114,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             pop.nonce = await this.getNonce('pending');
         }
 
-        if (pop.gasLimit == null || pop.gasLimit === 0n) {
-            if (pop.type == 0) pop.gasLimit = await this.estimateGas(pop);
-            else {
-                //Special cases for type 2 tx to bypass address out of scope in the node
-                const temp = pop.to;
-                pop.to = '0x0000000000000000000000000000000000000000';
-                pop.gasLimit = getBigInt(2 * Number(await this.estimateGas(pop)));
-                pop.to = temp;
-            }
-        }
-
         // Populate the chain ID
         const network = await (<Provider>this.provider).getNetwork();
 
@@ -134,6 +123,29 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         } else {
             pop.chainId = network.chainId;
         }
+
+        // Create a base transaction object to be used for gas estimation and access list creation
+        const baseTx: QuaiTransactionLike = {
+            chainId: pop.chainId,
+            type: pop.type,
+            from: pop.from,
+            nonce: pop.nonce,
+        };
+        if (pop.to) baseTx.to = pop.to;
+        if (pop.data) baseTx.data = pop.data;
+        if (pop.value) baseTx.value = pop.value;
+
+        if (pop.gasLimit == null || pop.gasLimit === 0n) {
+            if (pop.type == 0) {
+                pop.gasLimit = await this.estimateGas(baseTx);
+            } else {
+                //Special cases for type 2 tx to bypass address out of scope in the node
+                baseTx.to = '0x0000000000000000000000000000000000000000';
+                pop.gasLimit = getBigInt(2 * Number(await this.estimateGas(baseTx)));
+                baseTx.to = pop.to;
+            }
+        }
+
         if (pop.gasPrice == null || pop.minerTip == null) {
             const feeData = await provider.getFeeData(zone, true);
 
@@ -148,7 +160,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             if (tx.accessList) {
                 pop.accessList = tx.accessList;
             } else {
-                pop.accessList = await this.createAccessList(pop as QuaiTransactionRequest);
+                pop.accessList = await this.createAccessList(baseTx as QuaiTransactionRequest);
             }
         }
         //@TOOD: Don't await all over the place; save them up for
