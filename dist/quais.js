@@ -19134,61 +19134,6 @@ class AbstractTransaction {
 }
 
 /**
- * An **AbstractCoinSelector** provides a base class for other sub-classes to implement the functionality for selecting
- * UTXOs for a spend and to properly handle spend and change outputs.
- *
- * This class is abstract and should not be used directly. Sub-classes should implement the
- * {@link AbstractCoinSelector#performSelection | **performSelection**} method to provide the actual coin selection
- * logic.
- *
- * @category Transaction
- * @abstract
- */
-class AbstractCoinSelector {
-    availableUTXOs;
-    totalInputValue = BigInt(0);
-    spendOutputs = [];
-    changeOutputs = [];
-    selectedUTXOs = [];
-    target = null;
-    /**
-     * Constructs a new AbstractCoinSelector instance with an empty UTXO array.
-     *
-     * @param {UTXO[]} [availableUXTOs=[]] - The initial available UTXOs. Default is `[]`
-     */
-    constructor(availableUTXOs = []) {
-        this.availableUTXOs = availableUTXOs.map((utxo) => {
-            this._validateUTXO(utxo);
-            return utxo;
-        });
-        this.spendOutputs = [];
-        this.changeOutputs = [];
-    }
-    /**
-     * Validates the provided UTXO instance. In order to be valid for coin selection, the UTXO must have a valid address
-     * and denomination.
-     *
-     * @param {UTXO} utxo - The UTXO to validate.
-     * @throws {Error} If the UTXO is invalid.
-     * @protected
-     */
-    _validateUTXO(utxo) {
-        if (utxo.address == null) {
-            throw new Error('UTXO address is required');
-        }
-        if (utxo.denomination == null) {
-            throw new Error('UTXO denomination is required');
-        }
-        if (utxo.txhash == null) {
-            throw new Error('UTXO txhash is required');
-        }
-        if (utxo.index == null) {
-            throw new Error('UTXO index is required');
-        }
-    }
-}
-
-/**
  * List of supported Qi denominations.
  *
  * @category Transaction
@@ -19402,6 +19347,81 @@ class UTXO {
     }
 }
 
+class AbstractCoinSelector {
+    availableUTXOs;
+    totalInputValue = BigInt(0);
+    spendOutputs = [];
+    changeOutputs = [];
+    selectedUTXOs = [];
+    target = null;
+    /**
+     * Constructs a new AbstractCoinSelector instance with an empty UTXO array.
+     *
+     * @param {UTXO[]} [availableUXTOs=[]] - The initial available UTXOs. Default is `[]`
+     */
+    constructor(availableUTXOs = []) {
+        this.availableUTXOs = availableUTXOs.map((utxo) => {
+            this._validateUTXO(utxo);
+            return utxo;
+        });
+        this.spendOutputs = [];
+        this.changeOutputs = [];
+    }
+    /**
+     * Validates the provided UTXO instance. In order to be valid for coin selection, the UTXO must have a valid address
+     * and denomination.
+     *
+     * @param {UTXO} utxo - The UTXO to validate.
+     * @throws {Error} If the UTXO is invalid.
+     * @protected
+     */
+    _validateUTXO(utxo) {
+        if (utxo.address == null) {
+            throw new Error('UTXO address is required');
+        }
+        if (utxo.denomination == null) {
+            throw new Error('UTXO denomination is required');
+        }
+        if (utxo.txhash == null) {
+            throw new Error('UTXO txhash is required');
+        }
+        if (utxo.index == null) {
+            throw new Error('UTXO index is required');
+        }
+    }
+    /**
+     * Validates the available UTXOs.
+     *
+     * @throws Will throw an error if there are no available UTXOs.
+     */
+    validateUTXOs() {
+        if (this.availableUTXOs.length === 0) {
+            throw new Error('No UTXOs available');
+        }
+    }
+    /**
+     * Sorts UTXOs by their denomination.
+     *
+     * @param {UTXO[]} utxos - The UTXOs to sort.
+     * @param {'asc' | 'desc'} direction - The direction to sort ('asc' for ascending, 'desc' for descending).
+     * @returns {UTXO[]} The sorted UTXOs.
+     */
+    sortUTXOsByDenomination(utxos, direction) {
+        if (direction === 'asc') {
+            return [...utxos].sort((a, b) => {
+                const diff = BigInt(a.denomination !== null ? denominations[a.denomination] : 0) -
+                    BigInt(b.denomination !== null ? denominations[b.denomination] : 0);
+                return diff > BigInt(0) ? 1 : diff < BigInt(0) ? -1 : 0;
+            });
+        }
+        return [...utxos].sort((a, b) => {
+            const diff = BigInt(b.denomination !== null ? denominations[b.denomination] : 0) -
+                BigInt(a.denomination !== null ? denominations[a.denomination] : 0);
+            return diff > BigInt(0) ? 1 : diff < BigInt(0) ? -1 : 0;
+        });
+    }
+}
+
 // import { bigIntAbs } from '../utils/maths.js';
 /**
  * The FewestCoinSelector class provides a coin selection algorithm that selects the fewest UTXOs required to meet the
@@ -19422,7 +19442,8 @@ class FewestCoinSelector extends AbstractCoinSelector {
      * @param {bigint} fee - The fee amount to include in the selection.
      * @returns {SelectedCoinsResult} The selected UTXOs and outputs.
      */
-    performSelection(target, fee = BigInt(0)) {
+    performSelection(config) {
+        const { target = BigInt(0), fee = BigInt(0) } = config;
         if (target <= BigInt(0)) {
             throw new Error('Target amount must be greater than 0');
         }
@@ -19463,12 +19484,6 @@ class FewestCoinSelector extends AbstractCoinSelector {
         const totalOutputValue = this.calculateTotalOutputValue();
         if (totalOutputValue > this.totalInputValue) {
             throw new Error('Total output value exceeds total input value');
-        }
-        // Ensure largest output denomination ≤ largest input denomination
-        const maxInputDenomination = this.getMaxInputDenomination();
-        const maxOutputDenomination = this.getMaxOutputDenomination();
-        if (maxOutputDenomination > maxInputDenomination) {
-            throw new Error('Largest output denomination exceeds largest input denomination');
         }
         return {
             inputs: this.selectedUTXOs,
@@ -19672,36 +19687,139 @@ class FewestCoinSelector extends AbstractCoinSelector {
         }
         this.changeOutputs = this.createChangeOutputs(changeAmount);
     }
+}
+
+/**
+ * A coin selector that aggregates multiple UTXOs into larger denominations. It attempts to combine smaller denomination
+ * UTXOs into the largest possible denominations.
+ */
+class AggregateCoinSelector extends AbstractCoinSelector {
     /**
-     * Sorts UTXOs by their denomination.
+     * Performs coin selection by aggregating UTXOs into larger denominations. This implementation combines smaller
+     * denomination UTXOs into the largest possible denominations up to maxDenomination, while ensuring enough value
+     * remains to cover the transaction fee.
      *
-     * @param {UTXO[]} utxos - The UTXOs to sort.
-     * @param {'asc' | 'desc'} direction - The direction to sort ('asc' for ascending, 'desc' for descending).
-     * @returns {UTXO[]} The sorted UTXOs.
+     * @param {CoinSelectionConfig} config - The configuration object containing:
+     * @param {boolean} [config.includeLocked=false] - Whether to include locked UTXOs in the selection. Default is
+     *   `false`
+     * @param {bigint} [config.fee=0n] - The fee amount to account for. Default is `0n`
+     * @param {number} [config.maxDenomination=6] - The maximum denomination to aggregate up to (default 6 = 1 Qi).
+     *   Default is `6`
+     * @returns {SelectedCoinsResult} The selected UTXOs and aggregated outputs
+     * @throws {Error} If no eligible UTXOs are available for aggregation
      */
-    sortUTXOsByDenomination(utxos, direction) {
-        if (direction === 'asc') {
-            return [...utxos].sort((a, b) => {
-                const diff = BigInt(a.denomination !== null ? denominations[a.denomination] : 0) -
-                    BigInt(b.denomination !== null ? denominations[b.denomination] : 0);
-                return diff > BigInt(0) ? 1 : diff < BigInt(0) ? -1 : 0;
-            });
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    performSelection(config) {
+        const { includeLocked = false, fee = BigInt(0), maxDenomination = 6, // Default to denomination[6] (1 Qi)
+         } = config;
+        this.validateUTXOs();
+        // Filter UTXOs based on lock status if needed
+        const eligibleUTXOs = includeLocked
+            ? this.availableUTXOs
+            : this.availableUTXOs.filter((utxo) => utxo.lock === null || utxo.lock === 0);
+        // totalInputValue is the sum of the denominations of the eligible UTXOsregardless of maxDenomination
+        this.totalInputValue = eligibleUTXOs.reduce((sum, utxo) => sum + BigInt(denominations[utxo.denomination]), BigInt(0));
+        // get the UTXOs that are below maxDenomination
+        const smallDenominationsUTXOs = eligibleUTXOs.filter((utxo) => utxo.denomination < maxDenomination);
+        if (smallDenominationsUTXOs.length === 0) {
+            throw new Error('No eligible UTXOs available for aggregation');
         }
-        return [...utxos].sort((a, b) => {
-            const diff = BigInt(b.denomination !== null ? denominations[b.denomination] : 0) -
-                BigInt(a.denomination !== null ? denominations[a.denomination] : 0);
-            return diff > BigInt(0) ? 1 : diff < BigInt(0) ? -1 : 0;
-        });
+        // get the UTXOs that are above or equal to maxDenomination
+        const bigDenominationUTXOs = eligibleUTXOs.filter((utxo) => utxo.denomination >= maxDenomination);
+        // calculate the sum of the denominations of the big denomination UTXOs
+        const totalInputValueAboveMaxDenomination = bigDenominationUTXOs.reduce((sum, utxo) => sum + BigInt(denominations[utxo.denomination]), BigInt(0));
+        // calculate the sum of the denominations of the small denomination UTXOs
+        const totalInputValueBelowMaxDenomination = this.totalInputValue - totalInputValueAboveMaxDenomination;
+        // The valueToAggregate value is calculated as:
+        // 1. If the total value of bigDenominationsUTXOs is greater than the fee, then the fee is covered by bigDenominationsUTXOs, and
+        //    the valueToAggregate is the value of small denomination UTXOs, i.e.:
+        //    valueToAggregate = totalInputValueBelowMaxDenomination
+        // 2. Otherwise, the valueToAggregate equals the value of small denomination UTXOs minus
+        //    the difference between the fee and the value of the big denomination UTXOs, i.e.:
+        //    valueToAggregate = totalInputValueBelowMaxDenomination - (fee - totalInputValueAboveMaxDenomination)
+        const valueToAggregate = totalInputValueAboveMaxDenomination >= fee
+            ? totalInputValueBelowMaxDenomination
+            : totalInputValueBelowMaxDenomination - (fee - totalInputValueAboveMaxDenomination);
+        if (valueToAggregate <= BigInt(0)) {
+            throw new Error('Insufficient funds to cover fee');
+        }
+        this.spendOutputs = this.createOptimalDenominations(valueToAggregate);
+        // get the inputs to cover the valueToAggregate
+        const inputsToAggregate = this.getInputsToAggregate(smallDenominationsUTXOs, valueToAggregate);
+        // get UTXOs inputs not included in inputsToAggregate to cover the fee.
+        const feeInputs = this.getInputsForFee(inputsToAggregate, eligibleUTXOs, fee);
+        // calculate the value of the feeInputs
+        const feeInputsValue = feeInputs.reduce((sum, utxo) => sum + BigInt(denominations[utxo.denomination]), BigInt(0));
+        // if the feeInputs value is higher than the fee, add the difference to the outputs to compensate the fee
+        if (feeInputsValue > fee) {
+            const difference = feeInputsValue - fee;
+            const additionalOutputs = this.createOptimalDenominations(difference);
+            this.spendOutputs.push(...additionalOutputs);
+        }
+        this.selectedUTXOs = [...feeInputs, ...inputsToAggregate];
+        // if the number of outputs is greater than or equal to the number of inputs to aggregate, throw an error
+        if (this.spendOutputs.length >= inputsToAggregate.length) {
+            throw new Error('Aggregation would not reduce number of UTXOs');
+        }
+        this.changeOutputs = [];
+        return {
+            inputs: this.selectedUTXOs,
+            spendOutputs: this.spendOutputs,
+            changeOutputs: this.changeOutputs,
+        };
     }
     /**
-     * Validates the available UTXOs.
+     * Helper method to calculate the optimal denomination distribution for a given value.
      *
-     * @throws Will throw an error if there are no available UTXOs.
+     * @param {bigint} value - The value to optimize denominations for
+     * @returns {UTXO[]} Array of UTXOs with optimal denomination distribution
      */
-    validateUTXOs() {
-        if (this.availableUTXOs.length === 0) {
-            throw new Error('No UTXOs available');
+    createOptimalDenominations(value) {
+        const outputs = [];
+        let remaining = value;
+        for (let i = denominations.length - 1; i >= 0 && remaining > BigInt(0); i--) {
+            const denomination = denominations[i];
+            while (remaining >= denomination) {
+                const output = new UTXO();
+                output.denomination = i;
+                outputs.push(output);
+                remaining -= denomination;
+            }
         }
+        if (remaining > BigInt(0)) {
+            throw new Error('Unable to create optimal denominations');
+        }
+        return outputs;
+    }
+    // gets the input UTXOs to cover the fee
+    getInputsForFee(inputsToAggregate, eligibleUTXOs, fee) {
+        // get the input UTXOs that are not included in inputsToAggregate
+        const eligiblefeeInputs = eligibleUTXOs.filter((utxo) => !inputsToAggregate.some((input) => input.txhash === utxo.txhash && input.index === utxo.index));
+        const sortedUTXOs = this.sortUTXOsByDenomination(eligiblefeeInputs, 'asc');
+        // loop through sortedUTXOs and sum the denominations until the sum is greater than or equal to the fee
+        let sum = BigInt(0);
+        const feeInputs = [];
+        for (const utxo of sortedUTXOs) {
+            sum += BigInt(denominations[utxo.denomination]);
+            feeInputs.push(utxo);
+            if (sum >= fee) {
+                return feeInputs;
+            }
+        }
+        throw new Error('Unable to find inputs to cover fee');
+    }
+    // gets the input UTXOs whose value equals the amount to aggregate, i.e. valueToAggregate
+    getInputsToAggregate(smallDenominationsUTXOs, valueToAggregate) {
+        const sortedUTXOs = this.sortUTXOsByDenomination(smallDenominationsUTXOs, 'asc');
+        const inputsToAggregate = [];
+        for (const utxo of sortedUTXOs) {
+            inputsToAggregate.push(utxo);
+            if (inputsToAggregate.reduce((sum, utxo) => sum + BigInt(denominations[utxo.denomination]), BigInt(0)) ===
+                valueToAggregate) {
+                return inputsToAggregate;
+            }
+        }
+        throw new Error('Unable to find inputs to aggregate');
     }
 }
 
@@ -24238,17 +24356,6 @@ class AbstractSigner {
         if (pop.nonce == null || pop.nonce === 0) {
             pop.nonce = await this.getNonce('pending');
         }
-        if (pop.gasLimit == null || pop.gasLimit === 0n) {
-            if (pop.type == 0)
-                pop.gasLimit = await this.estimateGas(pop);
-            else {
-                //Special cases for type 2 tx to bypass address out of scope in the node
-                const temp = pop.to;
-                pop.to = '0x0000000000000000000000000000000000000000';
-                pop.gasLimit = getBigInt(2 * Number(await this.estimateGas(pop)));
-                pop.to = temp;
-            }
-        }
         // Populate the chain ID
         const network = await this.provider.getNetwork();
         if (pop.chainId != null && pop.chainId !== 0n) {
@@ -24257,6 +24364,30 @@ class AbstractSigner {
         }
         else {
             pop.chainId = network.chainId;
+        }
+        // Create a base transaction object to be used for gas estimation and access list creation
+        const baseTx = {
+            chainId: pop.chainId,
+            type: pop.type,
+            from: pop.from,
+            nonce: pop.nonce,
+        };
+        if (pop.to)
+            baseTx.to = pop.to;
+        if (pop.data)
+            baseTx.data = pop.data;
+        if (pop.value)
+            baseTx.value = pop.value;
+        if (pop.gasLimit == null || pop.gasLimit === 0n) {
+            if (pop.type == 0) {
+                pop.gasLimit = await this.estimateGas(baseTx);
+            }
+            else {
+                //Special cases for type 2 tx to bypass address out of scope in the node
+                baseTx.to = '0x0000000000000000000000000000000000000000';
+                pop.gasLimit = getBigInt(2 * Number(await this.estimateGas(baseTx)));
+                baseTx.to = pop.to;
+            }
         }
         if (pop.gasPrice == null || pop.minerTip == null) {
             const feeData = await provider.getFeeData(zone, true);
@@ -24272,7 +24403,7 @@ class AbstractSigner {
                 pop.accessList = tx.accessList;
             }
             else {
-                pop.accessList = await this.createAccessList(pop);
+                pop.accessList = await this.createAccessList(baseTx);
             }
         }
         //@TOOD: Don't await all over the place; save them up for
@@ -28349,6 +28480,34 @@ class HDNodeBIP32Adapter {
     }
 }
 
+/**
+ * The ConversionSelector class provides a coin selection algorithm that selects the fewest UTXOs required to meet the
+ * target amount. This algorithm is useful for minimizing the size of the transaction and the fees associated with it.
+ *
+ * This class is a modified version of {@link FewestCoinSelector | **FewestCoinSelector** } and implements the
+ * {@link FewestCoinSelector.createSpendOutputs | **createSpendOutputs** } method to provide the actual coin selection
+ * logic.
+ *
+ * @category Transaction
+ */
+class ConversionCoinSelector extends FewestCoinSelector {
+    /**
+     * Creates spend outputs based on the target amount and input denominations.
+     *
+     * @param {bigint} amount - The target amount to spend.
+     * @returns {UTXO[]} The spend outputs.
+     */
+    createSpendOutputs(amount) {
+        // Spend outpoints are not limited to max input denomination
+        const spendDenominations = denominate(amount);
+        return spendDenominations.map((denominationValue) => {
+            const utxo = new UTXO();
+            utxo.denomination = denominations.indexOf(denominationValue);
+            return utxo;
+        });
+    }
+}
+
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
 /**
  * Enum representing the status of an address in the wallet.
@@ -28439,7 +28598,7 @@ class QiHDWallet extends AbstractHDWallet {
      * @ignore
      * @type {OutpointInfo[]}
      */
-    _availableOutpoints = [];
+    _availableOutpoints = new Map();
     /**
      * @ignore
      * @type {AddressUsageCallback}
@@ -28493,8 +28652,11 @@ class QiHDWallet extends AbstractHDWallet {
      * @returns {number} The last used index.
      */
     _findLastUsedIndex(addresses, account, zone) {
-        const filteredAddresses = addresses?.filter((addressInfo) => addressInfo.account === account && addressInfo.zone === zone);
-        return filteredAddresses?.reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1) || -1;
+        if (!addresses)
+            return -1;
+        return (addresses
+            .filter((addressInfo) => addressInfo.account === account && addressInfo.zone === zone)
+            .reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1) || -1);
     }
     /**
      * Derives the next Qi BIP 44 address for the specified account and zone.
@@ -28511,41 +28673,32 @@ class QiHDWallet extends AbstractHDWallet {
         const addressNode = this.deriveNextAddressNode(account, lastIndex + 1, zone, isChange);
         const newAddressInfo = this._createAndStoreQiAddressInfo(addressNode, account, zone, isChange);
         const privateKeysArray = this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH) || [];
-        const existingPrivateKeyIndex = privateKeysArray.findIndex((info) => info.address === addressNode.address);
+        const existingPrivateKeyIndex = privateKeysArray.findIndex((info) => info.address === newAddressInfo.address);
         if (existingPrivateKeyIndex !== -1) {
-            // Update the status and last synced block for the address being moved from private keys to bip44
-            const pkAddressToRemove = privateKeysArray[existingPrivateKeyIndex];
-            const updatedAddresses = addresses.map((addressInfo) => {
-                if (addressInfo.address === pkAddressToRemove.address) {
-                    return {
-                        ...addressInfo,
-                        status: pkAddressToRemove.status,
-                        lastSyncedBlock: pkAddressToRemove.lastSyncedBlock,
-                    };
-                }
-                return addressInfo;
-            });
-            // update the private keys array
+            // Update the newAddressInfo directly with the status and last synced block from the private key address
+            const pkAddressInfo = privateKeysArray[existingPrivateKeyIndex];
+            newAddressInfo.status = pkAddressInfo.status;
+            newAddressInfo.lastSyncedBlock = pkAddressInfo.lastSyncedBlock;
+            // Remove the address from the privateKeysArray
             privateKeysArray.splice(existingPrivateKeyIndex, 1);
             this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, privateKeysArray);
-            // update the addresses array
-            this._addressesMap.set(derivationPath, updatedAddresses);
         }
         return newAddressInfo;
     }
     _createAndStoreQiAddressInfo(addressNode, account, zone, isChange) {
+        const derivationPath = isChange ? 'BIP44:change' : 'BIP44:external';
         const qiAddressInfo = {
+            zone,
+            account,
+            derivationPath,
             address: addressNode.address,
             pubKey: addressNode.publicKey,
-            account,
             index: addressNode.index,
             change: isChange,
-            zone,
             status: AddressStatus.UNKNOWN,
-            derivationPath: isChange ? 'BIP44:change' : 'BIP44:external',
             lastSyncedBlock: null,
         };
-        this._addressesMap.get(isChange ? 'BIP44:change' : 'BIP44:external').push(qiAddressInfo); // _addressesMap is initialized within the constructor
+        this._addressesMap.get(derivationPath).push(qiAddressInfo); // _addressesMap is initialized within the constructor
         return qiAddressInfo;
     }
     /**
@@ -28595,9 +28748,12 @@ class QiHDWallet extends AbstractHDWallet {
      */
     importOutpoints(outpoints) {
         this.validateOutpointInfo(outpoints);
-        // check if any of the outpoints are already in the availableOutpoints
-        const newOutpoints = outpoints.filter((outpoint) => !this._availableOutpoints.some((o) => o.outpoint.txhash === outpoint.outpoint.txhash && o.outpoint.index === outpoint.outpoint.index));
-        this._availableOutpoints.push(...newOutpoints);
+        for (const outpoint of outpoints) {
+            const key = `${outpoint.outpoint.txhash}:${outpoint.outpoint.index}`;
+            if (!this._availableOutpoints.has(key)) {
+                this._availableOutpoints.set(key, outpoint);
+            }
+        }
     }
     /**
      * Gets the outpoints for the specified zone.
@@ -28607,7 +28763,7 @@ class QiHDWallet extends AbstractHDWallet {
      */
     getOutpoints(zone) {
         this.validateZone(zone);
-        return this._availableOutpoints.filter((outpoint) => outpoint.zone === zone);
+        return Array.from(this._availableOutpoints.values()).filter((outpoint) => outpoint.zone === zone);
     }
     /**
      * Signs a Qi transaction and returns the serialized transaction.
@@ -28750,8 +28906,7 @@ class QiHDWallet extends AbstractHDWallet {
      * @returns {bigint} The spendable balance for the zone.
      */
     async _calculateAvailableOutpointSpendableBalanceForZone(zone, blockNumber) {
-        return this._availableOutpoints
-            .filter((utxo) => utxo.zone === zone)
+        return this.getOutpoints(zone)
             .filter((utxo) => utxo.outpoint.lock === 0 || utxo.outpoint.lock < blockNumber)
             .reduce((total, utxo) => {
             const denominationValue = denominations[utxo.outpoint.denomination];
@@ -28766,8 +28921,7 @@ class QiHDWallet extends AbstractHDWallet {
      * @returns {bigint} The locked balance for the zone.
      */
     async _calculateAvailableOutpointLockedBalanceForZone(zone, blockNumber) {
-        return this._availableOutpoints
-            .filter((utxo) => utxo.zone === zone)
+        return this.getOutpoints(zone)
             .filter((utxo) => utxo.outpoint.lock !== 0 && blockNumber < utxo.outpoint.lock)
             .reduce((total, utxo) => {
             const denominationValue = denominations[utxo.outpoint.denomination];
@@ -28781,10 +28935,7 @@ class QiHDWallet extends AbstractHDWallet {
      * @returns {UTXO[]} An array of UTXO objects.
      */
     outpointsToUTXOs(zone) {
-        this.validateZone(zone);
-        return this._availableOutpoints
-            .filter((outpointInfo) => outpointInfo.zone === zone)
-            .map((outpointInfo) => {
+        return this.getOutpoints(zone).map((outpointInfo) => {
             const utxo = new UTXO();
             utxo.txhash = outpointInfo.outpoint.txhash;
             utxo.index = outpointInfo.outpoint.index;
@@ -28794,7 +28945,113 @@ class QiHDWallet extends AbstractHDWallet {
             return utxo;
         });
     }
-    async prepareAndSendTransaction(amount, originZone, getDestinationAddresses) {
+    /**
+     * Converts an amount of Qi to Quai and sends it to a specified Quai address.
+     *
+     * @param {string} destinationAddress - The Quai address to send the converted Quai to.
+     * @param {bigint} amount - The amount of Qi to convert to Quai.
+     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+     * @throws {Error} If the destination address is invalid, the amount is zero, or the conversion fails.
+     */
+    async convertToQuai(destinationAddress, amount) {
+        const zone = getZoneForAddress(destinationAddress);
+        if (!zone) {
+            throw new Error(`Invalid zone for Quai address: ${destinationAddress}`);
+        }
+        if (isQiAddress(destinationAddress)) {
+            throw new Error(`Invalid Quai address: ${destinationAddress}`);
+        }
+        if (amount <= 0) {
+            throw new Error('Amount must be greater than 0');
+        }
+        const getDestinationAddresses = async (count) => {
+            return Array(count).fill(destinationAddress);
+        };
+        return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses, (utxos) => new ConversionCoinSelector(utxos));
+    }
+    /**
+     * Sends a transaction to a specified recipient payment code in a specified zone.
+     *
+     * @param {string} recipientPaymentCode - The payment code of the recipient.
+     * @param {bigint} amount - The amount of Qi to send.
+     * @param {Zone} originZone - The zone where the transaction originates.
+     * @param {Zone} destinationZone - The zone where the transaction is sent.
+     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+     * @throws {Error} If the payment code is invalid, the amount is zero, or the zones are invalid.
+     */
+    async sendTransaction(recipientPaymentCode, amount, originZone, destinationZone) {
+        if (!validatePaymentCode(recipientPaymentCode)) {
+            throw new Error('Invalid payment code');
+        }
+        if (amount <= 0) {
+            throw new Error('Amount must be greater than 0');
+        }
+        this.validateZone(originZone);
+        this.validateZone(destinationZone);
+        const getDestinationAddresses = async (count) => {
+            const addresses = [];
+            while (addresses.length < count) {
+                const address = this.getNextSendAddress(recipientPaymentCode, destinationZone).address;
+                const { isUsed } = await this.checkAddressUse(address);
+                if (!isUsed) {
+                    addresses.push(address);
+                }
+            }
+            return addresses;
+        };
+        return this.prepareAndSendTransaction(amount, originZone, getDestinationAddresses, (utxos) => new FewestCoinSelector(utxos));
+    }
+    /**
+     * Aggregates all the available UTXOs for the specified zone and account. This method creates a new transaction with
+     * all the available UTXOs as inputs and as fewest outputs as possible.
+     *
+     * @param {Zone} zone - The zone to aggregate the balance for.
+     * @returns {Promise<TransactionResponse>} The transaction response.
+     */
+    async aggregate(zone) {
+        this.validateZone(zone);
+        if (!this.provider) {
+            throw new Error('Provider is not set');
+        }
+        const zoneUTXOs = this.outpointsToUTXOs(zone);
+        if (zoneUTXOs.length === 0) {
+            throw new Error('No UTXOs available in zone.');
+        }
+        const aggregateCoinSelector = new AggregateCoinSelector(zoneUTXOs);
+        // TODO: Calculate mempool max fee
+        const fee = BigInt(1000); // temporary hardcode fee to 1 Qi
+        const selection = aggregateCoinSelector.performSelection({ fee, maxDenomination: 6, includeLocked: false });
+        const sendAddressesInfo = this._getUnusedBIP44Addresses(1, 0, 'BIP44:external', zone);
+        const sendAddresses = sendAddressesInfo.map((addressInfo) => addressInfo.address);
+        const changeAddresses = [];
+        const inputPubKeys = selection.inputs.map((input) => {
+            const addressInfo = this.locateAddressInfo(input.address);
+            if (!addressInfo) {
+                throw new Error(`Could not locate address info for address: ${input.address}`);
+            }
+            return addressInfo.pubKey;
+        });
+        // Proceed with creating and signing the transaction
+        const chainId = (await this.provider.getNetwork()).chainId;
+        const tx = await this.prepareTransaction(selection, inputPubKeys, sendAddresses, changeAddresses, Number(chainId));
+        // Sign the transaction
+        const signedTx = await this.signTransaction(tx);
+        // Broadcast the transaction to the network using the provider
+        return this.provider.broadcastTransaction(zone, signedTx);
+    }
+    /**
+     * Prepares and sends a transaction with the specified parameters.
+     *
+     * @private
+     * @param {bigint} amount - The amount of Qi to send.
+     * @param {Zone} originZone - The zone where the transaction originates.
+     * @param {Function} getDestinationAddresses - A function that returns a promise resolving to an array of
+     *   destination addresses.
+     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
+     * @throws {Error} If provider is not set, insufficient balance, no available UTXOs, or insufficient spendable
+     *   balance.
+     */
+    async prepareAndSendTransaction(amount, originZone, getDestinationAddresses, coinSelectorCreator) {
         if (!this.provider) {
             throw new Error('Provider is not set');
         }
@@ -28813,25 +29070,25 @@ class QiHDWallet extends AbstractHDWallet {
         if (unlockedUTXOs.length === 0) {
             throw new Error('Insufficient spendable balance in zone.');
         }
-        const fewestCoinSelector = new FewestCoinSelector(unlockedUTXOs);
+        const coinSelector = coinSelectorCreator(unlockedUTXOs);
         const spendTarget = amount;
-        let selection = fewestCoinSelector.performSelection(spendTarget);
+        let selection = coinSelector.performSelection({ target: spendTarget });
         // 3. Generate as many unused addresses as required to populate the spend outputs
         const sendAddresses = await getDestinationAddresses(selection.spendOutputs.length);
         const getChangeAddressesForOutputs = async (count) => {
             const currentChangeAddresses = this._addressesMap.get('BIP44:change') || [];
-            const outpusChangeAddresses = [];
+            const outputChangeAddresses = [];
             for (let i = 0; i < currentChangeAddresses.length; i++) {
                 if (currentChangeAddresses[i].status === AddressStatus.UNUSED) {
-                    outpusChangeAddresses.push(currentChangeAddresses[i]);
+                    outputChangeAddresses.push(currentChangeAddresses[i]);
                 }
-                if (outpusChangeAddresses.length === count)
+                if (outputChangeAddresses.length === count)
                     break;
             }
             // Generate the remaining number of change addresses if needed
-            const remainingAddressesNeeded = count - outpusChangeAddresses.length;
+            const remainingAddressesNeeded = count - outputChangeAddresses.length;
             if (remainingAddressesNeeded > 0) {
-                outpusChangeAddresses.push(...Array(remainingAddressesNeeded)
+                outputChangeAddresses.push(...Array(remainingAddressesNeeded)
                     .fill(0)
                     .map(() => this.getNextChangeAddressSync(0, originZone)));
             }
@@ -28839,7 +29096,7 @@ class QiHDWallet extends AbstractHDWallet {
             const mergedChangeAddresses = [
                 // Not updated last synced block because we are not certain of the success of the transaction
                 // so we will want to get deltas from last **checked** block
-                ...outpusChangeAddresses.map((address) => ({
+                ...outputChangeAddresses.map((address) => ({
                     ...address,
                     status: AddressStatus.ATTEMPTED_USE,
                 })),
@@ -28850,7 +29107,7 @@ class QiHDWallet extends AbstractHDWallet {
                 .sort((a, b) => a.index - b.index);
             // Update the _addressesMap with the modified change addresses and statuses
             this._addressesMap.set('BIP44:change', sortedAndFilteredChangeAddresses);
-            return outpusChangeAddresses.map((address) => address.address);
+            return outputChangeAddresses.map((address) => address.address);
         };
         // 4. Get change addresses
         const changeAddresses = await getChangeAddressesForOutputs(selection.changeOutputs.length);
@@ -28860,13 +29117,12 @@ class QiHDWallet extends AbstractHDWallet {
             throw new Error('Missing public key for input address');
         }
         let attempts = 0;
-        let finalFee = 0n;
         const MAX_FEE_ESTIMATION_ATTEMPTS = 5;
         while (attempts < MAX_FEE_ESTIMATION_ATTEMPTS) {
             const feeEstimationTx = this.prepareFeeEstimationTransaction(selection, inputPubKeys.map((pubkey) => pubkey), sendAddresses, changeAddresses);
-            finalFee = await this.provider.estimateFeeForQi(feeEstimationTx);
+            const estimatedFee = await this.provider.estimateFeeForQi(feeEstimationTx);
             // Get new selection with updated fee 2x
-            selection = fewestCoinSelector.performSelection(spendTarget, finalFee * 3n);
+            selection = coinSelector.performSelection({ target: spendTarget, fee: estimatedFee * 3n });
             // Determine if new addresses are needed for the change outputs
             const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
             if (changeAddressesNeeded > 0) {
@@ -28917,84 +29173,16 @@ class QiHDWallet extends AbstractHDWallet {
         return this.provider.broadcastTransaction(originZone, signedTx);
     }
     /**
-     * Converts an amount of Qi to Quai and sends it to a specified Quai address.
+     * Prepares a transaction with the specified parameters.
      *
-     * @param {string} destinationAddress - The Quai address to send the converted Quai to.
-     * @param {bigint} amount - The amount of Qi (in qits) to convert to Quai.
-     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
-     * @throws {Error} If the destination address is invalid, the amount is zero, or the conversion fails.
+     * @private
+     * @param {SelectedCoinsResult} selection - The selected coins result.
+     * @param {string[]} inputPubKeys - The public keys of the inputs.
+     * @param {string[]} sendAddresses - The addresses to send to.
+     * @param {string[]} changeAddresses - The addresses to change to.
+     * @param {number} chainId - The chain ID.
+     * @returns {Promise<QiTransaction>} A promise that resolves to the prepared transaction.
      */
-    async convertToQuai(destinationAddress, amount) {
-        const zone = getZoneForAddress(destinationAddress);
-        if (!zone) {
-            throw new Error(`Invalid zone for Quai address: ${destinationAddress}`);
-        }
-        if (isQiAddress(destinationAddress)) {
-            throw new Error(`Invalid Quai address: ${destinationAddress}`);
-        }
-        if (amount < 100000) {
-            throw new Error('Amount must be greater than 100 Qi (100,000 qits)');
-        }
-        const getDestinationAddresses = async (count) => {
-            return Array(count).fill(destinationAddress);
-        };
-        return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses);
-    }
-    /**
-     * Sends a transaction to a specified recipient payment code in a specified zone.
-     *
-     * @param {string} recipientPaymentCode - The payment code of the recipient.
-     * @param {bigint} amount - The amount of Qi (in qits) to send.
-     * @param {Zone} originZone - The zone where the transaction originates.
-     * @param {Zone} destinationZone - The zone where the transaction is sent.
-     * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
-     * @throws {Error} If the payment code is invalid, the amount is zero, or the zones are invalid.
-     */
-    async sendTransaction(recipientPaymentCode, amount, originZone, destinationZone) {
-        if (!validatePaymentCode(recipientPaymentCode)) {
-            throw new Error('Invalid payment code');
-        }
-        if (amount <= 0) {
-            throw new Error('Amount must be greater than 0');
-        }
-        if (!this.provider) {
-            throw new Error('Provider is not set');
-        }
-        this.validateZone(originZone);
-        this.validateZone(destinationZone);
-        const currentBlock = await this.provider.getBlock(toShard(originZone), 'latest');
-        const getDestinationAddresses = async (count) => {
-            const addresses = [];
-            const updatedAddresses = [];
-            while (addresses.length < count) {
-                const addressInfo = this.getNextSendAddress(recipientPaymentCode, destinationZone);
-                const { isUsed } = await this.checkAddressUse(addressInfo.address);
-                if (!isUsed) {
-                    addressInfo.status = AddressStatus.ATTEMPTED_USE;
-                    addresses.push(addressInfo.address);
-                }
-                else {
-                    addressInfo.status = AddressStatus.USED;
-                }
-                updatedAddresses.push({
-                    ...addressInfo,
-                    lastSyncedBlock: { hash: currentBlock?.hash, number: currentBlock?.woHeader.number },
-                });
-            }
-            // Update the status for the addresses being used for the payment code
-            const paymentCodeInfoArray = this._paymentCodeSendAddressMap.get(recipientPaymentCode) || [];
-            const updatedPaymentCodeInfoArray = paymentCodeInfoArray.map((info) => {
-                const updateAddrInfo = updatedAddresses.find((addr) => addr.address === info.address);
-                if (updateAddrInfo) {
-                    return updateAddrInfo;
-                }
-                return info;
-            });
-            this._paymentCodeSendAddressMap.set(recipientPaymentCode, updatedPaymentCodeInfoArray);
-            return addresses;
-        };
-        return this.prepareAndSendTransaction(amount, originZone, getDestinationAddresses);
-    }
     async prepareTransaction(selection, inputPubKeys, sendAddresses, changeAddresses, chainId) {
         const tx = new QiTransaction();
         tx.txInputs = selection.inputs.map((input, index) => ({
@@ -29019,6 +29207,16 @@ class QiHDWallet extends AbstractHDWallet {
         tx.chainId = chainId;
         return tx;
     }
+    /**
+     * Prepares a fee estimation transaction with the specified parameters.
+     *
+     * @private
+     * @param {SelectedCoinsResult} selection - The selected coins result.
+     * @param {string[]} inputPubKeys - The public keys of the inputs.
+     * @param {string[]} sendAddresses - The addresses to send to.
+     * @param {string[]} changeAddresses - The addresses to change to.
+     * @returns {QiPerformActionTransaction} The prepared transaction.
+     */
     prepareFeeEstimationTransaction(selection, inputPubKeys, sendAddresses, changeAddresses) {
         const txIn = selection.inputs.map((input, index) => ({
             previousOutpoint: { txHash: input.txhash, index: toQuantity(input.index) },
@@ -29043,6 +29241,27 @@ class QiHDWallet extends AbstractHDWallet {
             txIn,
             txOut,
         };
+    }
+    /**
+     * Gets a set of unused BIP44 addresses from the specified derivation path. It first checks if there are any unused
+     * addresses available in the _addressesMap and uses those if possible. If there are not enough unused addresses, it
+     * will generate new ones.
+     *
+     * @param amount - The number of addresses to get.
+     * @param path - The derivation path to get addresses from.
+     * @param zone - The zone to get addresses from.
+     * @returns An array of addresses.
+     */
+    _getUnusedBIP44Addresses(amount, account, path, zone) {
+        const addresses = this._addressesMap.get(path) || [];
+        const unusedAddresses = addresses.filter((address) => address.status === AddressStatus.UNUSED && address.account === account && address.zone === zone);
+        if (unusedAddresses.length >= amount) {
+            return unusedAddresses.slice(0, amount);
+        }
+        const remainingAddressesNeeded = amount - unusedAddresses.length;
+        const isChange = path === 'BIP44:change';
+        const newAddresses = Array.from({ length: remainingAddressesNeeded }, () => this._getNextQiAddress(account, zone, isChange));
+        return [...unusedAddresses, ...newAddresses];
     }
     /**
      * Returns a schnorr signature for the given message and private key.
@@ -29165,7 +29384,7 @@ class QiHDWallet extends AbstractHDWallet {
             addresses.map((addr) => ({ ...addr, status: AddressStatus.UNKNOWN, lastSyncedBlock: null })),
         ]));
         // flush available
-        this._availableOutpoints = [];
+        this._availableOutpoints.clear();
         // Reset each map so that all keys have empty array values but keys are preserved
         this._paymentCodeSendAddressMap = new Map(Array.from(this._paymentCodeSendAddressMap.keys()).map((key) => [key, []]));
         await this._scan(zone, account);
@@ -29199,10 +29418,13 @@ class QiHDWallet extends AbstractHDWallet {
         if (!this.provider)
             throw new Error('Provider not set');
         const derivationPaths = ['BIP44:external', 'BIP44:change', ...this.openChannels];
-        await Promise.all([
-            ...derivationPaths.map((path) => this._scanDerivationPath(path, zone, account, false, onOutpointsCreated, onOutpointsDeleted)),
-            this._scanDerivationPath(QiHDWallet.PRIVATE_KEYS_PATH, zone, account, true, onOutpointsCreated, onOutpointsDeleted),
-        ]);
+        const currentBlock = (await this.provider.getBlock(toShard(zone), 'latest'));
+        for (const path of derivationPaths) {
+            await this._scanDerivationPath(path, zone, account, currentBlock, false, onOutpointsCreated, onOutpointsDeleted);
+            // Yield control back to the event loop
+            await new Promise((resolve) => setTimeout(resolve, 0));
+        }
+        await this._scanDerivationPath(QiHDWallet.PRIVATE_KEYS_PATH, zone, account, currentBlock, true, onOutpointsCreated, onOutpointsDeleted);
     }
     /**
      * Scans for the next address in the specified zone and account, checking for associated outpoints, and updates the
@@ -29214,15 +29436,22 @@ class QiHDWallet extends AbstractHDWallet {
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If an error occurs during the address scanning or outpoints retrieval process.
      */
-    async _scanDerivationPath(path, zone, account, skipGap = false, onOutpointsCreated, onOutpointsDeleted) {
+    async _scanDerivationPath(path, zone, account, currentBlock, skipGap = false, onOutpointsCreated, onOutpointsDeleted) {
         const addresses = this._addressesMap.get(path) || [];
         const updatedAddresses = [];
         const createdOutpoints = {};
         const deletedOutpoints = {};
-        const currentBlock = await this.provider.getBlock(toShard(zone), 'latest');
         // Addresses with a last synced block are checked for outpoint deltas
-        const previouslySyncedAddresses = addresses.filter((addr) => addr.lastSyncedBlock !== null);
-        const unsyncedAddresses = addresses.filter((addr) => addr.lastSyncedBlock === null);
+        const previouslySyncedAddresses = [];
+        const unsyncedAddresses = [];
+        for (const addr of addresses) {
+            if (addr.lastSyncedBlock !== null) {
+                previouslySyncedAddresses.push(addr);
+            }
+            else {
+                unsyncedAddresses.push(addr);
+            }
+        }
         if (previouslySyncedAddresses.length > 0) {
             // get all unique txhashes from used addresses last synced block to current block
             const addressesByLastSyncedTxHash = {};
@@ -29257,8 +29486,8 @@ class QiHDWallet extends AbstractHDWallet {
                 const updatedAddressInfo = {
                     ...addressInfo,
                     lastSyncedBlock: {
-                        hash: currentBlock?.hash,
-                        number: currentBlock?.woHeader.number,
+                        hash: currentBlock.hash,
+                        number: currentBlock.woHeader.number,
                     },
                 };
                 // Handle created outpoints
@@ -29276,9 +29505,9 @@ class QiHDWallet extends AbstractHDWallet {
                 // Handle deleted outpoints
                 if (delta.deleted && delta.deleted.length > 0) {
                     // Remove corresponding outpoints from availableOutpoints
-                    this._availableOutpoints = this._availableOutpoints.filter((outpointInfo) => !(outpointInfo.address === address &&
-                        delta.deleted.some((deletedOutpoint) => deletedOutpoint.txhash === outpointInfo.outpoint.txhash &&
-                            deletedOutpoint.index === outpointInfo.outpoint.index)));
+                    for (const outpoint of delta.deleted) {
+                        this._availableOutpoints.delete(`${outpoint.txhash}:${outpoint.index}`);
+                    }
                     deletedOutpoints[address] = delta.deleted;
                 }
                 updatedAddresses.push(updatedAddressInfo);
@@ -29286,74 +29515,96 @@ class QiHDWallet extends AbstractHDWallet {
         }
         let consecutiveUnusedCount = 0;
         // Check unsynced addresses for outpoints
-        for (let i = 0; i < unsyncedAddresses.length; i++) {
-            const addr = unsyncedAddresses[i];
-            const { isUsed, outpoints } = await this.checkAddressUse(addr.address);
-            unsyncedAddresses[i].status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
-            unsyncedAddresses[i].lastSyncedBlock = {
-                hash: currentBlock?.hash,
-                number: currentBlock?.woHeader.number,
-            };
-            // import outpoints if any are found
-            if (outpoints.length > 0) {
-                this.importOutpoints(outpoints.map((outpoint) => ({
-                    outpoint,
-                    address: addr.address,
-                    zone: addr.zone,
-                    account: addr.account,
-                })));
-                createdOutpoints[addr.address] = outpoints;
-            }
-            if (addr.status === AddressStatus.USED) {
-                consecutiveUnusedCount = 0;
-            }
-            else {
-                consecutiveUnusedCount++;
-            }
-            updatedAddresses.push(unsyncedAddresses[i]);
-            // If the consecutive unused count has reached the gap limit, break
-            if (consecutiveUnusedCount >= QiHDWallet._GAP_LIMIT)
-                break;
-        }
-        if (!skipGap) {
-            // Generate new addresses if needed until the gap limit is reached
-            while (consecutiveUnusedCount < QiHDWallet._GAP_LIMIT) {
-                const isChange = path.endsWith(':change');
-                const newAddrInfo = path.includes('BIP44')
-                    ? this._getNextQiAddress(account, zone, isChange)
-                    : this.getNextReceiveAddress(path, zone, account);
-                const { isUsed, outpoints } = await this.checkAddressUse(newAddrInfo.address);
-                newAddrInfo.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
-                newAddrInfo.lastSyncedBlock = {
-                    hash: currentBlock?.hash,
-                    number: currentBlock?.woHeader.number,
+        // Batch check unsynced addresses for outpoints
+        if (unsyncedAddresses.length > 0) {
+            const checkAddressUsePromises = unsyncedAddresses.map((addr) => this.checkAddressUse(addr.address));
+            const checkResults = await Promise.all(checkAddressUsePromises);
+            for (let i = 0; i < unsyncedAddresses.length; i++) {
+                const addr = unsyncedAddresses[i];
+                const { isUsed, outpoints } = checkResults[i];
+                addr.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
+                addr.lastSyncedBlock = {
+                    hash: currentBlock.hash,
+                    number: currentBlock.woHeader.number,
                 };
-                // import outpoints if any are found
+                // Import outpoints if any are found
                 if (outpoints.length > 0) {
                     this.importOutpoints(outpoints.map((outpoint) => ({
                         outpoint,
-                        address: newAddrInfo.address,
-                        zone: newAddrInfo.zone,
-                        account: newAddrInfo.account,
+                        address: addr.address,
+                        zone: addr.zone,
+                        account: addr.account,
                     })));
-                    createdOutpoints[newAddrInfo.address] = outpoints;
+                    createdOutpoints[addr.address] = outpoints;
                 }
-                if (newAddrInfo.status === AddressStatus.USED) {
+                if (addr.status === AddressStatus.USED) {
                     consecutiveUnusedCount = 0;
                 }
                 else {
                     consecutiveUnusedCount++;
                 }
-                updatedAddresses.push(newAddrInfo);
+                updatedAddresses.push(addr);
+                // If the consecutive unused count has reached the gap limit, break
+                if (consecutiveUnusedCount >= QiHDWallet._GAP_LIMIT)
+                    break;
+            }
+        }
+        if (!skipGap) {
+            // Generate new addresses if needed until the gap limit is reached
+            while (consecutiveUnusedCount < QiHDWallet._GAP_LIMIT) {
+                const isChange = path.endsWith(':change');
+                // Determine how many addresses to generate in this batch
+                const remainingGap = QiHDWallet._GAP_LIMIT - consecutiveUnusedCount;
+                // Generate 'remainingGap' addresses
+                const newAddresses = [];
+                for (let i = 0; i < remainingGap; i++) {
+                    const newAddrInfo = path.includes('BIP44')
+                        ? this._getNextQiAddress(account, zone, isChange)
+                        : this.getNextReceiveAddress(path, zone, account);
+                    newAddresses.push(newAddrInfo);
+                }
+                // Batch check the new addresses for use
+                const checkAddressUsePromises = newAddresses.map((addr) => this.checkAddressUse(addr.address));
+                const checkResults = await Promise.all(checkAddressUsePromises);
+                // Process the results
+                for (let i = 0; i < newAddresses.length; i++) {
+                    const newAddrInfo = newAddresses[i];
+                    const { isUsed, outpoints } = checkResults[i];
+                    newAddrInfo.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
+                    newAddrInfo.lastSyncedBlock = {
+                        hash: currentBlock.hash,
+                        number: currentBlock.woHeader.number,
+                    };
+                    // Import outpoints if any are found
+                    if (outpoints.length > 0) {
+                        this.importOutpoints(outpoints.map((outpoint) => ({
+                            outpoint,
+                            address: newAddrInfo.address,
+                            zone: newAddrInfo.zone,
+                            account: newAddrInfo.account,
+                        })));
+                        createdOutpoints[newAddrInfo.address] = outpoints;
+                    }
+                    if (newAddrInfo.status === AddressStatus.USED) {
+                        consecutiveUnusedCount = 0;
+                    }
+                    else {
+                        consecutiveUnusedCount++;
+                    }
+                    addresses.push(newAddrInfo);
+                    // Check if the consecutive unused count has reached the gap limit
+                    if (consecutiveUnusedCount >= QiHDWallet._GAP_LIMIT) {
+                        break;
+                    }
+                }
+                // Yield control back to the event loop after each iteration
+                await new Promise((resolve) => setTimeout(resolve, 0));
             }
         }
         // update addresses map
         const updatedAddressesForMap = addresses.map((addr) => {
             const updatedAddr = updatedAddresses.find((a) => a.address === addr.address);
-            if (updatedAddr) {
-                return updatedAddr;
-            }
-            return addr;
+            return updatedAddr || addr;
         });
         this._addressesMap.set(path, updatedAddressesForMap);
         const executeCreatedOutpointsCallback = async () => {
@@ -29545,12 +29796,12 @@ class QiHDWallet extends AbstractHDWallet {
                 wallet.validateExtendedProperties(addressInfo);
             }
             const existingAddresses = wallet._addressesMap.get(key);
-            if (existingAddresses && existingAddresses.some((addr) => addr.address === addressInfo.address)) {
-                throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
+            if (!existingAddresses) {
+                wallet._addressesMap.set(key, [addressInfo]);
             }
-            const walletAddresses = wallet._addressesMap.get(key) || [];
-            walletAddresses.push(addressInfo);
-            wallet._addressesMap.set(key, walletAddresses);
+            else if (!existingAddresses.some((addr) => addr.address === addressInfo.address)) {
+                existingAddresses.push(addressInfo);
+            }
         }
         // validate and import the counter party payment code info
         for (const [paymentCode, paymentCodeInfoArray] of Object.entries(serialized.senderPaymentCodeInfo)) {
