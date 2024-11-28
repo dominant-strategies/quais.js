@@ -80,14 +80,6 @@ export class FewestCoinSelector extends AbstractCoinSelector {
             throw new Error('Total output value exceeds total input value');
         }
 
-        // Ensure largest output denomination ≤ largest input denomination
-        const maxInputDenomination = this.getMaxInputDenomination();
-        const maxOutputDenomination = this.getMaxOutputDenomination();
-
-        if (maxOutputDenomination > maxInputDenomination) {
-            throw new Error('Largest output denomination exceeds largest input denomination');
-        }
-
         return {
             inputs: this.selectedUTXOs,
             spendOutputs: this.spendOutputs,
