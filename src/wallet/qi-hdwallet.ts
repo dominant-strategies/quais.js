@@ -1732,6 +1732,19 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // Validate derivation path format
         this.validateDerivationPath(info.derivationPath, info.change);
+
+        // Validate last synced block
+        // 1. Validate lastSyncBlock.hash is a valid hash
+        if (info.lastSyncedBlock && !isHexString(info.lastSyncedBlock.hash, 32)) {
+            throw new Error(`Invalid last synced block hash: ${info.lastSyncedBlock.hash}`);
+        }
+        // 2. Validate lastSyncBlock.height is a number
+        if (
+            info.lastSyncedBlock &&
+            (typeof info.lastSyncedBlock.number !== 'number' || info.lastSyncedBlock.number < 0)
+        ) {
+            throw new Error(`Invalid last synced block number: ${info.lastSyncedBlock.number}`);
+        }
     }
 
     /**

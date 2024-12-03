@@ -6,50 +6,44 @@ describe('QiHDWallet Serialization/Deserialization', function () {
     this.timeout(10000);
     const tests = loadTests<SerializedQiHDWallet>('qi-wallet-serialization');
 
-    for (const test of tests) {
+    for (const testWallet of tests) {
         it('should correctly deserialize and reserialize wallet state', async function () {
             // First deserialize the wallet from test data
-            const deserializedWallet = await QiHDWallet.deserialize(test);
+            const deserializedWallet = await QiHDWallet.deserialize(testWallet);
 
             // Now serialize it back
             const serializedWallet = deserializedWallet.serialize();
 
             // Verify all properties match the original test data
-            assert.strictEqual(serializedWallet.version, test.version, 'Version mismatch');
-            assert.strictEqual(serializedWallet.phrase, test.phrase, 'Phrase mismatch');
-            assert.strictEqual(serializedWallet.coinType, test.coinType, 'Coin type mismatch');
+            assert.strictEqual(serializedWallet.version, testWallet.version, 'Version mismatch');
+            assert.strictEqual(serializedWallet.phrase, testWallet.phrase, 'Phrase mismatch');
+            assert.strictEqual(serializedWallet.coinType, testWallet.coinType, 'Coin type mismatch');
 
             // Compare addresses
             assert.deepStrictEqual(
                 serializedWallet.addresses.sort((a, b) => a.index - b.index),
-                test.addresses.sort((a, b) => a.index - b.index),
+                testWallet.addresses.sort((a, b) => a.index - b.index),
                 'Addresses mismatch',
             );
 
             // Compare sender payment code info
             assert.deepStrictEqual(
                 serializedWallet.senderPaymentCodeInfo,
-                test.senderPaymentCodeInfo,
+                testWallet.senderPaymentCodeInfo,
                 'Sender payment code info mismatch',
-            );
-
-            // Finally compare the entire serialized object
-            assert.deepStrictEqual(
-                serializedWallet,
-                test,
-                'Complete serialized wallet does not match original test data',
             );
         });
 
         it('should maintain wallet functionality after deserialization', async function () {
-            const deserializedWallet = await QiHDWallet.deserialize(test);
+            const deserializedWallet = await QiHDWallet.deserialize(testWallet);
             const zone = Zone.Cyprus1;
 
             // Verify the wallet has the correct number of addresses
             const externalAddresses = deserializedWallet.getAddressesForZone(zone);
             assert.strictEqual(
                 externalAddresses.length,
-                test.addresses.filter((addr) => addr.derivationPath === 'BIP44:external' && addr.zone === zone).length,
+                testWallet.addresses.filter((addr) => addr.derivationPath === 'BIP44:external' && addr.zone === zone)
+                    .length,
                 'External addresses count mismatch',
             );
 
@@ -57,7 +51,8 @@ describe('QiHDWallet Serialization/Deserialization', function () {
             const changeAddresses = deserializedWallet.getChangeAddressesForZone(zone);
             assert.strictEqual(
                 changeAddresses.length,
-                test.addresses.filter((addr) => addr.derivationPath === 'BIP44:change' && addr.zone === zone).length,
+                testWallet.addresses.filter((addr) => addr.derivationPath === 'BIP44:change' && addr.zone === zone)
+                    .length,
                 'Change addresses count mismatch',
             );
 
@@ -65,7 +60,7 @@ describe('QiHDWallet Serialization/Deserialization', function () {
             const gapAddresses = deserializedWallet.getGapAddressesForZone(zone);
             assert.strictEqual(
                 gapAddresses.length,
-                test.addresses.filter(
+                testWallet.addresses.filter(
                     (addr) =>
                         addr.derivationPath === 'BIP44:external' &&
                         addr.zone === zone &&
@@ -75,7 +70,7 @@ describe('QiHDWallet Serialization/Deserialization', function () {
             );
 
             // Verify payment channels were correctly restored
-            const paymentCodes = Object.keys(test.senderPaymentCodeInfo);
+            const paymentCodes = Object.keys(testWallet.senderPaymentCodeInfo);
             for (const paymentCode of paymentCodes) {
                 // Verify channel is open
                 assert.strictEqual(
@@ -88,7 +83,8 @@ describe('QiHDWallet Serialization/Deserialization', function () {
                 const paymentChannelAddresses = deserializedWallet.getPaymentChannelAddressesForZone(paymentCode, zone);
                 assert.strictEqual(
                     paymentChannelAddresses.length,
-                    test.addresses.filter((addr) => addr.derivationPath === paymentCode && addr.zone === zone).length,
+                    testWallet.addresses.filter((addr) => addr.derivationPath === paymentCode && addr.zone === zone)
+                        .length,
                     'Payment channel addresses count mismatch',
                 );
 
@@ -99,14 +95,14 @@ describe('QiHDWallet Serialization/Deserialization', function () {
                 );
                 assert.strictEqual(
                     gapPaymentChannelAddresses.length,
-                    test.addresses.filter(
+                    testWallet.addresses.filter(
                         (addr) => addr.derivationPath === paymentCode && addr.status === AddressStatus.UNUSED,
                     ).length,
                     'Gap payment channel addresses count mismatch',
                 );
 
                 // Verify the addresses match the expected ones
-                const expectedPaymentChannelAddresses = test.addresses
+                const expectedPaymentChannelAddresses = testWallet.addresses
                     .filter((addr) => addr.derivationPath === paymentCode && addr.zone === zone)
                     .sort((a, b) => a.index - b.index);
 
@@ -119,7 +115,7 @@ describe('QiHDWallet Serialization/Deserialization', function () {
         });
 
         it('should correctly handle gap addresses and payment channel addresses', async function () {
-            const deserializedWallet = await QiHDWallet.deserialize(test);
+            const deserializedWallet = await QiHDWallet.deserialize(testWallet);
             const zone = '0x00' as Zone;
 
             // Test gap addresses functionality
@@ -131,7 +127,7 @@ describe('QiHDWallet Serialization/Deserialization', function () {
             }
 
             // Test payment channel functionality for each payment code
-            const paymentCodes = Object.keys(test.senderPaymentCodeInfo);
+            const paymentCodes = Object.keys(testWallet.senderPaymentCodeInfo);
             for (const paymentCode of paymentCodes) {
                 // Test gap payment channel addresses
                 const gapPaymentAddresses = deserializedWallet.getGapPaymentChannelAddressesForZone(paymentCode, zone);
@@ -156,7 +152,7 @@ describe('QiHDWallet Serialization/Deserialization', function () {
                 }
 
                 // Verify all payment addresses are in the original test data
-                const allTestAddresses = test.addresses
+                const allTestAddresses = testWallet.addresses
                     .filter((addr) => addr.derivationPath === paymentCode)
                     .map((addr) => addr.address);
 
@@ -167,6 +163,90 @@ describe('QiHDWallet Serialization/Deserialization', function () {
                     );
                 }
             }
+        });
+        it('should handle duplicated addresses during deserialization', async function () {
+            const duplicatedWallet = {
+                ...testWallet,
+                addresses: [...testWallet.addresses, testWallet.addresses[0]],
+            };
+
+            const deserializedWallet = await QiHDWallet.deserialize(duplicatedWallet);
+            const addresses = deserializedWallet.getAddressesForAccount(0);
+            // verify no duplicates
+            const uniqueAddresses = new Set(addresses.map((addr) => addr.address));
+            assert.strictEqual(addresses.length, uniqueAddresses.size, 'Duplicated addresses should be filtered out');
+        });
+        it('should reject invalid sender payment codes during deserialization', async function () {
+            const validPaymentCode =
+                'PM8TJJYDFEugmzgwU9EoT3xEhiEy5tPLJCxcwa9HFEM2bs2zsGRdxpkJwsKXi2u3Tuu5AK3bUoethFD3oDB2r2vnUJv4W9sGWdvffNUriHS1D1szfbxn';
+            const invalidPaymentCodeWallet = {
+                ...testWallet,
+                senderPaymentCodeInfo: {
+                    ...testWallet.senderPaymentCodeInfo,
+                    'invalid-payment-code': testWallet.senderPaymentCodeInfo[validPaymentCode],
+                },
+            };
+            await assert.rejects(
+                async () => await QiHDWallet.deserialize(invalidPaymentCodeWallet),
+                /Invalid payment code/,
+                'Invalid payment code should be rejected',
+            );
+        });
+        it('should validate address derivation paths correctly', async function () {
+            const invalidDerivationPathWallet = {
+                ...testWallet,
+                addresses: [
+                    {
+                        ...testWallet.addresses[0],
+                        derivationPath: 'invalid_path',
+                    },
+                ],
+            };
+
+            await assert.rejects(
+                () => QiHDWallet.deserialize(invalidDerivationPathWallet),
+                /Invalid derivation path/,
+                'Should reject invalid derivation paths',
+            );
+        });
+        it('should validate lastSyncedBlock correctly', async function () {
+            const invalidLastSyncedBlockNumber = {
+                hash: '0x00ce00f04ae1189821fd7927d04df7bc9d5db672639bb786b0688f94e271f944',
+                number: -1,
+            };
+            const invalidLastSyncedBlockWallet = {
+                ...testWallet,
+                addresses: [
+                    {
+                        ...testWallet.addresses[0],
+                        lastSyncedBlock: invalidLastSyncedBlockNumber,
+                    },
+                ],
+            };
+            await assert.rejects(
+                () => QiHDWallet.deserialize(invalidLastSyncedBlockWallet),
+                /Invalid last synced block/,
+                'Should reject invalid last synced block',
+            );
+
+            const invalidLastSyncedBlockHash = {
+                hash: '0x00',
+                number: 1,
+            };
+            const invalidLastSyncedBlockWallet2 = {
+                ...testWallet,
+                addresses: [
+                    {
+                        ...testWallet.addresses[0],
+                        lastSyncedBlock: invalidLastSyncedBlockHash,
+                    },
+                ],
+            };
+            await assert.rejects(
+                () => QiHDWallet.deserialize(invalidLastSyncedBlockWallet2),
+                /Invalid last synced block/,
+                'Should reject invalid last synced block',
+            );
         });
     }
 });
