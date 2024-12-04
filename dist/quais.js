@@ -12275,15 +12275,7 @@ const quaisymbol = '\u039e'; // "\uD835\uDF63";
  *
  * @category Constants
  */
-const MessagePrefix = '\x19Quai Signed Message:\n';
-/**
- * A constant for the [EIP-191](https://eips.ethereum.org/EIPS/eip-191) personal message prefix.
- *
- * (**i.e.** `"\\x19Ethereum Signed Message:\\n"`)
- *
- * @category Constants
- */
-const EthMessagePrefix = '\x19Ethereum Signed Message:\n';
+const MessagePrefix = '\x19Ethereum Signed Message:\n';
 
 /**
  * A shard represents a chain within the Quai network hierarchy. A shard refer to the Prime chain, a region under the
@@ -15664,43 +15656,6 @@ function hashMessage(message) {
  */
 function verifyMessage(message, sig) {
     const digest = hashMessage(message);
-    return recoverAddress(digest, sig);
-}
-/**
- * Computes the [EIP-191](https://eips.ethereum.org/EIPS/eip-191) personal-sign message digest to sign.
- *
- * This prefixes the message with {@link EthMessagePrefix | **EthMessagePrefix**} and the decimal length of `message` and
- * computes the {@link keccak256 | **keccak256**} digest.
- *
- * If `message` is a string, it is converted to its UTF-8 bytes first. To compute the digest of a
- * [**DataHexString**](../types-aliases/DataHex), it must be converted to [**bytes**](../functions/getBytes).
- *
- * This is the same as `hashMessage` except it uses `EthMessagePrefix` instead of `MessagePrefix` and is available for
- * broader compatibility with EVM signing practices.
- *
- * @category Hash
- * @param message
- * @returns
- */
-function ethHashMessage(message) {
-    if (typeof message === 'string') {
-        message = toUtf8Bytes(message);
-    }
-    return keccak256(concat([toUtf8Bytes(EthMessagePrefix), toUtf8Bytes(String(message.length)), message]));
-}
-/**
- * Return the address of the private key that produced the signature `sig` during signing for `message`.
- *
- * This is the same as `verifyMessage` except it uses `EthMessagePrefix` instead of `MessagePrefix` and is available for
- * broader compatibility with EVM signing practices.
- *
- * @category Hash
- * @param message - The message that was signed.
- * @param sig - The signature to verify.
- * @returns {string} The address of the signer.
- */
-function ethVerifyMessage(message, sig) {
-    const digest = ethHashMessage(message);
     return recoverAddress(digest, sig);
 }
 
@@ -35277,8 +35232,6 @@ var quais = /*#__PURE__*/Object.freeze({
     encodeBytes32: encodeBytes32,
     encryptKeystoreJson: encryptKeystoreJson,
     encryptKeystoreJsonSync: encryptKeystoreJsonSync,
-    ethHashMessage: ethHashMessage,
-    ethVerifyMessage: ethVerifyMessage,
     formatMixedCaseChecksumAddress: formatMixedCaseChecksumAddress,
     formatQi: formatQi,
     formatQuai: formatQuai,
@@ -35350,5 +35303,5 @@ var quais = /*#__PURE__*/Object.freeze({
     zeroPadValue: zeroPadValue
 });
 
-export { AbiCoder, AbstractProvider, AbstractSigner, AddressStatus, BaseContract, Block, BrowserProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, ErrorDescription, ErrorFragment, EventFragment, EventLog, EventPayload, FallbackFragment, FeeData, FetchCancelSignal, FetchRequest, FetchResponse, FewestCoinSelector, FixedNumber, Fragment, FunctionFragment, Indexed, Interface, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, LangEs, Ledger, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, N$1 as N, NamedFragment, Network, ParamType, QiHDWallet, QiTransaction, QuaiHDWallet, QuaiTransaction, Result, Shard, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, TransactionDescription, TransactionReceipt, Typed, TypedDataEncoder, UTXO, UndecodedEventLog, UnmanagedSubscriber, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, Zone, accessListify, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32, decryptKeystoreJson, decryptKeystoreJsonSync, denominations, encodeBase58, encodeBase64, encodeBytes32, encryptKeystoreJson, encryptKeystoreJsonSync, ethHashMessage, ethVerifyMessage, formatMixedCaseChecksumAddress, formatQi, formatQuai, formatUnits, fromTwos, getAddress, getAddressDetails, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getNumber, getTxType, getUint, getZoneForAddress, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isError, isHexString, isKeystoreJson, isQiAddress, isQuaiAddress, keccak256, lock, makeError, mask, musigCrypto, parseQi, parseQuai, parseUnits, pbkdf2, quais, quaisymbol, randomBytes, recoverAddress, resolveAddress, ripemd160, scrypt, scryptSync, sha256, sha512, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toShard, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, toZone, uuidV4, validateAddress, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
+export { AbiCoder, AbstractProvider, AbstractSigner, AddressStatus, BaseContract, Block, BrowserProvider, ConstructorFragment, Contract, ContractEventPayload, ContractFactory, ContractTransactionReceipt, ContractTransactionResponse, ContractUnknownEventPayload, ErrorDescription, ErrorFragment, EventFragment, EventLog, EventPayload, FallbackFragment, FeeData, FetchCancelSignal, FetchRequest, FetchResponse, FewestCoinSelector, FixedNumber, Fragment, FunctionFragment, Indexed, Interface, JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner, LangEn, LangEs, Ledger, Log, LogDescription, MaxInt256, MaxUint256, MessagePrefix, MinInt256, Mnemonic, N$1 as N, NamedFragment, Network, ParamType, QiHDWallet, QiTransaction, QuaiHDWallet, QuaiTransaction, Result, Shard, Signature, SigningKey, SocketBlockSubscriber, SocketEventSubscriber, SocketPendingSubscriber, SocketProvider, SocketSubscriber, StructFragment, TransactionDescription, TransactionReceipt, Typed, TypedDataEncoder, UTXO, UndecodedEventLog, UnmanagedSubscriber, VoidSigner, Wallet, WebSocketProvider, WeiPerEther, Wordlist, WordlistOwl, WordlistOwlA, ZeroAddress, ZeroHash, Zone, accessListify, checkResultErrors, computeAddress, computeHmac, concat, copyRequest, dataLength, dataSlice, decodeBase58, decodeBase64, decodeBytes32, decryptKeystoreJson, decryptKeystoreJsonSync, denominations, encodeBase58, encodeBase64, encodeBytes32, encryptKeystoreJson, encryptKeystoreJsonSync, formatMixedCaseChecksumAddress, formatQi, formatQuai, formatUnits, fromTwos, getAddress, getAddressDetails, getBigInt, getBytes, getBytesCopy, getCreate2Address, getCreateAddress, getNumber, getTxType, getUint, getZoneForAddress, hashMessage, hexlify, id, isAddress, isAddressable, isBytesLike, isCallException, isError, isHexString, isKeystoreJson, isQiAddress, isQuaiAddress, keccak256, lock, makeError, mask, musigCrypto, parseQi, parseQuai, parseUnits, pbkdf2, quais, quaisymbol, randomBytes, recoverAddress, resolveAddress, ripemd160, scrypt, scryptSync, sha256, sha512, solidityPacked, solidityPackedKeccak256, solidityPackedSha256, stripZerosLeft, toBeArray, toBeHex, toBigInt, toNumber, toQuantity, toShard, toTwos, toUtf8Bytes, toUtf8CodePoints, toUtf8String, toZone, uuidV4, validateAddress, verifyMessage, verifyTypedData, version, wordlists, zeroPadBytes, zeroPadValue };
 //# sourceMappingURL=quais.js.map
