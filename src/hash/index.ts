@@ -3,7 +3,7 @@
  */
 
 export { id } from './id.js';
-export { hashMessage, verifyMessage, ethHashMessage, ethVerifyMessage } from './message.js';
+export { hashMessage, verifyMessage } from './message.js';
 export { solidityPacked, solidityPackedKeccak256, solidityPackedSha256 } from './solidity.js';
 export { TypedDataEncoder, verifyTypedData } from './typed-data.js';
 
