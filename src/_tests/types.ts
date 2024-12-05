@@ -344,9 +344,3 @@ export interface TestCaseQiTransaction {
     };
     signed: string;
 }
-
-export interface TestCaseQiSignMessage {
-    name: string;
-    mnemonic: string;
-    message: string;
-}

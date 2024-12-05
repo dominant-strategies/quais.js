@@ -1,15 +1,22 @@
-const quais = require('../../lib/commonjs/quais');
+const {
+	Mnemonic,
+	QiHDWallet,
+	Zone,
+	QiTransaction,
+	getBytes,
+	keccak256,
+} = require('../../lib/commonjs/quais');
 require('dotenv').config();
-const { keccak_256 } = require('@noble/hashes/sha3');
+
 const { schnorr } = require('@noble/curves/secp256k1');
 
 async function main() {
     // Create wallet
-    const mnemonic = quais.Mnemonic.fromPhrase(process.env.MNEMONIC);
-    const qiWallet = quais.QiHDWallet.fromMnemonic(mnemonic);
+    const mnemonic = Mnemonic.fromPhrase(process.env.MNEMONIC);
+    const qiWallet = QiHDWallet.fromMnemonic(mnemonic);
 
     // Get address info
-    const addressInfo1 = await qiWallet.getNextAddress(0, quais.Zone.Cyprus1);
+    const addressInfo1 = await qiWallet.getNextAddress(0, Zone.Cyprus1);
     const addr1 = addressInfo1.address;
     const pubkey1 = addressInfo1.pubKey;
 
@@ -23,13 +30,12 @@ async function main() {
                 denomination: 7,
             },
             address: addr1,
-            zone: quais.Zone.Cyprus1,
+            zone: Zone.Cyprus1,
         },
     ];
 
     // Polulate wallet with outpoints
     qiWallet.importOutpoints(outpointsInfo);
-
     // Define tx inputs, outputs for the Qi Tx
     let txInputs = [
         {
@@ -47,18 +53,18 @@ async function main() {
     ];
 
     // Create the Qi Tx to be signed
-    const tx = new quais.QiTransaction();
+    const tx = new QiTransaction();
     tx.txInputs = txInputs;
     tx.txOutputs = txOutputs;
 
     // Calculate the hash of the Qi tx (message to be signed and verified)
-    const txHash = keccak_256(tx.unsignedSerialized);
+    const txHash = getBytes(keccak256(tx.unsignedSerialized));
 
     // Sign the tx
     const serializedSignedTx = await qiWallet.signTransaction(tx);
 
     // Unmarshall the signed Tx
-    const signedTx = quais.QiTransaction.from(serializedSignedTx);
+    const signedTx = QiTransaction.from(serializedSignedTx);
 
     // Get the signature from the signed tx
     const signature = signedTx.signature;
@@ -66,8 +72,8 @@ async function main() {
     // Remove parity byte from pubkey
     publicKey = '0x' + pubkey1.slice(4);
 
-    // Rerify the schnoor signature
-    const verified = schnorr.verify(quais.getBytes(signature), txHash, quais.getBytes(publicKey));
+    // Verify the schnoor signature
+    const verified = schnorr.verify(getBytes(signature), txHash, getBytes(publicKey));
     console.log('Verified:', verified);
 }
 

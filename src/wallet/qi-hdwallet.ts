@@ -32,6 +32,7 @@ import ecc from '@bitcoinerlab/secp256k1';
 import { SelectedCoinsResult } from '../transaction/abstract-coinselector.js';
 import { QiPerformActionTransaction } from '../providers/abstract-provider.js';
 import { ConversionCoinSelector } from '../transaction/coinselector-conversion.js';
+import { toUtf8Bytes } from '../quais.js';
 
 /**
  * @property {Outpoint} outpoint - The outpoint object.
@@ -1617,8 +1618,13 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     public async signMessage(address: string, message: string | Uint8Array): Promise<string> {
         const privKey = this.getPrivateKey(address);
-        const digest = keccak256(message);
-        const signature = schnorr.sign(digest, getBytes(privKey));
+        const messageBytes =
+            typeof message === 'string'
+                ? getBytes(toUtf8Bytes(message)) // Add UTF-8 encoding to support arbitrary strings
+                : message;
+        const digest = keccak256(messageBytes);
+        const digestBytes = getBytes(digest);
+        const signature = schnorr.sign(digestBytes, getBytes(privKey));
         return hexlify(signature);
     }
 
