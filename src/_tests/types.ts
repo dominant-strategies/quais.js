@@ -285,18 +285,6 @@ export interface AddressInfo {
     zone: Zone;
 }
 
-export interface TestCaseQuaiSerialization {
-    name: string;
-    mnemonic: string;
-    params: Array<AddrParams>;
-    serialized: {
-        version: number;
-        phrase: string;
-        coinType: number;
-        addresses: Array<AddressInfo>;
-    };
-}
-
 export interface TestCaseQuaiTransaction {
     name: string;
     mnemonic: string;

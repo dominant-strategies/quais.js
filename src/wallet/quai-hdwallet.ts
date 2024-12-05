@@ -177,12 +177,11 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
         // import the addresses
         for (const addressInfo of serialized.addresses) {
             wallet.validateAddressInfo(addressInfo);
-            if (wallet._addresses.has(addressInfo.address)) {
-                throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
+            // if the address is already in the map, we don't need to add it again
+            if (!wallet._addresses.has(addressInfo.address)) {
+                wallet._addresses.set(addressInfo.address, addressInfo);
             }
-            wallet._addresses.set(addressInfo.address, addressInfo);
         }
-
         return wallet;
     }
 
