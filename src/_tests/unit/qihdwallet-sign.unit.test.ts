@@ -2,11 +2,19 @@ import assert from 'assert';
 
 import { loadTests } from '../utils.js';
 import { schnorr } from '@noble/curves/secp256k1';
-import { keccak_256 } from '@noble/hashes/sha3';
 import { MuSigFactory } from '@brandonblack/musig';
-import { TestCaseQiSignMessage, TestCaseQiTransaction, TxInput, TxOutput, Zone } from '../types.js';
+import { TestCaseQiTransaction, TxInput, TxOutput, Zone } from '../types.js';
 
-import { Mnemonic, QiHDWallet, QiTransaction, getBytes, hexlify, musigCrypto } from '../../index.js';
+import {
+    Mnemonic,
+    QiHDWallet,
+    QiTransaction,
+    getBytes,
+    hexlify,
+    musigCrypto,
+    keccak256,
+    toUtf8Bytes,
+} from '../../index.js';
 
 describe('QiHDWallet: Test transaction signing', function () {
     const tests = loadTests<TestCaseQiTransaction>('qi-transaction');
@@ -23,7 +31,7 @@ describe('QiHDWallet: Test transaction signing', function () {
                 test.transaction.txInputs,
                 test.transaction.txOutputs,
             );
-            const digest = keccak_256(qiTx.unsignedSerialized);
+            const digest = getBytes(keccak256(qiTx.unsignedSerialized));
             const signedSerialized = await qiWallet.signTransaction(qiTx);
 
             const signedTx = QiTransaction.from(signedSerialized);
@@ -41,18 +49,32 @@ describe('QiHDWallet: Test transaction signing', function () {
     }
 });
 
+interface signMessageTestCase {
+    mnemonic: string;
+    data: Array<{
+        name: string;
+        message: string;
+    }>;
+}
+
 describe('QiHDWallet: Test sign personal menssage', function () {
-    const tests = loadTests<TestCaseQiSignMessage>('qi-sign-message');
+    const tests = loadTests<signMessageTestCase>('qi-sign-message');
     for (const test of tests) {
-        it(`tests signing personal message: ${test.name}`, async function () {
-            const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
-            const qiWallet = QiHDWallet.fromMnemonic(mnemonic);
-            const addrInfo = qiWallet.getNextAddressSync(0, Zone.Cyprus1);
-            const signature = await qiWallet.signMessage(addrInfo.address, test.message);
-            const digest = keccak_256(test.message);
-            const verified = verifySchnorrSignature(signature, digest, addrInfo.pubKey);
-            assert.equal(verified, true);
-        });
+        const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
+        const qiWallet = QiHDWallet.fromMnemonic(mnemonic);
+        const addrInfo = qiWallet.getNextAddressSync(0, Zone.Cyprus1);
+        for (const data of test.data) {
+            it(`tests signing personal message: ${data.name}`, async function () {
+                const signature = await qiWallet.signMessage(addrInfo.address, data.message);
+                const messageBytes =
+                    typeof data.message === 'string'
+                        ? getBytes(toUtf8Bytes(data.message)) // Add UTF-8 encoding for strings
+                        : data.message;
+                const digest = getBytes(keccak256(messageBytes));
+                const verified = verifySchnorrSignature(signature, digest, addrInfo.pubKey);
+                assert.equal(verified, true);
+            });
+        }
     }
 });
 
