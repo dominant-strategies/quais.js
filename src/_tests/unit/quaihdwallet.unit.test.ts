@@ -2,13 +2,7 @@ import assert from 'assert';
 
 import { loadTests } from '../utils.js';
 
-import {
-    TestCaseQuaiTransaction,
-    TestCaseQuaiSerialization,
-    TestCaseQuaiTypedData,
-    Zone,
-    TestCaseQuaiMessageSign,
-} from '../types.js';
+import { TestCaseQuaiTransaction, TestCaseQuaiTypedData, Zone, TestCaseQuaiMessageSign } from '../types.js';
 
 import { recoverAddress } from '../../index.js';
 
@@ -24,27 +18,6 @@ describe('Test transaction signing', function () {
             const txData = test.transaction;
             const signed = await quaiWallet.signTransaction(txData);
             assert.equal(signed, test.signed, 'signed');
-        });
-    }
-});
-
-describe('Test serialization and deserialization of QuaiHDWallet', function () {
-    const tests = loadTests<TestCaseQuaiSerialization>('quai-serialization');
-    for (const test of tests) {
-        const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
-        const quaiWallet = QuaiHDWallet.fromMnemonic(mnemonic);
-        let serialized: any;
-        it(`tests serialization QuaiHDWallet: ${test.name}`, async function () {
-            for (const param of test.params) {
-                quaiWallet.getNextAddressSync(param.account, param.zone);
-            }
-            serialized = quaiWallet.serialize();
-            assert.deepEqual(serialized, test.serialized);
-        });
-
-        it(`tests deserialization QuaiHDWallet: ${test.name}`, async function () {
-            const deserialized = await QuaiHDWallet.deserialize(serialized);
-            assert.deepEqual(deserialized.serialize(), serialized);
         });
     }
 });

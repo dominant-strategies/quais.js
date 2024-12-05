@@ -1673,6 +1673,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             const existingAddresses = wallet._addressesMap.get(key);
             if (!existingAddresses) {
                 wallet._addressesMap.set(key, [addressInfo]);
+                // if the address is already in the map, we don't need to add it again
             } else if (!existingAddresses.some((addr) => addr.address === addressInfo.address)) {
                 existingAddresses!.push(addressInfo);
             }
