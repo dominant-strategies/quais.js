@@ -9,24 +9,34 @@ async function main() {
     // Create tx
     const addressInfo1 = await quaiWallet.getNextAddress(0, quais.Zone.Cyprus1);
     const from = addressInfo1.address;
+	console.log('from: ', from);
     const txObj = new quais.QuaiTransaction(from);
+	txObj.chainId = BigInt(969);
+	txObj.nonce = BigInt(0);
     txObj.gasLimit = BigInt(1000000);
-    (txObj.minerTip = BigInt(10000000000)),
-        (txObj.gasPrice = BigInt(30000000000000)),
-        (txObj.to = '0x002F4783248e2D6FF1aa6482A8C0D7a76de3C329');
+    txObj.minerTip = BigInt(10000000000);
+    txObj.gasPrice = BigInt(30000000000000);
+    txObj.to = '0x002F4783248e2D6FF1aa6482A8C0D7a76de3C329';
     txObj.value = BigInt(4200000);
 
+
+	// transaction to sign
+	console.log('txObj: ', JSON.stringify(txObj, null, 2));
+
     // Sign the tx
-    const signedTxSerialized = await quaiWallet.signTransaction(txObj);
+	const signedTxSerialized = await quaiWallet.signTransaction(txObj);
+	console.log('signedTxSerialized: ', signedTxSerialized);
 
     // Unmarshall the signed tx
-    const signedTx = quais.QuaiTransaction.from(signedTxSerialized);
+    const signedTxObj = quais.QuaiTransaction.from(signedTxSerialized);
+
+	console.log('signedTxObj: ', signedTxObj);
 
     // Get the signature
-    const signature = signedTx.signature;
+    const signature = signedTxObj.signature;
 
     // Verify the signature
-    const txHash = signedTx.digest;
+    const txHash = signedTxObj.digest;
     const signerAddress = quais.recoverAddress(txHash, signature);
 
     if (signerAddress === from) {

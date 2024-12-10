@@ -4,20 +4,35 @@ import { loadTests } from '../utils.js';
 
 import { TestCaseQuaiTransaction, TestCaseQuaiTypedData, Zone, TestCaseQuaiMessageSign } from '../types.js';
 
-import { recoverAddress } from '../../index.js';
+import { QuaiTransaction, recoverAddress, Signature } from '../../index.js';
 
 import { Mnemonic, QuaiHDWallet } from '../../index.js';
 
 describe('Test transaction signing', function () {
     const tests = loadTests<TestCaseQuaiTransaction>('quai-transaction');
     for (const test of tests) {
+        let txHash: string;
+        let signature: Signature;
         it(`tests signing an EIP-155 transaction: ${test.name}`, async function () {
             const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
             const quaiWallet = QuaiHDWallet.fromMnemonic(mnemonic);
             quaiWallet.getNextAddressSync(test.params.account, test.params.zone);
             const txData = test.transaction;
-            const signed = await quaiWallet.signTransaction(txData);
-            assert.equal(signed, test.signed, 'signed');
+            const signedTxSerialized = await quaiWallet.signTransaction(txData);
+            assert.equal(signedTxSerialized, test.signed, 'signed');
+
+            const signedTxObj = QuaiTransaction.from(signedTxSerialized);
+            txHash = signedTxObj.digest;
+            signature = signedTxObj.signature;
+        });
+
+        it(`tests verifying the signature: ${test.name}`, function () {
+            const signerAddress = recoverAddress(txHash, signature);
+            assert.equal(
+                signerAddress,
+                test.transaction.from,
+                `Signer address expected to be ${test.transaction.from} but got ${signerAddress}`,
+            );
         });
     }
 });
