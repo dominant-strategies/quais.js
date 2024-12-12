@@ -715,6 +715,11 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             Number(chainId),
         );
 
+        // verify tx gas is under block gas limit
+        if (!(await this._verifyGasLimit(tx, zone))) {
+            throw new Error('Transaction gas limit exceeds block gas limit');
+        }
+
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
 
@@ -895,6 +900,11 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             Number(chainId),
         );
 
+        // verify tx gas is under block gas limit
+        if (!(await this._verifyGasLimit(tx, originZone))) {
+            throw new Error('Transaction gas limit exceeds block gas limit');
+        }
+
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
         // Broadcast the transaction to the network using the provider
@@ -988,6 +998,32 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             txIn,
             txOut,
         };
+    }
+    /**
+     * Checks if the estimated gas for a transaction is within the current block's gas limit.
+     *
+     * @private
+     * @param {QiTransaction} tx - The Qi transaction to check
+     * @param {Zone} zone - The zone where the transaction will be executed
+     * @returns {Promise<boolean>} Returns true if the estimated gas is within block limit, false otherwise
+     * @throws {Error} If provider is not set or block cannot be retrieved
+     */
+    private async _verifyGasLimit(tx: QiTransaction, zone: Zone): Promise<boolean> {
+        if (!this.provider) {
+            throw new Error('Provider is not set');
+        }
+        const currentBlock = await this.provider.getBlock(toShard(zone), 'latest')!;
+        if (!currentBlock) {
+            throw new Error('Failed to get the current block');
+        }
+
+        const blockGasLimit = currentBlock.header.gasLimit;
+
+        const txEstimatedGas = await this.provider.estimateGas(tx);
+
+        const blockGasLimitThreshold = (blockGasLimit * 9n) / 10n; // 90% of blockGasLimit
+
+        return txEstimatedGas <= blockGasLimitThreshold;
     }
 
     /**
