@@ -496,7 +496,7 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         delete protoTx.etx_index;
         delete protoTx.work_nonce;
         delete protoTx.etx_type;
-        const protoTxCopy = structuredClone(protoTx);
+        const protoTxCopy = deepCopyProtoTransaction(protoTx);
 
         if (protoTx.v && protoTx.r && protoTx.s) {
             // check if protoTx.r is zero
@@ -538,4 +538,52 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         }));
         return tx;
     }
+}
+
+/**
+ * Deeply copies a ProtoTransaction object.
+ *
+ * @param {ProtoTransaction} proto - The ProtoTransaction object to copy.
+ * @returns {ProtoTransaction} The copied ProtoTransaction object.
+ */
+function deepCopyProtoTransaction(proto: ProtoTransaction): ProtoTransaction {
+    if (proto == null) return proto;
+
+    const copy: ProtoTransaction = {
+        type: proto.type,
+        chain_id: new Uint8Array(proto.chain_id),
+        nonce: proto.nonce,
+    };
+
+    // Handle optional Uint8Array fields
+    if (proto.to) copy.to = new Uint8Array(proto.to);
+    if (proto.value) copy.value = new Uint8Array(proto.value);
+    if (proto.data) copy.data = new Uint8Array(proto.data);
+    if (proto.gas_price) copy.gas_price = new Uint8Array(proto.gas_price);
+    if (proto.miner_tip) copy.miner_tip = new Uint8Array(proto.miner_tip);
+    if (proto.v) copy.v = new Uint8Array(proto.v);
+    if (proto.r) copy.r = new Uint8Array(proto.r);
+    if (proto.s) copy.s = new Uint8Array(proto.s);
+    if (proto.signature) copy.signature = new Uint8Array(proto.signature);
+    if (proto.etx_sender) copy.etx_sender = new Uint8Array(proto.etx_sender);
+
+    // Handle numeric fields
+    if (proto.gas !== undefined) copy.gas = proto.gas;
+    if (proto.etx_index !== undefined) copy.etx_index = proto.etx_index;
+    if (proto.work_nonce !== undefined) copy.work_nonce = proto.work_nonce;
+    if (proto.etx_type !== undefined) copy.etx_type = proto.etx_type;
+
+    // Handle access list
+    if (proto.access_list) {
+        copy.access_list = {
+            access_tuples: proto.access_list.access_tuples.map((tuple) => ({
+                address: new Uint8Array(tuple.address),
+                storage_key: tuple.storage_key.map((key) => ({
+                    value: new Uint8Array(key.value),
+                })),
+            })),
+        };
+    }
+
+    return copy;
 }
