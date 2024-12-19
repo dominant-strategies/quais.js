@@ -8,7 +8,7 @@ import ecc from '@bitcoinerlab/secp256k1';
  *
  * @ignore
  */
-const version = '1.0.0-alpha.26';
+const version = '1.0.0-alpha.32';
 
 /**
  * Property helper functions.
@@ -20844,7 +20844,7 @@ class QuaiTransaction extends AbstractTransaction {
         delete protoTx.etx_index;
         delete protoTx.work_nonce;
         delete protoTx.etx_type;
-        const protoTxCopy = structuredClone(protoTx);
+        const protoTxCopy = deepCopyProtoTransaction(protoTx);
         if (protoTx.v && protoTx.r && protoTx.s) {
             // check if protoTx.r is zero
             if (protoTx.r.reduce((acc, val) => (acc += val), 0) == 0) {
@@ -20880,6 +20880,63 @@ class QuaiTransaction extends AbstractTransaction {
         }));
         return tx;
     }
+}
+/**
+ * Deeply copies a ProtoTransaction object.
+ *
+ * @param {ProtoTransaction} proto - The ProtoTransaction object to copy.
+ * @returns {ProtoTransaction} The copied ProtoTransaction object.
+ */
+function deepCopyProtoTransaction(proto) {
+    if (proto == null)
+        return proto;
+    const copy = {
+        type: proto.type,
+        chain_id: new Uint8Array(proto.chain_id),
+        nonce: proto.nonce,
+    };
+    // Handle optional Uint8Array fields
+    if (proto.to)
+        copy.to = new Uint8Array(proto.to);
+    if (proto.value)
+        copy.value = new Uint8Array(proto.value);
+    if (proto.data)
+        copy.data = new Uint8Array(proto.data);
+    if (proto.gas_price)
+        copy.gas_price = new Uint8Array(proto.gas_price);
+    if (proto.miner_tip)
+        copy.miner_tip = new Uint8Array(proto.miner_tip);
+    if (proto.v)
+        copy.v = new Uint8Array(proto.v);
+    if (proto.r)
+        copy.r = new Uint8Array(proto.r);
+    if (proto.s)
+        copy.s = new Uint8Array(proto.s);
+    if (proto.signature)
+        copy.signature = new Uint8Array(proto.signature);
+    if (proto.etx_sender)
+        copy.etx_sender = new Uint8Array(proto.etx_sender);
+    // Handle numeric fields
+    if (proto.gas !== undefined)
+        copy.gas = proto.gas;
+    if (proto.etx_index !== undefined)
+        copy.etx_index = proto.etx_index;
+    if (proto.work_nonce !== undefined)
+        copy.work_nonce = proto.work_nonce;
+    if (proto.etx_type !== undefined)
+        copy.etx_type = proto.etx_type;
+    // Handle access list
+    if (proto.access_list) {
+        copy.access_list = {
+            access_tuples: proto.access_list.access_tuples.map((tuple) => ({
+                address: new Uint8Array(tuple.address),
+                storage_key: tuple.storage_key.map((key) => ({
+                    value: new Uint8Array(key.value),
+                })),
+            })),
+        };
+    }
+    return copy;
 }
 
 const BN_0$1 = BigInt(0);
@@ -26756,10 +26813,10 @@ class QuaiHDWallet extends AbstractHDWallet {
         // import the addresses
         for (const addressInfo of serialized.addresses) {
             wallet.validateAddressInfo(addressInfo);
-            if (wallet._addresses.has(addressInfo.address)) {
-                throw new Error(`Address ${addressInfo.address} already exists in the wallet`);
+            // if the address is already in the map, we don't need to add it again
+            if (!wallet._addresses.has(addressInfo.address)) {
+                wallet._addresses.set(addressInfo.address, addressInfo);
             }
-            wallet._addresses.set(addressInfo.address, addressInfo);
         }
         return wallet;
     }
@@ -29556,11 +29613,15 @@ class QiHDWallet extends AbstractHDWallet {
                 await new Promise((resolve) => setTimeout(resolve, 0));
             }
         }
-        // update addresses map
-        const updatedAddressesForMap = addresses.map((addr) => {
+        // Create a map to track unique addresses
+        const uniqueAddressMap = new Map();
+        // Process addresses in order, with updated addresses taking precedence
+        addresses.forEach((addr) => {
             const updatedAddr = updatedAddresses.find((a) => a.address === addr.address);
-            return updatedAddr || addr;
+            uniqueAddressMap.set(addr.address, updatedAddr || addr);
         });
+        // Convert map values back to array
+        const updatedAddressesForMap = Array.from(uniqueAddressMap.values());
         this._addressesMap.set(path, updatedAddressesForMap);
         const executeCreatedOutpointsCallback = async () => {
             if (onOutpointsCreated && Object.keys(createdOutpoints).length > 0) {
@@ -29702,8 +29763,12 @@ class QiHDWallet extends AbstractHDWallet {
      */
     async signMessage(address, message) {
         const privKey = this.getPrivateKey(address);
-        const digest = keccak256(message);
-        const signature = schnorr.sign(digest, getBytes(privKey));
+        const messageBytes = typeof message === 'string'
+            ? getBytes(toUtf8Bytes(message)) // Add UTF-8 encoding to support arbitrary strings
+            : message;
+        const digest = keccak256(messageBytes);
+        const digestBytes = getBytes(digest);
+        const signature = schnorr.sign(digestBytes, getBytes(privKey));
         return hexlify(signature);
     }
     /**
@@ -29753,6 +29818,7 @@ class QiHDWallet extends AbstractHDWallet {
             const existingAddresses = wallet._addressesMap.get(key);
             if (!existingAddresses) {
                 wallet._addressesMap.set(key, [addressInfo]);
+                // if the address is already in the map, we don't need to add it again
             }
             else if (!existingAddresses.some((addr) => addr.address === addressInfo.address)) {
                 existingAddresses.push(addressInfo);
@@ -29803,6 +29869,16 @@ class QiHDWallet extends AbstractHDWallet {
         }
         // Validate derivation path format
         this.validateDerivationPath(info.derivationPath, info.change);
+        // Validate last synced block
+        // 1. Validate lastSyncBlock.hash is a valid hash
+        if (info.lastSyncedBlock && !isHexString(info.lastSyncedBlock.hash, 32)) {
+            throw new Error(`Invalid last synced block hash: ${info.lastSyncedBlock.hash}`);
+        }
+        // 2. Validate lastSyncBlock.height is a number
+        if (info.lastSyncedBlock &&
+            (typeof info.lastSyncedBlock.number !== 'number' || info.lastSyncedBlock.number < 0)) {
+            throw new Error(`Invalid last synced block number: ${info.lastSyncedBlock.number}`);
+        }
     }
     /**
      * Validates that the derivation path is either a BIP44 path or a valid payment code.
