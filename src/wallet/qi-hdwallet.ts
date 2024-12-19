@@ -1458,11 +1458,17 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             }
         }
 
-        // update addresses map
-        const updatedAddressesForMap = addresses.map((addr) => {
+        // Create a map to track unique addresses
+        const uniqueAddressMap = new Map<string, QiAddressInfo>();
+
+        // Process addresses in order, with updated addresses taking precedence
+        addresses.forEach((addr) => {
             const updatedAddr = updatedAddresses.find((a) => a.address === addr.address);
-            return updatedAddr || addr;
+            uniqueAddressMap.set(addr.address, updatedAddr || addr);
         });
+
+        // Convert map values back to array
+        const updatedAddressesForMap = Array.from(uniqueAddressMap.values());
 
         this._addressesMap.set(path, updatedAddressesForMap);
 
