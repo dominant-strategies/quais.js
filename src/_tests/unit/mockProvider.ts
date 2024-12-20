@@ -28,6 +28,8 @@ export class MockProvider implements Provider {
     private _transactions: Map<string, TransactionResponse> = new Map();
     private _blocks: Map<string, Block> = new Map();
     private _balances: Map<string, bigint> = new Map();
+    private _lockedBalances: Map<string, bigint> = new Map();
+    private _outpoints: Map<string, Array<Outpoint>> = new Map();
     private _eventHandlers: Map<
         string,
         Array<{
@@ -54,9 +56,25 @@ export class MockProvider implements Provider {
         this._transactions.set(hash.toLowerCase(), tx);
     }
 
+    public setOutpoints(address: string, outpoints: Array<Outpoint>): void {
+        this._outpoints.set(address.toLowerCase(), outpoints);
+    }
+
     // Implementation of Provider interface methods
     async getNetwork(): Promise<Network> {
         return this._network;
+    }
+
+    public setBlock(key: string, block: Block): void {
+        this._blocks.set(key, block);
+    }
+
+    async getBlock(shard: Shard, blockHashOrBlockTag: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block> {
+        if (typeof blockHashOrBlockTag === 'string') {
+            return this._blocks.get(blockHashOrBlockTag) ?? null;
+        }
+        // Handle block tag (latest, pending, etc.)
+        throw new Error('Method not implemented.');
     }
 
     async getBlockNumber(shard: Shard): Promise<number> {
@@ -87,17 +105,8 @@ export class MockProvider implements Provider {
         throw new Error('Method not implemented.');
     }
 
-    async getOutpointsByAddress(): Promise<Array<Outpoint>> {
-        // TODO: Implement
-        throw new Error('Method not implemented.');
-    }
-
-    async getBlock(shard: Shard, blockHashOrBlockTag: BlockTag | string, prefetchTxs?: boolean): Promise<null | Block> {
-        if (typeof blockHashOrBlockTag === 'string') {
-            return this._blocks.get(blockHashOrBlockTag) ?? null;
-        }
-        // Handle block tag (latest, pending, etc.)
-        throw new Error('Method not implemented.');
+    async getOutpointsByAddress(address: AddressLike): Promise<Array<Outpoint>> {
+        return this._outpoints.get(address.toString().toLowerCase()) ?? [];
     }
 
     async estimateFeeForQi(tx: QiPerformActionTransaction): Promise<bigint> {
@@ -233,64 +242,68 @@ export class MockProvider implements Provider {
         throw new Error('Method not implemented.');
     }
 
-    async getLockedBalance(): Promise<bigint> {
-        throw new Error('Method not implemented.');
+    public setLockedBalance(address: AddressLike, balance: bigint): void {
+        this._lockedBalances.set(address.toString().toLowerCase(), balance);
+    }
+
+    async getLockedBalance(address: AddressLike): Promise<bigint> {
+        return this._lockedBalances.get(address.toString().toLowerCase()) ?? BigInt(0);
     }
     async getTransactionCount(): Promise<number> {
-        throw new Error('Method not implemented.');
+        throw new Error('getTransactionCount: Method not implemented.');
     }
     async getCode(): Promise<string> {
-        throw new Error('Method not implemented.');
+        throw new Error('getCode: Method not implemented.');
     }
     async getStorage(): Promise<string> {
-        throw new Error('Method not implemented.');
+        throw new Error('getStorage: Method not implemented.');
     }
     async estimateGas(): Promise<bigint> {
-        throw new Error('Method not implemented.');
+        throw new Error('estimateGas: Method not implemented.');
     }
     async createAccessList(): Promise<AccessList> {
-        throw new Error('Method not implemented.');
+        throw new Error('createAccessList: Method not implemented.');
     }
     async call(): Promise<string> {
-        throw new Error('Method not implemented.');
+        throw new Error('call: Method not implemented.');
     }
     async getTransaction(): Promise<null | TransactionResponse> {
-        throw new Error('Method not implemented.');
+        throw new Error('getTransaction: Method not implemented.');
     }
     async getTransactionReceipt(): Promise<null | TransactionReceipt> {
-        throw new Error('Method not implemented.');
+        throw new Error('getTransactionReceipt: Method not implemented.');
     }
     async getTransactionResult(): Promise<null | string> {
-        throw new Error('Method not implemented.');
+        throw new Error('getTransactionResult: Method not implemented.');
     }
     async getLogs(): Promise<Array<Log>> {
-        throw new Error('Method not implemented.');
+        throw new Error('getLogs: Method not implemented.');
     }
     async waitForTransaction(): Promise<null | TransactionReceipt> {
-        throw new Error('Method not implemented.');
+        throw new Error('waitForTransaction: Method not implemented.');
     }
     async waitForBlock(): Promise<Block> {
-        throw new Error('Method not implemented.');
+        throw new Error('waitForBlock: Method not implemented.');
     }
     async getProtocolExpansionNumber(): Promise<number> {
-        throw new Error('Method not implemented.');
+        throw new Error('getProtocolExpansionNumber: Method not implemented.');
     }
     async getTxPoolContent(zone: Zone): Promise<txpoolContentResponse> {
-        throw new Error('Method not implemented.');
+        throw new Error('getTxPoolContent: Method not implemented.');
     }
     async txPoolInspect(zone: Zone): Promise<txpoolInspectResponse> {
-        throw new Error('Method not implemented.');
+        throw new Error('txPoolInspect: Method not implemented.');
     }
     async getQiRateAtBlock(): Promise<bigint> {
-        throw new Error('Method not implemented.');
+        throw new Error('getQiRateAtBlock: Method not implemented.');
     }
     async getLatestQiRate(): Promise<bigint> {
-        throw new Error('Method not implemented.');
+        throw new Error('getLatestQiRate: Method not implemented.');
     }
     async getQuaiRateAtBlock(): Promise<bigint> {
-        throw new Error('Method not implemented.');
+        throw new Error('getQuaiRateAtBlock: Method not implemented.');
     }
     async getLatestQuaiRate(): Promise<bigint> {
-        throw new Error('Method not implemented.');
+        throw new Error('getLatestQuaiRate: Method not implemented.');
     }
 }
