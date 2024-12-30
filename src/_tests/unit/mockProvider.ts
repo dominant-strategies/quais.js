@@ -30,6 +30,8 @@ export class MockProvider implements Provider {
     private _balances: Map<string, bigint> = new Map();
     private _lockedBalances: Map<string, bigint> = new Map();
     private _outpoints: Map<string, Array<Outpoint>> = new Map();
+    private _estimateFeeForQi: Map<string, number> = new Map();
+    private _signedTransaction: string = '';
     private _eventHandlers: Map<
         string,
         Array<{
@@ -47,11 +49,31 @@ export class MockProvider implements Provider {
         if (config?.blockNumber) this._blockNumber = config.blockNumber;
     }
 
-    // Helper methods to set up test state
+    // Helper methods to set the balanace of an address
     public setBalance(address: string, balance: bigint): void {
         this._balances.set(address.toLowerCase(), balance);
     }
 
+    // mock getBalance method
+    async getBalance(address: AddressLike, blockTag?: BlockTag): Promise<bigint> {
+        return this._balances.get(address.toString().toLowerCase()) ?? BigInt(0);
+    }
+
+    // helper method to set the estimated Qi fee for a transaction in the mock provider
+    public setEstimateFeeForQi(input: QiPerformActionTransaction, output: number): void {
+        const key = JSON.stringify(input, bigIntSerializer);
+        this._estimateFeeForQi.set(key, output);
+    }
+
+    // mock estimateFeeForQi method
+    async estimateFeeForQi(input: QiPerformActionTransaction): Promise<bigint> {
+        const key = JSON.stringify(input, bigIntSerializer);
+
+        const fee = this._estimateFeeForQi.get(key) ?? 0;
+        return BigInt(fee);
+    }
+
+    // Helper methods to set the transaction to be used by the mock provider
     public setTransaction(hash: string, tx: TransactionResponse): void {
         this._transactions.set(hash.toLowerCase(), tx);
     }
@@ -60,11 +82,17 @@ export class MockProvider implements Provider {
         this._outpoints.set(address.toLowerCase(), outpoints);
     }
 
-    // Implementation of Provider interface methods
+    // Helper methods to set the network to be used by the mock provider
+    public setNetwork(network: Network): void {
+        this._network = network;
+    }
+
+    // mock getNetwork method
     async getNetwork(): Promise<Network> {
         return this._network;
     }
 
+    // Helper methods to set the block number to be used by the mock provider
     public setBlock(key: string, block: Block): void {
         this._blocks.set(key, block);
     }
@@ -81,11 +109,13 @@ export class MockProvider implements Provider {
         return this._blockNumber;
     }
 
-    async getBalance(address: AddressLike, blockTag?: BlockTag): Promise<bigint> {
-        return this._balances.get(address.toString().toLowerCase()) ?? BigInt(0);
+    // helper method to inspect the signed transaction sent to the mock provider
+    public getSignedTransaction(): string {
+        return this._signedTransaction;
     }
 
     async broadcastTransaction(zone: Zone, signedTx: string, from?: AddressLike): Promise<TransactionResponse> {
+        this._signedTransaction = signedTx;
         // Simulate transaction broadcast
         const type = decodeProtoTransaction(getBytes(signedTx)).type;
 
@@ -107,11 +137,6 @@ export class MockProvider implements Provider {
 
     async getOutpointsByAddress(address: AddressLike): Promise<Array<Outpoint>> {
         return this._outpoints.get(address.toString().toLowerCase()) ?? [];
-    }
-
-    async estimateFeeForQi(tx: QiPerformActionTransaction): Promise<bigint> {
-        // Return a mock fee for testing
-        return BigInt(1000);
     }
 
     async on(event: ProviderEvent, listener: Listener, zone?: Zone): Promise<this> {
@@ -306,4 +331,17 @@ export class MockProvider implements Provider {
     async getLatestQuaiRate(): Promise<bigint> {
         throw new Error('getLatestQuaiRate: Method not implemented.');
     }
+}
+
+function bigIntSerializer(key: string, value: any): any {
+    // Handle null/undefined explicitly
+    if (value === null || value === undefined) {
+        return value;
+    }
+    // Handle bigint values
+    if (typeof value === 'bigint') {
+        return value.toString();
+    }
+    // Return other values unchanged
+    return value;
 }
