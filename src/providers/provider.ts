@@ -54,7 +54,7 @@ import {
 import { WorkObjectLike } from '../transaction/work-object.js';
 import { QiTransactionLike } from '../transaction/qi-transaction.js';
 import { QuaiTransactionLike } from '../transaction/quai-transaction.js';
-import { toShard, toZone } from '../constants/index.js';
+import { toShard, toZone, ZeroAddress } from '../constants/index.js';
 import { getZoneFromNodeLocation, getZoneForAddress } from '../utils/shards.js';
 import { QiPerformActionTransaction } from './abstract-provider.js';
 
@@ -144,8 +144,16 @@ export class FeeData {
  */
 export function addressFromTransactionRequest(tx: TransactionRequest): AddressLike {
     if ('from' in tx && !!tx.from) {
-        return tx.from;
+        if (tx.from !== ZeroAddress) {
+            return tx.from;
+        }
     }
+    if ('to' in tx && !!tx.to) {
+        if (tx.to !== ZeroAddress) {
+            return tx.to as AddressLike;
+        }
+    }
+
     if ('txInputs' in tx && !!tx.txInputs) {
         const inputs = tx.txInputs as TxInput[];
         return computeAddress(inputs[0].pubkey);
@@ -153,9 +161,6 @@ export function addressFromTransactionRequest(tx: TransactionRequest): AddressLi
     if ('txIn' in tx && !!tx.txIn) {
         const inputs = tx.txIn as TxInputJson[];
         return computeAddress(inputs[0].pubkey);
-    }
-    if ('to' in tx && !!tx.to) {
-        return tx.to as AddressLike;
     }
     throw new Error('Unable to determine address from transaction inputs, from or to field');
 }
