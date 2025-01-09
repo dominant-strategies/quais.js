@@ -43,67 +43,69 @@ describe('QiHDWallet scan', async function () {
     const tests = loadTests<ScanTestCase>('qi-wallet-scan');
 
     for (const test of tests) {
-        this.timeout(1200000);
+        describe(test.name, async function () {
+            this.timeout(1200000);
 
-        const mockProvider = new MockProvider();
+            const mockProvider = new MockProvider();
 
-        // set the provider outpoints
-        for (const outpoint of test.provider_outpoints) {
-            mockProvider.setOutpoints(outpoint.address, outpoint.outpoints);
-        }
-
-        // set the provider blocks
-        for (const block of test.provider_blocks) {
-            mockProvider.setBlock(block.key, block.block);
-        }
-
-        // set the provider locked balace
-        for (const lockedBalance of test.provider_locked_balance) {
-            mockProvider.setLockedBalance(lockedBalance.address, BigInt(lockedBalance.balance));
-        }
-
-        // set the provider balance
-        for (const balance of test.provider_balance) {
-            mockProvider.setBalance(balance.address, BigInt(balance.balance));
-        }
-
-        const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
-        const wallet = QiHDWallet.fromMnemonic(mnemonic);
-        wallet.connect(mockProvider);
-        it('it scans the wallet with no errors', async function () {
-            try {
-                await wallet.scan(Zone.Cyprus1);
-                assert.ok(true, '====> TESTING: scan completed');
-            } catch (error) {
-                console.error('====> TESTING: error: ', error);
-                assert.fail('====> TESTING: error: ', error);
+            // set the provider outpoints
+            for (const outpoint of test.provider_outpoints) {
+                mockProvider.setOutpoints(outpoint.address, outpoint.outpoints);
             }
-        });
-        it('validates expected external addresses', async function () {
-            const externalAddresses = wallet.getAddressesForZone(Zone.Cyprus1);
-            const sortedExternalAddresses = externalAddresses.sort((a, b) => a.address.localeCompare(b.address));
-            const sortedExpectedExternalAddresses = test.expected_external_addresses.sort((a, b) =>
-                a.address.localeCompare(b.address),
-            );
-            assert.deepEqual(sortedExternalAddresses, sortedExpectedExternalAddresses);
-        });
 
-        it('validates expected change addresses', async function () {
-            const changeAddresses = wallet.getChangeAddressesForZone(Zone.Cyprus1);
-            const sortedChangeAddresses = changeAddresses.sort((a, b) => a.address.localeCompare(b.address));
-            const sortedExpectedChangeAddresses = test.expected_change_addresses.sort((a, b) =>
-                a.address.localeCompare(b.address),
-            );
-            assert.deepEqual(sortedChangeAddresses, sortedExpectedChangeAddresses);
-        });
+            // set the provider blocks
+            for (const block of test.provider_blocks) {
+                mockProvider.setBlock(block.key, block.block);
+            }
 
-        it('validates wallet balance', async function () {
-            const balance = await wallet.getBalanceForZone(Zone.Cyprus1);
-            assert.equal(balance.toString(), test.expected_balance.toString());
-        });
+            // set the provider locked balace
+            for (const lockedBalance of test.provider_locked_balance) {
+                mockProvider.setLockedBalance(lockedBalance.address, BigInt(lockedBalance.balance));
+            }
 
-        it('validates expected outpoints info', async function () {
-            assert.deepEqual(wallet.getOutpoints(Zone.Cyprus1), test.expected_outpoints_info);
+            // set the provider balance
+            for (const balance of test.provider_balance) {
+                mockProvider.setBalance(balance.address, BigInt(balance.balance));
+            }
+
+            const mnemonic = Mnemonic.fromPhrase(test.mnemonic);
+            const wallet = QiHDWallet.fromMnemonic(mnemonic);
+            wallet.connect(mockProvider);
+            it('it scans the wallet with no errors', async function () {
+                try {
+                    await wallet.scan(Zone.Cyprus1);
+                    assert.ok(true, '====> TESTING: scan completed');
+                } catch (error) {
+                    console.error('====> TESTING: error: ', error);
+                    assert.fail('====> TESTING: error: ', error);
+                }
+            });
+            it('validates expected external addresses', async function () {
+                const externalAddresses = wallet.getAddressesForZone(Zone.Cyprus1);
+                const sortedExternalAddresses = externalAddresses.sort((a, b) => a.address.localeCompare(b.address));
+                const sortedExpectedExternalAddresses = test.expected_external_addresses.sort((a, b) =>
+                    a.address.localeCompare(b.address),
+                );
+                assert.deepEqual(sortedExternalAddresses, sortedExpectedExternalAddresses);
+            });
+
+            it('validates expected change addresses', async function () {
+                const changeAddresses = wallet.getChangeAddressesForZone(Zone.Cyprus1);
+                const sortedChangeAddresses = changeAddresses.sort((a, b) => a.address.localeCompare(b.address));
+                const sortedExpectedChangeAddresses = test.expected_change_addresses.sort((a, b) =>
+                    a.address.localeCompare(b.address),
+                );
+                assert.deepEqual(sortedChangeAddresses, sortedExpectedChangeAddresses);
+            });
+
+            it('validates wallet balance', async function () {
+                const balance = await wallet.getBalanceForZone(Zone.Cyprus1);
+                assert.equal(balance.toString(), test.expected_balance.toString());
+            });
+
+            it('validates expected outpoints info', async function () {
+                assert.deepEqual(wallet.getOutpoints(Zone.Cyprus1), test.expected_outpoints_info);
+            });
         });
     }
 });
