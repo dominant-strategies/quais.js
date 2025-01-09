@@ -1403,16 +1403,20 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         });
 
         if (request.blockTag != null) {
-            const blockTag = this._getBlockTag(toShard(request.chainId!.toString()), request.blockTag);
-            if (isPromise(blockTag)) {
-                promises.push(
-                    (async function () {
-                        request.blockTag = await blockTag;
-                    })(),
-                );
-            } else {
-                request.blockTag = blockTag;
-            }
+            const getBlockTag = async () => {
+                const zone = await this.zoneFromAddress(addressFromTransactionRequest(_request));
+                const shard = toShard(zone);
+                const blockTag = this._getBlockTag(shard, request.blockTag);
+                if (isPromise(blockTag)) {
+                    return await blockTag;
+                }
+                return blockTag;
+            };
+            promises.push(
+                (async function () {
+                    request.blockTag = await getBlockTag();
+                })(),
+            );
         }
 
         if (promises.length) {
