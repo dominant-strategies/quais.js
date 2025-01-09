@@ -8,7 +8,7 @@ import ecc from '@bitcoinerlab/secp256k1';
  *
  * @ignore
  */
-const version = '1.0.0-alpha.32';
+const version = '1.0.0-alpha.33';
 
 /**
  * Property helper functions.
@@ -21020,7 +21020,14 @@ class FeeData {
  */
 function addressFromTransactionRequest(tx) {
     if ('from' in tx && !!tx.from) {
-        return tx.from;
+        if (tx.from !== ZeroAddress) {
+            return tx.from;
+        }
+    }
+    if ('to' in tx && !!tx.to) {
+        if (tx.to !== ZeroAddress) {
+            return tx.to;
+        }
     }
     if ('txInputs' in tx && !!tx.txInputs) {
         const inputs = tx.txInputs;
@@ -21029,9 +21036,6 @@ function addressFromTransactionRequest(tx) {
     if ('txIn' in tx && !!tx.txIn) {
         const inputs = tx.txIn;
         return computeAddress(inputs[0].pubkey);
-    }
-    if ('to' in tx && !!tx.to) {
-        return tx.to;
     }
     throw new Error('Unable to determine address from transaction inputs, from or to field');
 }
@@ -31635,15 +31639,18 @@ class AbstractProvider {
             }
         });
         if (request.blockTag != null) {
-            const blockTag = this._getBlockTag(toShard(request.chainId.toString()), request.blockTag);
-            if (isPromise(blockTag)) {
-                promises.push((async function () {
-                    request.blockTag = await blockTag;
-                })());
-            }
-            else {
-                request.blockTag = blockTag;
-            }
+            const getBlockTag = async () => {
+                const zone = await this.zoneFromAddress(addressFromTransactionRequest(_request));
+                const shard = toShard(zone);
+                const blockTag = this._getBlockTag(shard, request.blockTag);
+                if (isPromise(blockTag)) {
+                    return await blockTag;
+                }
+                return blockTag;
+            };
+            promises.push((async function () {
+                request.blockTag = await getBlockTag();
+            })());
         }
         if (promises.length) {
             return (async function () {
