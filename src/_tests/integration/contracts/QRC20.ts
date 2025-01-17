@@ -246,7 +246,6 @@ const QRC20 = {
                 },
                 {
                     internalType: 'uint256',
-                    name: 'minerTip',
                     type: 'uint256',
                 },
                 {

@@ -607,10 +607,6 @@ export type PerformActionRequest =
           zone: Zone;
       }
     | {
-          method: 'getMinerTip';
-          zone?: Zone;
-      }
-    | {
           method: 'getStorage';
           address: string;
           position: bigint;
@@ -1525,7 +1521,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     async getFeeData(zone?: Zone, txType: boolean = true): Promise<FeeData> {
         const getFeeDataFunc = async () => {
-            const { gasPrice, minerTip } = await resolveProperties({
+            const { gasPrice } = await resolveProperties({
                 gasPrice: (async () => {
                     try {
                         const value = await this.#perform({ method: 'getGasPrice', txType, zone: zone });
@@ -1535,27 +1531,13 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                     }
                     return null;
                 })(),
-                minerTip: (async () => {
-                    try {
-                        const value = txType ? await this.#perform({ method: 'getMinerTip', zone: zone }) : 0;
-                        return getBigInt(value, '%response');
-                        // eslint-disable-next-line no-empty
-                    } catch (error) {}
-                    return null;
-                })(),
             });
 
             if (gasPrice == null) {
                 throw new Error('could not determine gasPrice');
             }
-
-            let baseMinerTip: null | bigint = null;
-
-            // These are the recommended EIP-1559 heuristics for fee data
-
-            baseMinerTip = minerTip != null ? minerTip : BigInt('1000000000');
-
-            return new FeeData(gasPrice, baseMinerTip);
+            
+            return new FeeData(gasPrice);
         };
 
         return await getFeeDataFunc();

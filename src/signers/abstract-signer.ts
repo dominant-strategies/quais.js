@@ -146,14 +146,11 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             }
         }
 
-        if (pop.gasPrice == null || pop.minerTip == null) {
+        if (pop.gasPrice == null) {
             const feeData = await provider.getFeeData(zone, true);
 
             if (pop.gasPrice == null) {
                 pop.gasPrice = feeData.gasPrice;
-            }
-            if (pop.minerTip == null) {
-                pop.minerTip = feeData.minerTip || 10n;
             }
         }
         if (pop.data) {

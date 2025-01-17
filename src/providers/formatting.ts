@@ -157,11 +157,6 @@ export interface EtxParams {
     gasPrice: null | bigint;
 
     /**
-     * The maximum priority fee to allow a producer to claim.
-     */
-    minerTip: null | bigint;
-
-    /**
      * The gas supplied for this etx.
      */
     gas: null | bigint;
@@ -448,12 +443,6 @@ export interface QuaiTransactionResponseParams {
      * The maximum amount of gas this transaction is authorized to consume.
      */
     gasLimit: bigint;
-
-    /**
-     * For [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) transactions, this is the maximum priority fee to allow a
-     * producer to claim.
-     */
-    minerTip: null | bigint;
 
     /**
      * For [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) transactions, this is the maximum fee that will be paid.

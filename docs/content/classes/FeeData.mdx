@@ -11,19 +11,16 @@ A **FeeData** wraps all the fee-related values associated with the network.
 ### new FeeData()
 
 ```ts
-new FeeData(
-   gasPrice?, 
-   minerTip?): FeeData
+new FeeData(gasPrice): FeeData
 ```
 
-Creates a new FeeData for `gasPrice`, `gasPrice` and `minerTip`.
+Creates a new FeeData for `gasPrice`.
 
 #### Parameters
 
 | Parameter | Type | Description |
 | :------ | :------ | :------ |
 | `gasPrice`? | `null` \| `bigint` | The gas price. |
-| `minerTip`? | `null` \| `bigint` | The maximum priority fee per gas. |
 
 #### Returns
 
@@ -38,7 +35,6 @@ Creates a new FeeData for `gasPrice`, `gasPrice` and `minerTip`.
 | Property | Modifier | Type | Description |
 | :------ | :------ | :------ | :------ |
 | `gasPrice` | `readonly` | `null` \| `bigint` | The gas price for legacy networks. |
-| `minerTip` | `readonly` | `null` \| `bigint` | The additional amount to pay per gas to encourage a validator to include the transaction.<br /><br />The purpose of this is to compensate the validator for the adjusted risk for including a given transaction.<br /><br />This will be `null` on legacy networks (i.e. [pre-EIP-1559](https://eips.ethereum.org/EIPS/eip-1559)) |
 
 ## Methods
 

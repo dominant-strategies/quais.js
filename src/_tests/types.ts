@@ -180,9 +180,7 @@ export interface TestCaseTransactionTx {
     from: string;
     nonce?: number;
     gasLimit?: string;
-
     gasPrice?: string;
-    minerTip?: string;
 
     data?: string;
     value?: string;

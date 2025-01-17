@@ -33,7 +33,6 @@ const crossZoneTxReceipt = {
             type: '0x1',
             nonce: null,
             gasPrice: null,
-            minerTip: null,
             gasLimit: null,
             gas: '0x5208',
             value: '0x280de80',
@@ -82,7 +81,6 @@ describe('Transaction Receipt Formatter', () => {
         assert.equal(formattedReceipt.outboundEtxs[0].nonce, crossZoneTxReceipt.outboundEtxs[0].nonce);
         assert.equal(formattedReceipt.outboundEtxs[0].gas, crossZoneTxReceipt.outboundEtxs[0].gas);
         assert.equal(formattedReceipt.outboundEtxs[0].gasPrice, crossZoneTxReceipt.outboundEtxs[0].gasPrice);
-        assert.equal(formattedReceipt.outboundEtxs[0].minerTip, crossZoneTxReceipt.outboundEtxs[0].minerTip);
         assert.equal(formattedReceipt.outboundEtxs[0].value, crossZoneTxReceipt.outboundEtxs[0].value);
         assert.equal(formattedReceipt.outboundEtxs[0].input, crossZoneTxReceipt.outboundEtxs[0].input);
         assert.equal(formattedReceipt.outboundEtxs[0].to, crossZoneTxReceipt.outboundEtxs[0].to);

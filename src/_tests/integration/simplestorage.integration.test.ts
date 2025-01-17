@@ -34,7 +34,6 @@ describe('Test Contract SimpleStorage', function () {
         const nonce = await provider.getTransactionCount(wallet.address, 'latest');
         const deployParams = {
             nonce,
-            minerTip: 1000000000n,
             gasPrice: 3000000000000n,
             from: wallet.address,
         };
