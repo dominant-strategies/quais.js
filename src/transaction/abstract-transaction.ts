@@ -80,11 +80,6 @@ export interface ProtoTransaction {
     gas_price?: Uint8Array;
 
     /**
-     * The gas tip cap for the transaction.
-     */
-    miner_tip?: Uint8Array;
-
-    /**
      * The access list for the transaction.
      */
     access_list?: ProtoAccessList;
