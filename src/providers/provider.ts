@@ -98,25 +98,13 @@ export class FeeData {
     readonly gasPrice!: null | bigint;
 
     /**
-     * The additional amount to pay per gas to encourage a validator to include the transaction.
-     *
-     * The purpose of this is to compensate the validator for the adjusted risk for including a given transaction.
-     *
-     * This will be `null` on legacy networks (i.e. [pre-EIP-1559](https://eips.ethereum.org/EIPS/eip-1559))
-     */
-    readonly minerTip!: null | bigint;
-
-    /**
-     * Creates a new FeeData for `gasPrice`, `gasPrice` and `minerTip`.
+     * Creates a new FeeData for `gasPrice`.
      *
      * @param {null | bigint} [gasPrice] - The gas price.
-     * @param {null | bigint} [gasPrice] - The maximum fee per gas.
-     * @param {null | bigint} [minerTip] - The maximum priority fee per gas.
      */
-    constructor(gasPrice?: null | bigint, minerTip?: null | bigint) {
+    constructor(gasPrice?: null | bigint) {
         defineProperties<FeeData>(this, {
             gasPrice: getValue(gasPrice),
-            minerTip: getValue(minerTip),
         });
     }
 
@@ -126,11 +114,10 @@ export class FeeData {
      * @returns {any} The JSON-friendly value.
      */
     toJSON(): any {
-        const { gasPrice, minerTip } = this;
+        const { gasPrice } = this;
         return {
             _type: 'FeeData',
             gasPrice: toJson(gasPrice),
-            minerTip: toJson(minerTip),
         };
     }
 }
@@ -211,11 +198,6 @@ export interface QuaiTransactionRequest {
      * The gas price to use for the transaction.
      */
     gasPrice?: null | BigNumberish;
-
-    /**
-     * The tip to paid directly to the miner of the transaction.
-     */
-    minerTip?: null | BigNumberish;
 
     /**
      * The transaction data.
@@ -324,11 +306,6 @@ export interface QuaiPreparedTransactionRequest {
     gasPrice?: bigint;
 
     /**
-     * The fee paid directly to the miner of the transaction.
-     */
-    minerTip?: bigint;
-
-    /**
      * The transaction data.
      */
     data?: string;
@@ -412,7 +389,7 @@ export function copyRequest(req: TransactionRequest): PreparedTransactionRequest
         result.data = hexlify(req.data);
     }
 
-    const bigIntKeys = 'chainId,gasLimit,gasPrice,minerTip,value'.split(/,/);
+    const bigIntKeys = 'chainId,gasLimit,gasPrice,value'.split(/,/);
     for (const key of bigIntKeys) {
         if (!(key in req) || (<any>req)[key] == null) {
             continue;
@@ -1271,7 +1248,6 @@ export class TransactionReceipt implements TransactionReceiptParams, Iterable<Lo
                       type: etx.type,
                       nonce: etx.nonce,
                       gasPrice: safeConvert(etx.gasPrice, 'gasPrice'),
-                      minerTip: safeConvert(etx.minerTip, 'minerTip'),
                       gas: safeConvert(etx.gas, 'gas'),
                       value: safeConvert(etx.value, 'value'),
                       input: etx.input,
@@ -1780,12 +1756,6 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
     readonly gasLimit!: bigint;
 
     /**
-     * The maximum priority fee (per unit of gas) to allow a validator to charge the sender. This is inclusive of the
-     * {@link QuaiTransactionResponse.gasPrice | **gasPrice** }.
-     */
-    readonly minerTip!: null | bigint;
-
-    /**
      * The maximum fee (per unit of gas) to allow this transaction to charge the sender.
      */
     readonly gasPrice!: null | bigint;
@@ -1846,7 +1816,6 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
         this.data = tx.data;
         this.value = tx.value;
 
-        this.minerTip = tx.minerTip != null ? tx.minerTip : null;
         this.gasPrice = tx.gasPrice != null ? tx.gasPrice : null;
 
         this.chainId = tx.chainId;
@@ -1874,7 +1843,6 @@ export class QuaiTransactionResponse implements QuaiTransactionLike, QuaiTransac
             gasLimit: toJson(this.gasLimit),
             hash,
             gasPrice: toJson(this.gasPrice),
-            minerTip: toJson(this.minerTip),
             nonce,
             signature,
             to,

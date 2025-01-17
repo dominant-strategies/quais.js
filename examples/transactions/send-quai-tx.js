@@ -21,7 +21,6 @@ async function main() {
      * txObj.chainId = BigInt(9000);
      * txObj.nonce = await provider.getTransactionCount(from, 'latest');
      * txObj.gasLimit = BigInt(1000000);
-     * txObj.minerTip = BigInt(10000000000),
      * txObj.gasPrice = BigInt(30000000000000),
      */
 

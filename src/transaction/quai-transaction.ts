@@ -53,11 +53,6 @@ export interface QuaiTransactionLike extends TransactionLike {
     gasLimit?: null | BigNumberish;
 
     /**
-     * The maximum priority fee per gas for london transactions.
-     */
-    minerTip?: null | BigNumberish;
-
-    /**
      * The maximum total fee per gas for london transactions.
      */
     gasPrice?: null | BigNumberish;
@@ -113,7 +108,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     #nonce: number;
     #gasLimit: bigint;
     #gasPrice: null | bigint;
-    #minerTip: null | bigint;
     #value: bigint;
     #accessList: null | AccessList;
     from?: string;
@@ -213,22 +207,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
     }
 
     /**
-     * The maximum priority fee per unit of gas to pay. On legacy networks this should be `null`.
-     *
-     * @type {null | bigint}
-     */
-    get minerTip(): null | bigint {
-        const value = this.#minerTip;
-        if (value == null) {
-            return null;
-        }
-        return value;
-    }
-    set minerTip(value: null | BigNumberish) {
-        this.#minerTip = value == null ? null : getBigInt(value, 'minerTip');
-    }
-
-    /**
      * The maximum total fee per unit of gas to pay. On legacy networks this should be `null`.
      *
      * @type {null | bigint}
@@ -298,8 +276,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         this.#nonce = 0;
         this.#gasLimit = BigInt(0);
         this.#gasPrice = null;
-        this.#minerTip = null;
-        this.#gasPrice = null;
         this.#data = '0x';
         this.#value = BigInt(0);
         this.#accessList = null;
@@ -312,12 +288,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
      * @returns {number[]} The compatible transaction types.
      */
     inferTypes(): Array<number> {
-        if (this.gasPrice != null && this.minerTip != null) {
-            assert(this.gasPrice >= this.minerTip, 'priorityFee cannot be more than maxFee', 'BAD_DATA', {
-                value: this,
-            });
-        }
-
         assert(
             this.type !== 0 && this.type !== 1,
             'transaction type cannot have externalGasLimit, externalGasTip, externalGasPrice, externalData, or externalAccessList',
@@ -369,7 +339,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             nonce: this.nonce,
             gasLimit: s(this.gasLimit),
             gasPrice: s(this.gasPrice),
-            minerTip: s(this.minerTip),
             value: s(this.value),
             chainId: s(this.chainId),
             signature: this.signature ? this.signature.toJSON() : null,
@@ -389,7 +358,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
             type: this.type || 0,
             chain_id: formatNumber(this.chainId || 0, 'chainId'),
             nonce: this.nonce || 0,
-            miner_tip: formatNumber(this.minerTip || 0, 'minerTip'),
             gas_price: formatNumber(this.gasPrice || 0, 'gasPrice'),
             gas: Number(this.gasLimit || 0),
             to: this.to != null ? getBytes(this.to as string) : null,
@@ -442,9 +410,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         }
         if (tx.gasLimit != null) {
             result.gasLimit = tx.gasLimit;
-        }
-        if (tx.minerTip != null) {
-            result.minerTip = tx.minerTip;
         }
         if (tx.gasPrice != null) {
             result.gasPrice = tx.gasPrice;
@@ -527,7 +492,6 @@ export class QuaiTransaction extends AbstractTransaction<Signature> implements Q
         tx.type = protoTx.type;
         tx.chainId = toBigInt(protoTx.chain_id);
         tx.nonce = Number(protoTx.nonce);
-        tx.minerTip = toBigInt(protoTx.miner_tip!);
         tx.gasPrice = toBigInt(protoTx.gas_price!);
         tx.gasLimit = toBigInt(protoTx.gas!);
         tx.value = protoTx.value !== null ? toBigInt(protoTx.value!) : BigInt(0);
@@ -560,7 +524,6 @@ function deepCopyProtoTransaction(proto: ProtoTransaction): ProtoTransaction {
     if (proto.value) copy.value = new Uint8Array(proto.value);
     if (proto.data) copy.data = new Uint8Array(proto.data);
     if (proto.gas_price) copy.gas_price = new Uint8Array(proto.gas_price);
-    if (proto.miner_tip) copy.miner_tip = new Uint8Array(proto.miner_tip);
     if (proto.v) copy.v = new Uint8Array(proto.v);
     if (proto.r) copy.r = new Uint8Array(proto.r);
     if (proto.s) copy.s = new Uint8Array(proto.s);

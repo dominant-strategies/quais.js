@@ -283,11 +283,6 @@ export interface QuaiJsonRpcTransactionRequest extends AbstractJsonRpcTransactio
     gasPrice?: string;
 
     /**
-     * The maximum priority fee per gas for [EIP-1559](https://eips.ethereum.org/EIPS/eip-1559) transactions.
-     */
-    minerTip?: string;
-
-    /**
      * The nonce for the transaction.
      */
     nonce?: string;
@@ -878,9 +873,9 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             const tx = req.transaction;
             if (tx && tx.type != null && getBigInt(tx.type)) {
                 // If there are no EIP-1559 properties, it might be non-EIP-a559
-                if (tx.gasPrice == null && tx.minerTip == null) {
+                if (tx.gasPrice == null) {
                     const feeData = await this.getFeeData(req.zone, tx.type === 1);
-                    if (feeData.gasPrice == null && feeData.minerTip == null) {
+                    if (feeData.gasPrice == null) {
                         // Network doesn't know about EIP-1559 (and hence type)
                         req = Object.assign({}, req, {
                             transaction: Object.assign({}, tx, { type: undefined }),
@@ -1121,7 +1116,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
 
         if ('from' in tx || ('to' in tx && 'data' in tx)) {
             // JSON-RPC now requires numeric values to be "quantity" values
-            ['chainId', 'gasLimit', 'gasPrice', 'type', 'gasPrice', 'minerTip', 'nonce', 'value'].forEach((key) => {
+            ['chainId', 'gasLimit', 'gasPrice', 'type', 'gasPrice', 'nonce', 'value'].forEach((key) => {
                 if ((<any>tx)[key] == null) {
                     return;
                 }
@@ -1184,9 +1179,6 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                     method: 'quai_gasPrice',
                     args: [],
                 };
-
-            case 'getMinerTip':
-                return { method: 'quai_minerTip', args: [] };
 
             case 'getPendingHeader':
                 return { method: 'quai_getPendingHeader', args: [] };

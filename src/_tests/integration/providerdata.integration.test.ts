@@ -113,7 +113,6 @@ async function sendTransaction(to: string) {
                 to: string;
                 value: any;
                 gasPrice: any;
-                minerTip: any;
                 nonce: number;
                 data: string;
                 type: number;
@@ -127,7 +126,6 @@ async function sendTransaction(to: string) {
                 to,
                 value: quais.parseQuai('0.1'), // Sending 0.1 ether
                 gasPrice: gasPrice,
-                minerTip: quais.parseUnits('20', 'gwei'),
                 nonce: await providerC1.getTransactionCount(wallet.address, 'latest'),
                 data: '',
                 type: typeValue,
@@ -356,7 +354,6 @@ describe.skip('Test Transaction operations', function () {
                 {
                     type: Number(etx.type),
                     nonce: Number(etx.nonce),
-                    minerTip: BigInt(etx.minerTip),
                     gasPrice: BigInt(etx.gasPrice),
                     gas: BigInt(etx.gas),
                     value: BigInt(etx.value),

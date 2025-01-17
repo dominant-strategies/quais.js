@@ -7,7 +7,6 @@
           "from": "0x0004754b0bda885565558ad25b5015bbbb1b16fa",
           "gas": "0xa410",
           "gasPrice": "0x77359404",
-          "minerTip": "0x3b9aca00",
           "hash": "0x60185d6a221b9192c673a6ba72c1f25578a007e9252528484f772375d7e7feb6",
           "input": "0x",
           "nonce": "0x357",
@@ -31,7 +30,6 @@
           "from": "0x1ad5848c5ae71b41b3fad701e681533daf6c4bb8",
           "gas": "0xa410",
           "gasPrice": "0x77359404",
-          "minerTip": "0x3b9aca00",
           "hash": "0x00ada01e75ff2f7dee4902190e244c187860c7f4c2f245f825b662c0ab37c322",
           "input": "0x",
           "nonce": "0x355",
@@ -58,7 +56,6 @@ export type txpoolContentResponse = {
                 from: string;
                 gas: string;
                 gasPrice: string;
-                minerTip: string;
                 hash: string;
                 input: string;
                 nonce: string;
@@ -82,7 +79,6 @@ export type txpoolContentResponse = {
                 from: string;
                 gas: string;
                 gasPrice: string;
-                minerTip: string;
                 hash: string;
                 input: string;
                 nonce: string;

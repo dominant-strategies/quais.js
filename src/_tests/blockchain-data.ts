@@ -52,8 +52,6 @@ export interface TestBlockchainTransaction {
     chainId: bigint;
 
     accessList?: Array<Record<string, Array<string>>>;
-
-    minerTip?: bigint;
 }
 
 export interface TestBlockchainReceipt {
@@ -214,7 +212,6 @@ export const testTransaction: Record<TestBlockchainNetwork, Array<TestBlockchain
             data: '0x',
             value: BigInt('1100000000000000'),
             gasPrice: BigInt('70578812137'),
-            minerTip: BigInt('1000000000'),
             chainId: BigInt(1),
             signature: {
                 r: '0xdd26e5478d0aa84e334a0393d335ab24b83de8ecae9290305f15ab884ded246c',

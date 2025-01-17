@@ -18,7 +18,6 @@ function assertTxEqual(actual: QuaiTransaction, expected: TestCaseTransactionTx)
     assertTxUint(actual.gasLimit, expected.gasLimit, 'gasLimit');
 
     assertTxUint(actual.gasPrice, expected.gasPrice, 'gasPrice');
-    assertTxUint(actual.minerTip, expected.minerTip, 'minerTip');
 
     assert.equal(actual.data, expected.data, 'data');
     assertTxUint(actual.value, expected.value, 'value');
@@ -43,7 +42,6 @@ function addDefaults(tx: any): any {
     addDefault(tx, 'nonce', 0);
     addDefault(tx, 'gasLimit', BN_0);
     addDefault(tx, 'gasPrice', BN_0);
-    addDefault(tx, 'minerTip', BN_0);
     addDefault(tx, 'value', 0);
     addDefault(tx, 'data', '0x');
     addDefault(tx, 'accessList', []);
@@ -77,7 +75,6 @@ describe('Tests Signed Transaction Parsing', function () {
             let tx = QuaiTransaction.from(test.signed);
             const expected = addDefaults(test.transaction);
             expected.gasLimit = 0;
-            expected.minerTip = 0;
             expected.accessList = [];
             for (let i = 0; i < 2; i++) {
                 assertTxEqual(tx, expected);
