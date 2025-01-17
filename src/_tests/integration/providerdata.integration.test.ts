@@ -25,8 +25,8 @@ dotenv.config({ path: `.env`, override: false });
 // import type { TestBlockchainNetwork } from "./blockchain-data.js";
 
 //setupProviders();
-
-const providerC1 = new quais.JsonRpcProvider(process.env.RPC_URL);
+const options = { usePathing: false };
+const providerC1 = new quais.JsonRpcProvider(process.env.RPC_URL, undefined, options);
 const wallet = new quais.Wallet(process.env.CYPRUS1_PRIVKEY_1 || '', providerC1);
 const destinationC1 = '0x0047f9CEa7662C567188D58640ffC48901cde02a';
 const destinationC2 = '0x011ae0a1Bd5B71b4F16F8FdD3AEF278C3D042449';

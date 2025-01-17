@@ -55,7 +55,8 @@ describe('QiHDWallet Roundtrip Transaction', function () {
     let bobWallet: QiHDWallet;
     let alicePaymentCode: string;
     let bobPaymentCode: string;
-    const provider = new JsonRpcProvider(process.env.RPC_URL);
+    const options = { usePathing: false };
+    const provider = new JsonRpcProvider(process.env.RPC_URL, undefined, options);
 
     for (const test of tests) {
         this.timeout(1200000);
