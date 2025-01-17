@@ -694,7 +694,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const fee = BigInt(1000); // temporary hardcode fee to 1 Qi
         const selection = aggregateCoinSelector.performSelection({ fee, maxDenomination: 6, includeLocked: false });
 
-        const sendAddressesInfo = this._getUnusedBIP44Addresses(1, 0, 'BIP44:external', zone);
+        const sendAddressesInfo = this.getUnusedBIP44Addresses(1, 0, 'BIP44:external', zone);
         const sendAddresses = sendAddressesInfo.map((addressInfo) => addressInfo.address);
         const changeAddresses: string[] = [];
         const inputPubKeys = selection.inputs.map((input) => {
@@ -773,50 +773,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         // 3. Generate as many unused addresses as required to populate the spend outputs
         const sendAddresses = await getDestinationAddresses(selection.spendOutputs.length);
 
-        const getChangeAddressesForOutputs = async (count: number): Promise<string[]> => {
-            const currentChangeAddresses = this._addressesMap.get('BIP44:change') || [];
-            const outputChangeAddresses: QiAddressInfo[] = [];
-
-            for (let i = 0; i < currentChangeAddresses.length; i++) {
-                if (currentChangeAddresses[i].status === AddressStatus.UNUSED) {
-                    outputChangeAddresses.push(currentChangeAddresses[i]);
-                }
-
-                if (outputChangeAddresses.length === count) break;
-            }
-
-            // Generate the remaining number of change addresses if needed
-            const remainingAddressesNeeded = count - outputChangeAddresses.length;
-            if (remainingAddressesNeeded > 0) {
-                outputChangeAddresses.push(
-                    ...Array(remainingAddressesNeeded)
-                        .fill(0)
-                        .map(() => this.getNextChangeAddressSync(0, originZone)),
-                );
-            }
-
-            // Combine the existing change addresses with the newly generated addresses and ensure they are unique and sorted by index
-            const mergedChangeAddresses = [
-                // Not updated last synced block because we are not certain of the success of the transaction
-                // so we will want to get deltas from last **checked** block
-                ...outputChangeAddresses.map((address) => ({
-                    ...address,
-                    status: AddressStatus.ATTEMPTED_USE,
-                })),
-                ...currentChangeAddresses,
-            ];
-            const sortedAndFilteredChangeAddresses = mergedChangeAddresses
-                .filter((address, index, self) => self.findIndex((t) => t.address === address.address) === index)
-                .sort((a, b) => a.index - b.index);
-
-            // Update the _addressesMap with the modified change addresses and statuses
-            this._addressesMap.set('BIP44:change', sortedAndFilteredChangeAddresses);
-
-            return outputChangeAddresses.map((address) => address.address);
-        };
-
         // 4. Get change addresses
-        const changeAddresses = await getChangeAddressesForOutputs(selection.changeOutputs.length);
+        const changeAddresses = await this.getChangeAddressesForOutputs(selection.changeOutputs.length, originZone);
 
         // 5. Create the transaction and sign it using the signTransaction method
         let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
@@ -843,7 +801,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
             if (changeAddressesNeeded > 0) {
                 // Need more change addresses
-                const newChangeAddresses = await getChangeAddressesForOutputs(changeAddressesNeeded);
+                const newChangeAddresses = await this.getChangeAddressesForOutputs(changeAddressesNeeded, originZone);
                 changeAddresses.push(...newChangeAddresses);
             } else if (changeAddressesNeeded < 0) {
                 // Have extra change addresses, remove the excess
@@ -991,6 +949,37 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     /**
+     * Gets a set of unused change addresses for transaction outputs and updates their status in the wallet. This method
+     * retrieves unused BIP44 change addresses, marks them as attempted use, and maintains the wallet's address mapping
+     * state.
+     *
+     * @private
+     * @param {number} count - The number of change addresses needed
+     * @param {Zone} zone - The zone to get change addresses from
+     * @param {number} [account=0] - The account index to use (defaults to 0). Default is `0`
+     * @returns {Promise<string[]>} A promise that resolves to an array of change addresses
+     */
+    private async getChangeAddressesForOutputs(count: number, zone: Zone, account: number = 0): Promise<string[]> {
+        // Get unused change addresses using existing helper
+        const unusedAddresses = this.getUnusedBIP44Addresses(count, account, 'BIP44:change', zone);
+
+        // Update address statuses in wallet
+        const currentAddresses = this._addressesMap.get('BIP44:change') || [];
+        const updatedAddresses = [
+            // Mark selected addresses as attempted use
+            ...unusedAddresses.map((addr) => ({ ...addr, status: AddressStatus.ATTEMPTED_USE })),
+            // Keep other existing addresses unchanged
+            ...currentAddresses.filter((addr) => !unusedAddresses.some((unused) => unused.address === addr.address)),
+        ].sort((a, b) => a.index - b.index);
+
+        // Update wallet's address map
+        this._addressesMap.set('BIP44:change', updatedAddresses);
+
+        // Return just the addresses
+        return unusedAddresses.map((addr) => addr.address);
+    }
+
+    /**
      * Gets a set of unused BIP44 addresses from the specified derivation path. It first checks if there are any unused
      * addresses available in the _addressesMap and uses those if possible. If there are not enough unused addresses, it
      * will generate new ones.
@@ -1000,7 +989,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @param zone - The zone to get addresses from.
      * @returns An array of addresses.
      */
-    private _getUnusedBIP44Addresses(
+    private getUnusedBIP44Addresses(
         amount: number,
         account: number,
         path: DerivationPath,
