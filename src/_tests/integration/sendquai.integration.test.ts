@@ -38,7 +38,8 @@ describe('Test sending Quai', function () {
 
     before(async () => {
         const wsUrl = process.env.RPC_URL?.replace('https', 'wss')?.replace('http', 'ws');
-        provider = new WebSocketProvider(wsUrl ?? '');
+        const options = { usePathing: false };
+        provider = new WebSocketProvider(wsUrl ?? '', undefined, options);
         wallet = new Wallet(process.env.CYPRUS1_PRIVKEY_1!, provider);
         const senderBalance = await provider.getBalance(wallet.address);
         // ensure balance is greater than 0.1 QUAI
