@@ -18,7 +18,7 @@ describe('Test Contract', function () {
     let addr: string;
     before(async function () {
         this.timeout(100000);
-        const factory = new ContractFactory(abi, bytecode, wallet as ContractRunner);
+        const factory = new ContractFactory(abi, bytecode, wallet as ContractRunner, TestContract.IPFSHash);
         contract = (await factory.deploy()) as Contract;
         addr = await contract.getAddress();
         console.log('waiting for contract deployment');

@@ -40,6 +40,8 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
      */
     readonly runner!: null | ContractRunner;
 
+    IPFSHash: null | string = null;
+
     /**
      * Create a new **ContractFactory** with `abi` and `bytecode`, optionally connected to `runner`.
      *
@@ -49,6 +51,7 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         abi: Interface | InterfaceAbi,
         bytecode: BytesLike | { object: string },
         runner?: null | ContractRunner,
+        IPFSHash: null | string = null,
     ) {
         const iface = Interface.from(abi);
 
@@ -69,6 +72,7 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
             bytecode,
             interface: iface,
             runner: runner || null,
+            IPFSHash,
         });
     }
 
@@ -133,6 +137,15 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
             },
         );
 
+        assert(
+            this.IPFSHash !== null && this.IPFSHash !== undefined && this.IPFSHash.length !== 46,
+            'IPFSHash is not set or not 46 characters long',
+            'BAD_DATA',
+            {
+                value: 'IPFSHash',
+            },
+        );
+
         if (this.runner instanceof Wallet || this.runner instanceof JsonRpcSigner) {
             validateAddress(this.runner.address);
             tx.from = this.runner.address;
@@ -190,6 +203,10 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
             i++;
         }
         return tx;
+    }
+
+    setIPFSHash(IPFSHash: string): void {
+        this.IPFSHash = IPFSHash;
     }
 
     /**
