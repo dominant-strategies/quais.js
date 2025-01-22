@@ -1,23 +1,60 @@
-const quais = require('../../lib/commonjs/quais');
+const {
+	Mnemonic,
+	QiHDWallet,
+	Zone,
+	QiTransaction,
+	getBytes,
+	musigCrypto,
+	hexlify,
+} = require('../../lib/commonjs/quais');
 require('dotenv').config();
-const { keccak_256 } = require('@noble/hashes/sha3');
 const { schnorr } = require('@noble/curves/secp256k1');
 const { MuSigFactory } = require('@brandonblack/musig');
 
+/**
+ * MuSig Signature Example for Qi Transactions
+ * 
+ * This script demonstrates how to create and verify a MuSig (multi-signature) Schnorr signature
+ * for a Qi transaction. It shows the complete workflow of:
+ * 1. Creating multiple addresses from a single wallet
+ * 2. Creating a Qi transaction with multiple inputs
+ * 3. Signing with MuSig (aggregated signatures)
+ * 4. Verifying the aggregated signature
+ * 
+ * Usage:
+ * First, set up your .env file with:
+ * MNEMONIC="your twelve word mnemonic phrase here"
+ * 
+ * Then run:
+ * ```
+ * node sign-verify-qi-musig.js
+ * ```
+ * 
+ * The script will output:
+ * - Two signer addresses
+ * - The transaction to be signed
+ * - The serialized signed transaction
+ * - The transaction hash
+ * - The verification result
+ * 
+ * Note: This example uses MuSig for aggregating Schnorr signatures, which is
+ * particularly useful for UTXO-based multi-signature transactions.
+ */
+
 async function main() {
     // Create wallet
-    const mnemonic = quais.Mnemonic.fromPhrase(process.env.MNEMONIC);
-    const qiWallet = quais.QiHDWallet.fromMnemonic(mnemonic);
+    const mnemonic = Mnemonic.fromPhrase(process.env.MNEMONIC);
+    const qiWallet = QiHDWallet.fromMnemonic(mnemonic);
 
     // Generate 1 address for each outpoint
-    const addressInfo1 = await qiWallet.getNextAddress(0, quais.Zone.Cyprus1);
+    const addressInfo1 = await qiWallet.getNextAddress(0, Zone.Cyprus1);
     const addr1 = addressInfo1.address;
     const pubkey1 = addressInfo1.pubKey;
-
-    const addressInfo2 = await qiWallet.getNextAddress(0, quais.Zone.Cyprus1);
+	console.log('\n... signer address #1: ', addr1);
+    const addressInfo2 = await qiWallet.getNextAddress(0, Zone.Cyprus1);
     const addr2 = addressInfo2.address;
     const pubkey2 = addressInfo2.pubKey;
-
+	console.log('\n... signer address #2: ', addr2);
     // Define the outpoints for addr1
     const outpointsInfo = [
         {
@@ -27,7 +64,7 @@ async function main() {
                 denomination: 7,
             },
             address: addr1,
-            zone: quais.Zone.Cyprus1,
+            zone: Zone.Cyprus1,
         },
         {
             outpoint: {
@@ -36,7 +73,7 @@ async function main() {
                 denomination: 7,
             },
             address: addr2,
-            zone: quais.Zone.Cyprus1,
+            zone: Zone.Cyprus1,
         },
     ];
 
@@ -65,27 +102,31 @@ async function main() {
     ];
 
     // Create the Qi Tx to be signed
-    const tx = new quais.QiTransaction();
+    const tx = new QiTransaction();
     tx.txInputs = txInputs;
     tx.txOutputs = txOutputs;
 
-    // Calculate the hash of the Qi tx (message to be signed and verified)
-    const txHash = keccak_256(tx.unsignedSerialized);
+	console.log('\n... transaction to sign: ', JSON.stringify(tx, null, 2));
 
     // Sign the tx
     const serializedSignedTx = await qiWallet.signTransaction(tx);
 
     // Unmarshall the signed Tx
-    const signedTx = quais.QiTransaction.from(serializedSignedTx);
+    const signedTxObj = QiTransaction.from(serializedSignedTx);
+	console.log('\n... signed transaction (serialized): ', serializedSignedTx);
 
+	// Digest to verify
+	const txHash = getBytes(signedTxObj.digest);
+	console.log('\n... txHash to verify: ', signedTxObj.digest);
+	
     // Get the signature from the signed tx
-    const signature = signedTx.signature;
+    const signature = signedTxObj.signature;
 
-    const musig = MuSigFactory(quais.musigCrypto);
-    const pubKeysArray = [quais.getBytes(pubkey1), quais.getBytes(pubkey2)];
+    const musig = MuSigFactory(musigCrypto);
+    const pubKeysArray = [getBytes(pubkey1), getBytes(pubkey2)];
     const aggPublicKeyObj = musig.keyAgg(pubKeysArray);
 
-    let aggPublicKey = quais.hexlify(aggPublicKeyObj.aggPublicKey);
+    let aggPublicKey = hexlify(aggPublicKeyObj.aggPublicKey);
 
     // Remove the last 32 bytes (64 hex) from the aggPublicKey
     let compressedPubKey = aggPublicKey.slice(0, -64);
@@ -94,7 +135,7 @@ async function main() {
     compressedPubKey = '0x' + compressedPubKey.slice(4);
 
     // Verify the schnoor signature
-    const verified = schnorr.verify(quais.getBytes(signature), txHash, quais.getBytes(compressedPubKey));
+    const verified = schnorr.verify(getBytes(signature), txHash, getBytes(compressedPubKey));
     console.log('Verified:', verified);
 }
 

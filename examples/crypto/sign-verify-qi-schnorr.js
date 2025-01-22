@@ -4,11 +4,40 @@ const {
 	Zone,
 	QiTransaction,
 	getBytes,
-	keccak256,
 } = require('../../lib/commonjs/quais');
 require('dotenv').config();
 
 const { schnorr } = require('@noble/curves/secp256k1');
+
+/**
+ * Schnorr Signature Example for Qi Transactions
+ * 
+ * This script demonstrates how to create and verify a Schnorr signature
+ * for a Qi transaction. It shows the complete workflow of:
+ * 1. Creating a wallet and deriving an address
+ * 2. Creating a Qi transaction
+ * 3. Signing with Schnorr signature
+ * 4. Verifying the signature
+ * 
+ * Usage:
+ * First, set up your .env file with:
+ * MNEMONIC="your twelve word mnemonic phrase here"
+ * 
+ * Then run:
+ * ```
+ * node sign-verify-qi-schnorr.js
+ * ```
+ * 
+ * The script will output:
+ * - The signer's address
+ * - The transaction to be signed
+ * - The serialized signed transaction
+ * - The transaction hash
+ * - The verification result
+ * 
+ * Note: This example uses Schnorr signatures which are more efficient and
+ * provide better privacy compared to ECDSA signatures for UTXO transactions.
+ */
 
 async function main() {
     // Create wallet
@@ -18,6 +47,7 @@ async function main() {
     // Get address info
     const addressInfo1 = await qiWallet.getNextAddress(0, Zone.Cyprus1);
     const addr1 = addressInfo1.address;
+	console.log('\n... signer address: ', addr1);
     const pubkey1 = addressInfo1.pubKey;
 
     // Define the outpoints for addr1 (this is just an example outpoint)
@@ -57,24 +87,27 @@ async function main() {
     tx.txInputs = txInputs;
     tx.txOutputs = txOutputs;
 
-    // Calculate the hash of the Qi tx (message to be signed and verified)
-    const txHash = getBytes(keccak256(tx.unsignedSerialized));
+	console.log('\n... transaction to sign: ', JSON.stringify(tx, null, 2));
 
     // Sign the tx
     const serializedSignedTx = await qiWallet.signTransaction(tx);
-
+	console.log('\n... signed transaction (serialized): ', serializedSignedTx);
     // Unmarshall the signed Tx
-    const signedTx = QiTransaction.from(serializedSignedTx);
+    const signedTxObj = QiTransaction.from(serializedSignedTx);
+
+	// Digest to verify
+	const txHash = getBytes(signedTxObj.digest);
+	console.log('\n... txHash to verify: ', signedTxObj.digest);
 
     // Get the signature from the signed tx
-    const signature = signedTx.signature;
+    const signature = signedTxObj.signature;
 
     // Remove parity byte from pubkey
-    publicKey = '0x' + pubkey1.slice(4);
+    const publicKey = '0x' + pubkey1.slice(4);
 
     // Verify the schnoor signature
     const verified = schnorr.verify(getBytes(signature), txHash, getBytes(publicKey));
-    console.log('Verified:', verified);
+    console.log('\n=> signature is valid: ', verified);
 }
 
 main()
