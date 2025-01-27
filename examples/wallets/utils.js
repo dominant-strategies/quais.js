@@ -104,9 +104,19 @@ function printPaymentCodeInfo(paymentCodeInfo) {
     }
 }
 
+function generateAddresses(wallet, account, zone, count) {
+	let addresses = [];
+	for (let i = 0; i < count; i++) {
+		const addressInfo = wallet.getNextAddressSync(account, zone);
+		addresses.push(addressInfo);
+	}
+	return addresses;
+}
+
 module.exports = {
     printWalletInfo,
     printAddressTable,
     printOutpointTable,
     printPaymentCodeInfo,
+	generateAddresses,
 };
