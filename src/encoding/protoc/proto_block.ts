@@ -3,7 +3,7 @@
  * compiler version: 5.29.1
  * source: proto_block.proto
  * git: https://github.com/thesayyn/protoc-gen-ts */
-import * as dependency_1 from "./proto_common";
+import * as dependency_1 from "./proto_common.js";
 import * as pb_1 from "google-protobuf";
 export namespace block {
     export class ProtoHeader extends pb_1.Message {
