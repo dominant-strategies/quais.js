@@ -72,8 +72,8 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
             bytecode,
             interface: iface,
             runner: runner || null,
-            IPFSHash,
         });
+        this.IPFSHash = IPFSHash;
     }
 
     attach(target: string | Addressable): BaseContract & Omit<I, keyof BaseContract> {
@@ -138,8 +138,8 @@ export class ContractFactory<A extends Array<any> = Array<any>, I = BaseContract
         );
 
         assert(
-            this.IPFSHash !== null && this.IPFSHash !== undefined && this.IPFSHash.length !== 46,
-            'IPFSHash is not set or not 46 characters long',
+            this.IPFSHash !== null && this.IPFSHash !== undefined && this.IPFSHash.length == 46,
+            `IPFSHash is ${this.IPFSHash} not set or not 46 characters long`,
             'BAD_DATA',
             {
                 value: 'IPFSHash',
