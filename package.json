@@ -147,6 +147,7 @@
     "test-integ": "mocha --timeout 20000 --reporter ./reporter.cjs ./lib/commonjs/_tests/integration/*.integration.test.js",
     "test-coverage": "c8 -o output -r lcov -r text mocha --no-color --reporter ./reporter.cjs ./lib/esm/_tests/**/*.test.js | tee output/summary.txt",
     "test-esm": "mocha --trace-warnings --reporter ./reporter.cjs -r dotenv/config ./lib/esm/_tests/**/*.test.js",
+    "test-testcontract": "mocha --trace-warnings --reporter ./reporter.cjs -r dotenv/config ./lib/esm/_tests/integration/testcontract.integration.test.js",
     "prepare": "husky",
     "format": "prettier --write src/**/*.ts"
   },
