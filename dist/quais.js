@@ -8,7 +8,7 @@ import ecc from '@bitcoinerlab/secp256k1';
  *
  * @ignore
  */
-const version = '1.0.0-alpha.34';
+const version = '1.0.0-alpha.35';
 
 /**
  * Property helper functions.
@@ -33917,8 +33917,8 @@ class ContractFactory {
             bytecode,
             interface: iface,
             runner: runner || null,
-            IPFSHash,
         });
+        this.IPFSHash = IPFSHash;
     }
     attach(target) {
         return new BaseContract(target, this.interface, this.runner);
@@ -33964,7 +33964,7 @@ class ContractFactory {
         assert$1(this.runner && typeof this.runner.sendTransaction === 'function', 'factory runner does not support sending transactions', 'UNSUPPORTED_OPERATION', {
             operation: 'sendTransaction',
         });
-        assert$1(this.IPFSHash !== null && this.IPFSHash !== undefined && this.IPFSHash.length !== 46, 'IPFSHash is not set or not 46 characters long', 'BAD_DATA', {
+        assert$1(this.IPFSHash !== null && this.IPFSHash !== undefined && this.IPFSHash.length == 46, `IPFSHash is ${this.IPFSHash} not set or not 46 characters long`, 'BAD_DATA', {
             value: 'IPFSHash',
         });
         if (this.runner instanceof Wallet || this.runner instanceof JsonRpcSigner) {
