@@ -177,10 +177,7 @@ const _formatHeader = object({
     transactionsRoot: formatHash,
     uncledEntropy: getBigInt,
     utxoRoot: formatHash,
-    secondaryCoinbase: allowNull(getAddress),
     exchangeRate: getBigInt,
-    quaiToQi: getBigInt,
-    qiToQuai: getBigInt,
 });
 
 const _formatUncle = object({
