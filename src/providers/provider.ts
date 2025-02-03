@@ -474,9 +474,6 @@ export class BlockHeader implements BlockHeaderParams {
     readonly uncledEntropy: bigint;
     readonly utxoRoot!: string;
     readonly exchangeRate!: bigint;
-    readonly quaiToQi!: bigint;
-    readonly qiToQuai!: bigint;
-    readonly secondaryCoinbase!: string;
 
     constructor(params: BlockHeaderParams) {
         this.baseFeePerGas = params.baseFeePerGas;
@@ -509,9 +506,6 @@ export class BlockHeader implements BlockHeaderParams {
         this.uncledEntropy = params.uncledEntropy;
         this.utxoRoot = params.utxoRoot;
         this.exchangeRate = params.exchangeRate;
-        this.quaiToQi = params.quaiToQi;
-        this.qiToQuai = params.qiToQuai;
-        this.secondaryCoinbase = params.secondaryCoinbase;
     }
 
     toJSON(): BlockHeaderParams {

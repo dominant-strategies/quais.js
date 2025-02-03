@@ -54,9 +54,6 @@ export interface BlockHeaderParams {
     uncledEntropy: bigint;
     utxoRoot: string;
     exchangeRate: bigint;
-    quaiToQi: bigint;
-    qiToQuai: bigint;
-    secondaryCoinbase: string;
 }
 
 export interface UncleParams {
