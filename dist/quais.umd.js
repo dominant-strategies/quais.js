@@ -19797,10 +19797,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         transactionsRoot: formatHash,
         uncledEntropy: getBigInt,
         utxoRoot: formatHash,
-        secondaryCoinbase: allowNull(getAddress),
         exchangeRate: getBigInt,
-        quaiToQi: getBigInt,
-        qiToQuai: getBigInt,
     });
     const _formatUncle = object({
         primaryCoinbase: allowNull(getAddress),
@@ -20972,9 +20969,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         uncledEntropy;
         utxoRoot;
         exchangeRate;
-        quaiToQi;
-        qiToQuai;
-        secondaryCoinbase;
         constructor(params) {
             this.baseFeePerGas = params.baseFeePerGas;
             this.efficiencyScore = params.efficiencyScore;
@@ -21006,9 +21000,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             this.uncledEntropy = params.uncledEntropy;
             this.utxoRoot = params.utxoRoot;
             this.exchangeRate = params.exchangeRate;
-            this.quaiToQi = params.quaiToQi;
-            this.qiToQuai = params.qiToQuai;
-            this.secondaryCoinbase = params.secondaryCoinbase;
         }
         toJSON() {
             return {
