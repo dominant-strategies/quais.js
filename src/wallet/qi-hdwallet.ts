@@ -697,23 +697,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const sendAddressesInfo = this.getUnusedBIP44Addresses(1, 0, 'BIP44:external', zone);
         const sendAddresses = sendAddressesInfo.map((addressInfo) => addressInfo.address);
         const changeAddresses: string[] = [];
-        const inputPubKeys = selection.inputs.map((input) => {
-            const addressInfo = this.locateAddressInfo(input.address);
-            if (!addressInfo) {
-                throw new Error(`Could not locate address info for address: ${input.address}`);
-            }
-            return addressInfo.pubKey;
-        });
 
         // Proceed with creating and signing the transaction
         const chainId = (await this.provider.getNetwork()).chainId;
-        const tx = await this.prepareTransaction(
-            selection,
-            inputPubKeys,
-            sendAddresses,
-            changeAddresses,
-            Number(chainId),
-        );
+        const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId));
 
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
@@ -845,13 +832,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // Proceed with creating and signing the transaction
         const chainId = (await this.provider.getNetwork()).chainId;
-        const tx = await this.prepareTransaction(
-            selection,
-            inputPubKeys.map((pubkey) => pubkey!),
-            sendAddresses,
-            changeAddresses,
-            Number(chainId),
-        );
+        const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId));
 
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
@@ -872,17 +853,40 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     private async prepareTransaction(
         selection: SelectedCoinsResult,
-        inputPubKeys: string[],
         sendAddresses: string[],
         changeAddresses: string[],
         chainId: number,
     ): Promise<QiTransaction> {
         const tx = new QiTransaction();
-        tx.txInputs = selection.inputs.map((input, index) => ({
-            txhash: input.txhash!,
-            index: input.index!,
-            pubkey: inputPubKeys[index],
+
+        interface InputWithPubKey {
+            utxo: UTXO;
+            pubKey: string;
+        }
+
+        const inputsWithPubKeys: InputWithPubKey[] = selection.inputs.map((input) => {
+            const addressInfo = this.locateAddressInfo(input.address);
+            if (!addressInfo?.pubKey) {
+                throw new Error(`Missing public key for input address: ${input.address}`);
+            }
+            return {
+                utxo: input,
+                pubKey: addressInfo.pubKey,
+            };
+        });
+
+        tx.txInputs = inputsWithPubKeys.map((input) => ({
+            txhash: input.utxo.txhash!,
+            index: input.utxo.index!,
+            pubkey: input.pubKey,
         }));
+
+        // // 5.1 Create the "sender" inputs
+        // tx.txInputs = selection.inputs.map((input, index) => ({
+        //     txhash: input.txhash!,
+        //     index: input.index!,
+        //     pubkey: inputPubKeys[index],
+        // }));
         // 5.3 Create the "sender" outputs
         const senderOutputs = selection.spendOutputs.map((output, index) => ({
             address: sendAddresses[index],
