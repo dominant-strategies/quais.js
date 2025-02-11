@@ -6,6 +6,7 @@ import type { JsonRpcApiProviderOptions } from './provider-jsonrpc.js';
 import type { Networkish } from './network.js';
 import { Shard, toShard, toZone } from '../constants/index.js';
 import { fromShard } from '../constants/shards.js';
+import { ShardNickname, ShardPaths, ShardPorts } from './abstract-provider';
 
 /**
  * A generic interface to a Websocket-like object.
@@ -26,6 +27,21 @@ export interface WebSocketLike {
     close(code?: number, reason?: string): void;
 }
 
+export const DefaultWebsocketShardPorts = {
+    prime: 8001,
+    cyprus: 8002,
+    cyprus1: 8200,
+    cyprus2: 8201,
+    cyprus3: 8202,
+    paxos: 8003,
+    paxos1: 8220,
+    paxos2: 8221,
+    paxos3: 8222,
+    hydra: 8004,
+    hydra1: 8240,
+    hydra2: 8241,
+    hydra3: 8242,
+};
 /**
  * A function which can be used to re-create a WebSocket connection on disconnect.
  *
@@ -177,57 +193,166 @@ export class WebSocketProvider extends SocketProvider {
         this._urlMap.clear();
         try {
             const primeSuffix = this._getOption('usePathing') ? `/${fromShard(Shard.Prime, 'nickname')}` : ':8001';
+            const shardPortsArray: ShardPorts[] | undefined = this._getOption('shardPorts')
+                ? Array.isArray(this._getOption('shardPorts'))
+                    ? (this._getOption('shardPorts') as ShardPorts[])
+                    : ([this._getOption('shardPorts')] as ShardPorts[])
+                : undefined;
+            const shardPathsArray: ShardPaths[] | undefined = this._getOption('shardPaths')
+                ? Array.isArray(this._getOption('shardPaths'))
+                    ? (this._getOption('shardPaths') as ShardPaths[])
+                    : ([this._getOption('shardPaths')] as ShardPaths[])
+                : undefined;
+            const shardsOption = this._getOption('shards');
+            const shardsArray: Shard[][] | undefined = shardsOption
+                ? Array.isArray(shardsOption[0])
+                    ? (this._getOption('shards') as Shard[][] | undefined)
+                    : ([this._getOption('shards')] as Shard[][] | undefined)
+                : undefined;
 
-            const initShardWebSockets = async (baseUrl: string) => {
-                const shards = await this._getRunningLocations(Shard.Prime, true);
-                await Promise.all(
-                    shards.map(async (shard) => {
-                        const port = 8200 + 20 * shard[0] + shard[1];
-                        const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
-                        const shardSuffix = this._getOption('usePathing')
-                            ? `/${fromShard(shardEnum, 'nickname')}`
-                            : `:${port}`;
-                        const shardUrl = baseUrl.split(':').slice(0, 2).join(':');
-                        const websocket = this.createWebSocket(shardUrl, shardSuffix);
-                        this.initWebSocket(websocket, shardEnum, port);
-                        this.#websockets.push(websocket);
-                        this._urlMap.set(shardEnum, websocket);
-                        try {
-                            await this.waitShardReady(shardEnum);
-                        } catch (error) {
-                            console.log('failed to waitShardReady', error);
-                            this._initFailed = true;
-                        }
-                    }),
-                );
+            const initShardWebSockets = async (
+                baseUrl: string,
+                shardPorts?: ShardPorts | undefined,
+                shardPaths?: ShardPaths | undefined,
+                shards?: Shard[] | undefined,
+            ) => {
+                if (shards) {
+                    await Promise.all(
+                        shards.map(async (shard) => {
+                            const shardNickname = fromShard(shard, 'nickname');
+                            const port =
+                                shardPorts && shardNickname in shardPorts
+                                    ? shardPorts?.[shardNickname as ShardNickname]
+                                    : DefaultWebsocketShardPorts[shardNickname as ShardNickname];
+                            const path =
+                                shardPaths && shardNickname in shardPaths
+                                    ? shardPaths?.[shardNickname as ShardNickname]
+                                    : `/${shardNickname}`;
+                            const shardSuffix = this._getOption('usePathing') ? `${path}` : `:${port}`;
+                            const shardUrl = baseUrl.split(':').slice(0, 2).join(':');
+                            const websocket = this.createWebSocket(shardUrl, shardSuffix);
+                            this.initWebSocket(websocket, shard, port as number);
+                            this.#websockets.push(websocket);
+                            this._urlMap.set(shard, websocket);
+                            try {
+                                await this.waitShardReady(shard);
+                            } catch (error) {
+                                console.log('failed to waitShardReady', error);
+                                this._initFailed = true;
+                            }
+                        }),
+                    );
+                } else {
+                    const dynamicShards = await this._getRunningLocations(Shard.Prime, true);
+                    await Promise.all(
+                        dynamicShards.map(async (shard) => {
+                            const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
+                            const shardNickname = fromShard(shardEnum, 'nickname');
+                            const port =
+                                shardPorts && shardNickname in shardPorts
+                                    ? shardPorts?.[shardNickname as ShardNickname]
+                                    : DefaultWebsocketShardPorts[shardNickname as ShardNickname];
+                            const path =
+                                shardPaths && shardNickname in shardPaths
+                                    ? shardPaths?.[shardNickname as ShardNickname]
+                                    : `/${shardNickname}`;
+                            const shardSuffix = this._getOption('usePathing') ? `${path}` : `:${port}`;
+                            const shardUrl = baseUrl.split(':').slice(0, 2).join(':');
+                            const websocket = this.createWebSocket(shardUrl, shardSuffix);
+                            this.initWebSocket(websocket, shardEnum, port as number);
+                            this.#websockets.push(websocket);
+                            this._urlMap.set(shardEnum, websocket);
+                            try {
+                                await this.waitShardReady(shardEnum);
+                            } catch (error) {
+                                console.log('failed to waitShardReady', error);
+                                this._initFailed = true;
+                            }
+                        }),
+                    );
+                }
             };
 
             if (Array.isArray(urls)) {
-                for (const url of urls) {
-                    const baseUrl = `${url.split(':')[0]}:${url.split(':')[1]}`;
-                    const primeWebsocket = this.createWebSocket(baseUrl, primeSuffix);
+                if (shardsArray && urls.length !== shardsArray.length) {
+                    throw new Error('Shard array length does not match URL array length');
+                }
+                for (let urlIndex = 0; urlIndex < urls.length; urlIndex++) {
+                    const baseUrl = `${urls[urlIndex].split(':')[0]}:${urls[urlIndex].split(':')[1]}`;
+                    if (!shardsArray) {
+                        const primeWebsocket = this.createWebSocket(baseUrl, primeSuffix);
+                        this.initWebSocket(primeWebsocket, Shard.Prime, 8001);
+                        this.#websockets.push(primeWebsocket);
+                        this._urlMap.set(Shard.Prime, primeWebsocket);
+                        await this.waitShardReady(Shard.Prime);
+                    }
+                    const shardPorts: ShardPorts | undefined = shardPortsArray
+                        ? urls.length > shardPortsArray.length
+                            ? (shardPortsArray[0] as ShardPorts)
+                            : (shardPortsArray[urlIndex] as ShardPorts)
+                        : undefined;
+                    const shardPaths: ShardPaths | undefined = shardPathsArray
+                        ? urls.length > shardPathsArray.length
+                            ? (shardPathsArray[0] as ShardPaths)
+                            : (shardPathsArray[urlIndex] as ShardPaths)
+                        : undefined;
+                    const shards = shardsArray ? shardsArray[urlIndex] : undefined;
+                    await initShardWebSockets(baseUrl, shardPorts, shardPaths, shards);
+                }
+            } else if (typeof urls === 'function') {
+                const shardPorts: ShardPorts | undefined = shardPortsArray ? shardPortsArray[0] : undefined;
+                const shardPaths: ShardPaths | undefined = shardPathsArray ? shardPathsArray[0] : undefined;
+                const shards: Shard[] | undefined = shardsArray ? shardsArray[0] : undefined;
+                if (!shardsArray) {
+                    const primeWebsocket = urls();
                     this.initWebSocket(primeWebsocket, Shard.Prime, 8001);
                     this.#websockets.push(primeWebsocket);
                     this._urlMap.set(Shard.Prime, primeWebsocket);
                     await this.waitShardReady(Shard.Prime);
-                    await initShardWebSockets(baseUrl);
+                } else {
+                    if (!shards) {
+                        throw new Error('Shards array is empty or undefined.');
+                    }
+                    const firstWebsocket = urls();
+                    const shardNickname = fromShard(shards[0], 'nickname');
+                    const firstPort =
+                        shardPorts && shardNickname in shardPorts
+                            ? shardPorts?.[shardNickname as ShardNickname]
+                            : DefaultWebsocketShardPorts[shardNickname as ShardNickname];
+                    this.initWebSocket(firstWebsocket, shards[0], firstPort as number);
+                    this.#websockets.push(firstWebsocket);
+                    this._urlMap.set(shards[0], firstWebsocket);
+                    await this.waitShardReady(shards[0]);
                 }
-            } else if (typeof urls === 'function') {
-                const primeWebsocket = urls();
-                this.initWebSocket(primeWebsocket, Shard.Prime, 8001);
-                this.#websockets.push(primeWebsocket);
-                this._urlMap.set(Shard.Prime, primeWebsocket);
-                await this.waitShardReady(Shard.Prime);
                 const baseUrl = this.#websockets[0].url.split(':').slice(0, 2).join(':');
-                await initShardWebSockets(baseUrl);
+                await initShardWebSockets(baseUrl, shardPorts, shardPaths, shards?.slice(1));
             } else {
-                const primeWebsocket = urls as WebSocketLike;
-                this.initWebSocket(primeWebsocket, Shard.Prime, 8001);
-                this.#websockets.push(primeWebsocket);
-                this._urlMap.set(Shard.Prime, primeWebsocket);
-                await this.waitShardReady(Shard.Prime);
-                const baseUrl = primeWebsocket.url.split(':').slice(0, 2).join(':');
-                await initShardWebSockets(baseUrl);
+                const shardPorts: ShardPorts | undefined = shardPortsArray ? shardPortsArray[0] : undefined;
+                const shardPaths: ShardPaths | undefined = shardPathsArray ? shardPathsArray[0] : undefined;
+                const shards: Shard[] | undefined = shardsArray ? shardsArray[0] : undefined;
+                if (!shardsArray) {
+                    const primeWebsocket = urls as WebSocketLike;
+                    this.initWebSocket(primeWebsocket, Shard.Prime, 8001);
+                    this.#websockets.push(primeWebsocket);
+                    this._urlMap.set(Shard.Prime, primeWebsocket);
+                    await this.waitShardReady(Shard.Prime);
+                } else {
+                    if (!shards) {
+                        throw new Error('Shards array is empty or undefined.');
+                    }
+                    const firstWebsocket = urls as WebSocketLike;
+                    const shardNickname = fromShard(shards[0], 'nickname');
+                    const firstPort =
+                        shardPorts && shardNickname in shardPorts
+                            ? shardPorts?.[shardNickname as ShardNickname]
+                            : DefaultWebsocketShardPorts[shardNickname as ShardNickname];
+                    this.initWebSocket(firstWebsocket, shards[0], firstPort as number);
+                    this.#websockets.push(firstWebsocket);
+                    this._urlMap.set(shards[0], firstWebsocket);
+                    await this.waitShardReady(shards[0]);
+                }
+                const baseUrl = this.#websockets[0].url.split(':').slice(0, 2).join(':');
+                await initShardWebSockets(baseUrl, shardPorts, shardPaths, shards?.slice(1));
             }
             if (this.initResolvePromise) this.initResolvePromise();
         } catch (error) {
