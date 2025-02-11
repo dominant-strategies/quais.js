@@ -29,7 +29,7 @@ import {
     resolveProperties,
 } from '../utils/index.js';
 
-import { AbstractProvider, UnmanagedSubscriber } from './abstract-provider.js';
+import { AbstractProvider, ShardPaths, ShardPorts, UnmanagedSubscriber } from './abstract-provider.js';
 import { Network } from './network.js';
 import { FilterIdEventSubscriber, FilterIdPendingSubscriber } from './subscriber-filterid.js';
 
@@ -215,6 +215,9 @@ export type JsonRpcApiProviderOptions = {
 
     cacheTimeout?: number;
     usePathing?: boolean;
+    shardPorts?: ShardPorts | ShardPorts[] | false;
+    shardPaths?: ShardPaths | ShardPaths[] | false;
+    shards?: Shard[] | Shard[][] | false;
 };
 
 const defaultOptions = {
@@ -226,6 +229,9 @@ const defaultOptions = {
 
     cacheTimeout: 250,
     usePathing: true,
+    shardPorts: false,
+    shardPaths: false,
+    shards: false,
 };
 
 export interface AbstractJsonRpcTransactionRequest {
@@ -682,7 +688,12 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                     const rawResult: Array<Array<JsonRpcResult | JsonRpcError>> = [];
                     const processPayloads = async (key: string | undefined, value: JsonRpcPayload[], now?: boolean) => {
                         const payload = value.length === 1 ? value[0] : value;
-                        const shard = key ? toShard(key) : Shard.Prime;
+                        const shard = key
+                            ? toShard(key)
+                            : this._urlMap.has(Shard.Prime)
+                              ? Shard.Prime
+                              : this._urlMap.keys().next().value;
+
                         const zone = shard.length < 4 ? undefined : toZone(shard);
 
                         this.emit('debug', zone, { action: 'sendRpcPayload', payload });

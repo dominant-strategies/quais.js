@@ -700,12 +700,67 @@ export type AbstractProviderOptions = {
     cacheTimeout?: number;
     pollingInterval?: number;
     usePathing?: boolean;
+    shardPorts?: ShardPorts | ShardPorts[] | false;
+    shardPaths?: ShardPaths | ShardPaths[] | false;
+    shards?: Shard[] | Shard[][] | false;
 };
 
 const defaultOptions = {
     cacheTimeout: 250,
     pollingInterval: 4000,
     usePathing: true,
+    shardPorts: false,
+    shardPaths: false,
+    shards: false,
+};
+
+export type ShardPorts = {
+    prime?: number;
+    cyprus?: number;
+    cyprus1?: number;
+    cyprus2?: number;
+    cyprus3?: number;
+    paxos?: number;
+    paxos1?: number;
+    paxos2?: number;
+    paxos3?: number;
+    hydra?: number;
+    hydra1?: number;
+    hydra2?: number;
+    hydra3?: number;
+};
+
+export type ShardNickname = keyof ShardPorts;
+
+export const DefaultShardPorts = {
+    prime: 9001,
+    cyprus: 9002,
+    cyprus1: 9200,
+    cyprus2: 9201,
+    cyprus3: 9202,
+    paxos: 9003,
+    paxos1: 9220,
+    paxos2: 9221,
+    paxos3: 9222,
+    hydra: 9004,
+    hydra1: 9240,
+    hydra2: 9241,
+    hydra3: 9242,
+};
+export type ShardPaths = {
+    prime?: string;
+    cyprus?: string;
+    cyprus1?: string;
+    cyprus2?: string;
+    cyprus3?: string;
+    paxos?: string;
+    paxos1?: string;
+    paxos2?: string;
+    paxos3?: string;
+    hydra?: string;
+    hydra1?: string;
+    hydra2?: string;
+    hydra3?: string;
 };
 
 /**
@@ -811,38 +866,132 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         });
         try {
             const primeSuffix = this.#options.usePathing ? `/${fromShard(Shard.Prime, 'nickname')}` : ':9001';
+            const shardPortsArray: ShardPorts[] | undefined = this.#options.shardPorts
+                ? Array.isArray(this.#options.shardPorts)
+                    ? (this.#options.shardPorts as ShardPorts[])
+                    : ([this.#options.shardPorts] as ShardPorts[])
+                : undefined;
+            const shardPathsArray: ShardPaths[] | undefined = this.#options.shardPaths
+                ? Array.isArray(this.#options.shardPaths)
+                    ? (this.#options.shardPaths as ShardPaths[])
+                    : ([this.#options.shardPaths] as ShardPaths[])
+                : undefined;
+            const shardsArray: Shard[][] | undefined = this.#options.shards
+                ? Array.isArray(this.#options.shards[0])
+                    ? (this.#options.shards as Shard[][])
+                    : ([this.#options.shards] as Shard[][])
+                : undefined;
             if (urls instanceof FetchRequest) {
-                urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + primeSuffix;
-                this._urlMap.set(Shard.Prime, urls as C);
-                this.#connect.push(urls);
-                const shards = await this._waitGetRunningLocations(Shard.Prime, true);
-                shards.forEach((shard) => {
-                    const port = 9200 + 20 * shard[0] + shard[1];
-                    const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
-                    const shardSuffix = this.#options.usePathing ? `/${fromShard(shardEnum, 'nickname')}` : `:${port}`;
-                    this._urlMap.set(
-                        shardEnum,
-                        new FetchRequest(urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + shardSuffix) as C,
-                    );
-                });
+                const shardPorts: ShardPorts | undefined = shardPortsArray ? shardPortsArray[0] : undefined;
+                const shardPaths: ShardPaths | undefined = shardPathsArray ? shardPathsArray[0] : undefined;
+                if (shardsArray) {
+                    let isFirst = true;
+                    shardsArray[0].forEach((shard) => {
+                        const shardNickname = fromShard(shard, 'nickname');
+                        const port =
+                            shardPorts && shardNickname in shardPorts
+                                ? shardPorts?.[shardNickname as ShardNickname]
+                                : DefaultShardPorts[shardNickname as ShardNickname];
+                        const path =
+                            shardPaths && shardNickname in shardPaths
+                                ? shardPaths?.[shardNickname as ShardNickname]
+                                : `/${shardNickname}`;
+                        const shardSuffix = this.#options.usePathing ? `${path}` : `:${port}`;
+                        const fetchRequest = new FetchRequest(
+                            urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + shardSuffix,
+                        );
+                        if (isFirst) {
+                            this.#connect.push(fetchRequest);
+                            isFirst = false;
+                        }
+                        this._urlMap.set(shard, fetchRequest as C);
+                    });
+                } else {
+                    urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + primeSuffix;
+                    this._urlMap.set(Shard.Prime, urls as C);
+                    this.#connect.push(urls);
+                    const shards = await this._waitGetRunningLocations(Shard.Prime, true);
+                    shards.forEach((shard) => {
+                        const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
+                        const shardNickname = fromShard(shardEnum, 'nickname');
+                        const port =
+                            shardPorts && shardNickname in shardPorts
+                                ? shardPorts?.[shardNickname as ShardNickname]
+                                : DefaultShardPorts[shardNickname as ShardNickname];
+                        const path =
+                            shardPaths && shardNickname in shardPaths
+                                ? shardPaths?.[shardNickname as ShardNickname]
+                                : `/${shardNickname}`;
+                        const shardSuffix = this.#options.usePathing ? `${path}` : `:${port}`;
+                        this._urlMap.set(
+                            shardEnum,
+                            new FetchRequest(urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + shardSuffix) as C,
+                        );
+                    });
+                }
                 return;
             }
             if (Array.isArray(urls)) {
-                for (const url of urls) {
-                    const primeUrl = url.split(':')[0] + ':' + url.split(':')[1] + primeSuffix;
+                for (let urlIndex = 0; urlIndex < urls.length; urlIndex++) {
+                    const shardPorts: ShardPorts | undefined = shardPortsArray
+                        ? urls.length > shardPortsArray.length
+                            ? (shardPortsArray[0] as ShardPorts)
+                            : (shardPortsArray[urlIndex] as ShardPorts)
+                        : undefined;
+                    const shardPaths: ShardPaths | undefined = shardPathsArray
+                        ? urls.length > shardPathsArray.length
+                            ? (shardPathsArray[0] as ShardPaths)
+                            : (shardPathsArray[urlIndex] as ShardPaths)
+                        : undefined;
+
+                    if (shardsArray) {
+                        if (urls.length !== shardsArray.length) {
+                            throw new Error('Shard array length does not match URL array length');
+                        }
+                        let isFirst = true;
+                        shardsArray[urlIndex].forEach((shard) => {
+                            const shardNickname = fromShard(shard, 'nickname');
+                            const port =
+                                shardPorts && shardNickname in shardPorts
+                                    ? shardPorts?.[shardNickname as ShardNickname]
+                                    : DefaultShardPorts[shardNickname as ShardNickname];
+                            const path =
+                                shardPaths && shardNickname in shardPaths
+                                    ? shardPaths?.[shardNickname as ShardNickname]
+                                    : `/${shardNickname}`;
+                            const shardSuffix = this.#options.usePathing ? `${path}` : `:${port}`;
+                            const fetchRequest = new FetchRequest(
+                                urls[urlIndex].split(':')[0] + ':' + urls[urlIndex].split(':')[1] + shardSuffix,
+                            );
+                            if (isFirst) {
+                                this.#connect.push(fetchRequest);
+                                isFirst = false;
+                            }
+                            this._urlMap.set(shard, fetchRequest as C);
+                        });
+                    }
+                    const primeUrl = urls[urlIndex].split(':')[0] + ':' + urls[urlIndex].split(':')[1] + primeSuffix;
                     const primeConnect = new FetchRequest(primeUrl);
                     this._urlMap.set(Shard.Prime, primeConnect as C);
                     this.#connect.push(primeConnect);
                     const shards = await this._waitGetRunningLocations(Shard.Prime, true);
                     shards.forEach((shard) => {
-                        const port = 9200 + 20 * shard[0] + shard[1];
                         const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
-                        const shardSuffix = this.#options.usePathing
-                            ? `/${fromShard(shardEnum, 'nickname')}`
-                            : `:${port}`;
+                        const shardNickname = fromShard(shardEnum, 'nickname');
+                        const port =
+                            shardPorts && shardNickname in shardPorts
+                                ? shardPorts?.[shardNickname as ShardNickname]
+                                : DefaultShardPorts[shardNickname as ShardNickname];
+                        const path =
+                            shardPaths && shardNickname in shardPaths
+                                ? shardPaths?.[shardNickname as ShardNickname]
+                                : `/${shardNickname}`;
+                        const shardSuffix = this.#options.usePathing ? `${path}` : `:${port}`;
                         this._urlMap.set(
                             toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
-                            new FetchRequest(url.split(':')[0] + ':' + url.split(':')[1] + shardSuffix) as C,
+                            new FetchRequest(
+                                urls[urlIndex].split(':')[0] + ':' + urls[urlIndex].split(':')[1] + shardSuffix,
+                            ) as C,
                         );
                     });
                 }
@@ -1536,7 +1685,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             if (gasPrice == null) {
                 throw new Error('could not determine gasPrice');
             }
-            
+
             return new FeeData(gasPrice);
         };
 
