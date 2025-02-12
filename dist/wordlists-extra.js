@@ -102,7 +102,7 @@ const rotlBL = (h, l, s) => (h << (s - 32)) | (l >>> (64 - s));
  *
  * @ignore
  */
-const version = '1.0.0-alpha.38';
+const version = '1.0.0-alpha.39';
 
 /**
  * Property helper functions.

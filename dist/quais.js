@@ -8,7 +8,7 @@ import ecc from '@bitcoinerlab/secp256k1';
  *
  * @ignore
  */
-const version = '1.0.0-alpha.38';
+const version = '1.0.0-alpha.39';
 
 /**
  * Property helper functions.
@@ -7095,7 +7095,7 @@ class FetchRequest {
         this.#gzip = true;
         this.#headers = {};
         this.#method = '';
-        this.#timeout = 300000;
+        this.#timeout = 30000;
         this.#throttle = {
             slotInterval: SLOT_INTERVAL,
             maxAttempts: MAX_ATTEMPTS,
