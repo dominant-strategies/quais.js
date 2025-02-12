@@ -507,7 +507,7 @@ export class FetchRequest implements Iterable<[key: string, value: string]> {
         this.#gzip = true;
         this.#headers = {};
         this.#method = '';
-        this.#timeout = 300000;
+        this.#timeout = 30000;
 
         this.#throttle = {
             slotInterval: SLOT_INTERVAL,
