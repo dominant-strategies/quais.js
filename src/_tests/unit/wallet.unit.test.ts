@@ -4,13 +4,7 @@ import { loadTests } from '../utils.js';
 
 import type { TestCaseAccount, TestCaseTypedData, TestCaseTransaction } from '../types.js';
 
-import {
-    // hexlify,
-    // randomBytes,
-    Wallet,
-} from '../../index.js';
-
-// import type { QuaiHDWallet } from "../index.js";
+import { Wallet } from '../../index.js';
 
 describe('Test Private Key Wallet', function () {
     const tests = loadTests<TestCaseAccount>('accounts');
@@ -39,10 +33,6 @@ describe('Test Transaction Signing', function () {
                 gasLimit: 0,
             });
             const signed = await wallet.signTransaction(txData);
-            // let parsed = Transaction.from(signed);
-            // // console.log('txData: ', JSON.stringify(parsed))
-            // // console.log('EXPECTED: ', test.signedEip155)
-            // // console.log("ACTUAL: ", signed)
             assert.equal(signed, test.signed, 'signed');
         });
     }
