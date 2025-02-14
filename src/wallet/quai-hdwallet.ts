@@ -1,9 +1,9 @@
-import { AbstractHDWallet, NeuteredAddressInfo, _guard } from './hdwallet.js';
+import { AbstractHDWallet, NeuteredAddressInfo, _guard } from './abstract-hdwallet.js';
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QuaiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { isQuaiAddress, resolveAddress } from '../address/index.js';
 import { AllowedCoinType, Zone } from '../constants/index.js';
-import { SerializedHDWallet } from './hdwallet.js';
+import { SerializedHDWallet } from './abstract-hdwallet.js';
 import { Mnemonic } from './mnemonic.js';
 import { TypedDataDomain, TypedDataField } from '../hash/index.js';
 import { getZoneForAddress } from '../utils/index.js';
