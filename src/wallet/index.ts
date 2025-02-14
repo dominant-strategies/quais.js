@@ -13,7 +13,7 @@
 
 export { BaseWallet } from './base-wallet.js';
 
-export type { SerializedHDWallet, NeuteredAddressInfo } from './hdwallet.js';
+export type { SerializedHDWallet, NeuteredAddressInfo } from './abstract-hdwallet.js';
 
 export { QuaiHDWallet } from './quai-hdwallet.js';
 

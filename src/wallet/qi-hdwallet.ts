@@ -4,9 +4,8 @@ import {
     NeuteredAddressInfo,
     SerializedHDWallet,
     _guard,
-    MAX_ADDRESS_DERIVATION_ATTEMPTS,
     HARDENED_OFFSET,
-} from './hdwallet.js';
+} from './abstract-hdwallet.js';
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse, Block } from '../providers/index.js';
 import { computeAddress, isQiAddress } from '../address/index.js';
@@ -33,6 +32,11 @@ import { SelectedCoinsResult } from '../transaction/abstract-coinselector.js';
 import { QiPerformActionTransaction } from '../providers/abstract-provider.js';
 import { ConversionCoinSelector } from '../transaction/coinselector-conversion.js';
 import { toUtf8Bytes } from '../quais.js';
+
+/**
+ * Constant to represent the maximum attempt to derive an address for a payment code.
+ */
+const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
 
 /**
  * @property {Outpoint} outpoint - The outpoint object.
@@ -141,7 +145,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @ignore
      * @type {number}
      */
-    protected static _version: number = 1;
+    protected static override _version: number = 1;
 
     /**
      * @ignore
@@ -153,7 +157,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @ignore
      * @type {AllowedCoinType}
      */
-    protected static _coinType: AllowedCoinType = 969;
+    protected static override _coinType: AllowedCoinType = 969;
 
     /**
      * @ignore
