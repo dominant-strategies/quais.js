@@ -7,8 +7,6 @@ import { assertPrivate } from '../utils/index.js';
 import { Zone } from '../constants/index.js';
 import { TransactionRequest, Provider } from '../providers/index.js';
 import { AllowedCoinType } from '../constants/index.js';
-import { BIP44 } from './bip44.js';
-export const HARDENED_OFFSET = 2 ** 31;
 
 /**
  * Interface representing information about a neutered address.
@@ -35,10 +33,15 @@ export const _guard = {};
 /**
  * Abstract class representing a Hierarchical Deterministic (HD) wallet.
  */
-export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredAddressInfo> extends BIP44 {
+export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredAddressInfo> {
     protected static _version: number = 1;
 
-    protected static override _coinType?: AllowedCoinType;
+    protected static _coinType?: AllowedCoinType;
+
+    /**
+     * Root node of the HD wallet.
+     */
+    protected _root: HDNodeWallet;
 
     // Map of addresses to address info
     protected _addresses: Map<string, NeuteredAddressInfo> = new Map();
@@ -51,8 +54,27 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
      */
     constructor(guard: any, root: HDNodeWallet, provider?: Provider) {
         assertPrivate(guard, _guard, 'AbstractHDWallet');
-        super(root);
+        this._root = root;
         this.provider = provider;
+    }
+
+    /**
+     * Returns the parent path for a given coin type.
+     *
+     * @param {number} coinType - The coin type.
+     * @returns {string} The parent path.
+     */
+    protected static parentPath(coinType: number): string {
+        return `m/44'/${coinType}'`;
+    }
+
+    /**
+     * Returns the coin type of the wallet.
+     *
+     * @returns {AllowedCoinType} The coin type.
+     */
+    protected coinType(): AllowedCoinType {
+        return (this.constructor as typeof AbstractHDWallet)._coinType!;
     }
 
     /**
