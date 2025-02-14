@@ -7,7 +7,7 @@ import { SerializedHDWallet } from './abstract-hdwallet.js';
 import { Mnemonic } from './mnemonic.js';
 import { TypedDataDomain, TypedDataField } from '../hash/index.js';
 import { getZoneForAddress } from '../utils/index.js';
-
+import { BIP44 } from './bip44.js';
 export interface SerializedQuaiHDWallet extends SerializedHDWallet {
     addresses: Array<NeuteredAddressInfo>;
 }
@@ -58,6 +58,8 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
      */
     protected static _coinType: AllowedCoinType = 994;
 
+    protected bip44: BIP44;
+
     /**
      * Create a QuaiHDWallet instance.
      *
@@ -66,6 +68,7 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
      */
     constructor(guard: any, root: HDNodeWallet, provider?: Provider) {
         super(guard, root, provider);
+        this.bip44 = new BIP44(root, QuaiHDWallet._coinType);
     }
 
     /**
@@ -132,7 +135,7 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
     }
 
     protected validateAddressDerivation(info: NeuteredAddressInfo): void {
-        const addressNode = this._getAddressNode(info.account, false, info.index);
+        const addressNode = this.bip44._getAddressNode(info.account, false, info.index);
 
         // Validate derived address matches
         if (addressNode.address !== info.address) {
@@ -238,7 +241,7 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
         });
 
         // derive the address node and validate the zone
-        const addressNode = this._getAddressNode(account, false, addressIndex);
+        const addressNode = this.bip44._getAddressNode(account, false, addressIndex);
         const zone = getZoneForAddress(addressNode.address);
         if (!zone) {
             throw new Error(`Failed to derive a valid address zone for the index ${addressIndex}`);
@@ -285,7 +288,8 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
     protected _getNextAddress(accountIndex: number, zone: Zone): NeuteredAddressInfo {
         this.validateZone(zone);
         const lastIndex = this._findLastUsedIndex(Array.from(this._addresses.values()), accountIndex, zone);
-        const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
+        // const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
+        const addressNode = this.bip44.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
         return this._createAndStoreNeuteredAddressInfo(addressNode, accountIndex, zone);
     }
 
@@ -365,7 +369,7 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
             throw new Error(`Address ${addr} is not known to this wallet`);
         }
 
-        return this._getAddressNode(addressInfo.account, false, addressInfo.index);
+        return this.bip44._getAddressNode(addressInfo.account, false, addressInfo.index);
     }
 
     /**
