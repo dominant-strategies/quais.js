@@ -9,8 +9,8 @@ export abstract class AbstractQiWallet {
     protected coinType: number = 969;
     // map of address to address info
     protected addresses: Map<string, QiAddressInfo> = new Map();
-    // last derivation index
-    protected lastDerivationIndex: number = -1;
+    // last derivation indexes for each zone and account
+    protected lastDerivationIndexes: Map<Zone, Map<number, number>> = new Map();
     // map of address to outpoint info
     protected availableOutpoints: Map<string, OutpointInfo> = new Map();
 
@@ -20,6 +20,10 @@ export abstract class AbstractQiWallet {
             throw new Error(`Address ${address} not found in wallet`);
         }
         return info;
+    }
+
+    protected saveQiAddressInfo(addressInfo: QiAddressInfo): void {
+        this.addresses.set(addressInfo.address, addressInfo);
     }
 
     /**
@@ -34,21 +38,28 @@ export abstract class AbstractQiWallet {
     }
 
     /**
-     * Saves the last used derivation index to track address generation.
+     * Saves the last used derivation index for a specific zone and account.
      *
+     * @param {Zone} zone - The zone for the derivation index
+     * @param {number} account - The account number
      * @param {number} index - The derivation index to save
      */
-    protected saveLastDerivationIndex(index: number): void {
-        this.lastDerivationIndex = index;
+    protected saveLastDerivationIndex(zone: Zone, account: number, index: number): void {
+        if (!this.lastDerivationIndexes.has(zone)) {
+            this.lastDerivationIndexes.set(zone, new Map());
+        }
+        this.lastDerivationIndexes.get(zone)!.set(account, index);
     }
 
     /**
-     * Gets the last used derivation index.
+     * Gets the last used derivation index for a specific zone and account.
      *
-     * @returns {number} The last derivation index that was used
+     * @param {Zone} zone - The zone for the derivation index
+     * @param {number} account - The account number
+     * @returns {number} The last derivation index that was used, or -1 if none exists
      */
-    protected getLastDerivationIndex(): number {
-        return this.lastDerivationIndex;
+    protected getLastDerivationIndex(zone: Zone, account: number): number {
+        return this.lastDerivationIndexes.get(zone)?.get(account) ?? -1;
     }
 
     /**
@@ -273,8 +284,12 @@ export abstract class AbstractQiWallet {
      * @param {Zone} zone - The zone to get addresses for
      * @returns {QiAddressInfo[]} Array of address information in the zone
      */
-    private getAddressesInZone(zone: Zone): QiAddressInfo[] {
+    public getAddressesInZone(zone: Zone): QiAddressInfo[] {
         return Array.from(this.addresses.values()).filter((addr) => addr.zone === zone);
+    }
+
+    public getAddressessForAccount(account: number): QiAddressInfo[] {
+        return Array.from(this.addresses.values()).filter((addr) => addr.account === account);
     }
 
     /**
