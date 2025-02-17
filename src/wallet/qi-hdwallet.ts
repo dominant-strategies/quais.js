@@ -1,11 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-asserted-optional-chain */
-import {
-    AbstractHDWallet,
-    NeuteredAddressInfo,
-    SerializedHDWallet,
-    _guard,
-    HARDENED_OFFSET,
-} from './abstract-hdwallet.js';
+import { AbstractHDWallet, NeuteredAddressInfo, SerializedHDWallet, _guard } from './abstract-hdwallet.js';
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse, Block } from '../providers/index.js';
 import { computeAddress, isQiAddress } from '../address/index.js';
@@ -20,7 +14,7 @@ import {
 import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
 import { keccak256, musigCrypto, SigningKey } from '../crypto/index.js';
-import { Outpoint, OutpointDeltas, UTXO, denominations } from '../transaction/utxo.js';
+import { Outpoint, OutpointDeltas, UTXO } from '../transaction/utxo.js';
 import { AllowedCoinType, toShard, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
 import { PaymentCodePrivate, PaymentCodePublic, PC_VERSION, validatePaymentCode } from './payment-codes.js';
@@ -32,11 +26,14 @@ import { SelectedCoinsResult } from '../transaction/abstract-coinselector.js';
 import { QiPerformActionTransaction } from '../providers/abstract-provider.js';
 import { ConversionCoinSelector } from '../transaction/coinselector-conversion.js';
 import { toUtf8Bytes } from '../quais.js';
-
+import { Bip44QiWallet } from './bip44-qi-wallet.js';
+import { BIP44 } from './bip44.js';
 /**
  * Constant to represent the maximum attempt to derive an address for a payment code.
  */
 const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
+
+const HARDENED_OFFSET = 2 ** 31;
 
 /**
  * @property {Outpoint} outpoint - The outpoint object.
@@ -165,6 +162,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     private static readonly PRIVATE_KEYS_PATH: string = 'privateKeys' as const;
 
+    private readonly externalBip44: Bip44QiWallet;
+    private readonly changeBip44: Bip44QiWallet;
+
     /**
      * A map containing address information for all addresses known to the wallet. This includes:
      *
@@ -216,6 +216,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         this._addressesMap.set('BIP44:external', []);
         this._addressesMap.set('BIP44:change', []);
         this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, []);
+
+        const bip44 = new BIP44(this._root, QiHDWallet._coinType);
+        this.externalBip44 = new Bip44QiWallet(bip44, false);
+        this.changeBip44 = new Bip44QiWallet(bip44, true);
     }
 
     /**
@@ -256,62 +260,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     /**
-     * Derives the next Qi BIP 44 address for the specified account and zone.
-     *
-     * @param {number} account - The account number.
-     * @param {Zone} zone - The zone.
-     * @param {boolean} isChange - Whether to derive a change address.
-     * @returns {QiAddressInfo} The next Qi address information.
-     */
-    private _getNextQiAddress(account: number, zone: Zone, isChange: boolean): QiAddressInfo {
-        const derivationPath = isChange ? 'BIP44:change' : 'BIP44:external';
-        const addresses = this._addressesMap.get(derivationPath) || [];
-
-        const lastIndex = this._findLastUsedIndex(addresses, account, zone);
-        const addressNode = this.deriveNextAddressNode(account, lastIndex + 1, zone, isChange);
-        const newAddressInfo = this._createAndStoreQiAddressInfo(addressNode, account, zone, isChange);
-
-        const privateKeysArray = this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH) || [];
-        const existingPrivateKeyIndex = privateKeysArray.findIndex((info) => info.address === newAddressInfo.address);
-
-        if (existingPrivateKeyIndex !== -1) {
-            // Update the newAddressInfo directly with the status and last synced block from the private key address
-            const pkAddressInfo = privateKeysArray[existingPrivateKeyIndex];
-            newAddressInfo.status = pkAddressInfo.status;
-            newAddressInfo.lastSyncedBlock = pkAddressInfo.lastSyncedBlock;
-
-            // Remove the address from the privateKeysArray
-            privateKeysArray.splice(existingPrivateKeyIndex, 1);
-            this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, privateKeysArray);
-        }
-
-        return newAddressInfo;
-    }
-
-    private _createAndStoreQiAddressInfo(
-        addressNode: HDNodeWallet,
-        account: number,
-        zone: Zone,
-        isChange: boolean,
-    ): QiAddressInfo {
-        const derivationPath = isChange ? 'BIP44:change' : 'BIP44:external';
-        const qiAddressInfo: QiAddressInfo = {
-            zone,
-            account,
-            derivationPath,
-            address: addressNode.address,
-            pubKey: addressNode.publicKey,
-            index: addressNode.index,
-            change: isChange,
-            status: AddressStatus.UNKNOWN,
-            lastSyncedBlock: null,
-        };
-
-        this._addressesMap.get(derivationPath)!.push(qiAddressInfo); // _addressesMap is initialized within the constructor
-        return qiAddressInfo;
-    }
-
-    /**
      * Promise that resolves to the next address for the specified account and zone.
      *
      * @param {number} account - The account number.
@@ -330,7 +278,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {QiAddressInfo} The next Qi address information.
      */
     public getNextAddressSync(account: number, zone: Zone): QiAddressInfo {
-        return this._getNextQiAddress(account, zone, false);
+        return this.externalBip44.deriveNewAddress(zone, account);
     }
 
     /**
@@ -352,7 +300,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {NeuteredAddressInfo} The next change neutered address information.
      */
     public getNextChangeAddressSync(account: number, zone: Zone): QiAddressInfo {
-        return this._getNextQiAddress(account, zone, true);
+        return this.changeBip44.deriveNewAddress(zone, account);
     }
 
     /**
@@ -421,161 +369,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             }
         }
         return null;
-    }
-
-    /**
-     * Gets the total balance for the specified zone, including locked UTXOs.
-     *
-     * @param {Zone} zone - The zone to get the balance for.
-     * @param {number} [blockNumber] - The block number to use for the lock check.
-     * @param {boolean} useAvailableOutpoints - Whether to use available outpoints to calculate the balance.
-     * @returns {Promise<bigint>} The total balance for the zone.
-     */
-    public async getBalanceForZone(
-        zone: Zone,
-        blockNumber?: number,
-        useAvailableOutpoints: boolean = false,
-    ): Promise<bigint> {
-        if (!this.provider) throw new Error('Provider is not set');
-        this.validateZone(zone);
-        if (!blockNumber && useAvailableOutpoints) {
-            blockNumber = await this.provider.getBlockNumber(toShard(zone));
-        }
-
-        return (
-            (await this.getSpendableBalanceForZone(zone, blockNumber, useAvailableOutpoints)) +
-            (await this.getLockedBalanceForZone(zone, blockNumber, useAvailableOutpoints))
-        );
-    }
-
-    /**
-     * Gets the **spendable** balance for the specified zone by calling {@link getBalance} for all known addresses in the
-     * zone.
-     *
-     * @param {Zone} zone - The zone to get the balance for.
-     * @param {boolean} useAvailableOutpoints - Whether to use available outpoints to calculate the balance.
-     * @returns {bigint} The spendable balance for the zone.
-     */
-    public async getSpendableBalanceForZone(
-        zone: Zone,
-        blockNumber?: number,
-        useAvailableOutpoints: boolean = false,
-    ): Promise<bigint> {
-        if (!this.provider) throw new Error('Provider is not set');
-        this.validateZone(zone);
-
-        if (useAvailableOutpoints) {
-            if (!blockNumber) {
-                blockNumber = await this.provider.getBlockNumber(toShard(zone));
-            }
-            return this._calculateAvailableOutpointSpendableBalanceForZone(zone, blockNumber);
-        }
-        return this._fetchSpendableBalanceForZone(zone);
-    }
-
-    /**
-     * Gets the **locked** balance for the specified zone by calling {@link getLockedBalance} for all known addresses in
-     * the zone.
-     *
-     * @param {Zone} zone - The zone to get the balance for.
-     * @param {boolean} useAvailableOutpoints - Whether to use available outpoints to calculate the balance.
-     * @returns {bigint} The locked balance for the zone.
-     */
-    public async getLockedBalanceForZone(
-        zone: Zone,
-        blockNumber?: number,
-        useAvailableOutpoints: boolean = false,
-    ): Promise<bigint> {
-        if (!this.provider) throw new Error('Provider is not set');
-        this.validateZone(zone);
-
-        if (useAvailableOutpoints) {
-            if (!blockNumber) {
-                blockNumber = await this.provider.getBlockNumber(toShard(zone));
-            }
-            return this._calculateAvailableOutpointLockedBalanceForZone(zone, blockNumber);
-        }
-        return this._fetchLockedBalanceForZone(zone);
-    }
-
-    /**
-     * Gets the spendable balance for the specified zone by calling {@link getBalance} for all known addresses in the
-     * zone.
-     *
-     * @param {Zone} zone - The zone to get the spendable balance for.
-     * @returns {bigint} The spendable balance for the zone.
-     */
-    private async _fetchSpendableBalanceForZone(zone: Zone): Promise<bigint> {
-        const balanceMethod = async (address: string) => this.provider?.getBalance(address, 'latest') || BigInt(0);
-        return this._fetchBalanceForZone(zone, balanceMethod);
-    }
-
-    /**
-     * Gets the locked balance for the specified zone by calling {@link getLockedBalance} for all known addresses in the
-     * zone.
-     *
-     * @param {Zone} zone - The zone to get the locked balance for.
-     * @returns {bigint} The locked balance for the zone.
-     */
-    private async _fetchLockedBalanceForZone(zone: Zone): Promise<bigint> {
-        const balanceMethod = async (address: string) => this.provider?.getLockedBalance(address) || BigInt(0);
-        return this._fetchBalanceForZone(zone, balanceMethod);
-    }
-
-    /**
-     * Fetches the balance for the specified zone by calling the provided balance method for all known addresses in the
-     * zone.
-     *
-     * @param {Zone} zone - The zone to get the balance for.
-     * @param {Function} balanceMethod - The method to call to get the balance for each address.
-     * @returns {Promise<bigint>} The balance for the zone.
-     */
-    private async _fetchBalanceForZone(
-        zone: Zone,
-        balanceMethod: (address: string) => Promise<bigint>,
-    ): Promise<bigint> {
-        const allAddresses = Array.from(this._addressesMap.values())
-            .flat()
-            .filter((address) => address.zone === zone);
-        const allBalances = await Promise.all(
-            allAddresses.map((address) => balanceMethod(address.address) ?? BigInt(0)),
-        );
-        return allBalances.reduce((total, balance) => BigInt(total) + BigInt(balance), BigInt(0));
-    }
-
-    /**
-     * Gets the spendable balance for the specified zone using the available outpoints.
-     *
-     * @param {Zone} zone - The zone to get the spendable balance for.
-     * @param {number} [blockNumber] - The block number to use for the lock check.
-     * @returns {bigint} The spendable balance for the zone.
-     */
-    private async _calculateAvailableOutpointSpendableBalanceForZone(
-        zone: Zone,
-        blockNumber?: number,
-    ): Promise<bigint> {
-        return this.getOutpoints(zone)
-            .filter((utxo) => utxo.outpoint.lock === 0 || utxo.outpoint.lock! < blockNumber!)
-            .reduce((total, utxo) => {
-                const denominationValue = denominations[utxo.outpoint.denomination];
-                return total + denominationValue;
-            }, BigInt(0));
-    }
-
-    /**
-     * Gets the locked balance for the specified zone using the available outpoints.
-     *
-     * @param {Zone} zone - The zone to get the locked balance for.
-     * @param {number} [blockNumber] - The block number to use for the lock check.
-     * @returns {bigint} The locked balance for the zone.
-     */
-    private async _calculateAvailableOutpointLockedBalanceForZone(zone: Zone, blockNumber?: number): Promise<bigint> {
-        return this.getOutpoints(zone)
-            .filter((utxo) => utxo.outpoint.lock !== 0 && blockNumber! < utxo.outpoint.lock!)
-            .reduce((total, utxo) => {
-                const denominationValue = denominations[utxo.outpoint.denomination];
-                return total + denominationValue;
-            }, BigInt(0));
     }
 
     /**
@@ -737,7 +530,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // 1. Check the wallet has enough balance in the originating zone to send the transaction
         const currentBlock = await this.provider.getBlock(toShard(originZone), 'latest')!;
-        const balance = await this.getSpendableBalanceForZone(originZone, currentBlock?.woHeader.number, true);
+        const balance = await this.externalBip44.getSpendableBalance(originZone, currentBlock?.woHeader.number, true);
         if (balance < amount) {
             throw new Error(
                 `Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qi`,
@@ -885,13 +678,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             pubkey: input.pubKey,
         }));
 
-        // // 5.1 Create the "sender" inputs
-        // tx.txInputs = selection.inputs.map((input, index) => ({
-        //     txhash: input.txhash!,
-        //     index: input.index!,
-        //     pubkey: inputPubKeys[index],
-        // }));
-        // 5.3 Create the "sender" outputs
         const senderOutputs = selection.spendOutputs.map((output, index) => ({
             address: sendAddresses[index],
             denomination: output.denomination,
@@ -1013,9 +799,11 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         }
 
         const remainingAddressesNeeded = amount - unusedAddresses.length;
-        const isChange = path === 'BIP44:change';
+        // const isChange = path === 'BIP44:change';
         const newAddresses = Array.from({ length: remainingAddressesNeeded }, () =>
-            this._getNextQiAddress(account, zone, isChange),
+            // this._getNextQiAddress(account, zone, isChange),
+            //! Update this
+            this.externalBip44.deriveNewAddress(zone, account),
         );
         return [...unusedAddresses, ...newAddresses];
     }
@@ -1115,7 +903,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         if (addressInfo.derivationPath === 'BIP44:external' || addressInfo.derivationPath === 'BIP44:change') {
             // (BIP44 addresses)
-            const addressNode = this._getAddressNode(addressInfo.account, addressInfo.change, addressInfo.index);
+            const isChange = addressInfo.derivationPath === 'BIP44:change';
+            const bip44 = isChange ? this.changeBip44 : this.externalBip44;
+            const addressNode = bip44.getAddressNode(addressInfo.account, addressInfo.index);
             return addressNode.privateKey;
         } else {
             // (BIP47 addresses)
@@ -1394,7 +1184,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         if (!skipGap) {
             // Generate new addresses if needed until the gap limit is reached
             while (consecutiveUnusedCount < QiHDWallet._GAP_LIMIT) {
-                const isChange = path.endsWith(':change');
+                // const isChange = path.endsWith(':change');
 
                 // Determine how many addresses to generate in this batch
                 const remainingGap = QiHDWallet._GAP_LIMIT - consecutiveUnusedCount;
@@ -1403,7 +1193,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 const newAddresses: QiAddressInfo[] = [];
                 for (let i = 0; i < remainingGap; i++) {
                     const newAddrInfo = path.includes('BIP44')
-                        ? this._getNextQiAddress(account, zone, isChange)
+                        ? // ? this._getNextQiAddress(account, zone, isChange)
+                          //! TODO: Update this
+                          this.externalBip44.deriveNewAddress(zone, account)
                         : this.getNextReceiveAddress(path, zone, account);
                     newAddresses.push(newAddrInfo);
                 }
@@ -1543,7 +1335,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     public getAddressesForZone(zone: Zone): QiAddressInfo[] {
         this.validateZone(zone);
-        return this._addressesMap.get('BIP44:external')?.filter((addressInfo) => addressInfo.zone === zone) || [];
+        return this.externalBip44.getAddressesInZone(zone);
     }
 
     /**
@@ -1554,7 +1346,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     public getChangeAddressesForZone(zone: Zone): QiAddressInfo[] {
         this.validateZone(zone);
-        return this._addressesMap.get('BIP44:change')?.filter((addressInfo) => addressInfo.zone === zone) || [];
+        return this.changeBip44.getAddressesInZone(zone);
     }
 
     /**
@@ -1705,7 +1497,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     protected validateAddressDerivation(info: QiAddressInfo): void {
-        const addressNode = this._getAddressNode(info.account, info.change, info.index);
+        //! TODO: Update this
+        const isChange = info.derivationPath === 'BIP44:change';
+        const bip44 = isChange ? this.changeBip44 : this.externalBip44;
+        const addressNode = bip44.getAddressNode(info.account, info.index);
 
         // Validate derived address matches
         if (addressNode.address !== info.address) {
@@ -1837,6 +1632,17 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         if (account && account !== addressInfo.account) {
             throw new Error(`Address ${address} does not match account ${account}`);
         }
+    }
+
+    // helper method to check if an address is valid for a given zone
+    protected isValidAddressForZone(address: string, zone: Zone): boolean {
+        const addressZone = getZoneForAddress(address);
+        if (!addressZone) {
+            return false;
+        }
+        const isCorrectShard = addressZone === zone;
+        const isCorrectLedger = this.coinType() === 969 ? isQiAddress(address) : !isQiAddress(address);
+        return isCorrectShard && isCorrectLedger;
     }
 
     /**
@@ -2015,7 +1821,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {QiAddressInfo | null} The address info or null if not found.
      */
     public getAddressInfo(address: string): QiAddressInfo | null {
-        const externalAddressInfo = this._addressesMap.get('BIP44:external')?.find((addr) => addr.address === address);
+        const externalAddressInfo = this.externalBip44.getAddressInfo(address);
         if (!externalAddressInfo) {
             return null;
         }
@@ -2029,7 +1835,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {QiAddressInfo | null} The address info or null if not found.
      */
     public getChangeAddressInfo(address: string): QiAddressInfo | null {
-        const changeAddressInfo = this._addressesMap.get('BIP44:change')?.find((addr) => addr.address === address);
+        const changeAddressInfo = this.changeBip44.getAddressInfo(address);
         if (!changeAddressInfo) {
             return null;
         }
@@ -2111,7 +1917,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         if (account < 0 || addressIndex < 0) {
             throw new Error('Account and address index must be non-negative integers');
         }
-        return this._addAddress(account, addressIndex, false);
+        return this.externalBip44.addAddress(account, addressIndex);
     }
 
     /**
@@ -2125,27 +1931,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         if (account < 0 || addressIndex < 0) {
             throw new Error('Account and address index must be non-negative integers');
         }
-        return this._addAddress(account, addressIndex, true);
-    }
-
-    private _addAddress(account: number, addressIndex: number, isChange: boolean): QiAddressInfo {
-        const derivationPath = isChange ? 'BIP44:change' : 'BIP44:external';
-
-        const existingAddresses = this._addressesMap.get(derivationPath) || [];
-        if (existingAddresses.some((info) => info.index === addressIndex)) {
-            throw new Error(`Address index ${addressIndex} already exists in wallet under path ${derivationPath}`);
-        }
-        const addressNode = this._getAddressNode(account, isChange, addressIndex);
-        const zone = getZoneForAddress(addressNode.address);
-        if (!zone) {
-            throw new Error(`Failed to derive a Qi valid address zone for the index ${addressIndex}`);
-        }
-
-        if (!isQiAddress(addressNode.address)) {
-            throw new Error(`Address ${addressNode.address} is not a valid Qi address`);
-        }
-
-        return this._createAndStoreQiAddressInfo(addressNode, account, zone, isChange);
+        return this.changeBip44.addAddress(account, addressIndex);
     }
 
     /**
@@ -2155,9 +1941,15 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {QiAddressInfo[]} The addresses for the account.
      */
     public getAddressesForAccount(account: number): QiAddressInfo[] {
-        const addresses = this._addressesMap.values();
-        return Array.from(addresses)
-            .flat()
-            .filter((info) => info.account === account);
+        const externalAddresses = this.externalBip44.getAddressessForAccount(account);
+        const changeAddresses = this.changeBip44.getAddressessForAccount(account);
+        //! TODO: add address from payment codes
+        return [...externalAddresses, ...changeAddresses];
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    public getBalanceForZone(zone: Zone): bigint {
+        //! TODO: Implement this
+        return BigInt(0);
     }
 }
