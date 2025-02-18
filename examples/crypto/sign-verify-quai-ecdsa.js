@@ -53,7 +53,6 @@ async function main() {
 	txObj.chainId = BigInt(969);
 	txObj.nonce = BigInt(0);
     txObj.gasLimit = BigInt(1000000);
-    txObj.minerTip = BigInt(10000000000);
     txObj.gasPrice = BigInt(30000000000000);
     txObj.to = '0x002F4783248e2D6FF1aa6482A8C0D7a76de3C329';
     txObj.value = BigInt(4200000);
