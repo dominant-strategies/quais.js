@@ -153,7 +153,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
                 pop.gasPrice = feeData.gasPrice;
             }
         }
-        if (pop.data) {
+        if (pop.data && pop.data !== '0x') {
             if (tx.accessList) {
                 pop.accessList = tx.accessList;
             } else {
