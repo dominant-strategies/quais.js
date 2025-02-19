@@ -17,10 +17,14 @@ import { keccak256, musigCrypto, SigningKey } from '../crypto/index.js';
 import { Outpoint, OutpointDeltas, UTXO } from '../transaction/utxo.js';
 import { AllowedCoinType, toShard, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
-import { PaymentCodePrivate, PaymentCodePublic, PC_VERSION, validatePaymentCode } from './payment-codes.js';
+import {
+    // PaymentCodePrivate,
+    PaymentCodePublic,
+    PC_VERSION,
+    validatePaymentCode,
+} from './payment-codes.js';
 import { BIP32Factory } from './bip32/bip32.js';
 import { bs58check } from './bip32/crypto.js';
-import { type BIP32API, HDNodeBIP32Adapter } from './bip32/types.js';
 import ecc from '@bitcoinerlab/secp256k1';
 import { SelectedCoinsResult } from '../transaction/abstract-coinselector.js';
 import { QiPerformActionTransaction } from '../providers/abstract-provider.js';
@@ -28,12 +32,7 @@ import { ConversionCoinSelector } from '../transaction/coinselector-conversion.j
 import { toUtf8Bytes } from '../quais.js';
 import { Bip44QiWallet } from './qi-wallets/bip44-qi-wallet.js';
 import { BIP44 } from './bip44/bip44.js';
-/**
- * Constant to represent the maximum attempt to derive an address for a payment code.
- */
-const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
-
-const HARDENED_OFFSET = 2 ** 31;
+import { Bip47QiWalletCounterparty, Bip47QiWalletSelf } from './qi-wallets/bip47-qi-wallet.js';
 
 /**
  * @property {Outpoint} outpoint - The outpoint object.
@@ -164,7 +163,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
     private readonly externalBip44: Bip44QiWallet;
     private readonly changeBip44: Bip44QiWallet;
-
+    // self payment code wallet
+    private readonly bip47Self: Bip47QiWalletSelf;
+    // map of receiver payment code to counterparty bip47 wallet
+    private readonly bip47Counterparties: Map<string, Bip47QiWalletCounterparty>;
     /**
      * A map containing address information for all addresses known to the wallet. This includes:
      *
@@ -218,8 +220,14 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, []);
 
         const bip44 = new BIP44(this._root, QiHDWallet._coinType);
+        // initialize bip44 wallet for external and change addresses
         this.externalBip44 = new Bip44QiWallet(bip44, false);
         this.changeBip44 = new Bip44QiWallet(bip44, true);
+
+        // initialize self BIP47 wallet
+        this.bip47Self = new Bip47QiWalletSelf(this._root);
+        // initialize counterparty BIP47 wallets
+        this.bip47Counterparties = new Map();
     }
 
     /**
@@ -228,9 +236,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {string[]} The payment codes for all open channels.
      */
     get openChannels(): string[] {
-        return Array.from(this._addressesMap.keys()).filter(
-            (key) => !key.startsWith('BIP44:') && key !== QiHDWallet.PRIVATE_KEYS_PATH,
-        );
+        return Array.from(this.bip47Counterparties.keys());
     }
 
     /**
@@ -924,7 +930,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             if (version !== PC_VERSION) throw new Error('Invalid payment code version');
 
             const counterpartyPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
-            const paymentCodePrivate = this._getPaymentCodePrivate(account);
+            const paymentCodePrivate = this.bip47Self.getPaymentCodePrivate(account);
             const paymentPrivateKey = paymentCodePrivate.derivePaymentPrivateKey(counterpartyPCodePublic, index);
             return hexlify(paymentPrivateKey);
         }
@@ -1385,7 +1391,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {QiAddressInfo[]} The payment channel addresses for the zone.
      */
     public getPaymentChannelAddressesForZone(paymentCode: string, zone: Zone): QiAddressInfo[] {
-        return this._addressesMap.get(paymentCode)?.filter((addressInfo) => addressInfo.zone === zone) || [];
+        return this.bip47Counterparties.get(paymentCode)?.getAddressesInZone(zone) || [];
     }
 
     /**
@@ -1653,40 +1659,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {Promise<string>} A promise that resolves to the Base58-encoded BIP47 payment code.
      */
     public getPaymentCode(account: number = 0): string {
-        const privatePcode = this._getPaymentCodePrivate(account);
+        const privatePcode = this.bip47Self.getPaymentCodePrivate(account);
         return privatePcode.toBase58();
-    }
-
-    /**
-     * Generates a BIP47 private payment code for the specified account. The payment code is created by combining the
-     * account's public key and chain code.
-     *
-     * @private
-     * @param {number} account - The account index for which to generate the private payment code.
-     * @returns {Promise<PaymentCodePrivate>} A promise that resolves to the PaymentCodePrivate instance.
-     */
-    private _getPaymentCodePrivate(account: number): PaymentCodePrivate {
-        const bip32 = BIP32Factory(ecc) as BIP32API;
-
-        const accountNode = this._root.deriveChild(account + HARDENED_OFFSET);
-
-        // payment code array
-        const pc = new Uint8Array(80);
-
-        // set version + options
-        pc.set([1, 0]);
-
-        // set the public key
-        const pubKey = accountNode.publicKey;
-        pc.set(getBytes(pubKey), 2);
-
-        // set the chain code
-        const chainCode = accountNode.chainCode;
-        pc.set(getBytes(chainCode), 35);
-
-        const adapter = new HDNodeBIP32Adapter(accountNode);
-
-        return new PaymentCodePrivate(adapter, ecc, bip32, pc);
     }
 
     /**
@@ -1698,46 +1672,11 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
     public getNextSendAddress(receiverPaymentCode: string, zone: Zone, account: number = 0): QiAddressInfo {
-        const bip32 = BIP32Factory(ecc) as BIP32API;
-        const buf = bs58check.decode(receiverPaymentCode);
-        const version = buf[0];
-        if (version !== PC_VERSION) throw new Error('Invalid payment code version');
-
-        const walletPCodePrivate = this._getPaymentCodePrivate(account);
-        const receiverPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
-
-        const paymentCodeInfoArray = this._paymentCodeSendAddressMap.get(receiverPaymentCode);
-        const lastIndex = this._findLastUsedIndex(paymentCodeInfoArray, account, zone);
-
-        let addrIndex = lastIndex + 1;
-        for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
-            const address = receiverPCodePublic.getPaymentAddress(walletPCodePrivate, addrIndex);
-            if (this.isValidAddressForZone(address, zone)) {
-                const pubkey = receiverPCodePublic.derivePaymentPublicKey(walletPCodePrivate, addrIndex);
-                const pcInfo: QiAddressInfo = {
-                    address,
-                    pubKey: hexlify(pubkey),
-                    index: addrIndex,
-                    account,
-                    zone,
-                    change: false,
-                    status: AddressStatus.UNKNOWN,
-                    derivationPath: receiverPaymentCode,
-                    lastSyncedBlock: null,
-                };
-                if (paymentCodeInfoArray) {
-                    paymentCodeInfoArray.push(pcInfo);
-                } else {
-                    this._paymentCodeSendAddressMap.set(receiverPaymentCode, [pcInfo]);
-                }
-                return pcInfo;
-            }
-            addrIndex++;
+        if (!this.bip47Counterparties.has(receiverPaymentCode)) {
+            throw new Error(`Receiver payment code ${receiverPaymentCode} not found in wallet`);
         }
-
-        throw new Error(
-            `Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`,
-        );
+        const bip47WalletCounterParty = this.bip47Counterparties.get(receiverPaymentCode);
+        return bip47WalletCounterParty!.deriveNewAddress(zone, account, receiverPaymentCode);
     }
 
     /**
@@ -1749,46 +1688,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
     public getNextReceiveAddress(senderPaymentCode: string, zone: Zone, account: number = 0): QiAddressInfo {
-        const bip32 = BIP32Factory(ecc) as BIP32API;
-        const buf = bs58check.decode(senderPaymentCode);
-        const version = buf[0];
-        if (version !== PC_VERSION) throw new Error('Invalid payment code version');
-
-        const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
-        const walletPCodePrivate = this._getPaymentCodePrivate(account);
-
-        const paymentCodeInfoArray = this._addressesMap.get(senderPaymentCode);
-        const lastIndex = this._findLastUsedIndex(paymentCodeInfoArray, account, zone);
-
-        let addrIndex = lastIndex + 1;
-        for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
-            const address = walletPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex);
-            if (this.isValidAddressForZone(address, zone)) {
-                const pubkey = walletPCodePrivate.derivePaymentPublicKey(senderPCodePublic, addrIndex);
-                const pcInfo: QiAddressInfo = {
-                    address,
-                    pubKey: hexlify(pubkey),
-                    index: addrIndex,
-                    account,
-                    zone,
-                    change: false,
-                    status: AddressStatus.UNKNOWN,
-                    derivationPath: senderPaymentCode,
-                    lastSyncedBlock: null,
-                };
-                if (paymentCodeInfoArray) {
-                    paymentCodeInfoArray.push(pcInfo);
-                } else {
-                    this._addressesMap.set(senderPaymentCode, [pcInfo]);
-                }
-                return pcInfo;
-            }
-            addrIndex++;
-        }
-
-        throw new Error(
-            `Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`,
-        );
+        return this.bip47Self.deriveNewAddress(zone, account, senderPaymentCode);
     }
 
     /**
@@ -1801,17 +1701,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         if (!validatePaymentCode(paymentCode)) {
             throw new Error(`Invalid payment code: ${paymentCode}`);
         }
-        if (!this._addressesMap.has(paymentCode)) {
-            this._addressesMap.set(paymentCode, []);
-        }
-
-        if (!this._paymentCodeSendAddressMap.has(paymentCode)) {
-            this._paymentCodeSendAddressMap.set(paymentCode, []);
-        }
+        const couterPartyBip47Wallet = new Bip47QiWalletCounterparty(this.bip47Self);
+        this.bip47Counterparties.set(paymentCode, couterPartyBip47Wallet);
     }
 
     public channelIsOpen(paymentCode: string): boolean {
-        return this._addressesMap.has(paymentCode) && this._paymentCodeSendAddressMap.has(paymentCode);
+        return this.bip47Counterparties.has(paymentCode);
     }
 
     /**
@@ -1943,8 +1838,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     public getAddressesForAccount(account: number): QiAddressInfo[] {
         const externalAddresses = this.externalBip44.getAddressessForAccount(account);
         const changeAddresses = this.changeBip44.getAddressessForAccount(account);
-        //! TODO: add address from payment codes
-        return [...externalAddresses, ...changeAddresses];
+        const paymentCodeAddresses = this.bip47Self.getAddressessForAccount(account);
+        return [...externalAddresses, ...changeAddresses, ...paymentCodeAddresses];
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars

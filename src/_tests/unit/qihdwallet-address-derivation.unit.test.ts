@@ -71,10 +71,11 @@ describe('QiHDWallet Address Derivation', function () {
 
             const bobMnemonic = Mnemonic.fromPhrase(test.paymentCodeAddresses.bobMnemonic);
             const bobQiWallet = QiHDWallet.fromMnemonic(bobMnemonic);
+            console.log('getting payment code for Bob...');
             const bobPaymentCode = bobQiWallet.getPaymentCode(0);
-
+            console.log('payment code for Bob: ', bobPaymentCode);
             qiWallet.openChannel(bobPaymentCode);
-
+            console.log('opened channel for Bob...');
             for (const sendAddressesInfo of test.paymentCodeAddresses.sendAddresses) {
                 const zone = sendAddressesInfo.zone as Zone;
                 for (const expectedAddressInfo of sendAddressesInfo.addresses) {
@@ -204,7 +205,7 @@ describe('QiHDWallet Address Getters', function () {
                 assert.deepEqual(
                     addresses,
                     receiveAddressesInfo.addresses,
-                    `Payment channel addresses mismatch for zone ${zone} (got ${JSON.stringify(addresses)}, expected ${JSON.stringify(receiveAddressesInfo.addresses)})`,
+                    `Payment channel addresses mismatch for zone ${zone} (got: ${JSON.stringify(addresses, null, 2)}\nexpected: ${JSON.stringify(receiveAddressesInfo.addresses, null, 2)})`,
                 );
             }
         });
@@ -214,8 +215,7 @@ describe('QiHDWallet Address Getters', function () {
             const allAddresses = [
                 ...test.externalAddresses.flatMap((info) => info.addresses),
                 ...test.changeAddresses.flatMap((info) => info.addresses),
-                //! TODO: uncomment this
-                // ...test.paymentCodeAddresses.receiveAddresses.flatMap((info) => info.addresses),
+                ...test.paymentCodeAddresses.receiveAddresses.flatMap((info) => info.addresses),
             ].filter((addr) => addr.account === 0);
 
             const addresses = qiWallet.getAddressesForAccount(0);
