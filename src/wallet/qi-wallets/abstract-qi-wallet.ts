@@ -1,7 +1,7 @@
-import { OutpointInfo, QiAddressInfo } from './index.js';
-import { denominations } from '../transaction/utxo.js';
-import { Provider } from '../providers/index.js';
-import { toShard, Zone } from '../constants/index.js';
+import { OutpointInfo, QiAddressInfo } from '../index.js';
+import { denominations } from '../../transaction/utxo.js';
+import { Provider } from '../../providers/index.js';
+import { toShard, Zone } from '../../constants/index.js';
 
 export abstract class AbstractQiWallet {
     protected provider?: Provider;
