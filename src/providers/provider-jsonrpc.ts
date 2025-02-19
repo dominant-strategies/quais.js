@@ -694,7 +694,7 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                               ? Shard.Prime
                               : this._urlMap.keys().next().value;
 
-                        const zone = shard.length < 4 ? undefined : toZone(shard);
+                        const zone = shard && shard.length === 4 ? toZone(shard) : Zone.Cyprus1;
 
                         this.emit('debug', zone, { action: 'sendRpcPayload', payload });
 
