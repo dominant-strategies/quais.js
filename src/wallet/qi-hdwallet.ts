@@ -1836,9 +1836,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {QiAddressInfo[]} The addresses for the account.
      */
     public getAddressesForAccount(account: number): QiAddressInfo[] {
-        const externalAddresses = this.externalBip44.getAddressessForAccount(account);
-        const changeAddresses = this.changeBip44.getAddressessForAccount(account);
-        const paymentCodeAddresses = this.bip47Self.getAddressessForAccount(account);
+        const externalAddresses = this.externalBip44.getAddressesForAccount(account);
+        const changeAddresses = this.changeBip44.getAddressesForAccount(account);
+        const paymentCodeAddresses = this.bip47Self.getAddressesForAccount(account);
         return [...externalAddresses, ...changeAddresses, ...paymentCodeAddresses];
     }
 
