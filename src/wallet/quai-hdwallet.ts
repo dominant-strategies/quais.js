@@ -7,7 +7,7 @@ import { SerializedHDWallet } from './abstract-hdwallet.js';
 import { Mnemonic } from './mnemonic.js';
 import { TypedDataDomain, TypedDataField } from '../hash/index.js';
 import { getZoneForAddress } from '../utils/index.js';
-import { BIP44 } from './bip44.js';
+import { BIP44 } from './bip44/bip44.js';
 export interface SerializedQuaiHDWallet extends SerializedHDWallet {
     addresses: Array<NeuteredAddressInfo>;
 }
@@ -287,6 +287,7 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
      */
     protected _getNextAddress(accountIndex: number, zone: Zone): NeuteredAddressInfo {
         this.validateZone(zone);
+        //! TODO: revise this
         const lastIndex = this._findLastUsedIndex(Array.from(this._addresses.values()), accountIndex, zone);
         // const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
         const addressNode = this.bip44.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);

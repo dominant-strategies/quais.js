@@ -1,10 +1,10 @@
 import { AbstractQiWallet } from './abstract-qi-wallet.js';
-import { AddressStatus, QiAddressInfo } from './qi-hdwallet.js';
-import { BIP44 } from './bip44.js';
-import { Zone } from '../constants/index.js';
-import { HDNodeWallet } from './hdnodewallet.js';
-import { getZoneForAddress } from '../utils/index.js';
-import { isQiAddress } from '../address/index.js';
+import { AddressStatus, QiAddressInfo } from '../qi-hdwallet.js';
+import { BIP44 } from '../bip44/bip44.js';
+import { Zone } from '../../constants/index.js';
+import { HDNodeWallet } from '../hdnodewallet.js';
+import { getZoneForAddress } from '../../utils/index.js';
+import { isQiAddress } from '../../address/index.js';
 
 export class Bip44QiWallet extends AbstractQiWallet {
     private readonly bip44: BIP44;

@@ -26,8 +26,8 @@ import { SelectedCoinsResult } from '../transaction/abstract-coinselector.js';
 import { QiPerformActionTransaction } from '../providers/abstract-provider.js';
 import { ConversionCoinSelector } from '../transaction/coinselector-conversion.js';
 import { toUtf8Bytes } from '../quais.js';
-import { Bip44QiWallet } from './bip44-qi-wallet.js';
-import { BIP44 } from './bip44.js';
+import { Bip44QiWallet } from './qi-wallets/bip44-qi-wallet.js';
+import { BIP44 } from './bip44/bip44.js';
 /**
  * Constant to represent the maximum attempt to derive an address for a payment code.
  */

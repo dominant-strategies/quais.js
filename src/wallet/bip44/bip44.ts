@@ -1,7 +1,7 @@
-import { HDNodeWallet } from './hdnodewallet.js';
-import { AllowedCoinType, Zone } from '../constants/index.js';
-import { getZoneForAddress } from '../utils/index.js';
-import { isQiAddress } from '../address/index.js';
+import { HDNodeWallet } from '../hdnodewallet.js';
+import { AllowedCoinType, Zone } from '../../constants/index.js';
+import { getZoneForAddress } from '../../utils/index.js';
+import { isQiAddress } from '../../address/index.js';
 
 /**
  * Interface representing information about a neutered address.
