@@ -43,7 +43,7 @@ export class Bip44QiWallet extends AbstractQiWallet {
     public addAddress(account: number, addressIndex: number): QiAddressInfo {
         const derivationPath = this.isChange ? 'BIP44:change' : 'BIP44:external';
         // check if the index is already in use
-        if (this.getAddressessForAccount(account).some((addr) => addr.index === addressIndex)) {
+        if (this.getAddressesForAccount(account).some((addr) => addr.index === addressIndex)) {
             throw new Error(
                 `Address index ${addressIndex} already exists in wallet under account ${account} and derivation path ${derivationPath}`,
             );
