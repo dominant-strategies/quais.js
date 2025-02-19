@@ -288,7 +288,7 @@ export abstract class AbstractQiWallet {
         return Array.from(this.addresses.values()).filter((addr) => addr.zone === zone);
     }
 
-    public getAddressessForAccount(account: number): QiAddressInfo[] {
+    public getAddressesForAccount(account: number): QiAddressInfo[] {
         return Array.from(this.addresses.values()).filter((addr) => addr.account === account);
     }
 

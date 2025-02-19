@@ -12,3 +12,7 @@ lib/esm/**
 !.env.test
 .DS_Store
 quai-local-node*
+lib/**
+.vscode/**
+.cursorrules
+*.bak
