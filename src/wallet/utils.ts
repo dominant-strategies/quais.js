@@ -7,6 +7,16 @@ import { computeHmac, sha256 } from '../crypto/index.js';
 import { encodeBase58, toUtf8Bytes } from '../encoding/index.js';
 
 /**
+ * Interface representing information about a neutered address.
+ */
+export const HARDENED_OFFSET = 2 ** 31;
+
+/**
+ * Constant to represent the maximum attempt to derive an address.
+ */
+export const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
+
+/**
  * Converts a hex string to a Uint8Array. If the string does not start with '0x', it adds it.
  *
  * @param {string} hexString - The hex string to convert.
