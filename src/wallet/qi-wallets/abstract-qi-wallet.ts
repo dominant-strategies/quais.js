@@ -299,7 +299,7 @@ export abstract class AbstractQiWallet {
      * @param {number} [account] - Optional account number to derive the address for
      * @returns {QiAddressInfo} Information about the newly derived address
      */
-    abstract deriveNewAddress(zone: Zone, account?: number): QiAddressInfo;
+    abstract deriveNewAddress(zone: Zone, account?: number, paymentCode?: string): QiAddressInfo;
 
     /**
      * Scans the blockchain for transactions related to this wallet.
