@@ -24240,7 +24240,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     pop.gasPrice = feeData.gasPrice;
                 }
             }
-            if (pop.data) {
+            if (pop.data && pop.data !== '0x') {
                 if (tx.accessList) {
                     pop.accessList = tx.accessList;
                 }
@@ -33078,7 +33078,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                                 : this._urlMap.has(exports.Shard.Prime)
                                     ? exports.Shard.Prime
                                     : this._urlMap.keys().next().value;
-                            const zone = shard.length < 4 ? undefined : toZone(shard);
+                            const zone = shard && shard.length === 4 ? toZone(shard) : exports.Zone.Cyprus1;
                             this.emit('debug', zone, { action: 'sendRpcPayload', payload });
                             rawResult.push(await this._send(payload, shard, now));
                             this.emit('debug', zone, { action: 'receiveRpcResult', payload });
