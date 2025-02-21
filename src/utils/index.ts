@@ -17,6 +17,8 @@ export {
     zeroPadBytes,
 } from './data.js';
 
+export { decodeMultipleMetadataSections } from './decodeMultipleMetadataSections.js';
+
 export {
     isCallException,
     isError,

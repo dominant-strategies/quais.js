@@ -13,6 +13,7 @@ declare global {
         statusText: string;
         headers: Headers;
         arrayBuffer(): Promise<ArrayBuffer>;
+        json(): Promise<any>;
     }
 
     type FetchInit = {

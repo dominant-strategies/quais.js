@@ -29,6 +29,7 @@ import {
     defineProperties,
     EventPayload,
     resolveProperties,
+    decodeMultipleMetadataSections,
 } from '../utils/index.js';
 import { decodeProtoTransaction } from '../encoding/index.js';
 import type { txpoolContentResponse, txpoolInspectResponse } from './txpool.js';
@@ -98,6 +99,7 @@ import {
 import { getNodeLocationFromZone, getZoneFromNodeLocation } from '../utils/shards.js';
 import { fromShard } from '../constants/shards.js';
 import { AccessList } from '../transaction/index.js';
+import { Interface, InterfaceAbi } from '../abi';
 
 type Timer = ReturnType<typeof setTimeout>;
 
@@ -2463,6 +2465,33 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     // Alias for "off"
     async removeListener(event: ProviderEvent, listener: Listener, zone?: Zone): Promise<this> {
         return this.off(event, listener, zone);
+    }
+
+    async abiFromAddress(address: AddressLike, ipfsUrl?: string | undefined): Promise<Interface | InterfaceAbi> {
+        ipfsUrl = ipfsUrl || 'https://ipfs.qu.ai';
+        // Retrieve deployed bytecode (contains IPFS hash)
+        const resolvedAddress = this._getAddress(address);
+        const bytecode = await this.getCode(resolvedAddress);
+        if (bytecode === '0x') throw new Error('No contract found at this address');
+
+        // Decode metadata from the bytecode to extract the IPFS CID
+        const metadataSections = await decodeMultipleMetadataSections(bytecode);
+        const ipfsCid = metadataSections[0]?.ipfs;
+        if (!ipfsCid) throw new Error('No metadata found in bytecode');
+
+        // Fetch ABI from IPFS
+        const url = `${ipfsUrl}/ipfs/${ipfsCid}`;
+        try {
+            const response = await fetch(url, {});
+            if (response.status < 200 || response.status >= 300) {
+                throw new Error(`Failed to fetch metadata: ${response.statusText} (Status: ${response.status})`);
+            }
+
+            const metadata = await response.json();
+            return metadata.output.abi; // Return the ABI
+        } catch (error) {
+            throw new Error(`IPFS fetch error`);
+        }
     }
 
     /**
