@@ -51,6 +51,25 @@ export class Bip47QiWalletSelf extends AbstractQiWallet {
         return new PaymentCodePrivate(adapter, ecc, bip32, pc);
     }
 
+    /**
+     * Derives a new BIP47 receiving address for a specific zone and account using the sender's payment code. This
+     * method follows the BIP47 specification for deriving payment addresses from a notification transaction.
+     *
+     * @param {Zone} zone - The zone to derive the address for
+     * @param {number} [account=0] - The account index to use for derivation. Default is `0`
+     * @param {string} senderPaymentCode - The Base58Check encoded payment code of the sender
+     * @returns {QiAddressInfo} Information about the newly derived address including:
+     *
+     *   - The derived address
+     *   - Public key
+     *   - Derivation index
+     *   - Account number
+     *   - Zone
+     *   - Status and other metadata
+     *
+     * @throws {Error} If the payment code version is invalid
+     * @throws {Error} If unable to derive a valid address for the zone after maximum attempts
+     */
     public deriveNewAddress(zone: Zone, account: number = 0, senderPaymentCode: string): QiAddressInfo {
         const bip32 = BIP32Factory(ecc) as BIP32API;
         const buf = bs58check.decode(senderPaymentCode);
@@ -99,7 +118,6 @@ export class Bip47QiWalletSelf extends AbstractQiWallet {
 }
 
 export class Bip47QiWalletCounterparty extends AbstractQiWallet {
-    // private readonly root: HDNodeWallet;
     private readonly selfBip47Wallet: Bip47QiWalletSelf;
 
     public constructor(selfBip47Wallet: Bip47QiWalletSelf) {
@@ -107,6 +125,20 @@ export class Bip47QiWalletCounterparty extends AbstractQiWallet {
         this.selfBip47Wallet = selfBip47Wallet;
     }
 
+    /**
+     * Derives a new BIP47 payment address for sending funds to a counterparty.
+     *
+     * @remarks
+     * This method implements BIP-0047 payment code derivation for sending funds to a counterparty. It derives addresses
+     * using the counterparty's payment code until finding one that matches the specified zone. The derivation follows
+     * the path specified in BIP-0047 using the next unused index.
+     * @param {Zone} zone - The zone to derive the address for
+     * @param {number} [account=0] - The account index to use for derivation. Default is `0`
+     * @param {string} receiverPaymentCode - The Base58Check encoded payment code of the receiver
+     * @returns {QiAddressInfo} Information about the newly derived payment address
+     * @throws {Error} If the payment code version is invalid
+     * @throws {Error} If unable to derive a valid address for the zone after maximum attempts
+     */
     public deriveNewAddress(zone: Zone, account: number = 0, receiverPaymentCode: string): QiAddressInfo {
         const bip32 = BIP32Factory(ecc) as BIP32API;
         const buf = bs58check.decode(receiverPaymentCode);

@@ -166,11 +166,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * The BIP44 wallet instance used for deriving external (receiving) addresses. This follows the BIP44 derivation
      * path m/44'/969'/account'/0/index where:
      *
-     * - 969 is the coin type for Qi
-     * - Account is the account index
-     * - 0 indicates external addresses
-     * - Index is the address index
-     *
      * @private
      * @type {Bip44QiWallet}
      * @readonly
@@ -180,11 +175,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     /**
      * The BIP44 wallet instance used for deriving change (sending) addresses. This follows the BIP44 derivation path
      * m/44'/969'/account'/1/index where:
-     *
-     * - 969 is the coin type for Qi
-     * - Account is the account index
-     * - 1 indicates change addresses
-     * - Index is the address index
      *
      * @private
      * @type {Bip44QiWallet}
@@ -196,17 +186,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * The BIP47 wallet instance used for deriving addresses for sending funds to counterparties using BIP47 payment
      * codes. This follows the BIP47 derivation path m/47'/969'/account'/0/index where:
      *
-     * - 969 is the coin type for Qi
-     * - Account is the account index
-     * - 0 indicates external addresses
-     * - Index is the address index
-     *
      * @private
      * @type {Bip47QiWalletSelf}
      * @readonly
      */
     private readonly bip47Self: Bip47QiWalletSelf;
-    // map of receiver payment code to counterparty bip47 wallet
+
     /**
      * A map of BIP47 counterparty wallets indexed by their payment codes. This stores the wallet instances used for
      * deriving addresses when sending funds to counterparties. The key is the Base58-encoded payment code of the
