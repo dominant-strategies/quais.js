@@ -314,21 +314,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     /**
-     * Finds the last used index in an array of QiAddressInfo objects. If no index is found, returns -1.
-     *
-     * @param {QiAddressInfo[]} addresses - The array of QiAddressInfo objects.
-     * @returns {number} The last used index.
-     */
-    protected _findLastUsedIndex(addresses: QiAddressInfo[] | undefined, account: number, zone: Zone): number {
-        if (!addresses) return -1;
-        return (
-            addresses
-                .filter((addressInfo) => addressInfo.account === account && addressInfo.zone === zone)
-                .reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1) || -1
-        );
-    }
-
-    /**
      * Promise that resolves to the next address for the specified account and zone.
      *
      * @param {number} account - The account number.
@@ -1701,17 +1686,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         if (account && account !== addressInfo.account) {
             throw new Error(`Address ${address} does not match account ${account}`);
         }
-    }
-
-    // helper method to check if an address is valid for a given zone
-    protected isValidAddressForZone(address: string, zone: Zone): boolean {
-        const addressZone = getZoneForAddress(address);
-        if (!addressZone) {
-            return false;
-        }
-        const isCorrectShard = addressZone === zone;
-        const isCorrectLedger = this.coinType() === 969 ? isQiAddress(address) : !isQiAddress(address);
-        return isCorrectShard && isCorrectLedger;
     }
 
     /**

@@ -137,17 +137,6 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
     abstract getAddressesForAccount(account: number): T[];
 
     /**
-     * Finds the highest used index for a given account and zone.
-     *
-     * @param {T[] | undefined} addresses - Array of address info objects to search
-     * @param {number} account - The account number to find the last index for
-     * @param {Zone} zone - The zone to find the last index in
-     * @returns {number} The highest used index, or -1 if none found
-     * @protected
-     */
-    protected abstract _findLastUsedIndex(addresses: T[] | undefined, account: number, zone: Zone): number;
-
-    /**
      * Abstract method to sign a message using the private key associated with the given address.
      *
      * @param {string} address - The address for which the message is to be signed.
