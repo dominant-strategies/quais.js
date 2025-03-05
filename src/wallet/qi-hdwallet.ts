@@ -13,7 +13,7 @@ import {
 } from '../transaction/index.js';
 import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
-import { keccak256, musigCrypto, SigningKey } from '../crypto/index.js';
+import { keccak256, musigCrypto } from '../crypto/index.js';
 import { Outpoint, OutpointDeltas, UTXO } from '../transaction/utxo.js';
 import { AllowedCoinType, toShard, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
@@ -33,6 +33,7 @@ import { toUtf8Bytes } from '../quais.js';
 import { Bip44QiWallet } from './qi-wallets/bip44-qi-wallet.js';
 import { BIP44 } from './bip44/bip44.js';
 import { Bip47QiWalletCounterparty, Bip47QiWalletSelf } from './qi-wallets/bip47-qi-wallet.js';
+import { PrivatekeyQiWallet } from './qi-wallets/privkey-qi-wallet.js';
 
 /**
  * @property {Outpoint} outpoint - The outpoint object.
@@ -161,12 +162,71 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     private static readonly PRIVATE_KEYS_PATH: string = 'privateKeys' as const;
 
+    /**
+     * The BIP44 wallet instance used for deriving external (receiving) addresses. This follows the BIP44 derivation
+     * path m/44'/969'/account'/0/index where:
+     *
+     * - 969 is the coin type for Qi
+     * - Account is the account index
+     * - 0 indicates external addresses
+     * - Index is the address index
+     *
+     * @private
+     * @type {Bip44QiWallet}
+     * @readonly
+     */
     private readonly externalBip44: Bip44QiWallet;
+
+    /**
+     * The BIP44 wallet instance used for deriving change (sending) addresses. This follows the BIP44 derivation path
+     * m/44'/969'/account'/1/index where:
+     *
+     * - 969 is the coin type for Qi
+     * - Account is the account index
+     * - 1 indicates change addresses
+     * - Index is the address index
+     *
+     * @private
+     * @type {Bip44QiWallet}
+     * @readonly
+     */
     private readonly changeBip44: Bip44QiWallet;
-    // self payment code wallet
+
+    /**
+     * The BIP47 wallet instance used for deriving addresses for sending funds to counterparties using BIP47 payment
+     * codes. This follows the BIP47 derivation path m/47'/969'/account'/0/index where:
+     *
+     * - 969 is the coin type for Qi
+     * - Account is the account index
+     * - 0 indicates external addresses
+     * - Index is the address index
+     *
+     * @private
+     * @type {Bip47QiWalletSelf}
+     * @readonly
+     */
     private readonly bip47Self: Bip47QiWalletSelf;
     // map of receiver payment code to counterparty bip47 wallet
+    /**
+     * A map of BIP47 counterparty wallets indexed by their payment codes. This stores the wallet instances used for
+     * deriving addresses when sending funds to counterparties. The key is the Base58-encoded payment code of the
+     * counterparty, and the value is their corresponding BIP47 wallet instance.
+     *
+     * @private
+     * @type {Map<string, Bip47QiWalletCounterparty>}
+     * @readonly
+     */
     private readonly bip47Counterparties: Map<string, Bip47QiWalletCounterparty>;
+
+    /**
+     * The private key wallet instance used for deriving addresses from private keys.
+     *
+     * @private
+     * @type {PrivatekeyQiWallet}
+     * @readonly
+     */
+    private readonly privatekeyWallet: PrivatekeyQiWallet;
+
     /**
      * A map containing address information for all addresses known to the wallet. This includes:
      *
@@ -228,6 +288,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         this.bip47Self = new Bip47QiWalletSelf(this._root);
         // initialize counterparty BIP47 wallets
         this.bip47Counterparties = new Map();
+
+        // initialize private key wallet
+        this.privatekeyWallet = new PrivatekeyQiWallet();
     }
 
     /**
@@ -1745,43 +1808,16 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @throws {Error} If the private key is invalid or the address is already in use
      */
     public async importPrivateKey(privateKey: string): Promise<QiAddressInfo> {
-        if (!isHexString(privateKey, 32)) {
-            throw new Error(`Invalid private key format: must be 32-byte hex string (got ${privateKey})`);
+        const addrInfo = this.privatekeyWallet.importPrivateKey(privateKey);
+        // check address is not in BIP44 wallets
+        if (this.externalBip44.getAddressInfo(addrInfo.address) || this.changeBip44.getAddressInfo(addrInfo.address)) {
+            throw new Error(`Address ${addrInfo.address} already exists in BIP44 derivation path`);
         }
-
-        const pubKey = SigningKey.computePublicKey(privateKey, true);
-        const address = computeAddress(pubKey);
-
-        // Validate address is for correct zone and ledger
-        const addressZone = getZoneForAddress(address);
-        if (!addressZone) {
-            throw new Error(`Private key does not correspond to a valid address for any zone (got ${address})`);
+        // check address is not in BIP47 wallet
+        if (this.bip47Self.getAddressInfo(addrInfo.address)) {
+            throw new Error(`Address ${addrInfo.address} already exists in BIP47 derivation path`);
         }
-        if (!isQiAddress(address)) {
-            throw new Error(`Private key does not correspond to a valid Qi address (got ${address})`);
-        }
-
-        for (const [path, addresses] of this._addressesMap.entries()) {
-            if (addresses.some((info) => info.address === address)) {
-                throw new Error(`Address ${address} already exists in wallet under path ${path}`);
-            }
-        }
-
-        const addressInfo: QiAddressInfo = {
-            pubKey,
-            address,
-            account: 0,
-            index: -1,
-            change: false,
-            zone: addressZone,
-            status: AddressStatus.UNUSED,
-            derivationPath: privateKey, // Store private key in derivationPath
-            lastSyncedBlock: null,
-        };
-
-        this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH)!.push(addressInfo);
-
-        return addressInfo;
+        return addrInfo;
     }
 
     /**
@@ -1791,14 +1827,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {QiAddressInfo[]} Array of address info objects for imported addresses
      */
     public getImportedAddresses(zone?: Zone): QiAddressInfo[] {
-        const importedAddresses = this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH) || [];
-
-        if (zone !== undefined) {
-            this.validateZone(zone);
-            return importedAddresses.filter((info) => info.zone === zone);
-        }
-
-        return [...importedAddresses];
+        return this.privatekeyWallet.getImportedAddresses(zone);
     }
 
     /**
@@ -1839,7 +1868,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const externalAddresses = this.externalBip44.getAddressesForAccount(account);
         const changeAddresses = this.changeBip44.getAddressesForAccount(account);
         const paymentCodeAddresses = this.bip47Self.getAddressesForAccount(account);
-        return [...externalAddresses, ...changeAddresses, ...paymentCodeAddresses];
+        const privateKeyAddresses = this.privatekeyWallet.getAddressesForAccount(account);
+        return [...externalAddresses, ...changeAddresses, ...paymentCodeAddresses, ...privateKeyAddresses];
     }
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
