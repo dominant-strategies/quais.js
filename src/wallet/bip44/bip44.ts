@@ -3,7 +3,7 @@ import { AllowedCoinType, Zone } from '../../constants/index.js';
 import { isValidAddressForZone } from '../utils.js';
 
 /**
- * Interface representing information about a neutered address.
+ * Constant to represent the hardened offset for BIP44 derivation.
  */
 export const HARDENED_OFFSET = 2 ** 31;
 
