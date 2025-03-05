@@ -2,9 +2,20 @@
  * @module wallet/utils
  */
 
-import { getBytesCopy, assertArgument, BytesLike, concat, dataSlice, getBytes, assert } from '../utils/index.js';
+import {
+    getBytesCopy,
+    assertArgument,
+    BytesLike,
+    concat,
+    dataSlice,
+    getBytes,
+    assert,
+    getZoneForAddress,
+} from '../utils/index.js';
 import { computeHmac, sha256 } from '../crypto/index.js';
 import { encodeBase58, toUtf8Bytes } from '../encoding/index.js';
+import { isQiAddress } from '../address/index.js';
+import { AllowedCoinType, Zone } from '../constants/index.js';
 
 /**
  * Interface representing information about a neutered address.
@@ -219,4 +230,28 @@ export function ser_I(
     const I = getBytes(computeHmac('sha512', chainCode, data));
 
     return { IL: I.slice(0, 32), IR: I.slice(32) };
+}
+
+/**
+ * Validates if an address belongs to the specified zone and coin type.
+ *
+ * @remarks
+ * This function performs two validations:
+ *
+ * 1. Checks if the address belongs to the specified zone
+ * 2. Verifies if the address matches the expected ledger type (Qi or Quai) based on coin type
+ *
+ * @param {AllowedCoinType} coinType - The coin type to validate against (969 for Qi, other values for Quai)
+ * @param {string} address - The address to validate
+ * @param {Zone} zone - The zone to check the address against
+ * @returns {boolean} True if the address belongs to the specified zone and coin type, false otherwise
+ */
+export function isValidAddressForZone(coinType: AllowedCoinType, address: string, zone: Zone): boolean {
+    const addressZone = getZoneForAddress(address);
+    if (!addressZone) {
+        return false;
+    }
+    const isCorrectShard = addressZone === zone;
+    const isCorrectLedger = coinType === 969 ? isQiAddress(address) : !isQiAddress(address);
+    return isCorrectShard && isCorrectLedger;
 }

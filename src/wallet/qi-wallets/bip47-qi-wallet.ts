@@ -5,11 +5,11 @@ import { Zone } from '../../constants/index.js';
 import { BIP32Factory } from '../bip32/bip32.js';
 import ecc from '@bitcoinerlab/secp256k1';
 import { type BIP32API, HDNodeBIP32Adapter } from '../bip32/types.js';
-import { getBytes, getZoneForAddress, hexlify } from '../../utils/index.js';
+import { getBytes, hexlify } from '../../utils/index.js';
 import { bs58check } from '../bip32/crypto.js';
 import { PaymentCodePrivate, PaymentCodePublic, PC_VERSION } from '../payment-codes.js';
 import { HARDENED_OFFSET, MAX_ADDRESS_DERIVATION_ATTEMPTS } from '../utils.js';
-import { isQiAddress } from '../../address/index.js';
+import { isValidAddressForZone } from '../utils.js';
 
 export class Bip47QiWalletSelf extends AbstractQiWallet {
     private readonly root: HDNodeWallet;
@@ -64,7 +64,7 @@ export class Bip47QiWalletSelf extends AbstractQiWallet {
         let addrIndex = lastIndex + 1;
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             const address = walletPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex);
-            if (this.isValidAddressForZone(address, zone)) {
+            if (isValidAddressForZone(this.coinType, address, zone)) {
                 this.saveLastDerivationIndex(zone, account, addrIndex);
                 const pubkey = walletPCodePrivate.derivePaymentPublicKey(senderPCodePublic, addrIndex);
                 const pcInfo: QiAddressInfo = {
@@ -87,17 +87,6 @@ export class Bip47QiWalletSelf extends AbstractQiWallet {
         throw new Error(
             `Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`,
         );
-    }
-
-    // helper method to check if an address is valid for a given zone
-    protected isValidAddressForZone(address: string, zone: Zone): boolean {
-        const addressZone = getZoneForAddress(address);
-        if (!addressZone) {
-            return false;
-        }
-        const isCorrectShard = addressZone === zone;
-        const isCorrectLedger = this.coinType === 969 ? isQiAddress(address) : !isQiAddress(address);
-        return isCorrectShard && isCorrectLedger;
     }
 
     public scan(): void {
@@ -131,7 +120,7 @@ export class Bip47QiWalletCounterparty extends AbstractQiWallet {
         let addrIndex = lastIndex + 1;
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             const address = receiverPCodePublic.getPaymentAddress(walletPCodePrivate, addrIndex);
-            if (this.isValidAddressForZone(address, zone)) {
+            if (isValidAddressForZone(this.coinType, address, zone)) {
                 this.saveLastDerivationIndex(zone, account, addrIndex);
                 const pubkey = receiverPCodePublic.derivePaymentPublicKey(walletPCodePrivate, addrIndex);
                 const pcInfo: QiAddressInfo = {
@@ -154,17 +143,6 @@ export class Bip47QiWalletCounterparty extends AbstractQiWallet {
         throw new Error(
             `Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`,
         );
-    }
-
-    // helper method to check if an address is valid for a given zone
-    protected isValidAddressForZone(address: string, zone: Zone): boolean {
-        const addressZone = getZoneForAddress(address);
-        if (!addressZone) {
-            return false;
-        }
-        const isCorrectShard = addressZone === zone;
-        const isCorrectLedger = this.coinType === 969 ? isQiAddress(address) : !isQiAddress(address);
-        return isCorrectShard && isCorrectLedger;
     }
 
     public scan(): void {

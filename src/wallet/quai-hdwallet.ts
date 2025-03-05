@@ -290,7 +290,13 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
         //! TODO: revise this
         const lastIndex = this._findLastUsedIndex(Array.from(this._addresses.values()), accountIndex, zone);
         // const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
-        const addressNode = this.bip44.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
+        const addressNode = this.bip44.deriveNextAddressNode(
+            QuaiHDWallet._coinType,
+            accountIndex,
+            lastIndex + 1,
+            zone,
+            false,
+        );
         return this._createAndStoreNeuteredAddressInfo(addressNode, accountIndex, zone);
     }
 
