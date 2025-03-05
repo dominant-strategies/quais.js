@@ -18,7 +18,7 @@ export class Bip44QiWallet extends AbstractQiWallet {
 
     public deriveNewAddress(zone: Zone, account: number = 0): QiAddressInfo {
         const index = this.getLastDerivationIndex(zone, account) + 1;
-        const hdNode = this.bip44.deriveNextAddressNode(account, index, zone, this.isChange);
+        const hdNode = this.bip44.deriveNextAddressNode(this.coinType, account, index, zone, this.isChange);
         const newIndex = hdNode.index;
         this.saveLastDerivationIndex(zone, account, newIndex);
         const qiAddressInfo: QiAddressInfo = {

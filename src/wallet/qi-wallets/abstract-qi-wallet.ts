@@ -1,26 +1,18 @@
 import { OutpointInfo, QiAddressInfo } from '../index.js';
 import { denominations } from '../../transaction/utxo.js';
 import { Provider } from '../../providers/index.js';
-import { toShard, Zone } from '../../constants/index.js';
+import { AllowedCoinType, toShard, Zone } from '../../constants/index.js';
 
 export abstract class AbstractQiWallet {
     protected provider?: Provider;
     // coin type for bip44 derivation
-    protected coinType: number = 969;
+    protected coinType: AllowedCoinType = 969;
     // map of address to address info
     protected addresses: Map<string, QiAddressInfo> = new Map();
     // last derivation indexes for each zone and account
     protected lastDerivationIndexes: Map<Zone, Map<number, number>> = new Map();
     // map of address to outpoint info
     protected availableOutpoints: Map<string, OutpointInfo> = new Map();
-
-    public getAddressInfo(address: string): QiAddressInfo {
-        const info = this.addresses.get(address);
-        if (!info) {
-            throw new Error(`Address ${address} not found in wallet`);
-        }
-        return info;
-    }
 
     protected saveQiAddressInfo(addressInfo: QiAddressInfo): void {
         this.addresses.set(addressInfo.address, addressInfo);
@@ -290,6 +282,10 @@ export abstract class AbstractQiWallet {
 
     public getAddressesForAccount(account: number): QiAddressInfo[] {
         return Array.from(this.addresses.values()).filter((addr) => addr.account === account);
+    }
+
+    public getAddressInfo(address: string): QiAddressInfo | null {
+        return this.addresses.get(address) ?? null;
     }
 
     /**

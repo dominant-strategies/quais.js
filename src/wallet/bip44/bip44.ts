@@ -1,7 +1,6 @@
 import { HDNodeWallet } from '../hdnodewallet.js';
 import { AllowedCoinType, Zone } from '../../constants/index.js';
-import { getZoneForAddress } from '../../utils/index.js';
-import { isQiAddress } from '../../address/index.js';
+import { isValidAddressForZone } from '../utils.js';
 
 /**
  * Interface representing information about a neutered address.
@@ -54,17 +53,6 @@ export class BIP44 {
         return `m/44'/${this._coinType}'`;
     }
 
-    // helper method to check if an address is valid for a given zone
-    protected isValidAddressForZone(address: string, zone: Zone): boolean {
-        const addressZone = getZoneForAddress(address);
-        if (!addressZone) {
-            return false;
-        }
-        const isCorrectShard = addressZone === zone;
-        const isCorrectLedger = this.coinType() === 969 ? isQiAddress(address) : !isQiAddress(address);
-        return isCorrectShard && isCorrectLedger;
-    }
-
     /**
      * Gets the BIP44 change node for a given account and change flag.
      *
@@ -101,6 +89,7 @@ export class BIP44 {
      * @throws {Error} If a valid address for the specified zone cannot be derived within the allowed attempts.
      */
     public deriveNextAddressNode(
+        coinType: AllowedCoinType,
         account: number,
         startingIndex: number,
         zone: Zone,
@@ -112,7 +101,7 @@ export class BIP44 {
 
         for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
             addressNode = changeNode.deriveChild(addrIndex++);
-            if (this.isValidAddressForZone(addressNode.address, zone)) {
+            if (isValidAddressForZone(this.coinType(), addressNode.address, zone)) {
                 return addressNode;
             }
         }
