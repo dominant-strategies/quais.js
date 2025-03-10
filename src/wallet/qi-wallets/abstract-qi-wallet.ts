@@ -139,12 +139,37 @@ export abstract class AbstractQiWallet {
     }
 
     /**
+     * Exports all addresses from the wallet.
+     *
+     * @returns {QiAddressInfo[]} Array of all address information stored in the wallet
+     */
+    public exportAllAddresses(): QiAddressInfo[] {
+        return Array.from(this.addresses.values());
+    }
+
+    /**
      * Exports all available outpoints from the wallet.
      *
      * @returns {OutpointInfo[]} Array of all outpoint information stored in the wallet
      */
     public exportOutpoints(): OutpointInfo[] {
         return Array.from(this.availableOutpoints.values());
+    }
+
+    /**
+     * Imports address information into the wallet.
+     *
+     * @param {QiAddressInfo} addressInfo - The address information to import
+     */
+    public importAddressInfo(addressInfo: QiAddressInfo): void {
+        // Save the address info
+        this.saveQiAddressInfo(addressInfo);
+
+        // Update last derivation index if needed
+        const currentLastIndex = this.getLastDerivationIndex(addressInfo.zone, addressInfo.account);
+        if (addressInfo.index > currentLastIndex) {
+            this.saveLastDerivationIndex(addressInfo.zone, addressInfo.account, addressInfo.index);
+        }
     }
 
     /**
