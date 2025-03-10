@@ -239,6 +239,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
                     lock: new Uint8Array(),
                 })),
             },
+            data: new Uint8Array(),
         };
 
         if (this.signature && includeSignature) {
