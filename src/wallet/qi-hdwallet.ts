@@ -1358,10 +1358,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     public getGapAddressesForZone(zone: Zone): QiAddressInfo[] {
         this.validateZone(zone);
-        const gapAddresses = this._addressesMap.get('BIP44:external') || [];
-        return gapAddresses.filter(
-            (addressInfo) => addressInfo.zone === zone && addressInfo.status === AddressStatus.UNUSED,
-        );
+        const externalAddresses = this.externalBip44.getAddressesInZone(zone);
+        return externalAddresses.filter((addressInfo) => addressInfo.status === AddressStatus.UNUSED);
     }
 
     /**
@@ -1372,10 +1370,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     public getGapChangeAddressesForZone(zone: Zone): QiAddressInfo[] {
         this.validateZone(zone);
-        const gapChangeAddresses = this._addressesMap.get('BIP44:change') || [];
-        return gapChangeAddresses.filter(
-            (addressInfo) => addressInfo.zone === zone && addressInfo.status === AddressStatus.UNUSED,
-        );
+        const changeAddresses = this.changeBip44.getAddressesInZone(zone);
+        return changeAddresses.filter((addressInfo) => addressInfo.status === AddressStatus.UNUSED);
     }
 
     /**
@@ -1429,12 +1425,35 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     public serialize(): SerializedQiHDWallet {
         const hdwalletSerialized = super.serialize();
 
+        // get all addresses from BIP44 wallets
+        const bip44Addresses = this.externalBip44.exportAllAddresses();
+        const bip44ChangeAddresses = this.changeBip44.exportAllAddresses();
+        // get self address from BIP47 payment channels
+        const paymentChannelSelfAddresses = Array.from(this.paymentChannels.values()).flatMap((pc) =>
+            pc.selfWallet.exportAllAddresses(),
+        );
+        // get addresses from imported private keys
+        const importedPrivateKeysAddresses = this.privatekeyWallet.exportAllAddresses();
+
+        const allAddresses = [
+            ...bip44Addresses,
+            ...bip44ChangeAddresses,
+            ...paymentChannelSelfAddresses,
+            ...importedPrivateKeysAddresses,
+        ];
+
+        // Create senderPaymentCodeInfo object
+        const senderPaymentCodeInfo = Object.fromEntries(
+            Array.from(this.paymentChannels.entries()).map(([paymentCode, channel]) => [
+                paymentCode,
+                channel.counterpartyWallet.exportAllAddresses(),
+            ]),
+        );
+
         return {
             ...hdwalletSerialized,
-            addresses: Array.from(this._addressesMap.values()).flatMap((addresses) => addresses),
-            senderPaymentCodeInfo: Object.fromEntries(
-                Array.from(this._paymentCodeSendAddressMap.entries()).map(([key, value]) => [key, Array.from(value)]),
-            ),
+            addresses: allAddresses,
+            senderPaymentCodeInfo,
         };
     }
 
@@ -1455,25 +1474,32 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const root = HDNodeWallet.fromMnemonic(mnemonic, path);
         const wallet = new this(_guard, root);
 
-        // validate and import all the wallet addresses
+        // import all addresses
         for (const addressInfo of serialized.addresses) {
-            let key = addressInfo.derivationPath;
-            if (isHexString(key, 32)) {
-                key = QiHDWallet.PRIVATE_KEYS_PATH;
-            } else if (key.includes('BIP44')) {
-                // only validate if it's not a private key or a BIP44 path
+            if (isHexString(addressInfo.derivationPath, 32)) {
+                // private key address
+                wallet.privatekeyWallet.importAddressInfo(addressInfo);
+            } else if (addressInfo.derivationPath === 'BIP44:external') {
+                // BIP44 external address
                 wallet.validateAddressInfo(addressInfo);
-            } else {
-                // payment code addresses require different derivation validation
+                wallet.externalBip44.importAddressInfo(addressInfo);
+            } else if (addressInfo.derivationPath === 'BIP44:change') {
+                // BIP44 change address
+                wallet.validateAddressInfo(addressInfo);
+                wallet.changeBip44.importAddressInfo(addressInfo);
+            } else if (validatePaymentCode(addressInfo.derivationPath)) {
+                // payment code self address
                 wallet.validateBaseAddressInfo(addressInfo);
                 wallet.validateExtendedProperties(addressInfo);
-            }
-            const existingAddresses = wallet._addressesMap.get(key);
-            if (!existingAddresses) {
-                wallet._addressesMap.set(key, [addressInfo]);
-                // if the address is already in the map, we don't need to add it again
-            } else if (!existingAddresses.some((addr) => addr.address === addressInfo.address)) {
-                existingAddresses!.push(addressInfo);
+
+                // Create payment channel if it doesn't exist
+                if (!wallet.paymentChannels.has(addressInfo.derivationPath)) {
+                    wallet.openChannel(addressInfo.derivationPath);
+                }
+                const channel = wallet.paymentChannels.get(addressInfo.derivationPath)!;
+                channel.selfWallet.importAddressInfo(addressInfo);
+            } else {
+                throw new Error(`Invalid derivation path: ${addressInfo.derivationPath}`);
             }
         }
 
@@ -1487,14 +1513,19 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 wallet.validateBaseAddressInfo(pcInfo);
                 wallet.validateExtendedProperties(pcInfo);
             }
-            wallet._paymentCodeSendAddressMap.set(paymentCode, paymentCodeInfoArray);
+            if (!wallet.paymentChannels.has(paymentCode)) {
+                wallet.openChannel(paymentCode);
+            }
+            const channel = wallet.paymentChannels.get(paymentCode)!;
+            for (const pcInfo of paymentCodeInfoArray) {
+                channel.counterpartyWallet.importAddressInfo(pcInfo);
+            }
         }
 
         return wallet;
     }
 
     protected validateAddressDerivation(info: QiAddressInfo): void {
-        //! TODO: Update this
         const isChange = info.derivationPath === 'BIP44:change';
         const bip44 = isChange ? this.changeBip44 : this.externalBip44;
         const addressNode = bip44.getAddressNode(info.account, info.index);
