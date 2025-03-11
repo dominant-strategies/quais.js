@@ -313,6 +313,13 @@ export abstract class AbstractQiWallet {
         return this.addresses.get(address) ?? null;
     }
 
+    public setAddresses(addresses: QiAddressInfo[]): void {
+        this.addresses.clear();
+        for (const address of addresses) {
+            this.addresses.set(address.address, address);
+        }
+    }
+
     /**
      * Derives a new address for a specific zone and optional account.
      *
