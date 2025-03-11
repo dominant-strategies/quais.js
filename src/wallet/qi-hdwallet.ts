@@ -156,7 +156,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
     /**
      * The BIP44 wallet instance used for deriving external (receiving) addresses. This follows the BIP44 derivation
-     * path m/44'/969'/account'/0/index where:
+     * path m/44'/969'/account'/0/index
      *
      * @private
      * @type {Bip44QiWallet}
@@ -166,7 +166,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
     /**
      * The BIP44 wallet instance used for deriving change (sending) addresses. This follows the BIP44 derivation path
-     * m/44'/969'/account'/1/index where:
+     * m/44'/969'/account'/1/index
      *
      * @private
      * @type {Bip44QiWallet}
@@ -375,12 +375,30 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {QiAddressInfo | null} The address info or null if not found.
      */
     public locateAddressInfo(address: string): QiAddressInfo | null {
-        for (const [, addressInfos] of this._addressesMap.entries()) {
-            const addressInfo = addressInfos.find((info) => info.address === address);
-            if (addressInfo) {
-                return addressInfo;
+        // search in bip44 wallets
+        const externalAddress = this.externalBip44.getAddressInfo(address);
+        if (externalAddress) {
+            return externalAddress;
+        }
+        const changeAddress = this.changeBip44.getAddressInfo(address);
+        if (changeAddress) {
+            return changeAddress;
+        }
+
+        // search in payment code self addresses
+        for (const paymentChannel of this.paymentChannels.values()) {
+            const paymentCodeAddress = paymentChannel.selfWallet.getAddressInfo(address);
+            if (paymentCodeAddress) {
+                return paymentCodeAddress;
             }
         }
+
+        // search in private key wallet
+        const privateKeyAddress = this.privatekeyWallet.getAddressInfo(address);
+        if (privateKeyAddress) {
+            return privateKeyAddress;
+        }
+
         return null;
     }
 
@@ -605,14 +623,14 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 const addressesToSetToUnused = changeAddresses.slice(changeAddressesNeeded);
 
                 // Set the status of the addresses back to UNUSED in _addressesMap for removed addresses
-                const changeAddressesMap = this._addressesMap.get('BIP44:change')!;
-                const updatedChangeAddressesMap = changeAddressesMap.map((a) => {
+                const currentChangeAddresses = this.changeBip44.getAddressesInZone(originZone);
+                const updatedChangeAddresses = currentChangeAddresses.map((a) => {
                     if (addressesToSetToUnused.includes(a.address)) {
                         return { ...a, status: AddressStatus.UNUSED };
                     }
                     return a;
                 });
-                this._addressesMap.set('BIP44:change', updatedChangeAddressesMap);
+                this.changeBip44.setAddresses(updatedChangeAddresses);
             }
 
             // Determine if new addresses are needed for the spend outputs
@@ -655,7 +673,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      *
      * @private
      * @param {SelectedCoinsResult} selection - The selected coins result.
-     * @param {string[]} inputPubKeys - The public keys of the inputs.
      * @param {string[]} sendAddresses - The addresses to send to.
      * @param {string[]} changeAddresses - The addresses to change to.
      * @param {number} chainId - The chain ID.
@@ -771,7 +788,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const unusedAddresses = this.getUnusedBIP44Addresses(count, account, 'BIP44:change', zone);
 
         // Update address statuses in wallet
-        const currentAddresses = this._addressesMap.get('BIP44:change') || [];
+        const currentAddresses = this.changeBip44.getAddressesInZone(zone);
         const updatedAddresses = [
             // Mark selected addresses as attempted use
             ...unusedAddresses.map((addr) => ({ ...addr, status: AddressStatus.ATTEMPTED_USE })),
@@ -780,7 +797,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         ].sort((a, b) => a.index - b.index);
 
         // Update wallet's address map
-        this._addressesMap.set('BIP44:change', updatedAddresses);
+        this.changeBip44.setAddresses(updatedAddresses);
 
         // Return just the addresses
         return unusedAddresses.map((addr) => addr.address);
@@ -802,7 +819,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         path: DerivationPath,
         zone: Zone,
     ): QiAddressInfo[] {
-        const addresses = this._addressesMap.get(path) || [];
+        const wallet = path === 'BIP44:external' ? this.externalBip44 : this.changeBip44;
+        const addresses = wallet.getAddressesInZone(zone);
         const unusedAddresses = addresses.filter(
             (address) =>
                 address.status === AddressStatus.UNUSED && address.account === account && address.zone === zone,
@@ -812,11 +830,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         }
 
         const remainingAddressesNeeded = amount - unusedAddresses.length;
-        // const isChange = path === 'BIP44:change';
         const newAddresses = Array.from({ length: remainingAddressesNeeded }, () =>
-            // this._getNextQiAddress(account, zone, isChange),
-            //! Update this
-            this.externalBip44.deriveNewAddress(zone, account),
+            wallet.deriveNewAddress(zone, account),
         );
         return [...unusedAddresses, ...newAddresses];
     }
