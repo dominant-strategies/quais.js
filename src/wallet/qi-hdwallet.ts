@@ -223,6 +223,27 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     /**
+     * Connects the wallet to a provider and propagates the connection to all subwallets.
+     *
+     * @param {Provider} provider - The provider.
+     * @override
+     */
+    public connect(provider: Provider): void {
+        // Call parent class connect method
+        super.connect(provider);
+
+        // Propagate provider to subwallets
+        this.externalBip44.setProvider(provider);
+        this.changeBip44.setProvider(provider);
+        this.privatekeyWallet.setProvider(provider);
+
+        // Update payment channels
+        for (const channel of this.paymentChannels.values()) {
+            channel.selfWallet.setProvider(provider);
+        }
+    }
+
+    /**
      * Gets the payment codes for all open channels.
      *
      * @returns {string[]} The payment codes for all open channels.

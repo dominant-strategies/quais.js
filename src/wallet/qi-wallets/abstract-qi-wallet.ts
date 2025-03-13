@@ -106,6 +106,16 @@ export abstract class AbstractQiWallet {
             throw new Error(`Invalid zone: ${zone}`);
         }
     }
+
+    /**
+     * Sets the provider for the wallet.
+     *
+     * @param {Provider} provider - The provider to use for blockchain interactions
+     */
+    public setProvider(provider: Provider): void {
+        this.provider = provider;
+    }
+
     /**
      * Validates that a provider is set and available.
      *
