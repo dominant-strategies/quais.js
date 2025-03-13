@@ -330,8 +330,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {OutpointInfo[]} The outpoints for the zone.
      */
     public getOutpoints(zone: Zone): OutpointInfo[] {
-        this.validateZone(zone);
-        return Array.from(this._availableOutpoints.values()).filter((outpoint) => outpoint.zone === zone);
+        const bip44ExternalOutpoints = this.externalBip44.getOutpoints(zone);
+        const bip44ChangeOutpoints = this.changeBip44.getOutpoints(zone);
+        const privatekeyOutpoints = this.privatekeyWallet.getOutpoints(zone);
+        return [...bip44ExternalOutpoints, ...bip44ChangeOutpoints, ...privatekeyOutpoints];
     }
 
     /**
