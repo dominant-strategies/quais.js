@@ -1526,9 +1526,27 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         return [...externalAddresses, ...changeAddresses, ...paymentCodeAddresses, ...privateKeyAddresses];
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    public getBalanceForZone(zone: Zone): bigint {
-        //! TODO: Implement this
-        return BigInt(0);
+    /**
+     * Gets the total balance for a specific zone by summing balances from all address types:
+     *
+     * - BIP44 external addresses
+     * - BIP44 change addresses
+     * - BIP47 payment channel addresses
+     * - Imported private key addresses
+     *
+     * @param {Zone} zone - The zone to get the balance for
+     * @returns {Promise<bigint>} The total balance in the zone as a bigint
+     */
+    public async getBalanceForZone(zone: Zone): Promise<bigint> {
+        const bip44externalBalance = await this.externalBip44.getTotalBalance(zone);
+        const bip44changeBalance = await this.changeBip44.getTotalBalance(zone);
+        // get the sum of bip47 self wallets
+        let bip47AddressesBalance = BigInt(0);
+        for (const pc of this.paymentChannels.values()) {
+            bip47AddressesBalance += await pc.selfWallet.getTotalBalance(zone);
+        }
+
+        const privatekeyBalance = await this.privatekeyWallet.getTotalBalance(zone);
+        return bip44externalBalance + bip44changeBalance + bip47AddressesBalance + privatekeyBalance;
     }
 }
