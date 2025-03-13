@@ -147,12 +147,4 @@ export class Bip47QiWalletSelf extends AbstractQiWallet {
             `Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`,
         );
     }
-
-    public scan(): void {
-        //! TODO: Implement this
-    }
-
-    public sync(): void {
-        //! TODO: Implement this
-    }
 }
