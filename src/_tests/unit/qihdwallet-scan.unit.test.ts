@@ -82,19 +82,17 @@ describe('QiHDWallet scan', async function () {
             });
             it('validates expected external addresses', async function () {
                 const externalAddresses = wallet.getAddressesForZone(Zone.Cyprus1);
-                const sortedExternalAddresses = externalAddresses.sort((a, b) => a.address.localeCompare(b.address));
-                const sortedExpectedExternalAddresses = test.expected_external_addresses.sort((a, b) =>
-                    a.address.localeCompare(b.address),
+                const sortedExternalAddresses = externalAddresses.sort((a, b) => a.index - b.index);
+                const sortedExpectedExternalAddresses = test.expected_external_addresses.sort(
+                    (a, b) => a.index - b.index,
                 );
                 assert.deepEqual(sortedExternalAddresses, sortedExpectedExternalAddresses);
             });
 
             it('validates expected change addresses', async function () {
                 const changeAddresses = wallet.getChangeAddressesForZone(Zone.Cyprus1);
-                const sortedChangeAddresses = changeAddresses.sort((a, b) => a.address.localeCompare(b.address));
-                const sortedExpectedChangeAddresses = test.expected_change_addresses.sort((a, b) =>
-                    a.address.localeCompare(b.address),
-                );
+                const sortedChangeAddresses = changeAddresses.sort((a, b) => a.index - b.index);
+                const sortedExpectedChangeAddresses = test.expected_change_addresses.sort((a, b) => a.index - b.index);
                 assert.deepEqual(sortedChangeAddresses, sortedExpectedChangeAddresses);
             });
 
