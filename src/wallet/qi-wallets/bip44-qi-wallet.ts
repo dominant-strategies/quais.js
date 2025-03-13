@@ -146,12 +146,4 @@ export class Bip44QiWallet extends AbstractQiWallet {
         this.saveQiAddressInfo(qiAddressInfo);
         return qiAddressInfo;
     }
-
-    public scan(): void {
-        //! TODO: Implement this
-    }
-
-    public sync(): void {
-        //! TODO: Implement this
-    }
 }

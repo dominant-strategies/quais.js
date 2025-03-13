@@ -71,12 +71,4 @@ export class PrivatekeyQiWallet extends AbstractQiWallet {
     public deriveNewAddress(zone: Zone, account: number = 0): QiAddressInfo {
         throw new Error('Not implemented');
     }
-
-    public scan(): void {
-        //! TODO: Implement this
-    }
-
-    public sync(): void {
-        //! TODO: Implement this
-    }
 }
