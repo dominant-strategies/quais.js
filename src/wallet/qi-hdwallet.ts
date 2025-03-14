@@ -1410,6 +1410,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         const pc = new PaymentChannel(this._root, paymentCode);
         this.paymentChannels.set(paymentCode, pc);
+
+        // set the provider for the self wallet
+        pc.selfWallet.setProvider(this.provider!);
     }
 
     public channelIsOpen(paymentCode: string): boolean {
