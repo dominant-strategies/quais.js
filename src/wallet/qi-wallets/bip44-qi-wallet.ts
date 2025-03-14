@@ -9,9 +9,10 @@ import { isQiAddress } from '../../address/index.js';
 export class Bip44QiWallet extends AbstractQiWallet {
     private readonly bip44: BIP44;
     private readonly isChange: boolean;
+    private static readonly DEFAULT_GAP_LIMIT = 5;
 
     constructor(bip44: BIP44, isChange: boolean) {
-        super();
+        super(Bip44QiWallet.DEFAULT_GAP_LIMIT);
         this.bip44 = bip44;
         this.isChange = isChange;
     }

@@ -72,9 +72,10 @@ export function getPrivateKeyFromPaymentCode(
 export class Bip47QiWalletSelf extends AbstractQiWallet {
     private readonly root: HDNodeWallet;
     private readonly counterpartyPaymentCode: string;
+    private static readonly DEFAULT_GAP_LIMIT = 5;
 
     public constructor(root: HDNodeWallet, counterpartyPaymentCode: string) {
-        super();
+        super(Bip47QiWalletSelf.DEFAULT_GAP_LIMIT);
         this.root = root;
         this.counterpartyPaymentCode = counterpartyPaymentCode;
     }

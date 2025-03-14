@@ -7,8 +7,10 @@ import { SigningKey } from '../../crypto/index.js';
 import { Zone } from '../../constants/zones.js';
 
 export class PrivatekeyQiWallet extends AbstractQiWallet {
+    private static readonly DEFAULT_GAP_LIMIT = 0;
+
     public constructor() {
-        super();
+        super(PrivatekeyQiWallet.DEFAULT_GAP_LIMIT);
     }
 
     /**
@@ -69,6 +71,6 @@ export class PrivatekeyQiWallet extends AbstractQiWallet {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     public deriveNewAddress(zone: Zone, account: number = 0): QiAddressInfo {
-        throw new Error('Not implemented');
+        throw new Error('PrivatekeyQiWallet does not support deriveNewAddress');
     }
 }
