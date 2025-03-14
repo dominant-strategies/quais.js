@@ -312,7 +312,6 @@ export abstract class AbstractQiWallet {
     ): Promise<bigint> {
         this.requireProvider();
         this.validateZone(zone);
-
         if (useCachedOutpoints) {
             const currentBlock = blockNumber ?? (await this.provider!.getBlockNumber(toShard(zone)));
             return this.calculateCachedSpendableBalance(zone, currentBlock);
@@ -328,8 +327,9 @@ export abstract class AbstractQiWallet {
      * @returns {bigint} The calculated spendable balance
      */
     protected calculateCachedSpendableBalance(zone: Zone, currentBlock: number): bigint {
-        return this.getOutpoints(zone)
-            .filter((utxo) => utxo.outpoint.lock !== 0 && currentBlock! < utxo.outpoint.lock!)
+        const outpoints = this.getOutpoints(zone);
+        return outpoints
+            .filter((utxo) => utxo.outpoint.lock === 0 || currentBlock! >= utxo.outpoint.lock!)
             .reduce((sum, utxo) => sum + denominations[utxo.outpoint.denomination], BigInt(0));
     }
 
@@ -565,7 +565,6 @@ export abstract class AbstractQiWallet {
         for (const [blockHash, addresses] of addressesByBlockHash.entries()) {
             // Get outpoint deltas for this batch
             const deltas = await this.provider!.getOutpointDeltas(addresses, blockHash);
-            console.log('====> TESTING: @processSyncedAddresses: deltas: ', deltas);
 
             // Process each address's deltas
             for (const [address, delta] of Object.entries(deltas)) {
@@ -652,7 +651,6 @@ export abstract class AbstractQiWallet {
                         number: currentBlock.number,
                     },
                 };
-                console.log('====> TESTING: @processUnsyncedAddresses: outpoints: ', outpoints);
                 // Import outpoints if found
                 if (outpoints.length > 0) {
                     this.importOutpoints(
