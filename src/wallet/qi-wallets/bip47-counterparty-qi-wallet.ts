@@ -14,9 +14,10 @@ import { Bip47QiWalletSelf } from './bip47-self-qi-wallet.js';
 export class Bip47QiWalletCounterparty extends AbstractQiWallet {
     private readonly selfBip47Wallet: Bip47QiWalletSelf;
     private readonly counterpartyPaymentCode: string;
+    private static readonly DEFAULT_GAP_LIMIT = 5;
 
     public constructor(selfBip47Wallet: Bip47QiWalletSelf, counterpartyPaymentCode: string) {
-        super();
+        super(Bip47QiWalletCounterparty.DEFAULT_GAP_LIMIT);
         this.selfBip47Wallet = selfBip47Wallet;
         this.counterpartyPaymentCode = counterpartyPaymentCode;
     }

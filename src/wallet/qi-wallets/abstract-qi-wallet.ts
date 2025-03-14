@@ -41,10 +41,11 @@ export abstract class AbstractQiWallet {
     // map of address to outpoint info
     protected availableOutpoints: Map<string, OutpointInfo> = new Map();
 
-    /**
-     * Default gap limit for address generation. Child classes can override this value.
-     */
-    protected static GAP_LIMIT: number = 20;
+    protected gapLimit: number = 5;
+
+    constructor(gapLimit: number) {
+        this.gapLimit = gapLimit;
+    }
 
     protected saveQiAddressInfo(addressInfo: QiAddressInfo): void {
         this.addresses.set(addressInfo.address, addressInfo);
@@ -556,6 +557,7 @@ export abstract class AbstractQiWallet {
         for (const [blockHash, addresses] of addressesByBlockHash.entries()) {
             // Get outpoint deltas for this batch
             const deltas = await this.provider!.getOutpointDeltas(addresses, blockHash);
+            console.log('====> TESTING: @processSyncedAddresses: deltas: ', deltas);
 
             // Process each address's deltas
             for (const [address, delta] of Object.entries(deltas)) {
@@ -642,7 +644,7 @@ export abstract class AbstractQiWallet {
                         number: currentBlock.number,
                     },
                 };
-
+                console.log('====> TESTING: @processUnsyncedAddresses: outpoints: ', outpoints);
                 // Import outpoints if found
                 if (outpoints.length > 0) {
                     this.importOutpoints(
@@ -709,10 +711,9 @@ export abstract class AbstractQiWallet {
         currentUnusedCount: number,
         createdOutpoints: OutpointDeltaResponse,
     ): Promise<void> {
-        const gapLimit = (this.constructor as typeof AbstractQiWallet).GAP_LIMIT;
         let consecutiveUnused = currentUnusedCount;
 
-        while (consecutiveUnused < gapLimit) {
+        while (consecutiveUnused < this.gapLimit) {
             // Generate new address
             const newAddr = this.deriveNewAddress(zone, account);
 
@@ -752,7 +753,7 @@ export abstract class AbstractQiWallet {
             }
 
             // Stop if we've reached the gap limit
-            if (consecutiveUnused >= gapLimit) {
+            if (consecutiveUnused >= this.gapLimit) {
                 break;
             }
 
