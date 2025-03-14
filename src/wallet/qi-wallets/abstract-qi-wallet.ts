@@ -180,6 +180,14 @@ export abstract class AbstractQiWallet {
             const key = `${outpointInfo.outpoint.txhash}:${outpointInfo.outpoint.index}`;
             this.availableOutpoints.set(key, outpointInfo);
         }
+        // mark each address as used
+        for (const outpointInfo of outpointInfos) {
+            const address = outpointInfo.address;
+            const addressInfo = this.getAddressInfo(address);
+            if (addressInfo) {
+                addressInfo.status = AddressStatus.USED;
+            }
+        }
     }
 
     /**

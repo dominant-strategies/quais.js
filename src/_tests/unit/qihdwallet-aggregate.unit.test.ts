@@ -65,7 +65,7 @@ describe('QiHDWallet.aggregate', () => {
             }
 
             // Import test outpoints
-            wallet.importOutpoints(testCase.outpointInfos);
+            wallet.importOutpoints(testCase.outpointInfos, 'BIP44:external');
 
             const txResponse = (await wallet.aggregate(testCase.zone)) as QiTransactionResponse;
 

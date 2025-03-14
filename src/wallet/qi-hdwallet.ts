@@ -58,7 +58,7 @@ export enum AddressStatus {
  *
  * @type {string}
  */
-type DerivationPath = 'BIP44:external' | 'BIP44:change' | string; // string for payment codes
+type DerivationPath = 'BIP44:external' | 'BIP44:change' | 'PrivateKey' | string; // string for payment codes
 
 export type LastSyncedBlock = { hash: string; number: number };
 
@@ -138,12 +138,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
     /**
      * @ignore
-     * @type {number}
-     */
-    protected static _GAP_LIMIT: number = 5;
-
-    /**
-     * @ignore
      * @type {AllowedCoinType}
      */
     protected static override _coinType: AllowedCoinType = 969;
@@ -187,14 +181,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @readonly
      */
     private readonly privatekeyWallet: PrivatekeyQiWallet;
-
-    /**
-     * Array of outpoint information.
-     *
-     * @ignore
-     * @type {OutpointInfo[]}
-     */
-    protected _availableOutpoints: Map<string, OutpointInfo> = new Map();
 
     /**
      * @ignore
@@ -312,14 +298,21 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      *
      * @param {OutpointInfo[]} outpoints - The outpoints to import.
      */
-    public importOutpoints(outpoints: OutpointInfo[]): void {
+    public importOutpoints(outpoints: OutpointInfo[], derivationPath: DerivationPath): void {
         this.validateOutpointInfo(outpoints);
-
-        for (const outpoint of outpoints) {
-            const key = `${outpoint.outpoint.txhash}:${outpoint.outpoint.index}`;
-            if (!this._availableOutpoints.has(key)) {
-                this._availableOutpoints.set(key, outpoint);
+        if (derivationPath === 'BIP44:external') {
+            this.externalBip44.importOutpoints(outpoints);
+        } else if (derivationPath === 'BIP44:change') {
+            this.changeBip44.importOutpoints(outpoints);
+        } else if (derivationPath === 'PrivateKey') {
+            this.privatekeyWallet.importOutpoints(outpoints);
+        } else {
+            // derivaration path is a payment code
+            const paymentChannel = this.paymentChannels.get(derivationPath);
+            if (!paymentChannel) {
+                throw new Error(`Payment channel not found for derivation path: ${derivationPath}`);
             }
+            paymentChannel.selfWallet.importOutpoints(outpoints);
         }
     }
 
