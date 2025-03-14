@@ -145,6 +145,7 @@ export class Bip44QiWallet extends AbstractQiWallet {
             lastSyncedBlock: null,
         };
         this.saveQiAddressInfo(qiAddressInfo);
+        this.saveLastDerivationIndex(zone, account, addressIndex);
         return qiAddressInfo;
     }
 }
