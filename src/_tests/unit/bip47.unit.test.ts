@@ -27,10 +27,12 @@ describe('Test generation of payment codes and payment addresses', function () {
         );
 
         // Alice generates a payment address for sending funds to Bob
+        aliceQiWallet.openChannel(bobPaymentCode);
         const bobInfoAddress = aliceQiWallet.getNextSendAddress(bobPaymentCode, Zone.Cyprus1);
         assert.equal(bobInfoAddress.address, '0x00aFce8641EE61598B582ea02Df96623280E55d9');
 
         // Bob generates a payment address for receiving funds from Alice
+        bobQiWallet.openChannel(alicePaymentCode);
         const receiveInfoAddress = bobQiWallet.getNextReceiveAddress(alicePaymentCode, Zone.Cyprus1);
         assert.equal(receiveInfoAddress.address, '0x00aFce8641EE61598B582ea02Df96623280E55d9');
     });
