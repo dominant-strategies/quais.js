@@ -360,7 +360,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @param {string} address - The address to locate.
      * @returns {QiAddressInfo | null} The address info or null if not found.
      */
-    public locateAddressInfo(address: string): QiAddressInfo | null {
+    public getAddressInfo(address: string): QiAddressInfo | null {
         // search in bip44 wallets
         const externalAddress = this.externalBip44.getAddressInfo(address);
         if (externalAddress) {
@@ -578,7 +578,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const changeAddresses = await this.getChangeAddressesForOutputs(selection.changeOutputs.length, originZone);
 
         // 5. Create the transaction and sign it using the signTransaction method
-        let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
+        let inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
         if (inputPubKeys.some((pubkey) => !pubkey)) {
             throw new Error('Missing public key for input address');
         }
@@ -631,7 +631,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 sendAddresses.slice(spendAddressesNeeded);
             }
 
-            inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
+            inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
 
             // Calculate total new outputs needed (absolute value)
             const totalNewOutputsNeeded = Math.abs(changeAddressesNeeded) + Math.abs(spendAddressesNeeded);
@@ -678,7 +678,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         }
 
         const inputsWithPubKeys: InputWithPubKey[] = selection.inputs.map((input) => {
-            const addressInfo = this.locateAddressInfo(input.address);
+            const addressInfo = this.getAddressInfo(input.address);
             if (!addressInfo?.pubKey) {
                 throw new Error(`Missing public key for input address: ${input.address}`);
             }
@@ -904,7 +904,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {string} The private key.
      */
     public getPrivateKey(address: string): string {
-        const addressInfo = this.locateAddressInfo(address);
+        const addressInfo = this.getAddressInfo(address);
 
         if (!addressInfo) {
             throw new Error(`Address not found: ${address}`);
@@ -1344,7 +1344,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     private validateAddressAndAccount(address: string, account?: number): void {
-        const addressInfo = this.locateAddressInfo(address);
+        const addressInfo = this.getAddressInfo(address);
         if (!addressInfo) {
             throw new Error(`Address ${address} not found in wallet`);
         }
@@ -1417,34 +1417,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
     public channelIsOpen(paymentCode: string): boolean {
         return this.paymentChannels.has(paymentCode);
-    }
-
-    /**
-     * Gets the address info for a given address.
-     *
-     * @param {string} address - The address.
-     * @returns {QiAddressInfo | null} The address info or null if not found.
-     */
-    public getAddressInfo(address: string): QiAddressInfo | null {
-        const externalAddressInfo = this.externalBip44.getAddressInfo(address);
-        if (!externalAddressInfo) {
-            return null;
-        }
-        return externalAddressInfo;
-    }
-
-    /**
-     * Gets the address info for a given address.
-     *
-     * @param {string} address - The address.
-     * @returns {QiAddressInfo | null} The address info or null if not found.
-     */
-    public getChangeAddressInfo(address: string): QiAddressInfo | null {
-        const changeAddressInfo = this.changeBip44.getAddressInfo(address);
-        if (!changeAddressInfo) {
-            return null;
-        }
-        return changeAddressInfo;
     }
 
     /**
