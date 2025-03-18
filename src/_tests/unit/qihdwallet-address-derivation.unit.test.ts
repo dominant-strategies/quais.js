@@ -164,7 +164,7 @@ describe('QiHDWallet Address Getters', function () {
         it('getChangeAddressInfo returns correct address info', function () {
             for (const changeAddressesInfo of test.changeAddresses) {
                 for (const expectedAddressInfo of changeAddressesInfo.addresses) {
-                    const addressInfo = qiWallet.getChangeAddressInfo(expectedAddressInfo.address);
+                    const addressInfo = qiWallet.getAddressInfo(expectedAddressInfo.address);
                     assert.deepEqual(
                         addressInfo,
                         expectedAddressInfo,
@@ -286,7 +286,7 @@ describe('Basic Address Management', function () {
             );
 
             // Verify the change address was added correctly by retrieving it
-            const retrievedChangeAddress = qiWallet.getChangeAddressInfo(firstChangeAddress.address);
+            const retrievedChangeAddress = qiWallet.getAddressInfo(firstChangeAddress.address);
             assert.deepEqual(
                 retrievedChangeAddress,
                 firstChangeAddress,
