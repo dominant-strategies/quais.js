@@ -29760,7 +29760,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @param {string} address - The address to locate.
          * @returns {QiAddressInfo | null} The address info or null if not found.
          */
-        locateAddressInfo(address) {
+        getAddressInfo(address) {
             // search in bip44 wallets
             const externalAddress = this.externalBip44.getAddressInfo(address);
             if (externalAddress) {
@@ -29906,7 +29906,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             // 1. Check the wallet has enough balance in the originating zone to send the transaction
             const currentBlock = await this.provider.getBlock(toShard(originZone), 'latest');
-            const balance = await this.externalBip44.getSpendableBalance(originZone, currentBlock?.woHeader.number, true);
+            const balance = await this.getSpendableBalance(originZone, currentBlock?.woHeader.number, true);
             if (balance < amount) {
                 throw new Error(`Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qi`);
             }
@@ -29927,7 +29927,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // 4. Get change addresses
             const changeAddresses = await this.getChangeAddressesForOutputs(selection.changeOutputs.length, originZone);
             // 5. Create the transaction and sign it using the signTransaction method
-            let inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
+            let inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
             if (inputPubKeys.some((pubkey) => !pubkey)) {
                 throw new Error('Missing public key for input address');
             }
@@ -29970,7 +29970,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     // know exactly how these addresses are derived, so we just remove them from the array
                     sendAddresses.slice(spendAddressesNeeded);
                 }
-                inputPubKeys = selection.inputs.map((input) => this.locateAddressInfo(input.address)?.pubKey);
+                inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
                 // Calculate total new outputs needed (absolute value)
                 const totalNewOutputsNeeded = Math.abs(changeAddressesNeeded) + Math.abs(spendAddressesNeeded);
                 // If we need 5 or fewer new outputs, we can break the loop
@@ -30000,7 +30000,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         async prepareTransaction(selection, sendAddresses, changeAddresses, chainId) {
             const tx = new QiTransaction();
             const inputsWithPubKeys = selection.inputs.map((input) => {
-                const addressInfo = this.locateAddressInfo(input.address);
+                const addressInfo = this.getAddressInfo(input.address);
                 if (!addressInfo?.pubKey) {
                     throw new Error(`Missing public key for input address: ${input.address}`);
                 }
@@ -30184,7 +30184,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {string} The private key.
          */
         getPrivateKey(address) {
-            const addressInfo = this.locateAddressInfo(address);
+            const addressInfo = this.getAddressInfo(address);
             if (!addressInfo) {
                 throw new Error(`Address not found: ${address}`);
             }
@@ -30569,7 +30569,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             });
         }
         validateAddressAndAccount(address, account) {
-            const addressInfo = this.locateAddressInfo(address);
+            const addressInfo = this.getAddressInfo(address);
             if (!addressInfo) {
                 throw new Error(`Address ${address} not found in wallet`);
             }
@@ -30635,32 +30635,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
         channelIsOpen(paymentCode) {
             return this.paymentChannels.has(paymentCode);
-        }
-        /**
-         * Gets the address info for a given address.
-         *
-         * @param {string} address - The address.
-         * @returns {QiAddressInfo | null} The address info or null if not found.
-         */
-        getAddressInfo(address) {
-            const externalAddressInfo = this.externalBip44.getAddressInfo(address);
-            if (!externalAddressInfo) {
-                return null;
-            }
-            return externalAddressInfo;
-        }
-        /**
-         * Gets the address info for a given address.
-         *
-         * @param {string} address - The address.
-         * @returns {QiAddressInfo | null} The address info or null if not found.
-         */
-        getChangeAddressInfo(address) {
-            const changeAddressInfo = this.changeBip44.getAddressInfo(address);
-            if (!changeAddressInfo) {
-                return null;
-            }
-            return changeAddressInfo;
         }
         /**
          * Imports a private key and adds it to the wallet.
@@ -30753,6 +30727,26 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 bip47AddressesBalance += await pc.selfWallet.getTotalBalance(zone);
             }
             const privatekeyBalance = await this.privatekeyWallet.getTotalBalance(zone);
+            return bip44externalBalance + bip44changeBalance + bip47AddressesBalance + privatekeyBalance;
+        }
+        async getLockedBalance(zone, blockNumber, useCachedOutpoints = false) {
+            const bip44externalBalance = await this.externalBip44.getLockedBalance(zone, blockNumber, useCachedOutpoints);
+            const bip44changeBalance = await this.changeBip44.getLockedBalance(zone, blockNumber, useCachedOutpoints);
+            let bip47AddressesBalance = BigInt(0);
+            for (const pc of this.paymentChannels.values()) {
+                bip47AddressesBalance += await pc.selfWallet.getLockedBalance(zone);
+            }
+            const privatekeyBalance = await this.privatekeyWallet.getLockedBalance(zone, blockNumber, useCachedOutpoints);
+            return bip44externalBalance + bip44changeBalance + bip47AddressesBalance + privatekeyBalance;
+        }
+        async getSpendableBalance(zone, blockNumber, useCachedOutpoints = false) {
+            const bip44externalBalance = await this.externalBip44.getSpendableBalance(zone, blockNumber, useCachedOutpoints);
+            const bip44changeBalance = await this.changeBip44.getSpendableBalance(zone, blockNumber, useCachedOutpoints);
+            let bip47AddressesBalance = BigInt(0);
+            for (const pc of this.paymentChannels.values()) {
+                bip47AddressesBalance += await pc.selfWallet.getSpendableBalance(zone);
+            }
+            const privatekeyBalance = await this.privatekeyWallet.getSpendableBalance(zone, blockNumber, useCachedOutpoints);
             return bip44externalBalance + bip44changeBalance + bip47AddressesBalance + privatekeyBalance;
         }
     }
