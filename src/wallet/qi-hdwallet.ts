@@ -547,7 +547,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // 1. Check the wallet has enough balance in the originating zone to send the transaction
         const currentBlock = await this.provider.getBlock(toShard(originZone), 'latest')!;
-        const balance = await this.externalBip44.getSpendableBalance(originZone, currentBlock?.woHeader.number, true);
+        const balance = await this.getSpendableBalance(originZone, currentBlock?.woHeader.number, true);
         if (balance < amount) {
             throw new Error(
                 `Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qi`,
@@ -1545,6 +1545,44 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         }
 
         const privatekeyBalance = await this.privatekeyWallet.getTotalBalance(zone);
+        return bip44externalBalance + bip44changeBalance + bip47AddressesBalance + privatekeyBalance;
+    }
+
+    public async getLockedBalance(
+        zone: Zone,
+        blockNumber?: number,
+        useCachedOutpoints: boolean = false,
+    ): Promise<bigint> {
+        const bip44externalBalance = await this.externalBip44.getLockedBalance(zone, blockNumber, useCachedOutpoints);
+        const bip44changeBalance = await this.changeBip44.getLockedBalance(zone, blockNumber, useCachedOutpoints);
+        let bip47AddressesBalance = BigInt(0);
+        for (const pc of this.paymentChannels.values()) {
+            bip47AddressesBalance += await pc.selfWallet.getLockedBalance(zone);
+        }
+        const privatekeyBalance = await this.privatekeyWallet.getLockedBalance(zone, blockNumber, useCachedOutpoints);
+        return bip44externalBalance + bip44changeBalance + bip47AddressesBalance + privatekeyBalance;
+    }
+
+    public async getSpendableBalance(
+        zone: Zone,
+        blockNumber?: number,
+        useCachedOutpoints: boolean = false,
+    ): Promise<bigint> {
+        const bip44externalBalance = await this.externalBip44.getSpendableBalance(
+            zone,
+            blockNumber,
+            useCachedOutpoints,
+        );
+        const bip44changeBalance = await this.changeBip44.getSpendableBalance(zone, blockNumber, useCachedOutpoints);
+        let bip47AddressesBalance = BigInt(0);
+        for (const pc of this.paymentChannels.values()) {
+            bip47AddressesBalance += await pc.selfWallet.getSpendableBalance(zone);
+        }
+        const privatekeyBalance = await this.privatekeyWallet.getSpendableBalance(
+            zone,
+            blockNumber,
+            useCachedOutpoints,
+        );
         return bip44externalBalance + bip44changeBalance + bip47AddressesBalance + privatekeyBalance;
     }
 }
