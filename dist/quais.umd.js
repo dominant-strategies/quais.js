@@ -30,7 +30,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @ignore
      */
-    const version = '1.0.0-alpha.39';
+    const version = '1.0.0-alpha.41';
 
     /**
      * Property helper functions.
