@@ -20289,6 +20289,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                         lock: new Uint8Array(),
                     })),
                 },
+                data: new Uint8Array(),
             };
             if (this.signature && includeSignature) {
                 protoTx.signature = getBytes(this.signature);
@@ -25193,6 +25194,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      * @module wallet/utils
      */
     /**
+     * Interface representing information about a neutered address.
+     */
+    const HARDENED_OFFSET$1 = 2 ** 31;
+    /**
+     * Constant to represent the maximum attempt to derive an address.
+     */
+    const MAX_ADDRESS_DERIVATION_ATTEMPTS$1 = 10000000;
+    /**
      * Converts a hex string to a Uint8Array. If the string does not start with '0x', it adds it.
      *
      * @param {string} hexString - The hex string to convert.
@@ -25314,6 +25323,29 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             result = '0' + result;
         }
         return result;
+    }
+    /**
+     * Validates if an address belongs to the specified zone and coin type.
+     *
+     * @remarks
+     * This function performs two validations:
+     *
+     * 1. Checks if the address belongs to the specified zone
+     * 2. Verifies if the address matches the expected ledger type (Qi or Quai) based on coin type
+     *
+     * @param {AllowedCoinType} coinType - The coin type to validate against (969 for Qi, other values for Quai)
+     * @param {string} address - The address to validate
+     * @param {Zone} zone - The zone to check the address against
+     * @returns {boolean} True if the address belongs to the specified zone and coin type, false otherwise
+     */
+    function isValidAddressForZone(coinType, address, zone) {
+        const addressZone = getZoneForAddress(address);
+        if (!addressZone) {
+            return false;
+        }
+        const isCorrectShard = addressZone === zone;
+        const isCorrectLedger = coinType === 969 ? isQiAddress(address) : !isQiAddress(address);
+        return isCorrectShard && isCorrectLedger;
     }
 
     /**
@@ -26214,11 +26246,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         }
     }
 
-    const HARDENED_OFFSET = 2 ** 31;
-    /**
-     * Constant to represent the maximum attempt to derive an address.
-     */
-    const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
     const _guard = {};
     /**
      * Abstract class representing a Hierarchical Deterministic (HD) wallet.
@@ -26226,12 +26253,12 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     class AbstractHDWallet {
         static _version = 1;
         static _coinType;
-        // Map of addresses to address info
-        _addresses = new Map();
         /**
          * Root node of the HD wallet.
          */
         _root;
+        // Map of addresses to address info
+        _addresses = new Map();
         provider;
         /**
          * @param {HDNodeWallet} root - The root node of the HD wallet.
@@ -26258,69 +26285,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         coinType() {
             return this.constructor._coinType;
-        }
-        /**
-         * Returns the extended public key of the root node of the HD wallet.
-         *
-         * @returns {string} The extended public key.
-         */
-        get xPub() {
-            return this._root.extendedKey;
-        }
-        // helper method to check if an address is valid for a given zone
-        isValidAddressForZone(address, zone) {
-            const addressZone = getZoneForAddress(address);
-            if (!addressZone) {
-                return false;
-            }
-            const isCorrectShard = addressZone === zone;
-            const isCorrectLedger = this.coinType() === 969 ? isQiAddress(address) : !isQiAddress(address);
-            return isCorrectShard && isCorrectLedger;
-        }
-        /**
-         * Gets the BIP44 change node for a given account and change flag.
-         *
-         * @param {number} account - The account number.
-         * @param {boolean} change - Whether to get the change node.
-         * @returns {HDNodeWallet} The change node.
-         */
-        _getChangeNode(account, change) {
-            const changeIndex = change ? 1 : 0;
-            return this._root.deriveChild(account + HARDENED_OFFSET).deriveChild(changeIndex);
-        }
-        /**
-         * Gets the BIP44 address node for a given account, change flag, and address index.
-         *
-         * @param {number} account - The account number.
-         * @param {boolean} change - Whether to get the change node.
-         * @param {number} addressIndex - The address index.
-         * @returns {HDNodeWallet} The address node.
-         */
-        _getAddressNode(account, change, addressIndex) {
-            return this._getChangeNode(account, change).deriveChild(addressIndex);
-        }
-        /**
-         * Derives the next valid address node for a specified account, starting index, and zone. The method ensures the
-         * derived address belongs to the correct shard and ledger, as defined by the Quai blockchain specifications.
-         *
-         * @param {number} account - The account number from which to derive the address node.
-         * @param {number} startingIndex - The index from which to start deriving addresses.
-         * @param {Zone} zone - The zone (shard) for which the address should be valid.
-         * @param {boolean} [isChange=false] - Whether to derive a change address. Default is `false`
-         * @returns {HDNodeWallet} - The derived HD node wallet containing a valid address for the specified zone.
-         * @throws {Error} If a valid address for the specified zone cannot be derived within the allowed attempts.
-         */
-        deriveNextAddressNode(account, startingIndex, zone, isChange = false) {
-            const changeNode = this._getChangeNode(account, isChange);
-            let addrIndex = startingIndex;
-            let addressNode;
-            for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
-                addressNode = changeNode.deriveChild(addrIndex++);
-                if (this.isValidAddressForZone(addressNode.address, zone)) {
-                    return addressNode;
-                }
-            }
-            throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
         }
         /**
          * Creates an instance of the HD wallet.
@@ -26493,6 +26457,96 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
 
     /**
+     * Constant to represent the hardened offset for BIP44 derivation.
+     */
+    const HARDENED_OFFSET = 2 ** 31;
+    /**
+     * Constant to represent the maximum attempt to derive an address.
+     */
+    const MAX_ADDRESS_DERIVATION_ATTEMPTS = 10000000;
+    class BIP44 {
+        _coinType;
+        /**
+         * Root node of the HD wallet.
+         */
+        _root;
+        constructor(root, coinType) {
+            this._root = root;
+            this._coinType = coinType;
+        }
+        /**
+         * Returns the coin type of the wallet.
+         *
+         * @returns {AllowedCoinType} The coin type.
+         */
+        coinType() {
+            return this._coinType;
+        }
+        /**
+         * Returns the extended public key of the root node of the HD wallet.
+         *
+         * @returns {string} The extended public key.
+         */
+        get xPub() {
+            return this._root.extendedKey;
+        }
+        /**
+         * Returns the parent path for a given coin type.
+         */
+        parentPath() {
+            if (!this._coinType) {
+                throw new Error('Coin type not set');
+            }
+            return `m/44'/${this._coinType}'`;
+        }
+        /**
+         * Gets the BIP44 change node for a given account and change flag.
+         *
+         * @param {number} account - The account number.
+         * @param {boolean} change - Whether to get the change node.
+         * @returns {HDNodeWallet} The change node.
+         */
+        _getChangeNode(account, change) {
+            const changeIndex = change ? 1 : 0;
+            return this._root.deriveChild(account + HARDENED_OFFSET).deriveChild(changeIndex);
+        }
+        /**
+         * Gets the BIP44 address node for a given account, change flag, and address index.
+         *
+         * @param {number} account - The account number.
+         * @param {boolean} change - Whether to get the change node.
+         * @param {number} addressIndex - The address index.
+         * @returns {HDNodeWallet} The address node.
+         */
+        _getAddressNode(account, change, addressIndex) {
+            return this._getChangeNode(account, change).deriveChild(addressIndex);
+        }
+        /**
+         * Derives the next valid address node for a specified account, starting index, and zone. The method ensures the
+         * derived address belongs to the correct shard and ledger, as defined by the Quai blockchain specifications.
+         *
+         * @param {number} account - The account number from which to derive the address node.
+         * @param {number} startingIndex - The index from which to start deriving addresses.
+         * @param {Zone} zone - The zone (shard) for which the address should be valid.
+         * @param {boolean} [isChange=false] - Whether to derive a change address. Default is `false`
+         * @returns {HDNodeWallet} - The derived HD node wallet containing a valid address for the specified zone.
+         * @throws {Error} If a valid address for the specified zone cannot be derived within the allowed attempts.
+         */
+        deriveNextAddressNode(coinType, account, startingIndex, zone, isChange = false) {
+            const changeNode = this._getChangeNode(account, isChange);
+            let addrIndex = startingIndex;
+            let addressNode;
+            for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
+                addressNode = changeNode.deriveChild(addrIndex++);
+                if (isValidAddressForZone(this.coinType(), addressNode.address, zone)) {
+                    return addressNode;
+                }
+            }
+            throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
+        }
+    }
+
+    /**
      * The Quai HD wallet is a BIP44-compliant hierarchical deterministic wallet used for managing a set of addresses in the
      * Quai ledger. This is the easiest way to manage the interaction of managing accounts and addresses on the Quai
      * network, however, if your use case requires a single address Quai address, you can use the {@link Wallet} class.
@@ -26536,6 +26590,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @static
          */
         static _coinType = 994;
+        bip44;
         /**
          * Create a QuaiHDWallet instance.
          *
@@ -26544,6 +26599,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         constructor(guard, root, provider) {
             super(guard, root, provider);
+            this.bip44 = new BIP44(root, QuaiHDWallet._coinType);
         }
         /**
          * Sign a transaction.
@@ -26604,7 +26660,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             };
         }
         validateAddressDerivation(info) {
-            const addressNode = this._getAddressNode(info.account, false, info.index);
+            const addressNode = this.bip44._getAddressNode(info.account, false, info.index);
             // Validate derived address matches
             if (addressNode.address !== info.address) {
                 throw new Error(`Address mismatch: derived ${addressNode.address} but got ${info.address}`);
@@ -26695,7 +26751,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 }
             });
             // derive the address node and validate the zone
-            const addressNode = this._getAddressNode(account, false, addressIndex);
+            const addressNode = this.bip44._getAddressNode(account, false, addressIndex);
             const zone = getZoneForAddress(addressNode.address);
             if (!zone) {
                 throw new Error(`Failed to derive a valid address zone for the index ${addressIndex}`);
@@ -26736,8 +26792,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         _getNextAddress(accountIndex, zone) {
             this.validateZone(zone);
+            //! TODO: revise this
             const lastIndex = this._findLastUsedIndex(Array.from(this._addresses.values()), accountIndex, zone);
-            const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
+            // const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
+            const addressNode = this.bip44.deriveNextAddressNode(QuaiHDWallet._coinType, accountIndex, lastIndex + 1, zone, false);
             return this._createAndStoreNeuteredAddressInfo(addressNode, accountIndex, zone);
         }
         /**
@@ -26806,7 +26864,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (!addressInfo) {
                 throw new Error(`Address ${addr} is not known to this wallet`);
             }
-            return this._getAddressNode(addressInfo.account, false, addressInfo.index);
+            return this.bip44._getAddressNode(addressInfo.account, false, addressInfo.index);
         }
         /**
          * Gets the addresses for a given zone.
@@ -27828,6 +27886,898 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
 
     /**
+     * The ConversionSelector class provides a coin selection algorithm that selects the fewest UTXOs required to meet the
+     * target amount. This algorithm is useful for minimizing the size of the transaction and the fees associated with it.
+     *
+     * This class is a modified version of {@link FewestCoinSelector | **FewestCoinSelector** } and implements the
+     * {@link FewestCoinSelector.createSpendOutputs | **createSpendOutputs** } method to provide the actual coin selection
+     * logic.
+     *
+     * @category Transaction
+     */
+    class ConversionCoinSelector extends FewestCoinSelector {
+        /**
+         * Creates spend outputs based on the target amount and input denominations.
+         *
+         * @param {bigint} amount - The target amount to spend.
+         * @returns {UTXO[]} The spend outputs.
+         */
+        createSpendOutputs(amount) {
+            // Spend outpoints are not limited to max input denomination
+            const spendDenominations = denominate(amount);
+            return spendDenominations.map((denominationValue) => {
+                const utxo = new UTXO();
+                utxo.denomination = denominations.indexOf(denominationValue);
+                return utxo;
+            });
+        }
+    }
+
+    class AbstractQiWallet {
+        provider;
+        // coin type for bip44 derivation
+        coinType = 969;
+        // map of address to address info
+        addresses = new Map();
+        // last derivation indexes for each zone and account
+        lastDerivationIndexes = new Map();
+        // map of address to outpoint info
+        availableOutpoints = new Map();
+        gapLimit = 5;
+        constructor(gapLimit) {
+            this.gapLimit = gapLimit;
+        }
+        saveQiAddressInfo(addressInfo) {
+            this.addresses.set(addressInfo.address, addressInfo);
+        }
+        /**
+         * Gets the outpoints for the specified zone.
+         *
+         * @param {Zone} zone - The zone.
+         * @returns {OutpointInfo[]} The outpoints for the zone.
+         */
+        getOutpoints(zone) {
+            this.validateZone(zone);
+            return Array.from(this.availableOutpoints.values()).filter((outpoint) => outpoint.zone === zone);
+        }
+        /**
+         * Saves the last used derivation index for a specific zone and account.
+         *
+         * @param {Zone} zone - The zone for the derivation index
+         * @param {number} account - The account number
+         * @param {number} index - The derivation index to save
+         */
+        saveLastDerivationIndex(zone, account, index) {
+            if (!this.lastDerivationIndexes.has(zone)) {
+                this.lastDerivationIndexes.set(zone, new Map());
+            }
+            this.lastDerivationIndexes.get(zone).set(account, index);
+        }
+        /**
+         * Gets the last used derivation index for a specific zone and account.
+         *
+         * @param {Zone} zone - The zone for the derivation index
+         * @param {number} account - The account number
+         * @returns {number} The last derivation index that was used, or -1 if none exists
+         */
+        getLastDerivationIndex(zone, account) {
+            return this.lastDerivationIndexes.get(zone)?.get(account) ?? -1;
+        }
+        /**
+         * Deletes an address and its associated info from the wallet.
+         *
+         * @param {string} address - The address to delete
+         */
+        deleteAddress(address) {
+            this.addresses.delete(address);
+        }
+        /**
+         * Validates the zone.
+         *
+         * @param {Zone} zone - The zone.
+         * @throws {Error} If the zone is invalid.
+         */
+        validateZone(zone) {
+            if (!Object.values(exports.Zone).includes(zone)) {
+                throw new Error(`Invalid zone: ${zone}`);
+            }
+        }
+        /**
+         * Sets the provider for the wallet.
+         *
+         * @param {Provider} provider - The provider to use for blockchain interactions
+         */
+        setProvider(provider) {
+            this.provider = provider;
+        }
+        /**
+         * Validates that a provider is set and available.
+         *
+         * @throws {Error} If no provider is set
+         */
+        requireProvider() {
+            if (!this.provider) {
+                throw new Error('Provider is required but not set');
+            }
+        }
+        /**
+         * Validates that an address exists in the wallet and optionally belongs to a specific account.
+         *
+         * @param {string} address - The address to validate
+         * @param {number} [account] - Optional account number to validate against
+         * @throws {Error} If address is not found or does not match the specified account
+         */
+        validateAddressAndAccount(address, account) {
+            const addressInfo = this.getAddressInfo(address);
+            if (!addressInfo) {
+                throw new Error(`Address ${address} not found in wallet`);
+            }
+            if (account && account !== addressInfo.account) {
+                throw new Error(`Address ${address} does not match account ${account}`);
+            }
+        }
+        /**
+         * Validates an outpoint's data structure and contents.
+         *
+         * @param {OutpointInfo} outpoint - The outpoint information to validate
+         * @throws {Error} If the outpoint data is invalid
+         */
+        validateOutpointInfo(outpoint) {
+            // validate zone
+            this.validateZone(outpoint.zone);
+            // validate address and account
+            this.validateAddressAndAccount(outpoint.address, outpoint.account);
+            // validate Outpoint
+            if (outpoint.outpoint.txhash == null ||
+                outpoint.outpoint.index == null ||
+                outpoint.outpoint.denomination == null) {
+                throw new Error(`Invalid Outpoint: ${JSON.stringify(outpoint)} `);
+            }
+        }
+        /**
+         * Imports and validates a list of outpoints into the wallet.
+         *
+         * @param {OutpointInfo[]} outpointInfos - Array of outpoint information to import
+         * @throws {Error} If any outpoint fails validation
+         */
+        importOutpoints(outpointInfos) {
+            for (const outpointInfo of outpointInfos) {
+                this.validateOutpointInfo(outpointInfo);
+                const key = `${outpointInfo.outpoint.txhash}:${outpointInfo.outpoint.index}`;
+                this.availableOutpoints.set(key, outpointInfo);
+            }
+            // mark each address as used
+            for (const outpointInfo of outpointInfos) {
+                const address = outpointInfo.address;
+                const addressInfo = this.getAddressInfo(address);
+                if (addressInfo) {
+                    addressInfo.status = exports.AddressStatus.USED;
+                }
+            }
+        }
+        /**
+         * Exports all addresses from the wallet.
+         *
+         * @returns {QiAddressInfo[]} Array of all address information stored in the wallet
+         */
+        exportAllAddresses() {
+            return Array.from(this.addresses.values());
+        }
+        /**
+         * Exports all available outpoints from the wallet.
+         *
+         * @returns {OutpointInfo[]} Array of all outpoint information stored in the wallet
+         */
+        exportOutpoints() {
+            return Array.from(this.availableOutpoints.values());
+        }
+        /**
+         * Imports address information into the wallet.
+         *
+         * @param {QiAddressInfo} addressInfo - The address information to import
+         */
+        importAddressInfo(addressInfo) {
+            // Save the address info
+            this.saveQiAddressInfo(addressInfo);
+            // Update last derivation index if needed
+            const currentLastIndex = this.getLastDerivationIndex(addressInfo.zone, addressInfo.account);
+            if (addressInfo.index > currentLastIndex) {
+                this.saveLastDerivationIndex(addressInfo.zone, addressInfo.account, addressInfo.index);
+            }
+        }
+        /**
+         * Gets the total balance (spendable + locked) for a specific zone.
+         *
+         * @param {Zone} zone - The zone to get the balance for
+         * @param {number} [blockNumber] - Optional block number for balance calculation
+         * @param {boolean} [useCachedOutpoints=false] - Whether to use cached outpoints instead of network query. Default
+         *   is `false`
+         * @returns {Promise<bigint>} The total balance in the zone
+         */
+        async getTotalBalance(zone, blockNumber, useCachedOutpoints = false) {
+            const [spendable, locked] = await Promise.all([
+                this.getSpendableBalance(zone, blockNumber, useCachedOutpoints),
+                this.getLockedBalance(zone, blockNumber, useCachedOutpoints),
+            ]);
+            return spendable + locked;
+        }
+        /**
+         * Gets the locked balance for a specific zone.
+         *
+         * @param {Zone} zone - The zone to get the locked balance for
+         * @param {number} [blockNumber] - Optional block number for balance calculation
+         * @param {boolean} [useCachedOutpoints=false] - Whether to use cached outpoints instead of network query. Default
+         *   is `false`
+         * @returns {Promise<bigint>} The locked balance in the zone
+         */
+        async getLockedBalance(zone, blockNumber, useCachedOutpoints = false) {
+            this.requireProvider();
+            this.validateZone(zone);
+            if (useCachedOutpoints) {
+                const currentBlock = blockNumber ?? (await this.provider.getBlockNumber(toShard(zone)));
+                return this.calculateCachedLockedBalance(zone, currentBlock);
+            }
+            return await this.fetchNetworkLockedBalance(zone);
+        }
+        /**
+         * Calculates the locked balance from cached outpoints.
+         *
+         * @param {Zone} zone - The zone to calculate the balance for
+         * @param {number} currentBlock - The current block number
+         * @returns {bigint} The calculated locked balance
+         */
+        calculateCachedLockedBalance(zone, currentBlock) {
+            return this.getOutpoints(zone)
+                .filter((utxo) => utxo.outpoint.lock && utxo.outpoint.lock >= currentBlock)
+                .reduce((sum, utxo) => sum + denominations[utxo.outpoint.denomination], BigInt(0));
+        }
+        /**
+         * Fetches the locked balance from the network.
+         *
+         * @param {Zone} zone - The zone to fetch the balance for
+         * @returns {Promise<bigint>} The locked balance from the network
+         */
+        async fetchNetworkLockedBalance(zone) {
+            const balancePromises = this.getAddressesInZone(zone).map((addr) => this.provider.getLockedBalance(addr.address));
+            const balances = await Promise.all(balancePromises);
+            return balances.reduce((sum, balance) => sum + (balance ?? BigInt(0)), BigInt(0));
+        }
+        /**
+         * Gets the spendable balance for a specific zone.
+         *
+         * @param {Zone} zone - The zone to get the spendable balance for
+         * @param {number} [blockNumber] - Optional block number for balance calculation
+         * @param {boolean} [useCachedOutpoints=false] - Whether to use cached outpoints instead of network query. Default
+         *   is `false`
+         * @returns {Promise<bigint>} The spendable balance in the zone
+         */
+        async getSpendableBalance(zone, blockNumber, useCachedOutpoints = false) {
+            this.requireProvider();
+            this.validateZone(zone);
+            if (useCachedOutpoints) {
+                const currentBlock = blockNumber ?? (await this.provider.getBlockNumber(toShard(zone)));
+                return this.calculateCachedSpendableBalance(zone, currentBlock);
+            }
+            return await this.fetchNetworkSpendableBalance(zone);
+        }
+        /**
+         * Calculates the spendable balance from cached outpoints.
+         *
+         * @param {Zone} zone - The zone to calculate the balance for
+         * @param {number} currentBlock - The current block number
+         * @returns {bigint} The calculated spendable balance
+         */
+        calculateCachedSpendableBalance(zone, currentBlock) {
+            const outpoints = this.getOutpoints(zone);
+            return outpoints
+                .filter((utxo) => utxo.outpoint.lock === 0 || currentBlock >= utxo.outpoint.lock)
+                .reduce((sum, utxo) => sum + denominations[utxo.outpoint.denomination], BigInt(0));
+        }
+        /**
+         * Fetches the spendable balance from the network.
+         *
+         * @param {Zone} zone - The zone to fetch the balance for
+         * @returns {Promise<bigint>} The spendable balance from the network
+         */
+        async fetchNetworkSpendableBalance(zone) {
+            const balancePromises = this.getAddressesInZone(zone).map((addr) => this.provider.getBalance(addr.address, 'latest'));
+            const balances = await Promise.all(balancePromises);
+            return balances.reduce((sum, balance) => sum + (balance ?? BigInt(0)), BigInt(0));
+        }
+        /**
+         * Gets all addresses that belong to a specific zone.
+         *
+         * @param {Zone} zone - The zone to get addresses for
+         * @returns {QiAddressInfo[]} Array of address information in the zone
+         */
+        getAddressesInZone(zone) {
+            return Array.from(this.addresses.values()).filter((addr) => addr.zone === zone);
+        }
+        getAddressesForAccount(account) {
+            return Array.from(this.addresses.values()).filter((addr) => addr.account === account);
+        }
+        getAddressInfo(address) {
+            return this.addresses.get(address) ?? null;
+        }
+        setAddresses(addresses) {
+            this.addresses.clear();
+            for (const address of addresses) {
+                this.addresses.set(address.address, address);
+            }
+        }
+        /**
+         * Scans the blockchain for addresses and their outpoints related to this wallet in a specific zone. This performs a
+         * full scan, which may reset the wallet state for the given zone.
+         *
+         * @param {Zone} zone - The zone to scan
+         * @param {number} [account=0] - The account to scan. Default is `0`
+         * @returns {Promise<void>} A promise that resolves when the scan is complete
+         */
+        async scan(zone, account = 0) {
+            this.validateZone(zone);
+            // Reset state for this zone before scanning
+            this.resetWalletState(zone);
+            // Perform the actual scan
+            await this._scanAddresses(zone, account, true);
+        }
+        /**
+         * Synchronizes the wallet's state with the blockchain for addresses in a specific zone. Unlike scan, this does not
+         * reset wallet state but incrementally updates it.
+         *
+         * @param {Zone} zone - The zone to synchronize
+         * @param {number} [account=0] - The account to synchronize. Default is `0`
+         * @param {OutpointsCallback} [onOutpointsCreated] - Optional callback for created outpoints
+         * @param {OutpointsCallback} [onOutpointsDeleted] - Optional callback for deleted outpoints
+         * @returns {Promise<void>} A promise that resolves when the sync is complete
+         */
+        async sync(zone, account = 0, onOutpointsCreated, onOutpointsDeleted) {
+            this.validateZone(zone);
+            await this._scanAddresses(zone, account, false, onOutpointsCreated, onOutpointsDeleted);
+        }
+        /**
+         * Resets the wallet state for a specific zone by clearing outpoints and resetting address statuses. This resets all
+         * address status to UNKNOWN and sets lastSyncedBlock to null for addresses in the zone.
+         *
+         * @param {Zone} zone - The zone to reset state for
+         * @protected
+         */
+        resetWalletState(zone) {
+            // Clear outpoints for the specified zone
+            const outpointKeysToDelete = [];
+            this.availableOutpoints.forEach((outpointInfo, key) => {
+                if (outpointInfo.zone === zone) {
+                    outpointKeysToDelete.push(key);
+                }
+            });
+            for (const key of outpointKeysToDelete) {
+                this.availableOutpoints.delete(key);
+            }
+            // Reset status and lastSyncedBlock for all addresses in this zone
+            const addressesInZone = this.getAddressesInZone(zone);
+            for (const address of addressesInZone) {
+                // Create updated address with reset status and lastSyncedBlock
+                const updatedAddress = {
+                    ...address,
+                    status: exports.AddressStatus.UNKNOWN,
+                    lastSyncedBlock: null,
+                };
+                // Update in the addresses map
+                this.addresses.set(address.address, updatedAddress);
+            }
+        }
+        /**
+         * Protected method that scans addresses in the wallet for the specified zone and account. This implementation
+         * provides a generic scanning approach for a single derivation path.
+         *
+         * @param {Zone} zone - The zone to scan
+         * @param {number} account - The account number
+         * @param {boolean} resetState - Whether this is a full scan (true) or an incremental sync (false)
+         * @param {OutpointsCallback} [onOutpointsCreated] - Optional callback for created outpoints
+         * @param {OutpointsCallback} [onOutpointsDeleted] - Optional callback for deleted outpoints
+         * @returns {Promise<void>} A promise that resolves when the scan is complete
+         * @protected
+         */
+        async _scanAddresses(zone, account, resetState, onOutpointsCreated, onOutpointsDeleted) {
+            this.requireProvider();
+            // Get the current block information
+            const currentBlock = await this.getCurrentBlock(zone);
+            // Get addresses for this zone and account
+            const zoneAddresses = this.getAddressesInZone(zone).filter((addr) => addr.account === account);
+            // Separate previously synced addresses from unsynced addresses
+            const syncedAddresses = [];
+            const unsyncedAddresses = [];
+            for (const addr of zoneAddresses) {
+                if (addr.lastSyncedBlock !== null && !resetState) {
+                    syncedAddresses.push(addr);
+                }
+                else {
+                    unsyncedAddresses.push(addr);
+                }
+            }
+            // Track created and deleted outpoints for callbacks
+            const createdOutpoints = {};
+            const deletedOutpoints = {};
+            // Process previously synced addresses - get outpoint deltas
+            if (syncedAddresses.length > 0) {
+                await this.processSyncedAddresses(syncedAddresses, currentBlock, createdOutpoints, deletedOutpoints);
+            }
+            // Process unsynced addresses - check if they've been used
+            await this.processUnsyncedAddresses(unsyncedAddresses, currentBlock, createdOutpoints);
+            // Generate new addresses up to gap limit if needed
+            const consecutiveUnusedCount = this.countConsecutiveUnusedAddresses(zoneAddresses);
+            await this.generateAddressesToGapLimit(zone, account, currentBlock, consecutiveUnusedCount, createdOutpoints);
+            // Execute callbacks for created and deleted outpoints
+            await this.executeOutpointCallbacks(createdOutpoints, deletedOutpoints, onOutpointsCreated, onOutpointsDeleted);
+        }
+        /**
+         * Gets the current block information for a zone.
+         *
+         * @private
+         * @param {Zone} zone - The zone to get the current block for
+         * @returns {Promise<BlockReference>} The current block hash and number
+         */
+        async getCurrentBlock(zone) {
+            const block = await this.provider.getBlock(toShard(zone), 'latest');
+            if (!block) {
+                throw new Error(`Failed to get latest block for zone ${zone}`);
+            }
+            return {
+                hash: block.hash,
+                number: block.woHeader.number,
+            };
+        }
+        /**
+         * Processes previously synced addresses to check for changes since last sync.
+         *
+         * @private
+         * @param {QiAddressInfo[]} syncedAddresses - Addresses that have been previously synced
+         * @param {BlockReference} currentBlock - Current block information
+         * @param {OutpointDeltaResponse} createdOutpoints - Map to track created outpoints
+         * @param {OutpointDeltaResponse} deletedOutpoints - Map to track deleted outpoints
+         * @returns {Promise<void>}
+         */
+        async processSyncedAddresses(syncedAddresses, currentBlock, createdOutpoints, deletedOutpoints) {
+            // Group addresses by last synced block hash to batch queries
+            const addressesByBlockHash = new Map();
+            for (const addr of syncedAddresses) {
+                if (!addr.lastSyncedBlock?.hash)
+                    continue;
+                const blockHash = addr.lastSyncedBlock.hash;
+                if (!addressesByBlockHash.has(blockHash)) {
+                    addressesByBlockHash.set(blockHash, []);
+                }
+                addressesByBlockHash.get(blockHash).push(addr.address);
+            }
+            // Process each batch of addresses with the same last synced block
+            for (const [blockHash, addresses] of addressesByBlockHash.entries()) {
+                // Get outpoint deltas for this batch
+                const deltas = await this.provider.getOutpointDeltas(addresses, blockHash);
+                // Process each address's deltas
+                for (const [address, delta] of Object.entries(deltas)) {
+                    const addressInfo = this.addresses.get(address);
+                    if (!addressInfo)
+                        continue;
+                    // Update address status and last synced block
+                    const updatedAddressInfo = {
+                        ...addressInfo,
+                        lastSyncedBlock: {
+                            hash: currentBlock.hash,
+                            number: currentBlock.number,
+                        },
+                    };
+                    // Handle created outpoints
+                    if (delta.created && delta.created.length > 0) {
+                        // Import the new outpoints
+                        this.importOutpoints(delta.created.map((outpoint) => ({
+                            outpoint,
+                            address,
+                            zone: addressInfo.zone,
+                            account: addressInfo.account,
+                        })));
+                        // Track for callback
+                        createdOutpoints[address] = delta.created;
+                        // Set address as used
+                        updatedAddressInfo.status = exports.AddressStatus.USED;
+                    }
+                    // Handle deleted outpoints
+                    if (delta.deleted && delta.deleted.length > 0) {
+                        // Remove outpoints from our mapping
+                        for (const outpoint of delta.deleted) {
+                            const key = `${outpoint.txhash}:${outpoint.index}`;
+                            this.availableOutpoints.delete(key);
+                        }
+                        // Track for callback
+                        deletedOutpoints[address] = delta.deleted;
+                    }
+                    // Update address in wallet
+                    this.addresses.set(address, updatedAddressInfo);
+                }
+            }
+        }
+        /**
+         * Processes unsynced addresses to check if they have been used.
+         *
+         * @private
+         * @param {QiAddressInfo[]} unsyncedAddresses - Addresses that have not been previously synced
+         * @param {BlockReference} currentBlock - Current block information
+         * @param {OutpointDeltaResponse} createdOutpoints - Map to track created outpoints
+         * @returns {Promise<void>}
+         */
+        async processUnsyncedAddresses(unsyncedAddresses, currentBlock, createdOutpoints) {
+            const batchSize = 10; // Process in batches to avoid overwhelming the provider
+            for (let i = 0; i < unsyncedAddresses.length; i += batchSize) {
+                const batch = unsyncedAddresses.slice(i, i + batchSize);
+                const checkPromises = batch.map((addr) => this.checkAddressUse(addr.address));
+                const results = await Promise.all(checkPromises);
+                for (let j = 0; j < batch.length; j++) {
+                    const addr = batch[j];
+                    const { isUsed, outpoints } = results[j];
+                    // Update address status
+                    const updatedAddr = {
+                        ...addr,
+                        status: isUsed ? exports.AddressStatus.USED : exports.AddressStatus.UNUSED,
+                        lastSyncedBlock: {
+                            hash: currentBlock.hash,
+                            number: currentBlock.number,
+                        },
+                    };
+                    // Import outpoints if found
+                    if (outpoints.length > 0) {
+                        this.importOutpoints(outpoints.map((outpoint) => ({
+                            outpoint,
+                            address: addr.address,
+                            zone: addr.zone,
+                            account: addr.account,
+                        })));
+                        // Track for callback
+                        createdOutpoints[addr.address] = outpoints;
+                    }
+                    // Update address in wallet
+                    this.addresses.set(addr.address, updatedAddr);
+                }
+                // Yield to event loop to avoid blocking
+                await new Promise((resolve) => setTimeout(resolve, 0));
+            }
+        }
+        /**
+         * Counts the number of consecutive unused addresses in the provided list.
+         *
+         * @private
+         * @param {QiAddressInfo[]} addresses - The addresses to check
+         * @returns {number} The count of consecutive unused addresses at the end of the list
+         */
+        countConsecutiveUnusedAddresses(addresses) {
+            let count = 0;
+            // Sort by index in ascending order to check oldest to newest
+            const sortedAddresses = [...addresses].sort((a, b) => a.index - b.index);
+            // Start from the end to count consecutive unused addresses in reverse
+            for (let i = sortedAddresses.length - 1; i >= 0; i--) {
+                if (sortedAddresses[i].status === exports.AddressStatus.UNUSED) {
+                    count++;
+                }
+                else {
+                    break;
+                }
+            }
+            return count;
+        }
+        /**
+         * Generates new addresses up to the gap limit.
+         *
+         * @private
+         * @param {Zone} zone - The zone to generate addresses for
+         * @param {number} account - The account to generate addresses for
+         * @param {BlockReference} currentBlock - Current block information
+         * @param {number} currentUnusedCount - Current count of consecutive unused addresses
+         * @param {OutpointDeltaResponse} createdOutpoints - Map to track created outpoints
+         * @returns {Promise<void>}
+         */
+        async generateAddressesToGapLimit(zone, account, currentBlock, currentUnusedCount, createdOutpoints) {
+            let consecutiveUnused = currentUnusedCount;
+            while (consecutiveUnused < this.gapLimit) {
+                // Generate new address
+                const newAddr = this.deriveNewAddress(zone, account);
+                // Check if it's being used
+                const { isUsed, outpoints } = await this.checkAddressUse(newAddr.address);
+                // Update status
+                newAddr.status = isUsed ? exports.AddressStatus.USED : exports.AddressStatus.UNUSED;
+                newAddr.lastSyncedBlock = {
+                    hash: currentBlock.hash,
+                    number: currentBlock.number,
+                };
+                // Import outpoints if found
+                if (outpoints.length > 0) {
+                    this.importOutpoints(outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: newAddr.address,
+                        zone: newAddr.zone,
+                        account: newAddr.account,
+                    })));
+                    // Track for callback
+                    createdOutpoints[newAddr.address] = outpoints;
+                }
+                // Save the new address
+                this.addresses.set(newAddr.address, newAddr);
+                // Update consecutive unused count
+                if (newAddr.status === exports.AddressStatus.USED) {
+                    consecutiveUnused = 0;
+                }
+                else {
+                    consecutiveUnused++;
+                }
+                // Stop if we've reached the gap limit
+                if (consecutiveUnused >= this.gapLimit) {
+                    break;
+                }
+                // Yield to event loop
+                await new Promise((resolve) => setTimeout(resolve, 0));
+            }
+        }
+        /**
+         * Executes the callback functions for created and deleted outpoints.
+         *
+         * @private
+         * @param {OutpointDeltaResponse} createdOutpoints - Map of created outpoints by address
+         * @param {OutpointDeltaResponse} deletedOutpoints - Map of deleted outpoints by address
+         * @param {OutpointsCallback} [onCreated] - Callback for created outpoints
+         * @param {OutpointsCallback} [onDeleted] - Callback for deleted outpoints
+         * @returns {Promise<void>}
+         */
+        async executeOutpointCallbacks(createdOutpoints, deletedOutpoints, onCreated, onDeleted) {
+            const executeCreated = async () => {
+                if (onCreated && Object.keys(createdOutpoints).length > 0) {
+                    try {
+                        await onCreated(createdOutpoints);
+                    }
+                    catch (error) {
+                        console.error(`Error in onOutpointsCreated callback: ${error.message}`);
+                    }
+                }
+            };
+            const executeDeleted = async () => {
+                if (onDeleted && Object.keys(deletedOutpoints).length > 0) {
+                    try {
+                        await onDeleted(deletedOutpoints);
+                    }
+                    catch (error) {
+                        console.error(`Error in onOutpointsDeleted callback: ${error.message}`);
+                    }
+                }
+            };
+            await Promise.all([executeCreated(), executeDeleted()]);
+        }
+        /**
+         * Optional address use checker function that can be implemented by child classes. This allows extending the address
+         * use detection beyond just checking for outpoints.
+         */
+        addressUseChecker;
+        /**
+         * Sets an external function to check if an address has been used. This extends the address use detection beyond
+         * just checking for outpoints.
+         *
+         * @param {(address: string) => Promise<boolean>} checker - Function that returns true if address is used
+         */
+        setAddressUseChecker(checker) {
+            this.addressUseChecker = checker;
+        }
+        /**
+         * Checks if an address has been used and retrieves its outpoints.
+         *
+         * @param {string} address - The address to check
+         * @returns {Promise<AddressUseResult>} Whether the address is used and its outpoints
+         * @protected
+         */
+        async checkAddressUse(address) {
+            try {
+                const outpoints = await this.provider.getOutpointsByAddress(address);
+                let isUsed = outpoints.length > 0;
+                // If no outpoints found but we have an external checker, use it
+                if (!isUsed && this.addressUseChecker) {
+                    isUsed = await this.addressUseChecker(address);
+                }
+                return { isUsed, outpoints };
+            }
+            catch (error) {
+                console.error(`Error checking address use for ${address}:`, error);
+                throw new Error(`Failed to check address use: ${error}`);
+            }
+        }
+    }
+
+    class Bip44QiWallet extends AbstractQiWallet {
+        bip44;
+        isChange;
+        static DEFAULT_GAP_LIMIT = 5;
+        constructor(bip44, isChange) {
+            super(Bip44QiWallet.DEFAULT_GAP_LIMIT);
+            this.bip44 = bip44;
+            this.isChange = isChange;
+        }
+        /**
+         * Derives a new BIP44 address for a specific zone and account.
+         *
+         * @remarks
+         * This method follows BIP-0044 derivation path m/44'/969'/account'/change/index where:
+         *
+         * - 969 is the coin type for Qi
+         * - Account is the account index
+         * - Change is 0 for external addresses and 1 for change addresses
+         * - Index is incremented for each new address
+         *
+         * @param {Zone} zone - The zone to derive the address for
+         * @param {number} [account=0] - The account index to use for derivation. Default is `0`
+         * @returns {QiAddressInfo} Information about the newly derived address including:
+         *
+         *   - The derived address
+         *   - Public key
+         *   - Derivation index
+         *   - Account number
+         *   - Zone
+         *   - Change flag
+         *   - Status and other metadata
+         */
+        deriveNewAddress(zone, account = 0) {
+            const index = this.getLastDerivationIndex(zone, account) + 1;
+            const hdNode = this.bip44.deriveNextAddressNode(this.coinType, account, index, zone, this.isChange);
+            const newIndex = hdNode.index;
+            this.saveLastDerivationIndex(zone, account, newIndex);
+            const qiAddressInfo = {
+                address: hdNode.address,
+                pubKey: hdNode.publicKey,
+                index: newIndex,
+                account,
+                zone,
+                change: this.isChange,
+                status: exports.AddressStatus.UNKNOWN,
+                derivationPath: this.isChange ? 'BIP44:change' : 'BIP44:external',
+                lastSyncedBlock: null,
+            };
+            this.saveQiAddressInfo(qiAddressInfo);
+            return qiAddressInfo;
+        }
+        /**
+         * Gets the HD node wallet for a specific account and address index.
+         *
+         * @remarks
+         * This method retrieves the HD node wallet following the BIP-0044 derivation path m/44'/969'/account'/change/index
+         * where:
+         *
+         * - 969 is the coin type for Qi
+         * - Account is the account index
+         * - Change is 0 for external addresses and 1 for change addresses
+         * - Index is the address index
+         *
+         * @param {number} account - The account index to derive the node from
+         * @param {number} index - The address index to derive the node from
+         * @returns {HDNodeWallet} The derived HD node wallet containing the private key and address
+         */
+        getAddressNode(account, index) {
+            return this.bip44._getAddressNode(account, this.isChange, index);
+        }
+        /**
+         * Adds a new address to the wallet at a specific account and index.
+         *
+         * @remarks
+         * This method adds a new BIP-0044 address to the wallet by deriving it at the specified account and index. It
+         * follows the derivation path m/44'/969'/account'/change/index where:
+         *
+         * - 969 is the coin type for Qi
+         * - Account is the account index
+         * - Change is 0 for external addresses and 1 for change addresses
+         * - Index is the address index
+         *
+         * The method validates that:
+         *
+         * 1. The index is not already in use for the account
+         * 2. The derived address has a valid zone
+         * 3. The address is a valid Qi address
+         *
+         * @param {number} account - The account index to derive the address from
+         * @param {number} addressIndex - The address index to derive the address at
+         * @returns {QiAddressInfo} Information about the newly added address including:
+         *
+         *   - The derived address
+         *   - Public key
+         *   - Derivation index
+         *   - Account number
+         *   - Zone
+         *   - Change flag
+         *   - Status and other metadata
+         *
+         * @throws {Error} If the address index is already in use
+         * @throws {Error} If unable to derive a valid zone for the address
+         * @throws {Error} If the derived address is not a valid Qi address
+         */
+        addAddress(account, addressIndex) {
+            const derivationPath = this.isChange ? 'BIP44:change' : 'BIP44:external';
+            // check if the index is already in use
+            if (this.getAddressesForAccount(account).some((addr) => addr.index === addressIndex)) {
+                throw new Error(`Address index ${addressIndex} already exists in wallet under account ${account} and derivation path ${derivationPath}`);
+            }
+            const addressNode = this.getAddressNode(account, addressIndex);
+            const zone = getZoneForAddress(addressNode.address);
+            if (!zone) {
+                throw new Error(`Failed to derive a Qi valid address zone for the index ${addressIndex}`);
+            }
+            if (!isQiAddress(addressNode.address)) {
+                throw new Error(`Address ${addressNode.address} is not a valid Qi address`);
+            }
+            const qiAddressInfo = {
+                address: addressNode.address,
+                pubKey: addressNode.publicKey,
+                index: addressIndex,
+                account,
+                zone,
+                change: this.isChange,
+                status: exports.AddressStatus.UNKNOWN,
+                derivationPath: derivationPath,
+                lastSyncedBlock: null,
+            };
+            this.saveQiAddressInfo(qiAddressInfo);
+            this.saveLastDerivationIndex(zone, account, addressIndex);
+            return qiAddressInfo;
+        }
+    }
+
+    class PrivatekeyQiWallet extends AbstractQiWallet {
+        static DEFAULT_GAP_LIMIT = 0;
+        constructor() {
+            super(PrivatekeyQiWallet.DEFAULT_GAP_LIMIT);
+        }
+        /**
+         * Imports a private key and adds it to the wallet.
+         *
+         * @param {string} privateKey - The private key to import (hex string)
+         * @returns {Promise<QiAddressInfo>} The address information for the imported key
+         * @throws {Error} If the private key or derived address is invalid
+         */
+        importPrivateKey(privateKey) {
+            if (!isHexString(privateKey, 32)) {
+                throw new Error(`Invalid private key format: must be 32-byte hex string (got ${privateKey})`);
+            }
+            const pubKey = SigningKey.computePublicKey(privateKey, true);
+            const address = computeAddress(pubKey);
+            // Validate address is for correct zone and ledger
+            const addressZone = getZoneForAddress(address);
+            if (!addressZone) {
+                throw new Error(`Private key does not correspond to a valid address for any zone (got ${address})`);
+            }
+            if (!isQiAddress(address)) {
+                throw new Error(`Private key does not correspond to a valid Qi address (got ${address})`);
+            }
+            if (this.addresses.has(address)) {
+                throw new Error(`Address ${address} already exists in wallet`);
+            }
+            const addressInfo = {
+                pubKey,
+                address,
+                account: 0,
+                index: -1,
+                change: false,
+                zone: addressZone,
+                status: exports.AddressStatus.UNUSED,
+                derivationPath: privateKey,
+                lastSyncedBlock: null,
+            };
+            this.addresses.set(address, addressInfo);
+            return addressInfo;
+        }
+        getImportedAddresses(zone) {
+            if (zone !== undefined) {
+                return [...this.addresses.values()].filter((info) => info.zone === zone);
+            }
+            return [...this.addresses.values()];
+        }
+        getAddressesForAccount(account) {
+            return [...this.addresses.values()].filter((info) => info.account === account);
+        }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        deriveNewAddress(zone, account = 0) {
+            throw new Error('PrivatekeyQiWallet does not support deriveNewAddress');
+        }
+    }
+
+    /**
      * Uint8Array comparison
      */
     function areUint8ArraysEqual(a, b) {
@@ -28323,30 +29273,231 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
     }
 
     /**
-     * The ConversionSelector class provides a coin selection algorithm that selects the fewest UTXOs required to meet the
-     * target amount. This algorithm is useful for minimizing the size of the transaction and the fees associated with it.
+     * Generates a BIP47 private payment code for the specified account. The payment code is created by combining the
+     * account's public key and chain code.
      *
-     * This class is a modified version of {@link FewestCoinSelector | **FewestCoinSelector** } and implements the
-     * {@link FewestCoinSelector.createSpendOutputs | **createSpendOutputs** } method to provide the actual coin selection
-     * logic.
-     *
-     * @category Transaction
+     * @param {HDNodeWallet} root - The root HD node to derive from
+     * @param {number} account - The account index for which to generate the private payment code.
+     * @returns {PaymentCodePrivate} The PaymentCodePrivate instance.
      */
-    class ConversionCoinSelector extends FewestCoinSelector {
+    function generatePaymentCodePrivate(root, account) {
+        const bip32 = BIP32Factory(ecc);
+        const accountNode = root.deriveChild(account + HARDENED_OFFSET$1);
+        // payment code array
+        const pc = new Uint8Array(80);
+        // set version + options
+        pc.set([1, 0]);
+        // set the public key
+        const pubKey = accountNode.publicKey;
+        pc.set(getBytes(pubKey), 2);
+        // set the chain code
+        const chainCode = accountNode.chainCode;
+        pc.set(getBytes(chainCode), 35);
+        const adapter = new HDNodeBIP32Adapter(accountNode);
+        return new PaymentCodePrivate(adapter, ecc, bip32, pc);
+    }
+    /**
+     * Derives a private key from a BIP47 payment code for a specific index and account. This function implements the BIP47
+     * specification for deriving private keys from payment codes.
+     *
+     * @param {HDNodeWallet} root - The root HD node to derive from
+     * @param {string} counterPartyPaymentCode - The Base58Check encoded payment code of the counterparty
+     * @param {number} index - The index to use for key derivation
+     * @param {number} account - The account index to use for derivation
+     * @returns {string} The derived private key as a hex string
+     * @throws {Error} If the payment code version is invalid
+     */
+    function getPrivateKeyFromPaymentCode(root, counterPartyPaymentCode, index, account) {
+        const bip32 = BIP32Factory(ecc);
+        const buf = bs58check.decode(counterPartyPaymentCode);
+        const version = buf[0];
+        if (version !== PC_VERSION)
+            throw new Error('Invalid payment code version');
+        const counterpartyPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
+        const paymentCodePrivate = generatePaymentCodePrivate(root, account);
+        const paymentPrivateKey = paymentCodePrivate.derivePaymentPrivateKey(counterpartyPCodePublic, index);
+        return hexlify(paymentPrivateKey);
+    }
+    class Bip47QiWalletSelf extends AbstractQiWallet {
+        root;
+        counterpartyPaymentCode;
+        static DEFAULT_GAP_LIMIT = 5;
+        constructor(root, counterpartyPaymentCode) {
+            super(Bip47QiWalletSelf.DEFAULT_GAP_LIMIT);
+            this.root = root;
+            this.counterpartyPaymentCode = counterpartyPaymentCode;
+        }
         /**
-         * Creates spend outputs based on the target amount and input denominations.
+         * Generates a BIP47 private payment code for the specified account. The payment code is created by combining the
+         * account's public key and chain code.
          *
-         * @param {bigint} amount - The target amount to spend.
-         * @returns {UTXO[]} The spend outputs.
+         * @private
+         * @param {number} account - The account index for which to generate the private payment code.
+         * @returns {Promise<PaymentCodePrivate>} A promise that resolves to the PaymentCodePrivate instance.
          */
-        createSpendOutputs(amount) {
-            // Spend outpoints are not limited to max input denomination
-            const spendDenominations = denominate(amount);
-            return spendDenominations.map((denominationValue) => {
-                const utxo = new UTXO();
-                utxo.denomination = denominations.indexOf(denominationValue);
-                return utxo;
-            });
+        getPaymentCodePrivate(account = 0) {
+            return generatePaymentCodePrivate(this.root, account);
+        }
+        /**
+         * Derives a new BIP47 receiving address for a specific zone and account using the sender's payment code. This
+         * method follows the BIP47 specification for deriving payment addresses from a notification transaction.
+         *
+         * @param {Zone} zone - The zone to derive the address for
+         * @param {number} [account=0] - The account index to use for derivation. Default is `0`
+         * @param {string} senderPaymentCode - The Base58Check encoded payment code of the sender
+         * @returns {QiAddressInfo} Information about the newly derived address including:
+         *
+         *   - The derived address
+         *   - Public key
+         *   - Derivation index
+         *   - Account number
+         *   - Zone
+         *   - Status and other metadata
+         *
+         * @throws {Error} If the payment code version is invalid
+         * @throws {Error} If unable to derive a valid address for the zone after maximum attempts
+         */
+        deriveNewAddress(zone, account = 0) {
+            const bip32 = BIP32Factory(ecc);
+            const buf = bs58check.decode(this.counterpartyPaymentCode);
+            const version = buf[0];
+            if (version !== PC_VERSION)
+                throw new Error('Invalid payment code version');
+            const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
+            const walletPCodePrivate = this.getPaymentCodePrivate(account);
+            const lastIndex = this.getLastDerivationIndex(zone, account);
+            let addrIndex = lastIndex + 1;
+            for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS$1; attempts++) {
+                const address = walletPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex);
+                if (isValidAddressForZone(this.coinType, address, zone)) {
+                    this.saveLastDerivationIndex(zone, account, addrIndex);
+                    const pubkey = walletPCodePrivate.derivePaymentPublicKey(senderPCodePublic, addrIndex);
+                    const pcInfo = {
+                        address,
+                        pubKey: hexlify(pubkey),
+                        index: addrIndex,
+                        account,
+                        zone,
+                        change: false,
+                        status: exports.AddressStatus.UNKNOWN,
+                        derivationPath: this.counterpartyPaymentCode,
+                        lastSyncedBlock: null,
+                    };
+                    this.saveQiAddressInfo(pcInfo);
+                    return pcInfo;
+                }
+                addrIndex++;
+            }
+            throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS$1} attempts.`);
+        }
+    }
+
+    class Bip47QiWalletCounterparty extends AbstractQiWallet {
+        selfBip47Wallet;
+        counterpartyPaymentCode;
+        static DEFAULT_GAP_LIMIT = 5;
+        constructor(selfBip47Wallet, counterpartyPaymentCode) {
+            super(Bip47QiWalletCounterparty.DEFAULT_GAP_LIMIT);
+            this.selfBip47Wallet = selfBip47Wallet;
+            this.counterpartyPaymentCode = counterpartyPaymentCode;
+        }
+        /**
+         * Derives a new BIP47 payment address for sending funds to a counterparty.
+         *
+         * @remarks
+         * This method implements BIP-0047 payment code derivation for sending funds to a counterparty. It derives addresses
+         * using the counterparty's payment code until finding one that matches the specified zone. The derivation follows
+         * the path specified in BIP-0047 using the next unused index.
+         * @param {Zone} zone - The zone to derive the address for
+         * @param {number} [account=0] - The account index to use for derivation. Default is `0`
+         * @param {string} receiverPaymentCode - The Base58Check encoded payment code of the receiver
+         * @returns {QiAddressInfo} Information about the newly derived payment address
+         * @throws {Error} If the payment code version is invalid
+         * @throws {Error} If unable to derive a valid address for the zone after maximum attempts
+         */
+        deriveNewAddress(zone, account = 0) {
+            const bip32 = BIP32Factory(ecc);
+            const buf = bs58check.decode(this.counterpartyPaymentCode);
+            const version = buf[0];
+            if (version !== PC_VERSION)
+                throw new Error('Invalid payment code version');
+            const walletPCodePrivate = this.selfBip47Wallet.getPaymentCodePrivate(account);
+            const receiverPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
+            const lastIndex = this.getLastDerivationIndex(zone, account);
+            let addrIndex = lastIndex + 1;
+            for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS$1; attempts++) {
+                const address = receiverPCodePublic.getPaymentAddress(walletPCodePrivate, addrIndex);
+                if (isValidAddressForZone(this.coinType, address, zone)) {
+                    this.saveLastDerivationIndex(zone, account, addrIndex);
+                    const pubkey = receiverPCodePublic.derivePaymentPublicKey(walletPCodePrivate, addrIndex);
+                    const pcInfo = {
+                        address,
+                        pubKey: hexlify(pubkey),
+                        index: addrIndex,
+                        account,
+                        zone,
+                        change: false,
+                        status: exports.AddressStatus.UNKNOWN,
+                        derivationPath: this.counterpartyPaymentCode,
+                        lastSyncedBlock: null,
+                    };
+                    this.saveQiAddressInfo(pcInfo);
+                    return pcInfo;
+                }
+                addrIndex++;
+            }
+            throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS$1} attempts.`);
+        }
+    }
+
+    /**
+     * Represents a BIP47 payment channel between two parties, managing both sending and receiving addresses for a specific
+     * payment code pair.
+     */
+    class PaymentChannel {
+        #selfWallet;
+        #counterpartyWallet;
+        #counterpartyPaymentCode;
+        constructor(root, counterpartyPaymentCode) {
+            this.#counterpartyPaymentCode = counterpartyPaymentCode;
+            this.#selfWallet = new Bip47QiWalletSelf(root, counterpartyPaymentCode);
+            this.#counterpartyWallet = new Bip47QiWalletCounterparty(this.#selfWallet, counterpartyPaymentCode);
+        }
+        /**
+         * Gets the self wallet instance used for receiving payments
+         */
+        get selfWallet() {
+            return this.#selfWallet;
+        }
+        /**
+         * Gets the counterparty wallet instance used for sending payments
+         */
+        get counterpartyWallet() {
+            return this.#counterpartyWallet;
+        }
+        /**
+         * Gets the counterparty's payment code
+         */
+        get counterpartyPaymentCode() {
+            return this.#counterpartyPaymentCode;
+        }
+        /**
+         * Gets the address info for a given receiving address
+         *
+         * @param address - The receiving address to get the info for
+         * @returns The address info or null if not found
+         */
+        getReceivingAddressInfo(address) {
+            return this.#selfWallet.getAddressInfo(address);
+        }
+        getReceivingAddressesForAccount(account) {
+            return this.#selfWallet.getAddressesForAccount(account);
+        }
+        getNextReceivingAddress(zone, account = 0) {
+            return this.#selfWallet.deriveNewAddress(zone, account);
+        }
+        getNextSendingAddress(zone, account = 0) {
+            return this.#counterpartyWallet.deriveNewAddress(zone, account);
         }
     }
 
@@ -28408,11 +29559,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
         static _version = 1;
         /**
          * @ignore
-         * @type {number}
-         */
-        static _GAP_LIMIT = 5;
-        /**
-         * @ignore
          * @type {AllowedCoinType}
          */
         static _coinType = 969;
@@ -28422,42 +29568,40 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         static PRIVATE_KEYS_PATH = 'privateKeys';
         /**
-         * A map containing address information for all addresses known to the wallet. This includes:
-         *
-         * - BIP44 derived addresses (external)
-         * - BIP44 derived change addresses
-         * - BIP47 payment code derived addresses for receiving funds
-         *
-         * The key is the derivation path or payment code, and the value is an array of QiAddressInfo objects.
+         * The BIP44 wallet instance used for deriving external (receiving) addresses. This follows the BIP44 derivation
+         * path m/44'/969'/account'/0/index
          *
          * @private
-         * @type {Map<DerivationPath, QiAddressInfo[]>}
+         * @type {Bip44QiWallet}
+         * @readonly
          */
-        _addressesMap = new Map();
+        externalBip44;
         /**
-         * Array of outpoint information.
+         * The BIP44 wallet instance used for deriving change (sending) addresses. This follows the BIP44 derivation path
+         * m/44'/969'/account'/1/index
          *
-         * @ignore
-         * @type {OutpointInfo[]}
+         * @private
+         * @type {Bip44QiWallet}
+         * @readonly
          */
-        _availableOutpoints = new Map();
+        changeBip44;
+        /**
+         * Map of payment channels indexed by counterparty payment code
+         */
+        paymentChannels = new Map();
+        /**
+         * The private key wallet instance used for deriving addresses from private keys.
+         *
+         * @private
+         * @type {PrivatekeyQiWallet}
+         * @readonly
+         */
+        privatekeyWallet;
         /**
          * @ignore
          * @type {AddressUsageCallback}
          */
         _addressUseChecker;
-        /**
-         * A map containing address information for sending funds to counterparties using BIP47 payment codes.
-         *
-         * @remarks
-         * The key is the receiver's payment code, and the value is an array of QiAddressInfo objects. These addresses are
-         * derived from the receiver's payment code and are used only for sending funds. They are not part of the set of
-         * addresses that this wallet can control or spend from. This map is used to keep track of addresses generated for
-         * each payment channel to ensure proper address rotation and avoid address reuse when sending funds.
-         * @private
-         * @type {Map<string, QiAddressInfo[]>}
-         */
-        _paymentCodeSendAddressMap = new Map();
         /**
          * @ignore
          * @param {HDNodeWallet} root - The root HDNodeWallet.
@@ -28465,9 +29609,32 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         constructor(guard, root, provider) {
             super(guard, root, provider);
-            this._addressesMap.set('BIP44:external', []);
-            this._addressesMap.set('BIP44:change', []);
-            this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, []);
+            const bip44 = new BIP44(this._root, QiHDWallet._coinType);
+            // initialize bip44 wallet for external and change addresses
+            this.externalBip44 = new Bip44QiWallet(bip44, false);
+            this.changeBip44 = new Bip44QiWallet(bip44, true);
+            // initialize payment channels
+            this.paymentChannels = new Map();
+            // initialize private key wallet
+            this.privatekeyWallet = new PrivatekeyQiWallet();
+        }
+        /**
+         * Connects the wallet to a provider and propagates the connection to all subwallets.
+         *
+         * @param {Provider} provider - The provider.
+         * @override
+         */
+        connect(provider) {
+            // Call parent class connect method
+            super.connect(provider);
+            // Propagate provider to subwallets
+            this.externalBip44.setProvider(provider);
+            this.changeBip44.setProvider(provider);
+            this.privatekeyWallet.setProvider(provider);
+            // Update payment channels
+            for (const channel of this.paymentChannels.values()) {
+                channel.selfWallet.setProvider(provider);
+            }
         }
         /**
          * Gets the payment codes for all open channels.
@@ -28475,7 +29642,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {string[]} The payment codes for all open channels.
          */
         get openChannels() {
-            return Array.from(this._addressesMap.keys()).filter((key) => !key.startsWith('BIP44:') && key !== QiHDWallet.PRIVATE_KEYS_PATH);
+            return Array.from(this.paymentChannels.keys());
         }
         /**
          * Sets the address use checker. The provided callback function should accept an address as input and return a
@@ -28486,62 +29653,6 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         setAddressUseChecker(checker) {
             this._addressUseChecker = checker;
-        }
-        /**
-         * Finds the last used index in an array of QiAddressInfo objects. If no index is found, returns -1.
-         *
-         * @param {QiAddressInfo[]} addresses - The array of QiAddressInfo objects.
-         * @returns {number} The last used index.
-         */
-        _findLastUsedIndex(addresses, account, zone) {
-            if (!addresses)
-                return -1;
-            return (addresses
-                .filter((addressInfo) => addressInfo.account === account && addressInfo.zone === zone)
-                .reduce((maxIndex, addressInfo) => Math.max(maxIndex, addressInfo.index), -1) || -1);
-        }
-        /**
-         * Derives the next Qi BIP 44 address for the specified account and zone.
-         *
-         * @param {number} account - The account number.
-         * @param {Zone} zone - The zone.
-         * @param {boolean} isChange - Whether to derive a change address.
-         * @returns {QiAddressInfo} The next Qi address information.
-         */
-        _getNextQiAddress(account, zone, isChange) {
-            const derivationPath = isChange ? 'BIP44:change' : 'BIP44:external';
-            const addresses = this._addressesMap.get(derivationPath) || [];
-            const lastIndex = this._findLastUsedIndex(addresses, account, zone);
-            const addressNode = this.deriveNextAddressNode(account, lastIndex + 1, zone, isChange);
-            const newAddressInfo = this._createAndStoreQiAddressInfo(addressNode, account, zone, isChange);
-            const privateKeysArray = this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH) || [];
-            const existingPrivateKeyIndex = privateKeysArray.findIndex((info) => info.address === newAddressInfo.address);
-            if (existingPrivateKeyIndex !== -1) {
-                // Update the newAddressInfo directly with the status and last synced block from the private key address
-                const pkAddressInfo = privateKeysArray[existingPrivateKeyIndex];
-                newAddressInfo.status = pkAddressInfo.status;
-                newAddressInfo.lastSyncedBlock = pkAddressInfo.lastSyncedBlock;
-                // Remove the address from the privateKeysArray
-                privateKeysArray.splice(existingPrivateKeyIndex, 1);
-                this._addressesMap.set(QiHDWallet.PRIVATE_KEYS_PATH, privateKeysArray);
-            }
-            return newAddressInfo;
-        }
-        _createAndStoreQiAddressInfo(addressNode, account, zone, isChange) {
-            const derivationPath = isChange ? 'BIP44:change' : 'BIP44:external';
-            const qiAddressInfo = {
-                zone,
-                account,
-                derivationPath,
-                address: addressNode.address,
-                pubKey: addressNode.publicKey,
-                index: addressNode.index,
-                change: isChange,
-                status: exports.AddressStatus.UNKNOWN,
-                lastSyncedBlock: null,
-            };
-            this._addressesMap.get(derivationPath).push(qiAddressInfo); // _addressesMap is initialized within the constructor
-            return qiAddressInfo;
         }
         /**
          * Promise that resolves to the next address for the specified account and zone.
@@ -28561,7 +29672,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {QiAddressInfo} The next Qi address information.
          */
         getNextAddressSync(account, zone) {
-            return this._getNextQiAddress(account, zone, false);
+            return this.externalBip44.deriveNewAddress(zone, account);
         }
         /**
          * Promise that resolves to the next change address for the specified account and zone.
@@ -28581,20 +29692,31 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {NeuteredAddressInfo} The next change neutered address information.
          */
         getNextChangeAddressSync(account, zone) {
-            return this._getNextQiAddress(account, zone, true);
+            return this.changeBip44.deriveNewAddress(zone, account);
         }
         /**
          * Imports an array of outpoints.
          *
          * @param {OutpointInfo[]} outpoints - The outpoints to import.
          */
-        importOutpoints(outpoints) {
+        importOutpoints(outpoints, derivationPath) {
             this.validateOutpointInfo(outpoints);
-            for (const outpoint of outpoints) {
-                const key = `${outpoint.outpoint.txhash}:${outpoint.outpoint.index}`;
-                if (!this._availableOutpoints.has(key)) {
-                    this._availableOutpoints.set(key, outpoint);
+            if (derivationPath === 'BIP44:external') {
+                this.externalBip44.importOutpoints(outpoints);
+            }
+            else if (derivationPath === 'BIP44:change') {
+                this.changeBip44.importOutpoints(outpoints);
+            }
+            else if (derivationPath === 'PrivateKey') {
+                this.privatekeyWallet.importOutpoints(outpoints);
+            }
+            else {
+                // derivaration path is a payment code
+                const paymentChannel = this.paymentChannels.get(derivationPath);
+                if (!paymentChannel) {
+                    throw new Error(`Payment channel not found for derivation path: ${derivationPath}`);
                 }
+                paymentChannel.selfWallet.importOutpoints(outpoints);
             }
         }
         /**
@@ -28604,8 +29726,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {OutpointInfo[]} The outpoints for the zone.
          */
         getOutpoints(zone) {
-            this.validateZone(zone);
-            return Array.from(this._availableOutpoints.values()).filter((outpoint) => outpoint.zone === zone);
+            const bip44ExternalOutpoints = this.externalBip44.getOutpoints(zone);
+            const bip44ChangeOutpoints = this.changeBip44.getOutpoints(zone);
+            const privatekeyOutpoints = this.privatekeyWallet.getOutpoints(zone);
+            return [...bip44ExternalOutpoints, ...bip44ChangeOutpoints, ...privatekeyOutpoints];
         }
         /**
          * Signs a Qi transaction and returns the serialized transaction.
@@ -28637,138 +29761,28 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {QiAddressInfo | null} The address info or null if not found.
          */
         locateAddressInfo(address) {
-            for (const [, addressInfos] of this._addressesMap.entries()) {
-                const addressInfo = addressInfos.find((info) => info.address === address);
-                if (addressInfo) {
-                    return addressInfo;
+            // search in bip44 wallets
+            const externalAddress = this.externalBip44.getAddressInfo(address);
+            if (externalAddress) {
+                return externalAddress;
+            }
+            const changeAddress = this.changeBip44.getAddressInfo(address);
+            if (changeAddress) {
+                return changeAddress;
+            }
+            // search in payment code self addresses
+            for (const paymentChannel of this.paymentChannels.values()) {
+                const paymentCodeAddress = paymentChannel.selfWallet.getAddressInfo(address);
+                if (paymentCodeAddress) {
+                    return paymentCodeAddress;
                 }
+            }
+            // search in private key wallet
+            const privateKeyAddress = this.privatekeyWallet.getAddressInfo(address);
+            if (privateKeyAddress) {
+                return privateKeyAddress;
             }
             return null;
-        }
-        /**
-         * Gets the total balance for the specified zone, including locked UTXOs.
-         *
-         * @param {Zone} zone - The zone to get the balance for.
-         * @param {number} [blockNumber] - The block number to use for the lock check.
-         * @param {boolean} useAvailableOutpoints - Whether to use available outpoints to calculate the balance.
-         * @returns {Promise<bigint>} The total balance for the zone.
-         */
-        async getBalanceForZone(zone, blockNumber, useAvailableOutpoints = false) {
-            if (!this.provider)
-                throw new Error('Provider is not set');
-            this.validateZone(zone);
-            if (!blockNumber && useAvailableOutpoints) {
-                blockNumber = await this.provider.getBlockNumber(toShard(zone));
-            }
-            return ((await this.getSpendableBalanceForZone(zone, blockNumber, useAvailableOutpoints)) +
-                (await this.getLockedBalanceForZone(zone, blockNumber, useAvailableOutpoints)));
-        }
-        /**
-         * Gets the **spendable** balance for the specified zone by calling {@link getBalance} for all known addresses in the
-         * zone.
-         *
-         * @param {Zone} zone - The zone to get the balance for.
-         * @param {boolean} useAvailableOutpoints - Whether to use available outpoints to calculate the balance.
-         * @returns {bigint} The spendable balance for the zone.
-         */
-        async getSpendableBalanceForZone(zone, blockNumber, useAvailableOutpoints = false) {
-            if (!this.provider)
-                throw new Error('Provider is not set');
-            this.validateZone(zone);
-            if (useAvailableOutpoints) {
-                if (!blockNumber) {
-                    blockNumber = await this.provider.getBlockNumber(toShard(zone));
-                }
-                return this._calculateAvailableOutpointSpendableBalanceForZone(zone, blockNumber);
-            }
-            return this._fetchSpendableBalanceForZone(zone);
-        }
-        /**
-         * Gets the **locked** balance for the specified zone by calling {@link getLockedBalance} for all known addresses in
-         * the zone.
-         *
-         * @param {Zone} zone - The zone to get the balance for.
-         * @param {boolean} useAvailableOutpoints - Whether to use available outpoints to calculate the balance.
-         * @returns {bigint} The locked balance for the zone.
-         */
-        async getLockedBalanceForZone(zone, blockNumber, useAvailableOutpoints = false) {
-            if (!this.provider)
-                throw new Error('Provider is not set');
-            this.validateZone(zone);
-            if (useAvailableOutpoints) {
-                if (!blockNumber) {
-                    blockNumber = await this.provider.getBlockNumber(toShard(zone));
-                }
-                return this._calculateAvailableOutpointLockedBalanceForZone(zone, blockNumber);
-            }
-            return this._fetchLockedBalanceForZone(zone);
-        }
-        /**
-         * Gets the spendable balance for the specified zone by calling {@link getBalance} for all known addresses in the
-         * zone.
-         *
-         * @param {Zone} zone - The zone to get the spendable balance for.
-         * @returns {bigint} The spendable balance for the zone.
-         */
-        async _fetchSpendableBalanceForZone(zone) {
-            const balanceMethod = async (address) => this.provider?.getBalance(address, 'latest') || BigInt(0);
-            return this._fetchBalanceForZone(zone, balanceMethod);
-        }
-        /**
-         * Gets the locked balance for the specified zone by calling {@link getLockedBalance} for all known addresses in the
-         * zone.
-         *
-         * @param {Zone} zone - The zone to get the locked balance for.
-         * @returns {bigint} The locked balance for the zone.
-         */
-        async _fetchLockedBalanceForZone(zone) {
-            const balanceMethod = async (address) => this.provider?.getLockedBalance(address) || BigInt(0);
-            return this._fetchBalanceForZone(zone, balanceMethod);
-        }
-        /**
-         * Fetches the balance for the specified zone by calling the provided balance method for all known addresses in the
-         * zone.
-         *
-         * @param {Zone} zone - The zone to get the balance for.
-         * @param {Function} balanceMethod - The method to call to get the balance for each address.
-         * @returns {Promise<bigint>} The balance for the zone.
-         */
-        async _fetchBalanceForZone(zone, balanceMethod) {
-            const allAddresses = Array.from(this._addressesMap.values())
-                .flat()
-                .filter((address) => address.zone === zone);
-            const allBalances = await Promise.all(allAddresses.map((address) => balanceMethod(address.address) ?? BigInt(0)));
-            return allBalances.reduce((total, balance) => BigInt(total) + BigInt(balance), BigInt(0));
-        }
-        /**
-         * Gets the spendable balance for the specified zone using the available outpoints.
-         *
-         * @param {Zone} zone - The zone to get the spendable balance for.
-         * @param {number} [blockNumber] - The block number to use for the lock check.
-         * @returns {bigint} The spendable balance for the zone.
-         */
-        async _calculateAvailableOutpointSpendableBalanceForZone(zone, blockNumber) {
-            return this.getOutpoints(zone)
-                .filter((utxo) => utxo.outpoint.lock === 0 || utxo.outpoint.lock < blockNumber)
-                .reduce((total, utxo) => {
-                const denominationValue = denominations[utxo.outpoint.denomination];
-                return total + denominationValue;
-            }, BigInt(0));
-        }
-        /**
-         * Gets the locked balance for the specified zone using the available outpoints.
-         *
-         * @param {Zone} zone - The zone to get the locked balance for.
-         * @param {number} [blockNumber] - The block number to use for the lock check.
-         * @returns {bigint} The locked balance for the zone.
-         */
-        async _calculateAvailableOutpointLockedBalanceForZone(zone, blockNumber) {
-            return this.getOutpoints(zone)
-                .filter((utxo) => utxo.outpoint.lock !== 0 && blockNumber < utxo.outpoint.lock)
-                .reduce((total, utxo) => {
-                const denominationValue = denominations[utxo.outpoint.denomination];
-                return total + denominationValue;
-            }, BigInt(0));
         }
         /**
          * Converts outpoints for a specific zone to UTXO format.
@@ -28866,16 +29880,9 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const sendAddressesInfo = this.getUnusedBIP44Addresses(1, 0, 'BIP44:external', zone);
             const sendAddresses = sendAddressesInfo.map((addressInfo) => addressInfo.address);
             const changeAddresses = [];
-            const inputPubKeys = selection.inputs.map((input) => {
-                const addressInfo = this.locateAddressInfo(input.address);
-                if (!addressInfo) {
-                    throw new Error(`Could not locate address info for address: ${input.address}`);
-                }
-                return addressInfo.pubKey;
-            });
             // Proceed with creating and signing the transaction
             const chainId = (await this.provider.getNetwork()).chainId;
-            const tx = await this.prepareTransaction(selection, inputPubKeys, sendAddresses, changeAddresses, Number(chainId));
+            const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId));
             // Sign the transaction
             const signedTx = await this.signTransaction(tx);
             // Broadcast the transaction to the network using the provider
@@ -28899,7 +29906,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             // 1. Check the wallet has enough balance in the originating zone to send the transaction
             const currentBlock = await this.provider.getBlock(toShard(originZone), 'latest');
-            const balance = await this.getSpendableBalanceForZone(originZone, currentBlock?.woHeader.number, true);
+            const balance = await this.externalBip44.getSpendableBalance(originZone, currentBlock?.woHeader.number, true);
             if (balance < amount) {
                 throw new Error(`Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qi`);
             }
@@ -28942,14 +29949,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     // Have extra change addresses, remove the excess
                     const addressesToSetToUnused = changeAddresses.slice(changeAddressesNeeded);
                     // Set the status of the addresses back to UNUSED in _addressesMap for removed addresses
-                    const changeAddressesMap = this._addressesMap.get('BIP44:change');
-                    const updatedChangeAddressesMap = changeAddressesMap.map((a) => {
+                    const currentChangeAddresses = this.changeBip44.getAddressesInZone(originZone);
+                    const updatedChangeAddresses = currentChangeAddresses.map((a) => {
                         if (addressesToSetToUnused.includes(a.address)) {
                             return { ...a, status: exports.AddressStatus.UNUSED };
                         }
                         return a;
                     });
-                    this._addressesMap.set('BIP44:change', updatedChangeAddressesMap);
+                    this.changeBip44.setAddresses(updatedChangeAddresses);
                 }
                 // Determine if new addresses are needed for the spend outputs
                 const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
@@ -28974,7 +29981,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             // Proceed with creating and signing the transaction
             const chainId = (await this.provider.getNetwork()).chainId;
-            const tx = await this.prepareTransaction(selection, inputPubKeys.map((pubkey) => pubkey), sendAddresses, changeAddresses, Number(chainId));
+            const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId));
             // Sign the transaction
             const signedTx = await this.signTransaction(tx);
             // Broadcast the transaction to the network using the provider
@@ -28985,20 +29992,28 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          *
          * @private
          * @param {SelectedCoinsResult} selection - The selected coins result.
-         * @param {string[]} inputPubKeys - The public keys of the inputs.
          * @param {string[]} sendAddresses - The addresses to send to.
          * @param {string[]} changeAddresses - The addresses to change to.
          * @param {number} chainId - The chain ID.
          * @returns {Promise<QiTransaction>} A promise that resolves to the prepared transaction.
          */
-        async prepareTransaction(selection, inputPubKeys, sendAddresses, changeAddresses, chainId) {
+        async prepareTransaction(selection, sendAddresses, changeAddresses, chainId) {
             const tx = new QiTransaction();
-            tx.txInputs = selection.inputs.map((input, index) => ({
-                txhash: input.txhash,
-                index: input.index,
-                pubkey: inputPubKeys[index],
+            const inputsWithPubKeys = selection.inputs.map((input) => {
+                const addressInfo = this.locateAddressInfo(input.address);
+                if (!addressInfo?.pubKey) {
+                    throw new Error(`Missing public key for input address: ${input.address}`);
+                }
+                return {
+                    utxo: input,
+                    pubKey: addressInfo.pubKey,
+                };
+            });
+            tx.txInputs = inputsWithPubKeys.map((input) => ({
+                txhash: input.utxo.txhash,
+                index: input.utxo.index,
+                pubkey: input.pubKey,
             }));
-            // 5.3 Create the "sender" outputs
             const senderOutputs = selection.spendOutputs.map((output, index) => ({
                 address: sendAddresses[index],
                 denomination: output.denomination,
@@ -29065,7 +30080,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             // Get unused change addresses using existing helper
             const unusedAddresses = this.getUnusedBIP44Addresses(count, account, 'BIP44:change', zone);
             // Update address statuses in wallet
-            const currentAddresses = this._addressesMap.get('BIP44:change') || [];
+            const currentAddresses = this.changeBip44.getAddressesInZone(zone);
             const updatedAddresses = [
                 // Mark selected addresses as attempted use
                 ...unusedAddresses.map((addr) => ({ ...addr, status: exports.AddressStatus.ATTEMPTED_USE })),
@@ -29073,7 +30088,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                 ...currentAddresses.filter((addr) => !unusedAddresses.some((unused) => unused.address === addr.address)),
             ].sort((a, b) => a.index - b.index);
             // Update wallet's address map
-            this._addressesMap.set('BIP44:change', updatedAddresses);
+            this.changeBip44.setAddresses(updatedAddresses);
             // Return just the addresses
             return unusedAddresses.map((addr) => addr.address);
         }
@@ -29088,14 +30103,14 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns An array of addresses.
          */
         getUnusedBIP44Addresses(amount, account, path, zone) {
-            const addresses = this._addressesMap.get(path) || [];
+            const wallet = path === 'BIP44:external' ? this.externalBip44 : this.changeBip44;
+            const addresses = wallet.getAddressesInZone(zone);
             const unusedAddresses = addresses.filter((address) => address.status === exports.AddressStatus.UNUSED && address.account === account && address.zone === zone);
             if (unusedAddresses.length >= amount) {
                 return unusedAddresses.slice(0, amount);
             }
             const remainingAddressesNeeded = amount - unusedAddresses.length;
-            const isChange = path === 'BIP44:change';
-            const newAddresses = Array.from({ length: remainingAddressesNeeded }, () => this._getNextQiAddress(account, zone, isChange));
+            const newAddresses = Array.from({ length: remainingAddressesNeeded }, () => wallet.deriveNewAddress(zone, account));
             return [...unusedAddresses, ...newAddresses];
         }
         /**
@@ -29177,29 +30192,20 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (isHexString(addressInfo.derivationPath, 32)) {
                 return addressInfo.derivationPath;
             }
+            const account = addressInfo.account;
+            const index = addressInfo.index;
             if (addressInfo.derivationPath === 'BIP44:external' || addressInfo.derivationPath === 'BIP44:change') {
                 // (BIP44 addresses)
-                const addressNode = this._getAddressNode(addressInfo.account, addressInfo.change, addressInfo.index);
+                const isChange = addressInfo.derivationPath === 'BIP44:change';
+                const bip44 = isChange ? this.changeBip44 : this.externalBip44;
+                const addressNode = bip44.getAddressNode(account, index);
                 return addressNode.privateKey;
             }
             else {
                 // (BIP47 addresses)
-                const pcAddressInfo = addressInfo;
-                const account = pcAddressInfo.account;
-                const index = pcAddressInfo.index;
-                const counterpartyPaymentCode = pcAddressInfo.derivationPath;
-                if (!counterpartyPaymentCode) {
-                    throw new Error('Counterparty payment code not found for payment channel address');
-                }
-                const bip32 = BIP32Factory(ecc);
-                const buf = bs58check.decode(counterpartyPaymentCode);
-                const version = buf[0];
-                if (version !== PC_VERSION)
-                    throw new Error('Invalid payment code version');
-                const counterpartyPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
-                const paymentCodePrivate = this._getPaymentCodePrivate(account);
-                const paymentPrivateKey = paymentCodePrivate.derivePaymentPrivateKey(counterpartyPCodePublic, index);
-                return hexlify(paymentPrivateKey);
+                const counterpartyPaymentCode = addressInfo.derivationPath;
+                const privateKey = getPrivateKeyFromPaymentCode(this._root, counterpartyPaymentCode, index, account);
+                return privateKey;
             }
         }
         /**
@@ -29212,17 +30218,10 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @throws {Error} If the zone is invalid.
          */
         async scan(zone, account = 0) {
-            this.validateZone(zone);
-            // set status of all addresses to unknown
-            this._addressesMap = new Map(Array.from(this._addressesMap.entries()).map(([key, addresses]) => [
-                key,
-                addresses.map((addr) => ({ ...addr, status: exports.AddressStatus.UNKNOWN, lastSyncedBlock: null })),
-            ]));
-            // flush available
-            this._availableOutpoints.clear();
-            // Reset each map so that all keys have empty array values but keys are preserved
-            this._paymentCodeSendAddressMap = new Map(Array.from(this._paymentCodeSendAddressMap.keys()).map((key) => [key, []]));
-            await this._scan(zone, account);
+            const bip44Scans = [this.externalBip44.scan(zone, account), this.changeBip44.scan(zone, account)];
+            const paymentChannelScans = Array.from(this.paymentChannels.values()).map((pc) => pc.selfWallet.scan(zone, account));
+            const privateKeyScans = this.privatekeyWallet.scan(zone, account);
+            await Promise.all([...bip44Scans, ...paymentChannelScans, privateKeyScans]);
         }
         /**
          * Scans the specified zone for addresses with unspent outputs. Starting at the last address index, it will generate
@@ -29235,239 +30234,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @throws {Error} If the zone is invalid.
          */
         async sync(zone, account = 0, onOutpointsCreated, onOutpointsDeleted) {
-            this.validateZone(zone);
-            await this._scan(zone, account, onOutpointsCreated, onOutpointsDeleted);
-        }
-        /**
-         * Internal method to scan the specified zone for addresses with unspent outputs. This method handles the actual
-         * scanning logic, generating new addresses until the gap limit is reached for both gap and change addresses.
-         *
-         * @param {Zone} zone - The zone in which to scan for addresses.
-         * @param {number} [account=0] - The index of the account to scan. Default is `0`
-         * @param {Function} [onCreate] - A callback function that is called when a new address is created.
-         * @param {Function} [onDelete] - A callback function that is called when an address is deleted.
-         * @returns {Promise<void>} A promise that resolves when the scan is complete.
-         * @throws {Error} If the provider is not set.
-         */
-        async _scan(zone, account = 0, onOutpointsCreated, onOutpointsDeleted) {
-            if (!this.provider)
-                throw new Error('Provider not set');
-            const derivationPaths = ['BIP44:external', 'BIP44:change', ...this.openChannels];
-            const currentBlock = (await this.provider.getBlock(toShard(zone), 'latest'));
-            for (const path of derivationPaths) {
-                await this._scanDerivationPath(path, zone, account, currentBlock, false, onOutpointsCreated, onOutpointsDeleted);
-                // Yield control back to the event loop
-                await new Promise((resolve) => setTimeout(resolve, 0));
-            }
-            await this._scanDerivationPath(QiHDWallet.PRIVATE_KEYS_PATH, zone, account, currentBlock, true, onOutpointsCreated, onOutpointsDeleted);
-        }
-        /**
-         * Scans for the next address in the specified zone and account, checking for associated outpoints, and updates the
-         * address count and gap addresses accordingly.
-         *
-         * @param {Zone} zone - The zone in which the address is being scanned.
-         * @param {number} account - The index of the account for which the address is being scanned.
-         * @param {boolean} isChange - A flag indicating whether the address is a change address.
-         * @returns {Promise<void>} A promise that resolves when the scan is complete.
-         * @throws {Error} If an error occurs during the address scanning or outpoints retrieval process.
-         */
-        async _scanDerivationPath(path, zone, account, currentBlock, skipGap = false, onOutpointsCreated, onOutpointsDeleted) {
-            const addresses = this._addressesMap.get(path) || [];
-            const updatedAddresses = [];
-            const createdOutpoints = {};
-            const deletedOutpoints = {};
-            // Addresses with a last synced block are checked for outpoint deltas
-            const previouslySyncedAddresses = [];
-            const unsyncedAddresses = [];
-            for (const addr of addresses) {
-                if (addr.lastSyncedBlock !== null) {
-                    previouslySyncedAddresses.push(addr);
-                }
-                else {
-                    unsyncedAddresses.push(addr);
-                }
-            }
-            if (previouslySyncedAddresses.length > 0) {
-                // get all unique txhashes from used addresses last synced block to current block
-                const addressesByLastSyncedTxHash = {};
-                for (const addr of previouslySyncedAddresses) {
-                    if (addr.lastSyncedBlock?.hash) {
-                        if (!addressesByLastSyncedTxHash[addr.lastSyncedBlock.hash]) {
-                            addressesByLastSyncedTxHash[addr.lastSyncedBlock.hash] = [addr.address];
-                        }
-                        else {
-                            addressesByLastSyncedTxHash[addr.lastSyncedBlock.hash].push(addr.address);
-                        }
-                    }
-                }
-                // Get outpoint deltas for each unique txhash
-                const deltasBatches = await Promise.all(Object.entries(addressesByLastSyncedTxHash).map(([txHash, addresses]) => this.provider.getOutpointDeltas(addresses, txHash)));
-                // combine deltas into single object
-                const deltas = {};
-                for (const deltaBatch of deltasBatches) {
-                    for (const [address, delta] of Object.entries(deltaBatch)) {
-                        if (!deltas[address]) {
-                            deltas[address] = { created: delta.created, deleted: delta.deleted };
-                        }
-                        else {
-                            deltas[address].created.push(...delta.created);
-                            deltas[address].deleted.push(...delta.deleted);
-                        }
-                    }
-                }
-                // Process deltas
-                for (const [address, delta] of Object.entries(deltas)) {
-                    const addressInfo = addresses.find((a) => a.address === address);
-                    const updatedAddressInfo = {
-                        ...addressInfo,
-                        lastSyncedBlock: {
-                            hash: currentBlock.hash,
-                            number: currentBlock.woHeader.number,
-                        },
-                    };
-                    // Handle created outpoints
-                    if (delta.created && delta.created.length > 0) {
-                        this.importOutpoints(delta.created.map((outpoint) => ({
-                            outpoint,
-                            address,
-                            zone,
-                            account,
-                        })));
-                        createdOutpoints[address] = delta.created;
-                        // set address status to used even if it may have already has this status
-                        updatedAddressInfo.status = exports.AddressStatus.USED;
-                    }
-                    // Handle deleted outpoints
-                    if (delta.deleted && delta.deleted.length > 0) {
-                        // Remove corresponding outpoints from availableOutpoints
-                        for (const outpoint of delta.deleted) {
-                            this._availableOutpoints.delete(`${outpoint.txhash}:${outpoint.index}`);
-                        }
-                        deletedOutpoints[address] = delta.deleted;
-                    }
-                    updatedAddresses.push(updatedAddressInfo);
-                }
-            }
-            let consecutiveUnusedCount = 0;
-            // Check unsynced addresses for outpoints
-            // Batch check unsynced addresses for outpoints
-            if (unsyncedAddresses.length > 0) {
-                const checkAddressUsePromises = unsyncedAddresses.map((addr) => this.checkAddressUse(addr.address));
-                const checkResults = await Promise.all(checkAddressUsePromises);
-                for (let i = 0; i < unsyncedAddresses.length; i++) {
-                    const addr = unsyncedAddresses[i];
-                    const { isUsed, outpoints } = checkResults[i];
-                    addr.status = isUsed ? exports.AddressStatus.USED : exports.AddressStatus.UNUSED;
-                    addr.lastSyncedBlock = {
-                        hash: currentBlock.hash,
-                        number: currentBlock.woHeader.number,
-                    };
-                    // Import outpoints if any are found
-                    if (outpoints.length > 0) {
-                        this.importOutpoints(outpoints.map((outpoint) => ({
-                            outpoint,
-                            address: addr.address,
-                            zone: addr.zone,
-                            account: addr.account,
-                        })));
-                        createdOutpoints[addr.address] = outpoints;
-                    }
-                    if (addr.status === exports.AddressStatus.USED) {
-                        consecutiveUnusedCount = 0;
-                    }
-                    else {
-                        consecutiveUnusedCount++;
-                    }
-                    updatedAddresses.push(addr);
-                    // If the consecutive unused count has reached the gap limit, break
-                    if (consecutiveUnusedCount >= QiHDWallet._GAP_LIMIT)
-                        break;
-                }
-            }
-            if (!skipGap) {
-                // Generate new addresses if needed until the gap limit is reached
-                while (consecutiveUnusedCount < QiHDWallet._GAP_LIMIT) {
-                    const isChange = path.endsWith(':change');
-                    // Determine how many addresses to generate in this batch
-                    const remainingGap = QiHDWallet._GAP_LIMIT - consecutiveUnusedCount;
-                    // Generate 'remainingGap' addresses
-                    const newAddresses = [];
-                    for (let i = 0; i < remainingGap; i++) {
-                        const newAddrInfo = path.includes('BIP44')
-                            ? this._getNextQiAddress(account, zone, isChange)
-                            : this.getNextReceiveAddress(path, zone, account);
-                        newAddresses.push(newAddrInfo);
-                    }
-                    // Batch check the new addresses for use
-                    const checkAddressUsePromises = newAddresses.map((addr) => this.checkAddressUse(addr.address));
-                    const checkResults = await Promise.all(checkAddressUsePromises);
-                    // Process the results
-                    for (let i = 0; i < newAddresses.length; i++) {
-                        const newAddrInfo = newAddresses[i];
-                        const { isUsed, outpoints } = checkResults[i];
-                        newAddrInfo.status = isUsed ? exports.AddressStatus.USED : exports.AddressStatus.UNUSED;
-                        newAddrInfo.lastSyncedBlock = {
-                            hash: currentBlock.hash,
-                            number: currentBlock.woHeader.number,
-                        };
-                        // Import outpoints if any are found
-                        if (outpoints.length > 0) {
-                            this.importOutpoints(outpoints.map((outpoint) => ({
-                                outpoint,
-                                address: newAddrInfo.address,
-                                zone: newAddrInfo.zone,
-                                account: newAddrInfo.account,
-                            })));
-                            createdOutpoints[newAddrInfo.address] = outpoints;
-                        }
-                        if (newAddrInfo.status === exports.AddressStatus.USED) {
-                            consecutiveUnusedCount = 0;
-                        }
-                        else {
-                            consecutiveUnusedCount++;
-                        }
-                        addresses.push(newAddrInfo);
-                        // Check if the consecutive unused count has reached the gap limit
-                        if (consecutiveUnusedCount >= QiHDWallet._GAP_LIMIT) {
-                            break;
-                        }
-                    }
-                    // Yield control back to the event loop after each iteration
-                    await new Promise((resolve) => setTimeout(resolve, 0));
-                }
-            }
-            // Create a map to track unique addresses
-            const uniqueAddressMap = new Map();
-            // Process addresses in order, with updated addresses taking precedence
-            addresses.forEach((addr) => {
-                const updatedAddr = updatedAddresses.find((a) => a.address === addr.address);
-                uniqueAddressMap.set(addr.address, updatedAddr || addr);
-            });
-            // Convert map values back to array
-            const updatedAddressesForMap = Array.from(uniqueAddressMap.values());
-            this._addressesMap.set(path, updatedAddressesForMap);
-            const executeCreatedOutpointsCallback = async () => {
-                if (onOutpointsCreated && Object.keys(createdOutpoints).length > 0) {
-                    try {
-                        await onOutpointsCreated(createdOutpoints);
-                    }
-                    catch (error) {
-                        console.error(`Error in onOutpointsCreated callback: ${error.message}`);
-                    }
-                }
-            };
-            const executeDeletedOutpointsCallback = async () => {
-                if (onOutpointsDeleted && Object.keys(deletedOutpoints).length > 0) {
-                    try {
-                        await onOutpointsDeleted(deletedOutpoints);
-                    }
-                    catch (error) {
-                        console.error(`Error in onOutpointsDeleted callback: ${error.message}`);
-                    }
-                }
-            };
-            // execute callbacks
-            await Promise.all([executeCreatedOutpointsCallback(), executeDeletedOutpointsCallback()]);
+            const bip44Syncs = [
+                this.externalBip44.sync(zone, account, onOutpointsCreated, onOutpointsDeleted),
+                this.changeBip44.sync(zone, account, onOutpointsCreated, onOutpointsDeleted),
+            ];
+            const paymentChannelSyncs = Array.from(this.paymentChannels.values()).map((pc) => pc.selfWallet.sync(zone, account, onOutpointsCreated, onOutpointsDeleted));
+            const privateKeySyncs = this.privatekeyWallet.sync(zone, account, onOutpointsCreated, onOutpointsDeleted);
+            await Promise.all([...bip44Syncs, ...paymentChannelSyncs, privateKeySyncs]);
         }
         /**
          * Queries the network node for the outpoints of the specified address.
@@ -29520,7 +30293,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         getAddressesForZone(zone) {
             this.validateZone(zone);
-            return this._addressesMap.get('BIP44:external')?.filter((addressInfo) => addressInfo.zone === zone) || [];
+            return this.externalBip44.getAddressesInZone(zone);
         }
         /**
          * Gets the change addresses for the specified zone.
@@ -29530,7 +30303,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         getChangeAddressesForZone(zone) {
             this.validateZone(zone);
-            return this._addressesMap.get('BIP44:change')?.filter((addressInfo) => addressInfo.zone === zone) || [];
+            return this.changeBip44.getAddressesInZone(zone);
         }
         /**
          * Gets the gap addresses for the specified zone.
@@ -29540,8 +30313,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         getGapAddressesForZone(zone) {
             this.validateZone(zone);
-            const gapAddresses = this._addressesMap.get('BIP44:external') || [];
-            return gapAddresses.filter((addressInfo) => addressInfo.zone === zone && addressInfo.status === exports.AddressStatus.UNUSED);
+            const externalAddresses = this.externalBip44.getAddressesInZone(zone);
+            return externalAddresses.filter((addressInfo) => addressInfo.status === exports.AddressStatus.UNUSED);
         }
         /**
          * Gets the gap change addresses for the specified zone.
@@ -29551,8 +30324,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         getGapChangeAddressesForZone(zone) {
             this.validateZone(zone);
-            const gapChangeAddresses = this._addressesMap.get('BIP44:change') || [];
-            return gapChangeAddresses.filter((addressInfo) => addressInfo.zone === zone && addressInfo.status === exports.AddressStatus.UNUSED);
+            const changeAddresses = this.changeBip44.getAddressesInZone(zone);
+            return changeAddresses.filter((addressInfo) => addressInfo.status === exports.AddressStatus.UNUSED);
         }
         /**
          * Gets the payment channel addresses for the specified zone.
@@ -29562,7 +30335,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {QiAddressInfo[]} The payment channel addresses for the zone.
          */
         getPaymentChannelAddressesForZone(paymentCode, zone) {
-            return this._addressesMap.get(paymentCode)?.filter((addressInfo) => addressInfo.zone === zone) || [];
+            return this.paymentChannels.get(paymentCode)?.selfWallet.getAddressesInZone(zone) || [];
         }
         /**
          * Gets the gap payment channel addresses for the specified payment code.
@@ -29571,10 +30344,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {QiAddressInfo[]} The gap payment channel addresses for the payment code.
          */
         getGapPaymentChannelAddressesForZone(paymentCode, zone) {
-            return (this._addressesMap
-                .get(paymentCode)
-                ?.filter((addressInfo) => addressInfo.status === exports.AddressStatus.UNUSED && addressInfo.zone === zone) ||
-                []);
+            const addressesInfo = this.getPaymentChannelAddressesForZone(paymentCode, zone);
+            return addressesInfo.filter((addressInfo) => addressInfo.status === exports.AddressStatus.UNUSED);
         }
         /**
          * Signs a message using the private key associated with the given address.
@@ -29602,10 +30373,28 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          */
         serialize() {
             const hdwalletSerialized = super.serialize();
+            // get all addresses from BIP44 wallets
+            const bip44Addresses = this.externalBip44.exportAllAddresses();
+            const bip44ChangeAddresses = this.changeBip44.exportAllAddresses();
+            // get self address from BIP47 payment channels
+            const paymentChannelSelfAddresses = Array.from(this.paymentChannels.values()).flatMap((pc) => pc.selfWallet.exportAllAddresses());
+            // get addresses from imported private keys
+            const importedPrivateKeysAddresses = this.privatekeyWallet.exportAllAddresses();
+            const allAddresses = [
+                ...bip44Addresses,
+                ...bip44ChangeAddresses,
+                ...paymentChannelSelfAddresses,
+                ...importedPrivateKeysAddresses,
+            ];
+            // Create senderPaymentCodeInfo object
+            const senderPaymentCodeInfo = Object.fromEntries(Array.from(this.paymentChannels.entries()).map(([paymentCode, channel]) => [
+                paymentCode,
+                channel.counterpartyWallet.exportAllAddresses(),
+            ]));
             return {
                 ...hdwalletSerialized,
-                addresses: Array.from(this._addressesMap.values()).flatMap((addresses) => addresses),
-                senderPaymentCodeInfo: Object.fromEntries(Array.from(this._paymentCodeSendAddressMap.entries()).map(([key, value]) => [key, Array.from(value)])),
+                addresses: allAddresses,
+                senderPaymentCodeInfo,
             };
         }
         /**
@@ -29623,28 +30412,35 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             const path = this.parentPath(serialized.coinType);
             const root = HDNodeWallet.fromMnemonic(mnemonic, path);
             const wallet = new this(_guard, root);
-            // validate and import all the wallet addresses
+            // import all addresses
             for (const addressInfo of serialized.addresses) {
-                let key = addressInfo.derivationPath;
-                if (isHexString(key, 32)) {
-                    key = QiHDWallet.PRIVATE_KEYS_PATH;
+                if (isHexString(addressInfo.derivationPath, 32)) {
+                    // private key address
+                    wallet.privatekeyWallet.importAddressInfo(addressInfo);
                 }
-                else if (key.includes('BIP44')) {
-                    // only validate if it's not a private key or a BIP44 path
+                else if (addressInfo.derivationPath === 'BIP44:external') {
+                    // BIP44 external address
                     wallet.validateAddressInfo(addressInfo);
+                    wallet.externalBip44.importAddressInfo(addressInfo);
                 }
-                else {
-                    // payment code addresses require different derivation validation
+                else if (addressInfo.derivationPath === 'BIP44:change') {
+                    // BIP44 change address
+                    wallet.validateAddressInfo(addressInfo);
+                    wallet.changeBip44.importAddressInfo(addressInfo);
+                }
+                else if (validatePaymentCode(addressInfo.derivationPath)) {
+                    // payment code self address
                     wallet.validateBaseAddressInfo(addressInfo);
                     wallet.validateExtendedProperties(addressInfo);
+                    // Create payment channel if it doesn't exist
+                    if (!wallet.paymentChannels.has(addressInfo.derivationPath)) {
+                        wallet.openChannel(addressInfo.derivationPath);
+                    }
+                    const channel = wallet.paymentChannels.get(addressInfo.derivationPath);
+                    channel.selfWallet.importAddressInfo(addressInfo);
                 }
-                const existingAddresses = wallet._addressesMap.get(key);
-                if (!existingAddresses) {
-                    wallet._addressesMap.set(key, [addressInfo]);
-                    // if the address is already in the map, we don't need to add it again
-                }
-                else if (!existingAddresses.some((addr) => addr.address === addressInfo.address)) {
-                    existingAddresses.push(addressInfo);
+                else {
+                    throw new Error(`Invalid derivation path: ${addressInfo.derivationPath}`);
                 }
             }
             // validate and import the counter party payment code info
@@ -29657,12 +30453,20 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
                     wallet.validateBaseAddressInfo(pcInfo);
                     wallet.validateExtendedProperties(pcInfo);
                 }
-                wallet._paymentCodeSendAddressMap.set(paymentCode, paymentCodeInfoArray);
+                if (!wallet.paymentChannels.has(paymentCode)) {
+                    wallet.openChannel(paymentCode);
+                }
+                const channel = wallet.paymentChannels.get(paymentCode);
+                for (const pcInfo of paymentCodeInfoArray) {
+                    channel.counterpartyWallet.importAddressInfo(pcInfo);
+                }
             }
             return wallet;
         }
         validateAddressDerivation(info) {
-            const addressNode = this._getAddressNode(info.account, info.change, info.index);
+            const isChange = info.derivationPath === 'BIP44:change';
+            const bip44 = isChange ? this.changeBip44 : this.externalBip44;
+            const addressNode = bip44.getAddressNode(info.account, info.index);
             // Validate derived address matches
             if (addressNode.address !== info.address) {
                 throw new Error(`Address mismatch: derived ${addressNode.address} but got ${info.address}`);
@@ -29781,32 +30585,8 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {Promise<string>} A promise that resolves to the Base58-encoded BIP47 payment code.
          */
         getPaymentCode(account = 0) {
-            const privatePcode = this._getPaymentCodePrivate(account);
+            const privatePcode = generatePaymentCodePrivate(this._root, account);
             return privatePcode.toBase58();
-        }
-        /**
-         * Generates a BIP47 private payment code for the specified account. The payment code is created by combining the
-         * account's public key and chain code.
-         *
-         * @private
-         * @param {number} account - The account index for which to generate the private payment code.
-         * @returns {Promise<PaymentCodePrivate>} A promise that resolves to the PaymentCodePrivate instance.
-         */
-        _getPaymentCodePrivate(account) {
-            const bip32 = BIP32Factory(ecc);
-            const accountNode = this._root.deriveChild(account + HARDENED_OFFSET);
-            // payment code array
-            const pc = new Uint8Array(80);
-            // set version + options
-            pc.set([1, 0]);
-            // set the public key
-            const pubKey = accountNode.publicKey;
-            pc.set(getBytes(pubKey), 2);
-            // set the chain code
-            const chainCode = accountNode.chainCode;
-            pc.set(getBytes(chainCode), 35);
-            const adapter = new HDNodeBIP32Adapter(accountNode);
-            return new PaymentCodePrivate(adapter, ecc, bip32, pc);
         }
         /**
          * Generates a payment address for sending funds to the specified receiver's BIP47 payment code. Uses Diffie-Hellman
@@ -29817,42 +30597,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @throws {Error} Throws an error if the payment code version is invalid.
          */
         getNextSendAddress(receiverPaymentCode, zone, account = 0) {
-            const bip32 = BIP32Factory(ecc);
-            const buf = bs58check.decode(receiverPaymentCode);
-            const version = buf[0];
-            if (version !== PC_VERSION)
-                throw new Error('Invalid payment code version');
-            const walletPCodePrivate = this._getPaymentCodePrivate(account);
-            const receiverPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
-            const paymentCodeInfoArray = this._paymentCodeSendAddressMap.get(receiverPaymentCode);
-            const lastIndex = this._findLastUsedIndex(paymentCodeInfoArray, account, zone);
-            let addrIndex = lastIndex + 1;
-            for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
-                const address = receiverPCodePublic.getPaymentAddress(walletPCodePrivate, addrIndex);
-                if (this.isValidAddressForZone(address, zone)) {
-                    const pubkey = receiverPCodePublic.derivePaymentPublicKey(walletPCodePrivate, addrIndex);
-                    const pcInfo = {
-                        address,
-                        pubKey: hexlify(pubkey),
-                        index: addrIndex,
-                        account,
-                        zone,
-                        change: false,
-                        status: exports.AddressStatus.UNKNOWN,
-                        derivationPath: receiverPaymentCode,
-                        lastSyncedBlock: null,
-                    };
-                    if (paymentCodeInfoArray) {
-                        paymentCodeInfoArray.push(pcInfo);
-                    }
-                    else {
-                        this._paymentCodeSendAddressMap.set(receiverPaymentCode, [pcInfo]);
-                    }
-                    return pcInfo;
-                }
-                addrIndex++;
+            if (!this.paymentChannels.has(receiverPaymentCode)) {
+                throw new Error(`Receiver payment code ${receiverPaymentCode} not found in wallet`);
             }
-            throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
+            const paymentChannel = this.paymentChannels.get(receiverPaymentCode);
+            return paymentChannel.getNextSendingAddress(zone, account);
         }
         /**
          * Generates a payment address for receiving funds from the specified sender's BIP47 payment code. Uses
@@ -29863,42 +30612,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @throws {Error} Throws an error if the payment code version is invalid.
          */
         getNextReceiveAddress(senderPaymentCode, zone, account = 0) {
-            const bip32 = BIP32Factory(ecc);
-            const buf = bs58check.decode(senderPaymentCode);
-            const version = buf[0];
-            if (version !== PC_VERSION)
-                throw new Error('Invalid payment code version');
-            const senderPCodePublic = new PaymentCodePublic(ecc, bip32, buf.slice(1));
-            const walletPCodePrivate = this._getPaymentCodePrivate(account);
-            const paymentCodeInfoArray = this._addressesMap.get(senderPaymentCode);
-            const lastIndex = this._findLastUsedIndex(paymentCodeInfoArray, account, zone);
-            let addrIndex = lastIndex + 1;
-            for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
-                const address = walletPCodePrivate.getPaymentAddress(senderPCodePublic, addrIndex);
-                if (this.isValidAddressForZone(address, zone)) {
-                    const pubkey = walletPCodePrivate.derivePaymentPublicKey(senderPCodePublic, addrIndex);
-                    const pcInfo = {
-                        address,
-                        pubKey: hexlify(pubkey),
-                        index: addrIndex,
-                        account,
-                        zone,
-                        change: false,
-                        status: exports.AddressStatus.UNKNOWN,
-                        derivationPath: senderPaymentCode,
-                        lastSyncedBlock: null,
-                    };
-                    if (paymentCodeInfoArray) {
-                        paymentCodeInfoArray.push(pcInfo);
-                    }
-                    else {
-                        this._addressesMap.set(senderPaymentCode, [pcInfo]);
-                    }
-                    return pcInfo;
-                }
-                addrIndex++;
+            if (!this.paymentChannels.has(senderPaymentCode)) {
+                throw new Error(`Sender payment code ${senderPaymentCode} not found in wallet`);
             }
-            throw new Error(`Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`);
+            const paymentChannel = this.paymentChannels.get(senderPaymentCode);
+            return paymentChannel.getNextReceivingAddress(zone, account);
         }
         /**
          * Receives a payment code and stores it in the wallet for future use. If the payment code is already in the wallet,
@@ -29910,15 +30628,13 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (!validatePaymentCode(paymentCode)) {
                 throw new Error(`Invalid payment code: ${paymentCode}`);
             }
-            if (!this._addressesMap.has(paymentCode)) {
-                this._addressesMap.set(paymentCode, []);
-            }
-            if (!this._paymentCodeSendAddressMap.has(paymentCode)) {
-                this._paymentCodeSendAddressMap.set(paymentCode, []);
-            }
+            const pc = new PaymentChannel(this._root, paymentCode);
+            this.paymentChannels.set(paymentCode, pc);
+            // set the provider for the self wallet
+            pc.selfWallet.setProvider(this.provider);
         }
         channelIsOpen(paymentCode) {
-            return this._addressesMap.has(paymentCode) && this._paymentCodeSendAddressMap.has(paymentCode);
+            return this.paymentChannels.has(paymentCode);
         }
         /**
          * Gets the address info for a given address.
@@ -29927,7 +30643,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {QiAddressInfo | null} The address info or null if not found.
          */
         getAddressInfo(address) {
-            const externalAddressInfo = this._addressesMap.get('BIP44:external')?.find((addr) => addr.address === address);
+            const externalAddressInfo = this.externalBip44.getAddressInfo(address);
             if (!externalAddressInfo) {
                 return null;
             }
@@ -29940,7 +30656,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {QiAddressInfo | null} The address info or null if not found.
          */
         getChangeAddressInfo(address) {
-            const changeAddressInfo = this._addressesMap.get('BIP44:change')?.find((addr) => addr.address === address);
+            const changeAddressInfo = this.changeBip44.getAddressInfo(address);
             if (!changeAddressInfo) {
                 return null;
             }
@@ -29954,37 +30670,17 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @throws {Error} If the private key is invalid or the address is already in use
          */
         async importPrivateKey(privateKey) {
-            if (!isHexString(privateKey, 32)) {
-                throw new Error(`Invalid private key format: must be 32-byte hex string (got ${privateKey})`);
+            const addrInfo = this.privatekeyWallet.importPrivateKey(privateKey);
+            // check address is not in BIP44 wallets
+            if (this.externalBip44.getAddressInfo(addrInfo.address) || this.changeBip44.getAddressInfo(addrInfo.address)) {
+                throw new Error(`Address ${addrInfo.address} already exists in BIP44 derivation path`);
             }
-            const pubKey = SigningKey.computePublicKey(privateKey, true);
-            const address = computeAddress(pubKey);
-            // Validate address is for correct zone and ledger
-            const addressZone = getZoneForAddress(address);
-            if (!addressZone) {
-                throw new Error(`Private key does not correspond to a valid address for any zone (got ${address})`);
-            }
-            if (!isQiAddress(address)) {
-                throw new Error(`Private key does not correspond to a valid Qi address (got ${address})`);
-            }
-            for (const [path, addresses] of this._addressesMap.entries()) {
-                if (addresses.some((info) => info.address === address)) {
-                    throw new Error(`Address ${address} already exists in wallet under path ${path}`);
+            for (const paymentChannel of this.paymentChannels.values()) {
+                if (paymentChannel.getReceivingAddressInfo(addrInfo.address)) {
+                    throw new Error(`Address ${addrInfo.address} already exists in BIP47 derivation path`);
                 }
             }
-            const addressInfo = {
-                pubKey,
-                address,
-                account: 0,
-                index: -1,
-                change: false,
-                zone: addressZone,
-                status: exports.AddressStatus.UNUSED,
-                derivationPath: privateKey,
-                lastSyncedBlock: null,
-            };
-            this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH).push(addressInfo);
-            return addressInfo;
+            return addrInfo;
         }
         /**
          * Gets all addresses that were imported via private keys.
@@ -29993,12 +30689,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {QiAddressInfo[]} Array of address info objects for imported addresses
          */
         getImportedAddresses(zone) {
-            const importedAddresses = this._addressesMap.get(QiHDWallet.PRIVATE_KEYS_PATH) || [];
-            if (zone !== undefined) {
-                this.validateZone(zone);
-                return importedAddresses.filter((info) => info.zone === zone);
-            }
-            return [...importedAddresses];
+            return this.privatekeyWallet.getImportedAddresses(zone);
         }
         /**
          * Adds a new address to the wallet.
@@ -30011,7 +30702,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (account < 0 || addressIndex < 0) {
                 throw new Error('Account and address index must be non-negative integers');
             }
-            return this._addAddress(account, addressIndex, false);
+            return this.externalBip44.addAddress(account, addressIndex);
         }
         /**
          * Adds a new change address to the wallet.
@@ -30024,23 +30715,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             if (account < 0 || addressIndex < 0) {
                 throw new Error('Account and address index must be non-negative integers');
             }
-            return this._addAddress(account, addressIndex, true);
-        }
-        _addAddress(account, addressIndex, isChange) {
-            const derivationPath = isChange ? 'BIP44:change' : 'BIP44:external';
-            const existingAddresses = this._addressesMap.get(derivationPath) || [];
-            if (existingAddresses.some((info) => info.index === addressIndex)) {
-                throw new Error(`Address index ${addressIndex} already exists in wallet under path ${derivationPath}`);
-            }
-            const addressNode = this._getAddressNode(account, isChange, addressIndex);
-            const zone = getZoneForAddress(addressNode.address);
-            if (!zone) {
-                throw new Error(`Failed to derive a Qi valid address zone for the index ${addressIndex}`);
-            }
-            if (!isQiAddress(addressNode.address)) {
-                throw new Error(`Address ${addressNode.address} is not a valid Qi address`);
-            }
-            return this._createAndStoreQiAddressInfo(addressNode, account, zone, isChange);
+            return this.changeBip44.addAddress(account, addressIndex);
         }
         /**
          * Gets the addresses for a given account.
@@ -30049,10 +30724,36 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
          * @returns {QiAddressInfo[]} The addresses for the account.
          */
         getAddressesForAccount(account) {
-            const addresses = this._addressesMap.values();
-            return Array.from(addresses)
-                .flat()
-                .filter((info) => info.account === account);
+            const externalAddresses = this.externalBip44.getAddressesForAccount(account);
+            const changeAddresses = this.changeBip44.getAddressesForAccount(account);
+            const paymentCodeAddresses = [];
+            for (const paymentChannel of this.paymentChannels.values()) {
+                paymentCodeAddresses.push(...paymentChannel.getReceivingAddressesForAccount(account));
+            }
+            const privateKeyAddresses = this.privatekeyWallet.getAddressesForAccount(account);
+            return [...externalAddresses, ...changeAddresses, ...paymentCodeAddresses, ...privateKeyAddresses];
+        }
+        /**
+         * Gets the total balance for a specific zone by summing balances from all address types:
+         *
+         * - BIP44 external addresses
+         * - BIP44 change addresses
+         * - BIP47 payment channel addresses
+         * - Imported private key addresses
+         *
+         * @param {Zone} zone - The zone to get the balance for
+         * @returns {Promise<bigint>} The total balance in the zone as a bigint
+         */
+        async getBalanceForZone(zone) {
+            const bip44externalBalance = await this.externalBip44.getTotalBalance(zone);
+            const bip44changeBalance = await this.changeBip44.getTotalBalance(zone);
+            // get the sum of bip47 self wallets
+            let bip47AddressesBalance = BigInt(0);
+            for (const pc of this.paymentChannels.values()) {
+                bip47AddressesBalance += await pc.selfWallet.getTotalBalance(zone);
+            }
+            const privatekeyBalance = await this.privatekeyWallet.getTotalBalance(zone);
+            return bip44externalBalance + bip44changeBalance + bip47AddressesBalance + privatekeyBalance;
         }
     }
 
