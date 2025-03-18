@@ -1,167 +1,167 @@
 {
-  "author": "Dominant Strategies",
-  "browser": {
-    "./lib/esm/crypto/crypto.js": "./lib/esm/crypto/crypto-browser.js",
-    "./lib/esm/providers/ws.js": "./lib/esm/providers/ws-browser.js",
-    "./lib/esm/encoding/base64.js": "./lib/esm/encoding/base64-browser.js",
-    "./lib/esm/utils/geturl.js": "./lib/esm/utils/geturl-browser.js",
-    "./lib/esm/wordlists/wordlists.js": "./lib/esm/wordlists/wordlists-browser.js"
-  },
-  "dependencies": {
-    "@bitcoinerlab/secp256k1": "^1.1.1",
-    "@brandonblack/musig": "^0.0.1-alpha.1",
-    "@noble/curves": "1.2.0",
-    "@noble/hashes": "1.3.2",
-    "@scure/base": "^1.1.9",
-    "aes-js": "4.0.0-beta.5",
-    "dotenv": "^16.4.1",
-    "google-protobuf": "^3.21.4",
-    "tslib": "^2.6.2",
-    "ws": "^8.17.1"
-  },
-  "description": "A complete and compact Quai library, for dapps, wallets and any other tools.",
-  "devDependencies": {
-    "@rollup/plugin-node-resolve": "^15.2.3",
-    "@types/expect": "^24.3.0",
-    "@types/google-protobuf": "^3.15.12",
-    "@types/mocha": "^9.1.1",
-    "@types/node": "18.15.13",
-    "@types/semver": "7.5.0",
-    "@typescript-eslint/eslint-plugin": "^7.7.0",
-    "@typescript-eslint/parser": "^7.7.0",
-    "axios": "^1.6.7",
-    "c8": "7.12.0",
-    "eslint": "^8.57.0",
-    "eslint-config-airbnb-typescript": "^18.0.0",
-    "eslint-config-prettier": "^9.1.0",
-    "husky": "^9.0.11",
-    "lint-staged": "^15.2.2",
-    "mocha": "^10.8.2",
-    "prettier": "^3.2.5",
-    "prettier-plugin-jsdoc": "^1.3.0",
-    "rollup": "^4.19.0",
-    "semver": "7.5.4",
-    "ts-mocha": "^10.0.0",
-    "typedoc": "^0.25.13",
-    "typedoc-plugin-frontmatter": "^1.0.0",
-    "typedoc-plugin-markdown": "^4.0.1",
-    "typedoc-plugin-remove-references": "^0.0.6",
-    "typescript": "5.0.4",
-    "uglify-js": "3.17.0"
-  },
-  "engines": {
-    "node": ">=17.0.0"
-  },
-  "exports": {
-    ".": {
-      "import": "./lib/esm/index.js",
-      "default": "./lib/commonjs/index.js"
+    "author": "Dominant Strategies",
+    "browser": {
+        "./lib/esm/crypto/crypto.js": "./lib/esm/crypto/crypto-browser.js",
+        "./lib/esm/providers/ws.js": "./lib/esm/providers/ws-browser.js",
+        "./lib/esm/encoding/base64.js": "./lib/esm/encoding/base64-browser.js",
+        "./lib/esm/utils/geturl.js": "./lib/esm/utils/geturl-browser.js",
+        "./lib/esm/wordlists/wordlists.js": "./lib/esm/wordlists/wordlists-browser.js"
     },
-    "./abi": {
-      "import": "./lib/esm/abi/index.js",
-      "default": "./lib/commonjs/abi/index.js"
+    "dependencies": {
+        "@bitcoinerlab/secp256k1": "^1.1.1",
+        "@brandonblack/musig": "^0.0.1-alpha.1",
+        "@noble/curves": "1.2.0",
+        "@noble/hashes": "1.3.2",
+        "@scure/base": "^1.1.9",
+        "aes-js": "4.0.0-beta.5",
+        "dotenv": "^16.4.1",
+        "google-protobuf": "^3.21.4",
+        "tslib": "^2.6.2",
+        "ws": "^8.17.1"
     },
-    "./address": {
-      "import": "./lib/esm/address/index.js",
-      "default": "./lib/commonjs/address/index.js"
+    "description": "A complete and compact Quai library, for dapps, wallets and any other tools.",
+    "devDependencies": {
+        "@rollup/plugin-node-resolve": "^15.2.3",
+        "@types/expect": "^24.3.0",
+        "@types/google-protobuf": "^3.15.12",
+        "@types/mocha": "^9.1.1",
+        "@types/node": "18.15.13",
+        "@types/semver": "7.5.0",
+        "@typescript-eslint/eslint-plugin": "^7.7.0",
+        "@typescript-eslint/parser": "^7.7.0",
+        "axios": "^1.6.7",
+        "c8": "7.12.0",
+        "eslint": "^8.57.0",
+        "eslint-config-airbnb-typescript": "^18.0.0",
+        "eslint-config-prettier": "^9.1.0",
+        "husky": "^9.0.11",
+        "lint-staged": "^15.2.2",
+        "mocha": "^10.8.2",
+        "prettier": "^3.2.5",
+        "prettier-plugin-jsdoc": "^1.3.0",
+        "rollup": "^4.19.0",
+        "semver": "7.5.4",
+        "ts-mocha": "^10.0.0",
+        "typedoc": "^0.25.13",
+        "typedoc-plugin-frontmatter": "^1.0.0",
+        "typedoc-plugin-markdown": "^4.0.1",
+        "typedoc-plugin-remove-references": "^0.0.6",
+        "typescript": "5.0.4",
+        "uglify-js": "3.17.0"
     },
-    "./constants": {
-      "import": "./lib/esm/constants/index.js",
-      "default": "./lib/commonjs/constants/index.js"
+    "engines": {
+        "node": ">=17.0.0"
     },
-    "./contract": {
-      "import": "./lib/esm/contract/index.js",
-      "default": "./lib/commonjs/contract/index.js"
+    "exports": {
+        ".": {
+            "import": "./lib/esm/index.js",
+            "default": "./lib/commonjs/index.js"
+        },
+        "./abi": {
+            "import": "./lib/esm/abi/index.js",
+            "default": "./lib/commonjs/abi/index.js"
+        },
+        "./address": {
+            "import": "./lib/esm/address/index.js",
+            "default": "./lib/commonjs/address/index.js"
+        },
+        "./constants": {
+            "import": "./lib/esm/constants/index.js",
+            "default": "./lib/commonjs/constants/index.js"
+        },
+        "./contract": {
+            "import": "./lib/esm/contract/index.js",
+            "default": "./lib/commonjs/contract/index.js"
+        },
+        "./crypto": {
+            "import": "./lib/esm/crypto/index.js",
+            "default": "./lib/commonjs/crypto/index.js"
+        },
+        "./hash": {
+            "import": "./lib/esm/hash/index.js",
+            "default": "./lib/commonjs/hash/index.js"
+        },
+        "./providers": {
+            "import": "./lib/esm/providers/index.js",
+            "default": "./lib/commonjs/providers/index.js"
+        },
+        "./transaction": {
+            "import": "./lib/esm/transaction/index.js",
+            "default": "./lib/commonjs/transaction/index.js"
+        },
+        "./utils": {
+            "import": "./lib/esm/utils/index.js",
+            "default": "./lib/commonjs/utils/index.js"
+        },
+        "./wallet": {
+            "import": "./lib/esm/wallet/index.js",
+            "default": "./lib/commonjs/wallet/index.js"
+        },
+        "./wordlists": {
+            "import": "./lib/esm/wordlists/index.js",
+            "default": "./lib/commonjs/wordlists/index.js"
+        }
     },
-    "./crypto": {
-      "import": "./lib/esm/crypto/index.js",
-      "default": "./lib/commonjs/crypto/index.js"
+    "gitHead": "3bd0bf5b077f4aa5fab480474e3982e50e1af506",
+    "homepage": "https://qu.ai",
+    "keywords": [
+        "quainetwork",
+        "quai",
+        "quais",
+        "quaisjs",
+        "quais.js"
+    ],
+    "license": "MIT",
+    "main": "./lib/commonjs/index.js",
+    "module": "./lib/esm/index.js",
+    "name": "quais",
+    "publishConfig": {
+        "access": "public",
+        "tag": "latest"
     },
-    "./hash": {
-      "import": "./lib/esm/hash/index.js",
-      "default": "./lib/commonjs/hash/index.js"
+    "repository": {
+        "type": "git",
+        "url": "git://github.com/dominant-strategies/quais.js.git"
     },
-    "./providers": {
-      "import": "./lib/esm/providers/index.js",
-      "default": "./lib/commonjs/providers/index.js"
+    "scripts": {
+        "_build-dist": "rollup -c && uglifyjs ./dist/quais.js -o ./dist/quais.min.js && uglifyjs ./dist/quais.umd.js -o ./dist/quais.umd.min.js && uglifyjs ./dist/wordlists-extra.js -o ./dist/wordlists-extra.min.js",
+        "_dist-stats": "gzip -k9f -S '.gz' ./dist/quais.min.js && gzip -k9f -S '.gz' ./dist/quais.umd.min.js && gzip -k9f -S '.gz' ./dist/wordlists-extra.min.js && du -hs ./dist/*.gz && echo '' && du -hs ./dist/*.js",
+        "auto-build": "npm run build -- -w",
+        "lint": "eslint src/**/*.ts --fix",
+        "build": "tsc --project tsconfig.esm.json && cp ./misc/basedirs/lib/esm/package.json ./lib/esm",
+        "build-all": "npm run build && npm run build-commonjs",
+        "build-clean": "npm run clean && npm run build && npm run build-all && npm run _build-dist && npm run _dist-stats",
+        "build-commonjs": "tsc --project tsconfig.commonjs.json",
+        "build-dist": "npm run build && npm run _build-dist && npm run _dist-stats",
+        "clean": "rm -rf dist lib/esm lib/commonjs && cp -r misc/basedirs/* .",
+        "update-symlink": "npm run clean && npm run build-all && npm rm -g quais -g && npm link",
+        "stats": "echo 'Dependencies' && npm ls --all --omit=dev",
+        "test": "NODE_ENV=test npm run test-esm",
+        "test-containers": "npm run containers-up && NODE_ENV=test npm run test; npm run containers-down",
+        "test-integ-containers": "npm run containers-up && NODE_ENV=test npm run test-integ; npm run containers-down",
+        "containers-up": "./start-test-containers.sh",
+        "containers-down": "./stop-test-containers.sh",
+        "test-browser": "node lib/esm/_tests/browser/test-browser.js",
+        "test-commonjs": "mocha --reporter ./reporter.cjs ./lib/commonjs/_tests/**/*.test.js",
+        "test-unit": "mocha --timeout 10000 --reporter ./reporter.cjs ./lib/commonjs/_tests/unit/*.unit.test.js",
+        "test-integ": "mocha --timeout 20000 --reporter ./reporter.cjs ./lib/commonjs/_tests/integration/*.integration.test.js",
+        "test-coverage": "c8 -o output -r lcov -r text mocha --no-color --reporter ./reporter.cjs ./lib/esm/_tests/**/*.test.js | tee output/summary.txt",
+        "test-esm": "mocha --trace-warnings --reporter ./reporter.cjs -r dotenv/config ./lib/esm/_tests/**/*.test.js",
+        "test-testcontract": "mocha --trace-warnings --reporter ./reporter.cjs -r dotenv/config ./lib/esm/_tests/integration/testcontract.integration.test.js",
+        "prepare": "husky",
+        "format": "prettier --write src/**/*.ts"
     },
-    "./transaction": {
-      "import": "./lib/esm/transaction/index.js",
-      "default": "./lib/commonjs/transaction/index.js"
+    "sideEffects": false,
+    "version": "1.0.0-alpha.41",
+    "husky": {
+        "hooks": {
+            "pre-commit": "lint-staged"
+        }
     },
-    "./utils": {
-      "import": "./lib/esm/utils/index.js",
-      "default": "./lib/commonjs/utils/index.js"
-    },
-    "./wallet": {
-      "import": "./lib/esm/wallet/index.js",
-      "default": "./lib/commonjs/wallet/index.js"
-    },
-    "./wordlists": {
-      "import": "./lib/esm/wordlists/index.js",
-      "default": "./lib/commonjs/wordlists/index.js"
+    "lint-staged": {
+        "src/**/*.{ts}": [
+            "eslint --fix",
+            "prettier --write"
+        ]
     }
-  },
-  "gitHead": "3bd0bf5b077f4aa5fab480474e3982e50e1af506",
-  "homepage": "https://qu.ai",
-  "keywords": [
-    "quainetwork",
-    "quai",
-    "quais",
-    "quaisjs",
-    "quais.js"
-  ],
-  "license": "MIT",
-  "main": "./lib/commonjs/index.js",
-  "module": "./lib/esm/index.js",
-  "name": "quais",
-  "publishConfig": {
-    "access": "public",
-    "tag": "latest"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/dominant-strategies/quais.js.git"
-  },
-  "scripts": {
-    "_build-dist": "rollup -c && uglifyjs ./dist/quais.js -o ./dist/quais.min.js && uglifyjs ./dist/quais.umd.js -o ./dist/quais.umd.min.js && uglifyjs ./dist/wordlists-extra.js -o ./dist/wordlists-extra.min.js",
-    "_dist-stats": "gzip -k9f -S '.gz' ./dist/quais.min.js && gzip -k9f -S '.gz' ./dist/quais.umd.min.js && gzip -k9f -S '.gz' ./dist/wordlists-extra.min.js && du -hs ./dist/*.gz && echo '' && du -hs ./dist/*.js",
-    "auto-build": "npm run build -- -w",
-    "lint": "eslint src/**/*.ts --fix",
-    "build": "tsc --project tsconfig.esm.json && cp ./misc/basedirs/lib/esm/package.json ./lib/esm",
-    "build-all": "npm run build && npm run build-commonjs",
-    "build-clean": "npm run clean && npm run build && npm run build-all && npm run _build-dist && npm run _dist-stats",
-    "build-commonjs": "tsc --project tsconfig.commonjs.json",
-    "build-dist": "npm run build && npm run _build-dist && npm run _dist-stats",
-    "clean": "rm -rf dist lib/esm lib/commonjs && cp -r misc/basedirs/* .",
-    "update-symlink": "npm run clean && npm run build-all && npm rm -g quais -g && npm link",
-    "stats": "echo 'Dependencies' && npm ls --all --omit=dev",
-    "test": "NODE_ENV=test npm run test-esm",
-    "test-containers": "npm run containers-up && NODE_ENV=test npm run test; npm run containers-down",
-    "test-integ-containers": "npm run containers-up && NODE_ENV=test npm run test-integ; npm run containers-down",
-    "containers-up": "./start-test-containers.sh",
-    "containers-down": "./stop-test-containers.sh",
-    "test-browser": "node lib/esm/_tests/browser/test-browser.js",
-    "test-commonjs": "mocha --reporter ./reporter.cjs ./lib/commonjs/_tests/**/*.test.js",
-    "test-unit": "mocha --timeout 10000 --reporter ./reporter.cjs ./lib/commonjs/_tests/unit/*.unit.test.js",
-    "test-integ": "mocha --timeout 20000 --reporter ./reporter.cjs ./lib/commonjs/_tests/integration/*.integration.test.js",
-    "test-coverage": "c8 -o output -r lcov -r text mocha --no-color --reporter ./reporter.cjs ./lib/esm/_tests/**/*.test.js | tee output/summary.txt",
-    "test-esm": "mocha --trace-warnings --reporter ./reporter.cjs -r dotenv/config ./lib/esm/_tests/**/*.test.js",
-    "test-testcontract": "mocha --trace-warnings --reporter ./reporter.cjs -r dotenv/config ./lib/esm/_tests/integration/testcontract.integration.test.js",
-    "prepare": "husky",
-    "format": "prettier --write src/**/*.ts"
-  },
-  "sideEffects": false,
-  "version": "1.0.0-alpha.42",
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "src/**/*.{ts}": [
-      "eslint --fix",
-      "prettier --write"
-    ]
-  }
 }
