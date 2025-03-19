@@ -160,7 +160,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
     /**
      * The BIP44 wallet instance used for deriving change (sending) addresses. This follows the BIP44 derivation path
-     * m/44'/969'/account'/1/index
+     * m/44'/969'/account'/0/index
      *
      * @private
      * @type {Bip44QiWallet}
@@ -168,6 +168,24 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      */
     private readonly changeBip44: Bip44QiWallet;
 
+    /**
+     * The BIP47 HDNode instance used for deriving payment code addresses. This follows the BIP47 derivation path
+     * m/47'/969'/account'/0/index
+     *
+     * @private
+     * @type {HDNodeWallet}
+     * @readonly
+     */
+    private readonly bip47HDNode: HDNodeWallet;
+
+    /**
+     * The BIP47 derivation path m/47'/969'
+     *
+     * @private
+     * @type {string}
+     * @readonly
+     */
+    private static readonly bip47derivationPath: string = "m/47'/969'";
     /**
      * Map of payment channels indexed by counterparty payment code
      */
@@ -206,6 +224,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // initialize private key wallet
         this.privatekeyWallet = new PrivatekeyQiWallet();
+        // initialize bip47 HDNode
+        this.bip47HDNode = HDNodeWallet.fromMnemonic(this._root.mnemonic!, QiHDWallet.bip47derivationPath);
     }
 
     /**
@@ -927,7 +947,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         } else {
             // (BIP47 addresses)
             const counterpartyPaymentCode = addressInfo.derivationPath;
-            const privateKey = getPrivateKeyFromPaymentCode(this._root, counterpartyPaymentCode, index, account);
+            const privateKey = getPrivateKeyFromPaymentCode(this.bip47HDNode, counterpartyPaymentCode, index, account);
             return privateKey;
         }
     }
@@ -1361,7 +1381,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {Promise<string>} A promise that resolves to the Base58-encoded BIP47 payment code.
      */
     public getPaymentCode(account: number = 0): string {
-        const privatePcode = generatePaymentCodePrivate(this._root, account);
+        const privatePcode = generatePaymentCodePrivate(this.bip47HDNode, account);
         return privatePcode.toBase58();
     }
 
@@ -1408,7 +1428,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             throw new Error(`Invalid payment code: ${paymentCode}`);
         }
 
-        const pc = new PaymentChannel(this._root, paymentCode);
+        const pc = new PaymentChannel(this.bip47HDNode, paymentCode);
         this.paymentChannels.set(paymentCode, pc);
 
         // set the provider for the self wallet
