@@ -1730,13 +1730,16 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             tx = await tx;
         }
         const zone = await this.zoneFromAddress(addressFromTransactionRequest(tx));
-        return (
-            await this.#perform({
-                method: 'createAccessList',
-                transaction: tx,
-                zone: zone,
-            })
-        ).accessList;
+        const result = await this.#perform({
+            method: 'createAccessList',
+            transaction: tx,
+            zone: zone,
+        });
+        // Check for VM-level error (e.g., vm.ErrOutOfGas)
+        if (result.error) {
+            throw new Error(`Access list creation failed due to VM error: ${result.Error}`);
+        }
+        return result.accessList;
     }
 
     // TODO: `attempt` is not used, remove or re-write
