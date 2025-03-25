@@ -166,11 +166,23 @@ describe('QiHDWallet scan and send transaction', async function () {
                 const tx = QiTransaction.from(signedTransaction);
                 const expectedTx = QiTransaction.from(expectedSignedTx);
 
-                // compare everyhing but the hash and signature
-                assert.deepEqual(tx.txInputs, expectedTx.txInputs);
-                assert.deepEqual(tx.txOutputs, expectedTx.txOutputs);
-                assert.deepEqual(tx.type, expectedTx.type);
-                assert.deepEqual(tx.chainId, expectedTx.chainId);
+                // compare everythin but the hash and signature
+                assert.deepEqual(
+                    tx.txInputs,
+                    expectedTx.txInputs,
+                    `Expected inputs: ${JSON.stringify(expectedTx.txInputs, null, 2)} \nbut got: ${JSON.stringify(tx.txInputs, null, 2)}`,
+                );
+                assert.deepEqual(
+                    tx.txOutputs,
+                    expectedTx.txOutputs,
+                    `Expected outputs: ${JSON.stringify(expectedTx.txOutputs, null, 2)} \nbut got: ${JSON.stringify(tx.txOutputs, null, 2)}`,
+                );
+                assert.deepEqual(tx.type, expectedTx.type, `Expected type: ${expectedTx.type} \nbut got: ${tx.type}`);
+                assert.deepEqual(
+                    tx.chainId,
+                    expectedTx.chainId,
+                    `Expected chainId: ${expectedTx.chainId} \nbut got: ${tx.chainId}`,
+                );
 
                 console.log(`\n      ℹ️  Transaction has ${tx.txInputs.length} input(s)`);
                 let valid: boolean;
