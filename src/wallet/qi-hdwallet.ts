@@ -186,6 +186,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @readonly
      */
     private static readonly bip47derivationPath: string = "m/47'/969'";
+
     /**
      * Map of payment channels indexed by counterparty payment code
      */
@@ -224,6 +225,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // initialize private key wallet
         this.privatekeyWallet = new PrivatekeyQiWallet();
+		
         // initialize bip47 HDNode
         this.bip47HDNode = HDNodeWallet.fromMnemonic(this._root.mnemonic!, QiHDWallet.bip47derivationPath);
     }
