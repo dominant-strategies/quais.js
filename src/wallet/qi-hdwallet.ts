@@ -38,6 +38,7 @@ export interface OutpointInfo {
     outpoint: Outpoint;
     address: string;
     zone: Zone;
+    derivationPath: DerivationPath;
     account?: number;
 }
 
@@ -58,7 +59,7 @@ export enum AddressStatus {
  *
  * @type {string}
  */
-type DerivationPath = 'BIP44:external' | 'BIP44:change' | 'PrivateKey' | string; // string for payment codes
+export type DerivationPath = 'BIP44:external' | 'BIP44:change' | 'PrivateKey' | string; // string for payment codes
 
 export type LastSyncedBlock = { hash: string; number: number };
 
