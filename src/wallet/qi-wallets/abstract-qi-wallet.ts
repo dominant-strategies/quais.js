@@ -589,6 +589,7 @@ export abstract class AbstractQiWallet {
                             address,
                             zone: addressInfo.zone,
                             account: addressInfo.account,
+                            derivationPath: addressInfo.derivationPath,
                         })),
                     );
 
@@ -659,6 +660,7 @@ export abstract class AbstractQiWallet {
                             address: addr.address,
                             zone: addr.zone,
                             account: addr.account,
+                            derivationPath: addr.derivationPath,
                         })),
                     );
 
@@ -741,6 +743,7 @@ export abstract class AbstractQiWallet {
                         address: newAddr.address,
                         zone: newAddr.zone,
                         account: newAddr.account,
+                        derivationPath: newAddr.derivationPath,
                     })),
                 );
 
