@@ -6,7 +6,7 @@ import { Zone } from '../../constants/zones.js';
 import { QiTransactionResponse } from '../../quais.js';
 import { MockProvider } from './mockProvider.js';
 import { TxInput, TxOutput } from '../../transaction/utxo.js';
-
+import { DerivationPath } from '../../wallet/qi-hdwallet.js';
 interface AggregateTestCase {
     mnemonic: string;
     zone: Zone;
@@ -20,6 +20,7 @@ interface AggregateTestCase {
         address: string;
         zone: Zone;
         account: number;
+        derivationPath: DerivationPath;
     }>;
     addressesToAdd: Array<{
         account: number;
