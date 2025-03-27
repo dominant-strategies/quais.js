@@ -225,9 +225,18 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // initialize private key wallet
         this.privatekeyWallet = new PrivatekeyQiWallet();
-		
+
         // initialize bip47 HDNode
         this.bip47HDNode = HDNodeWallet.fromMnemonic(this._root.mnemonic!, QiHDWallet.bip47derivationPath);
+    }
+
+    /**
+     * Returns the extended public key of the root node of the BIP44 HD wallet.
+     *
+     * @returns {string} The extended public key.
+     */
+    public xPub(): string {
+        return this._root.extendedKey;
     }
 
     /**

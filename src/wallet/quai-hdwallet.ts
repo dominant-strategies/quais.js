@@ -72,6 +72,15 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
     }
 
     /**
+     * Returns the extended public key of the root node of the BIP44 HD wallet.
+     *
+     * @returns {string} The extended public key.
+     */
+    public xPub(): string {
+        return this._root.extendedKey;
+    }
+
+    /**
      * Sign a transaction.
      *
      * @param {QuaiTransactionRequest} tx - The transaction request.
