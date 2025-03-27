@@ -1,3 +1,5 @@
+import { DerivationPath } from '../wallet/qi-hdwallet';
+
 export type TestCaseAbiVerbose =
     | {
           type: 'address' | 'hexstring' | 'number' | 'string';
@@ -328,6 +330,7 @@ export interface outpointInfo {
     };
     address: string;
     zone: Zone;
+    derivationPath: DerivationPath;
 }
 
 export interface TestCaseQiTransaction {
