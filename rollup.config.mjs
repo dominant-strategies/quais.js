@@ -27,6 +27,7 @@ function getConfig(opts) {
             name: opts.name || undefined,
             format: opts.format || 'esm',
             sourcemap: true,
+            inlineDynamicImports: true,
             globals: {
                 'google-protobuf': 'pb_1',
                 '@bitcoinerlab/secp256k1': 'ecc',
