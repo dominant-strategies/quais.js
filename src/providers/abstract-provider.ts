@@ -99,7 +99,7 @@ import {
 import { getNodeLocationFromZone, getZoneFromNodeLocation } from '../utils/shards.js';
 import { fromShard } from '../constants/shards.js';
 import { AccessList } from '../transaction/index.js';
-import { Interface, InterfaceAbi } from '../abi';
+import { Interface, InterfaceAbi } from '../abi/index.js';
 
 type Timer = ReturnType<typeof setTimeout>;
 
