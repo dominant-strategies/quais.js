@@ -31478,6 +31478,7 @@ class AbstractQiWallet {
                         address,
                         zone: addressInfo.zone,
                         account: addressInfo.account,
+                        derivationPath: addressInfo.derivationPath,
                     })));
                     // Track for callback
                     createdOutpoints[address] = delta.created;
@@ -31533,6 +31534,7 @@ class AbstractQiWallet {
                         address: addr.address,
                         zone: addr.zone,
                         account: addr.account,
+                        derivationPath: addr.derivationPath,
                     })));
                     // Track for callback
                     createdOutpoints[addr.address] = outpoints;
@@ -31597,6 +31599,7 @@ class AbstractQiWallet {
                     address: newAddr.address,
                     zone: newAddr.zone,
                     account: newAddr.account,
+                    derivationPath: newAddr.derivationPath,
                 })));
                 // Track for callback
                 createdOutpoints[newAddr.address] = outpoints;
@@ -32827,28 +32830,43 @@ class QiHDWallet extends AbstractHDWallet {
         return this.changeBip44.deriveNewAddress(zone, account);
     }
     /**
-     * Imports an array of outpoints.
+     * Imports an array of outpoints into their corresponding wallets based on their derivation paths.
      *
      * @param {OutpointInfo[]} outpoints - The outpoints to import.
      */
-    importOutpoints(outpoints, derivationPath) {
+    importOutpoints(outpoints) {
         this.validateOutpointInfo(outpoints);
-        if (derivationPath === 'BIP44:external') {
-            this.externalBip44.importOutpoints(outpoints);
-        }
-        else if (derivationPath === 'BIP44:change') {
-            this.changeBip44.importOutpoints(outpoints);
-        }
-        else if (derivationPath === 'PrivateKey') {
-            this.privatekeyWallet.importOutpoints(outpoints);
-        }
-        else {
-            // derivaration path is a payment code
-            const paymentChannel = this.paymentChannels.get(derivationPath);
-            if (!paymentChannel) {
-                throw new Error(`Payment channel not found for derivation path: ${derivationPath}`);
+        // Group outpoints by derivation path for batch processing
+        const groupedOutpoints = new Map();
+        for (const outpoint of outpoints) {
+            const path = outpoint.derivationPath;
+            if (!groupedOutpoints.has(path)) {
+                groupedOutpoints.set(path, []);
             }
-            paymentChannel.selfWallet.importOutpoints(outpoints);
+            groupedOutpoints.get(path).push(outpoint);
+        }
+        // Process each group of outpoints
+        for (const [path, pathOutpoints] of groupedOutpoints) {
+            switch (path) {
+                case 'BIP44:external':
+                    this.externalBip44.importOutpoints(pathOutpoints);
+                    break;
+                case 'BIP44:change':
+                    this.changeBip44.importOutpoints(pathOutpoints);
+                    break;
+                case 'PrivateKey':
+                    this.privatekeyWallet.importOutpoints(pathOutpoints);
+                    break;
+                default: {
+                    // Handle payment code paths
+                    const paymentChannel = this.paymentChannels.get(path);
+                    if (!paymentChannel) {
+                        throw new Error(`Payment channel not found for derivation path: ${path}`);
+                    }
+                    paymentChannel.selfWallet.importOutpoints(pathOutpoints);
+                    break;
+                }
+            }
         }
     }
     /**
