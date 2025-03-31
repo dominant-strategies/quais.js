@@ -25,7 +25,7 @@ describe('QiHDWallet: Test transaction signing', function () {
             for (const param of test.params) {
                 qiWallet.getNextAddressSync(param.account, param.zone);
             }
-            qiWallet.importOutpoints(test.outpoints, 'BIP44:external');
+            qiWallet.importOutpoints(test.outpoints);
             const qiTx = createQiTransaction(
                 test.transaction.chainId,
                 test.transaction.txInputs,
