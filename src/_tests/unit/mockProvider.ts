@@ -12,11 +12,11 @@ import {
 } from '../../providers/index.js';
 import { AddressLike } from '../../address/index.js';
 import { Shard, Zone } from '../../constants/index.js';
-import { Listener, EventPayload, EventEmitterable, getBytes } from '../../utils/index.js';
+import { Listener, EventPayload, EventEmitterable, getBytes, BigNumberish } from '../../utils/index.js';
 import { Outpoint, OutpointDeltas } from '../../transaction/utxo.js';
 import { AccessList, QiTransaction, QuaiTransaction } from '../../transaction/index.js';
 import { WorkObjectLike } from '../../transaction/work-object.js';
-import { QiPerformActionTransaction } from '../../providers/abstract-provider.js';
+import { ConversionTransactionRequest, QiPerformActionTransaction } from '../../providers/abstract-provider.js';
 import { txpoolContentResponse, txpoolInspectResponse } from '../../providers/txpool.js';
 import { QiTransactionResponse } from '../../providers/provider.js';
 import { decodeProtoTransaction } from '../../encoding/index.js';
@@ -330,6 +330,14 @@ export class MockProvider implements Provider {
     }
     async getLatestQuaiRate(): Promise<bigint> {
         throw new Error('getLatestQuaiRate: Method not implemented.');
+    }
+
+    async calculateConversionAmount(
+        fromOrArgs: string | ConversionTransactionRequest,
+        to?: string,
+        value?: BigNumberish,
+    ): Promise<bigint> {
+        throw new Error('calculateConversionAmount: Method not implemented.');
     }
 }
 
