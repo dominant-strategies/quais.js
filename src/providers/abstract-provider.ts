@@ -523,6 +523,12 @@ export interface QiPerformActionTransaction extends QiPreparedTransactionRequest
     [key: string]: any;
 }
 
+export interface ConversionTransactionRequest {
+    from: string;
+    to: string;
+    value: string;
+}
+
 /**
  * The {@link AbstractProvider | **AbstractProvider**} methods will normalize all values and pass this type to
  * {@link AbstractProvider._perform | **AbstractProvider._perform**}.
@@ -534,6 +540,10 @@ export type PerformActionRequest =
           method: 'broadcastTransaction';
           signedTransaction: string;
           zone: Zone;
+      }
+    | {
+          method: 'calculateConversionAmount';
+          transactionArgs: ConversionTransactionRequest;
       }
     | {
           method: 'call';
@@ -1924,6 +1934,38 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             return null;
         }
         return this._wrapBlock(params, network);
+    }
+
+    async calculateConversionAmount(
+        fromOrArgs: string | ConversionTransactionRequest,
+        to?: string,
+        value?: BigNumberish,
+    ): Promise<bigint> {
+        let formattedArgs: ConversionTransactionRequest;
+
+        if (typeof fromOrArgs === 'string' && to && value !== undefined) {
+            // Handle individual parameters
+            formattedArgs = {
+                from: await this._getAddress(fromOrArgs),
+                to: await this._getAddress(to),
+                value: toQuantity(value),
+            };
+        } else if (typeof fromOrArgs === 'object') {
+            // Handle object parameter
+            formattedArgs = {
+                from: await this._getAddress(fromOrArgs.from),
+                to: await this._getAddress(fromOrArgs.to),
+                value: toQuantity(fromOrArgs.value),
+            };
+        } else {
+            throw new Error('Invalid parameters for calculateConversionAmount');
+        }
+
+        const result = await this._perform({
+            method: 'calculateConversionAmount',
+            transactionArgs: formattedArgs,
+        });
+        return getBigInt(result, '%response');
     }
 
     async getTransaction(hash: string): Promise<null | TransactionResponse | ExternalTransactionResponse> {

@@ -24,6 +24,7 @@ import type { TxInput, TxOutput } from '../transaction/utxo.js';
 import type { Zone, Shard } from '../constants/index.js';
 import type { txpoolContentResponse, txpoolInspectResponse } from './txpool.js';
 import { EtxParams, UncleParams } from './formatting.js';
+import { ConversionTransactionRequest } from './abstract-provider';
 
 const BN_0 = BigInt(0);
 
@@ -3012,4 +3013,22 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
     getLatestQuaiRate(zone: Zone, amt: bigint): Promise<bigint>;
 
     getOutpointDeltas(addresses: string[], startHash: string, endHash?: string): Promise<OutpointDeltas>;
+
+    /**
+     * Calculate the conversion amount between two addresses from different ledgers.
+     *
+     * @param {string} from - The source address
+     * @param {string} to - The destination address
+     * @param {BigNumberish} value - The amount to convert
+     * @returns {Promise<bigint>} A promise resolving to the converted amount
+     */
+    calculateConversionAmount(from: string, to: string, value: BigNumberish): Promise<bigint>;
+
+    /**
+     * Calculate the conversion amount between two addresses from different ledgers.
+     *
+     * @param {ConversionTransactionRequest} transactionArgs - The transaction arguments containing from, to, and value
+     * @returns {Promise<bigint>} A promise resolving to the converted amount
+     */
+    calculateConversionAmount(transactionArgs: ConversionTransactionRequest): Promise<bigint>;
 }
