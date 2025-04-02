@@ -1182,6 +1182,12 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
             case 'chainId':
                 return { method: 'quai_chainId', args: [] };
 
+            case 'calculateConversionAmount':
+                return {
+                    method: 'quai_calculateConversionAmount',
+                    args: [req.transactionArgs],
+                };
+
             case 'getBlockNumber':
                 return { method: 'quai_blockNumber', args: [] };
 
