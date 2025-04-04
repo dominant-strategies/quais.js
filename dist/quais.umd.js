@@ -30,7 +30,7 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
      *
      * @ignore
      */
-    const version$2 = '1.0.0-alpha.41';
+    const version$2 = '1.0.0-alpha.44';
 
     /**
      * Property helper functions.
@@ -35730,6 +35730,33 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             }
             return this._wrapBlock(params, network);
         }
+        async calculateConversionAmount(fromOrArgs, to, value) {
+            let formattedArgs;
+            if (typeof fromOrArgs === 'string' && to && value !== undefined) {
+                // Handle individual parameters
+                formattedArgs = {
+                    from: await this._getAddress(fromOrArgs),
+                    to: await this._getAddress(to),
+                    value: toQuantity(value),
+                };
+            }
+            else if (typeof fromOrArgs === 'object') {
+                // Handle object parameter
+                formattedArgs = {
+                    from: await this._getAddress(fromOrArgs.from),
+                    to: await this._getAddress(fromOrArgs.to),
+                    value: toQuantity(fromOrArgs.value),
+                };
+            }
+            else {
+                throw new Error('Invalid parameters for calculateConversionAmount');
+            }
+            const result = await this._perform({
+                method: 'calculateConversionAmount',
+                transactionArgs: formattedArgs,
+            });
+            return getBigInt(result, '%response');
+        }
         async getTransaction(hash) {
             const zone = toZone(this.shardFromHash(hash));
             const { network, params } = await resolveProperties({
@@ -37378,6 +37405,11 @@ const __$G = (typeof globalThis !== 'undefined' ? globalThis: typeof window !== 
             switch (req.method) {
                 case 'chainId':
                     return { method: 'quai_chainId', args: [] };
+                case 'calculateConversionAmount':
+                    return {
+                        method: 'quai_calculateConversionAmount',
+                        args: [req.transactionArgs],
+                    };
                 case 'getBlockNumber':
                     return { method: 'quai_blockNumber', args: [] };
                 case 'getGasPrice':
