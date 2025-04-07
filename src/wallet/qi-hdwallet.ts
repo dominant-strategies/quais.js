@@ -103,6 +103,16 @@ type OutpointsCallback = (outpoints: OutpointDeltaResponse) => Promise<void>;
  */
 
 /**
+ * Interface representing options for Qi transactions.
+ */
+export interface QiTransactionOptions {
+    /**
+     * Optional transaction data payload.
+     */
+    data?: Uint8Array;
+}
+
+/**
  * The Qi HD wallet is a BIP44-compliant hierarchical deterministic wallet used for managing a set of addresses in the
  * Qi ledger. This is wallet implementation is the primary way to interact with the Qi UTXO ledger on the Quai network.
  *
@@ -464,10 +474,15 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      *
      * @param {string} destinationAddress - The Quai address to send the converted Quai to.
      * @param {bigint} amount - The amount of Qi to convert to Quai.
+     * @param {QiTransactionOptions} [options] - Optional transaction configuration.
      * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
      * @throws {Error} If the destination address is invalid, the amount is zero, or the conversion fails.
      */
-    public async convertToQuai(destinationAddress: string, amount: bigint): Promise<TransactionResponse> {
+    public async convertToQuai(
+        destinationAddress: string,
+        amount: bigint,
+        options: QiTransactionOptions = {},
+    ): Promise<TransactionResponse> {
         const zone = getZoneForAddress(destinationAddress);
         if (!zone) {
             throw new Error(`Invalid zone for Quai address: ${destinationAddress}`);
@@ -490,6 +505,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             zone,
             getDestinationAddresses,
             (utxos) => new ConversionCoinSelector(utxos),
+            options,
         );
     }
 
@@ -500,6 +516,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @param {bigint} amount - The amount of Qi to send.
      * @param {Zone} originZone - The zone where the transaction originates.
      * @param {Zone} destinationZone - The zone where the transaction is sent.
+     * @param {QiTransactionOptions} [options] - Optional transaction configuration.
      * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
      * @throws {Error} If the payment code is invalid, the amount is zero, or the zones are invalid.
      */
@@ -508,6 +525,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         amount: bigint,
         originZone: Zone,
         destinationZone: Zone,
+        options: QiTransactionOptions = {},
     ): Promise<TransactionResponse> {
         if (!validatePaymentCode(recipientPaymentCode)) {
             throw new Error('Invalid payment code');
@@ -535,6 +553,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             originZone,
             getDestinationAddresses,
             (utxos) => new FewestCoinSelector(utxos),
+            options,
         );
     }
 
@@ -543,9 +562,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * all the available UTXOs as inputs and as fewest outputs as possible.
      *
      * @param {Zone} zone - The zone to aggregate the balance for.
+     * @param {QiTransactionOptions} [options] - Optional transaction configuration.
      * @returns {Promise<TransactionResponse>} The transaction response.
      */
-    public async aggregate(zone: Zone): Promise<TransactionResponse> {
+    public async aggregate(zone: Zone, options: QiTransactionOptions = {}): Promise<TransactionResponse> {
         this.validateZone(zone);
         if (!this.provider) {
             throw new Error('Provider is not set');
@@ -567,7 +587,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // Proceed with creating and signing the transaction
         const chainId = (await this.provider.getNetwork()).chainId;
-        const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId));
+        const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId), options);
 
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
@@ -593,6 +613,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         originZone: Zone,
         getDestinationAddresses: (count: number) => Promise<string[]>,
         coinSelectorCreator: (utxos: UTXO[]) => FewestCoinSelector | ConversionCoinSelector,
+        options: QiTransactionOptions = {},
     ): Promise<TransactionResponse> {
         if (!this.provider) {
             throw new Error('Provider is not set');
@@ -699,7 +720,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         // Proceed with creating and signing the transaction
         const chainId = (await this.provider.getNetwork()).chainId;
-        const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId));
+        const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId), options);
 
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
@@ -722,6 +743,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         sendAddresses: string[],
         changeAddresses: string[],
         chainId: number,
+        options: QiTransactionOptions = {},
     ): Promise<QiTransaction> {
         const tx = new QiTransaction();
 
@@ -763,6 +785,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             denomination: output.denomination!,
         }));
         tx.chainId = chainId;
+
+        // Set data if provided in options
+        if (options.data) {
+            tx.data = options.data;
+        }
+
         return tx;
     }
 
