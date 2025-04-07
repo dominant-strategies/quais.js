@@ -137,11 +137,11 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
         if (pop.gasLimit == null || pop.gasLimit === 0n) {
             if (pop.type == 0) {
-                pop.gasLimit = await this.estimateGas(baseTx);
+                pop.gasLimit = await this.estimateGas(baseTx as unknown as TransactionRequest);
             } else {
                 //Special cases for type 2 tx to bypass address out of scope in the node
                 baseTx.to = '0x0000000000000000000000000000000000000000';
-                pop.gasLimit = getBigInt(2 * Number(await this.estimateGas(baseTx)));
+                pop.gasLimit = getBigInt(2 * Number(await this.estimateGas(baseTx as unknown as TransactionRequest)));
                 baseTx.to = pop.to;
             }
         }
@@ -157,7 +157,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             if (tx.accessList) {
                 pop.accessList = tx.accessList;
             } else {
-                pop.accessList = await this.createAccessList(baseTx as QuaiTransactionRequest);
+                pop.accessList = await this.createAccessList(baseTx as unknown as QuaiTransactionRequest);
             }
         }
         //@TOOD: Don't await all over the place; save them up for
@@ -186,7 +186,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         const txObj = QuaiTransaction.from(pop);
 
         const sender = await this.getAddress();
-        const signedTx = await this.signTransaction(txObj);
+        const signedTx = await this.signTransaction(txObj as unknown as TransactionRequest);
         return await provider.broadcastTransaction(zone, signedTx, sender);
     }
 
