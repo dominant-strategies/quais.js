@@ -26,6 +26,13 @@ export interface QiTransactionLike extends TransactionLike {
      * @type {TxOutput[] | null}
      */
     txOutputs?: null | TxOutput[];
+
+    /**
+     * Optional transaction data.
+     *
+     * @type {Uint8Array | null}
+     */
+    data?: null | Uint8Array;
 }
 
 /**
@@ -38,6 +45,7 @@ export interface QiTransactionLike extends TransactionLike {
 export class QiTransaction extends AbstractTransaction<string> implements QiTransactionLike {
     #txInputs?: null | TxInput[];
     #txOutputs?: null | TxOutput[];
+    #data: Uint8Array;
 
     /**
      * Get transaction inputs.
@@ -81,6 +89,25 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
             throw new Error('txOutputs must be an array');
         }
         this.#txOutputs = value.map((output) => ({ ...output }));
+    }
+
+    /**
+     * Get transaction data.
+     *
+     * @returns {Uint8Array} The transaction data.
+     */
+    get data(): Uint8Array {
+        // Return a copy of the data to prevent external modification
+        return new Uint8Array(this.#data);
+    }
+
+    /**
+     * Set transaction data.
+     *
+     * @param {Uint8Array | null} value - The transaction data.
+     */
+    set data(value: Uint8Array | null) {
+        this.#data = value ? new Uint8Array(value) : new Uint8Array();
     }
 
     /**
@@ -159,6 +186,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         super();
         this.#txInputs = [];
         this.#txOutputs = [];
+        this.#data = new Uint8Array();
     }
 
     /**
@@ -210,6 +238,7 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
             hash: this.hash,
             txInputs: this.txInputs,
             txOutputs: this.txOutputs,
+            data: this.data.length > 0 ? hexlify(this.data) : null,
         } as QiTransactionLike;
     }
 
@@ -277,6 +306,9 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
         if (tx.txOutputs != null) {
             result.txOutputs = tx.txOutputs as TxOutput[];
         }
+        if (tx.data != null) {
+            result.data = tx.data;
+        }
 
         if (tx.hash != null) {
             assertArgument(result.isSigned(), 'unsigned transaction cannot define hash', 'tx', tx);
@@ -311,6 +343,9 @@ export class QiTransaction extends AbstractTransaction<string> implements QiTran
             })) ?? [];
         if (protoTx.signature) {
             tx.signature = hexlify(protoTx.signature);
+        }
+        if (protoTx.data) {
+            tx.data = protoTx.data;
         }
 
         return tx;
