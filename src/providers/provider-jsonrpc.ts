@@ -252,6 +252,11 @@ export interface QiJsonRpcTransactionRequest extends AbstractJsonRpcTransactionR
     txInputs?: Array<TxInput>;
 
     txOutputs?: Array<TxOutput>;
+
+    /**
+     * Optional transaction data payload.
+     */
+    data?: string;
 }
 
 /**

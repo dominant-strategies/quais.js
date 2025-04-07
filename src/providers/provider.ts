@@ -260,6 +260,11 @@ export interface QiTransactionRequest {
      * The outputs for the transaction.
      */
     txOutputs?: null | Array<TxOutput>;
+
+    /**
+     * The transaction data.
+     */
+    data?: null | Uint8Array;
 }
 
 /**
@@ -365,6 +370,11 @@ export interface QiPreparedTransactionRequest {
      * The outputs for the transaction.
      */
     txOutputs?: null | Array<TxOutput>;
+
+    /**
+     * Optional transaction data payload.
+     */
+    data?: Uint8Array;
 }
 
 /**
