@@ -624,7 +624,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const balance = await this.getSpendableBalance(originZone, currentBlock?.woHeader.number, true);
         if (balance < amount) {
             throw new Error(
-                `Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qi`,
+                `Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qits`,
             );
         }
 
