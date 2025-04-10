@@ -146,9 +146,11 @@ describe('QiHDWallet scan and convert to Quai', async function () {
             });
 
             it('sends transaction to convert Qi to Quai', async function () {
+                const data = new Uint8Array([3]);
                 const aliceToBobTx = await qiWallet.convertToQuai(
                     quaiAddressInfo.address,
                     BigInt(test.amount_to_convert),
+                    { data },
                 );
                 assert.ok(aliceToBobTx);
             });
