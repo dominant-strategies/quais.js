@@ -7,7 +7,7 @@ import { Outpoint } from '../../transaction/utxo.js';
 /**
  * Represents a mapping of addresses to outpoints.
  */
-type OutpointDeltaResponse = { [address: string]: Outpoint[] };
+type OutpointDeltaResponse = { [address: string]: OutpointInfo[] };
 
 /**
  * Callback type for handling outpoint changes during scanning/syncing.
@@ -583,18 +583,17 @@ export abstract class AbstractQiWallet {
                 // Handle created outpoints
                 if (delta.created && delta.created.length > 0) {
                     // Import the new outpoints
-                    this.importOutpoints(
-                        delta.created.map((outpoint) => ({
-                            outpoint,
-                            address,
-                            zone: addressInfo.zone,
-                            account: addressInfo.account,
-                            derivationPath: addressInfo.derivationPath,
-                        })),
-                    );
+                    const outpointInfos = delta.created.map((outpoint) => ({
+                        outpoint,
+                        address,
+                        zone: addressInfo.zone,
+                        account: addressInfo.account,
+                        derivationPath: addressInfo.derivationPath,
+                    }));
+                    this.importOutpoints(outpointInfos);
 
                     // Track for callback
-                    createdOutpoints[address] = delta.created;
+                    createdOutpoints[address] = outpointInfos;
 
                     // Set address as used
                     updatedAddressInfo.status = AddressStatus.USED;
@@ -609,7 +608,13 @@ export abstract class AbstractQiWallet {
                     }
 
                     // Track for callback
-                    deletedOutpoints[address] = delta.deleted;
+                    deletedOutpoints[address] = delta.deleted.map((outpoint) => ({
+                        outpoint,
+                        address,
+                        zone: addressInfo.zone,
+                        account: addressInfo.account,
+                        derivationPath: addressInfo.derivationPath,
+                    }));
                 }
 
                 // Update address in wallet
@@ -654,18 +659,17 @@ export abstract class AbstractQiWallet {
                 };
                 // Import outpoints if found
                 if (outpoints.length > 0) {
-                    this.importOutpoints(
-                        outpoints.map((outpoint) => ({
-                            outpoint,
-                            address: addr.address,
-                            zone: addr.zone,
-                            account: addr.account,
-                            derivationPath: addr.derivationPath,
-                        })),
-                    );
+                    const outpointInfos = outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: addr.address,
+                        zone: addr.zone,
+                        account: addr.account,
+                        derivationPath: addr.derivationPath,
+                    }));
+                    this.importOutpoints(outpointInfos);
 
                     // Track for callback
-                    createdOutpoints[addr.address] = outpoints;
+                    createdOutpoints[addr.address] = outpointInfos;
                 }
 
                 // Update address in wallet
@@ -737,18 +741,17 @@ export abstract class AbstractQiWallet {
 
             // Import outpoints if found
             if (outpoints.length > 0) {
-                this.importOutpoints(
-                    outpoints.map((outpoint) => ({
-                        outpoint,
-                        address: newAddr.address,
-                        zone: newAddr.zone,
-                        account: newAddr.account,
-                        derivationPath: newAddr.derivationPath,
-                    })),
-                );
+                const outpointInfos = outpoints.map((outpoint) => ({
+                    outpoint,
+                    address: newAddr.address,
+                    zone: newAddr.zone,
+                    account: newAddr.account,
+                    derivationPath: newAddr.derivationPath,
+                }));
+                this.importOutpoints(outpointInfos);
 
                 // Track for callback
-                createdOutpoints[newAddr.address] = outpoints;
+                createdOutpoints[newAddr.address] = outpointInfos;
             }
 
             // Save the new address

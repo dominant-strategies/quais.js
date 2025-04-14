@@ -89,7 +89,7 @@ export interface SerializedQiHDWallet extends SerializedHDWallet {
 }
 
 type AddressUsageCallback = (address: string) => Promise<boolean>;
-type OutpointDeltaResponse = { [address: string]: Outpoint[] };
+type OutpointDeltaResponse = { [address: string]: OutpointInfo[] };
 type OutpointsCallback = (outpoints: OutpointDeltaResponse) => Promise<void>;
 
 /**
