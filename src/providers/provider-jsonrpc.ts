@@ -1320,17 +1320,17 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                 };
             }
 
-            case 'getQiRateAtBlock': {
+            case 'qiToQuai': {
                 return {
-                    method: 'quai_qiRateAtBlock',
-                    args: [req.blockTag, req.amt],
+                    method: 'quai_qiToQuai',
+                    args: [req.amt, req.blockTag],
                 };
             }
 
-            case 'getQuaiRateAtBlock': {
+            case 'quaiToQi': {
                 return {
-                    method: 'quai_quaiRateAtBlock',
-                    args: [req.blockTag, req.amt],
+                    method: 'quai_quaiToQi',
+                    args: [req.amt, req.blockTag],
                 };
             }
 
