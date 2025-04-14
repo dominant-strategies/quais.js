@@ -656,15 +656,15 @@ export type PerformActionRequest =
           shard: Shard;
       }
     | {
-          method: 'getQiRateAtBlock';
-          blockTag: BlockTag;
+          method: 'qiToQuai';
           amt: string;
+          blockTag: BlockTag;
           zone: Zone;
       }
     | {
-          method: 'getQuaiRateAtBlock';
-          blockTag: BlockTag;
+          method: 'quaiToQi';
           amt: string;
+          blockTag: BlockTag;
           zone: Zone;
       }
     | {
@@ -1065,9 +1065,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @param {number} [amt=1] - The amount in quais to get the rate for. Default is `1`
      * @returns {Promise<bigint>} A promise that resolves to the latest Quai -> Qi rate for the given amount.
      */
-    async getLatestQuaiRate(zone: Zone, amt: bigint): Promise<bigint> {
+    async getLatestQuaiToQiRate(zone: Zone, amt: bigint): Promise<bigint> {
         const blockNumber = await this.getBlockNumber(toShard(zone));
-        return this.getQuaiRateAtBlock(zone, blockNumber, amt);
+        return this.getQuaiToQiRateAtBlock(zone, blockNumber, amt);
     }
 
     /**
@@ -1078,16 +1078,16 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      * @returns {Promise<bigint>} A promise that resolves to the Quai rate at the specified block.
      */
-    async getQuaiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: bigint): Promise<bigint> {
+    async getQuaiToQiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: bigint): Promise<bigint> {
         let resolvedBlockTag = this._getBlockTag(toShard(zone), blockTag);
         if (typeof resolvedBlockTag !== 'string') {
             resolvedBlockTag = await resolvedBlockTag;
         }
         return getBigInt(
             await this.#perform({
-                method: 'getQuaiRateAtBlock',
-                blockTag: resolvedBlockTag,
+                method: 'quaiToQi',
                 amt: toQuantity(String(amt)),
+                blockTag: resolvedBlockTag,
                 zone: zone,
             }),
         );
@@ -1146,9 +1146,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      * @returns {Promise<bigint>} A promise that resolves to the latest Qi rate.
      */
-    async getLatestQiRate(zone: Zone, amt: bigint): Promise<bigint> {
+    async getLatestQiToQuaiRate(zone: Zone, amt: bigint): Promise<bigint> {
         const blockNumber = await this.getBlockNumber(toShard(zone));
-        return this.getQiRateAtBlock(zone, blockNumber, amt);
+        return this.getQiToQuaiRateAtBlock(zone, blockNumber, amt);
     }
 
     /**
@@ -1159,7 +1159,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
      * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      * @returns {Promise<bigint>} A promise that resolves to the Qi rate at the specified block.
      */
-    async getQiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: bigint): Promise<bigint> {
+    async getQiToQuaiRateAtBlock(zone: Zone, blockTag: BlockTag, amt: bigint): Promise<bigint> {
         let resolvedBlockTag = this._getBlockTag(toShard(zone), blockTag);
         if (typeof resolvedBlockTag !== 'string') {
             resolvedBlockTag = await resolvedBlockTag;
@@ -1167,9 +1167,9 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
         return getBigInt(
             await this.#perform({
-                method: 'getQiRateAtBlock',
-                blockTag: resolvedBlockTag,
+                method: 'qiToQuai',
                 amt: toQuantity(String(amt)),
+                blockTag: resolvedBlockTag,
                 zone: zone,
             }),
         );

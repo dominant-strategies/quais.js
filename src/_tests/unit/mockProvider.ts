@@ -319,17 +319,17 @@ export class MockProvider implements Provider {
     async txPoolInspect(zone: Zone): Promise<txpoolInspectResponse> {
         throw new Error('txPoolInspect: Method not implemented.');
     }
-    async getQiRateAtBlock(): Promise<bigint> {
-        throw new Error('getQiRateAtBlock: Method not implemented.');
+    async getQiToQuaiRateAtBlock(): Promise<bigint> {
+        throw new Error('getQiToQuaiRateAtBlock: Method not implemented.');
     }
-    async getLatestQiRate(): Promise<bigint> {
-        throw new Error('getLatestQiRate: Method not implemented.');
+    async getLatestQiToQuaiRate(): Promise<bigint> {
+        throw new Error('getLatestQiToQuaiRate: Method not implemented.');
     }
-    async getQuaiRateAtBlock(): Promise<bigint> {
-        throw new Error('getQuaiRateAtBlock: Method not implemented.');
+    async getQuaiToQiRateAtBlock(): Promise<bigint> {
+        throw new Error('getQuaiToQiRateAtBlock: Method not implemented.');
     }
-    async getLatestQuaiRate(): Promise<bigint> {
-        throw new Error('getLatestQuaiRate: Method not implemented.');
+    async getLatestQuaiToQiRate(): Promise<bigint> {
+        throw new Error('getLatestQuaiToQiRate: Method not implemented.');
     }
 
     async calculateConversionAmount(
