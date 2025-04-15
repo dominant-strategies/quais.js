@@ -10,7 +10,7 @@ import ecc from '@bitcoinerlab/secp256k1';
  *
  * @ignore
  */
-const version$2 = '1.0.0-alpha.44';
+const version$2 = '1.0.0-alpha.45';
 
 /**
  * Property helper functions.
@@ -23211,6 +23211,7 @@ function formatOutpointDeltas(deltas) {
 class QiTransaction extends AbstractTransaction {
     #txInputs;
     #txOutputs;
+    #data;
     /**
      * Get transaction inputs.
      *
@@ -23250,6 +23251,23 @@ class QiTransaction extends AbstractTransaction {
             throw new Error('txOutputs must be an array');
         }
         this.#txOutputs = value.map((output) => ({ ...output }));
+    }
+    /**
+     * Get transaction data.
+     *
+     * @returns {Uint8Array} The transaction data.
+     */
+    get data() {
+        // Return a copy of the data to prevent external modification
+        return new Uint8Array(this.#data);
+    }
+    /**
+     * Set transaction data.
+     *
+     * @param {Uint8Array | null} value - The transaction data.
+     */
+    set data(value) {
+        this.#data = value ? new Uint8Array(value) : new Uint8Array();
     }
     /**
      * Get the permuted hash of the transaction as specified by QIP-0010.
@@ -23313,6 +23331,7 @@ class QiTransaction extends AbstractTransaction {
         super();
         this.#txInputs = [];
         this.#txOutputs = [];
+        this.#data = new Uint8Array();
     }
     /**
      * Validates the explicit properties and returns a list of compatible transaction types.
@@ -23358,6 +23377,7 @@ class QiTransaction extends AbstractTransaction {
             hash: this.hash,
             txInputs: this.txInputs,
             txOutputs: this.txOutputs,
+            data: this.data.length > 0 ? hexlify(this.data) : null,
         };
     }
     /**
@@ -23386,7 +23406,7 @@ class QiTransaction extends AbstractTransaction {
                     lock: new Uint8Array(),
                 })),
             },
-            data: new Uint8Array(),
+            data: this.data,
         };
         if (this.signature && includeSignature) {
             protoTx.signature = getBytes(this.signature);
@@ -23421,6 +23441,9 @@ class QiTransaction extends AbstractTransaction {
         if (tx.txOutputs != null) {
             result.txOutputs = tx.txOutputs;
         }
+        if (tx.data != null) {
+            result.data = tx.data;
+        }
         if (tx.hash != null) {
             assertArgument(result.isSigned(), 'unsigned transaction cannot define hash', 'tx', tx);
         }
@@ -23450,6 +23473,9 @@ class QiTransaction extends AbstractTransaction {
             })) ?? [];
         if (protoTx.signature) {
             tx.signature = hexlify(protoTx.signature);
+        }
+        if (protoTx.data) {
+            tx.data = protoTx.data;
         }
         return tx;
     }
@@ -31473,15 +31499,16 @@ class AbstractQiWallet {
                 // Handle created outpoints
                 if (delta.created && delta.created.length > 0) {
                     // Import the new outpoints
-                    this.importOutpoints(delta.created.map((outpoint) => ({
+                    const outpointInfos = delta.created.map((outpoint) => ({
                         outpoint,
                         address,
                         zone: addressInfo.zone,
                         account: addressInfo.account,
                         derivationPath: addressInfo.derivationPath,
-                    })));
+                    }));
+                    this.importOutpoints(outpointInfos);
                     // Track for callback
-                    createdOutpoints[address] = delta.created;
+                    createdOutpoints[address] = outpointInfos;
                     // Set address as used
                     updatedAddressInfo.status = AddressStatus.USED;
                 }
@@ -31493,7 +31520,13 @@ class AbstractQiWallet {
                         this.availableOutpoints.delete(key);
                     }
                     // Track for callback
-                    deletedOutpoints[address] = delta.deleted;
+                    deletedOutpoints[address] = delta.deleted.map((outpoint) => ({
+                        outpoint,
+                        address,
+                        zone: addressInfo.zone,
+                        account: addressInfo.account,
+                        derivationPath: addressInfo.derivationPath,
+                    }));
                 }
                 // Update address in wallet
                 this.addresses.set(address, updatedAddressInfo);
@@ -31529,15 +31562,16 @@ class AbstractQiWallet {
                 };
                 // Import outpoints if found
                 if (outpoints.length > 0) {
-                    this.importOutpoints(outpoints.map((outpoint) => ({
+                    const outpointInfos = outpoints.map((outpoint) => ({
                         outpoint,
                         address: addr.address,
                         zone: addr.zone,
                         account: addr.account,
                         derivationPath: addr.derivationPath,
-                    })));
+                    }));
+                    this.importOutpoints(outpointInfos);
                     // Track for callback
-                    createdOutpoints[addr.address] = outpoints;
+                    createdOutpoints[addr.address] = outpointInfos;
                 }
                 // Update address in wallet
                 this.addresses.set(addr.address, updatedAddr);
@@ -31594,15 +31628,16 @@ class AbstractQiWallet {
             };
             // Import outpoints if found
             if (outpoints.length > 0) {
-                this.importOutpoints(outpoints.map((outpoint) => ({
+                const outpointInfos = outpoints.map((outpoint) => ({
                     outpoint,
                     address: newAddr.address,
                     zone: newAddr.zone,
                     account: newAddr.account,
                     derivationPath: newAddr.derivationPath,
-                })));
+                }));
+                this.importOutpoints(outpointInfos);
                 // Track for callback
-                createdOutpoints[newAddr.address] = outpoints;
+                createdOutpoints[newAddr.address] = outpointInfos;
             }
             // Save the new address
             this.addresses.set(newAddr.address, newAddr);
@@ -32623,15 +32658,6 @@ var AddressStatus;
     AddressStatus["UNKNOWN"] = "UNKNOWN";
 })(AddressStatus || (AddressStatus = {}));
 /**
- * Current known issues:
- *
- * - When generating send addresses we are not checking if the address has already been used before
- * - When syncing is seems like we are adding way too many change addresses
- * - Bip44 external and change address maps also have gap addresses in them
- * - It is unclear if we have checked if addresses have been used and if they are used
- * - We should always check all addresses that were previously included in a transaction to see if they have been used
- */
-/**
  * The Qi HD wallet is a BIP44-compliant hierarchical deterministic wallet used for managing a set of addresses in the
  * Qi ledger. This is wallet implementation is the primary way to interact with the Qi UTXO ledger on the Quai network.
  *
@@ -32956,10 +32982,11 @@ class QiHDWallet extends AbstractHDWallet {
      *
      * @param {string} destinationAddress - The Quai address to send the converted Quai to.
      * @param {bigint} amount - The amount of Qi to convert to Quai.
+     * @param {QiTransactionOptions} [options] - Optional transaction configuration.
      * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
      * @throws {Error} If the destination address is invalid, the amount is zero, or the conversion fails.
      */
-    async convertToQuai(destinationAddress, amount) {
+    async convertToQuai(destinationAddress, amount, options = {}) {
         const zone = getZoneForAddress(destinationAddress);
         if (!zone) {
             throw new Error(`Invalid zone for Quai address: ${destinationAddress}`);
@@ -32973,7 +33000,7 @@ class QiHDWallet extends AbstractHDWallet {
         const getDestinationAddresses = async (count) => {
             return Array(count).fill(destinationAddress);
         };
-        return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses, (utxos) => new ConversionCoinSelector(utxos));
+        return this.prepareAndSendTransaction(amount, zone, getDestinationAddresses, (utxos) => new ConversionCoinSelector(utxos), options);
     }
     /**
      * Sends a transaction to a specified recipient payment code in a specified zone.
@@ -32982,10 +33009,11 @@ class QiHDWallet extends AbstractHDWallet {
      * @param {bigint} amount - The amount of Qi to send.
      * @param {Zone} originZone - The zone where the transaction originates.
      * @param {Zone} destinationZone - The zone where the transaction is sent.
+     * @param {QiTransactionOptions} [options] - Optional transaction configuration.
      * @returns {Promise<TransactionResponse>} A promise that resolves to the transaction response.
      * @throws {Error} If the payment code is invalid, the amount is zero, or the zones are invalid.
      */
-    async sendTransaction(recipientPaymentCode, amount, originZone, destinationZone) {
+    async sendTransaction(recipientPaymentCode, amount, originZone, destinationZone, options = {}) {
         if (!validatePaymentCode(recipientPaymentCode)) {
             throw new Error('Invalid payment code');
         }
@@ -33005,16 +33033,17 @@ class QiHDWallet extends AbstractHDWallet {
             }
             return addresses;
         };
-        return this.prepareAndSendTransaction(amount, originZone, getDestinationAddresses, (utxos) => new FewestCoinSelector(utxos));
+        return this.prepareAndSendTransaction(amount, originZone, getDestinationAddresses, (utxos) => new FewestCoinSelector(utxos), options);
     }
     /**
      * Aggregates all the available UTXOs for the specified zone and account. This method creates a new transaction with
      * all the available UTXOs as inputs and as fewest outputs as possible.
      *
      * @param {Zone} zone - The zone to aggregate the balance for.
+     * @param {QiTransactionOptions} [options] - Optional transaction configuration.
      * @returns {Promise<TransactionResponse>} The transaction response.
      */
-    async aggregate(zone) {
+    async aggregate(zone, options = {}) {
         this.validateZone(zone);
         if (!this.provider) {
             throw new Error('Provider is not set');
@@ -33032,7 +33061,7 @@ class QiHDWallet extends AbstractHDWallet {
         const changeAddresses = [];
         // Proceed with creating and signing the transaction
         const chainId = (await this.provider.getNetwork()).chainId;
-        const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId));
+        const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId), options);
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
         // Broadcast the transaction to the network using the provider
@@ -33050,7 +33079,7 @@ class QiHDWallet extends AbstractHDWallet {
      * @throws {Error} If provider is not set, insufficient balance, no available UTXOs, or insufficient spendable
      *   balance.
      */
-    async prepareAndSendTransaction(amount, originZone, getDestinationAddresses, coinSelectorCreator) {
+    async prepareAndSendTransaction(amount, originZone, getDestinationAddresses, coinSelectorCreator, options = {}) {
         if (!this.provider) {
             throw new Error('Provider is not set');
         }
@@ -33058,7 +33087,7 @@ class QiHDWallet extends AbstractHDWallet {
         const currentBlock = await this.provider.getBlock(toShard(originZone), 'latest');
         const balance = await this.getSpendableBalance(originZone, currentBlock?.woHeader.number, true);
         if (balance < amount) {
-            throw new Error(`Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qi`);
+            throw new Error(`Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qits`);
         }
         // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
         const zoneUTXOs = this.outpointsToUTXOs(originZone);
@@ -33131,7 +33160,7 @@ class QiHDWallet extends AbstractHDWallet {
         }
         // Proceed with creating and signing the transaction
         const chainId = (await this.provider.getNetwork()).chainId;
-        const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId));
+        const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId), options);
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
         // Broadcast the transaction to the network using the provider
@@ -33147,7 +33176,7 @@ class QiHDWallet extends AbstractHDWallet {
      * @param {number} chainId - The chain ID.
      * @returns {Promise<QiTransaction>} A promise that resolves to the prepared transaction.
      */
-    async prepareTransaction(selection, sendAddresses, changeAddresses, chainId) {
+    async prepareTransaction(selection, sendAddresses, changeAddresses, chainId, options = {}) {
         const tx = new QiTransaction();
         const inputsWithPubKeys = selection.inputs.map((input) => {
             const addressInfo = this.getAddressInfo(input.address);
@@ -33178,6 +33207,10 @@ class QiHDWallet extends AbstractHDWallet {
             denomination: output.denomination,
         }));
         tx.chainId = chainId;
+        // Set data if provided in options
+        if (options.data) {
+            tx.data = options.data;
+        }
         return tx;
     }
     /**
@@ -34961,9 +34994,9 @@ class AbstractProvider {
      * @param {number} [amt=1] - The amount in quais to get the rate for. Default is `1`
      * @returns {Promise<bigint>} A promise that resolves to the latest Quai -> Qi rate for the given amount.
      */
-    async getLatestQuaiRate(zone, amt) {
+    async getLatestQuaiToQiRate(zone, amt) {
         const blockNumber = await this.getBlockNumber(toShard(zone));
-        return this.getQuaiRateAtBlock(zone, blockNumber, amt);
+        return this.getQuaiToQiRateAtBlock(zone, blockNumber, amt);
     }
     /**
      * Get the Quai rate at a specific block.
@@ -34973,15 +35006,15 @@ class AbstractProvider {
      * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      * @returns {Promise<bigint>} A promise that resolves to the Quai rate at the specified block.
      */
-    async getQuaiRateAtBlock(zone, blockTag, amt) {
+    async getQuaiToQiRateAtBlock(zone, blockTag, amt) {
         let resolvedBlockTag = this._getBlockTag(toShard(zone), blockTag);
         if (typeof resolvedBlockTag !== 'string') {
             resolvedBlockTag = await resolvedBlockTag;
         }
         return getBigInt(await this.#perform({
-            method: 'getQuaiRateAtBlock',
-            blockTag: resolvedBlockTag,
+            method: 'quaiToQi',
             amt: toQuantity(String(amt)),
+            blockTag: resolvedBlockTag,
             zone: zone,
         }));
     }
@@ -35035,9 +35068,9 @@ class AbstractProvider {
      * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      * @returns {Promise<bigint>} A promise that resolves to the latest Qi rate.
      */
-    async getLatestQiRate(zone, amt) {
+    async getLatestQiToQuaiRate(zone, amt) {
         const blockNumber = await this.getBlockNumber(toShard(zone));
-        return this.getQiRateAtBlock(zone, blockNumber, amt);
+        return this.getQiToQuaiRateAtBlock(zone, blockNumber, amt);
     }
     /**
      * Get the Qi rate at a specific block.
@@ -35047,15 +35080,15 @@ class AbstractProvider {
      * @param {number} [amt=1] - The amount to get the rate for. Default is `1`
      * @returns {Promise<bigint>} A promise that resolves to the Qi rate at the specified block.
      */
-    async getQiRateAtBlock(zone, blockTag, amt) {
+    async getQiToQuaiRateAtBlock(zone, blockTag, amt) {
         let resolvedBlockTag = this._getBlockTag(toShard(zone), blockTag);
         if (typeof resolvedBlockTag !== 'string') {
             resolvedBlockTag = await resolvedBlockTag;
         }
         return getBigInt(await this.#perform({
-            method: 'getQiRateAtBlock',
-            blockTag: resolvedBlockTag,
+            method: 'qiToQuai',
             amt: toQuantity(String(amt)),
+            blockTag: resolvedBlockTag,
             zone: zone,
         }));
     }
@@ -37499,16 +37532,16 @@ class JsonRpcApiProvider extends AbstractProvider {
                     args: [],
                 };
             }
-            case 'getQiRateAtBlock': {
+            case 'qiToQuai': {
                 return {
-                    method: 'quai_qiRateAtBlock',
-                    args: [req.blockTag, req.amt],
+                    method: 'quai_qiToQuai',
+                    args: [req.amt, req.blockTag],
                 };
             }
-            case 'getQuaiRateAtBlock': {
+            case 'quaiToQi': {
                 return {
-                    method: 'quai_quaiRateAtBlock',
-                    args: [req.blockTag, req.amt],
+                    method: 'quai_quaiToQi',
+                    args: [req.amt, req.blockTag],
                 };
             }
             case 'getLogs':
