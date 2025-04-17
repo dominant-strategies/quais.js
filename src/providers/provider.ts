@@ -458,17 +458,18 @@ export class BlockHeader implements BlockHeaderParams {
     readonly baseFeePerGas!: null | bigint;
     readonly efficiencyScore: bigint;
     readonly etxEligibleSlices: string;
+    readonly etxRollupRoot!: string;
     readonly etxSetRoot: string;
     readonly evmRoot!: string;
+    readonly exchangeRate!: bigint;
     readonly expansionNumber: number;
-    readonly etxRollupRoot!: string;
-    readonly outboundEtxsRoot!: string;
     readonly extraData!: string;
     readonly gasLimit!: bigint;
     readonly gasUsed!: bigint;
     readonly interlinkRootHash: string;
     readonly manifestHash!: Array<string>;
     readonly number!: Array<number>;
+    readonly outboundEtxsRoot!: string;
     readonly parentDeltaEntropy!: Array<bigint>;
     readonly parentEntropy!: Array<bigint>;
     readonly parentHash!: Array<string>;
@@ -476,15 +477,14 @@ export class BlockHeader implements BlockHeaderParams {
     readonly primeTerminusHash: string;
     readonly quaiStateSize!: bigint;
     readonly receiptsRoot!: string;
-    readonly uncleHash!: string;
     readonly size!: bigint;
     readonly stateLimit!: bigint;
     readonly stateUsed!: bigint;
     readonly thresholdCount: bigint;
     readonly transactionsRoot!: string;
+    readonly uncleHash!: string;
     readonly uncledEntropy: bigint;
     readonly utxoRoot!: string;
-    readonly exchangeRate!: bigint;
 
     constructor(params: BlockHeaderParams) {
         this.baseFeePerGas = params.baseFeePerGas;

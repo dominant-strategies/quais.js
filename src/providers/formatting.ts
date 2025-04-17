@@ -27,17 +27,18 @@ export interface BlockHeaderParams {
     baseFeePerGas: null | bigint;
     efficiencyScore: bigint;
     etxEligibleSlices: string;
+    etxRollupRoot: string;
     etxSetRoot: string;
     evmRoot: string;
+    exchangeRate: bigint;
     expansionNumber: number;
-    etxRollupRoot: string;
-    outboundEtxsRoot: string;
     extraData: string;
     gasLimit: bigint;
     gasUsed: bigint;
     interlinkRootHash: string;
     manifestHash: Array<string>;
     number: Array<number>;
+    outboundEtxsRoot: string;
     parentDeltaEntropy: Array<bigint>;
     parentEntropy: Array<bigint>;
     parentHash: Array<string>;
@@ -45,15 +46,14 @@ export interface BlockHeaderParams {
     primeTerminusHash: string;
     quaiStateSize: bigint;
     receiptsRoot: string;
-    uncleHash: string;
     size: bigint;
     stateLimit: bigint;
     stateUsed: bigint;
     thresholdCount: bigint;
     transactionsRoot: string;
+    uncleHash: string;
     uncledEntropy: bigint;
     utxoRoot: string;
-    exchangeRate: bigint;
 }
 
 export interface UncleParams {
