@@ -64,7 +64,7 @@ function equals(name: string, actual: any, expected: any): void {
         });
 
         Object.keys(keys).forEach((key) => {
-            if (typeof actual[key] === 'string' && actual[key].toLowerCase && key === 'type') {
+            if (typeof actual[key] === 'string' && key === 'type') {
                 actual[key] = actual[key].toLowerCase();
             }
             equals('(' + name + ' - key + ' + key + ')', actual[key], expected[key]);
@@ -209,38 +209,44 @@ describe.skip('Test Provider Block operations', function () {
             outboundEtxs: rpcBlock.outboundEtxs,
             hash: rpcBlock.hash,
             header: {
+                avgTxFees: BigInt(rpcBlock.header.avgTxFees),
                 baseFeePerGas: BigInt(rpcBlock.header.baseFeePerGas),
+                conversionFlowAmount: BigInt(rpcBlock.header.conversionFlowAmount),
                 efficiencyScore: BigInt(rpcBlock.header.efficiencyScore),
                 etxEligibleSlices: rpcBlock.header.etxEligibleSlices,
+                etxRollupRoot: rpcBlock.header.etxRollupRoot,
                 etxSetRoot: rpcBlock.header.etxSetRoot,
                 evmRoot: rpcBlock.header.evmRoot,
+                exchangeRate: BigInt(rpcBlock.header.exchangeRate),
                 expansionNumber: Number(rpcBlock.header.expansionNumber),
-                etxRollupRoot: rpcBlock.header.etxRollupRoot,
-                outboundEtxsRoot: rpcBlock.header.outboundEtxsRoot,
                 extraData: rpcBlock.header.extraData,
                 gasLimit: BigInt(rpcBlock.header.gasLimit),
                 gasUsed: BigInt(rpcBlock.header.gasUsed),
                 interlinkRootHash: rpcBlock.header.interlinkRootHash,
+                kQuaiDiscount: BigInt(rpcBlock.header.kQuaiDiscount),
                 manifestHash: rpcBlock.header.manifestHash,
+                minerDifficulty: BigInt(rpcBlock.header.minerDifficulty),
                 number: rpcBlock.header.number.map((stringNumber: string) => Number(stringNumber)),
+                outboundEtxsRoot: rpcBlock.header.outboundEtxsRoot,
                 parentDeltaEntropy: rpcBlock.header.parentDeltaEntropy.map((delta: string) => BigInt(delta)),
                 parentEntropy: rpcBlock.header.parentEntropy.map((entropy: string) => BigInt(entropy)),
                 parentHash: rpcBlock.header.parentHash,
                 parentUncledDeltaEntropy: rpcBlock.header.parentUncledDeltaEntropy.map((delta: string) =>
                     BigInt(delta),
                 ),
+                primeStateRoot: rpcBlock.header.primeStateRoot,
                 primeTerminusHash: rpcBlock.header.primeTerminusHash,
-                receiptsRoot: rpcBlock.header.receiptsRoot,
                 quaiStateSize: BigInt(rpcBlock.header.quaiStateSize),
+                receiptsRoot: rpcBlock.header.receiptsRoot,
                 size: BigInt(rpcBlock.header.size),
                 stateLimit: BigInt(rpcBlock.header.stateLimit),
                 stateUsed: BigInt(rpcBlock.header.stateUsed),
                 thresholdCount: BigInt(rpcBlock.header.thresholdCount),
+                totalFees: BigInt(rpcBlock.header.totalFees),
                 transactionsRoot: rpcBlock.header.transactionsRoot,
                 uncleHash: rpcBlock.header.uncleHash,
                 uncledEntropy: BigInt(rpcBlock.header.uncledEntropy),
                 utxoRoot: rpcBlock.header.utxoRoot,
-                exchangeRate: BigInt(rpcBlock.header.exchangeRate),
             },
             interlinkHashes: rpcBlock.interlinkHashes,
             size: BigInt(rpcBlock.size),
