@@ -24,7 +24,9 @@ export interface BlockParams {
 }
 
 export interface BlockHeaderParams {
+    avgTxFees: bigint;
     baseFeePerGas: null | bigint;
+    conversionFlowAmount: bigint;
     efficiencyScore: bigint;
     etxEligibleSlices: string;
     etxRollupRoot: string;
@@ -36,13 +38,16 @@ export interface BlockHeaderParams {
     gasLimit: bigint;
     gasUsed: bigint;
     interlinkRootHash: string;
+    kQuaiDiscount: bigint;
     manifestHash: Array<string>;
+    minerDifficulty: bigint;
     number: Array<number>;
     outboundEtxsRoot: string;
     parentDeltaEntropy: Array<bigint>;
     parentEntropy: Array<bigint>;
     parentHash: Array<string>;
     parentUncledDeltaEntropy: Array<bigint>;
+    primeStateRoot: string;
     primeTerminusHash: string;
     quaiStateSize: bigint;
     receiptsRoot: string;
@@ -50,6 +55,7 @@ export interface BlockHeaderParams {
     stateLimit: bigint;
     stateUsed: bigint;
     thresholdCount: bigint;
+    totalFees: bigint;
     transactionsRoot: string;
     uncleHash: string;
     uncledEntropy: bigint;

@@ -455,7 +455,9 @@ export interface MinedBlock extends Block {}
  * @category Providers
  */
 export class BlockHeader implements BlockHeaderParams {
+    readonly avgTxFees!: bigint;
     readonly baseFeePerGas!: null | bigint;
+    readonly conversionFlowAmount!: bigint;
     readonly efficiencyScore: bigint;
     readonly etxEligibleSlices: string;
     readonly etxRollupRoot!: string;
@@ -467,13 +469,16 @@ export class BlockHeader implements BlockHeaderParams {
     readonly gasLimit!: bigint;
     readonly gasUsed!: bigint;
     readonly interlinkRootHash: string;
+    readonly kQuaiDiscount!: bigint;
     readonly manifestHash!: Array<string>;
+    readonly minerDifficulty!: bigint;
     readonly number!: Array<number>;
     readonly outboundEtxsRoot!: string;
     readonly parentDeltaEntropy!: Array<bigint>;
     readonly parentEntropy!: Array<bigint>;
     readonly parentHash!: Array<string>;
     readonly parentUncledDeltaEntropy: Array<bigint>;
+    readonly primeStateRoot!: string;
     readonly primeTerminusHash: string;
     readonly quaiStateSize!: bigint;
     readonly receiptsRoot!: string;
@@ -481,42 +486,49 @@ export class BlockHeader implements BlockHeaderParams {
     readonly stateLimit!: bigint;
     readonly stateUsed!: bigint;
     readonly thresholdCount: bigint;
+    readonly totalFees!: bigint;
     readonly transactionsRoot!: string;
     readonly uncleHash!: string;
     readonly uncledEntropy: bigint;
     readonly utxoRoot!: string;
 
     constructor(params: BlockHeaderParams) {
+        this.avgTxFees = params.avgTxFees;
         this.baseFeePerGas = params.baseFeePerGas;
+        this.conversionFlowAmount = params.conversionFlowAmount;
         this.efficiencyScore = params.efficiencyScore;
         this.etxEligibleSlices = params.etxEligibleSlices;
+        this.etxRollupRoot = params.etxRollupRoot;
         this.etxSetRoot = params.etxSetRoot;
         this.evmRoot = params.evmRoot;
+        this.exchangeRate = params.exchangeRate;
         this.expansionNumber = params.expansionNumber;
-        this.etxRollupRoot = params.etxRollupRoot;
-        this.outboundEtxsRoot = params.outboundEtxsRoot;
         this.extraData = params.extraData;
         this.gasLimit = params.gasLimit;
         this.gasUsed = params.gasUsed;
         this.interlinkRootHash = params.interlinkRootHash;
+        this.kQuaiDiscount = params.kQuaiDiscount;
         this.manifestHash = params.manifestHash;
+        this.minerDifficulty = params.minerDifficulty;
         this.number = params.number;
+        this.outboundEtxsRoot = params.outboundEtxsRoot;
         this.parentDeltaEntropy = params.parentDeltaEntropy;
         this.parentEntropy = params.parentEntropy;
         this.parentHash = params.parentHash;
         this.parentUncledDeltaEntropy = params.parentUncledDeltaEntropy;
+        this.primeStateRoot = params.primeStateRoot;
         this.primeTerminusHash = params.primeTerminusHash;
         this.quaiStateSize = params.quaiStateSize;
         this.receiptsRoot = params.receiptsRoot;
-        this.uncleHash = params.uncleHash;
         this.size = params.size;
         this.stateLimit = params.stateLimit;
         this.stateUsed = params.stateUsed;
         this.thresholdCount = params.thresholdCount;
+        this.totalFees = params.totalFees;
         this.transactionsRoot = params.transactionsRoot;
+        this.uncleHash = params.uncleHash;
         this.uncledEntropy = params.uncledEntropy;
         this.utxoRoot = params.utxoRoot;
-        this.exchangeRate = params.exchangeRate;
     }
 
     toJSON(): BlockHeaderParams {
