@@ -22865,36 +22865,42 @@ function formatLog(value) {
     return _formatLog(value);
 }
 const _formatHeader = object({
+    avgTxFees: getBigInt,
     baseFeePerGas: getBigInt,
+    conversionFlowAmount: getBigInt,
     efficiencyScore: getBigInt,
     etxEligibleSlices: formatHash,
+    etxRollupRoot: formatHash,
     etxSetRoot: formatHash,
     evmRoot: formatHash,
+    exchangeRate: getBigInt,
     expansionNumber: getNumber,
-    etxRollupRoot: formatHash,
-    outboundEtxsRoot: formatHash,
     extraData: formatData,
     gasLimit: getBigInt,
     gasUsed: getBigInt,
     interlinkRootHash: formatHash,
+    kQuaiDiscount: getBigInt,
     manifestHash: arrayOf(formatHash),
+    minerDifficulty: getBigInt,
     number: arrayOf(getNumber),
+    outboundEtxsRoot: formatHash,
     parentDeltaEntropy: arrayOf(getBigInt),
     parentEntropy: arrayOf(getBigInt),
     parentHash: arrayOf(formatHash),
     parentUncledDeltaEntropy: arrayOf(getBigInt),
+    primeStateRoot: formatHash,
     primeTerminusHash: formatHash,
     quaiStateSize: getBigInt,
     receiptsRoot: formatHash,
-    uncleHash: formatHash,
     size: getBigInt,
     stateLimit: getBigInt,
     stateUsed: getBigInt,
     thresholdCount: getBigInt,
+    totalFees: getBigInt,
     transactionsRoot: formatHash,
+    uncleHash: formatHash,
     uncledEntropy: getBigInt,
     utxoRoot: formatHash,
-    exchangeRate: getBigInt,
 });
 const _formatUncle = object({
     primaryCoinbase: allowNull(getAddress),
@@ -24063,67 +24069,79 @@ function copyRequest(req) {
  * @category Providers
  */
 class BlockHeader {
+    avgTxFees;
     baseFeePerGas;
+    conversionFlowAmount;
     efficiencyScore;
     etxEligibleSlices;
+    etxRollupRoot;
     etxSetRoot;
     evmRoot;
+    exchangeRate;
     expansionNumber;
-    etxRollupRoot;
-    outboundEtxsRoot;
     extraData;
     gasLimit;
     gasUsed;
     interlinkRootHash;
+    kQuaiDiscount;
     manifestHash;
+    minerDifficulty;
     number;
+    outboundEtxsRoot;
     parentDeltaEntropy;
     parentEntropy;
     parentHash;
     parentUncledDeltaEntropy;
+    primeStateRoot;
     primeTerminusHash;
     quaiStateSize;
     receiptsRoot;
-    uncleHash;
     size;
     stateLimit;
     stateUsed;
     thresholdCount;
+    totalFees;
     transactionsRoot;
+    uncleHash;
     uncledEntropy;
     utxoRoot;
-    exchangeRate;
     constructor(params) {
+        this.avgTxFees = params.avgTxFees;
         this.baseFeePerGas = params.baseFeePerGas;
+        this.conversionFlowAmount = params.conversionFlowAmount;
         this.efficiencyScore = params.efficiencyScore;
         this.etxEligibleSlices = params.etxEligibleSlices;
+        this.etxRollupRoot = params.etxRollupRoot;
         this.etxSetRoot = params.etxSetRoot;
         this.evmRoot = params.evmRoot;
+        this.exchangeRate = params.exchangeRate;
         this.expansionNumber = params.expansionNumber;
-        this.etxRollupRoot = params.etxRollupRoot;
-        this.outboundEtxsRoot = params.outboundEtxsRoot;
         this.extraData = params.extraData;
         this.gasLimit = params.gasLimit;
         this.gasUsed = params.gasUsed;
         this.interlinkRootHash = params.interlinkRootHash;
+        this.kQuaiDiscount = params.kQuaiDiscount;
         this.manifestHash = params.manifestHash;
+        this.minerDifficulty = params.minerDifficulty;
         this.number = params.number;
+        this.outboundEtxsRoot = params.outboundEtxsRoot;
         this.parentDeltaEntropy = params.parentDeltaEntropy;
         this.parentEntropy = params.parentEntropy;
         this.parentHash = params.parentHash;
         this.parentUncledDeltaEntropy = params.parentUncledDeltaEntropy;
+        this.primeStateRoot = params.primeStateRoot;
         this.primeTerminusHash = params.primeTerminusHash;
         this.quaiStateSize = params.quaiStateSize;
         this.receiptsRoot = params.receiptsRoot;
-        this.uncleHash = params.uncleHash;
         this.size = params.size;
         this.stateLimit = params.stateLimit;
         this.stateUsed = params.stateUsed;
         this.thresholdCount = params.thresholdCount;
+        this.totalFees = params.totalFees;
         this.transactionsRoot = params.transactionsRoot;
+        this.uncleHash = params.uncleHash;
         this.uncledEntropy = params.uncledEntropy;
         this.utxoRoot = params.utxoRoot;
-        this.exchangeRate = params.exchangeRate;
     }
     toJSON() {
         return {
