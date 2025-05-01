@@ -389,7 +389,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const bip44ExternalOutpoints = this.externalBip44.getOutpoints(zone);
         const bip44ChangeOutpoints = this.changeBip44.getOutpoints(zone);
         const privatekeyOutpoints = this.privatekeyWallet.getOutpoints(zone);
-        return [...bip44ExternalOutpoints, ...bip44ChangeOutpoints, ...privatekeyOutpoints];
+        const paymentChannelOutpoints = Array.from(this.paymentChannels.values()).flatMap((pc) =>
+            pc.selfWallet.getOutpoints(zone),
+        );
+        return [...bip44ExternalOutpoints, ...bip44ChangeOutpoints, ...privatekeyOutpoints, ...paymentChannelOutpoints];
     }
 
     /**
