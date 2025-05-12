@@ -35,8 +35,8 @@ type AddressDetails = {
  * @returns {Object | null} An object containing the zone and UTXO information, or null if no address is found.
  */
 export function getAddressDetails(address: string): AddressDetails | null {
-    const isQiLedger = (parseInt(address.substring(4, 5), 16) & 0x1) === Ledger.Qi;
-
+    const thirdNibble = parseInt(address.substring(4, 5), 16);
+    const isQiLedger = (thirdNibble & 0x8) >> 3 === Ledger.Qi;
     return { zone: toZone(address.substring(0, 4)), ledger: isQiLedger ? Ledger.Qi : Ledger.Quai };
 }
 
