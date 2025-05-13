@@ -3,7 +3,7 @@ import { AbstractHDWallet, NeuteredAddressInfo, SerializedHDWallet, _guard } fro
 import { HDNodeWallet } from './hdnodewallet.js';
 import { QiTransactionRequest, Provider, TransactionResponse } from '../providers/index.js';
 import { computeAddress, isQiAddress } from '../address/index.js';
-import { getBytes, getZoneForAddress, hexlify, isHexString, toQuantity } from '../utils/index.js';
+import { BytesLike, getBytes, getZoneForAddress, hexlify, isHexString, toQuantity } from '../utils/index.js';
 import {
     TransactionLike,
     QiTransaction,
@@ -223,9 +223,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @param {HDNodeWallet} root - The root HDNodeWallet.
      * @param {Provider} [provider] - The provider (optional).
      */
-    constructor(guard: any, root: HDNodeWallet, provider?: Provider) {
+    constructor(guard: any, root: HDNodeWallet, seed?: BytesLike, provider?: Provider) {
         super(guard, root, provider);
-
         const bip44 = new BIP44(this._root, QiHDWallet._coinType);
         // initialize bip44 wallet for external and change addresses
         this.externalBip44 = new Bip44QiWallet(bip44, false);
@@ -238,7 +237,14 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         this.privatekeyWallet = new PrivatekeyQiWallet();
 
         // initialize bip47 HDNode
-        this.bip47HDNode = HDNodeWallet.fromMnemonic(this._root.mnemonic!, QiHDWallet.bip47derivationPath);
+        if (seed) {
+            const masterNode = HDNodeWallet.fromSeed(seed);
+            this.bip47HDNode = masterNode.derivePath(QiHDWallet.bip47derivationPath.replace(/^m\//, ''));
+        } else if (this._root.mnemonic) {
+            this.bip47HDNode = HDNodeWallet.fromMnemonic(this._root.mnemonic, QiHDWallet.bip47derivationPath);
+        } else {
+            throw new Error('No seed or mnemonic provided');
+        }
     }
 
     /**

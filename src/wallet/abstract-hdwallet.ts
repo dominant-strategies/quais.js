@@ -7,6 +7,7 @@ import { assertPrivate } from '../utils/index.js';
 import { Zone } from '../constants/index.js';
 import { TransactionRequest, Provider } from '../providers/index.js';
 import { AllowedCoinType } from '../constants/index.js';
+import type { BytesLike } from '../utils/index.js';
 
 /**
  * Interface representing information about a neutered address.
@@ -166,7 +167,8 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
         mnemonic: Mnemonic,
     ): T {
         const coinType = (this as any)._coinType;
-        const root = HDNodeWallet.fromMnemonic(mnemonic, (this as any).parentPath(coinType));
+        const path = (this as any).parentPath(coinType);
+        const root = HDNodeWallet.fromMnemonic(mnemonic, path);
         return new (this as any)(_guard, root);
     }
 
@@ -182,6 +184,44 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
         mnemonic: Mnemonic,
     ): T {
         return (this as any).createInstance(mnemonic);
+    }
+
+    /**
+     * Creates an instance of the HD wallet from a root HD node.
+     *
+     * This method creates a wallet instance directly from an existing HD node root, optionally passing the original
+     * seed for wallets that need it for additional derivation paths (like BIP47 payment codes).
+     *
+     * @param {new (guard: any, root: HDNodeWallet, seed?: BytesLike) => T} this - The constructor of the HD wallet.
+     * @param {HDNodeWallet} root - The root HD node to use for the wallet.
+     * @param {BytesLike} [seed] - Optional original seed bytes, needed for some wallet types.
+     * @returns {T} The created wallet instance.
+     * @protected
+     */
+    protected static createInstanceFromRoot<T extends AbstractHDWallet>(
+        this: new (guard: any, root: HDNodeWallet, seed?: BytesLike) => T,
+        root: HDNodeWallet,
+        seed?: BytesLike,
+    ): T {
+        return new (this as any)(_guard, root, seed);
+    }
+
+    /**
+     * Creates an HD wallet from a seed.
+     *
+     * This method creates a wallet by first generating an HD node from the provided seed, then deriving the appropriate
+     * path based on the coin type, and finally creating a wallet instance with the derived root node.
+     *
+     * @param {new (guard: any, root: HDNodeWallet) => T} this - The constructor of the HD wallet.
+     * @param {BytesLike} seed - The seed bytes used to generate the wallet.
+     * @returns {T} The created wallet instance.
+     */
+    static fromSeed<T extends AbstractHDWallet>(this: new (guard: any, root: HDNodeWallet) => T, seed: BytesLike): T {
+        let root = HDNodeWallet.fromSeed(seed);
+        const coinType = (this as any)._coinType;
+        const path = (this as any).parentPath(coinType);
+        root = root.derivePath(path);
+        return (this as any).createInstanceFromRoot(root, seed);
     }
 
     /**
