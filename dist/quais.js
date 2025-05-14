@@ -16434,7 +16434,8 @@ function getZoneForAddress(address) {
  * @returns {Object | null} An object containing the zone and UTXO information, or null if no address is found.
  */
 function getAddressDetails(address) {
-    const isQiLedger = (parseInt(address.substring(4, 5), 16) & 0x1) === Ledger.Qi;
+    const thirdNibble = parseInt(address.substring(4, 5), 16);
+    const isQiLedger = (thirdNibble & 0x8) >> 3 === Ledger.Qi;
     return { zone: toZone(address.substring(0, 4)), ledger: isQiLedger ? Ledger.Qi : Ledger.Quai };
 }
 /**
@@ -29436,7 +29437,8 @@ class AbstractHDWallet {
      */
     static createInstance(mnemonic) {
         const coinType = this._coinType;
-        const root = HDNodeWallet.fromMnemonic(mnemonic, this.parentPath(coinType));
+        const path = this.parentPath(coinType);
+        const root = HDNodeWallet.fromMnemonic(mnemonic, path);
         return new this(_guard, root);
     }
     /**
@@ -29448,6 +29450,38 @@ class AbstractHDWallet {
      */
     static fromMnemonic(mnemonic) {
         return this.createInstance(mnemonic);
+    }
+    /**
+     * Creates an instance of the HD wallet from a root HD node.
+     *
+     * This method creates a wallet instance directly from an existing HD node root, optionally passing the original
+     * seed for wallets that need it for additional derivation paths (like BIP47 payment codes).
+     *
+     * @param {new (guard: any, root: HDNodeWallet, seed?: BytesLike) => T} this - The constructor of the HD wallet.
+     * @param {HDNodeWallet} root - The root HD node to use for the wallet.
+     * @param {BytesLike} [seed] - Optional original seed bytes, needed for some wallet types.
+     * @returns {T} The created wallet instance.
+     * @protected
+     */
+    static createInstanceFromRoot(root, seed) {
+        return new this(_guard, root, seed);
+    }
+    /**
+     * Creates an HD wallet from a seed.
+     *
+     * This method creates a wallet by first generating an HD node from the provided seed, then deriving the appropriate
+     * path based on the coin type, and finally creating a wallet instance with the derived root node.
+     *
+     * @param {new (guard: any, root: HDNodeWallet) => T} this - The constructor of the HD wallet.
+     * @param {BytesLike} seed - The seed bytes used to generate the wallet.
+     * @returns {T} The created wallet instance.
+     */
+    static fromSeed(seed) {
+        let root = HDNodeWallet.fromSeed(seed);
+        const coinType = this._coinType;
+        const path = this.parentPath(coinType);
+        root = root.derivePath(path);
+        return this.createInstanceFromRoot(root, seed);
     }
     /**
      * Creates a random HD wallet.
@@ -32776,7 +32810,7 @@ class QiHDWallet extends AbstractHDWallet {
      * @param {HDNodeWallet} root - The root HDNodeWallet.
      * @param {Provider} [provider] - The provider (optional).
      */
-    constructor(guard, root, provider) {
+    constructor(guard, root, seed, provider) {
         super(guard, root, provider);
         const bip44 = new BIP44(this._root, QiHDWallet._coinType);
         // initialize bip44 wallet for external and change addresses
@@ -32787,7 +32821,16 @@ class QiHDWallet extends AbstractHDWallet {
         // initialize private key wallet
         this.privatekeyWallet = new PrivatekeyQiWallet();
         // initialize bip47 HDNode
-        this.bip47HDNode = HDNodeWallet.fromMnemonic(this._root.mnemonic, QiHDWallet.bip47derivationPath);
+        if (seed) {
+            const masterNode = HDNodeWallet.fromSeed(seed);
+            this.bip47HDNode = masterNode.derivePath(QiHDWallet.bip47derivationPath.replace(/^m\//, ''));
+        }
+        else if (this._root.mnemonic) {
+            this.bip47HDNode = HDNodeWallet.fromMnemonic(this._root.mnemonic, QiHDWallet.bip47derivationPath);
+        }
+        else {
+            throw new Error('No seed or mnemonic provided');
+        }
     }
     /**
      * Returns the extended public key of the root node of the BIP44 HD wallet.
