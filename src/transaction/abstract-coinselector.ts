@@ -41,7 +41,8 @@ export interface CoinSelectionConfig {
     target?: bigint;
     fee?: bigint;
     includeLocked?: boolean;
-    maxDenomination?: number;
+    maxDenominationAggregate?: number;
+    maxDenominationOutput?: number;
     // Any future parameters can be added here
 }
 
