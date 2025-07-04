@@ -14,7 +14,7 @@ import {
 import { MuSigFactory } from '@brandonblack/musig';
 import { schnorr } from '@noble/curves/secp256k1';
 import { keccak256, musigCrypto } from '../crypto/index.js';
-import { Outpoint, UTXO } from '../transaction/utxo.js';
+import { denominations, Outpoint, UTXO } from '../transaction/utxo.js';
 import { AllowedCoinType, toShard, Zone } from '../constants/index.js';
 import { Mnemonic } from './mnemonic.js';
 import { validatePaymentCode } from './payment-codes.js';
@@ -62,6 +62,8 @@ export enum AddressStatus {
 export type DerivationPath = 'BIP44:external' | 'BIP44:change' | 'PrivateKey' | string; // string for payment codes
 
 export type LastSyncedBlock = { hash: string; number: number };
+
+const MAX_FEE_ESTIMATION_ATTEMPTS = 5;
 
 /**
  * Interface representing an address in the Qi HD wallet.
@@ -574,7 +576,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @param {QiTransactionOptions} [options] - Optional transaction configuration.
      * @returns {Promise<TransactionResponse>} The transaction response.
      */
-    public async aggregate(zone: Zone, options: QiTransactionOptions = {}): Promise<TransactionResponse> {
+    public async aggregate(
+        zone: Zone,
+        options: QiTransactionOptions = {},
+        maxDenominationAggregate: number = 6,
+        maxDenominationOutput: number = denominations.length - 1,
+    ): Promise<TransactionResponse> {
         this.validateZone(zone);
         if (!this.provider) {
             throw new Error('Provider is not set');
@@ -587,17 +594,97 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         const aggregateCoinSelector = new AggregateCoinSelector(zoneUTXOs);
         // TODO: Calculate mempool max fee
-        const fee = BigInt(1000); // temporary hardcode fee to 1 Qi
-        const selection = aggregateCoinSelector.performSelection({ fee, maxDenomination: 6, includeLocked: false });
+        let selection = aggregateCoinSelector.performSelection({
+            maxDenominationAggregate,
+            maxDenominationOutput,
+        });
 
-        const sendAddressesInfo = this.getUnusedBIP44Addresses(1, 0, 'BIP44:external', zone);
-        const sendAddresses = sendAddressesInfo.map((addressInfo) => addressInfo.address);
+        const sendAddresses = await this.getChangeAddressesForOutputs(selection.spendOutputs.length, zone);
         const changeAddresses: string[] = [];
+        let inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
+        if (inputPubKeys.some((pubkey) => !pubkey)) {
+            throw new Error('Missing public key for input address');
+        }
+
+        let attempts = 0;
+        while (attempts < MAX_FEE_ESTIMATION_ATTEMPTS) {
+            const feeEstimationTx = this.prepareFeeEstimationTransaction(
+                selection,
+                inputPubKeys.map((pubkey) => pubkey!),
+                sendAddresses,
+                changeAddresses,
+            );
+
+            const estimatedFee = await this.provider.estimateFeeForQi(feeEstimationTx);
+
+            // Get new selection with updated fee 2x
+            selection = aggregateCoinSelector.performSelection({
+                fee: estimatedFee * 10n, // Needs to be the first tx in the block
+                maxDenominationAggregate,
+                maxDenominationOutput,
+            });
+            // Determine if new addresses are needed for the change outputs
+            const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
+            if (changeAddressesNeeded > 0) {
+                // Need more change addresses
+                const newChangeAddresses = await this.getChangeAddressesForOutputs(changeAddressesNeeded, zone);
+                changeAddresses.push(...newChangeAddresses);
+            } else if (changeAddressesNeeded < 0) {
+                // Have extra change addresses, remove the excess
+                const addressesToSetToUnused = changeAddresses.slice(changeAddressesNeeded);
+
+                // Set the status of the addresses back to UNUSED in _addressesMap for removed addresses
+                const currentChangeAddresses = this.changeBip44.getAddressesInZone(zone);
+                const updatedChangeAddresses = currentChangeAddresses.map((a) => {
+                    if (addressesToSetToUnused.includes(a.address)) {
+                        return { ...a, status: AddressStatus.UNUSED };
+                    }
+                    return a;
+                });
+                this.changeBip44.setAddresses(updatedChangeAddresses);
+            }
+
+            // Determine if new addresses are needed for the spend outputs
+            const spendAddressesNeeded = selection.spendOutputs.length - sendAddresses.length;
+            if (spendAddressesNeeded > 0) {
+                // Need more send addresses
+                const newSendAddresses = await this.getChangeAddressesForOutputs(spendAddressesNeeded, zone);
+                sendAddresses.push(...newSendAddresses);
+            } else if (spendAddressesNeeded < 0) {
+                // Have extra send addresses, remove the excess
+                const addressesToSetToUnused = sendAddresses.slice(spendAddressesNeeded);
+
+                // Set the status of the addresses back to UNUSED in _addressesMap for removed addresses
+                const currentSendAddresses = this.changeBip44.getAddressesInZone(zone);
+                const updatedSendAddresses = currentSendAddresses.map((a) => {
+                    if (addressesToSetToUnused.includes(a.address)) {
+                        return { ...a, status: AddressStatus.UNUSED };
+                    }
+                    return a;
+                });
+                this.changeBip44.setAddresses(updatedSendAddresses);
+            }
+
+            inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
+
+            // Calculate total new outputs needed (absolute value)
+            const totalNewOutputsNeeded = Math.abs(changeAddressesNeeded) + Math.abs(spendAddressesNeeded);
+
+            // If we need 5 or fewer new outputs, we can break the loop
+            if ((changeAddressesNeeded <= 0 && spendAddressesNeeded <= 0) || totalNewOutputsNeeded <= 5) {
+                break;
+            }
+
+            attempts++;
+        }
 
         // Proceed with creating and signing the transaction
         const chainId = (await this.provider.getNetwork()).chainId;
         const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId), options);
 
+        // Calculate fee before broadcasting
+        const fee = this.calculateTransactionFee(selection);
+        console.log('Tx fee: ', Number(fee) / 1000);
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
 
@@ -628,16 +715,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             throw new Error('Provider is not set');
         }
 
-        // 1. Check the wallet has enough balance in the originating zone to send the transaction
         const currentBlock = await this.provider.getBlock(toShard(originZone), 'latest')!;
-        const balance = await this.getSpendableBalance(originZone, currentBlock?.woHeader.number, true);
-        if (balance < amount) {
-            throw new Error(
-                `Insufficient balance in the originating zone: want ${Number(amount) / 1000} Qi got ${balance} Qits`,
-            );
-        }
-
-        // 2. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
+        // 1. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
         const zoneUTXOs = this.outpointsToUTXOs(originZone);
         if (zoneUTXOs.length === 0) {
             throw new Error('No Qi available in zone.');
@@ -667,7 +746,6 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         }
 
         let attempts = 0;
-        const MAX_FEE_ESTIMATION_ATTEMPTS = 5;
 
         while (attempts < MAX_FEE_ESTIMATION_ATTEMPTS) {
             const feeEstimationTx = this.prepareFeeEstimationTransaction(
@@ -731,10 +809,56 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const chainId = (await this.provider.getNetwork()).chainId;
         const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId), options);
 
+        // Calculate fee before broadcasting
+        const fee = this.calculateTransactionFee(selection);
+        console.log('Tx fee: ', Number(fee) / 1000);
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
         // Broadcast the transaction to the network using the provider
         return this.provider.broadcastTransaction(originZone, signedTx);
+    }
+
+    /**
+     * Calculates the transaction fee as the difference between input value and output value.
+     *
+     * @private
+     * @param {SelectedCoinsResult} selection - The selected coins result.
+     * @returns {bigint} The transaction fee.
+     */
+    private calculateTransactionFee(selection: SelectedCoinsResult): bigint {
+        // Calculate total input value
+        const totalInputValue = selection.inputs.reduce((sum, utxo) => {
+            if (utxo.denomination === null) {
+                throw new Error('UTXO denomination cannot be null');
+            }
+            return sum + denominations[utxo.denomination];
+        }, BigInt(0));
+
+        // Calculate total output value (spend + change)
+        const totalSpendValue = selection.spendOutputs.reduce((sum, utxo) => {
+            if (utxo.denomination === null) {
+                throw new Error('UTXO denomination cannot be null');
+            }
+            return sum + denominations[utxo.denomination];
+        }, BigInt(0));
+
+        const totalChangeValue = selection.changeOutputs.reduce((sum, utxo) => {
+            if (utxo.denomination === null) {
+                throw new Error('UTXO denomination cannot be null');
+            }
+            return sum + denominations[utxo.denomination];
+        }, BigInt(0));
+
+        const totalOutputValue = totalSpendValue + totalChangeValue;
+
+        // Fee is the difference between inputs and outputs
+        const fee = totalInputValue - totalOutputValue;
+
+        if (fee < 0) {
+            throw new Error('Invalid transaction: outputs exceed inputs');
+        }
+
+        return fee;
     }
 
     /**

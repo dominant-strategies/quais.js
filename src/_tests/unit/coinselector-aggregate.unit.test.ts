@@ -58,7 +58,7 @@ describe('AggregateCoinSelector', () => {
                 const result = selector.performSelection({
                     includeLocked: testCase.includeLocked,
                     fee: BigInt(testCase.fee),
-                    maxDenomination: testCase.maxDenomination ?? undefined,
+                    maxDenominationAggregate: testCase.maxDenomination ?? undefined,
                 });
 
                 // Map UTXOs to same format as expected outputs before sorting
@@ -124,7 +124,7 @@ describe('AggregateCoinSelector', () => {
                     selector.performSelection({
                         includeLocked: testCase.includeLocked,
                         fee: BigInt(testCase.fee),
-                        maxDenomination: testCase.maxDenomination ?? 6,
+                        maxDenominationAggregate: testCase.maxDenomination ?? 6,
                     });
                 }, new Error(testCase.expectedError));
             }
