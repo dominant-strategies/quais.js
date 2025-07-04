@@ -24,7 +24,7 @@ import type { TxInput, TxOutput } from '../transaction/utxo.js';
 import type { Zone, Shard } from '../constants/index.js';
 import type { txpoolContentResponse, txpoolInspectResponse } from './txpool.js';
 import { EtxParams, UncleParams } from './formatting.js';
-import { ConversionTransactionRequest } from './abstract-provider';
+import { ConversionTransactionRequest } from './abstract-provider.js';
 
 const BN_0 = BigInt(0);
 

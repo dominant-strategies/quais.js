@@ -5,6 +5,7 @@ import { computeAddress } from '../address/address.js';
 import { bs58check } from './bip32/crypto.js';
 import type { TinySecp256k1Interface } from './bip32/types.js';
 import { secp256k1 } from '@noble/curves/secp256k1';
+import { Buffer } from 'buffer';
 
 export const PC_VERSION = 0x47;
 

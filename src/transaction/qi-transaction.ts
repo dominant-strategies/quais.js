@@ -6,6 +6,7 @@ import { formatNumber } from '../providers/format.js';
 import { computeAddress, isQiAddress } from '../address/index.js';
 import { ProtoTransaction } from './abstract-transaction.js';
 import { Zone } from '../constants/index.js';
+import { Buffer } from 'buffer';
 
 /**
  * Interface representing a QiTransaction.

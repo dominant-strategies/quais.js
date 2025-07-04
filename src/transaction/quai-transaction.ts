@@ -25,6 +25,7 @@ import {
 import { formatNumber, handleNumber } from '../providers/format.js';
 import { ProtoTransaction } from './abstract-transaction.js';
 import { Zone } from '../constants/index.js';
+import { Buffer } from 'buffer';
 
 /**
  * A **QuaiTransactionLike** is a JSON representation of a Quai transaction.

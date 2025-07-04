@@ -16,3 +16,5 @@ lib/**
 .vscode/**
 .cursorrules
 *.bak
+*.d.ts
+*.map
