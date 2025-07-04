@@ -6,7 +6,7 @@ import type { JsonRpcApiProviderOptions } from './provider-jsonrpc.js';
 import type { Networkish } from './network.js';
 import { Shard, toShard, toZone } from '../constants/index.js';
 import { fromShard } from '../constants/shards.js';
-import { ShardNickname, ShardPaths, ShardPorts } from './abstract-provider';
+import { ShardNickname, ShardPaths, ShardPorts } from './abstract-provider.js';
 
 /**
  * A generic interface to a Websocket-like object.
@@ -223,7 +223,9 @@ export class WebSocketProvider extends SocketProvider {
                             const port =
                                 shardPorts && shardNickname in shardPorts
                                     ? shardPorts?.[shardNickname as ShardNickname]
-                                    : DefaultWebsocketShardPorts[shardNickname as ShardNickname];
+                                    : DefaultWebsocketShardPorts[
+                                          shardNickname as keyof typeof DefaultWebsocketShardPorts
+                                      ];
                             const path =
                                 shardPaths && shardNickname in shardPaths
                                     ? shardPaths?.[shardNickname as ShardNickname]
@@ -251,7 +253,9 @@ export class WebSocketProvider extends SocketProvider {
                             const port =
                                 shardPorts && shardNickname in shardPorts
                                     ? shardPorts?.[shardNickname as ShardNickname]
-                                    : DefaultWebsocketShardPorts[shardNickname as ShardNickname];
+                                    : DefaultWebsocketShardPorts[
+                                          shardNickname as keyof typeof DefaultWebsocketShardPorts
+                                      ];
                             const path =
                                 shardPaths && shardNickname in shardPaths
                                     ? shardPaths?.[shardNickname as ShardNickname]
@@ -318,7 +322,7 @@ export class WebSocketProvider extends SocketProvider {
                     const firstPort =
                         shardPorts && shardNickname in shardPorts
                             ? shardPorts?.[shardNickname as ShardNickname]
-                            : DefaultWebsocketShardPorts[shardNickname as ShardNickname];
+                            : DefaultWebsocketShardPorts[shardNickname as keyof typeof DefaultWebsocketShardPorts];
                     this.initWebSocket(firstWebsocket, shards[0], firstPort as number);
                     this.#websockets.push(firstWebsocket);
                     this._urlMap.set(shards[0], firstWebsocket);
@@ -345,7 +349,7 @@ export class WebSocketProvider extends SocketProvider {
                     const firstPort =
                         shardPorts && shardNickname in shardPorts
                             ? shardPorts?.[shardNickname as ShardNickname]
-                            : DefaultWebsocketShardPorts[shardNickname as ShardNickname];
+                            : DefaultWebsocketShardPorts[shardNickname as keyof typeof DefaultWebsocketShardPorts];
                     this.initWebSocket(firstWebsocket, shards[0], firstPort as number);
                     this.#websockets.push(firstWebsocket);
                     this._urlMap.set(shards[0], firstWebsocket);

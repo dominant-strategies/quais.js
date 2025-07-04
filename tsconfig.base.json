@@ -4,7 +4,7 @@
 		"declarationMap": true,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
-		"importHelpers": true,
+		"importHelpers": false,
 		"lib": ["es2020", "es5"],
 		"module": "es2022",
 		"moduleResolution": "node16",

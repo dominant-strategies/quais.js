@@ -1,4 +1,4 @@
-import { DerivationPath } from '../wallet/qi-hdwallet';
+import { DerivationPath } from '../wallet/qi-hdwallet.js';
 
 export type TestCaseAbiVerbose =
     | {

@@ -4,6 +4,7 @@ import { gunzipSync } from 'zlib';
 
 import { assert } from './errors.js';
 import { getBytes } from './data.js';
+import { Buffer } from 'buffer';
 
 import type { FetchGetUrlFunc, FetchRequest, FetchCancelSignal, GetUrlResponse } from './fetch.js';
 
