@@ -24,13 +24,13 @@
   },
   "peerDependencies": {
     "react-native-fast-crypto": "^2.2.0",
-    "react-native-quick-crypto": "^0.7.15"
+    "@quai/react-native-quick-crypto": "^1.0.0-beta.19"
   },
   "peerDependenciesMeta": {
     "react-native-fast-crypto": {
       "optional": true
     },
-    "react-native-quick-crypto": {
+    "@quai/react-native-quick-crypto": {
       "optional": true
     }
   },
