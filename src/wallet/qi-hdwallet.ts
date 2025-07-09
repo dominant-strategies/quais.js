@@ -315,7 +315,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @param {Zone} zone - The zone.
      * @returns {Promise<QiAddressInfo>} The next Qi address information.
      */
-    public async getNextAddress(account: number, zone: Zone): Promise<QiAddressInfo> {
+    public async getNextAddress(account: number, zone: Zone, useReactNative: boolean = false): Promise<QiAddressInfo> {
+        if (useReactNative) {
+            return this.externalBip44.deriveNewAddressReactNativeAsync(zone, account);
+        }
         return Promise.resolve(this.getNextAddressSync(account, zone));
     }
 

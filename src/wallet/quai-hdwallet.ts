@@ -270,7 +270,14 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
      * @param {Zone} zone - The zone in which to retrieve the next address.
      * @returns {Promise<T>} The next neutered address information.
      */
-    public async getNextAddress(account: number, zone: Zone): Promise<NeuteredAddressInfo> {
+    public async getNextAddress(
+        account: number,
+        zone: Zone,
+        useReactNative: boolean = false,
+    ): Promise<NeuteredAddressInfo> {
+        if (useReactNative) {
+            return this._getNextAddressReactNativeAsync(account, zone);
+        }
         return Promise.resolve(this._getNextAddress(account, zone));
     }
 
@@ -301,6 +308,18 @@ export class QuaiHDWallet extends AbstractHDWallet<NeuteredAddressInfo> {
         // const addressNode = this.deriveNextAddressNode(accountIndex, lastIndex + 1, zone, false);
         const addressNode = this.bip44.deriveNextAddressNode(
             QuaiHDWallet._coinType,
+            accountIndex,
+            lastIndex + 1,
+            zone,
+            false,
+        );
+        return this._createAndStoreNeuteredAddressInfo(addressNode, accountIndex, zone);
+    }
+
+    protected async _getNextAddressReactNativeAsync(accountIndex: number, zone: Zone): Promise<NeuteredAddressInfo> {
+        this.validateZone(zone);
+        const lastIndex = this._findLastUsedIndex(Array.from(this._addresses.values()), accountIndex, zone);
+        const addressNode = await this.bip44.deriveNextAddressNodeReactNativeAsync(
             accountIndex,
             lastIndex + 1,
             zone,
