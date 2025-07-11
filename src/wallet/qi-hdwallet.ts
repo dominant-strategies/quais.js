@@ -115,6 +115,15 @@ export interface QiTransactionOptions {
 }
 
 /**
+ * Progress callback for long-running operations like aggregation.
+ *
+ * @param progress - Progress percentage (0-100)
+ * @param step - Current step description
+ * @param detail - Optional additional detail about current operation
+ */
+export type ProgressCallback = (progress: number, step: string, detail?: string) => void;
+
+/**
  * The Qi HD wallet is a BIP44-compliant hierarchical deterministic wallet used for managing a set of addresses in the
  * Qi ledger. This is wallet implementation is the primary way to interact with the Qi UTXO ledger on the Quai network.
  *
@@ -407,10 +416,11 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * Signs a Qi transaction and returns the serialized transaction.
      *
      * @param {QiTransactionRequest} tx - The transaction to sign.
+     * @param {ProgressCallback} [onProgress] - Optional progress callback for tracking signing progress.
      * @returns {Promise<string>} The serialized transaction.
      * @throws {Error} If the UTXO transaction is invalid.
      */
-    public async signTransaction(tx: QiTransactionRequest): Promise<string> {
+    public async signTransaction(tx: QiTransactionRequest, onProgress?: ProgressCallback): Promise<string> {
         const txobj = QiTransaction.from(<TransactionLike>tx);
         if (!txobj.txInputs || txobj.txInputs.length == 0 || !txobj.txOutputs)
             throw new Error('Invalid UTXO transaction, missing inputs or outputs');
@@ -419,9 +429,11 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         let signature: string;
         if (txobj.txInputs.length === 1) {
+            onProgress?.(75, 'Signing with Schnorr', 'Creating Schnorr signature for single input');
             signature = this.createSchnorrSignature(txobj.txInputs[0], hash);
+            onProgress?.(90, 'Signature complete', 'Schnorr signature created');
         } else {
-            signature = this.createMuSigSignature(txobj, hash);
+            signature = await this.createMuSigSignature(txobj, hash, onProgress);
         }
         txobj.signature = signature;
         return txobj.serialized;
@@ -478,6 +490,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             utxo.lock = outpointInfo.outpoint.lock ?? null;
             return utxo;
         });
+    }
+
+    private outpointsForAddress(address: string): OutpointInfo[] {
+        return this.getOutpoints(getZoneForAddress(address) || Zone.Cyprus1).filter(
+            (outpoint) => outpoint.address === address,
+        );
     }
 
     /**
@@ -574,6 +592,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      *
      * @param {Zone} zone - The zone to aggregate the balance for.
      * @param {QiTransactionOptions} [options] - Optional transaction configuration.
+     * @param {number} [maxDenominationAggregate=6] - The maximum denomination to aggregate up to. Default is `6`
+     * @param {number} [maxDenominationOutput] - The maximum denomination for outputs.
+     * @param {ProgressCallback} [onProgress] - Optional progress callback for tracking long operations.
      * @returns {Promise<TransactionResponse>} The transaction response.
      */
     public async aggregate(
@@ -581,7 +602,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         options: QiTransactionOptions = {},
         maxDenominationAggregate: number = 6,
         maxDenominationOutput: number = denominations.length - 1,
+        onProgress?: ProgressCallback,
     ): Promise<TransactionResponse> {
+        onProgress?.(0, 'Initializing aggregation', `Validating zone and loading ${zone} UTXOs`);
+
         this.validateZone(zone);
         if (!this.provider) {
             throw new Error('Provider is not set');
@@ -591,6 +615,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         if (zoneUTXOs.length === 0) {
             throw new Error('No UTXOs available in zone.');
         }
+
+        onProgress?.(5, 'Coin selection', `Selecting from ${zoneUTXOs.length} available UTXOs`);
 
         const aggregateCoinSelector = new AggregateCoinSelector(zoneUTXOs);
         // TODO: Calculate mempool max fee
@@ -606,6 +632,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             throw new Error('Missing public key for input address');
         }
 
+        onProgress?.(15, 'Fee estimation', `Estimating fees for ${selection.inputs.length} inputs`);
+
         let attempts = 0;
         while (attempts < MAX_FEE_ESTIMATION_ATTEMPTS) {
             const feeEstimationTx = this.prepareFeeEstimationTransaction(
@@ -615,11 +643,13 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 changeAddresses,
             );
 
-            const estimatedFee = await this.provider.estimateFeeForQi(feeEstimationTx);
+            let estimatedFee = await this.provider.estimateFeeForQi(feeEstimationTx);
+            // Add 10% to the estimated fee (minimum 10 qits)
+            estimatedFee = estimatedFee < 10 ? 10n : (estimatedFee * 11n) / 10n;
 
             // Get new selection with updated fee 2x
             selection = aggregateCoinSelector.performSelection({
-                fee: estimatedFee * 10n, // Needs to be the first tx in the block
+                fee: estimatedFee, // Needs to be the first tx in the block
                 maxDenominationAggregate,
                 maxDenominationOutput,
             });
@@ -678,18 +708,42 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             attempts++;
         }
 
+        onProgress?.(
+            60,
+            'Preparing transaction',
+            `Creating transaction with ${selection.inputs.length} inputs and ${selection.spendOutputs.length + selection.changeOutputs.length} outputs`,
+        );
+
         // Proceed with creating and signing the transaction
         const chainId = (await this.provider.getNetwork()).chainId;
         const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId), options);
 
-        // Calculate fee before broadcasting
-        const fee = this.calculateTransactionFee(selection);
-        console.log('Tx fee: ', Number(fee) / 1000);
-        // Sign the transaction
-        const signedTx = await this.signTransaction(tx);
+        onProgress?.(65, 'Validating transaction', 'Ensuring transaction matches coin selector expectations');
+
+        // Validate that the transaction matches the coin selector's expectations
+        this.validateTransactionMatchesSelection(tx, selection);
+
+        // Calculate actual fee from the constructed transaction
+        const actualFee = this.calculateActualTransactionFee(tx);
+        console.log('Actual Tx fee: ', Number(actualFee) / 1000);
+
+        onProgress?.(
+            70,
+            'Signing transaction',
+            `Signing transaction with ${tx.txInputs.length} inputs using ${tx.txInputs.length === 1 ? 'Schnorr' : 'MuSig'}`,
+        );
+
+        // Sign the transaction (pass progress callback for detailed signing progress)
+        const signedTx = await this.signTransaction(tx, onProgress);
+
+        onProgress?.(95, 'Broadcasting transaction', 'Sending transaction to network');
 
         // Broadcast the transaction to the network using the provider
-        return this.provider.broadcastTransaction(zone, signedTx);
+        const result = await this.provider.broadcastTransaction(zone, signedTx);
+
+        onProgress?.(100, 'Complete', 'Transaction successfully broadcast. Waiting for confirmation...');
+
+        return result;
     }
 
     /**
@@ -755,10 +809,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 changeAddresses,
             );
 
-            const estimatedFee = await this.provider.estimateFeeForQi(feeEstimationTx);
+            let estimatedFee = await this.provider.estimateFeeForQi(feeEstimationTx);
+            // Add 10% to the estimated fee
+            estimatedFee = (estimatedFee * 11n) / 10n;
 
             // Get new selection with updated fee 2x
-            selection = coinSelector.performSelection({ target: spendTarget, fee: estimatedFee * 3n });
+            selection = coinSelector.performSelection({ target: spendTarget, fee: estimatedFee * 2n });
             // Determine if new addresses are needed for the change outputs
             const changeAddressesNeeded = selection.changeOutputs.length - changeAddresses.length;
             if (changeAddressesNeeded > 0) {
@@ -809,9 +865,13 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         const chainId = (await this.provider.getNetwork()).chainId;
         const tx = await this.prepareTransaction(selection, sendAddresses, changeAddresses, Number(chainId), options);
 
-        // Calculate fee before broadcasting
-        const fee = this.calculateTransactionFee(selection);
-        console.log('Tx fee: ', Number(fee) / 1000);
+        // Validate that the transaction matches the coin selector's expectations
+        this.validateTransactionMatchesSelection(tx, selection);
+
+        // Calculate actual fee from the constructed transaction
+        const actualFee = this.calculateActualTransactionFee(tx);
+        console.log('Actual Tx fee: ', Number(actualFee) / 1000);
+
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
         // Broadcast the transaction to the network using the provider
@@ -859,6 +919,95 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         }
 
         return fee;
+    }
+
+    /**
+     * Calculates the actual transaction fee from the constructed transaction.
+     *
+     * @private
+     * @param {QiTransaction} tx - The constructed transaction.
+     * @returns {bigint} The actual transaction fee.
+     */
+    private calculateActualTransactionFee(tx: QiTransaction): bigint {
+        const inputDenominations: number[] = [];
+        const outputDenominations: number[] = [];
+        // Calculate total input value
+        const totalInputValue = tx.txInputs.reduce((sum, input) => {
+            // Get the denomination from the UTXO
+            const utxo = this.outpointsForAddress(computeAddress(input.pubkey)).find(
+                (outpoint) => outpoint.outpoint.txhash === input.txhash && outpoint.outpoint.index === input.index,
+            );
+            if (!utxo || utxo.outpoint.denomination === null) {
+                throw new Error(`UTXO not found or denomination null for input: ${input.txhash}:${input.index}`);
+            }
+            inputDenominations.push(utxo.outpoint.denomination);
+            return sum + denominations[utxo.outpoint.denomination];
+        }, BigInt(0));
+
+        // Calculate total output value
+        const totalOutputValue = tx.txOutputs.reduce((sum, output) => {
+            outputDenominations.push(output.denomination);
+            return sum + denominations[output.denomination];
+        }, BigInt(0));
+
+        // Fee is the difference between inputs and outputs
+        const fee = totalInputValue - totalOutputValue;
+
+        if (fee < 0) {
+            throw new Error('Invalid transaction: outputs exceed inputs');
+        }
+
+        console.log('Input denominations: ', inputDenominations);
+        console.log('Output denominations: ', outputDenominations);
+
+        return fee;
+    }
+
+    /**
+     * Validates that the constructed transaction matches the coin selector's expectations.
+     *
+     * @private
+     * @param {QiTransaction} tx - The constructed transaction.
+     * @param {SelectedCoinsResult} selection - The coin selector result.
+     * @throws {Error} If the transaction doesn't match the selection.
+     */
+    private validateTransactionMatchesSelection(tx: QiTransaction, selection: SelectedCoinsResult): void {
+        // Validate input count
+        if (tx.txInputs.length !== selection.inputs.length) {
+            throw new Error(
+                `Transaction input count mismatch: expected ${selection.inputs.length}, got ${tx.txInputs.length}`,
+            );
+        }
+
+        // Validate output count
+        const expectedOutputCount = selection.spendOutputs.length + selection.changeOutputs.length;
+        if (tx.txOutputs.length !== expectedOutputCount) {
+            throw new Error(
+                `Transaction output count mismatch: expected ${expectedOutputCount}, got ${tx.txOutputs.length}`,
+            );
+        }
+
+        // Validate that inputs match
+        for (let i = 0; i < tx.txInputs.length; i++) {
+            const txInput = tx.txInputs[i];
+            const selectionInput = selection.inputs[i];
+
+            if (txInput.txhash !== selectionInput.txhash || txInput.index !== selectionInput.index) {
+                throw new Error(
+                    `Transaction input mismatch at index ${i}: expected ${selectionInput.txhash}:${selectionInput.index}, got ${txInput.txhash}:${txInput.index}`,
+                );
+            }
+        }
+
+        // Calculate expected vs actual fee
+        const expectedFee = this.calculateTransactionFee(selection);
+        const actualFee = this.calculateActualTransactionFee(tx);
+
+        if (expectedFee !== actualFee) {
+            throw new Error(
+                `Transaction fee mismatch: coin selector expected ${Number(expectedFee) / 1000} Qi, but actual transaction has ${Number(actualFee) / 1000} Qi fee`,
+            );
+        }
     }
 
     /**
@@ -1056,18 +1205,30 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @ignore
      * @param {QiTransaction} tx - The Qi transaction.
      * @param {Uint8Array} hash - The hash of the message.
-     * @returns {string} The MuSig signature.
+     * @param {ProgressCallback} [onProgress] - Optional progress callback for tracking signing progress.
+     * @returns {Promise<string>} The MuSig signature.
      */
-    private createMuSigSignature(tx: QiTransaction, hash: Uint8Array): string {
+    private async createMuSigSignature(
+        tx: QiTransaction,
+        hash: Uint8Array,
+        onProgress?: ProgressCallback,
+    ): Promise<string> {
         const musig = MuSigFactory(musigCrypto);
+        const totalInputs = tx.txInputs.length;
+
+        onProgress?.(75, 'MuSig Setup', `Initializing MuSig for ${totalInputs} inputs`);
 
         // Collect private keys corresponding to the pubkeys found on the inputs
         const privKeys = tx.txInputs.map((input) => this.getPrivateKeyForTxInput(input));
+
+        onProgress?.(77, 'MuSig Setup', 'Creating public keys for aggregation');
 
         // Create an array of public keys corresponding to the private keys for musig aggregation
         const pubKeys: Uint8Array[] = privKeys
             .map((privKey) => musigCrypto.getPublicKey(getBytes(privKey!), true))
             .filter((pubKey) => pubKey !== null) as Uint8Array[];
+
+        onProgress?.(79, 'MuSig Setup', 'Generating nonces');
 
         // Generate nonces for each public key
         const nonces = pubKeys.map((pk) => musig.nonceGen({ publicKey: getBytes(pk!) }));
@@ -1075,18 +1236,36 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
 
         const signingSession = musig.startSigningSession(aggNonce, hash, pubKeys);
 
-        // Create partial signatures for each private key
-        const partialSignatures = privKeys.map((sk, index) =>
-            musig.partialSign({
+        onProgress?.(80, 'MuSig Signing', `Creating partial signatures for ${totalInputs} inputs`);
+
+        // Create partial signatures for each private key (this is the slow part for many inputs)
+        const partialSignatures: Uint8Array[] = [];
+        for (let index = 0; index < privKeys.length; index++) {
+            const sk = privKeys[index];
+            const partialSig = musig.partialSign({
                 secretKey: getBytes(sk || ''),
                 publicNonce: nonces[index],
                 sessionKey: signingSession,
                 verify: true,
-            }),
-        );
+            });
+            partialSignatures.push(partialSig);
+
+            // Report progress during the slow partial signature creation
+            const sigProgress = 80 + Math.floor(((index + 1) / totalInputs) * 10); // 80-90% range
+            onProgress?.(sigProgress, 'MuSig Signing', `Partial signature ${index + 1}/${totalInputs} created`);
+
+            // Add a small delay every 100 signatures to allow UI updates
+            if ((index + 1) % 100 === 0) {
+                await new Promise((resolve) => setTimeout(resolve, 0));
+            }
+        }
+
+        onProgress?.(90, 'MuSig Aggregation', 'Aggregating partial signatures');
 
         // Aggregate the partial signatures into a final aggregated signature
         const finalSignature = musig.signAgg(partialSignatures, signingSession);
+
+        onProgress?.(92, 'MuSig Complete', 'MuSig signature created successfully');
 
         return hexlify(finalSignature);
     }
