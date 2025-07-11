@@ -1710,15 +1710,13 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             tx = await tx;
         }
         const zone = await this.zoneFromAddress(addressFromTransactionRequest(tx));
-        return (
-            getBigInt(
-                await this.#perform({
-                    method: 'estimateGas',
-                    transaction: tx,
-                    zone: zone,
-                }),
-                '%response',
-            ) * BigInt(2)
+        return getBigInt(
+            await this.#perform({
+                method: 'estimateGas',
+                transaction: tx,
+                zone: zone,
+            }),
+            '%response',
         );
     }
 
