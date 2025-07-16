@@ -110,4 +110,38 @@ export class BIP44 {
             `Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`,
         );
     }
+
+    /**
+     * Derives the next valid address node for a specified account, starting index, and zone using React Native fast
+     * crypto. This async version uses react-native-fast-crypto for secp256k1 operations. The method ensures the derived
+     * address belongs to the correct shard and ledger, as defined by the Quai blockchain specifications.
+     *
+     * @param {number} account - The account number from which to derive the address node.
+     * @param {number} startingIndex - The index from which to start deriving addresses.
+     * @param {Zone} zone - The zone (shard) for which the address should be valid.
+     * @param {boolean} [isChange=false] - Whether to derive a change address. Default is `false`
+     * @returns {Promise<HDNodeWallet>} - The derived HD node wallet containing a valid address for the specified zone.
+     * @throws {Error} If a valid address for the specified zone cannot be derived within the allowed attempts.
+     */
+    public async deriveNextAddressNodeReactNativeAsync(
+        account: number,
+        startingIndex: number,
+        zone: Zone,
+        isChange: boolean = false,
+    ): Promise<HDNodeWallet> {
+        const changeNode = this._getChangeNode(account, isChange);
+        let addrIndex = startingIndex;
+        let addressNode: HDNodeWallet;
+
+        for (let attempts = 0; attempts < MAX_ADDRESS_DERIVATION_ATTEMPTS; attempts++) {
+            addressNode = await changeNode.deriveChildReactNative(addrIndex++);
+            if (isValidAddressForZone(this.coinType(), addressNode.address, zone)) {
+                return addressNode;
+            }
+        }
+
+        throw new Error(
+            `Failed to derive a valid address for the zone ${zone} after ${MAX_ADDRESS_DERIVATION_ATTEMPTS} attempts.`,
+        );
+    }
 }

@@ -45,7 +45,7 @@ export class BaseWallet extends AbstractSigner {
      * @param {SigningKey} privateKey - The private key for the wallet.
      * @param {null | Provider} [provider] - The provider to connect to.
      */
-    constructor(privateKey: SigningKey, provider?: null | Provider) {
+    constructor(privateKey: SigningKey, provider?: null | Provider, address?: string) {
         super(provider);
 
         assertArgument(
@@ -57,7 +57,7 @@ export class BaseWallet extends AbstractSigner {
 
         this.#signingKey = privateKey;
 
-        this.#address = computeAddress(this.signingKey.publicKey);
+        this.#address = address || computeAddress(this.signingKey.publicKey);
     }
 
     // Store private values behind getters to reduce visibility

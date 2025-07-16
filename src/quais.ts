@@ -209,6 +209,8 @@ export {
     QuaiHDWallet,
     QiHDWallet,
     Wallet,
+    HDNodeWallet,
+    HDNodeVoidWallet,
     isKeystoreJson,
     decryptKeystoreJsonSync,
     decryptKeystoreJson,

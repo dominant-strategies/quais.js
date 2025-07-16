@@ -60,6 +60,26 @@ export class Bip44QiWallet extends AbstractQiWallet {
         return qiAddressInfo;
     }
 
+    public async deriveNewAddressReactNativeAsync(zone: Zone, account: number = 0): Promise<QiAddressInfo> {
+        const index = this.getLastDerivationIndex(zone, account) + 1;
+        const hdNode = await this.bip44.deriveNextAddressNodeReactNativeAsync(account, index, zone, this.isChange);
+        const newIndex = hdNode.index;
+        this.saveLastDerivationIndex(zone, account, newIndex);
+        const qiAddressInfo: QiAddressInfo = {
+            address: hdNode.address,
+            pubKey: hdNode.publicKey,
+            index: newIndex,
+            account,
+            zone,
+            change: this.isChange,
+            status: AddressStatus.UNKNOWN,
+            derivationPath: this.isChange ? 'BIP44:change' : 'BIP44:external',
+            lastSyncedBlock: null,
+        };
+        this.saveQiAddressInfo(qiAddressInfo);
+        return qiAddressInfo;
+    }
+
     /**
      * Gets the HD node wallet for a specific account and address index.
      *

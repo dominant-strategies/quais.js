@@ -19,13 +19,19 @@ import type { SignatureLike } from './index.js';
  */
 export class SigningKey {
     #privateKey: string;
+    #cachedCompressed?: string; // store once, reuse forever
 
     /**
      * Creates a new **SigningKey** for `privateKey`.
      */
-    constructor(privateKey: BytesLike) {
+    constructor(privateKey: BytesLike, compressedPub?: BytesLike) {
         assertArgument(dataLength(privateKey) === 32, 'invalid private key', 'privateKey', '[REDACTED]');
         this.#privateKey = hexlify(privateKey);
+
+        if (compressedPub) {
+            assertArgument(dataLength(compressedPub) === 33, 'invalid public key', 'compressedPub', compressedPub);
+            this.#cachedCompressed = hexlify(compressedPub);
+        }
     }
 
     /**
@@ -42,9 +48,12 @@ export class SigningKey {
      * nibbles).
      */
     get publicKey(): string {
-        return SigningKey.computePublicKey(this.#privateKey);
+        // derive once from the compressed copy (fast) and cache via closure
+        const uncompressed = SigningKey.computePublicKey(this.compressedPublicKey, false);
+        // Future calls to publicKey will return the cached value
+        Object.defineProperty(this, 'publicKey', { value: uncompressed });
+        return uncompressed;
     }
-
     /**
      * The compressed public key.
      *
@@ -52,7 +61,11 @@ export class SigningKey {
      * hexadecimal nibbles)
      */
     get compressedPublicKey(): string {
-        return SigningKey.computePublicKey(this.#privateKey, true);
+        if (!this.#cachedCompressed) {
+            // first access – compute & cache (JS if native not present)
+            this.#cachedCompressed = SigningKey.computePublicKey(this.#privateKey, true);
+        }
+        return this.#cachedCompressed;
     }
 
     /**
