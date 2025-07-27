@@ -1,7 +1,7 @@
 import { computeHmac, randomBytes, ripemd160, SigningKey, sha256 } from '../crypto/index.js';
 import { VoidSigner } from '../signers/index.js';
 import { computeAddress } from '../address/index.js';
-import { decodeBase58, encodeBase58 } from '../encoding/index.js';
+import { decodeBase58, encodeBase58, toUtf8Bytes } from '../encoding/index.js';
 import { Buffer } from 'buffer';
 import {
     concat,
@@ -689,6 +689,58 @@ export class HDNodeWallet extends BaseWallet {
      */
     static fromMnemonic(mnemonic: Mnemonic, path: string): HDNodeWallet {
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
+    }
+
+    /**
+     * Native seed -> root node
+     */
+    static async fromSeedReactNative(seed: BytesLike): Promise<HDNodeWallet> {
+        const quickCrypto = getReactNativeQuickCrypto();
+        const seedBytes = getBytes(seed, 'seed');
+        assertArgument(seedBytes.length >= 16 && seedBytes.length <= 64, 'invalid seed', 'seed', '[REDACTED]');
+        const h = quickCrypto.createHmac('sha512', MasterSecret);
+        h.update(seedBytes);
+        const buf = h.digest();
+        const I = new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+        const IL = I.slice(0, 32);
+        const IR = I.slice(32);
+
+        const signingKey = new SigningKey(hexlify(IL));
+        // return a depth‑0 node (path "m")
+        // For depth 0 pass "0x00000000" as parentFingerprint
+        return new HDNodeWallet(_guard, signingKey, '0x00000000', hexlify(IR), 'm', 0, 0, null, null);
+    }
+
+    /**
+     * Native phrase -> seed -> derive path
+     */
+    static async fromMnemonicReactNative(mnemonic: Mnemonic, path: string): Promise<HDNodeWallet> {
+        const fastCrypto = getReactNativeFastCrypto();
+        const data = toUtf8Bytes(mnemonic.phrase, 'NFKD');
+        const salt = toUtf8Bytes('mnemonic' + mnemonic.password, 'NFKD');
+        const seed = await fastCrypto.pbkdf2.deriveAsync(data, salt, 2048, 64, 'sha512');
+        const root = await HDNodeWallet.fromSeedReactNative(seed);
+        // Attach mnemonic info
+        return root.derivePath(path).connectMnemonic(mnemonic);
+    }
+
+    /**
+     * Helper to attach mnemonic & keep typing clean
+     */
+    private connectMnemonic(mnemonic: Mnemonic): HDNodeWallet {
+        return new HDNodeWallet(
+            _guard,
+            this.signingKey,
+            this.parentFingerprint,
+            this.chainCode,
+            this.path,
+            this.index,
+            this.depth,
+            mnemonic,
+            this.provider,
+            this.fingerprint,
+            this.address,
+        );
     }
 
     /**
