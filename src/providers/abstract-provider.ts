@@ -1745,7 +1745,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
         });
         // Check for VM-level error (e.g., vm.ErrOutOfGas)
         if (result.error) {
-            throw new Error(`Access list creation failed due to VM error: ${result.Error}`);
+            throw new Error(`Access list creation failed due to VM error: ${result.error}`);
         }
         return result.accessList;
     }

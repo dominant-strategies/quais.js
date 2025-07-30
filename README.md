@@ -133,6 +133,10 @@ packages designed to further enhance the functionality and experience.
 -   [QuaisPolling](https://npmjs.com/package/quais-polling) - A package to poll Quai Network for events and logs
 -   [MulticallProvider](https://github.com/ethers-io/ext-provider-multicall) - A Provider which bundles multiple call requests into a single `call` to reduce latency and backend request capacity
 
+
+## Deterministic Build
+Use ./deterministic-build.sh to deterministically build the quais.js library using Docker. The hash returned from the script can be compared across different machines to ensure the code is the same and the built library will be in ./deterministic-build-output/dist/.
+
 ## License
 
 MIT License (including **all** dependencies).
