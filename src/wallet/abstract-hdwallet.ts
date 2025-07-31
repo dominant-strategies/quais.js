@@ -186,6 +186,16 @@ export abstract class AbstractHDWallet<T extends NeuteredAddressInfo = NeuteredA
         return (this as any).createInstance(mnemonic);
     }
 
+    static async fromMnemonicReactNative<T extends AbstractHDWallet>(
+        this: new (guard: any, root: HDNodeWallet) => T,
+        mnemonic: Mnemonic,
+    ): Promise<T> {
+        const coinType = (this as any)._coinType;
+        const path = (this as any).parentPath(coinType);
+        const root = await HDNodeWallet.fromMnemonicReactNative(mnemonic, path);
+        return new (this as any)(_guard, root);
+    }
+
     /**
      * Creates an instance of the HD wallet from a root HD node.
      *

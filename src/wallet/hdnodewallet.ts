@@ -1,7 +1,8 @@
 import { computeHmac, randomBytes, ripemd160, SigningKey, sha256 } from '../crypto/index.js';
 import { VoidSigner } from '../signers/index.js';
 import { computeAddress } from '../address/index.js';
-import { decodeBase58, encodeBase58 } from '../encoding/index.js';
+import { decodeBase58, encodeBase58, toUtf8Bytes } from '../encoding/index.js';
+import { Buffer } from 'buffer';
 import {
     concat,
     dataSlice,
@@ -30,12 +31,40 @@ import type { Wordlist } from '../wordlists/index.js';
 
 import type { KeystoreAccount } from './json-keystore.js';
 
+import type { ReactNativeFastCrypto } from 'react-native-fast-crypto';
+
 // "Bitcoin seed"
 const MasterSecret = new Uint8Array([66, 105, 116, 99, 111, 105, 110, 32, 115, 101, 101, 100]);
 
 const HardenedBit = 0x80000000;
 
 const N = BigInt('0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141');
+
+// Cache for react-native-fast-crypto to avoid repeated require() calls
+let _cachedReactNativeCrypto: any = null;
+let _cachedReactNativeQuickCrypto: any = null;
+
+function getReactNativeFastCrypto(): ReactNativeFastCrypto {
+    if (_cachedReactNativeCrypto === null) {
+        try {
+            _cachedReactNativeCrypto = require('react-native-fast-crypto');
+        } catch (error) {
+            throw new Error('react-native-fast-crypto is required for React Native key derivation');
+        }
+    }
+    return _cachedReactNativeCrypto;
+}
+
+function getReactNativeQuickCrypto(): any {
+    if (_cachedReactNativeQuickCrypto === null) {
+        try {
+            _cachedReactNativeQuickCrypto = require('@quai/react-native-quick-crypto');
+        } catch (error) {
+            throw new Error('react-native-quick-crypto is required for React Native key derivation');
+        }
+    }
+    return _cachedReactNativeQuickCrypto;
+}
 
 const Nibbles = '0123456789abcdef';
 function zpad(value: number, length: number): string {
@@ -86,6 +115,48 @@ function ser_I(
     const I = getBytes(computeHmac('sha512', chainCode, data));
 
     return { IL: I.slice(0, 32), IR: I.slice(32) };
+}
+
+function ser_I_ReactNative(
+    index: number,
+    chainCode: string,
+    publicKey: string,
+    privateKey: null | string,
+    quickCrypto: any,
+): { IL: Uint8Array; IR: Uint8Array } {
+    const data = new Uint8Array(37);
+
+    if (index & HardenedBit) {
+        assert(privateKey != null, 'cannot derive child of neutered node', 'UNSUPPORTED_OPERATION', {
+            operation: 'deriveChild',
+        });
+
+        // Data = 0x00 || ser_256(k_par)
+        data.set(getBytes(privateKey), 1);
+    } else {
+        // Data = ser_p(point(k_par))
+        data.set(getBytes(publicKey));
+    }
+
+    // Data += ser_32(i)
+    for (let i = 24; i >= 0; i -= 8) {
+        data[33 + (i >> 3)] = (index >> (24 - i)) & 0xff;
+    }
+
+    // Use native HMAC from react-native-quick-crypto
+    const hmac = quickCrypto.createHmac('sha512', getBytes(chainCode));
+    hmac.update(data);
+    const digest = hmac.digest(); // Returns Buffer
+    const I = new Uint8Array(digest.buffer, digest.byteOffset, digest.byteLength);
+
+    return { IL: I.slice(0, 32), IR: I.slice(32) };
+}
+
+// Native hash function for fingerprint calculation
+function calculateFingerprintNative(publicKey: Uint8Array, quickCrypto: any): string {
+    const sha256Hash = quickCrypto.createHash('sha256').update(publicKey).digest();
+    const ripemdHash = quickCrypto.createHash('ripemd160').update(sha256Hash).digest();
+    return hexlify(ripemdHash.subarray(0, 4));
 }
 
 type HDNodeLike<T> = { depth: number; deriveChild: (i: number) => T };
@@ -218,13 +289,15 @@ export class HDNodeWallet extends BaseWallet {
         depth: number,
         mnemonic: null | Mnemonic,
         provider: null | Provider,
+        childFingerprint?: string,
+        address?: string,
     ) {
-        super(signingKey, provider);
+        super(signingKey, provider, address);
         assertPrivate(guard, _guard, 'HDNodeWallet');
 
         defineProperties<HDNodeWallet>(this, { publicKey: signingKey.compressedPublicKey });
 
-        const fingerprint = dataSlice(ripemd160(sha256(this.publicKey)), 0, 4);
+        const fingerprint = childFingerprint || dataSlice(ripemd160(sha256(this.publicKey)), 0, 4);
         defineProperties<HDNodeWallet>(this, {
             parentFingerprint,
             fingerprint,
@@ -401,6 +474,101 @@ export class HDNodeWallet extends BaseWallet {
     }
 
     /**
+     * Return the child for `index` using React Native fast crypto. This is an async version that uses
+     * react-native-fast-crypto for secp256k1 operations.
+     *
+     * @param {Numeric} _index
+     * @returns {Promise<HDNodeWallet>}
+     */
+    async deriveChildReactNative(_index: Numeric): Promise<HDNodeWallet> {
+        const index = getNumber(_index, 'index');
+        assertArgument(index <= 0xffffffff, 'invalid index', 'index', index);
+
+        // Step 1: Path building
+        let path = this.path;
+        if (path) {
+            path += '/' + (index & ~HardenedBit);
+            if (index & HardenedBit) {
+                path += "'";
+            }
+        }
+
+        /* 1. ser_I — HMAC operation (using native quick-crypto) */
+        const quickCrypto = getReactNativeQuickCrypto();
+        const { IL, IR } = ser_I_ReactNative(index, this.chainCode, this.publicKey, this.privateKey, quickCrypto);
+
+        /* 2. Use libsecp for the scalar addition (handles overflow & zero) */
+        const fastCrypto = getReactNativeFastCrypto();
+        const childPriv = await fastCrypto.secp256k1.privateKeyTweakAdd(
+            getBytes(this.privateKey), // 32-byte parent key
+            IL, // 32-byte tweak
+        ); // Buffer(32) → always valid key
+
+        /* 3. Native public key (compressed) */
+        const childPubCompressed = await fastCrypto.secp256k1.publicKeyCreate(childPriv, true);
+        const childPubUncompressed = await fastCrypto.secp256k1.publicKeyCreate(childPriv, false);
+
+        const compressedPub = hexlify(childPubCompressed);
+
+        /* 4. Wrap in a *light* SigningKey without recomputing pubkey */
+        const ki = new SigningKey(hexlify(childPriv), compressedPub);
+
+        const fingerprint = calculateFingerprintNative(childPubCompressed, quickCrypto);
+
+        const address = await this.addressFromUncompressed(childPubUncompressed, quickCrypto);
+
+        /* 5. Assemble the child HDNode */
+        const newWallet = new HDNodeWallet(
+            _guard,
+            ki,
+            this.fingerprint,
+            hexlify(IR),
+            path,
+            index,
+            this.depth + 1,
+            this.mnemonic,
+            this.provider,
+            fingerprint,
+            address,
+        );
+        return newWallet;
+    }
+
+    /**
+     * Compute an EIP‑55–checksummed address from an **uncompressed** public key (uint8[65] starting with 0x04) using
+     * the native keccak supplied by react‑native‑quick‑crypto.
+     *
+     * @param uncompressed – 65‑byte uncompressed secp256k1 public key
+     * @param quickCrypto – the quick‑crypto module (already required once)
+     * @returns – properly checksummed `0x…` address
+     */
+    async addressFromUncompressed(uncompressed: Uint8Array, quickCrypto: any): Promise<string> {
+        /* ----------------------------------------------------------- *
+         * 1. keccak256( X || Y ) — skip the 0x04 prefix *
+         * ----------------------------------------------------------- */
+        const hashBytes: Uint8Array = quickCrypto.keccak256(uncompressed.subarray(1)); // 32‑byte hash
+
+        /* last 20 bytes are the raw address */
+        const addrBytes = hashBytes.subarray(12); // Uint8Array(20)
+        const addrHex = Buffer.from(addrBytes).toString('hex'); // 40 lowercase nibbles
+
+        /* ----------------------------------------------------------- *
+         * 2. keccak256( asciiLower(addr) ) — EIP-55 checksum *
+         * ----------------------------------------------------------- */
+        const chkBytes: Uint8Array = quickCrypto.keccak256(Buffer.from(addrHex, 'utf8')); // ascii string → bytes
+        const chkHex = Buffer.from(chkBytes).toString('hex'); // 64‑char hex string
+
+        /* ----------------------------------------------------------- *
+         * 3. Apply mixed‑case checksum                                *
+         * ----------------------------------------------------------- */
+        let out = '0x';
+        for (let i = 0; i < 40; i++) {
+            out += parseInt(chkHex[i], 16) >= 8 ? addrHex[i].toUpperCase() : addrHex[i];
+        }
+        return out;
+    }
+
+    /**
      * Return the HDNode for `path` from this node.
      *
      * @param {string} path
@@ -521,6 +689,58 @@ export class HDNodeWallet extends BaseWallet {
      */
     static fromMnemonic(mnemonic: Mnemonic, path: string): HDNodeWallet {
         return HDNodeWallet.#fromSeed(mnemonic.computeSeed(), mnemonic).derivePath(path);
+    }
+
+    /**
+     * Native seed -> root node
+     */
+    static async fromSeedReactNative(seed: BytesLike): Promise<HDNodeWallet> {
+        const quickCrypto = getReactNativeQuickCrypto();
+        const seedBytes = getBytes(seed, 'seed');
+        assertArgument(seedBytes.length >= 16 && seedBytes.length <= 64, 'invalid seed', 'seed', '[REDACTED]');
+        const h = quickCrypto.createHmac('sha512', MasterSecret);
+        h.update(seedBytes);
+        const buf = h.digest();
+        const I = new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength);
+        const IL = I.slice(0, 32);
+        const IR = I.slice(32);
+
+        const signingKey = new SigningKey(hexlify(IL));
+        // return a depth‑0 node (path "m")
+        // For depth 0 pass "0x00000000" as parentFingerprint
+        return new HDNodeWallet(_guard, signingKey, '0x00000000', hexlify(IR), 'm', 0, 0, null, null);
+    }
+
+    /**
+     * Native phrase -> seed -> derive path
+     */
+    static async fromMnemonicReactNative(mnemonic: Mnemonic, path: string): Promise<HDNodeWallet> {
+        const fastCrypto = getReactNativeFastCrypto();
+        const data = toUtf8Bytes(mnemonic.phrase, 'NFKD');
+        const salt = toUtf8Bytes('mnemonic' + mnemonic.password, 'NFKD');
+        const seed = await fastCrypto.pbkdf2.deriveAsync(data, salt, 2048, 64, 'sha512');
+        const root = await HDNodeWallet.fromSeedReactNative(seed);
+        // Attach mnemonic info
+        return root.derivePath(path).connectMnemonic(mnemonic);
+    }
+
+    /**
+     * Helper to attach mnemonic & keep typing clean
+     */
+    private connectMnemonic(mnemonic: Mnemonic): HDNodeWallet {
+        return new HDNodeWallet(
+            _guard,
+            this.signingKey,
+            this.parentFingerprint,
+            this.chainCode,
+            this.path,
+            this.index,
+            this.depth,
+            mnemonic,
+            this.provider,
+            this.fingerprint,
+            this.address,
+        );
     }
 
     /**
