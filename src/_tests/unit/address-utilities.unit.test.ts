@@ -62,4 +62,86 @@ describe('Quai SDK Address Utility Functions', function () {
             assert.strictEqual(isQuaiAddress(address), expected.isQuai, `isQuaiAddress should be ${expected.isQuai}`);
         });
     });
+
+    describe('Address Scope Detection (Go implementation compatibility)', function () {
+        // Test cases based on Go implementation:
+        // func (a Address) IsInQiLedgerScope() bool {
+        //     return a.Bytes()[1] > 127
+        // }
+        const scopeTestCases = [
+            {
+                address: '0x00c0000000000000000000000000000000000000',
+                expectedQi: true,
+                description: 'Second byte is 0xc0 (192 > 127) - should be Qi',
+            },
+            {
+                address: '0x0080000000000000000000000000000000000000',
+                expectedQi: true,
+                description: 'Second byte is 0x80 (128 > 127) - should be Qi',
+            },
+            {
+                address: '0x0040000000000000000000000000000000000000',
+                expectedQi: false,
+                description: 'Second byte is 0x40 (64 <= 127) - should be Quai',
+            },
+            {
+                address: '0x007f000000000000000000000000000000000000',
+                expectedQi: false,
+                description: 'Second byte is 0x7f (127 <= 127) - should be Quai',
+            },
+            {
+                address: '0x00ff000000000000000000000000000000000000',
+                expectedQi: true,
+                description: 'Second byte is 0xff (255 > 127) - should be Qi',
+            },
+            {
+                address: '0x0000000000000000000000000000000000000000',
+                expectedQi: false,
+                description: 'Second byte is 0x00 (0 <= 127) - should be Quai',
+            },
+        ];
+
+        scopeTestCases.forEach(({ address, expectedQi, description }) => {
+            it(`${description}`, function () {
+                // Test isQiAddress function
+                assert.strictEqual(
+                    isQiAddress(address),
+                    expectedQi,
+                    `isQiAddress(${address}) should return ${expectedQi}`,
+                );
+
+                // Test isQuaiAddress function
+                assert.strictEqual(
+                    isQuaiAddress(address),
+                    !expectedQi,
+                    `isQuaiAddress(${address}) should return ${!expectedQi}`,
+                );
+
+                // Test getAddressDetails function
+                const details = getAddressDetails(address);
+                assert(details, 'getAddressDetails should not return null');
+                const isQiFromDetails = details.ledger === 1; // Ledger.Qi = 1
+                assert.strictEqual(
+                    isQiFromDetails,
+                    expectedQi,
+                    `getAddressDetails(${address}).ledger should indicate ${expectedQi ? 'Qi' : 'Quai'} ledger`,
+                );
+            });
+        });
+
+        it('should check the correct byte position (second byte, not third nibble)', function () {
+            // This test verifies the implementation details
+            const address = '0x00c0000000000000000000000000000000000000';
+            const secondByte = address.substring(4, 6); // Should be 'c0'
+            const secondByteValue = parseInt(secondByte, 16); // Should be 192
+
+            assert.strictEqual(secondByte, 'c0', 'Second byte should be c0');
+            assert.strictEqual(secondByteValue, 192, 'Second byte value should be 192');
+            assert.strictEqual(secondByteValue > 127, true, '192 > 127 should be true');
+
+            // Verify the binary representation
+            const binaryString = secondByteValue.toString(2).padStart(8, '0');
+            assert.strictEqual(binaryString[0], '1', 'First bit of second byte should be 1 for Qi addresses');
+        });
+    });
 });

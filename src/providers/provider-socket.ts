@@ -518,7 +518,7 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
     }
 
     validateUrl(url: string): void {
-        const urlPattern = /^(wss?):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
+        const urlPattern = /^(wss?):\/\/[a-zA-Z0-9.-]+(:\d+)?(\/[a-zA-Z0-9._~:/?#[\]@!$&'()*+,;=-]*)?$/;
 
         if (!urlPattern.test(url)) {
             let errorMessage = 'Invalid URL: ';
@@ -531,9 +531,6 @@ export class SocketProvider extends JsonRpcApiProvider<WebSocketLike> {
                 errorMessage += 'URL should not end with a /. ';
             }
 
-            if (/\/[^/]+/.test(url)) {
-                errorMessage += 'URL should not contain a path, query string, or fragment. ';
-            }
             throw new Error(errorMessage.trim());
         }
     }

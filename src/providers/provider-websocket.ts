@@ -142,7 +142,24 @@ export class WebSocketProvider extends SocketProvider {
 
         websocket.onclose = () => {
             setTimeout(() => {
-                const baseUrl = websocket.url.split(':').slice(0, 2).join(':').split('/').slice(0, 3).join('/');
+                // Extract base URL from the current websocket URL
+                let baseUrl = websocket.url;
+                if (this._getOption('usePathing')) {
+                    // Remove the shard path suffix if usePathing is true
+                    const shardNickname = fromShard(shard, 'nickname');
+                    const pathSuffix = `/${shardNickname}`;
+                    if (baseUrl.endsWith(pathSuffix)) {
+                        baseUrl = baseUrl.slice(0, -pathSuffix.length);
+                    }
+                } else {
+                    // Remove port if usePathing is false
+                    const portIndex = baseUrl.lastIndexOf(':');
+                    if (portIndex > 5) {
+                        // After 'wss://' or 'ws://'
+                        baseUrl = baseUrl.slice(0, portIndex);
+                    }
+                }
+
                 const shardSuffix = this._getOption('usePathing') ? `/${fromShard(shard, 'nickname')}` : `:${port}`;
                 const newWebSocket = this.createWebSocket(baseUrl, shardSuffix);
                 this.initWebSocket(newWebSocket, shard, port);
@@ -174,9 +191,31 @@ export class WebSocketProvider extends SocketProvider {
         }
     }
 
+    /**
+     * Constructs a WebSocket URL with proper handling for usePathing option.
+     *
+     * @param {string} baseUrl - The base URL.
+     * @param {string} suffix - The suffix to add (path or port).
+     * @returns {string} The constructed URL.
+     */
+    private constructWebSocketUrl(baseUrl: string, suffix: string): string {
+        if (!this._getOption('usePathing')) {
+            // When usePathing is false, use the URL as-is (ignore suffix)
+            return baseUrl;
+        }
+        // When usePathing is true, append the suffix to the URL
+        // If URL already has a path, append to it; otherwise add after hostname
+        if (baseUrl.includes('/') && baseUrl.split('/').length > 3) {
+            // URL has a path, append suffix to existing path
+            return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) + suffix : baseUrl + suffix;
+        }
+        // URL has no path, extract protocol and hostname, then add suffix
+        return baseUrl.split(':').slice(0, 2).join(':') + suffix;
+    }
+
     createWebSocket = (baseUrl: string, suffix: string): WebSocketLike => {
-        const tempWs = new _WebSocket(`${baseUrl}${suffix}`);
-        return tempWs as WebSocketLike;
+        const tempWs = new _WebSocket(this.constructWebSocketUrl(baseUrl, suffix));
+        return tempWs as unknown as WebSocketLike;
         // wait 2 minutes
     };
 
@@ -231,8 +270,7 @@ export class WebSocketProvider extends SocketProvider {
                                     ? shardPaths?.[shardNickname as ShardNickname]
                                     : `/${shardNickname}`;
                             const shardSuffix = this._getOption('usePathing') ? `${path}` : `:${port}`;
-                            const shardUrl = baseUrl.split(':').slice(0, 2).join(':');
-                            const websocket = this.createWebSocket(shardUrl, shardSuffix);
+                            const websocket = this.createWebSocket(baseUrl, shardSuffix);
                             this.initWebSocket(websocket, shard, port as number);
                             this.#websockets.push(websocket);
                             this._urlMap.set(shard, websocket);
@@ -245,6 +283,12 @@ export class WebSocketProvider extends SocketProvider {
                         }),
                     );
                 } else {
+                    // When usePathing is false, Cyprus1 has already been set up by the caller
+                    // Don't create additional shard connections
+                    if (!this._getOption('usePathing')) {
+                        return;
+                    }
+                    // When usePathing is true, dynamically detect and create shard connections
                     const dynamicShards = await this._getRunningLocations(Shard.Prime, true);
                     await Promise.all(
                         dynamicShards.map(async (shard) => {
@@ -261,8 +305,7 @@ export class WebSocketProvider extends SocketProvider {
                                     ? shardPaths?.[shardNickname as ShardNickname]
                                     : `/${shardNickname}`;
                             const shardSuffix = this._getOption('usePathing') ? `${path}` : `:${port}`;
-                            const shardUrl = baseUrl.split(':').slice(0, 2).join(':');
-                            const websocket = this.createWebSocket(shardUrl, shardSuffix);
+                            const websocket = this.createWebSocket(baseUrl, shardSuffix);
                             this.initWebSocket(websocket, shardEnum, port as number);
                             this.#websockets.push(websocket);
                             this._urlMap.set(shardEnum, websocket);
@@ -284,35 +327,71 @@ export class WebSocketProvider extends SocketProvider {
                 for (let urlIndex = 0; urlIndex < urls.length; urlIndex++) {
                     const baseUrl = `${urls[urlIndex].split(':')[0]}:${urls[urlIndex].split(':')[1]}`;
                     if (!shardsArray) {
-                        const primeWebsocket = this.createWebSocket(baseUrl, primeSuffix);
-                        this.initWebSocket(primeWebsocket, Shard.Prime, 8001);
-                        this.#websockets.push(primeWebsocket);
-                        this._urlMap.set(Shard.Prime, primeWebsocket);
-                        await this.waitShardReady(Shard.Prime);
+                        if (!this._getOption('usePathing')) {
+                            // When usePathing is false, use single websocket for Cyprus1
+                            const websocket = new _WebSocket(urls[urlIndex]) as unknown as WebSocketLike;
+                            this.initWebSocket(websocket, Shard.Cyprus1, 8200);
+                            this.#websockets.push(websocket);
+                            this._urlMap.set(Shard.Cyprus1, websocket);
+                            await this.waitShardReady(Shard.Cyprus1);
+                        } else {
+                            // When usePathing is true, create Prime websocket and detect shards
+                            const primeWebsocket = this.createWebSocket(baseUrl, primeSuffix);
+                            this.initWebSocket(primeWebsocket, Shard.Prime, 8001);
+                            this.#websockets.push(primeWebsocket);
+                            this._urlMap.set(Shard.Prime, primeWebsocket);
+                            await this.waitShardReady(Shard.Prime);
+
+                            const shardPorts: ShardPorts | undefined = shardPortsArray
+                                ? urls.length > shardPortsArray.length
+                                    ? (shardPortsArray[0] as ShardPorts)
+                                    : (shardPortsArray[urlIndex] as ShardPorts)
+                                : undefined;
+                            const shardPaths: ShardPaths | undefined = shardPathsArray
+                                ? urls.length > shardPathsArray.length
+                                    ? (shardPathsArray[0] as ShardPaths)
+                                    : (shardPathsArray[urlIndex] as ShardPaths)
+                                : undefined;
+                            await initShardWebSockets(baseUrl, shardPorts, shardPaths, undefined);
+                        }
+                    } else {
+                        // When shardsArray is provided, use it
+                        const shardPorts: ShardPorts | undefined = shardPortsArray
+                            ? urls.length > shardPortsArray.length
+                                ? (shardPortsArray[0] as ShardPorts)
+                                : (shardPortsArray[urlIndex] as ShardPorts)
+                            : undefined;
+                        const shardPaths: ShardPaths | undefined = shardPathsArray
+                            ? urls.length > shardPathsArray.length
+                                ? (shardPathsArray[0] as ShardPaths)
+                                : (shardPathsArray[urlIndex] as ShardPaths)
+                            : undefined;
+                        const shards = shardsArray[urlIndex];
+                        await initShardWebSockets(baseUrl, shardPorts, shardPaths, shards);
                     }
-                    const shardPorts: ShardPorts | undefined = shardPortsArray
-                        ? urls.length > shardPortsArray.length
-                            ? (shardPortsArray[0] as ShardPorts)
-                            : (shardPortsArray[urlIndex] as ShardPorts)
-                        : undefined;
-                    const shardPaths: ShardPaths | undefined = shardPathsArray
-                        ? urls.length > shardPathsArray.length
-                            ? (shardPathsArray[0] as ShardPaths)
-                            : (shardPathsArray[urlIndex] as ShardPaths)
-                        : undefined;
-                    const shards = shardsArray ? shardsArray[urlIndex] : undefined;
-                    await initShardWebSockets(baseUrl, shardPorts, shardPaths, shards);
                 }
             } else if (typeof urls === 'function') {
                 const shardPorts: ShardPorts | undefined = shardPortsArray ? shardPortsArray[0] : undefined;
                 const shardPaths: ShardPaths | undefined = shardPathsArray ? shardPathsArray[0] : undefined;
                 const shards: Shard[] | undefined = shardsArray ? shardsArray[0] : undefined;
                 if (!shardsArray) {
-                    const primeWebsocket = urls();
-                    this.initWebSocket(primeWebsocket, Shard.Prime, 8001);
-                    this.#websockets.push(primeWebsocket);
-                    this._urlMap.set(Shard.Prime, primeWebsocket);
-                    await this.waitShardReady(Shard.Prime);
+                    if (!this._getOption('usePathing')) {
+                        // When usePathing is false, use single websocket for Cyprus1
+                        const websocket = urls();
+                        this.initWebSocket(websocket, Shard.Cyprus1, 8200);
+                        this.#websockets.push(websocket);
+                        this._urlMap.set(Shard.Cyprus1, websocket);
+                        await this.waitShardReady(Shard.Cyprus1);
+                    } else {
+                        // When usePathing is true, create Prime websocket and detect shards
+                        const primeWebsocket = urls();
+                        this.initWebSocket(primeWebsocket, Shard.Prime, 8001);
+                        this.#websockets.push(primeWebsocket);
+                        this._urlMap.set(Shard.Prime, primeWebsocket);
+                        await this.waitShardReady(Shard.Prime);
+                        const baseUrl = this.#websockets[0].url.split(':').slice(0, 2).join(':');
+                        await initShardWebSockets(baseUrl, shardPorts, shardPaths, undefined);
+                    }
                 } else {
                     if (!shards) {
                         throw new Error('Shards array is empty or undefined.');
@@ -327,19 +406,31 @@ export class WebSocketProvider extends SocketProvider {
                     this.#websockets.push(firstWebsocket);
                     this._urlMap.set(shards[0], firstWebsocket);
                     await this.waitShardReady(shards[0]);
+                    const baseUrl = this.#websockets[0].url.split(':').slice(0, 2).join(':');
+                    await initShardWebSockets(baseUrl, shardPorts, shardPaths, shards.slice(1));
                 }
-                const baseUrl = this.#websockets[0].url.split(':').slice(0, 2).join(':');
-                await initShardWebSockets(baseUrl, shardPorts, shardPaths, shards?.slice(1));
             } else {
                 const shardPorts: ShardPorts | undefined = shardPortsArray ? shardPortsArray[0] : undefined;
                 const shardPaths: ShardPaths | undefined = shardPathsArray ? shardPathsArray[0] : undefined;
                 const shards: Shard[] | undefined = shardsArray ? shardsArray[0] : undefined;
                 if (!shardsArray) {
-                    const primeWebsocket = urls as WebSocketLike;
-                    this.initWebSocket(primeWebsocket, Shard.Prime, 8001);
-                    this.#websockets.push(primeWebsocket);
-                    this._urlMap.set(Shard.Prime, primeWebsocket);
-                    await this.waitShardReady(Shard.Prime);
+                    if (!this._getOption('usePathing')) {
+                        // When usePathing is false, use single websocket for Cyprus1
+                        const websocket = urls as WebSocketLike;
+                        this.initWebSocket(websocket, Shard.Cyprus1, 8200);
+                        this.#websockets.push(websocket);
+                        this._urlMap.set(Shard.Cyprus1, websocket);
+                        await this.waitShardReady(Shard.Cyprus1);
+                    } else {
+                        // When usePathing is true, create Prime websocket and detect shards
+                        const primeWebsocket = urls as WebSocketLike;
+                        this.initWebSocket(primeWebsocket, Shard.Prime, 8001);
+                        this.#websockets.push(primeWebsocket);
+                        this._urlMap.set(Shard.Prime, primeWebsocket);
+                        await this.waitShardReady(Shard.Prime);
+                        const baseUrl = this.#websockets[0].url.split(':').slice(0, 2).join(':');
+                        await initShardWebSockets(baseUrl, shardPorts, shardPaths, undefined);
+                    }
                 } else {
                     if (!shards) {
                         throw new Error('Shards array is empty or undefined.');
@@ -354,9 +445,9 @@ export class WebSocketProvider extends SocketProvider {
                     this.#websockets.push(firstWebsocket);
                     this._urlMap.set(shards[0], firstWebsocket);
                     await this.waitShardReady(shards[0]);
+                    const baseUrl = this.#websockets[0].url.split(':').slice(0, 2).join(':');
+                    await initShardWebSockets(baseUrl, shardPorts, shardPaths, shards.slice(1));
                 }
-                const baseUrl = this.#websockets[0].url.split(':').slice(0, 2).join(':');
-                await initShardWebSockets(baseUrl, shardPorts, shardPaths, shards?.slice(1));
             }
             if (this.initResolvePromise) this.initResolvePromise();
         } catch (error) {
