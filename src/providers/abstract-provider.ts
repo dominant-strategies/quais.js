@@ -864,6 +864,28 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     /**
+     * Constructs a URL with proper handling for usePathing option.
+     *
+     * @param {string} baseUrl - The base URL.
+     * @param {string} suffix - The suffix to add (path or port).
+     * @returns {string} The constructed URL.
+     */
+    private constructUrl(baseUrl: string, suffix: string): string {
+        if (!this.#options.usePathing) {
+            // When usePathing is false, use the URL as-is (ignore suffix)
+            return baseUrl;
+        }
+        // When usePathing is true, append the suffix to the URL
+        // If URL already has a path, append to it; otherwise add after hostname
+        if (baseUrl.includes('/') && baseUrl.split('/').length > 3) {
+            // URL has a path, append suffix to existing path
+            return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) + suffix : baseUrl + suffix;
+        }
+        // URL has no path, extract protocol and hostname, then add suffix
+        return baseUrl.split(':')[0] + ':' + baseUrl.split(':')[1] + suffix;
+    }
+
+    /**
      * Initialize the URL map with the provided URLs.
      *
      * @param {U} urls - The URLs to initialize the map with.
@@ -907,9 +929,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                                 ? shardPaths?.[shardNickname as ShardNickname]
                                 : `/${shardNickname}`;
                         const shardSuffix = this.#options.usePathing ? `${path}` : `:${port}`;
-                        const fetchRequest = new FetchRequest(
-                            urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + shardSuffix,
-                        );
+                        const fetchRequest = new FetchRequest(this.constructUrl(urls.url, shardSuffix));
                         if (isFirst) {
                             this.#connect.push(fetchRequest);
                             isFirst = false;
@@ -917,27 +937,34 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                         this._urlMap.set(shard, fetchRequest as C);
                     });
                 } else {
-                    urls.url = urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + primeSuffix;
-                    this._urlMap.set(Shard.Prime, urls as C);
-                    this.#connect.push(urls);
-                    const shards = await this._waitGetRunningLocations(Shard.Prime, true);
-                    shards.forEach((shard) => {
-                        const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
-                        const shardNickname = fromShard(shardEnum, 'nickname');
-                        const port =
-                            shardPorts && shardNickname in shardPorts
-                                ? shardPorts?.[shardNickname as ShardNickname]
-                                : DefaultShardPorts[shardNickname as ShardNickname];
-                        const path =
-                            shardPaths && shardNickname in shardPaths
-                                ? shardPaths?.[shardNickname as ShardNickname]
-                                : `/${shardNickname}`;
-                        const shardSuffix = this.#options.usePathing ? `${path}` : `:${port}`;
-                        this._urlMap.set(
-                            shardEnum,
-                            new FetchRequest(urls.url.split(':')[0] + ':' + urls.url.split(':')[1] + shardSuffix) as C,
-                        );
-                    });
+                    if (!this.#options.usePathing) {
+                        // When usePathing is false, use single URL for Cyprus1 (default active shard)
+                        this._urlMap.set(Shard.Cyprus1, urls as C);
+                        this.#connect.push(urls);
+                    } else {
+                        // When usePathing is true, create shard-specific URLs
+                        urls.url = this.constructUrl(urls.url, primeSuffix);
+                        this._urlMap.set(Shard.Prime, urls as C);
+                        this.#connect.push(urls);
+                        const shards = await this._waitGetRunningLocations(Shard.Prime, true);
+                        shards.forEach((shard) => {
+                            const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
+                            const shardNickname = fromShard(shardEnum, 'nickname');
+                            const port =
+                                shardPorts && shardNickname in shardPorts
+                                    ? shardPorts?.[shardNickname as ShardNickname]
+                                    : DefaultShardPorts[shardNickname as ShardNickname];
+                            const path =
+                                shardPaths && shardNickname in shardPaths
+                                    ? shardPaths?.[shardNickname as ShardNickname]
+                                    : `/${shardNickname}`;
+                            const shardSuffix = this.#options.usePathing ? `${path}` : `:${port}`;
+                            this._urlMap.set(
+                                shardEnum,
+                                new FetchRequest(this.constructUrl(urls.url, shardSuffix)) as C,
+                            );
+                        });
+                    }
                 }
                 return;
             }
@@ -970,9 +997,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                                     ? shardPaths?.[shardNickname as ShardNickname]
                                     : `/${shardNickname}`;
                             const shardSuffix = this.#options.usePathing ? `${path}` : `:${port}`;
-                            const fetchRequest = new FetchRequest(
-                                urls[urlIndex].split(':')[0] + ':' + urls[urlIndex].split(':')[1] + shardSuffix,
-                            );
+                            const fetchRequest = new FetchRequest(this.constructUrl(urls[urlIndex], shardSuffix));
                             if (isFirst) {
                                 this.#connect.push(fetchRequest);
                                 isFirst = false;
@@ -980,31 +1005,36 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
                             this._urlMap.set(shard, fetchRequest as C);
                         });
                     } else {
-                        const primeUrl =
-                            urls[urlIndex].split(':')[0] + ':' + urls[urlIndex].split(':')[1] + primeSuffix;
-                        const primeConnect = new FetchRequest(primeUrl);
-                        this._urlMap.set(Shard.Prime, primeConnect as C);
-                        this.#connect.push(primeConnect);
-                        const shards = await this._waitGetRunningLocations(Shard.Prime, true);
-                        shards.forEach((shard) => {
-                            const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
-                            const shardNickname = fromShard(shardEnum, 'nickname');
-                            const port =
-                                shardPorts && shardNickname in shardPorts
-                                    ? shardPorts?.[shardNickname as ShardNickname]
-                                    : DefaultShardPorts[shardNickname as ShardNickname];
-                            const path =
-                                shardPaths && shardNickname in shardPaths
-                                    ? shardPaths?.[shardNickname as ShardNickname]
-                                    : `/${shardNickname}`;
-                            const shardSuffix = this.#options.usePathing ? `${path}` : `:${port}`;
-                            this._urlMap.set(
-                                toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
-                                new FetchRequest(
-                                    urls[urlIndex].split(':')[0] + ':' + urls[urlIndex].split(':')[1] + shardSuffix,
-                                ) as C,
-                            );
-                        });
+                        if (!this.#options.usePathing) {
+                            // When usePathing is false, use single URL for Cyprus1 (default active shard)
+                            const connect = new FetchRequest(urls[urlIndex]);
+                            this._urlMap.set(Shard.Cyprus1, connect as C);
+                            this.#connect.push(connect);
+                        } else {
+                            // When usePathing is true, create shard-specific URLs
+                            const primeUrl = this.constructUrl(urls[urlIndex], primeSuffix);
+                            const primeConnect = new FetchRequest(primeUrl);
+                            this._urlMap.set(Shard.Prime, primeConnect as C);
+                            this.#connect.push(primeConnect);
+                            const shards = await this._waitGetRunningLocations(Shard.Prime, true);
+                            shards.forEach((shard) => {
+                                const shardEnum = toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`);
+                                const shardNickname = fromShard(shardEnum, 'nickname');
+                                const port =
+                                    shardPorts && shardNickname in shardPorts
+                                        ? shardPorts?.[shardNickname as ShardNickname]
+                                        : DefaultShardPorts[shardNickname as ShardNickname];
+                                const path =
+                                    shardPaths && shardNickname in shardPaths
+                                        ? shardPaths?.[shardNickname as ShardNickname]
+                                        : `/${shardNickname}`;
+                                const shardSuffix = this.#options.usePathing ? `${path}` : `:${port}`;
+                                this._urlMap.set(
+                                    toShard(`0x${shard[0].toString(16)}${shard[1].toString(16)}`),
+                                    new FetchRequest(this.constructUrl(urls[urlIndex], shardSuffix)) as C,
+                                );
+                            });
+                        }
                     }
                 }
             }
@@ -1876,7 +1906,7 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
     }
 
     validateUrl(url: string): void {
-        const urlPattern = /^(https?):\/\/[a-zA-Z0-9.-]+(:\d+)?$/;
+        const urlPattern = /^(https?):\/\/[a-zA-Z0-9.-]+(:\d+)?(\/[a-zA-Z0-9._~:/?#[\]@!$&'()*+,;=-]*)?$/;
 
         if (!urlPattern.test(url)) {
             let errorMessage = 'Invalid URL: ';
@@ -1887,10 +1917,6 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
             if (url.endsWith('/')) {
                 errorMessage += 'URL should not end with a /. ';
-            }
-
-            if (/\/[^/]+/.test(url)) {
-                errorMessage += 'URL should not contain a path, query string, or fragment. ';
             }
 
             throw new Error(errorMessage.trim());
