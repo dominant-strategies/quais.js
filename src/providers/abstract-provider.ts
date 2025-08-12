@@ -876,13 +876,17 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
             return baseUrl;
         }
         // When usePathing is true, append the suffix to the URL
-        // If URL already has a path, append to it; otherwise add after hostname
-        if (baseUrl.includes('/') && baseUrl.split('/').length > 3) {
-            // URL has a path, append suffix to existing path
+        try {
+            const urlObj = new URL(baseUrl);
+            // Append suffix to the pathname
+            urlObj.pathname = urlObj.pathname.endsWith('/')
+                ? urlObj.pathname.slice(0, -1) + suffix
+                : urlObj.pathname + suffix;
+            return urlObj.toString();
+        } catch (e) {
+            // Fallback for malformed URLs: simple concatenation
             return baseUrl.endsWith('/') ? baseUrl.slice(0, -1) + suffix : baseUrl + suffix;
         }
-        // URL has no path, extract protocol and hostname, then add suffix
-        return baseUrl.split(':')[0] + ':' + baseUrl.split(':')[1] + suffix;
     }
 
     /**

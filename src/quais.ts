@@ -215,6 +215,7 @@ export {
     Wallet,
     HDNodeWallet,
     HDNodeVoidWallet,
+    BIP44,
     isKeystoreJson,
     decryptKeystoreJsonSync,
     decryptKeystoreJson,

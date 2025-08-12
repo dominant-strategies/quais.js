@@ -10,7 +10,7 @@ describe('Provider URL Path Handling', function () {
             // Test that no error is thrown when creating provider with path in URL
             let provider: JsonRpcProvider | null = null;
             try {
-                provider = new JsonRpcProvider('https://example.com/cyprus1', undefined, { usePathing: false });
+                provider = new JsonRpcProvider('https://rpc.quai.network/cyprus1', undefined, { usePathing: false });
                 assert.ok(provider, 'Provider should be created successfully');
                 assert.ok(provider._urlMap, 'Provider should have URL map');
             } finally {
@@ -23,7 +23,7 @@ describe('Provider URL Path Handling', function () {
         it('should accept URLs without paths when usePathing is true for JsonRpcProvider', function () {
             let provider: JsonRpcProvider | null = null;
             try {
-                provider = new JsonRpcProvider('https://example.com', undefined, { usePathing: true });
+                provider = new JsonRpcProvider('https://rpc.quai.network', undefined, { usePathing: true });
                 assert.ok(provider, 'Provider should be created successfully');
                 assert.ok(provider._urlMap, 'Provider should have URL map');
             } finally {
@@ -46,7 +46,7 @@ describe('Provider URL Path Handling', function () {
 
     describe('URL map configuration', function () {
         it('should map to Cyprus1 shard when usePathing is false for JsonRpcProvider', function () {
-            const provider = new JsonRpcProvider('https://custom.rpc/cyprus1', undefined, { usePathing: false });
+            const provider = new JsonRpcProvider('https://rpc.quai.network/cyprus1', undefined, { usePathing: false });
             try {
                 // Check that Cyprus1 shard is in the URL map
                 const hasCyprus1 = Array.from(provider._urlMap.keys()).some((key) => key === Shard.Cyprus1);
@@ -57,7 +57,7 @@ describe('Provider URL Path Handling', function () {
         });
 
         it('should create multiple shard URLs when usePathing is true for JsonRpcProvider', function () {
-            const provider = new JsonRpcProvider('https://rpc.example.com', undefined, { usePathing: true });
+            const provider = new JsonRpcProvider('https://rpc.quai.network', undefined, { usePathing: true });
             try {
                 // Should have multiple shards in URL map
                 const mapSize = provider._urlMap.size;
@@ -305,7 +305,7 @@ describe('Provider URL Path Handling', function () {
 
     describe('Type checking', function () {
         it('should compile with correct types for JsonRpcProvider', function () {
-            const provider: JsonRpcProvider = new JsonRpcProvider('https://example.com', undefined, {
+            const provider: JsonRpcProvider = new JsonRpcProvider('https://rpc.quai.network/cyprus1', undefined, {
                 usePathing: false,
             });
 
@@ -317,7 +317,7 @@ describe('Provider URL Path Handling', function () {
         });
 
         it('should compile with correct types for WebSocketProvider', async function () {
-            const provider: WebSocketProvider = new WebSocketProvider('wss://example.com', undefined, {
+            const provider: WebSocketProvider = new WebSocketProvider('wss://rpc.quai.network/cyprus1', undefined, {
                 usePathing: false,
             });
 
