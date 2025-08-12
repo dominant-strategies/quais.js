@@ -197,6 +197,10 @@ export {
     decodeBase64,
     encodeBase64,
 
+    // proto
+    encodeProtoTransaction,
+    decodeProtoTransaction,
+
     // utf8
     toUtf8Bytes,
     toUtf8CodePoints,
@@ -314,7 +318,13 @@ export type {
 export type { Signer } from './signers/index.js';
 
 // TRANSACTION
-export type { AccessList, AccessListish, AccessListEntry, TransactionLike } from './transaction/index.js';
+export type {
+    AccessList,
+    AccessListish,
+    AccessListEntry,
+    TransactionLike,
+    ProtoTransaction,
+} from './transaction/index.js';
 
 // UTILS
 export type {

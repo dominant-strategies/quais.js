@@ -32,7 +32,7 @@ export { FewestCoinSelector } from './coinselector-fewest.js';
 export { AggregateCoinSelector } from './coinselector-aggregate.js';
 export type { SpendTarget } from './abstract-coinselector.js';
 
-export type { TransactionLike } from './abstract-transaction.js';
+export type { TransactionLike, ProtoTransaction } from './abstract-transaction.js';
 
 export type { TxInput, TxOutput } from './utxo.js';
 export { denominations, UTXO } from './utxo.js';
