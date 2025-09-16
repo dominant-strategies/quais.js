@@ -362,7 +362,7 @@ export class JsonRpcSigner extends AbstractSigner<JsonRpcApiProvider> {
      * @returns {Promise<QuaiTransactionLike>} The populated transaction.
      */
     async populateQuaiTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionLike> {
-        return (await this.populateCall(tx)) as QuaiTransactionLike;
+        return await super.populateQuaiTransaction(tx);
     }
 
     /**
