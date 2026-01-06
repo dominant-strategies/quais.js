@@ -17,7 +17,7 @@ type OutpointsCallback = (outpoints: OutpointDeltaResponse) => Promise<void>;
 /**
  * Represents the result of checking address usage.
  */
-interface AddressUseResult {
+export interface AddressUseResult {
     isUsed: boolean;
     outpoints: Outpoint[];
 }
@@ -25,9 +25,90 @@ interface AddressUseResult {
 /**
  * Represents a block reference with hash and number.
  */
-interface BlockReference {
+export interface BlockReference {
     hash: string;
     number: number;
+}
+
+/**
+ * Represents a mapping of addresses to outpoints for callbacks.
+ */
+export type OutpointDeltaResponseType = { [address: string]: OutpointInfo[] };
+
+/**
+ * Default retry configuration for RPC calls.
+ */
+const DEFAULT_RETRY_CONFIG = {
+    maxRetries: 3,
+    baseDelayMs: 1000,
+    maxDelayMs: 10000,
+};
+
+/**
+ * Checks if an error is a retryable server error (5xx status codes or network errors).
+ *
+ * @param {unknown} error - The error to check
+ * @returns {boolean} True if the error is retryable
+ */
+function isRetryableError(error: unknown): boolean {
+    if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        // Check for 5xx status codes
+        if (/50[0-4]|gateway|timeout|unavailable|overloaded/i.test(message)) {
+            return true;
+        }
+        // Check for network errors
+        if (/network|econnreset|econnrefused|etimedout|socket/i.test(message)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/**
+ * Executes an async function with exponential backoff retry logic for transient errors.
+ *
+ * @template T
+ * @param {() => Promise<T>} fn - The async function to execute
+ * @param {string} operationName - Name of the operation for logging
+ * @param {typeof DEFAULT_RETRY_CONFIG} [config] - Optional retry configuration
+ * @returns {Promise<T>} The result of the function
+ * @throws {Error} The last error if all retries fail
+ */
+export async function retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    operationName: string,
+    config = DEFAULT_RETRY_CONFIG,
+): Promise<T> {
+    let lastError: Error | undefined;
+
+    for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
+        try {
+            return await fn();
+        } catch (error) {
+            lastError = error instanceof Error ? error : new Error(String(error));
+
+            // Don't retry if it's not a retryable error or we've exhausted retries
+            if (!isRetryableError(error) || attempt === config.maxRetries) {
+                throw lastError;
+            }
+
+            // Calculate delay with exponential backoff and jitter
+            const exponentialDelay = config.baseDelayMs * Math.pow(2, attempt);
+            const jitter = Math.random() * 0.3 * exponentialDelay; // Add up to 30% jitter
+            const delay = Math.min(exponentialDelay + jitter, config.maxDelayMs);
+
+            console.warn(
+                `${operationName} failed (attempt ${attempt + 1}/${config.maxRetries + 1}): ${lastError.message}. ` +
+                    `Retrying in ${Math.round(delay)}ms...`,
+            );
+
+            await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+    }
+
+    // This should never be reached due to the throw in the loop, but TypeScript needs it
+    throw lastError ?? new Error(`${operationName} failed after ${config.maxRetries + 1} attempts`);
 }
 
 export abstract class AbstractQiWallet {
@@ -475,9 +556,13 @@ export abstract class AbstractQiWallet {
         onOutpointsDeleted?: OutpointsCallback,
     ): Promise<void> {
         this.requireProvider();
+        const scanStart = Date.now();
+        const walletType = this.constructor.name;
 
         // Get the current block information
+        let stepStart = Date.now();
         const currentBlock = await this.getCurrentBlock(zone);
+        console.log(`[_scanAddresses ${walletType}] getCurrentBlock: ${Date.now() - stepStart}ms`);
 
         // Get addresses for this zone and account
         const zoneAddresses = this.getAddressesInZone(zone).filter((addr) => addr.account === account);
@@ -494,24 +579,42 @@ export abstract class AbstractQiWallet {
             }
         }
 
+        console.log(
+            `[_scanAddresses ${walletType}] syncedAddresses: ${syncedAddresses.length}, unsyncedAddresses: ${unsyncedAddresses.length}`,
+        );
+
         // Track created and deleted outpoints for callbacks
         const createdOutpoints: OutpointDeltaResponse = {};
         const deletedOutpoints: OutpointDeltaResponse = {};
 
         // Process previously synced addresses - get outpoint deltas
         if (syncedAddresses.length > 0) {
+            stepStart = Date.now();
             await this.processSyncedAddresses(syncedAddresses, currentBlock, createdOutpoints, deletedOutpoints);
+            console.log(
+                `[_scanAddresses ${walletType}] processSyncedAddresses (${syncedAddresses.length} addrs): ${Date.now() - stepStart}ms`,
+            );
         }
 
         // Process unsynced addresses - check if they've been used
+        stepStart = Date.now();
         await this.processUnsyncedAddresses(unsyncedAddresses, currentBlock, createdOutpoints);
+        console.log(
+            `[_scanAddresses ${walletType}] processUnsyncedAddresses (${unsyncedAddresses.length} addrs): ${Date.now() - stepStart}ms`,
+        );
 
         // Generate new addresses up to gap limit if needed
+        stepStart = Date.now();
         const consecutiveUnusedCount = this.countConsecutiveUnusedAddresses(zoneAddresses);
         await this.generateAddressesToGapLimit(zone, account, currentBlock, consecutiveUnusedCount, createdOutpoints);
+        console.log(`[_scanAddresses ${walletType}] generateAddressesToGapLimit: ${Date.now() - stepStart}ms`);
 
         // Execute callbacks for created and deleted outpoints
+        stepStart = Date.now();
         await this.executeOutpointCallbacks(createdOutpoints, deletedOutpoints, onOutpointsCreated, onOutpointsDeleted);
+        console.log(`[_scanAddresses ${walletType}] executeOutpointCallbacks: ${Date.now() - stepStart}ms`);
+
+        console.log(`[_scanAddresses ${walletType}] TOTAL: ${Date.now() - scanStart}ms`);
     }
 
     /**
@@ -522,7 +625,10 @@ export abstract class AbstractQiWallet {
      * @returns {Promise<BlockReference>} The current block hash and number
      */
     private async getCurrentBlock(zone: Zone): Promise<BlockReference> {
-        const block = await this.provider!.getBlock(toShard(zone), 'latest');
+        const block = await retryWithBackoff(
+            () => this.provider!.getBlock(toShard(zone), 'latest'),
+            `getBlock(${zone})`,
+        );
         if (!block) {
             throw new Error(`Failed to get latest block for zone ${zone}`);
         }
@@ -548,6 +654,7 @@ export abstract class AbstractQiWallet {
         createdOutpoints: OutpointDeltaResponse,
         deletedOutpoints: OutpointDeltaResponse,
     ): Promise<void> {
+        const methodStart = Date.now();
         // Group addresses by last synced block hash to batch queries
         const addressesByBlockHash: Map<string, string[]> = new Map();
 
@@ -561,10 +668,20 @@ export abstract class AbstractQiWallet {
             addressesByBlockHash.get(blockHash)!.push(addr.address);
         }
 
+        console.log(`[processSyncedAddresses] Grouped into ${addressesByBlockHash.size} batches by block hash`);
+
+        let batchIndex = 0;
         // Process each batch of addresses with the same last synced block
         for (const [blockHash, addresses] of addressesByBlockHash.entries()) {
-            // Get outpoint deltas for this batch
-            const deltas = await this.provider!.getOutpointDeltas(addresses, blockHash);
+            const batchStart = Date.now();
+            // Get outpoint deltas for this batch with retry logic
+            const deltas = await retryWithBackoff(
+                () => this.provider!.getOutpointDeltas(addresses, blockHash),
+                `getOutpointDeltas(${addresses.length} addresses)`,
+            );
+            console.log(
+                `[processSyncedAddresses] Batch ${++batchIndex}/${addressesByBlockHash.size}: getOutpointDeltas for ${addresses.length} addresses took ${Date.now() - batchStart}ms`,
+            );
 
             // Process each address's deltas
             for (const [address, delta] of Object.entries(deltas)) {
@@ -621,10 +738,12 @@ export abstract class AbstractQiWallet {
                 this.addresses.set(address, updatedAddressInfo);
             }
         }
+        console.log(`[processSyncedAddresses] TOTAL: ${Date.now() - methodStart}ms`);
     }
 
     /**
-     * Processes unsynced addresses to check if they have been used.
+     * Processes unsynced addresses to check if they have been used. Uses batch JSON-RPC requests for efficiency (up to
+     * 10,000 addresses per batch).
      *
      * @private
      * @param {QiAddressInfo[]} unsyncedAddresses - Addresses that have not been previously synced
@@ -637,16 +756,31 @@ export abstract class AbstractQiWallet {
         currentBlock: BlockReference,
         createdOutpoints: OutpointDeltaResponse,
     ): Promise<void> {
-        const batchSize = 10; // Process in batches to avoid overwhelming the provider
+        if (unsyncedAddresses.length === 0) return;
+
+        const methodStart = Date.now();
+        // Process in large batches - the provider will send as a single JSON-RPC batch request
+        const batchSize = 10000;
+        let batchIndex = 0;
+        const totalBatches = Math.ceil(unsyncedAddresses.length / batchSize);
 
         for (let i = 0; i < unsyncedAddresses.length; i += batchSize) {
+            const batchStart = Date.now();
             const batch = unsyncedAddresses.slice(i, i + batchSize);
-            const checkPromises = batch.map((addr) => this.checkAddressUse(addr.address));
-            const results = await Promise.all(checkPromises);
+            const addressStrings = batch.map((addr) => addr.address);
 
-            for (let j = 0; j < batch.length; j++) {
-                const addr = batch[j];
-                const { isUsed, outpoints } = results[j];
+            // Use batch method for single JSON-RPC request
+            const results = await this.checkAddressesUse(addressStrings);
+            console.log(
+                `[processUnsyncedAddresses] Batch ${++batchIndex}/${totalBatches}: checkAddressesUse for ${batch.length} addresses took ${Date.now() - batchStart}ms`,
+            );
+
+            // Process all results
+            for (const addr of batch) {
+                const result = results.get(addr.address);
+                if (!result) continue;
+
+                const { isUsed, outpoints } = result;
 
                 // Update address status
                 const updatedAddr = {
@@ -657,6 +791,7 @@ export abstract class AbstractQiWallet {
                         number: currentBlock.number,
                     },
                 };
+
                 // Import outpoints if found
                 if (outpoints.length > 0) {
                     const outpointInfos = outpoints.map((outpoint) => ({
@@ -675,10 +810,8 @@ export abstract class AbstractQiWallet {
                 // Update address in wallet
                 this.addresses.set(addr.address, updatedAddr);
             }
-
-            // Yield to event loop to avoid blocking
-            await new Promise((resolve) => setTimeout(resolve, 0));
         }
+        console.log(`[processUnsyncedAddresses] TOTAL: ${Date.now() - methodStart}ms`);
     }
 
     /**
@@ -706,7 +839,8 @@ export abstract class AbstractQiWallet {
     }
 
     /**
-     * Generates new addresses up to the gap limit.
+     * Generates new addresses up to the gap limit. Pre-generates addresses in batches and checks them with batch RPC
+     * requests for efficiency.
      *
      * @private
      * @param {Zone} zone - The zone to generate addresses for
@@ -725,52 +859,70 @@ export abstract class AbstractQiWallet {
     ): Promise<void> {
         let consecutiveUnused = currentUnusedCount;
 
+        // Generate addresses needed to reach gap limit, plus a small buffer
+        // Keep batch size small to avoid blocking the event loop with key derivation
+        // (crypto operations are CPU-intensive)
+        const batchMultiplier = 2;
+
         while (consecutiveUnused < this.gapLimit) {
-            // Generate new address
-            const newAddr = this.deriveNewAddress(zone, account);
+            // Generate just enough addresses to potentially reach the gap limit
+            // plus a small buffer to reduce RPC round-trips
+            const addressesNeeded = this.gapLimit - consecutiveUnused;
+            const addressesToGenerate = Math.max(addressesNeeded, this.gapLimit) * batchMultiplier;
+            const newAddresses: QiAddressInfo[] = [];
 
-            // Check if it's being used
-            const { isUsed, outpoints } = await this.checkAddressUse(newAddr.address);
-
-            // Update status
-            newAddr.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
-            newAddr.lastSyncedBlock = {
-                hash: currentBlock.hash,
-                number: currentBlock.number,
-            };
-
-            // Import outpoints if found
-            if (outpoints.length > 0) {
-                const outpointInfos = outpoints.map((outpoint) => ({
-                    outpoint,
-                    address: newAddr.address,
-                    zone: newAddr.zone,
-                    account: newAddr.account,
-                    derivationPath: newAddr.derivationPath,
-                }));
-                this.importOutpoints(outpointInfos);
-
-                // Track for callback
-                createdOutpoints[newAddr.address] = outpointInfos;
+            for (let i = 0; i < addressesToGenerate; i++) {
+                newAddresses.push(this.deriveNewAddress(zone, account));
             }
 
-            // Save the new address
-            this.addresses.set(newAddr.address, newAddr);
+            // Batch check all addresses at once
+            const addressStrings = newAddresses.map((addr) => addr.address);
+            const results = await this.checkAddressesUse(addressStrings);
 
-            // Update consecutive unused count
-            if (newAddr.status === AddressStatus.USED) {
-                consecutiveUnused = 0;
-            } else {
-                consecutiveUnused++;
+            // Process results in order
+            for (const newAddr of newAddresses) {
+                const result = results.get(newAddr.address);
+                if (!result) continue;
+
+                const { isUsed, outpoints } = result;
+
+                // Update status
+                newAddr.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
+                newAddr.lastSyncedBlock = {
+                    hash: currentBlock.hash,
+                    number: currentBlock.number,
+                };
+
+                // Import outpoints if found
+                if (outpoints.length > 0) {
+                    const outpointInfos = outpoints.map((outpoint) => ({
+                        outpoint,
+                        address: newAddr.address,
+                        zone: newAddr.zone,
+                        account: newAddr.account,
+                        derivationPath: newAddr.derivationPath,
+                    }));
+                    this.importOutpoints(outpointInfos);
+
+                    // Track for callback
+                    createdOutpoints[newAddr.address] = outpointInfos;
+                }
+
+                // Save the new address
+                this.addresses.set(newAddr.address, newAddr);
+
+                // Update consecutive unused count
+                if (newAddr.status === AddressStatus.USED) {
+                    consecutiveUnused = 0;
+                } else {
+                    consecutiveUnused++;
+                }
+
+                // Stop if we've reached the gap limit
+                if (consecutiveUnused >= this.gapLimit) {
+                    return;
+                }
             }
-
-            // Stop if we've reached the gap limit
-            if (consecutiveUnused >= this.gapLimit) {
-                break;
-            }
-
-            // Yield to event loop
-            await new Promise((resolve) => setTimeout(resolve, 0));
         }
     }
 
@@ -851,5 +1003,239 @@ export abstract class AbstractQiWallet {
             console.error(`Error checking address use for ${address}:`, error);
             throw new Error(`Failed to check address use: ${error}`);
         }
+    }
+
+    /**
+     * Batch check multiple addresses for usage and retrieve their outpoints. Uses JSON-RPC batch requests for
+     * efficiency. Automatically splits into multiple batches if more than 10,000 addresses are provided.
+     *
+     * @param {string[]} addresses - The addresses to check
+     * @returns {Promise<Map<string, AddressUseResult>>} Map of address to usage result
+     * @protected
+     */
+    protected async checkAddressesUse(addresses: string[]): Promise<Map<string, AddressUseResult>> {
+        if (addresses.length === 0) {
+            return new Map();
+        }
+
+        try {
+            const results = new Map<string, AddressUseResult>();
+            const maxBatchSize = 10000;
+
+            // Split into batches of 10k if needed
+            for (let i = 0; i < addresses.length; i += maxBatchSize) {
+                const batch = addresses.slice(i, i + maxBatchSize);
+                const outpointsMap = await retryWithBackoff(
+                    () => this.provider!.getOutpointsByAddresses(batch),
+                    `getOutpointsByAddresses(${batch.length} addresses)`,
+                );
+
+                // Process results and check with external checker if needed
+                for (const address of batch) {
+                    const outpoints = outpointsMap.get(address) ?? [];
+                    let isUsed = outpoints.length > 0;
+
+                    // If no outpoints found but we have an external checker, use it
+                    if (!isUsed && this.addressUseChecker) {
+                        isUsed = await this.addressUseChecker(address);
+                    }
+
+                    results.set(address, { isUsed, outpoints });
+                }
+            }
+
+            return results;
+        } catch (error) {
+            console.error(`Error batch checking addresses:`, error);
+            throw new Error(`Failed to batch check addresses: ${error}`);
+        }
+    }
+
+    // ================================
+    // Consolidated Scan Helper Methods
+    // ================================
+
+    /**
+     * Prepares the wallet for a consolidated scan by resetting state and returning all addresses that need to be
+     * checked.
+     *
+     * @param {Zone} zone - The zone to prepare for scanning
+     * @param {number} account - The account number
+     * @param {boolean} resetState - Whether to reset wallet state
+     * @returns {QiAddressInfo[]} Array of addresses that need to be checked
+     */
+    public prepareForScan(zone: Zone, account: number, resetState: boolean): QiAddressInfo[] {
+        this.validateZone(zone);
+
+        if (resetState) {
+            this.resetWalletState(zone);
+        }
+
+        // Get addresses for this zone and account
+        return this.getAddressesInZone(zone).filter((addr) => addr.account === account);
+    }
+
+    /**
+     * Applies pre-fetched outpoint results to addresses in this wallet.
+     *
+     * @param {Map<string, AddressUseResult>} results - Map of address to outpoint results
+     * @param {BlockReference} currentBlock - Current block reference
+     * @param {OutpointDeltaResponse} createdOutpoints - Map to track created outpoints
+     */
+    public applyOutpointResults(
+        results: Map<string, AddressUseResult>,
+        currentBlock: BlockReference,
+        createdOutpoints: OutpointDeltaResponse,
+    ): void {
+        for (const [address, result] of results) {
+            const addressInfo = this.addresses.get(address);
+            if (!addressInfo) continue;
+
+            const { isUsed, outpoints } = result;
+
+            // Update address status
+            const updatedAddr: QiAddressInfo = {
+                ...addressInfo,
+                status: isUsed ? AddressStatus.USED : AddressStatus.UNUSED,
+                lastSyncedBlock: {
+                    hash: currentBlock.hash,
+                    number: currentBlock.number,
+                },
+            };
+
+            // Import outpoints if found
+            if (outpoints.length > 0) {
+                const outpointInfos = outpoints.map((outpoint) => ({
+                    outpoint,
+                    address: addressInfo.address,
+                    zone: addressInfo.zone,
+                    account: addressInfo.account,
+                    derivationPath: addressInfo.derivationPath,
+                }));
+                this.importOutpoints(outpointInfos);
+
+                // Track for callback
+                createdOutpoints[addressInfo.address] = outpointInfos;
+            }
+
+            // Update address in wallet
+            this.addresses.set(address, updatedAddr);
+        }
+    }
+
+    /**
+     * Derives a batch of new addresses for gap limit scanning.
+     *
+     * @param {Zone} zone - The zone to derive addresses for
+     * @param {number} account - The account number
+     * @param {number} count - Number of addresses to derive
+     * @returns {QiAddressInfo[]} Array of newly derived addresses
+     */
+    public deriveAddressBatch(zone: Zone, account: number, count: number): QiAddressInfo[] {
+        const newAddresses: QiAddressInfo[] = [];
+        for (let i = 0; i < count; i++) {
+            newAddresses.push(this.deriveNewAddress(zone, account));
+        }
+        return newAddresses;
+    }
+
+    /**
+     * Gets the current gap limit status for this wallet in a zone.
+     *
+     * @param {Zone} zone - The zone to check
+     * @param {number} account - The account number
+     * @returns {{ consecutiveUnused: number; needsMore: boolean; addressesToGenerate: number }}
+     */
+    public getGapLimitStatus(
+        zone: Zone,
+        account: number,
+    ): {
+        consecutiveUnused: number;
+        needsMore: boolean;
+        addressesToGenerate: number;
+    } {
+        const addresses = this.getAddressesInZone(zone).filter((addr) => addr.account === account);
+        const consecutiveUnused = this.countConsecutiveUnusedAddresses(addresses);
+        const needsMore = consecutiveUnused < this.gapLimit;
+        const addressesNeeded = this.gapLimit - consecutiveUnused;
+        // Generate at least gapLimit addresses, with a multiplier for efficiency
+        const addressesToGenerate = needsMore ? Math.max(addressesNeeded, this.gapLimit) * 2 : 0;
+
+        return { consecutiveUnused, needsMore, addressesToGenerate };
+    }
+
+    /**
+     * Applies results to newly derived addresses and updates gap limit tracking.
+     *
+     * @param {QiAddressInfo[]} newAddresses - The newly derived addresses
+     * @param {Map<string, AddressUseResult>} results - Map of address to outpoint results
+     * @param {BlockReference} currentBlock - Current block reference
+     * @param {OutpointDeltaResponse} createdOutpoints - Map to track created outpoints
+     * @returns {{ reachedGapLimit: boolean; consecutiveUnused: number }}
+     */
+    public applyNewAddressResults(
+        newAddresses: QiAddressInfo[],
+        results: Map<string, AddressUseResult>,
+        currentBlock: BlockReference,
+        createdOutpoints: OutpointDeltaResponse,
+    ): { reachedGapLimit: boolean; consecutiveUnused: number } {
+        // Get current consecutive unused count
+        const existingAddresses = this.getAddressesInZone(newAddresses[0]?.zone ?? Zone.Cyprus1).filter(
+            (addr) => addr.account === (newAddresses[0]?.account ?? 0),
+        );
+        let consecutiveUnused = this.countConsecutiveUnusedAddresses(existingAddresses);
+
+        for (const newAddr of newAddresses) {
+            const result = results.get(newAddr.address);
+            if (!result) continue;
+
+            const { isUsed, outpoints } = result;
+
+            // Update status
+            newAddr.status = isUsed ? AddressStatus.USED : AddressStatus.UNUSED;
+            newAddr.lastSyncedBlock = {
+                hash: currentBlock.hash,
+                number: currentBlock.number,
+            };
+
+            // Import outpoints if found
+            if (outpoints.length > 0) {
+                const outpointInfos = outpoints.map((outpoint) => ({
+                    outpoint,
+                    address: newAddr.address,
+                    zone: newAddr.zone,
+                    account: newAddr.account,
+                    derivationPath: newAddr.derivationPath,
+                }));
+                this.importOutpoints(outpointInfos);
+
+                // Track for callback
+                createdOutpoints[newAddr.address] = outpointInfos;
+            }
+
+            // Save the new address
+            this.addresses.set(newAddr.address, newAddr);
+
+            // Update consecutive unused count
+            if (newAddr.status === AddressStatus.USED) {
+                consecutiveUnused = 0;
+            } else {
+                consecutiveUnused++;
+            }
+
+            // Check if we've reached the gap limit
+            if (consecutiveUnused >= this.gapLimit) {
+                return { reachedGapLimit: true, consecutiveUnused };
+            }
+        }
+
+        return { reachedGapLimit: consecutiveUnused >= this.gapLimit, consecutiveUnused };
+    }
+
+    /**
+     * Gets the gap limit for this wallet.
+     */
+    public getGapLimit(): number {
+        return this.gapLimit;
     }
 }

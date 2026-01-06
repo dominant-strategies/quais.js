@@ -256,11 +256,13 @@ export class FewestCoinSelector extends AbstractCoinSelector {
             remainingFee -= BigInt(denominations[utxo.denomination!]);
 
             if (remainingFee <= BigInt(0)) {
-                // If we have excess, create a new change output
+                // If we have excess from the last added UTXO, return it as change.
+                // Use -remainingFee (the overshoot) rather than recomputing from
+                // totalInputValue, which would need to account for the original fee.
                 if (remainingFee < BigInt(0)) {
-                    const change = BigInt(this.totalInputValue) - BigInt(this.target!) - BigInt(additionalFeeNeeded);
-                    this.adjustChangeOutputs(change);
+                    this.adjustChangeOutputs(-remainingFee);
                 }
+                break;
             }
         }
 
@@ -298,9 +300,15 @@ export class FewestCoinSelector extends AbstractCoinSelector {
         // Remove the identified inputs
         this.selectedUTXOs = this.selectedUTXOs.filter((utxo) => !inputsToRemove.includes(utxo));
 
-        // If there's still excess value, add it to change outputs
+        // If there's still excess value, add it to existing change outputs.
+        // We must include currentChange because adjustChangeOutputs replaces
+        // (not appends to) the change outputs.
         if (excessValue > BigInt(0)) {
-            this.adjustChangeOutputs(excessValue);
+            const currentChange = this.changeOutputs.reduce(
+                (sum, output) => sum + BigInt(denominations[output.denomination!]),
+                BigInt(0),
+            );
+            this.adjustChangeOutputs(currentChange + excessValue);
         }
 
         return {

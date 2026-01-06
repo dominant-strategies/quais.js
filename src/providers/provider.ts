@@ -2814,6 +2814,15 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
     getOutpointsByAddress(address: AddressLike): Promise<Array<Outpoint>>;
 
     /**
+     * Get the UTXO entries for multiple addresses in a single batch request. This is significantly more efficient than
+     * calling getOutpointsByAddress for each address when dealing with many addresses (e.g., wallet scanning).
+     *
+     * @param {string[]} addresses - The addresses to fetch the UTXO entries for (max 10,000 per call).
+     * @returns {Promise<Map<string, Outpoint[]>>} A promise resolving to a map of address to UTXO entries.
+     */
+    getOutpointsByAddresses(addresses: string[]): Promise<Map<string, Outpoint[]>>;
+
+    /**
      * Get the number of transactions ever sent for `address`, which is used as the `nonce` when sending a transaction.
      * If `blockTag` is specified and the node supports archive access for that `blockTag`, the transaction count is as
      * of that {@link BlockTag | **BlockTag**}.
