@@ -139,6 +139,15 @@ export class MockProvider implements Provider {
         return this._outpoints.get(address.toString().toLowerCase()) ?? [];
     }
 
+    async getOutpointsByAddresses(addresses: string[]): Promise<Map<string, Outpoint[]>> {
+        const results = new Map<string, Outpoint[]>();
+        for (const address of addresses) {
+            const outpoints = this._outpoints.get(address.toLowerCase()) ?? [];
+            results.set(address, outpoints);
+        }
+        return results;
+    }
+
     async on(event: ProviderEvent, listener: Listener, zone?: Zone): Promise<this> {
         const eventKey = this._getEventKey(event, zone);
         if (!this._eventHandlers.has(eventKey)) {

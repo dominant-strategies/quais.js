@@ -17,6 +17,7 @@ import { getAddress, resolveAddress } from '../address/index.js';
 import { accessListify, QuaiTransactionLike } from '../transaction/index.js';
 import {
     getBigInt,
+    getZoneForAddress,
     hexlify,
     isHexString,
     toQuantity,
@@ -28,6 +29,9 @@ import {
     defineProperties,
     resolveProperties,
 } from '../utils/index.js';
+import { isQiAddress } from '../address/index.js';
+import { Outpoint } from '../transaction/utxo.js';
+import { formatOutpoints } from './format.js';
 
 import { AbstractProvider, ShardPaths, ShardPorts, UnmanagedSubscriber } from './abstract-provider.js';
 import { Network } from './network.js';
@@ -1530,6 +1534,78 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
         } else {
             return continueSend();
         }
+    }
+
+    /**
+     * Get the UTXO entries for multiple addresses in a single batch JSON-RPC request. This is much more efficient than
+     * calling getOutpointsByAddress for each address individually, especially when scanning wallets with many
+     * addresses.
+     *
+     * @param {string[]} addresses - The Qi addresses to fetch UTXOs for (max 10,000 per call)
+     * @returns {Promise<Map<string, Outpoint[]>>} Map of address to outpoints
+     */
+    async getOutpointsByAddresses(addresses: string[]): Promise<Map<string, Outpoint[]>> {
+        if (addresses.length === 0) {
+            return new Map();
+        }
+
+        if (addresses.length > 10000) {
+            throw new Error('Maximum 10,000 addresses per batch request');
+        }
+
+        // Validate all addresses are Qi addresses and get the zone
+        const zone = getZoneForAddress(addresses[0]);
+        if (!zone) {
+            throw new Error(`Invalid address: ${addresses[0]}`);
+        }
+
+        for (const addr of addresses) {
+            if (!isQiAddress(addr)) {
+                throw new Error(`Invalid Qi address: ${addr}`);
+            }
+        }
+
+        // Build batch payload - each address gets its own request with unique ID
+        const payloads: Array<JsonRpcPayload> = addresses.map((addr, index) => ({
+            jsonrpc: '2.0',
+            id: index + 1,
+            method: 'quai_getOutpointsByAddress',
+            params: [addr],
+        }));
+
+        // Send batch request directly using _send
+        const shard = toShard(zone);
+        const responses = await this._send(payloads, shard);
+
+        // Map results back to addresses
+        const results = new Map<string, Outpoint[]>();
+
+        for (const response of responses) {
+            if ('error' in response && response.error) {
+                // Log error but continue processing other results
+                console.error(`Error fetching outpoints for address at id ${response.id}:`, response.error);
+                continue;
+            }
+
+            if ('result' in response) {
+                // The ID corresponds to the index in the addresses array (1-based)
+                const index = (response.id as number) - 1;
+                if (index >= 0 && index < addresses.length) {
+                    const address = addresses[index];
+                    const outpoints = formatOutpoints(response.result);
+                    results.set(address, outpoints);
+                }
+            }
+        }
+
+        // Set empty arrays for addresses that didn't return results
+        for (const addr of addresses) {
+            if (!results.has(addr)) {
+                results.set(addr, []);
+            }
+        }
+
+        return results;
     }
 
     /**

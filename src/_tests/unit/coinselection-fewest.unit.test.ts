@@ -1,10 +1,6 @@
 import assert from 'assert';
 import { FewestCoinSelector } from '../../transaction/coinselector-fewest.js';
-import {
-    UTXO,
-    // denominate,
-    denominations,
-} from '../../transaction/utxo.js';
+import { UTXO, denominations } from '../../transaction/utxo.js';
 
 const TEST_SPEND_ADDRESS = '0x00539bc2CE3eD0FD039c582CB700EF5398bB0491';
 
@@ -128,231 +124,192 @@ describe('FewestCoinSelector', function () {
         });
     });
 
-    // New tests for increaseFee and decreaseFee
-    describe('Fee Adjustment Methods', function () {
-        // TODO: Fix this test
-        /*
-        it('increases fee by reducing change outputs when sufficient change is available', function () {
-            const availableUTXOs = createUTXOs([3]); // Denomination index 3 (50 units)
-            const targetSpend = denominations[2]; // 10 units
+    // Helper to sum UTXO denomination values
+    function sumOutputs(outputs: UTXO[]): bigint {
+        return outputs.reduce((sum, o) => sum + BigInt(denominations[o.denomination!]), BigInt(0));
+    }
+
+    describe('increaseFee', function () {
+        it('reduces change outputs when sufficient change is available (fee=0)', function () {
+            const availableUTXOs = createUTXOs([3]); // 50 units
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection({ target: targetSpend });
+            selector.performSelection({ target: denominations[2] }); // target=10, fee=0
 
-            // Calculate expected initial change amount
-            const initialChangeAmount = denominations[3] - denominations[2]; // 50 - 10 = 40 units
+            // Initial: inputs=50, spend=10, change=40, implicitFee=0
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(40));
 
-            const maxInputDenomination = denominations[3]; // 50 units
+            selector.increaseFee(denominations[2]); // +10 fee
 
-            // Denominate the change amount using maxDenomination
-            const expectedChangeDenominations = denominate(initialChangeAmount, maxInputDenomination);
-
-            // Assert that change outputs are correctly created
-            assert.strictEqual(selector.changeOutputs.length, expectedChangeDenominations.length);
-
-            // Verify that the change outputs sum to the expected change amount
-            const actualInitialChangeAmount = selector.changeOutputs.reduce((sum, output) => {
-                return sum + denominations[output.denomination!];
-            }, BigInt(0));
-            assert.strictEqual(actualInitialChangeAmount, initialChangeAmount);
-
-            // Increase fee by 10 units
-            const additionalFeeNeeded = denominations[2]; // 10 units
-            const success = selector.increaseFee(additionalFeeNeeded);
-
-            assert.strictEqual(success, true);
-
-            // Calculate expected new change amount
-            const newChangeAmount = initialChangeAmount - additionalFeeNeeded; // 40 - 10 = 30 units
-
-            // Denominate the new change amount
-            const expectedNewChangeDenominations = denominate(newChangeAmount, maxInputDenomination);
-
-            // Assert that change outputs are updated correctly
-            assert.strictEqual(selector.changeOutputs.length, expectedNewChangeDenominations.length);
-
-            // Verify that the change outputs sum to the new change amount
-            const actualNewChangeAmount = selector.changeOutputs.reduce((sum, output) => {
-                return sum + denominations[output.denomination!];
-            }, BigInt(0));
-            assert.strictEqual(actualNewChangeAmount, newChangeAmount);
-
-            // Ensure total input value remains the same
-            assert.strictEqual(selector.totalInputValue, denominations[3]);
-
-            // Ensure no additional inputs were added
-            assert.strictEqual(selector.selectedUTXOs.length, 1);
+            // Change should decrease by 10: 40 - 10 = 30
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(30));
+            assert.strictEqual(selector.selectedUTXOs.length, 1); // no new inputs
+            // Implicit fee = 50 - 10 - 30 = 10
+            assert.strictEqual(
+                selector.totalInputValue - sumOutputs(selector.spendOutputs) - sumOutputs(selector.changeOutputs),
+                BigInt(10),
+            );
         });
 
-        it('increases fee by adding inputs when change outputs are insufficient', function () {
-            const availableUTXOs = createUTXOs([2, 2, 2]); // Denomination index 2 (10 units each)
-            const targetSpend = denominations[2] * BigInt(2); // 20 units
+        it('adds inputs when change is insufficient (fee=0, no excess)', function () {
+            const availableUTXOs = createUTXOs([2, 2, 2]); // three 10-unit UTXOs
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection({ target: targetSpend });
+            selector.performSelection({ target: denominations[2] * BigInt(2) }); // target=20
 
-            // Initially, no change outputs (total input = 20 units)
-            assert.strictEqual(selector.changeOutputs.length, 0);
+            // Initial: inputs=20, spend=20, change=0
+            assert.strictEqual(selector.selectedUTXOs.length, 2);
 
-            // Increase fee by 10 units
-            const additionalFeeNeeded = denominations[2]; // 10 units
-            const success = selector.increaseFee(additionalFeeNeeded);
+            selector.increaseFee(denominations[2]); // +10 fee
 
-            assert.strictEqual(success, true);
-
-            // After adding an additional input, total input value is 30 units
-            assert.strictEqual(selector.totalInputValue, denominations[2] * BigInt(3)); // 30 units
-
-            // Calculate expected change amount
-            // const expectedChangeAmount = selector.totalInputValue - targetSpend.value - additionalFeeNeeded; // 30 - 20 - 10 = 0 units
-
-            // Since change amount is zero, no change outputs
-            assert.strictEqual(selector.changeOutputs.length, 0);
-
-            // Verify that the number of selected UTXOs is now 3
+            // Should add 3rd UTXO, no excess change
             assert.strictEqual(selector.selectedUTXOs.length, 3);
+            assert.strictEqual(selector.totalInputValue, BigInt(30));
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(0));
         });
 
-        it('fails to increase fee when no additional inputs are available', function () {
-            const availableUTXOs = createUTXOs([2, 2]); // Two .01 Qi UTXOs
-            const targetSpend = denominations[2] * BigInt(2); // .02 Qi
+        it('adds inputs with excess returned as change (fee=0)', function () {
+            const availableUTXOs = createUTXOs([2, 2]); // two 10-unit UTXOs
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection({ target: targetSpend });
+            selector.performSelection({ target: denominations[2] }); // target=10
 
-            // No change outputs expected
-            assert.strictEqual(selector.changeOutputs.length, 0);
+            // Initial: inputs=10, spend=10, change=0
+            selector.increaseFee(denominations[1]); // +5 fee
 
-            // Attempt to increase fee by .01 Qi
-            const additionalFeeNeeded = denominations[2]; // .01 Qi
-            const success = selector.increaseFee(additionalFeeNeeded);
-
-            // Should fail due to insufficient funds
-            assert.strictEqual(success, false);
-
-            // Inputs and outputs remain unchanged
+            // Must add 2nd UTXO (10), excess = 10 - 5 = 5 returned as change
             assert.strictEqual(selector.selectedUTXOs.length, 2);
-            assert.strictEqual(selector.changeOutputs.length, 0);
+            assert.strictEqual(selector.totalInputValue, BigInt(20));
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(5));
+            // Implicit fee = 20 - 10 - 5 = 5
+            assert.strictEqual(
+                selector.totalInputValue - sumOutputs(selector.spendOutputs) - sumOutputs(selector.changeOutputs),
+                BigInt(5),
+            );
         });
 
-        it('decreases fee by increasing change outputs when possible', function () {
-            const availableUTXOs = createUTXOs([3, 2]); // .05 Qi and .01 Qi
-            const targetSpend = denominations[3]; // .05 Qi
+        it('correctly accounts for original fee when adding inputs (regression)', function () {
+            // This is the key regression test: performSelection with non-zero fee,
+            // then increaseFee that triggers path 2 (needs new inputs).
+            // The old code computed change as (totalInputValue - target - additionalFee),
+            // omitting the original fee, which made the implicit fee too low.
+            const availableUTXOs = createUTXOs([2, 2, 2]); // three 10-unit UTXOs
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection({ target: targetSpend });
+            selector.performSelection({ target: denominations[2], fee: denominations[1] }); // target=10, fee=5
 
-            // No change outputs expected
-            assert.strictEqual(selector.changeOutputs.length, 0);
+            // Initial: inputs=20, spend=10, change=20-10-5=5, implicitFee=5
+            assert.strictEqual(selector.totalInputValue, BigInt(20));
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(5));
 
-            // Decrease fee by .01 Qi
-            const feeReduction = denominations[2]; // .01 Qi
-            selector.decreaseFee(feeReduction);
+            selector.increaseFee(denominations[2]); // +10 additional fee
 
-            // Change output should now reflect the reduced fee
-            assert.strictEqual(selector.changeOutputs.length, 1);
-            assert.strictEqual(denominations[selector.changeOutputs[0].denomination!], denominations[2]);
-
-            // Inputs remain the same
-            assert.strictEqual(selector.selectedUTXOs.length, 1);
-        });
-        it.only('decreases fee by removing inputs when possible', function () {
-            const availableUTXOs = createUTXOs([3, 2]); // Denomination indices 3 (50 units) and 2 (10 units)
-            const targetSpend = denominations[1]; // 20 units
-            const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection({ target: targetSpend });
-
-            // Initially, selects the 50-unit UTXO for the target spend
-            assert.strictEqual(selector.selectedUTXOs.length, 1);
-            assert.strictEqual(selector.totalInputValue, denominations[2]); // 10 units
-
-            // Calculate initial change amount
-            const initialChangeAmount = denominations[2] - denominations[1]; // 10 - 5 = 5 units
-
-            // Decrease fee by 5 units
-            const feeReduction = denominations[1]; // 5 units
-            selector.decreaseFee(feeReduction);
-
-            // New change amount should include the fee reduction
-            const newChangeAmount = initialChangeAmount - feeReduction; // 5 + 5 = 10 units
-
-            // Denominate new change amount using max input denomination (50 units)
-            const expectedChangeDenominations = denominate(newChangeAmount, denominations[2]);
-
-            // Assert that change outputs are updated correctly
-            assert.strictEqual(selector.changeOutputs.length, expectedChangeDenominations.length);
-
-            // Verify that the change outputs sum to the new change amount
-            const actualNewChangeAmount = selector.changeOutputs.reduce((sum, output) => {
-                return sum + denominations[output.denomination!];
-            }, BigInt(0));
-            assert.strictEqual(actualNewChangeAmount, newChangeAmount);
-
-            // Inputs remain the same (cannot remove inputs without violating protocol rules)
-            assert.strictEqual(selector.selectedUTXOs.length, 1);
-            assert.strictEqual(selector.totalInputValue, denominations[2]); // Still 10 units
+            // Change(5) < additionalFee(10), so path 2 is taken:
+            // - consume all change, remainingFee = 10 - 5 = 5
+            // - add 3rd UTXO (10), remainingFee = 5 - 10 = -5
+            // - excess change = 5
+            assert.strictEqual(selector.selectedUTXOs.length, 3);
+            assert.strictEqual(selector.totalInputValue, BigInt(30));
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(5));
+            // Implicit fee must be original(5) + additional(10) = 15
+            assert.strictEqual(
+                selector.totalInputValue - sumOutputs(selector.spendOutputs) - sumOutputs(selector.changeOutputs),
+                BigInt(15),
+            );
         });
 
-        it('does not remove inputs if it would result in insufficient funds when decreasing fee', function () {
-            const availableUTXOs = createUTXOs([3]); // .05 Qi
-            const targetSpend = denominations[3]; // .05 Qi
+        it('correctly reduces change with non-zero original fee (path 1, regression)', function () {
+            const availableUTXOs = createUTXOs([4]); // 100-unit UTXO
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection({ target: targetSpend });
+            selector.performSelection({ target: denominations[3], fee: denominations[2] }); // target=50, fee=10
 
-            // No change outputs expected
-            assert.strictEqual(selector.changeOutputs.length, 0);
+            // Initial: inputs=100, spend=50, change=40, implicitFee=10
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(40));
 
-            // Decrease fee by .01 Qi
-            const feeReduction = denominations[2]; // .01 Qi
-            selector.decreaseFee(feeReduction);
+            selector.increaseFee(denominations[1]); // +5 additional fee
 
-            // Cannot remove any inputs, but can adjust change outputs
-            // Change output should now reflect the reduced fee
-            assert.strictEqual(selector.changeOutputs.length, 1);
-            assert.strictEqual(denominations[selector.changeOutputs[0].denomination!], denominations[2]);
-
-            // Inputs remain the same
-            assert.strictEqual(selector.selectedUTXOs.length, 1);
-            assert.strictEqual(selector.totalInputValue, denominations[3]);
+            // Path 1: change(40) >= additionalFee(5), new change = 40 - 5 = 35
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(35));
+            assert.strictEqual(selector.selectedUTXOs.length, 1); // no new inputs
+            // Implicit fee = 100 - 50 - 35 = 15
+            assert.strictEqual(
+                selector.totalInputValue - sumOutputs(selector.spendOutputs) - sumOutputs(selector.changeOutputs),
+                BigInt(15),
+            );
         });
 
-        it('handles edge case where fee increase consumes entire change output and requires additional inputs', function () {
-            const availableUTXOs = createUTXOs([2, 2]); // Denomination indices 2 (10 units each)
-            const targetSpend = denominations[2]; // 10 units
+        it('fails when no additional inputs are available', function () {
+            const availableUTXOs = createUTXOs([2, 2]); // two 10-unit UTXOs
             const selector = new FewestCoinSelector(availableUTXOs);
-            selector.performSelection({ target: targetSpend });
+            selector.performSelection({ target: denominations[2] * BigInt(2) }); // target=20
 
-            // Initially, selects one UTXO, change expected
-            assert.strictEqual(selector.selectedUTXOs.length, 1);
-            assert.strictEqual(selector.totalInputValue, denominations[2]); // 10 units
+            // All UTXOs used, no change
+            selector.increaseFee(denominations[2]); // +10 fee
 
-            // Calculate initial change amount
-            // const initialChangeAmount = denominations[2] - denominations[2]; // 10 - 10 = 0 units
-
-            // No change outputs expected
-            assert.strictEqual(selector.changeOutputs.length, 0);
-
-            // Increase fee by 5 units
-            const additionalFeeNeeded = denominations[1]; // 5 units
-            const success = selector.increaseFee(additionalFeeNeeded);
-
-            assert.strictEqual(success, true);
-
-            // Now, an additional input is added
+            // No unused UTXOs available, change stays empty
             assert.strictEqual(selector.selectedUTXOs.length, 2);
-            assert.strictEqual(selector.totalInputValue, denominations[2] * BigInt(2)); // 20 units
-
-            // New change amount
-            const newChangeAmount = selector.totalInputValue - targetSpend - additionalFeeNeeded; // 20 - 10 - 5 = 5 units
-
-            // Denominate the new change amount using max input denomination (10 units)
-            const expectedChangeDenominations = denominate(newChangeAmount, denominations[2]);
-
-            // Assert that change outputs are correctly created
-            assert.strictEqual(selector.changeOutputs.length, expectedChangeDenominations.length);
-
-            // Verify that the change outputs sum to the new change amount
-            const actualChangeAmount = selector.changeOutputs.reduce((sum, output) => {
-                return sum + denominations[output.denomination!];
-            }, BigInt(0));
-            assert.strictEqual(actualChangeAmount, newChangeAmount);
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(0));
         });
- */
+    });
+
+    describe('decreaseFee', function () {
+        it('increases change outputs when inputs cannot be removed', function () {
+            const availableUTXOs = createUTXOs([3]); // 50-unit UTXO
+            const selector = new FewestCoinSelector(availableUTXOs);
+            selector.performSelection({ target: denominations[3] }); // target=50
+
+            // Initial: inputs=50, spend=50, change=0, implicitFee=0
+            selector.decreaseFee(denominations[2]); // reduce fee by 10
+
+            // Can't remove the only input, so excess becomes change
+            assert.strictEqual(selector.selectedUTXOs.length, 1);
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(10));
+        });
+
+        it('preserves existing change when adding fee reduction (regression)', function () {
+            // This is the key regression test: with existing change outputs,
+            // decreaseFee must ADD excess to existing change, not replace it.
+            // The old code called adjustChangeOutputs(excessValue) which replaced
+            // the existing change entirely.
+            const availableUTXOs = createUTXOs([4]); // 100-unit UTXO
+            const selector = new FewestCoinSelector(availableUTXOs);
+            selector.performSelection({ target: denominations[3], fee: denominations[2] }); // target=50, fee=10
+
+            // Initial: inputs=100, spend=50, change=40, implicitFee=10
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(40));
+
+            selector.decreaseFee(denominations[1]); // reduce fee by 5
+
+            // Can't remove the 100-unit input (would go below target).
+            // Excess 5 must be ADDED to existing change: 40 + 5 = 45
+            assert.strictEqual(selector.selectedUTXOs.length, 1);
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(45));
+            // Implicit fee = 100 - 50 - 45 = 5 = original(10) - reduction(5)
+            assert.strictEqual(
+                selector.totalInputValue - sumOutputs(selector.spendOutputs) - sumOutputs(selector.changeOutputs),
+                BigInt(5),
+            );
+        });
+
+        it('removes inputs when possible and returns remaining excess as change', function () {
+            const availableUTXOs = createUTXOs([2, 2]); // two 10-unit UTXOs
+            const selector = new FewestCoinSelector(availableUTXOs);
+            selector.performSelection({ target: denominations[2] }); // target=10
+
+            // Initial: selects single 10-unit UTXO, change=0
+            assert.strictEqual(selector.selectedUTXOs.length, 1);
+
+            // First increase fee to get 2 inputs
+            selector.increaseFee(denominations[1]); // +5 fee
+            // Now: inputs=[10,10]=20, spend=10, change=5, fee=5
+            assert.strictEqual(selector.selectedUTXOs.length, 2);
+
+            // Now decrease fee by 10 - should remove one input
+            selector.decreaseFee(denominations[2]); // -10
+
+            // The 10-unit input can be removed (20-10=10 >= target 10)
+            assert.strictEqual(selector.selectedUTXOs.length, 1);
+            assert.strictEqual(selector.totalInputValue, BigInt(10));
+            // excessValue = 10 - 10 = 0, plus existing change(5) preserved
+            // Actually after removing input worth 10, excessValue = 0, so
+            // the existing change outputs remain unchanged at 5
+            assert.strictEqual(sumOutputs(selector.changeOutputs), BigInt(5));
+        });
     });
 });

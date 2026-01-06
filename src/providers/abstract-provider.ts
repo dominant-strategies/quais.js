@@ -21,6 +21,7 @@ import {
     getBigInt,
     getBytes,
     getNumber,
+    getZoneForAddress,
     makeError,
     assert,
     assertArgument,
@@ -1842,6 +1843,39 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     async getOutpointsByAddress(address: AddressLike): Promise<Outpoint[]> {
         return formatOutpoints(await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest'));
+    }
+
+    /**
+     * Get the UTXO entries for multiple addresses in a single batch request. This method sends a JSON-RPC batch request
+     * for efficiency when scanning many addresses.
+     *
+     * @param {string[]} addresses - The addresses to fetch UTXOs for (max 10,000 per call)
+     * @returns {Promise<Map<string, Outpoint[]>>} Map of address to outpoints
+     */
+    async getOutpointsByAddresses(addresses: string[]): Promise<Map<string, Outpoint[]>> {
+        if (addresses.length === 0) {
+            return new Map();
+        }
+
+        if (addresses.length > 10000) {
+            throw new Error('Maximum 10,000 addresses per batch request');
+        }
+
+        // Get zone from the first address for routing
+        const zone = getZoneForAddress(addresses[0]);
+        if (!zone) {
+            throw new Error(`Invalid address: ${addresses[0]}`);
+        }
+
+        // This will be overridden by JsonRpcApiProvider for batch support
+        // Default fallback uses individual calls (less efficient)
+        const results = new Map<string, Outpoint[]>();
+        const promises = addresses.map(async (addr) => {
+            const outpoints = await this.getOutpointsByAddress(addr);
+            results.set(addr, outpoints);
+        });
+        await Promise.all(promises);
+        return results;
     }
 
     async getTransactionCount(address: AddressLike, blockTag?: BlockTag): Promise<number> {

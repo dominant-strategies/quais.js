@@ -15,6 +15,8 @@ export class PaymentCodePublic {
     protected readonly buf: Uint8Array;
     root: BIP32Interface;
     hasPrivKeys: boolean;
+    // Cache for notification public key (always derived at index 0)
+    private _notificationPublicKey: Uint8Array | null = null;
 
     /**
      * Constructor for the PaymentCode class.
@@ -99,12 +101,15 @@ export class PaymentCodePublic {
     }
 
     /**
-     * Retrieves the public key for notification.
+     * Retrieves the public key for notification. Cached for performance.
      *
      * @returns {Uint8Array} The public key for notification.
      */
     getNotificationPublicKey(): Uint8Array {
-        return getBytes(this.derive(0).publicKey);
+        if (!this._notificationPublicKey) {
+            this._notificationPublicKey = getBytes(this.derive(0).publicKey);
+        }
+        return this._notificationPublicKey;
     }
 
     /**
@@ -177,6 +182,9 @@ export class PaymentCodePublic {
 }
 
 export class PaymentCodePrivate extends PaymentCodePublic {
+    // Cache for notification private key (always derived at index 0)
+    private _notificationPrivateKey: Uint8Array | null = null;
+
     /**
      * Constructor for the PaymentCodePrivate class.
      *
@@ -267,13 +275,16 @@ export class PaymentCodePrivate extends PaymentCodePublic {
     }
 
     /**
-     * Retrieves the notification private key.
+     * Retrieves the notification private key. Cached for performance.
      *
      * @returns {Uint8Array} The notification private key.
      */
     getNotificationPrivateKey(): Uint8Array {
-        const child = this.derive(0);
-        return child.privateKey!;
+        if (!this._notificationPrivateKey) {
+            const child = this.derive(0);
+            this._notificationPrivateKey = child.privateKey!;
+        }
+        return this._notificationPrivateKey;
     }
 }
 

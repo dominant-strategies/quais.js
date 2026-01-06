@@ -27,6 +27,13 @@ import { BIP44 } from './bip44/bip44.js';
 import { PrivatekeyQiWallet } from './qi-wallets/privkey-qi-wallet.js';
 import { PaymentChannel } from './qi-wallets/bip47-paymentchannel.js';
 import { generatePaymentCodePrivate, getPrivateKeyFromPaymentCode } from './qi-wallets/bip47-self-qi-wallet.js';
+import {
+    AbstractQiWallet,
+    AddressUseResult,
+    BlockReference,
+    OutpointDeltaResponseType,
+    retryWithBackoff,
+} from './qi-wallets/abstract-qi-wallet.js';
 /**
  * @property {Outpoint} outpoint - The outpoint object.
  * @property {string} address - The address associated with the outpoint.
@@ -1332,18 +1339,181 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * Scans the specified zone for addresses with unspent outputs. Starting at index 0, it will generate new addresses
      * until the gap limit is reached for external and change BIP44 addresses and payment channel addresses.
      *
+     * This method uses consolidated batch RPC calls to minimize network requests:
+     *
+     * - Single getBlock call for all sub-wallets
+     * - Single batch getOutpointsByAddresses call for all addresses across all sub-wallets
+     *
      * @param {Zone} zone - The zone in which to scan for addresses.
      * @param {number} [account=0] - The index of the account to scan. Default is `0`
      * @returns {Promise<void>} A promise that resolves when the scan is complete.
      * @throws {Error} If the zone is invalid.
      */
     public async scan(zone: Zone, account: number = 0): Promise<void> {
-        const bip44Scans = [this.externalBip44.scan(zone, account), this.changeBip44.scan(zone, account)];
-        const paymentChannelScans = Array.from(this.paymentChannels.values()).map((pc) =>
-            pc.selfWallet.scan(zone, account),
-        );
-        const privateKeyScans = this.privatekeyWallet.scan(zone, account);
-        await Promise.all([...bip44Scans, ...paymentChannelScans, privateKeyScans]);
+        if (!this.provider) {
+            throw new Error('Provider is required for scanning');
+        }
+
+        // Get current block once for all sub-wallets
+        const block = await this.provider.getBlock(toShard(zone), 'latest');
+        if (!block) {
+            throw new Error(`Failed to get latest block for zone ${zone}`);
+        }
+        const currentBlock: BlockReference = {
+            hash: block.hash,
+            number: block.woHeader.number,
+        };
+
+        // Collect all sub-wallets that need scanning
+        // Note: We cast selfWallet from Readonly<Bip47QiWalletSelf> to AbstractQiWallet
+        // because we need to call methods that modify wallet state during scanning
+        const subWallets: AbstractQiWallet[] = [
+            this.externalBip44 as AbstractQiWallet,
+            this.changeBip44 as AbstractQiWallet,
+            ...Array.from(this.paymentChannels.values()).map((pc) => pc.selfWallet as unknown as AbstractQiWallet),
+            this.privatekeyWallet as AbstractQiWallet,
+        ];
+
+        // Track created outpoints for all wallets
+        const createdOutpoints: OutpointDeltaResponseType = {};
+
+        // Phase 1: Prepare all wallets and collect existing addresses
+        const walletAddresses: Map<AbstractQiWallet, string[]> = new Map();
+        const allAddresses: string[] = [];
+
+        for (const wallet of subWallets) {
+            const addresses = wallet.prepareForScan(zone, account, true);
+            const addressStrings = addresses.map((addr) => addr.address);
+            walletAddresses.set(wallet, addressStrings);
+            allAddresses.push(...addressStrings);
+        }
+
+        // Phase 2: Batch check all existing addresses at once
+        if (allAddresses.length > 0) {
+            const results = await this.batchCheckAddresses(allAddresses);
+
+            // Apply results to each wallet
+            for (const wallet of subWallets) {
+                const walletAddrs = walletAddresses.get(wallet) ?? [];
+                const walletResults = new Map<string, AddressUseResult>();
+                for (const addr of walletAddrs) {
+                    const result = results.get(addr);
+                    if (result) {
+                        walletResults.set(addr, result);
+                    }
+                }
+                wallet.applyOutpointResults(walletResults, currentBlock, createdOutpoints);
+            }
+        }
+
+        // Phase 3: Generate new addresses until gap limit is reached for all wallets
+        await this.generateAddressesToGapLimitConsolidated(subWallets, zone, account, currentBlock, createdOutpoints);
+    }
+
+    /**
+     * Generates addresses for all sub-wallets until their gap limits are reached, using consolidated batch RPC calls.
+     *
+     * @private
+     */
+    private async generateAddressesToGapLimitConsolidated(
+        subWallets: AbstractQiWallet[],
+        zone: Zone,
+        account: number,
+        currentBlock: BlockReference,
+        createdOutpoints: OutpointDeltaResponseType,
+    ): Promise<void> {
+        // Track which wallets still need more addresses
+        let walletsNeedingMore = subWallets.filter((w) => w.getGapLimit() > 0);
+
+        while (walletsNeedingMore.length > 0) {
+            // Derive addresses for all wallets that need more
+            const walletNewAddresses: Map<AbstractQiWallet, QiAddressInfo[]> = new Map();
+            const allNewAddresses: string[] = [];
+
+            for (const wallet of walletsNeedingMore) {
+                const status = wallet.getGapLimitStatus(zone, account);
+                if (status.needsMore && status.addressesToGenerate > 0) {
+                    const newAddresses = wallet.deriveAddressBatch(zone, account, status.addressesToGenerate);
+                    walletNewAddresses.set(wallet, newAddresses);
+                    allNewAddresses.push(...newAddresses.map((addr) => addr.address));
+                }
+            }
+
+            // If no addresses to check, we're done
+            if (allNewAddresses.length === 0) {
+                break;
+            }
+
+            // Batch check all new addresses at once
+            const results = await this.batchCheckAddresses(allNewAddresses);
+
+            // Apply results to each wallet and check if they need more addresses
+            const stillNeedMore: AbstractQiWallet[] = [];
+
+            for (const wallet of walletsNeedingMore) {
+                const newAddresses = walletNewAddresses.get(wallet);
+                if (!newAddresses || newAddresses.length === 0) {
+                    continue;
+                }
+
+                // Filter results for this wallet
+                const walletResults = new Map<string, AddressUseResult>();
+                for (const addr of newAddresses) {
+                    const result = results.get(addr.address);
+                    if (result) {
+                        walletResults.set(addr.address, result);
+                    }
+                }
+
+                // Apply results
+                const { reachedGapLimit } = wallet.applyNewAddressResults(
+                    newAddresses,
+                    walletResults,
+                    currentBlock,
+                    createdOutpoints,
+                );
+
+                // If gap limit not reached, this wallet needs more addresses
+                if (!reachedGapLimit) {
+                    stillNeedMore.push(wallet);
+                }
+            }
+
+            walletsNeedingMore = stillNeedMore;
+        }
+    }
+
+    /**
+     * Batch checks multiple addresses for usage using a single RPC call. Automatically splits into multiple batches if
+     * over 10,000 addresses.
+     *
+     * @private
+     */
+    private async batchCheckAddresses(addresses: string[]): Promise<Map<string, AddressUseResult>> {
+        if (addresses.length === 0) {
+            return new Map();
+        }
+
+        const results = new Map<string, AddressUseResult>();
+        const maxBatchSize = 10000;
+
+        // Split into batches of 10k if needed
+        for (let i = 0; i < addresses.length; i += maxBatchSize) {
+            const batch = addresses.slice(i, i + maxBatchSize);
+            const outpointsMap = await retryWithBackoff(
+                () => this.provider!.getOutpointsByAddresses(batch),
+                `getOutpointsByAddresses(${batch.length} addresses)`,
+            );
+
+            // Process results
+            for (const address of batch) {
+                const outpoints = outpointsMap.get(address) ?? [];
+                const isUsed = outpoints.length > 0;
+                results.set(address, { isUsed, outpoints });
+            }
+        }
+
+        return results;
     }
 
     /**
@@ -1802,6 +1972,11 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     public openChannel(paymentCode: string): void {
         if (!validatePaymentCode(paymentCode)) {
             throw new Error(`Invalid payment code: ${paymentCode}`);
+        }
+
+        // Check if the channel already exists to avoid overwriting existing addresses
+        if (this.paymentChannels.has(paymentCode)) {
+            return;
         }
 
         const pc = new PaymentChannel(this.bip47HDNode, paymentCode);

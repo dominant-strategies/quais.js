@@ -239,17 +239,16 @@ export class AggregateCoinSelector extends AbstractCoinSelector {
     private getInputsToAggregate(smallDenominationsUTXOs: UTXO[], valueToAggregate: bigint): UTXO[] {
         const sortedUTXOs = this.sortUTXOsByDenomination(smallDenominationsUTXOs, 'asc');
         const inputsToAggregate: UTXO[] = [];
+        let sum = BigInt(0);
+
         for (const utxo of sortedUTXOs) {
             inputsToAggregate.push(utxo);
-            if (
-                inputsToAggregate.reduce((sum, utxo) => sum + BigInt(denominations[utxo.denomination!]), BigInt(0)) >=
-                valueToAggregate
-            ) {
+            sum += BigInt(denominations[utxo.denomination!]);
+            if (sum >= valueToAggregate) {
                 return inputsToAggregate;
             }
         }
-        throw new Error(
-            `Unable to find inputs to aggregate, wanted ${valueToAggregate} but got ${inputsToAggregate.reduce((sum, utxo) => sum + BigInt(denominations[utxo.denomination!]), BigInt(0))}`,
-        );
+
+        throw new Error(`Unable to find inputs to aggregate, wanted ${valueToAggregate} but got ${sum}`);
     }
 }
