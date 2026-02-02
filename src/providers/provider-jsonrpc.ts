@@ -1222,6 +1222,11 @@ export abstract class JsonRpcApiProvider<C = FetchRequest> extends AbstractProvi
                     method: 'quai_getOutpointsByAddress',
                     args: [req.address],
                 };
+            case 'getOutpointsByAddresses':
+                return {
+                    method: 'quai_getOutpointsByAddresses',
+                    args: [req.addresses],
+                };
             case 'getTransactionCount':
                 return {
                     method: 'quai_getTransactionCount',
