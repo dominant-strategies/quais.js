@@ -585,6 +585,10 @@ export type PerformActionRequest =
           zone: Zone;
       }
     | {
+          method: 'getOutpointsByAddresses';
+          addresses: string[];
+      }
+    | {
           method: 'getBlock';
           blockTag: BlockTag;
           includeTransactions: boolean;
@@ -1842,6 +1846,31 @@ export class AbstractProvider<C = FetchRequest> implements Provider {
 
     async getOutpointsByAddress(address: AddressLike): Promise<Outpoint[]> {
         return formatOutpoints(await this.#getAccountValue({ method: 'getOutpointsByAddress' }, address, 'latest'));
+    }
+
+    /**
+     * Get outpoints for multiple addresses in a single RPC call.
+     * This is more efficient than calling getOutpointsByAddress multiple times.
+     * 
+     * @param addresses - Array of addresses to query
+     * @returns Map of address to outpoints array
+     */
+    async getOutpointsByAddresses(addresses: AddressLike[]): Promise<Map<string, Outpoint[]>> {
+        const resolvedAddresses = await Promise.all(
+            addresses.map(addr => resolveAddress(addr))
+        );
+        
+        const result = await this.#perform({
+            method: 'getOutpointsByAddresses',
+            addresses: resolvedAddresses,
+        });
+        
+        const outpointsMap = new Map<string, Outpoint[]>();
+        for (const [addr, outpoints] of Object.entries(result as Record<string, any[]>)) {
+            outpointsMap.set(addr, formatOutpoints(outpoints));
+        }
+        
+        return outpointsMap;
     }
 
     async getTransactionCount(address: AddressLike, blockTag?: BlockTag): Promise<number> {

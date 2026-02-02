@@ -2814,6 +2814,16 @@ export interface Provider extends ContractRunner, EventEmitterable<ProviderEvent
     getOutpointsByAddress(address: AddressLike): Promise<Array<Outpoint>>;
 
     /**
+     * Get outpoints for multiple addresses in a single RPC call.
+     * This is more efficient than calling getOutpointsByAddress multiple times,
+     * reducing network round-trips for wallet scanning operations.
+     *
+     * @param {AddressLike[]} addresses - Array of addresses to query.
+     * @returns {Promise<Map<string, Outpoint[]>>} A promise resolving to a map of address to outpoints.
+     */
+    getOutpointsByAddresses(addresses: AddressLike[]): Promise<Map<string, Array<Outpoint>>>;
+
+    /**
      * Get the number of transactions ever sent for `address`, which is used as the `nonce` when sending a transaction.
      * If `blockTag` is specified and the node supports archive access for that `blockTag`, the transaction count is as
      * of that {@link BlockTag | **BlockTag**}.
