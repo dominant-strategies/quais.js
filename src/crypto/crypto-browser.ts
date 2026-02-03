@@ -7,13 +7,6 @@ import { sha512 } from '@noble/hashes/sha512';
 
 import { assert, assertArgument } from '../utils/index.js';
 
-declare global {
-    interface Window {}
-
-    const window: Window;
-    const self: Window;
-}
-
 function getGlobal(): any {
     if (typeof self !== 'undefined') {
         return self;

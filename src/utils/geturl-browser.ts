@@ -2,29 +2,6 @@ import { assert } from './errors.js';
 
 import type { FetchGetUrlFunc, FetchRequest, FetchCancelSignal, GetUrlResponse } from './fetch.js';
 
-declare global {
-    class Headers {
-        constructor(values: Array<[string, string]>);
-        forEach(func: (v: string, k: string) => void): void;
-    }
-
-    class Response {
-        status: number;
-        statusText: string;
-        headers: Headers;
-        arrayBuffer(): Promise<ArrayBuffer>;
-        json(): Promise<any>;
-    }
-
-    type FetchInit = {
-        method?: string;
-        headers?: Headers;
-        body?: Uint8Array;
-    };
-
-    function fetch(url: string, init: FetchInit): Promise<Response>;
-}
-
 // @TODO: timeout is completely ignored; start a Promise.any with a reject?
 // TODO: `options` is not used; remove?
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
