@@ -6,6 +6,7 @@
 		"forceConsistentCasingInFileNames": true,
 		"importHelpers": false,
 		"lib": ["es2020", "es5"],
+		"skipLibCheck": true,
 		"module": "es2022",
 		"moduleResolution": "node16",
 		"noEmitOnError": true,
