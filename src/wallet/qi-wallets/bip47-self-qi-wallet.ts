@@ -72,7 +72,7 @@ export function getPrivateKeyFromPaymentCode(
 export class Bip47QiWalletSelf extends AbstractQiWallet {
     private readonly root: HDNodeWallet;
     private readonly counterpartyPaymentCode: string;
-    private static readonly DEFAULT_GAP_LIMIT = 5;
+    private static readonly DEFAULT_GAP_LIMIT = 25;
 
     // Cached instances for performance - these are expensive to create
     private readonly bip32: BIP32API;

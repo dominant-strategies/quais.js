@@ -485,6 +485,21 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     /**
+     * Sets the status of a specific address in the wallet. Searches across all sub-wallets (BIP44 external, BIP44
+     * change, payment channels, private key wallet).
+     *
+     * @param {string} address - The address to update.
+     * @param {AddressStatus} status - The new status to set.
+     * @returns {boolean} True if the address was found and updated, false otherwise.
+     */
+    public setAddressStatus(address: string, status: AddressStatus): boolean {
+        const addressInfo = this.getAddressInfo(address);
+        if (!addressInfo) return false;
+        addressInfo.status = status;
+        return true;
+    }
+
+    /**
      * Converts outpoints for a specific zone to UTXO format.
      *
      * @param {Zone} zone - The zone to filter outpoints for.
@@ -692,7 +707,7 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 sendAddresses.push(...newSendAddresses);
             } else if (spendAddressesNeeded < 0) {
                 // Have extra send addresses, remove the excess
-                const addressesToSetToUnused = sendAddresses.slice(spendAddressesNeeded);
+                const addressesToSetToUnused = sendAddresses.splice(spendAddressesNeeded);
 
                 // Set the status of the addresses back to UNUSED in _addressesMap for removed addresses
                 const currentSendAddresses = this.changeBip44.getAddressesInZone(zone);
@@ -853,9 +868,11 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 const newSendAddresses = await getDestinationAddresses(spendAddressesNeeded);
                 sendAddresses.push(...newSendAddresses);
             } else if (spendAddressesNeeded < 0) {
-                // It would be great to reset the status of the addresses to UNUSED in _addressesMap but we do not
-                // know exactly how these addresses are derived, so we just remove them from the array
-                sendAddresses.slice(spendAddressesNeeded);
+                // Remove excess send addresses from the array and reset their status
+                const removedAddresses = sendAddresses.splice(spendAddressesNeeded);
+                for (const addr of removedAddresses) {
+                    this.setAddressStatus(addr, AddressStatus.UNUSED);
+                }
             }
 
             inputPubKeys = selection.inputs.map((input) => this.getAddressInfo(input.address)?.pubKey);
