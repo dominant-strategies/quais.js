@@ -122,7 +122,7 @@ export abstract class AbstractQiWallet {
     // map of address to outpoint info
     protected availableOutpoints: Map<string, OutpointInfo> = new Map();
 
-    protected gapLimit: number = 5;
+    protected gapLimit: number = 25;
 
     constructor(gapLimit: number) {
         this.gapLimit = gapLimit;
