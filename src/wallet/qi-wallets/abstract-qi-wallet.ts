@@ -1076,6 +1076,41 @@ export abstract class AbstractQiWallet {
     }
 
     /**
+     * Prepares the wallet for a gap-only sync by clearing cached outpoints and marking all existing addresses in the
+     * zone/account as needing a fresh address check, while preserving the known address set.
+     *
+     * @param {Zone} zone - The zone to prepare
+     * @param {number} account - The account number
+     * @returns {QiAddressInfo[]} Array of existing addresses that should be rechecked
+     */
+    public prepareForGapSync(zone: Zone, account: number): QiAddressInfo[] {
+        this.validateZone(zone);
+
+        const addresses = this.getAddressesInZone(zone).filter((addr) => addr.account === account);
+        const addressesForAccount = new Set(addresses.map((addr) => addr.address));
+
+        const outpointKeysToDelete: string[] = [];
+        this.availableOutpoints.forEach((outpointInfo, key) => {
+            if (outpointInfo.zone === zone && addressesForAccount.has(outpointInfo.address)) {
+                outpointKeysToDelete.push(key);
+            }
+        });
+
+        for (const key of outpointKeysToDelete) {
+            this.availableOutpoints.delete(key);
+        }
+
+        for (const address of addresses) {
+            this.addresses.set(address.address, {
+                ...address,
+                lastSyncedBlock: null,
+            });
+        }
+
+        return this.getAddressesInZone(zone).filter((addr) => addr.account === account);
+    }
+
+    /**
      * Applies pre-fetched outpoint results to addresses in this wallet.
      *
      * @param {Map<string, AddressUseResult>} results - Map of address to outpoint results

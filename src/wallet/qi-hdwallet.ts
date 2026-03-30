@@ -1428,6 +1428,68 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     /**
+     * Performs a gap-only sync for the wallet. This preserves the known address set, clears cached outpoints for the
+     * zone/account, forces all existing addresses to be rechecked against the network, and then regenerates the gap.
+     *
+     * This is intended for wallet reopen flows where address metadata is trusted but cached outpoints/checkpoints are
+     * not.
+     *
+     * @param {Zone} zone - The zone in which to sync addresses.
+     * @param {number} [account=0] - The account index to sync. Default is `0`
+     * @returns {Promise<void>} A promise that resolves when the gap sync is complete.
+     */
+    public async gapSync(zone: Zone, account: number = 0): Promise<void> {
+        if (!this.provider) {
+            throw new Error('Provider is required for gap syncing');
+        }
+
+        const block = await this.provider.getBlock(toShard(zone), 'latest');
+        if (!block) {
+            throw new Error(`Failed to get latest block for zone ${zone}`);
+        }
+        const currentBlock: BlockReference = {
+            hash: block.hash,
+            number: block.woHeader.number,
+        };
+
+        const subWallets: AbstractQiWallet[] = [
+            this.externalBip44 as AbstractQiWallet,
+            this.changeBip44 as AbstractQiWallet,
+            ...Array.from(this.paymentChannels.values()).map((pc) => pc.selfWallet as unknown as AbstractQiWallet),
+            this.privatekeyWallet as AbstractQiWallet,
+        ];
+
+        const createdOutpoints: OutpointDeltaResponseType = {};
+        const walletAddresses: Map<AbstractQiWallet, string[]> = new Map();
+        const allAddresses: string[] = [];
+
+        for (const wallet of subWallets) {
+            const addresses = wallet.prepareForGapSync(zone, account);
+            const addressStrings = addresses.map((addr) => addr.address);
+            walletAddresses.set(wallet, addressStrings);
+            allAddresses.push(...addressStrings);
+        }
+
+        if (allAddresses.length > 0) {
+            const results = await this.batchCheckAddresses(allAddresses);
+
+            for (const wallet of subWallets) {
+                const walletAddrs = walletAddresses.get(wallet) ?? [];
+                const walletResults = new Map<string, AddressUseResult>();
+                for (const addr of walletAddrs) {
+                    const result = results.get(addr);
+                    if (result) {
+                        walletResults.set(addr, result);
+                    }
+                }
+                wallet.applyOutpointResults(walletResults, currentBlock, createdOutpoints);
+            }
+        }
+
+        await this.generateAddressesToGapLimitConsolidated(subWallets, zone, account, currentBlock, createdOutpoints);
+    }
+
+    /**
      * Generates addresses for all sub-wallets until their gap limits are reached, using consolidated batch RPC calls.
      *
      * @private
