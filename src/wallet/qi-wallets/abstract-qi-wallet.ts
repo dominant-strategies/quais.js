@@ -1076,8 +1076,8 @@ export abstract class AbstractQiWallet {
     }
 
     /**
-     * Prepares the wallet for a gap-only sync by clearing cached outpoints and marking all existing addresses in the
-     * zone/account as needing a fresh address check, while preserving the known address set.
+     * Prepares the wallet for a gap-only sync by returning the existing address set for the zone/account without
+     * clearing cached outpoints. The caller can then merge fresh RPC results into the current wallet state.
      *
      * @param {Zone} zone - The zone to prepare
      * @param {number} account - The account number
@@ -1085,28 +1085,6 @@ export abstract class AbstractQiWallet {
      */
     public prepareForGapSync(zone: Zone, account: number): QiAddressInfo[] {
         this.validateZone(zone);
-
-        const addresses = this.getAddressesInZone(zone).filter((addr) => addr.account === account);
-        const addressesForAccount = new Set(addresses.map((addr) => addr.address));
-
-        const outpointKeysToDelete: string[] = [];
-        this.availableOutpoints.forEach((outpointInfo, key) => {
-            if (outpointInfo.zone === zone && addressesForAccount.has(outpointInfo.address)) {
-                outpointKeysToDelete.push(key);
-            }
-        });
-
-        for (const key of outpointKeysToDelete) {
-            this.availableOutpoints.delete(key);
-        }
-
-        for (const address of addresses) {
-            this.addresses.set(address.address, {
-                ...address,
-                lastSyncedBlock: null,
-            });
-        }
-
         return this.getAddressesInZone(zone).filter((addr) => addr.account === account);
     }
 
