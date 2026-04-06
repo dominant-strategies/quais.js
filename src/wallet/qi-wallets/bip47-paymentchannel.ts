@@ -55,10 +55,16 @@ export class PaymentChannel {
     }
 
     public getNextReceivingAddress(zone: Zone, account: number = 0): QiAddressInfo {
+        const reusable = this.#selfWallet.getReusableAddress(zone, account);
+        if (reusable) return reusable;
         return this.#selfWallet.deriveNewAddress(zone, account);
     }
 
-    public getNextSendingAddress(zone: Zone, account: number = 0): QiAddressInfo {
+    public getNextSendingAddress(zone: Zone, account: number = 0, exclude?: Set<string>): QiAddressInfo {
+        // Reuse an existing UNUSED or ATTEMPTED_USE address before deriving a new one
+        // to avoid gaps in the derivation sequence that could exceed the gap limit
+        const reusable = this.#counterpartyWallet.getReusableAddress(zone, account, exclude);
+        if (reusable) return reusable;
         return this.#counterpartyWallet.deriveNewAddress(zone, account);
     }
 }
