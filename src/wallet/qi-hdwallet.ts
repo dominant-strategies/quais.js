@@ -231,6 +231,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     private readonly privatekeyWallet: PrivatekeyQiWallet;
 
     /**
+     * Addresses used as outputs in the most recent sendTransaction/convertToQuai call. Pelagus reads this after a send
+     * to track addresses for failure recovery. Reset at the start of each prepareAndSendTransaction call.
+     */
+    public lastSendAddresses: string[] = [];
+
+    /**
      * @ignore
      * @type {AddressUsageCallback}
      */
@@ -330,13 +336,16 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     /**
-     * Synchronously retrieves the next address for the specified account and zone.
+     * Synchronously retrieves the next address for the specified account and zone. Reuses an existing UNUSED or
+     * ATTEMPTED_USE address before deriving a new one to prevent unnecessary gaps in the derivation sequence.
      *
      * @param {number} account - The account number.
      * @param {Zone} zone - The zone.
      * @returns {QiAddressInfo} The next Qi address information.
      */
     public getNextAddressSync(account: number, zone: Zone): QiAddressInfo {
+        const reusable = this.externalBip44.getReusableAddress(zone, account);
+        if (reusable) return reusable;
         return this.externalBip44.deriveNewAddress(zone, account);
     }
 
@@ -359,6 +368,8 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {NeuteredAddressInfo} The next change neutered address information.
      */
     public getNextChangeAddressSync(account: number, zone: Zone): QiAddressInfo {
+        const reusable = this.changeBip44.getReusableAddress(zone, account);
+        if (reusable) return reusable;
         return this.changeBip44.deriveNewAddress(zone, account);
     }
 
@@ -590,15 +601,44 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         this.validateZone(originZone);
         this.validateZone(destinationZone);
 
+        const alreadySelected = new Set<string>();
         const getDestinationAddresses = async (count: number): Promise<string[]> => {
+            // Collect all candidate addresses (reusable + newly derived)
+            const candidates: QiAddressInfo[] = [];
+            while (candidates.length < count) {
+                const addrInfo = this.getNextSendAddress(recipientPaymentCode, destinationZone, 0, alreadySelected);
+                candidates.push(addrInfo);
+                alreadySelected.add(addrInfo.address);
+            }
+
+            // Batch check all candidates in a single RPC call
+            const results = await this.batchCheckAddresses(candidates.map((a) => a.address));
+
+            // Process results: keep unused, mark used ones
             const addresses: string[] = [];
-            while (addresses.length < count) {
-                const address = this.getNextSendAddress(recipientPaymentCode, destinationZone).address;
-                const { isUsed } = await this.checkAddressUse(address);
-                if (!isUsed) {
-                    addresses.push(address);
+            for (const addrInfo of candidates) {
+                const result = results.get(addrInfo.address);
+                if (result?.isUsed) {
+                    addrInfo.status = AddressStatus.USED;
+                } else {
+                    addrInfo.status = AddressStatus.ATTEMPTED_USE;
+                    addresses.push(addrInfo.address);
                 }
             }
+
+            // If some were used on-chain, we need more — derive and check individually
+            while (addresses.length < count) {
+                const addrInfo = this.getNextSendAddress(recipientPaymentCode, destinationZone, 0, alreadySelected);
+                alreadySelected.add(addrInfo.address);
+                const { isUsed } = await this.checkAddressUse(addrInfo.address);
+                if (!isUsed) {
+                    addrInfo.status = AddressStatus.ATTEMPTED_USE;
+                    addresses.push(addrInfo.address);
+                } else {
+                    addrInfo.status = AddressStatus.USED;
+                }
+            }
+
             return addresses;
         };
 
@@ -898,6 +938,9 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         // Calculate actual fee from the constructed transaction
         const actualFee = this.calculateActualTransactionFee(tx);
         console.log('Actual Tx fee: ', Number(actualFee) / 1000);
+
+        // Store send addresses for external tracking (failure recovery)
+        this.lastSendAddresses = [...sendAddresses];
 
         // Sign the transaction
         const signedTx = await this.signTransaction(tx);
@@ -1371,7 +1414,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             throw new Error('Provider is required for scanning');
         }
 
+        const scanStart = Date.now();
+        const logScan = (msg: string) =>
+            console.log(`[QiHDWallet.scan] ${msg} (${((Date.now() - scanStart) / 1000).toFixed(1)}s elapsed)`);
+
         // Get current block once for all sub-wallets
+        logScan('Getting current block...');
         const block = await this.provider.getBlock(toShard(zone), 'latest');
         if (!block) {
             throw new Error(`Failed to get latest block for zone ${zone}`);
@@ -1380,21 +1428,22 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             hash: block.hash,
             number: block.woHeader.number,
         };
+        logScan(`Got block #${currentBlock.number}`);
 
         // Collect all sub-wallets that need scanning
-        // Note: We cast selfWallet from Readonly<Bip47QiWalletSelf> to AbstractQiWallet
-        // because we need to call methods that modify wallet state during scanning
         const subWallets: AbstractQiWallet[] = [
             this.externalBip44 as AbstractQiWallet,
             this.changeBip44 as AbstractQiWallet,
             ...Array.from(this.paymentChannels.values()).map((pc) => pc.selfWallet as unknown as AbstractQiWallet),
             this.privatekeyWallet as AbstractQiWallet,
         ];
+        logScan(`${subWallets.length} sub-wallets (gap limits: ${subWallets.map((w) => w.getGapLimit()).join(', ')})`);
 
         // Track created outpoints for all wallets
         const createdOutpoints: OutpointDeltaResponseType = {};
 
         // Phase 1: Prepare all wallets and collect existing addresses
+        logScan('Phase 1: Preparing wallets and collecting existing addresses...');
         const walletAddresses: Map<AbstractQiWallet, string[]> = new Map();
         const allAddresses: string[] = [];
 
@@ -1404,10 +1453,13 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             walletAddresses.set(wallet, addressStrings);
             allAddresses.push(...addressStrings);
         }
+        logScan(`Phase 1 done: ${allAddresses.length} existing addresses across ${subWallets.length} wallets`);
 
         // Phase 2: Batch check all existing addresses at once
+        logScan(`Phase 2: Batch checking ${allAddresses.length} addresses on-chain...`);
         if (allAddresses.length > 0) {
             const results = await this.batchCheckAddresses(allAddresses);
+            logScan(`Phase 2: Got ${results.size} results, applying to wallets...`);
 
             // Apply results to each wallet
             for (const wallet of subWallets) {
@@ -1422,9 +1474,61 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 wallet.applyOutpointResults(walletResults, currentBlock, createdOutpoints);
             }
         }
+        logScan('Phase 2 done');
 
         // Phase 3: Generate new addresses until gap limit is reached for all wallets
+        logScan('Phase 3: Generating addresses to gap limit...');
         await this.generateAddressesToGapLimitConsolidated(subWallets, zone, account, currentBlock, createdOutpoints);
+        logScan('Phase 3 done — scan complete');
+    }
+
+    /**
+     * Performs a deep scan of all sub-wallets with an extended gap limit to recover addresses and UTXOs that may have
+     * been created beyond the normal gap limit. This is useful for users who may have missed UTXOs due to previously
+     * skipped addresses.
+     *
+     * @param {Zone} zone - The zone to scan.
+     * @param {number} [account=0] - The account index to scan. Default is `0`
+     * @param {number} [extraAddresses=100] - Number of extra addresses to scan beyond the normal gap limit. Default is
+     *   `100`
+     * @returns {Promise<void>} A promise that resolves when the deep scan is complete.
+     */
+    public async deepScan(zone: Zone, account: number = 0, extraAddresses: number = 100): Promise<void> {
+        if (!this.provider) {
+            throw new Error('Provider is required for deep scanning');
+        }
+
+        // Collect all sub-wallets
+        const subWallets: AbstractQiWallet[] = [
+            this.externalBip44 as AbstractQiWallet,
+            this.changeBip44 as AbstractQiWallet,
+            ...Array.from(this.paymentChannels.values()).map((pc) => pc.selfWallet as unknown as AbstractQiWallet),
+            this.privatekeyWallet as AbstractQiWallet,
+        ];
+
+        // Save original gap limits and temporarily increase them
+        // Skip wallets with gap limit 0 (e.g. PrivatekeyQiWallet — cannot derive new addresses)
+        const originalLimits = new Map<AbstractQiWallet, number>();
+        for (const wallet of subWallets) {
+            const original = wallet.getGapLimit();
+            originalLimits.set(wallet, original);
+            if (original > 0) {
+                wallet.setGapLimit(original + extraAddresses);
+            }
+        }
+
+        try {
+            // Run a full scan with the extended gap limits
+            await this.scan(zone, account);
+        } finally {
+            // Restore original gap limits
+            for (const wallet of subWallets) {
+                const original = originalLimits.get(wallet);
+                if (original !== undefined) {
+                    wallet.setGapLimit(original);
+                }
+            }
+        }
     }
 
     /**
@@ -1441,12 +1545,15 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     ): Promise<void> {
         // Track which wallets still need more addresses
         let walletsNeedingMore = subWallets.filter((w) => w.getGapLimit() > 0);
+        let iteration = 0;
 
         while (walletsNeedingMore.length > 0) {
+            iteration++;
             // Derive addresses for all wallets that need more
             const walletNewAddresses: Map<AbstractQiWallet, QiAddressInfo[]> = new Map();
             const allNewAddresses: string[] = [];
 
+            const deriveStart = Date.now();
             for (const wallet of walletsNeedingMore) {
                 const status = wallet.getGapLimitStatus(zone, account);
                 if (status.needsMore && status.addressesToGenerate > 0) {
@@ -1455,14 +1562,22 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                     allNewAddresses.push(...newAddresses.map((addr) => addr.address));
                 }
             }
+            console.log(
+                `[Phase3] Iteration ${iteration}: derived ${allNewAddresses.length} addresses for ${walletsNeedingMore.length} wallets in ${Date.now() - deriveStart}ms`,
+            );
 
             // If no addresses to check, we're done
             if (allNewAddresses.length === 0) {
+                console.log(`[Phase3] No more addresses to check, done`);
                 break;
             }
 
             // Batch check all new addresses at once
+            const rpcStart = Date.now();
             const results = await this.batchCheckAddresses(allNewAddresses);
+            console.log(
+                `[Phase3] Iteration ${iteration}: batch checked ${allNewAddresses.length} addresses in ${Date.now() - rpcStart}ms`,
+            );
 
             // Apply results to each wallet and check if they need more addresses
             const stillNeedMore: AbstractQiWallet[] = [];
@@ -1496,8 +1611,12 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 }
             }
 
+            console.log(
+                `[Phase3] Iteration ${iteration}: ${stillNeedMore.length}/${walletsNeedingMore.length} wallets still need more`,
+            );
             walletsNeedingMore = stillNeedMore;
         }
+        console.log(`[Phase3] Complete after ${iteration} iterations`);
     }
 
     /**
@@ -1956,12 +2075,17 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      * @returns {Promise<string>} A promise that resolves to the payment address for sending funds.
      * @throws {Error} Throws an error if the payment code version is invalid.
      */
-    public getNextSendAddress(receiverPaymentCode: string, zone: Zone, account: number = 0): QiAddressInfo {
+    public getNextSendAddress(
+        receiverPaymentCode: string,
+        zone: Zone,
+        account: number = 0,
+        exclude?: Set<string>,
+    ): QiAddressInfo {
         if (!this.paymentChannels.has(receiverPaymentCode)) {
             throw new Error(`Receiver payment code ${receiverPaymentCode} not found in wallet`);
         }
         const paymentChannel = this.paymentChannels.get(receiverPaymentCode);
-        return paymentChannel!.getNextSendingAddress(zone, account);
+        return paymentChannel!.getNextSendingAddress(zone, account, exclude);
     }
 
     /**

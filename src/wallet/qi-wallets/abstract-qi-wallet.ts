@@ -122,7 +122,7 @@ export abstract class AbstractQiWallet {
     // map of address to outpoint info
     protected availableOutpoints: Map<string, OutpointInfo> = new Map();
 
-    protected gapLimit: number = 25;
+    protected gapLimit: number = 5;
 
     constructor(gapLimit: number) {
         this.gapLimit = gapLimit;
@@ -454,6 +454,30 @@ export abstract class AbstractQiWallet {
     }
 
     /**
+     * Finds a reusable address (UNUSED or ATTEMPTED_USE) for the given zone and account. Prefers UNUSED. ATTEMPTED_USE
+     * addresses are usually funded on-chain (from confirmed txs) but in rare cases are genuinely unused
+     * (failed/timed-out txs). The caller must verify on-chain status via checkAddressUse before using the returned
+     * address.
+     *
+     * @param {Zone} zone - The zone to find an address for
+     * @param {number} account - The account number
+     * @param {Set<string>} [exclude] - Addresses to exclude (already selected in current tx)
+     * @returns {QiAddressInfo | null} A reusable address, or null if none found
+     */
+    public getReusableAddress(zone: Zone, account: number, exclude?: Set<string>): QiAddressInfo | null {
+        let attemptedFallback: QiAddressInfo | null = null;
+        for (const addr of this.addresses.values()) {
+            if (addr.zone !== zone || addr.account !== account) continue;
+            if (exclude?.has(addr.address)) continue;
+            if (addr.status === AddressStatus.UNUSED) return addr;
+            if (addr.status === AddressStatus.ATTEMPTED_USE && !attemptedFallback) {
+                attemptedFallback = addr;
+            }
+        }
+        return attemptedFallback;
+    }
+
+    /**
      * Derives a new address for a specific zone and optional account.
      *
      * @param {Zone} zone - The zone to derive the address for
@@ -522,12 +546,16 @@ export abstract class AbstractQiWallet {
         }
 
         // Reset status and lastSyncedBlock for all addresses in this zone
+        // Preserve UNUSED and ATTEMPTED_USE statuses so addresses remain eligible
+        // for reuse after the scan (the scan's Phase 2 will mark funded ones as USED)
         const addressesInZone = this.getAddressesInZone(zone);
         for (const address of addressesInZone) {
-            // Create updated address with reset status and lastSyncedBlock
+            const preserveStatus =
+                address.status === AddressStatus.UNUSED || address.status === AddressStatus.ATTEMPTED_USE;
+
             const updatedAddress: QiAddressInfo = {
                 ...address,
-                status: AddressStatus.UNKNOWN,
+                status: preserveStatus ? address.status : AddressStatus.UNKNOWN,
                 lastSyncedBlock: null,
             };
 
@@ -1237,5 +1265,12 @@ export abstract class AbstractQiWallet {
      */
     public getGapLimit(): number {
         return this.gapLimit;
+    }
+
+    /**
+     * Sets the gap limit for this wallet.
+     */
+    public setGapLimit(limit: number): void {
+        this.gapLimit = limit;
     }
 }
