@@ -54,6 +54,15 @@ export class PaymentChannel {
         return this.#selfWallet.getAddressesForAccount(account);
     }
 
+    /**
+     * Returns the next receiving address for this payment channel. Reuses an existing UNUSED or ATTEMPTED_USE address
+     * before deriving a new one.
+     *
+     * **Stability warning**: this method does NOT mutate the returned address's status. Repeated calls without an
+     * intervening state change will return the SAME address. This is intentional — a payment-code receive address
+     * should remain stable until the counterparty has actually used it. Callers that need a fresh address per call must
+     * track consumed addresses themselves or mark the returned address USED/ATTEMPTED_USE.
+     */
     public getNextReceivingAddress(zone: Zone, account: number = 0): QiAddressInfo {
         const reusable = this.#selfWallet.getReusableAddress(zone, account);
         if (reusable) return reusable;

@@ -336,8 +336,18 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     /**
-     * Synchronously retrieves the next address for the specified account and zone. Reuses an existing UNUSED or
-     * ATTEMPTED_USE address before deriving a new one to prevent unnecessary gaps in the derivation sequence.
+     * Synchronously retrieves the next external BIP44 address for the specified account and zone. Reuses an existing
+     * UNUSED or ATTEMPTED_USE address before deriving a new one to prevent unnecessary gaps in the derivation
+     * sequence.
+     *
+     * **Stability warning**: this method does NOT mutate the returned address's status. Repeated calls without an
+     * intervening scan or external state change will return the SAME address until the caller either (a) causes the
+     * address to be marked USED on-chain (e.g. by funding it), or (b) explicitly marks it USED/ATTEMPTED_USE via
+     * setAddressStatus.
+     *
+     * This is intentional for reuse-oriented callers (e.g. Qi→Quai conversion refund addresses) where stable reuse of
+     * the same unused address is desirable. Callers that need a unique address per call must track consumed addresses
+     * themselves.
      *
      * @param {number} account - The account number.
      * @param {Zone} zone - The zone.
@@ -833,6 +843,10 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
         if (!this.provider) {
             throw new Error('Provider is not set');
         }
+
+        // Reset at the start so callers that read lastSendAddresses after a failed
+        // send do not see stale data from a prior successful send.
+        this.lastSendAddresses = [];
 
         const currentBlock = await this.provider.getBlock(toShard(originZone), 'latest')!;
         // 1. Select the UXTOs from the specified zone to use as inputs, and generate the spend and change outputs
@@ -1489,13 +1503,18 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
      *
      * @param {Zone} zone - The zone to scan.
      * @param {number} [account=0] - The account index to scan. Default is `0`
-     * @param {number} [extraAddresses=100] - Number of extra addresses to scan beyond the normal gap limit. Default is
-     *   `100`
+     * @param {number} [extraAddresses=100] - Number of extra addresses to scan beyond the normal gap limit. Must be a
+     *   finite non-negative integer. Default is `100`
      * @returns {Promise<void>} A promise that resolves when the deep scan is complete.
+     * @throws {Error} If extraAddresses is not a finite non-negative integer.
      */
     public async deepScan(zone: Zone, account: number = 0, extraAddresses: number = 100): Promise<void> {
         if (!this.provider) {
             throw new Error('Provider is required for deep scanning');
+        }
+
+        if (!Number.isFinite(extraAddresses) || !Number.isInteger(extraAddresses) || extraAddresses < 0) {
+            throw new Error(`Invalid extraAddresses: ${extraAddresses} — must be a finite non-negative integer`);
         }
 
         // Collect all sub-wallets
@@ -1620,8 +1639,14 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
     }
 
     /**
-     * Batch checks multiple addresses for usage using a single RPC call. Automatically splits into multiple batches if
-     * over 10,000 addresses.
+     * Batch checks multiple addresses for on-chain usage using a single RPC call per batch of 10,000. An address is
+     * considered used if getOutpointsByAddresses returns any outpoints for it.
+     *
+     * **Limitation**: this method does NOT consult the custom `_addressUseChecker` callback (unlike
+     * {@link checkAddressUse}). Consumers that register a custom address-use checker via `addAddressCallback` must use
+     * {@link checkAddressUse} directly if they need that checker's result to participate in the usage determination. All
+     * scan/sync/gap-limit paths in this wallet intentionally rely only on on-chain state here and do not go through the
+     * custom checker.
      *
      * @private
      */

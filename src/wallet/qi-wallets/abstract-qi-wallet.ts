@@ -525,8 +525,12 @@ export abstract class AbstractQiWallet {
     }
 
     /**
-     * Resets the wallet state for a specific zone by clearing outpoints and resetting address statuses. This resets all
-     * address status to UNKNOWN and sets lastSyncedBlock to null for addresses in the zone.
+     * Resets the wallet state for a specific zone by clearing outpoints and resetting address statuses in preparation
+     * for a fresh scan. Clears all in-memory outpoints in the zone and sets lastSyncedBlock to null for every address.
+     *
+     * Address status is reset to UNKNOWN EXCEPT for addresses marked UNUSED or ATTEMPTED_USE, which are preserved so
+     * they remain eligible for reuse by getReusableAddress after the scan. The scan's Phase 2 will overwrite them with
+     * USED if on-chain outpoints are found.
      *
      * @param {Zone} zone - The zone to reset state for
      * @protected
@@ -1268,9 +1272,16 @@ export abstract class AbstractQiWallet {
     }
 
     /**
-     * Sets the gap limit for this wallet.
+     * Sets the gap limit for this wallet. The limit must be a finite non-negative integer — negative, non-integer, or
+     * non-finite values throw to prevent undefined behavior in scan/gapLimit calculations.
+     *
+     * @param {number} limit - The new gap limit (finite, integer, >= 0)
+     * @throws {Error} If limit is not a finite non-negative integer
      */
     public setGapLimit(limit: number): void {
+        if (!Number.isFinite(limit) || !Number.isInteger(limit) || limit < 0) {
+            throw new Error(`Invalid gap limit: ${limit} — must be a finite non-negative integer`);
+        }
         this.gapLimit = limit;
     }
 }
