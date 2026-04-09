@@ -119,6 +119,14 @@ export interface QiTransactionOptions {
      * Optional transaction data payload.
      */
     data?: Uint8Array;
+
+    /**
+     * Optional callback invoked when send addresses are released during fee estimation. This happens when a
+     * re-estimation determines fewer output addresses are needed — the excess addresses are marked UNUSED and this
+     * callback is called with the released address strings. Callers can use this to remove the addresses from any
+     * exclude/reservation set so they can be reused in subsequent iterations.
+     */
+    onSendAddressesReleased?: (addresses: string[]) => void;
 }
 
 /**
@@ -624,11 +632,17 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             // Batch check all candidates in a single RPC call
             const results = await this.batchCheckAddresses(candidates.map((a) => a.address));
 
-            // Process results: keep unused, mark used ones
+            // Process results: keep unused, mark used ones.
+            // Also consult _addressUseChecker for addresses that have no outpoints,
+            // since batchCheckAddresses only checks on-chain state.
             const addresses: string[] = [];
             for (const addrInfo of candidates) {
                 const result = results.get(addrInfo.address);
-                if (result?.isUsed) {
+                let used = result?.isUsed ?? false;
+                if (!used && this._addressUseChecker) {
+                    used = await this._addressUseChecker(addrInfo.address);
+                }
+                if (used) {
                     addrInfo.status = AddressStatus.USED;
                 } else {
                     addrInfo.status = AddressStatus.ATTEMPTED_USE;
@@ -657,7 +671,14 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
             originZone,
             getDestinationAddresses,
             (utxos) => new FewestCoinSelector(utxos),
-            options,
+            {
+                ...options,
+                onSendAddressesReleased: (released) => {
+                    for (const addr of released) {
+                        alreadySelected.delete(addr);
+                    }
+                },
+            },
         );
     }
 
@@ -922,10 +943,16 @@ export class QiHDWallet extends AbstractHDWallet<QiAddressInfo> {
                 const newSendAddresses = await getDestinationAddresses(spendAddressesNeeded);
                 sendAddresses.push(...newSendAddresses);
             } else if (spendAddressesNeeded < 0) {
-                // Remove excess send addresses from the array and reset their status
+                // Remove excess send addresses from the array and reset their status.
                 const removedAddresses = sendAddresses.splice(spendAddressesNeeded);
                 for (const addr of removedAddresses) {
                     this.setAddressStatus(addr, AddressStatus.UNUSED);
+                }
+                // Notify the caller so it can release these addresses from any
+                // exclude/reservation set, allowing them to be reused if a subsequent
+                // fee-estimation iteration needs more addresses.
+                if (options.onSendAddressesReleased) {
+                    options.onSendAddressesReleased(removedAddresses);
                 }
             }
 
