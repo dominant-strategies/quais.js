@@ -31,6 +31,7 @@ export class MockProvider implements Provider {
     private _lockedBalances: Map<string, bigint> = new Map();
     private _outpoints: Map<string, Array<Outpoint>> = new Map();
     private _estimateFeeForQi: Map<string, number> = new Map();
+    private _defaultEstimateFeeForQi: bigint | null = null;
     private _signedTransaction: string = '';
     private _eventHandlers: Map<
         string,
@@ -65,12 +66,19 @@ export class MockProvider implements Provider {
         this._estimateFeeForQi.set(key, output);
     }
 
+    public setDefaultEstimateFeeForQi(output: bigint): void {
+        this._defaultEstimateFeeForQi = output;
+    }
+
     // mock estimateFeeForQi method
     async estimateFeeForQi(input: QiPerformActionTransaction): Promise<bigint> {
         const key = JSON.stringify(input, bigIntSerializer);
 
-        const fee = this._estimateFeeForQi.get(key) ?? 0;
-        return BigInt(fee);
+        const fee = this._estimateFeeForQi.get(key);
+        if (fee != null) {
+            return BigInt(fee);
+        }
+        return this._defaultEstimateFeeForQi ?? BigInt(0);
     }
 
     // Helper methods to set the transaction to be used by the mock provider
@@ -130,7 +138,7 @@ export class MockProvider implements Provider {
         throw new Error('Broadcast transaction not implemented for Quai');
     }
 
-    async getOutpointDeltas(): Promise<OutpointDeltas> {
+    async getOutpointDeltas(_addresses?: string[], _startHash?: string, _endHash?: string): Promise<OutpointDeltas> {
         // TODO: Implement
         throw new Error('Method not implemented.');
     }
