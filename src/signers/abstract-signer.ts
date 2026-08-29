@@ -102,7 +102,7 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
 
     async populateQuaiTransaction(tx: QuaiTransactionRequest): Promise<QuaiTransactionLike> {
         const provider = checkProvider(this, 'populateTransaction');
-        const zone = await this.zoneFromAddress(tx.from);
+        const zone = tx.from != null ? await this.zoneFromAddress(tx.from) : await this.zoneFromAddress(addressFromTransactionRequest(tx));
 
         const pop = (await populate(this, tx)) as QuaiTransactionLike;
 

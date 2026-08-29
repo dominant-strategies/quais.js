@@ -67,7 +67,8 @@ export function formatMixedCaseChecksumAddress(address: string): string {
 export function getAddress(address: string): string {
     assertArgument(typeof address === 'string', 'invalid address', 'address', address);
 
-    if (address.match(/^(0x)?[0-9a-fA-F]{40}$/)) {
+    // Quai addresses are 42 hex chars: 0x + 2 char zone prefix + 40 hex chars
+    if (address.match(/^(0x)?[0-9a-fA-F]{42}$/)) {
         // Missing the 0x prefix
         if (!address.startsWith('0x')) {
             address = '0x' + address;

@@ -86,7 +86,8 @@ async function checkAddress(target: any, promise: Promise<null | string>): Promi
  */
 export function resolveAddress(target: AddressLike): string | Promise<string> {
     if (typeof target === 'string') {
-        if (target.match(/^0x[0-9a-f]{40}$/i)) {
+        // Quai addresses are 42 hex chars: 0x + 2 char zone prefix + 40 hex chars
+        if (target.match(/^0x[0-9a-f]{42}$/i)) {
             return target;
         }
     } else if (isAddressable(target)) {
@@ -107,8 +108,9 @@ export function resolveAddress(target: AddressLike): string | Promise<string> {
  */
 export function validateAddress(address: string): void {
     assertArgument(typeof address === 'string', 'address must be string', 'address', address);
+    // Quai addresses are 42 hex chars: 0x + 2 char zone prefix + 40 hex chars
     assertArgument(
-        Boolean(address.match(/^(0x)?[0-9a-fA-F]{40}$/)),
+        Boolean(address.match(/^(0x)?[0-9a-fA-F]{42}$/)),
         'invalid address string format',
         'address',
         address,
