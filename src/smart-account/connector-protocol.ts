@@ -6,7 +6,9 @@ export interface SendCalls {
     chainId: string;
     account: string;
     calls: { to: string; value: string; data: string }[];
-    /** Durable dApp-generated correlation ID. Persist it before opening the wallet. */
+    /**
+     * Durable dApp-generated correlation ID. Persist it before opening the wallet.
+     */
     requestId?: string;
 }
 export interface SignMessage {
@@ -30,7 +32,9 @@ export interface DepositTransfer {
     account: string;
     routeId: DepositRouteId;
     sourceHash: string;
-    /** Durable dApp-generated correlation ID for recovery submissions. */
+    /**
+     * Durable dApp-generated correlation ID for recovery submissions.
+     */
     requestId?: string;
 }
 export interface WalletDepositPlan {
@@ -83,6 +87,12 @@ export interface WalletCapabilities {
         guaranteed: false;
         userFeeWei?: string;
     };
+    /**
+     * The user lets this app's eligible swaps skip the wallet review, and their signer prompts outside the wallet
+     * window. The app may leave the wallet in the background for swaps; the wallet still sends `attention` when a
+     * request needs the user there.
+     */
+    backgroundSwaps?: boolean;
 }
 export interface WalletOperation {
     id: string;
@@ -142,9 +152,8 @@ function object(value: unknown, keys: string[]): Record<string, unknown> {
 }
 export function parseCalls(value: unknown): SendCalls {
     const raw = value as Record<string, unknown> | null;
-    const keys = raw?.requestId === undefined
-        ? ['chainId', 'account', 'calls']
-        : ['chainId', 'account', 'calls', 'requestId'];
+    const keys =
+        raw?.requestId === undefined ? ['chainId', 'account', 'calls'] : ['chainId', 'account', 'calls', 'requestId'];
     const v = object(value, keys);
     if (
         !uint(v.chainId) ||
@@ -197,14 +206,16 @@ export function parseDepositQuote(value: unknown): DepositQuote {
         !addr(v.sourceSender) ||
         !uint(v.amount) ||
         v.amount === '0'
-    ) throw new Error('Invalid deposit quote request');
+    )
+        throw new Error('Invalid deposit quote request');
     return v as unknown as DepositQuote;
 }
 export function parseDepositTransfer(value: unknown): DepositTransfer {
     const raw = value as Record<string, unknown> | null;
-    const keys = raw?.requestId === undefined
-        ? ['chainId', 'account', 'routeId', 'sourceHash']
-        : ['chainId', 'account', 'routeId', 'sourceHash', 'requestId'];
+    const keys =
+        raw?.requestId === undefined
+            ? ['chainId', 'account', 'routeId', 'sourceHash']
+            : ['chainId', 'account', 'routeId', 'sourceHash', 'requestId'];
     const v = object(value, keys);
     if (
         v.chainId !== '9' ||
@@ -213,7 +224,8 @@ export function parseDepositTransfer(value: unknown): DepositTransfer {
         typeof v.sourceHash !== 'string' ||
         !/^0x[0-9a-fA-F]{64}$/.test(v.sourceHash) ||
         (v.requestId !== undefined && !isConnectorUuid(v.requestId))
-    ) throw new Error('Invalid deposit transfer request');
+    )
+        throw new Error('Invalid deposit transfer request');
     return v as unknown as DepositTransfer;
 }
 export function parseRequest(value: unknown): ConnectorRequest {
@@ -263,6 +275,21 @@ export class WalletConnectorError extends Error {
         super(message);
         this.name = 'WalletConnectorError';
     }
+}
+/**
+ * The signer declined before producing a signature: EIP-1193 4001, including ethers' ACTION_REJECTED and provider
+ * errors wrapped in another error.
+ */
+export function isUserRejection(error: unknown): boolean {
+    const queue: unknown[] = [error];
+    for (let i = 0; i < queue.length && i < 16; i++) {
+        const value = queue[i];
+        if (!value || typeof value !== 'object') continue;
+        const v = value as Record<string, unknown>;
+        if (v.code === 4001 || v.code === 'ACTION_REJECTED') return true;
+        for (const key of ['cause', 'error', 'info']) if (v[key] && typeof v[key] === 'object') queue.push(v[key]);
+    }
+    return false;
 }
 export function trustedOrigin(value: string): string {
     const url = new URL(value);
@@ -352,7 +379,8 @@ export function parseResult(method: WalletMethod, result: unknown): unknown {
             !/^0x(?:[0-9a-fA-F]{2})*$/.test(transaction.data) ||
             transaction.value !== '0' ||
             ![1, 8453].includes(Number(transaction.chainId))
-        ) throw new Error('Invalid deposit plan');
+        )
+            throw new Error('Invalid deposit plan');
     }
     if (method === 'getDepositStatus') {
         if (
@@ -378,7 +406,8 @@ export function parseResult(method: WalletMethod, result: unknown): unknown {
             (v.destinationHash !== undefined &&
                 (typeof v.destinationHash !== 'string' || !/^0x[0-9a-fA-F]{64}$/.test(v.destinationHash))) ||
             (v.receivedAmount !== undefined && !uint(v.receivedAmount))
-        ) throw new Error('Invalid deposit status');
+        )
+            throw new Error('Invalid deposit status');
     }
     if (method === 'getCapabilities') {
         const p = v.payment as Record<string, unknown> | undefined;
@@ -394,7 +423,8 @@ export function parseResult(method: WalletMethod, result: unknown): unknown {
             !['sponsored', 'user-paid', 'mixed'].includes(p.mode) ||
             typeof p.quotes !== 'boolean' ||
             p.guaranteed !== false ||
-            (p.userFeeWei !== undefined && !uint(p.userFeeWei))
+            (p.userFeeWei !== undefined && !uint(p.userFeeWei)) ||
+            (v.backgroundSwaps !== undefined && typeof v.backgroundSwaps !== 'boolean')
         )
             throw new Error('Invalid capabilities');
     } else if (method === 'getFeeQuote') {

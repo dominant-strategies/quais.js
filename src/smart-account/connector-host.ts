@@ -6,6 +6,7 @@ import {
     type ConnectorMessageEvent,
     boundedMessage,
     isConnectorUuid,
+    isUserRejection,
     parseParams,
     parseRequest,
     trustedOrigin,
@@ -14,6 +15,11 @@ import {
 export interface HostContext {
     origin: string;
     signal: AbortSignal;
+    /**
+     * Ask the app to bring the wallet window forward because this request needs the user here. Browsers only let the
+     * app raise a window shortly after a click.
+     */
+    attention(): void;
 }
 /**
  * No signer/relay knowledge here. The handler MUST enforce connection consent and action review.
@@ -132,21 +138,47 @@ export function serveWalletRequests(options: {
         }
         const abort = new AbortController();
         active = { id: request.id, abort };
+        const attention = () => {
+            if (disposed || !source || abort.signal.aborted || active?.id !== request.id) return;
+            try {
+                source.postMessage(
+                    {
+                        protocol: CONNECTOR_PROTOCOL,
+                        version: 1,
+                        channel: options.channel,
+                        type: 'attention',
+                        id: request.id,
+                    },
+                    origin,
+                );
+            } catch {
+                /* Peer closed. */
+            }
+        };
         void options
-            .handle(request, { origin, signal: abort.signal })
+            .handle(request, { origin, signal: abort.signal, attention })
             .then((result) => {
                 if (!abort.signal.aborted) reply(request.id, result);
             })
             .catch((error: unknown) => {
-                if (!abort.signal.aborted)
-                    reply(request.id, undefined, {
-                        code: error instanceof WalletConnectorError ? error.code : 'REQUEST_FAILED',
-                        // Never pass provider errors, signatures or relay responses across origins.
-                        message:
-                            error instanceof WalletConnectorError
-                                ? error.message
-                                : 'The wallet could not complete this request. Check the wallet for details.',
-                    });
+                if (abort.signal.aborted) return;
+                // A declined signer prompt produced no signature, so nothing can be submitted.
+                const declined = !(error instanceof WalletConnectorError) && isUserRejection(error);
+                reply(request.id, undefined, {
+                    code:
+                        error instanceof WalletConnectorError
+                            ? error.code
+                            : declined
+                              ? 'USER_REJECTED'
+                              : 'REQUEST_FAILED',
+                    // Never pass provider errors, signatures or relay responses across origins.
+                    message:
+                        error instanceof WalletConnectorError
+                            ? error.message
+                            : declined
+                              ? 'User declined the request.'
+                              : 'The wallet could not complete this request. Check the wallet for details.',
+                });
             })
             .finally(() => {
                 active = undefined;

@@ -11,6 +11,11 @@ import { SmartAccountClient, createPopupTransport } from 'quais/smart-account';
 const wallet = new SmartAccountClient(
     createPopupTransport({
         walletUrl: 'https://wallet.qu.ai', // configure a trusted wallet host
+        // Only use background methods the chosen host explicitly supports.
+        backgroundMethods: ['sendCalls'],
+        onAttention(waiting) {
+            setShowOpenWallet(waiting);
+        },
     }),
 );
 // Call connect from a click handler so the browser permits the popup.
@@ -44,6 +49,9 @@ to transports with quote support; the current Quai Smart
 Wallet host advertises `payment.quotes: false` and rejects that method. All actions
 accepted by that host's relay are sponsored without reimbursement, subject to capacity.
 Capabilities do not reserve gas or guarantee admission.
+`backgroundSwaps: true` means the connected user has allowed eligible swaps from
+that app to skip the wallet host's review screen. It does not make arbitrary calls
+silent and does not guarantee that a signer prompt can stay in the background.
 
 A custom `WalletTransport` may replace the popup transport for native/mobile hosts.
 It must enforce the same consent, signing and response-validation requirements.
@@ -69,7 +77,13 @@ The reference Quai Smart Wallet host supplies these separately.
     opt specific methods into `backgroundMethods` and call `prepare({ focus: false })`
     to keep an existing window behind the dApp. This changes focus only: the host must
     still validate every request and bring itself forward whenever user review is
-    required.
+    required. When the host calls `HostContext.attention()`, the transport attempts to
+    focus it and invokes `onAttention(true)`. Browsers may reject programmatic focus,
+    so the app should display an **Open wallet** control whose click handler calls
+    `prepare()`. The transport invokes `onAttention(false)` when the request settles.
+-   A signer rejection using EIP-1193 code `4001` or ethers `ACTION_REJECTED` is
+    normalized to `USER_REJECTED`. Other unexpected provider errors are sanitized as
+    `REQUEST_FAILED`; raw provider text never crosses from the wallet host to the app.
 -   `AbortSignal`, popup closure and timeouts stop waiting. They cannot reverse a
     transaction already submitted. Inspect activity/status before any retry.
 -   Persist a UUIDv4 `requestId` before `sendCalls` or `recoverDeposit`. A conforming

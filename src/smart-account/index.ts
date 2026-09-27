@@ -3,7 +3,7 @@
  */
 export { SmartAccountClient, createPopupTransport } from './connector.js';
 export type { WalletTransport } from './connector.js';
-export { WalletConnectorError } from './connector-protocol.js';
+export { WalletConnectorError, isUserRejection } from './connector-protocol.js';
 export type {
     SendCalls,
     WalletAccount,

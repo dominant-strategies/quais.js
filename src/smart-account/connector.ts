@@ -28,7 +28,9 @@ export * from './connector-protocol.js';
  * Framework-, signer-, factory- and relay-independent request boundary.
  */
 export interface WalletTransport {
-    /** Open or focus the trusted wallet while the browser still recognizes a user gesture. */
+    /**
+     * Open or focus the trusted wallet while the browser still recognizes a user gesture.
+     */
     prepare?(options?: { focus?: boolean }): void;
     request(method: WalletMethod, params: unknown, signal?: AbortSignal): Promise<unknown>;
     destroy(): void;
@@ -38,28 +40,31 @@ export class SmartAccountClient {
     private queued = 0;
     private disposed = false;
     constructor(readonly transport: WalletTransport) {}
-    /** Includes the active request and requests waiting behind it. */
+    /**
+     * Includes the active request and requests waiting behind it.
+     */
     get pendingRequests() {
         return this.queued;
     }
-    /** Prepare the approval window synchronously before a dApp awaits RPC preflight. */
+    /**
+     * Prepare the approval window synchronously before a dApp awaits RPC preflight.
+     */
     prepare(options?: { focus?: boolean }) {
-        if (this.disposed)
-            throw new WalletConnectorError('DISCONNECTED', 'Connector disposed');
+        if (this.disposed) throw new WalletConnectorError('DISCONNECTED', 'Connector disposed');
         this.transport.prepare?.(options);
     }
     private request<T>(method: WalletMethod, params: unknown, signal?: AbortSignal): Promise<T> {
-        if (this.disposed)
-            return Promise.reject(new WalletConnectorError('DISCONNECTED', 'Connector disposed'));
+        if (this.disposed) return Promise.reject(new WalletConnectorError('DISCONNECTED', 'Connector disposed'));
         this.queued += 1;
         const run = this.tail.then(async () => {
-            if (this.disposed)
-                throw new WalletConnectorError('DISCONNECTED', 'Connector disposed');
-            if (signal?.aborted)
-                throw new WalletConnectorError('CANCELLED', 'Request cancelled');
+            if (this.disposed) throw new WalletConnectorError('DISCONNECTED', 'Connector disposed');
+            if (signal?.aborted) throw new WalletConnectorError('CANCELLED', 'Request cancelled');
             return this.transport.request(method, params, signal) as Promise<T>;
         });
-        this.tail = run.then(() => undefined, () => undefined);
+        this.tail = run.then(
+            () => undefined,
+            () => undefined,
+        );
         return run.finally(() => {
             this.queued -= 1;
         });
@@ -113,10 +118,16 @@ export function createPopupTransport(options: {
     walletUrl: string;
     timeoutMs?: number;
     /**
-     * Keep an existing wallet window in the background for these methods.
-     * This changes window focus only; the wallet host still validates and approves every request.
+     * Keep an existing wallet window in the background for these methods. This changes window focus only; the wallet
+     * host still validates and approves every request.
      */
     backgroundMethods?: readonly WalletMethod[];
+    /**
+     * Called with true when the wallet asks for the user during a pending request, and with false when that request
+     * settles. The transport tries to focus the wallet, but browsers only allow that shortly after a click, so also
+     * offer a control whose click handler calls `prepare()`.
+     */
+    onAttention?(waiting: boolean): void;
 }): WalletTransport {
     const browser = connectorBrowser();
     const url = new URL(options.walletUrl);
@@ -134,8 +145,7 @@ export function createPopupTransport(options: {
         disposed = false;
     let pending: { id: string; fail(error: Error): void } | undefined;
     const openPopup = (): WalletPopup => {
-        if (disposed)
-            throw new WalletConnectorError('DISCONNECTED', 'Connector disposed');
+        if (disposed) throw new WalletConnectorError('DISCONNECTED', 'Connector disposed');
         if (!popup || popup.closed) {
             channel = browser.crypto.randomUUID();
             const destination = new URL(url.toString());
@@ -158,8 +168,7 @@ export function createPopupTransport(options: {
                 }
             }
         }
-        if (!popup)
-            throw new WalletConnectorError('POPUP_BLOCKED', 'Allow the wallet popup and try again.');
+        if (!popup) throw new WalletConnectorError('POPUP_BLOCKED', 'Allow the wallet popup and try again.');
         return popup;
     };
     return {
@@ -202,13 +211,23 @@ export function createPopupTransport(options: {
                 peer.focus();
             }
             return new Promise((resolve, reject) => {
-                let sent = false;
+                let sent = false,
+                    waiting = false;
+                const notify = (value: boolean) => {
+                    waiting = value;
+                    try {
+                        options.onAttention?.(value);
+                    } catch {
+                        /* An app callback must not break the request. */
+                    }
+                };
                 const finish = (error?: Error, result?: unknown) => {
                     clearInterval(poll);
                     clearTimeout(timer);
                     browser.removeEventListener('message', receive);
                     signal?.removeEventListener('abort', abort);
                     pending = undefined;
+                    if (waiting) notify(false);
                     if (error) reject(error);
                     else resolve(result);
                 };
@@ -241,6 +260,16 @@ export function createPopupTransport(options: {
                     if (data.type === 'ready' && !sent) {
                         sent = true;
                         peer.postMessage(payload, origin);
+                        return;
+                    }
+                    if (data.type === 'attention' && data.id === id) {
+                        if (waiting) return;
+                        try {
+                            peer.focus();
+                        } catch {
+                            /* The app's fallback control can still focus it. */
+                        }
+                        notify(true);
                         return;
                     }
                     if (data.type !== 'response' || data.id !== id) return;
