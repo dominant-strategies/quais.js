@@ -135,10 +135,23 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
         if (pop.value) baseTx.value = pop.value;
         if (pop.gasPrice != null) baseTx.gasPrice = pop.gasPrice;
 
+        // Empty calldata can still execute a contract's receive function (e.g. a
+        // Safe proxy delegates to its singleton). Quai requires those accesses in
+        // the signed transaction too; do not use calldata as a contract-call test.
+        const accessListPromise =
+            pop.accessList != null
+                ? Promise.resolve(pop.accessList)
+                : pop.type === 0 || (pop.data && pop.data !== '0x')
+                  ? this.createAccessList(baseTx as unknown as QuaiTransactionRequest)
+                  : Promise.resolve(undefined);
+
         const gasLimitPromise = (async () => {
             if (pop.gasLimit != null && pop.gasLimit !== 0n) return pop.gasLimit;
             if (pop.type == 0) {
-                return await this.estimateGas(baseTx as unknown as TransactionRequest);
+                // Estimate the same access list that will be signed, including
+                // its intrinsic gas. An eth_call success alone does not enforce it.
+                const accessList = await accessListPromise;
+                return await this.estimateGas({ ...baseTx, accessList } as TransactionRequest);
             }
 
             // Special case for type 2 tx to bypass address out of scope in the node.
@@ -154,11 +167,6 @@ export abstract class AbstractSigner<P extends null | Provider = null | Provider
             const feeData = await provider.getFeeData(zone, true);
             return feeData.gasPrice;
         })();
-
-        const accessListPromise =
-            pop.data && pop.data !== '0x' && !tx.accessList
-                ? this.createAccessList(baseTx as unknown as QuaiTransactionRequest)
-                : Promise.resolve(tx.accessList);
 
         [pop.nonce, pop.gasLimit, pop.gasPrice, pop.accessList] = await Promise.all([
             noncePromise,
