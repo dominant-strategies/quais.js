@@ -158,6 +158,7 @@
     "update-symlink": "npm run clean && npm run build-all && npm rm -g quais -g && npm link",
     "stats": "echo 'Dependencies' && npm ls --all --omit=dev",
     "test": "NODE_ENV=test npm run test-esm",
+    "verify:quai:mainnet": "npm run build && node scripts/verify-quai-mainnet.mjs",
     "test-containers": "npm run containers-up && NODE_ENV=test npm run test; npm run containers-down",
     "test-integ-containers": "npm run containers-up && NODE_ENV=test npm run test-integ; npm run containers-down",
     "containers-up": "./start-test-containers.sh",

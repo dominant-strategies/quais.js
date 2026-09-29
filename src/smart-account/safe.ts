@@ -22,7 +22,7 @@ export type { SafeAddress, SafeCall, SafeHex, SafeTypedRequest } from './safe-ty
 import { SAFE_PROXY_CREATION_CODE, SAFE_RUNTIME_HASHES } from './safe-artifacts.js';
 import { QUAI_SAFE_PROFILE, QUAI_SAFE_PROXY_CREATION_CODE, QUAI_SAFE_RUNTIME_HASHES } from './quai-safe-artifacts.js';
 export { SAFE_RUNTIME_HASHES, SAFE_VERSION } from './safe-artifacts.js';
-export { QUAI_SAFE_PROFILE, QUAI_SAFE_RUNTIME_HASHES } from './quai-safe-artifacts.js';
+export { QUAI_SAFE_PROFILE, QUAI_SAFE_PROXY_CREATION_CODE, QUAI_SAFE_RUNTIME_HASHES } from './quai-safe-artifacts.js';
 
 export const SAFE_ABI = [
     'function setup(address[] owners,uint256 threshold,address to,bytes data,address fallbackHandler,address paymentToken,uint256 payment,address paymentReceiver)',

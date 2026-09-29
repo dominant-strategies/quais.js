@@ -1,7 +1,7 @@
 # Smart-account wallet connector (experimental)
 
-The `quais/smart-account` entry point provides a portable client and optional browser
-popup transport. It has no Privy, React, relay server, factory address, token catalog
+The `quais/smart-account` entry point provides a portable client and browser
+popup or embedded transport. It has no Privy, React, relay server, factory address, token catalog
 dependency for the connector. An optional Safe adapter is exported alongside it. It is not an ERC-4337 bundler client, an EIP-1193 provider,
 or a replacement for the existing native `Wallet` signer.
 
@@ -45,15 +45,20 @@ The selected wallet determines supported actions, contract implementation, signi
 provider and sponsorship. Check capabilities before using optional methods.
 `signMessage`, `getDepositQuote`, `getDepositStatus`, and `recoverDeposit` are
 available to hosts that advertise those capabilities. `getFeeQuote` is available
-to transports with quote support; the current Quai Smart
-Wallet host advertises `payment.quotes: false` and rejects that method. All actions
-accepted by that host's relay are sponsored without reimbursement, subject to capacity.
-Capabilities do not reserve gas or guarantee admission.
+to transports with quote support; the current Quai Smart Wallet host advertises
+`payment.quotes: false` and rejects that method. Its payment mode depends on relay
+configuration: setup-only mode sponsors account creation and requires user-paid
+execution afterward; a sponsored mode can cover admitted actions. Capabilities
+do not reserve gas or guarantee admission.
 `backgroundSwaps: true` means the connected user has allowed eligible swaps from
 that app to skip the wallet host's review screen. It does not make arbitrary calls
 silent and does not guarantee that a signer prompt can stay in the background.
 
-A custom `WalletTransport` may replace the popup transport for native/mobile hosts.
+A dApp embedded inside the trusted wallet page can use `createEmbeddedTransport`
+with an exact configured wallet origin, a channel supplied by that wallet, and
+`window.parent`. It uses the same request validation and never opens a popup.
+Do not accept an arbitrary wallet origin from a URL or an untrusted parent frame.
+A custom `WalletTransport` may replace either browser transport for native/mobile hosts.
 It must enforce the same consent, signing and response-validation requirements.
 `serveWalletRequests` supplies source/origin/channel validation for browser hosts.
 With the popup transport, omit `source` so the host binds the source from the
@@ -104,7 +109,8 @@ supported signers must be tested by integrating wallet hosts before production u
 ## Safe 1.4.1 adapter
 
 The same entry point exports pure upstream Safe helpers, without a default deployment,
-RPC, UI or signer. Supply independently verified contract addresses:
+RPC, UI or signer. Supply independently verified contract addresses. The confirmed
+Quai mainnet v5 reference can be selected explicitly:
 
 ```ts
 import {
@@ -116,8 +122,11 @@ import {
     safeSigner,
     verifySafeDeployment,
     verifySafeAccount,
-    TypedDataEncoder,
-} from 'quais';
+    QUAI_SAFE_MAINNET_V5,
+} from 'quais/smart-account';
+import { TypedDataEncoder } from 'quais';
+
+const { factory, safe: deployment } = QUAI_SAFE_MAINNET_V5;
 
 const predicted = findSafe(factory, owner, deployment);
 const setup = encodeSafeCreate(owner, factory, deployment);

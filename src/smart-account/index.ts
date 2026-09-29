@@ -1,7 +1,7 @@
 /**
  * General wallet client and browser transport; signer and contract implementations remain adapters.
  */
-export { SmartAccountClient, createPopupTransport } from './connector.js';
+export { SmartAccountClient, createPopupTransport, createEmbeddedTransport } from './connector.js';
 export type { WalletTransport } from './connector.js';
 export { WalletConnectorError, isUserRejection } from './connector-protocol.js';
 export type {
@@ -17,3 +17,4 @@ export type {
 export { serveWalletRequests } from './connector-host.js';
 export type { HostContext } from './connector-host.js';
 export * from './safe.js';
+export { QUAI_SAFE_MAINNET_V5 } from './quai-mainnet.js';
