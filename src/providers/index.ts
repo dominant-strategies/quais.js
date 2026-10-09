@@ -14,6 +14,8 @@ export { JsonRpcApiProvider, JsonRpcProvider, JsonRpcSigner } from './provider-j
 
 export { BrowserProvider } from './provider-browser.js';
 
+export { WalletConnectProvider } from './provider-walletconnect.js';
+
 export { SocketProvider } from './provider-socket.js';
 export { WebSocketProvider } from './provider-websocket.js';
 
@@ -60,6 +62,8 @@ export type {
 } from './provider.js';
 
 export type { DebugEventBrowserProvider, Eip1193Provider } from './provider-browser.js';
+
+export type { WalletConnectProviderOptions } from './provider-walletconnect.js';
 
 export type {
     JsonRpcPayload,

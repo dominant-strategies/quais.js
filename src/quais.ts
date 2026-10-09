@@ -110,6 +110,7 @@ export {
     JsonRpcProvider,
     JsonRpcSigner,
     BrowserProvider,
+    WalletConnectProvider,
     SocketProvider,
     WebSocketProvider,
     Network,
@@ -311,6 +312,7 @@ export type {
     QiTransactionResponse,
     QuaiTransactionResponse,
     TransactionResponseParams,
+    WalletConnectProviderOptions,
     WebSocketCreator,
     WebSocketLike,
 } from './providers/index.js';
